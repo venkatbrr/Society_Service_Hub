@@ -43,11 +43,13 @@ export default function LoginScreen() {
         // some other error happened
         console.error('Google Sign-In Error:', error);
         
+        // Better error message for debugging
+        const errorMsg = error.message || error.code || 'Failed to sign in';
+        Toast.show({ type: 'error', text1: 'Google Auth Error', text2: errorMsg, visibilityTime: 5000 });
+        
         // For development/testing only - bypass if configured
         if (process.env.NODE_ENV === 'development') {
-           Toast.show({ type: 'info', text1: 'Dev Mode', text2: 'Please create dummy user in Supabase to test' });
-        } else {
-          Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to sign in' });
+           Toast.show({ type: 'info', text1: 'Dev Mode', text2: 'Please create dummy user in Supabase to test', visibilityTime: 4000 });
         }
       }
     } finally {

@@ -4,13 +4,19 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 import { configureGoogleSignIn } from '../lib/auth';
 import Toast from 'react-native-toast-message';
 
-// Initialize Google Sign In
-configureGoogleSignIn();
-
 function RootLayoutNav() {
   const { session, communityId, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  // Initialize Google Sign In when the layout mounts
+  useEffect(() => {
+    try {
+      configureGoogleSignIn();
+    } catch (e) {
+      console.warn('Failed to configure Google Sign-In', e);
+    }
+  }, []);
 
   useEffect(() => {
     if (isLoading) return;
