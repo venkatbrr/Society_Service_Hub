@@ -6,7 +6,10 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "db:login": "npx supabase login",
+    "db:link": "npx supabase link --project-ref mbzvcaoulawdugfearmj",
+    "db:push": "npx supabase db push"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

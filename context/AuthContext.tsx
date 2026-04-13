@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
-      setCommunityId(session?.user?.app_metadata?.community_id ?? null);
+      setCommunityId(session?.user?.user_metadata?.community_id ?? session?.user?.app_metadata?.community_id ?? null);
     } catch (error) {
       console.error('Error fetching session:', error);
     } finally {
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setCommunityId(session?.user?.app_metadata?.community_id ?? null);
+      setCommunityId(session?.user?.user_metadata?.community_id ?? session?.user?.app_metadata?.community_id ?? null);
       setIsLoading(false);
     });
 
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (data.session) {
       setSession(data.session);
       setUser(data.session.user);
-      setCommunityId(data.session.user.app_metadata?.community_id ?? null);
+      setCommunityId(data.session.user.user_metadata?.community_id ?? data.session.user.app_metadata?.community_id ?? null);
     }
   };
 
