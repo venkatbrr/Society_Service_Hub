@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
@@ -104,13 +104,25 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <SearchBar 
-        value={searchQuery} 
-        onChangeText={setSearchQuery} 
-        isLightMode={true} 
-      />
-      
-      <View>
+      <View style={styles.header}>
+        <View>
+          <Text style={[styles.greeting, { color: colors.textMuted }]}>Tavern</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Service Hub</Text>
+        </View>
+        <TouchableOpacity 
+          style={[styles.profileButton, { backgroundColor: colors.surface2 }]}
+          onPress={() => router.push('/(tabs)/profile')}
+        >
+          <Ionicons name="person" size={20} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.filterSection}>
+        <SearchBar 
+          value={searchQuery} 
+          onChangeText={setSearchQuery} 
+          isLightMode={true} 
+        />
         <CategoryFilter 
           selectedCategory={selectedCategory} 
           onSelectCategory={setSelectedCategory} 
@@ -130,12 +142,13 @@ export default function HomeScreen() {
           />
         )}
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
         ListEmptyComponent={
           <EmptyState 
-            icon="people-outline" 
+            icon="people" 
             title="No Providers Found" 
             message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to add a trusted service provider!"}
             isLightMode={true}
@@ -146,8 +159,9 @@ export default function HomeScreen() {
       <TouchableOpacity 
         style={[styles.fab, { backgroundColor: colors.primary }]}
         onPress={() => router.push('/provider/add')}
+        activeOpacity={0.9}
       >
-        <Ionicons name="add" size={24} color="#FFF" />
+        <Ionicons name="add" size={32} color="#FFF" />
       </TouchableOpacity>
     </View>
   );
@@ -157,23 +171,53 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  greeting: {
+    fontSize: 14,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  profileButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterSection: {
+    marginBottom: 8,
+  },
   listContent: {
-    padding: 16,
-    paddingBottom: 80, // Space for FAB
+    padding: 20,
+    paddingBottom: 100,
   },
   fab: {
     position: 'absolute',
     bottom: 24,
     right: 24,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    elevation: 8,
+    shadowColor: '#4F46E5',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
+    shadowRadius: 8,
   },
 });

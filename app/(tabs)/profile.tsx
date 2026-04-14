@@ -39,6 +39,10 @@ export default function ProfileScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
+      </View>
+
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.profileHeader}>
           {user?.user_metadata?.avatar_url ? (
@@ -47,8 +51,8 @@ export default function ProfileScreen() {
               style={styles.avatar} 
             />
           ) : (
-            <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '20' }]}>
-              <Ionicons name="person" size={40} color={colors.primary} />
+            <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '10' }]}>
+              <Ionicons name="person" size={32} color={colors.primary} />
             </View>
           )}
           <View style={styles.profileInfo}>
@@ -62,32 +66,44 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>My Community</Text>
-        <View style={styles.row}>
-          <Text style={[styles.label, { color: colors.textMuted }]}>Name</Text>
-          <Text style={[styles.value, { color: colors.text }]}>{communityDetails?.name || 'Loading...'}</Text>
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={styles.sectionHeader}>
+          <Ionicons name="business" size={20} color={colors.primary} />
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>My Community</Text>
         </View>
-        <View style={styles.row}>
-          <Text style={[styles.label, { color: colors.textMuted }]}>Invite Code</Text>
-          <Text style={[styles.codeValue, { color: colors.primary, backgroundColor: colors.primary + '10' }]}>
-            {communityDetails?.code || '---'}
-          </Text>
+        
+        <View style={styles.infoRow}>
+          <Text style={[styles.label, { color: colors.textMuted }]}>NAME</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{communityDetails?.name || '---'}</Text>
         </View>
+
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+        <View style={styles.infoRow}>
+          <Text style={[styles.label, { color: colors.textMuted }]}>INVITE CODE</Text>
+          <View style={[styles.codeBadge, { backgroundColor: colors.surface2 }]}>
+            <Text style={[styles.codeValue, { color: colors.primary }]}>
+              {communityDetails?.code || '---'}
+            </Text>
+          </View>
+        </View>
+        
         <Text style={[styles.hint, { color: colors.textMuted }]}>
           Share this code with your neighbors so they can join!
         </Text>
       </View>
 
+      <View style={styles.spacer} />
+
       <TouchableOpacity 
-        style={[styles.signOutButton, { borderColor: colors.accent }]} 
+        style={[styles.signOutButton, { backgroundColor: colors.accent + '10' }]} 
         onPress={handleSignOut}
       >
         <Ionicons name="log-out-outline" size={20} color={colors.accent} />
         <Text style={[styles.signOutText, { color: colors.accent }]}>Sign Out</Text>
       </TouchableOpacity>
       
-      <Text style={[styles.version, { color: colors.textMuted }]}>Version 1.0.0</Text>
+      <Text style={[styles.version, { color: colors.textMuted }]}>Society Service Hub v1.0.0</Text>
     </View>
   );
 }
@@ -95,11 +111,20 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   card: {
-    padding: 16,
-    borderRadius: 16,
+    padding: 20,
+    borderRadius: 24,
     marginBottom: 24,
     borderWidth: 1,
   },
@@ -109,14 +134,14 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
   },
   avatarPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -125,65 +150,82 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    fontWeight: '800',
+    marginBottom: 2,
   },
   email: {
     fontSize: 14,
+    fontWeight: '500',
   },
   section: {
-    padding: 16,
-    borderRadius: 16,
+    padding: 20,
+    borderRadius: 24,
     marginBottom: 24,
     borderWidth: 1,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  row: {
+  sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  infoRow: {
+    marginVertical: 4,
   },
   label: {
-    fontSize: 16,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginBottom: 6,
   },
   value: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  codeBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
   codeValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '800',
     letterSpacing: 2,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    overflow: 'hidden',
+  },
+  divider: {
+    height: 1,
+    marginVertical: 16,
   },
   hint: {
     fontSize: 12,
-    marginTop: 8,
+    marginTop: 12,
+    lineHeight: 18,
+  },
+  spacer: {
+    flex: 1,
   },
   signOutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 18,
     gap: 8,
+    marginBottom: 16,
   },
   signOutText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   version: {
     textAlign: 'center',
-    marginTop: 24,
+    marginBottom: 40,
     fontSize: 12,
+    fontWeight: '500',
   },
 });

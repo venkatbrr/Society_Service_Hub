@@ -1,46 +1,65 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  StyleSheet, 
+  TouchableOpacity, 
+  ScrollView, 
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { Colors } from '../../constants/Colors';
-import { CATEGORIES } from '../../constants/categories';
 import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function AddProviderScreen() {
-  const { user, communityId } = useAuth();
+const TRANSACTION_CATEGORIES = [
+  'Donation',
+  'Activity Fee',
+  'Catering',
+  'Decoration',
+  'Equipment Rental',
+  'Prize/Gift',
+  'Marketing',
+  'Other'
+];
+
+export default function AddTransactionScreen() {
+  const { eventId } = useLocalSearchParams();
+  const { user } = useAuth();
   const router = useRouter();
   const colors = Colors.light;
 
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [type, setType] = useState<'income' | 'expense'>('income');
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState(TRANSACTION_CATEGORIES[0]);
   const [description, setDescription] = useState('');
-  const [flatBlock, setFlatBlock] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
-    if (!name.trim() || !phone.trim() || !category) {
-      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Name, phone, and category are required' });
+    if (!amount.trim() || isNaN(Number(amount)) || Number(amount) <= 0) {
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please enter a valid amount' });
       return;
     }
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from('service_providers').insert({
-        community_id: communityId as string,
+      const { error } = await supabase.from('event_transactions').insert({
+        event_id: eventId as string,
         created_by: user?.id as string,
-        name: name.trim(),
-        phone: phone.trim(),
+        amount: Number(amount),
+        type,
         category,
         description: description.trim() || null,
-        flat_block: flatBlock.trim() || null,
       });
 
       if (error) throw error;
 
-      Toast.show({ type: 'success', text1: 'Provider added successfully' });
+      Toast.show({ type: 'success', text1: 'Entry added successfully' });
       router.back();
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Error', text2: error.message });
@@ -50,41 +69,55 @@ export default function AddProviderScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Share Contact</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>Help your neighbors find trusted local service providers</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Add Funds</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>Record income or expenses for this event</Text>
         </View>
 
         <View style={[styles.form, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>NAME</Text>
-            <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-              placeholder="e.g. Ramesh - Electrician"
-              placeholderTextColor={colors.textMuted}
-              value={name}
-              onChangeText={setName}
-            />
+          <Text style={[styles.label, { color: colors.text }]}>TRANSACTION TYPE</Text>
+          <View style={[styles.tabContainer, { backgroundColor: colors.surface2 }]}>
+            <TouchableOpacity 
+              style={[
+                styles.tab, 
+                type === 'income' ? { backgroundColor: colors.card, shadowColor: '#000', elevation: 2 } : {}
+              ]}
+              onPress={() => setType('income')}
+            >
+              <Text style={[styles.tabText, { color: type === 'income' ? colors.secondary : colors.textMuted }]}>Income (+)</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[
+                styles.tab, 
+                type === 'expense' ? { backgroundColor: colors.card, shadowColor: '#000', elevation: 2 } : {}
+              ]}
+              onPress={() => setType('expense')}
+            >
+              <Text style={[styles.tabText, { color: type === 'expense' ? colors.accent : colors.textMuted }]}>Expense (-)</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>PHONE NUMBER</Text>
+            <Text style={[styles.label, { color: colors.text }]}>AMOUNT (₹)</Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-              placeholder="e.g. +91 98765 43210"
+              placeholder="0.00"
               placeholderTextColor={colors.textMuted}
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
             />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>CATEGORY</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-              {CATEGORIES.map(cat => (
+            <View style={styles.categoryContainer}>
+              {TRANSACTION_CATEGORIES.map((cat) => (
                 <TouchableOpacity
                   key={cat}
                   style={[
@@ -96,30 +129,19 @@ export default function AddProviderScreen() {
                   <Text style={[styles.categoryText, { color: category === cat ? 'white' : colors.text }]}>{cat}</Text>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>FLAT / BLOCK (OPTIONAL)</Text>
-            <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-              placeholder="e.g. Often works in Block A"
-              placeholderTextColor={colors.textMuted}
-              value={flatBlock}
-              onChangeText={setFlatBlock}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>DESCRIPTION</Text>
+            <Text style={[styles.label, { color: colors.text }]}>NOTES</Text>
             <TextInput
               style={[styles.textArea, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-              placeholder="e.g. Very reliable, fair pricing..."
+              placeholder="Add some details about this transaction..."
               placeholderTextColor={colors.textMuted}
               value={description}
               onChangeText={setDescription}
               multiline
-              numberOfLines={4}
+              numberOfLines={3}
               textAlignVertical="top"
             />
           </View>
@@ -132,10 +154,10 @@ export default function AddProviderScreen() {
           onPress={handleSave}
           disabled={isLoading}
         >
-          {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Add Provider</Text>}
+          {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Add Entry</Text>}
         </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -158,7 +180,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     marginTop: 4,
-    lineHeight: 22,
   },
   form: {
     padding: 24,
@@ -172,32 +193,51 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1.5,
-    marginBottom: 8,
+    marginBottom: 12,
     marginLeft: 4,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 24,
+  },
+  tab: {
+    flex: 1,
+    height: 44,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tabText: {
+    fontWeight: '700',
+    fontSize: 14,
   },
   input: {
     height: 54,
     borderWidth: 1,
     borderRadius: 16,
     paddingHorizontal: 16,
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: '700',
   },
-  categoryScroll: {
+  categoryContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 14,
-    marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   categoryText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   textArea: {
-    height: 120,
+    height: 100,
     borderWidth: 1,
     borderRadius: 16,
     paddingHorizontal: 16,

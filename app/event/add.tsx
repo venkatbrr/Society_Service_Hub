@@ -1,46 +1,48 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { Colors } from '../../constants/Colors';
-import { CATEGORIES } from '../../constants/categories';
 import Toast from 'react-native-toast-message';
+// import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function AddProviderScreen() {
+export default function AddEventScreen() {
   const { user, communityId } = useAuth();
   const router = useRouter();
   const colors = Colors.light;
 
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [flatBlock, setFlatBlock] = useState('');
+  const [dateString, setDateString] = useState(new Date().toISOString().split('T')[0]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
-    if (!name.trim() || !phone.trim() || !category) {
-      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Name, phone, and category are required' });
+    if (!title.trim()) {
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Event title is required' });
+      return;
+    }
+
+    const finalDate = new Date(dateString);
+    if (isNaN(finalDate.getTime())) {
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please enter a valid date (YYYY-MM-DD)' });
       return;
     }
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from('service_providers').insert({
+      const { error } = await supabase.from('events').insert({
         community_id: communityId as string,
         created_by: user?.id as string,
-        name: name.trim(),
-        phone: phone.trim(),
-        category,
+        title: title.trim(),
         description: description.trim() || null,
-        flat_block: flatBlock.trim() || null,
+        event_date: finalDate.toISOString(),
       });
 
       if (error) throw error;
 
-      Toast.show({ type: 'success', text1: 'Provider added successfully' });
+      Toast.show({ type: 'success', text1: 'Event created successfully' });
       router.back();
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Error', text2: error.message });
@@ -53,68 +55,40 @@ export default function AddProviderScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Share Contact</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>Help your neighbors find trusted local service providers</Text>
+          <Text style={[styles.title, { color: colors.text }]}>New Event</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>Create a beautiful activity for your community</Text>
         </View>
 
         <View style={[styles.form, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>NAME</Text>
+            <Text style={[styles.label, { color: colors.text }]}>TITLE</Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-              placeholder="e.g. Ramesh - Electrician"
+              placeholder="e.g. Navratri Festival"
               placeholderTextColor={colors.textMuted}
-              value={name}
-              onChangeText={setName}
+              value={title}
+              onChangeText={setTitle}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>PHONE NUMBER</Text>
+            <Text style={[styles.label, { color: colors.text }]}>DATE (YYYY-MM-DD)</Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-              placeholder="e.g. +91 98765 43210"
+              placeholder="2024-05-20"
               placeholderTextColor={colors.textMuted}
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
+              value={dateString}
+              onChangeText={setDateString}
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>CATEGORY</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-              {CATEGORIES.map(cat => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[
-                    styles.categoryChip,
-                    category === cat ? { backgroundColor: colors.primary, borderColor: colors.primary } : { backgroundColor: colors.background, borderColor: colors.border }
-                  ]}
-                  onPress={() => setCategory(cat)}
-                >
-                  <Text style={[styles.categoryText, { color: category === cat ? 'white' : colors.text }]}>{cat}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>FLAT / BLOCK (OPTIONAL)</Text>
-            <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-              placeholder="e.g. Often works in Block A"
-              placeholderTextColor={colors.textMuted}
-              value={flatBlock}
-              onChangeText={setFlatBlock}
-            />
-          </View>
+          {/* DateTimePicker is currently disabled to prevent native crashes */}
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>DESCRIPTION</Text>
             <TextInput
               style={[styles.textArea, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-              placeholder="e.g. Very reliable, fair pricing..."
+              placeholder="Tell everyone what this event is about..."
               placeholderTextColor={colors.textMuted}
               value={description}
               onChangeText={setDescription}
@@ -132,7 +106,7 @@ export default function AddProviderScreen() {
           onPress={handleSave}
           disabled={isLoading}
         >
-          {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Add Provider</Text>}
+          {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Create Event</Text>}
         </TouchableOpacity>
       </View>
     </View>
@@ -158,7 +132,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     marginTop: 4,
-    lineHeight: 22,
   },
   form: {
     padding: 24,
@@ -182,19 +155,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
   },
-  categoryScroll: {
-    flexDirection: 'row',
-  },
-  categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 14,
-    marginRight: 8,
+  dateButton: {
+    height: 54,
     borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  categoryText: {
-    fontSize: 14,
-    fontWeight: '600',
+  dateText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   textArea: {
     height: 120,

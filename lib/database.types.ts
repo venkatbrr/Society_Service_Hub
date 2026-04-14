@@ -131,6 +131,67 @@ export type Database = {
           created_at?: string;
         };
       };
+      events: {
+        Row: {
+          id: string;
+          community_id: string;
+          created_by: string;
+          title: string;
+          description: string | null;
+          event_date: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          community_id: string;
+          created_by: string;
+          title: string;
+          description?: string | null;
+          event_date: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          community_id?: string;
+          created_by?: string;
+          title?: string;
+          description?: string | null;
+          event_date?: string;
+          created_at?: string;
+        };
+      };
+      event_transactions: {
+        Row: {
+          id: string;
+          event_id: string;
+          amount: number;
+          type: 'income' | 'expense';
+          category: string;
+          description: string | null;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          amount: number;
+          type: 'income' | 'expense';
+          category: string;
+          description?: string | null;
+          created_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          amount?: number;
+          type?: 'income' | 'expense';
+          category?: string;
+          description?: string | null;
+          created_by?: string;
+          created_at?: string;
+        };
+      };
     };
   };
 };
