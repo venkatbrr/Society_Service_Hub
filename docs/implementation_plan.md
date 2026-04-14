@@ -17,7 +17,7 @@ A mobile application for gated communities to manage and access trusted service 
 
 ---
 
-## Architecture Overview
+## Architectdevedeveure Overview
 
 ```mermaid
 graph TD

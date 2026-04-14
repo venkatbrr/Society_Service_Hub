@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "societyservicehub",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -23,7 +23,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.Society_Service_Hub"
+      "package": "com.venkat.gatehood"
     },
     "web": {
       "bundler": "metro",
@@ -38,10 +38,17 @@
           "iosUrlScheme": "com.googleusercontent.apps.DUMMY-IOS-CLIENT-ID"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6dcab1c4-815e-4b14-9b6f-e83939e2c0d9"
+      }
     }
   }
 }
