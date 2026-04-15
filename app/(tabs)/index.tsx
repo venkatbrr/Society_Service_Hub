@@ -13,6 +13,7 @@ import { CommunityInsights } from '../../components/CommunityInsights';
 import { ActiveFundTeaser } from '../../components/ActiveFundTeaser';
 import { ProviderWithInteraction } from '../../lib/database.types';
 import Toast from 'react-native-toast-message';
+import { isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 const isMissingRelationError = (error: { code?: string; message?: string } | null) =>
   error?.code === 'PGRST205' ||
@@ -46,18 +47,31 @@ export default function HomeScreen() {
       }
 
       // 2. Fetch Active Fund (most recent event with a goal)
-      const { data: fundData } = await supabase
+      const { data: fundData, error: fundError } = await supabase
         .from('events')
-        .select('*, event_transactions(amount, type)')
+        .select('*')
         .eq('community_id', communityId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
+      if (fundError && !isMissingFundSchemaError(fundError)) {
+        throw fundError;
+      }
+
       if (fundData) {
-        const collected = fundData.event_transactions
-          ?.filter((t: any) => t.type === 'income')
-          .reduce((sum: number, t: any) => sum + Number(t.amount), 0) || 0;
+        const { data: transactionData, error: transactionError } = await supabase
+          .from('event_transactions')
+          .select('amount, type')
+          .eq('event_id', fundData.id);
+
+        if (transactionError && !isMissingFundSchemaError(transactionError)) {
+          throw transactionError;
+        }
+
+        const collected = (transactionData ?? [])
+          .filter((t: any) => t.type === 'income')
+          .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
         
         setActiveFund({
           id: fundData.id,

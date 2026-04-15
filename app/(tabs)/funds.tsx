@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ import { Tables } from '../../lib/database.types';
 import { FundCard } from '../../components/FundCard';
 import { useAuth } from '../../context/AuthContext';
 import { FundAccessRole, getEffectiveFundRole } from '../../lib/fundRoles';
+import Toast from 'react-native-toast-message';
+import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 type FundWithTotals = Tables<'events'> & {
   totals: {
@@ -37,6 +39,7 @@ export default function FundsScreen() {
   const { user, communityId, appRole } = useAuth();
   const colors = Colors.light;
   const isAdmin = appRole === 'admin';
+  const hasShownSchemaToastRef = useRef(false);
 
   const fetchFunds = useCallback(async () => {
     if (!communityId) {
@@ -56,9 +59,35 @@ export default function FundsScreen() {
         supabase.from('profiles').select('id, full_name'),
       ]);
 
-      if (fundsResult.error) throw fundsResult.error;
-      if (transactionsResult.error) throw transactionsResult.error;
-      if (rolesResult.error) throw rolesResult.error;
+      if (fundsResult.error) {
+        if (isMissingFundSchemaError(fundsResult.error)) {
+          setFunds([]);
+          if (!hasShownSchemaToastRef.current) {
+            hasShownSchemaToastRef.current = true;
+            Toast.show({ type: 'error', text1: 'Funds unavailable', text2: getMissingFundSchemaMessage() });
+          }
+          return;
+        }
+
+        throw fundsResult.error;
+      }
+
+      const transactions = isMissingFundSchemaError(transactionsResult.error) ? [] : (transactionsResult.data ?? []);
+      const roles = isMissingFundSchemaError(rolesResult.error) ? [] : (rolesResult.data ?? []);
+
+      if ((transactionsResult.error || rolesResult.error) && !hasShownSchemaToastRef.current) {
+        hasShownSchemaToastRef.current = true;
+        Toast.show({ type: 'error', text1: 'Funds partially loaded', text2: getMissingFundSchemaMessage() });
+      }
+
+      if (transactionsResult.error && !isMissingFundSchemaError(transactionsResult.error)) {
+        throw transactionsResult.error;
+      }
+
+      if (rolesResult.error && !isMissingFundSchemaError(rolesResult.error)) {
+        throw rolesResult.error;
+      }
+
       if (profilesResult.error) throw profilesResult.error;
 
       const profileNames = new Map(
@@ -66,8 +95,8 @@ export default function FundsScreen() {
       );
 
       const nextFunds = (fundsResult.data ?? []).map((fund) => {
-        const fundTransactions = (transactionsResult.data ?? []).filter((transaction) => transaction.event_id === fund.id);
-        const fundRoles = (rolesResult.data ?? []).filter((assignment) => assignment.event_id === fund.id);
+        const fundTransactions = transactions.filter((transaction) => transaction.event_id === fund.id);
+        const fundRoles = roles.filter((assignment) => assignment.event_id === fund.id);
         const income = fundTransactions
           .filter((transaction) => transaction.type === 'income')
           .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
@@ -91,8 +120,12 @@ export default function FundsScreen() {
       });
 
       setFunds(nextFunds);
+      if (!transactionsResult.error && !rolesResult.error) {
+        hasShownSchemaToastRef.current = false;
+      }
     } catch (error) {
       console.error('Error fetching funds:', error);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load funds' });
     } finally {
       setLoading(false);
       setRefreshing(false);

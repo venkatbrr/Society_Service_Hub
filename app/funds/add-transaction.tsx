@@ -18,6 +18,7 @@ import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
 import { Tables } from '../../lib/database.types';
 import { formatRole, getEffectiveFundRole, getFundPermissions } from '../../lib/fundRoles';
+import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 type FundContext = Pick<Tables<'events'>, 'id' | 'community_id' | 'title'> & {
   fund_roles: Tables<'fund_roles'>[];
@@ -46,35 +47,53 @@ export default function AddTransactionScreen() {
     const loadContext = async () => {
       try {
         setIsFetchingContext(true);
-        const { data, error } = await supabase
-          .from('events')
-          .select('id, community_id, title, fund_roles(*), event_transactions(contributor_user_id, type)')
-          .eq('id', event_id as string)
-          .single();
+        const { data, error } = await supabase.from('events').select('id, community_id, title').eq('id', event_id as string).single();
 
         if (error) throw error;
 
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, app_role')
-          .eq('community_id', data.community_id)
-          .order('full_name', { ascending: true });
+        const [rolesResult, transactionsResult, profilesResult] = await Promise.all([
+          supabase.from('fund_roles').select('*').eq('event_id', data.id),
+          supabase.from('event_transactions').select('contributor_user_id, type').eq('event_id', data.id),
+          supabase.from('profiles').select('id, full_name, app_role').eq('community_id', data.community_id).order('full_name', { ascending: true }),
+        ]);
 
-        if (profilesError) throw profilesError;
+        if (rolesResult.error && !isMissingFundSchemaError(rolesResult.error)) {
+          throw rolesResult.error;
+        }
 
-        const visibleMembers = (profiles ?? []).filter((member) => member.app_role !== 'admin');
+        if (transactionsResult.error && !isMissingFundSchemaError(transactionsResult.error)) {
+          throw transactionsResult.error;
+        }
+
+        if (profilesResult.error) throw profilesResult.error;
+
+        const visibleMembers = (profilesResult.data ?? []).filter((member) => member.app_role !== 'admin');
         const paidMemberIds = new Set(
-          (data.event_transactions ?? [])
+          (transactionsResult.data ?? [])
             .filter((transaction) => transaction.type === 'income' && transaction.contributor_user_id)
             .map((transaction) => transaction.contributor_user_id as string)
         );
         const defaultMember = visibleMembers.find((member) => !paidMemberIds.has(member.id));
 
-        setFund(data);
+        setFund({
+          ...data,
+          fund_roles: rolesResult.data ?? [],
+          event_transactions: transactionsResult.data ?? [],
+        });
         setMembers(visibleMembers);
         setSelectedMemberId(defaultMember?.id ?? null);
+
+        if (rolesResult.error || transactionsResult.error) {
+          Toast.show({ type: 'error', text1: 'Funds partially loaded', text2: getMissingFundSchemaMessage() });
+        }
       } catch (error: any) {
-        Toast.show({ type: 'error', text1: 'Error', text2: error.message || 'Unable to load fund details' });
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: isMissingFundSchemaError(error)
+            ? getMissingFundSchemaMessage()
+            : error.message || 'Unable to load fund details',
+        });
         router.back();
       } finally {
         setIsFetchingContext(false);
@@ -207,7 +226,11 @@ export default function AddTransactionScreen() {
       });
       router.back();
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: 'Error', text2: error.message });
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: isMissingFundSchemaError(error) ? getMissingFundSchemaMessage() : error.message,
+      });
     } finally {
       setIsLoading(false);
     }

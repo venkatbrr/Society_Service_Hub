@@ -24,6 +24,7 @@ import {
   getFundPermissions,
   getRestrictionHint,
 } from '../../lib/fundRoles';
+import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 type FundDetail = Tables<'events'> & {
   event_transactions: Tables<'event_transactions'>[];
@@ -45,27 +46,43 @@ export default function FundDetailScreen() {
   const fetchFundDetail = useCallback(async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('events')
-        .select('*, event_transactions(*), fund_roles(*)')
-        .eq('id', id as string)
-        .single();
+      const { data, error } = await supabase.from('events').select('*').eq('id', id as string).single();
 
       if (error) throw error;
 
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, app_role')
-        .eq('community_id', data.community_id)
-        .order('full_name', { ascending: true });
+      const [transactionsResult, rolesResult, profilesResult] = await Promise.all([
+        supabase.from('event_transactions').select('*').eq('event_id', data.id),
+        supabase.from('fund_roles').select('*').eq('event_id', data.id),
+        supabase.from('profiles').select('id, full_name, app_role').eq('community_id', data.community_id).order('full_name', { ascending: true }),
+      ]);
 
-      if (profilesError) throw profilesError;
+      if (transactionsResult.error && !isMissingFundSchemaError(transactionsResult.error)) {
+        throw transactionsResult.error;
+      }
 
-      setFund(data);
-      setMembers(profiles ?? []);
+      if (rolesResult.error && !isMissingFundSchemaError(rolesResult.error)) {
+        throw rolesResult.error;
+      }
+
+      if (profilesResult.error) throw profilesResult.error;
+
+      setFund({
+        ...data,
+        event_transactions: transactionsResult.data ?? [],
+        fund_roles: rolesResult.data ?? [],
+      });
+      setMembers(profilesResult.data ?? []);
+
+      if (transactionsResult.error || rolesResult.error) {
+        Toast.show({ type: 'error', text1: 'Funds partially loaded', text2: getMissingFundSchemaMessage() });
+      }
     } catch (error: any) {
       console.error(error);
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Fund not found' });
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: isMissingFundSchemaError(error) ? getMissingFundSchemaMessage() : 'Fund not found',
+      });
       router.back();
     } finally {
       setLoading(false);

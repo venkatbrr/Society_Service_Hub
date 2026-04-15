@@ -8,6 +8,7 @@ import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
 import { MAX_TREASURERS } from '../../lib/fundRoles';
 import { Tables } from '../../lib/database.types';
+import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role'>;
 
@@ -131,7 +132,11 @@ export default function AddFundScreen() {
       Toast.show({ type: 'success', text1: 'Fund created successfully' });
       router.replace(`/funds/${fund.id}`);
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: 'Error', text2: error.message });
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: isMissingFundSchemaError(error) ? getMissingFundSchemaMessage() : error.message,
+      });
     } finally {
       setIsLoading(false);
     }
