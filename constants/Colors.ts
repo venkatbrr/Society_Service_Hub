@@ -5,18 +5,18 @@ export const Colors = {
   light: {
     text: '#1A202C',
     textMuted: '#718096',
-    background: '#FFFFFF',
-    surface: '#F7FAFC',
-    surface2: '#EDF2F7',
-    primary: '#4F46E5', // Indigo 600
-    secondary: '#10B981', // Emerald 500
-    accent: '#F43F5E', // Rose 500
-    warning: '#F59E0B', // Amber 500
-    border: '#E2E8F0',
-    tint: '#4F46E5',
-    icon: '#A0AEC0',
-    tabIconDefault: '#A0AEC0',
-    tabIconSelected: '#4F46E5',
+    background: '#F9FAFB', // Off-white
+    surface: '#FFFFFF',
+    surface2: '#F3F4F6',
+    primary: '#10B981', // Soft Green (Emerald 500)
+    secondary: '#3B82F6', // Blue 500
+    accent: '#F43F5E', 
+    warning: '#F59E0B',
+    border: '#E5E7EB',
+    tint: '#10B981',
+    icon: '#9CA3AF',
+    tabIconDefault: '#9CA3AF',
+    tabIconSelected: '#10B981',
     card: '#FFFFFF',
     overlay: 'rgba(0, 0, 0, 0.05)',
   },

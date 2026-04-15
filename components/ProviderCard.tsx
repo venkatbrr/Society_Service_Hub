@@ -18,19 +18,36 @@ export const ProviderCard = ({ provider, onPress, onToggleFavorite, isLightMode 
 
   return (
     <TouchableOpacity 
-      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+      style={[styles.card, { backgroundColor: colors.card, shadowColor: '#000' }]} 
       onPress={onPress}
-      activeOpacity={0.8}
+      activeOpacity={0.9}
     >
-      <View style={styles.cardHeader}>
-        <View style={styles.titleContainer}>
-          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-            {provider.name}
-          </Text>
-          <View style={[styles.categoryBadge, { backgroundColor: categoryColor + '10' }]}>
-            <Text style={[styles.categoryText, { color: categoryColor }]}>{provider.category}</Text>
+      <View style={styles.content}>
+        <View style={styles.imagePlaceholder}>
+           <Ionicons name="person" size={24} color={colors.icon} />
+        </View>
+
+        <View style={styles.mainInfo}>
+          <View style={styles.headerRow}>
+            <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+              {provider.name}
+            </Text>
+            {provider.is_verified && (
+              <Ionicons name="checkmark-circle" size={18} color={Colors.light.primary} style={styles.verifiedIcon} />
+            )}
+          </View>
+          
+          <Text style={[styles.category, { color: colors.textMuted }]}>{provider.category}</Text>
+
+          <View style={styles.ratingRow}>
+            <Ionicons name="star" size={14} color={colors.warning} />
+            <Text style={[styles.ratingText, { color: colors.text }]}>
+              {Number(provider.avg_rating).toFixed(1)}
+              <Text style={styles.ratingCount}> ({provider.rating_count})</Text>
+            </Text>
           </View>
         </View>
+
         <TouchableOpacity 
           style={styles.favoriteBtn} 
           onPress={() => onToggleFavorite(provider.id, !!provider.is_favorite)}
@@ -43,23 +60,20 @@ export const ProviderCard = ({ provider, onPress, onToggleFavorite, isLightMode 
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-      <View style={styles.cardFooter}>
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            <Ionicons name="call" size={14} color={colors.textMuted} />
-            <Text style={[styles.metaText, { color: colors.textMuted }]}>{provider.phone}</Text>
-          </View>
-          <View style={styles.metaItem}>
-            <Ionicons name="star" size={14} color={colors.warning} />
-            <Text style={[styles.metaText, { color: colors.text }]}>
-              {Number(provider.avg_rating).toFixed(1)}
-              <Text style={styles.ratingCount}> ({provider.rating_count})</Text>
+      <View style={[styles.footer, { borderTopColor: colors.surface2 }]}>
+        <View style={styles.trustIndicators}>
+          <View style={styles.trustItem}>
+            <Ionicons name="home-outline" size={14} color={colors.textMuted} />
+            <Text style={[styles.trustText, { color: colors.textMuted }]}>
+              Used by {provider.hire_count || 0} homes
             </Text>
           </View>
+          {provider.is_trending && (
+            <View style={[styles.trendingTag, { backgroundColor: Colors.light.primary + '15' }]}>
+              <Text style={[styles.trendingText, { color: Colors.light.primary }]}>Trending</Text>
+            </View>
+          )}
         </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.border} />
       </View>
     </TouchableOpacity>
   );
@@ -67,69 +81,91 @@ export const ProviderCard = ({ provider, onPress, onToggleFavorite, isLightMode 
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
-    elevation: 2,
+    elevation: 3,
   },
-  cardHeader: {
+  content: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  titleContainer: {
+  imagePlaceholder: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  mainInfo: {
     flex: 1,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   name: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    marginBottom: 6,
+    letterSpacing: -0.2,
   },
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+  verifiedIcon: {
+    marginLeft: 2,
   },
-  categoryText: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+  category: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  ratingText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  ratingCount: {
+    fontWeight: '400',
+    color: '#9CA3AF',
   },
   favoriteBtn: {
-    padding: 4,
+    padding: 8,
   },
-  divider: {
-    height: 1,
-    marginVertical: 12,
+  footer: {
+    borderTopWidth: 1,
+    paddingTop: 12,
   },
-  cardFooter: {
+  trustIndicators: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  metaRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  metaItem: {
+  trustItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  metaText: {
-    fontSize: 13,
+  trustText: {
+    fontSize: 12,
     fontWeight: '500',
   },
-  ratingCount: {
-    fontSize: 11,
-    fontWeight: '400',
-    color: '#718096',
+  trendingTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  trendingText: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
 });

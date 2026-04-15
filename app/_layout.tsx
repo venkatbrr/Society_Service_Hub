@@ -21,7 +21,7 @@ function RootLayoutNav() {
   useEffect(() => {
     if (isLoading) return;
 
-    const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'login';
+    const inAuthGroup = segments[0] === 'login';
 
     if (!session) {
       // If the user isn't signed in and the initial segment is not anything in the auth group.

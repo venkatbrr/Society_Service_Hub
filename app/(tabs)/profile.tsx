@@ -7,7 +7,7 @@ import { Colors } from '../../constants/Colors';
 import Toast from 'react-native-toast-message';
 
 export default function ProfileScreen() {
-  const { user, signOut, communityId } = useAuth();
+  const { user, signOut, communityId, appRole } = useAuth();
   const [communityDetails, setCommunityDetails] = useState<{name: string, code: string} | null>(null);
 
   const colors = Colors.light;
@@ -62,6 +62,11 @@ export default function ProfileScreen() {
             <Text style={[styles.email, { color: colors.textMuted }]}>
               {user?.email}
             </Text>
+            <View style={[styles.roleBadge, { backgroundColor: colors.surface2 }]}>
+              <Text style={[styles.roleBadgeText, { color: colors.primary }]}>
+                App Role: {appRole.charAt(0).toUpperCase() + appRole.slice(1)}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -156,6 +161,19 @@ const styles = StyleSheet.create({
   email: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  roleBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  roleBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
   },
   section: {
     padding: 20,

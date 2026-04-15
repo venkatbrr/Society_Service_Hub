@@ -11,6 +11,10 @@ import { ProviderWithInteraction } from '../../lib/database.types';
 import { CATEGORY_COLORS } from '../../constants/categories';
 import Toast from 'react-native-toast-message';
 
+const isMissingRelationError = (error: { code?: string; message?: string } | null) =>
+  error?.code === 'PGRST205' ||
+  error?.message?.includes("Could not find the table 'public.provider_hires'");
+
 export default function ProviderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -22,10 +26,12 @@ export default function ProviderDetailScreen() {
 
   useEffect(() => {
     fetchProvider();
-  }, [id]);
+  }, [id, user]);
 
   const fetchProvider = async () => {
     try {
+      if (!id || id === 'add') return;
+      
       const { data, error } = await supabase
         .from('service_providers')
         .select('*')
@@ -34,7 +40,6 @@ export default function ProviderDetailScreen() {
 
       if (error) throw error;
 
-      // Checks favorites and user ratings for this provider
       if (user) {
          const { data: favs } = await supabase
            .from('favorites')
@@ -49,15 +54,26 @@ export default function ProviderDetailScreen() {
            .eq('provider_id', id)
            .maybeSingle();
 
+         const { count: hireCount, error: hireCountError } = await supabase
+           .from('provider_hires')
+           .select('*', { count: 'exact', head: true })
+           .eq('provider_id', id);
+
+         if (hireCountError && !isMissingRelationError(hireCountError)) {
+           throw hireCountError;
+         }
+
          setProvider({
            ...data,
            is_favorite: favs && favs.length > 0,
-           user_rating: rats ? rats.rating : null
+           user_rating: rats ? rats.rating : null,
+           hire_count: hireCount || 0
          });
       } else {
-         setProvider(data);
+         setProvider({ ...data, hire_count: 0 });
       }
     } catch (error: any) {
+      console.error(error);
       Toast.show({ type: 'error', text1: 'Error', text2: 'Provider not found' });
       router.back();
     } finally {
@@ -65,28 +81,68 @@ export default function ProviderDetailScreen() {
     }
   };
 
+  const logHire = async () => {
+    if (!provider || !user) return;
+    try {
+      const { error } = await supabase.from('provider_hires').insert({
+        user_id: user.id,
+        provider_id: provider.id
+      });
+
+      if (error) {
+        if (isMissingRelationError(error)) return;
+        throw error;
+      }
+
+      setProvider(prev => prev ? { ...prev, hire_count: (prev.hire_count || 0) + 1 } : null);
+    } catch (err) {
+      console.error('Error logging hire:', err);
+    }
+  };
+
   const handleCall = async () => {
     if (!provider) return;
+    await logHire();
     const url = `tel:${provider.phone}`;
     const supported = await Linking.canOpenURL(url);
     if (supported) {
       await Linking.openURL(url);
     } else {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Phone dialing not supported on this device' });
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Phone dialing not supported' });
     }
+  };
+
+  const handleWhatsApp = async () => {
+    if (!provider) return;
+    await logHire();
+    const cleanPhone = provider.phone.replace(/[^0-9]/g, '');
+    const url = `whatsapp://send?phone=${cleanPhone}`;
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      await Linking.openURL(`https://wa.me/${cleanPhone}`);
+    }
+  };
+
+  const handleHireAgain = () => {
+    if (!provider) return;
+    Alert.alert(
+      "Hire Again",
+      `Would you like to contact ${provider.name} again?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "WhatsApp", onPress: handleWhatsApp },
+        { text: "Call", onPress: handleCall },
+      ]
+    );
   };
 
   const handleShare = async () => {
     if (!provider) return;
-    
-    // For simplicity, we just share text since it works across all apps natively
-    const message = `Check out this service provider on Society Service Hub!\n\nName: ${provider.name}\nCategory: ${provider.category}\nPhone: ${provider.phone}\n${provider.description ? `\nNotes: ${provider.description}` : ''}`;
-    
+    const message = `Check out ${provider.name} (${provider.category}) on Society Service Hub!\nPhone: ${provider.phone}`;
     try {
-      await Share.share({
-        message,
-        title: `Share ${provider.name}'s Contact`
-      });
+      await Share.share({ message });
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Error sharing contact' });
     }
@@ -94,10 +150,8 @@ export default function ProviderDetailScreen() {
 
   const handleToggleFavorite = async () => {
     if (!provider || !user) return;
-    
     const isCurrentlyFavorite = provider.is_favorite;
     setProvider({ ...provider, is_favorite: !isCurrentlyFavorite });
-
     try {
       if (isCurrentlyFavorite) {
         await supabase.from('favorites').delete().match({ user_id: user.id, provider_id: provider.id });
@@ -113,14 +167,11 @@ export default function ProviderDetailScreen() {
   const handleRating = async (rating: number) => {
     if (!provider || !user) return;
     try {
-      // Upsert rating
       const { error } = await supabase
         .from('ratings')
         .upsert({ user_id: user.id, provider_id: provider.id, rating }, { onConflict: 'user_id,provider_id' });
-        
       if (error) throw error;
       Toast.show({ type: 'success', text1: 'Rating saved' });
-      // Refetch to get new average
       fetchProvider();
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Error saving rating' });
@@ -151,195 +202,144 @@ export default function ProviderDetailScreen() {
     );
   }
 
-  const categoryColor = CATEGORY_COLORS[provider.category] || colors.primary;
-
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.headerCard, { backgroundColor: colors.primary }]}>
         <View style={styles.headerTop}>
-           <View style={[styles.badge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-             <Text style={styles.badgeText}>{provider.category}</Text>
-           </View>
+           <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
+             <Ionicons name="arrow-back" size={24} color="#FFF" />
+           </TouchableOpacity>
            <TouchableOpacity onPress={handleToggleFavorite} style={styles.iconButton}>
              <Ionicons name={provider.is_favorite ? "heart" : "heart-outline"} size={28} color={provider.is_favorite ? colors.accent : "#FFF"} />
            </TouchableOpacity>
         </View>
-        <Text style={styles.name}>{provider.name}</Text>
-        <View style={styles.ratingRow}>
-           <Ionicons name="star" size={20} color={colors.warning} />
-           <Text style={styles.ratingText}>{Number(provider.avg_rating).toFixed(1)} ({provider.rating_count} reviews)</Text>
+        
+        <View style={styles.headerContent}>
+          <View style={styles.imagePlaceholderLarge}>
+            <Ionicons name="person" size={48} color="#FFF" />
+          </View>
+          <View style={styles.headerInfo}>
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>{provider.name}</Text>
+              {provider.is_verified && (
+                <View style={styles.verifiedBadge}>
+                  <Ionicons name="checkmark-circle" size={16} color="#FFF" />
+                  <Text style={styles.verifiedText}>Verified</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.categoryTextDisp}>{provider.category}</Text>
+            <View style={styles.ratingRowDisp}>
+               <Ionicons name="star" size={18} color="#FFD700" />
+               <Text style={styles.ratingValueDisp}>{Number(provider.avg_rating || 0).toFixed(1)}</Text>
+               <Text style={styles.ratingCountDisp}>({provider.rating_count || 0} reviews)</Text>
+            </View>
+          </View>
         </View>
       </View>
 
-      <View style={styles.actionRow}>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.surface }]} onPress={handleCall}>
-          <View style={[styles.actionIconArea, { backgroundColor: colors.secondary + '20' }]}>
-            <Ionicons name="call" size={24} color={colors.secondary} />
-          </View>
-          <Text style={[styles.actionText, { color: colors.text }]}>Call</Text>
-        </TouchableOpacity>
+      <View style={styles.trustBanner}>
+         <View style={styles.trustStat}>
+            <Text style={styles.trustStatValue}>{provider.hire_count || 0}</Text>
+            <Text style={styles.trustStatLabel}>Homes used</Text>
+         </View>
+         <View style={styles.trustDivider} />
+         <View style={styles.trustStat}>
+            <Text style={styles.trustStatValue}>{provider.rating_count || 0}</Text>
+            <Text style={styles.trustStatLabel}>Community reviews</Text>
+         </View>
+      </View>
 
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.surface }]} onPress={handleShare}>
-           <View style={[styles.actionIconArea, { backgroundColor: colors.primary + '20' }]}>
-            <Ionicons name="share-social" size={24} color={colors.primary} />
-          </View>
-          <Text style={[styles.actionText, { color: colors.text }]}>Share</Text>
+      <View style={styles.actionGrid}>
+        <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: '#10B981' }]} onPress={handleWhatsApp}>
+          <Ionicons name="logo-whatsapp" size={24} color="#FFF" />
+          <Text style={styles.mainActionText}>WhatsApp</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: '#3B82F6' }]} onPress={handleCall}>
+          <Ionicons name="call" size={24} color="#FFF" />
+          <Text style={styles.mainActionText}>Call</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity style={styles.hireAgainBtn} onPress={handleHireAgain}>
+        <Ionicons name="refresh" size={20} color={colors.primary} />
+        <Text style={[styles.hireAgainText, { color: colors.primary }]}>Hire Again</Text>
+      </TouchableOpacity>
+
+      <View style={[styles.detailsCard, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Experience Details</Text>
+        <Text style={[styles.detailText, { color: colors.textMuted, marginTop: 8 }]}>
+          {provider.description || `${provider.name} is a trusted provider in our gated community.`}
+        </Text>
+        {provider.flat_block ? (
+          <View style={styles.infoRow}>
+            <Ionicons name="location-outline" size={20} color={colors.textMuted} />
+            <Text style={[styles.infoText, { color: colors.text }]}>Usually works at {provider.flat_block}</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={[styles.detailsCard, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Phone Number</Text>
-        <Text style={[styles.detailText, { color: colors.text }]}>{provider.phone}</Text>
-        
-        {provider.flat_block && (
-          <>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Usually Works At</Text>
-            <Text style={[styles.detailText, { color: colors.textMuted }]}>{provider.flat_block}</Text>
-          </>
-        )}
-
-        {provider.description && (
-          <>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Description / Notes</Text>
-            <Text style={[styles.detailText, { color: colors.textMuted }]}>{provider.description}</Text>
-          </>
-        )}
+         <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 16 }]}>Rate this Provider</Text>
+         <RatingStars rating={provider.user_rating || 0} onRating={handleRating} size={36} isLightMode={true} />
+         <Text style={styles.reviewNote}>Reviews are only visible to our community members.</Text>
       </View>
 
-      <View style={[styles.detailsCard, { backgroundColor: colors.surface }]}>
-         <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 8 }]}>Your Rating</Text>
-         <RatingStars rating={provider.user_rating || 0} onRating={handleRating} size={32} isLightMode={true} />
+      <View style={styles.actionRowAlt}>
+         <TouchableOpacity style={styles.altBtn} onPress={handleShare}>
+            <Ionicons name="share-outline" size={20} color={colors.textMuted} />
+            <Text style={[styles.altBtnText, { color: colors.textMuted }]}>Share Contact</Text>
+         </TouchableOpacity>
       </View>
 
-      {user?.id === provider.created_by && (
+      {user?.id === provider.created_by ? (
          <View style={styles.adminControls}>
             <TouchableOpacity style={[styles.dangerBtn, { borderColor: colors.accent }]} onPress={handleDelete}>
               <Ionicons name="trash-outline" size={20} color={colors.accent} />
               <Text style={{ color: colors.accent, marginLeft: 8, fontWeight: '600' }}>Delete Provider</Text>
             </TouchableOpacity>
          </View>
-      )}
+      ) : null}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerCard: {
-    padding: 24,
-    paddingTop: 32,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  badgeText: {
-    color: '#FFF',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  iconButton: {
-    padding: 4,
-  },
-  name: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 8,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  ratingText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    padding: 16,
-    gap: 16,
-  },
-  actionBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3.84,
-    elevation: 2,
-    gap: 12,
-  },
-  actionIconArea: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  detailsCard: {
-    margin: 16,
-    marginTop: 0,
-    padding: 20,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3.84,
-    elevation: 2,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  detailText: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  divider: {
-    height: 1,
-    marginVertical: 16,
-  },
-  adminControls: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  dangerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  }
+  container: { flex: 1 },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  headerCard: { padding: 24, paddingTop: 60, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  headerContent: { flexDirection: 'row', alignItems: 'center', gap: 20, marginBottom: 10 },
+  imagePlaceholderLarge: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+  headerInfo: { flex: 1 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
+  name: { fontSize: 24, fontWeight: '800', color: '#FFF', letterSpacing: -0.5 },
+  verifiedBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, gap: 4 },
+  verifiedText: { color: '#FFF', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
+  categoryTextDisp: { fontSize: 16, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginTop: 4 },
+  ratingRowDisp: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  ratingValueDisp: { color: '#FFF', fontSize: 18, fontWeight: '700' },
+  ratingCountDisp: { color: 'rgba(255,255,255,0.7)', fontSize: 14 },
+  iconButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
+  trustBanner: { flexDirection: 'row', backgroundColor: '#FFF', marginHorizontal: 20, marginTop: -25, borderRadius: 16, padding: 20, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 },
+  trustStat: { flex: 1, alignItems: 'center' },
+  trustStatValue: { fontSize: 20, fontWeight: '800', color: '#1A202C' },
+  trustStatLabel: { fontSize: 12, color: '#718096', fontWeight: '500', marginTop: 2 },
+  trustDivider: { width: 1, height: '100%', backgroundColor: '#E2E8F0' },
+  actionGrid: { flexDirection: 'row', padding: 20, gap: 15 },
+  mainActionBtn: { flex: 1, flexDirection: 'row', height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', gap: 10, elevation: 2 },
+  mainActionText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+  hireAgainBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, marginBottom: 20, padding: 16, borderRadius: 16, borderWidth: 1.5, borderColor: '#E2E8F0', gap: 8 },
+  hireAgainText: { fontSize: 15, fontWeight: '700' },
+  detailsCard: { backgroundColor: '#FFF', marginHorizontal: 20, marginBottom: 20, padding: 24, borderRadius: 24, elevation: 1 },
+  sectionTitle: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
+  detailText: { fontSize: 15, lineHeight: 22 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
+  infoText: { fontSize: 15, fontWeight: '500' },
+  reviewNote: { fontSize: 12, color: '#9CA3AF', marginTop: 12, textAlign: 'center' },
+  actionRowAlt: { padding: 20, paddingBottom: 40, alignItems: 'center' },
+  altBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  altBtnText: { fontSize: 14, fontWeight: '600' },
+  adminControls: { padding: 20, paddingBottom: 60 },
+  dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 18, borderRadius: 16, borderWidth: 1 }
 });

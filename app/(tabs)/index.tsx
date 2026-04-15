@@ -9,18 +9,67 @@ import { ProviderCard } from '../../components/ProviderCard';
 import { SearchBar } from '../../components/SearchBar';
 import { CategoryFilter } from '../../components/CategoryFilter';
 import { EmptyState } from '../../components/EmptyState';
+import { CommunityInsights } from '../../components/CommunityInsights';
+import { ActiveFundTeaser } from '../../components/ActiveFundTeaser';
 import { ProviderWithInteraction } from '../../lib/database.types';
 import Toast from 'react-native-toast-message';
+
+const isMissingRelationError = (error: { code?: string; message?: string } | null) =>
+  error?.code === 'PGRST205' ||
+  error?.message?.includes("Could not find the table 'public.provider_hires'");
 
 export default function HomeScreen() {
   const [providers, setProviders] = useState<ProviderWithInteraction[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [insights, setInsights] = useState<any[]>([]);
+  const [activeFund, setActiveFund] = useState<any>(null);
   const { user, communityId } = useAuth();
   const router = useRouter();
 
   const colors = Colors.light;
+
+  const fetchCommunityStats = useCallback(async () => {
+    if (!communityId) return;
+    try {
+      // 1. Fetch Insights
+      const { data: insightsData, error: insightsError } = await supabase
+        .rpc('get_community_insights', { p_community_id: communityId });
+      
+      if (!insightsError && insightsData) {
+        setInsights([
+          { title: 'Most hired', value: insightsData.most_hired_category, icon: 'people', color: '#10B981' },
+          { title: 'Spent this month', value: `₹${insightsData.total_spent_month.toLocaleString()}`, icon: 'cash', color: '#3B82F6' },
+          { title: 'Contributions', value: `${insightsData.contribution_percentage}%`, icon: 'checkmark-circle', color: '#F59E0B' },
+        ]);
+      }
+
+      // 2. Fetch Active Fund (most recent event with a goal)
+      const { data: fundData } = await supabase
+        .from('events')
+        .select('*, event_transactions(amount, type)')
+        .eq('community_id', communityId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (fundData) {
+        const collected = fundData.event_transactions
+          ?.filter((t: any) => t.type === 'income')
+          .reduce((sum: number, t: any) => sum + Number(t.amount), 0) || 0;
+        
+        setActiveFund({
+          id: fundData.id,
+          title: fundData.title,
+          collected: collected,
+          goal: fundData.goal_amount || 0
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+    }
+  }, [communityId]);
 
   const fetchProviders = useCallback(async () => {
     if (!communityId) return;
@@ -52,11 +101,24 @@ export default function HomeScreen() {
 
       if (favoritesError) throw favoritesError;
 
+      // 3. Fetch hire counts for all providers in this community
+      const { data: hiresData, error: hiresError } = await supabase
+        .from('provider_hires')
+        .select('provider_id');
+
+      if (hiresError && !isMissingRelationError(hiresError)) throw hiresError;
+
+      const hireCounts: Record<string, number> = {};
+      (hiresData ?? []).forEach(h => {
+        hireCounts[h.provider_id] = (hireCounts[h.provider_id] || 0) + 1;
+      });
+
       const favoriteIds = new Set(favoritesData?.map(f => f.provider_id));
 
       const mergedData = providersData.map(provider => ({
         ...provider,
-        is_favorite: favoriteIds.has(provider.id)
+        is_favorite: favoriteIds.has(provider.id),
+        hire_count: hireCounts[provider.id] || 0
       }));
 
       setProviders(mergedData);
@@ -68,11 +130,12 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetchProviders();
-  }, [fetchProviders]);
+    fetchCommunityStats();
+  }, [fetchProviders, fetchCommunityStats]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchProviders();
+    await Promise.all([fetchProviders(), fetchCommunityStats()]);
     setRefreshing(false);
   };
 
@@ -117,19 +180,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.filterSection}>
-        <SearchBar 
-          value={searchQuery} 
-          onChangeText={setSearchQuery} 
-          isLightMode={true} 
-        />
-        <CategoryFilter 
-          selectedCategory={selectedCategory} 
-          onSelectCategory={setSelectedCategory} 
-          isLightMode={true} 
-        />
-      </View>
-
       <FlatList
         data={providers}
         keyExtractor={(item) => item.id}
@@ -145,6 +195,34 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+        ListHeaderComponent={
+          <>
+            {insights.length > 0 && <CommunityInsights insights={insights} />}
+            
+            {activeFund && activeFund.goal > 0 && (
+              <ActiveFundTeaser 
+                title={activeFund.title}
+                collected={activeFund.collected}
+                goal={activeFund.goal}
+                onPress={() => router.push(`/funds/${activeFund.id}`)}
+              />
+            )}
+
+            <View style={styles.filterSection}>
+              <Text style={styles.sectionTitle}>Find Trusted Help</Text>
+              <SearchBar 
+                value={searchQuery} 
+                onChangeText={setSearchQuery} 
+                isLightMode={true} 
+              />
+              <CategoryFilter 
+                selectedCategory={selectedCategory} 
+                onSelectCategory={setSelectedCategory} 
+                isLightMode={true} 
+              />
+            </View>
+          </>
         }
         ListEmptyComponent={
           <EmptyState 
@@ -199,10 +277,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterSection: {
+    paddingHorizontal: 24,
+    marginTop: 10,
     marginBottom: 8,
   },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 16,
+    letterSpacing: -0.3,
+  },
   listContent: {
-    padding: 20,
     paddingBottom: 100,
   },
   fab: {
@@ -215,7 +300,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
-    shadowColor: '#4F46E5',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
