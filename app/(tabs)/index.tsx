@@ -11,7 +11,8 @@ import { CategoryFilter } from '../../components/CategoryFilter';
 import { EmptyState } from '../../components/EmptyState';
 import { CommunityInsights } from '../../components/CommunityInsights';
 import { ActiveFundTeaser } from '../../components/ActiveFundTeaser';
-import { ProviderWithInteraction } from '../../lib/database.types';
+import { VisitCard } from '../../components/VisitCard';
+import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
 import Toast from 'react-native-toast-message';
 import { isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
@@ -19,8 +20,12 @@ const isMissingRelationError = (error: { code?: string; message?: string } | nul
   error?.code === 'PGRST205' ||
   error?.message?.includes("Could not find the table 'public.provider_hires'");
 
+const VISIT_CATEGORIES = ['All', 'Cleaning', 'Repair', 'Pest Control', 'Electrician', 'Plumber', 'AC Service', 'Painting', 'Other'];
+
 export default function HomeScreen() {
+  const [activeSegment, setActiveSegment] = useState<'providers' | 'visits'>('providers');
   const [providers, setProviders] = useState<ProviderWithInteraction[]>([]);
+  const [visits, setVisits] = useState<VisitWithJoinerData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -96,7 +101,7 @@ export default function HomeScreen() {
         .eq('community_id', communityId)
         .order('avg_rating', { ascending: false });
 
-      if (selectedCategory) {
+      if (selectedCategory && selectedCategory !== 'All') {
         query = query.eq('category', selectedCategory);
       }
 
@@ -142,19 +147,60 @@ export default function HomeScreen() {
     }
   }, [communityId, selectedCategory, searchQuery, user?.id]);
 
+  const fetchVisits = useCallback(async () => {
+    if (!communityId || !user?.id) return;
+
+    try {
+      const { data, error } = await supabase.rpc('get_community_visits', {
+        p_community_id: communityId,
+        p_user_id: user.id
+      });
+
+      if (error) throw error;
+
+      let processedData = data as VisitWithJoinerData[];
+
+      // Client-side filtering for search and category (RPC already filters date)
+      if (selectedCategory && selectedCategory !== 'All') {
+        processedData = processedData.filter(v => v.category === selectedCategory);
+      }
+
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        processedData = processedData.filter(v => 
+          v.title.toLowerCase().includes(query) || 
+          v.provider_name.toLowerCase().includes(query) ||
+          v.category.toLowerCase().includes(query)
+        );
+      }
+
+      setVisits(processedData);
+    } catch (error: any) {
+      console.error(error);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load visits' });
+    }
+  }, [communityId, user?.id, searchQuery, selectedCategory]);
+
   useEffect(() => {
-    fetchProviders();
+    if (activeSegment === 'providers') {
+      fetchProviders();
+    } else {
+      fetchVisits();
+    }
     fetchCommunityStats();
-  }, [fetchProviders, fetchCommunityStats]);
+  }, [activeSegment, fetchProviders, fetchVisits, fetchCommunityStats]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchProviders(), fetchCommunityStats()]);
+    if (activeSegment === 'providers') {
+      await Promise.all([fetchProviders(), fetchCommunityStats()]);
+    } else {
+      await Promise.all([fetchVisits(), fetchCommunityStats()]);
+    }
     setRefreshing(false);
   };
 
   const handleToggleFavorite = async (providerId: string, isCurrentlyFavorite: boolean) => {
-    // Optimistic UI update
     setProviders(current => 
       current.map(p => p.id === providerId ? { ...p, is_favorite: !isCurrentlyFavorite } : p)
     );
@@ -171,12 +217,18 @@ export default function HomeScreen() {
           .insert({ user_id: user?.id as string, provider_id: providerId });
       }
     } catch (error) {
-      // Revert on error
       setProviders(current => 
         current.map(p => p.id === providerId ? { ...p, is_favorite: isCurrentlyFavorite } : p)
       );
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update favorites' });
     }
+  };
+
+  const handleJoinVisit = async (visitId: string) => {
+    // Navigate to detail for the join flow or handle a quick join if needed.
+    // Spec says Join button on card keep friction low, so maybe a quick join modal later.
+    // For now, let's navigate to detail or show a toast.
+    router.push(`/visits/${visitId}`);
   };
 
   return (
@@ -194,16 +246,64 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.segmentedControl}>
+        <TouchableOpacity 
+          style={[styles.segmentBtn, activeSegment === 'providers' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          onPress={() => {
+            setActiveSegment('providers');
+            setSelectedCategory(null);
+            setSearchQuery('');
+          }}
+        >
+          <Text style={[styles.segmentText, { color: activeSegment === 'providers' ? '#FFF' : colors.textMuted }]}>Providers</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.segmentBtn, activeSegment === 'visits' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          onPress={() => {
+            setActiveSegment('visits');
+            setSelectedCategory(null);
+            setSearchQuery('');
+          }}
+        >
+          <Text style={[styles.segmentText, { color: activeSegment === 'visits' ? '#FFF' : colors.textMuted }]}>Visits</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        data={providers}
+        data={activeSegment === 'providers' ? providers : visits}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <ProviderCard 
-            provider={item} 
-            onPress={() => router.push(`/provider/${item.id}`)}
-            onToggleFavorite={handleToggleFavorite}
-            isLightMode={true}
-          />
+          activeSegment === 'providers' ? (
+            <ProviderCard 
+              provider={item as ProviderWithInteraction} 
+              onPress={() => router.push(`/provider/${item.id}`)}
+              onToggleFavorite={handleToggleFavorite}
+              isLightMode={true}
+            />
+          ) : (
+            <VisitCard 
+              id={item.id}
+              title={(item as VisitWithJoinerData).title}
+              providerName={(item as VisitWithJoinerData).provider_name}
+              hasProviderProfile={!!(item as VisitWithJoinerData).provider_id}
+              category={(item as VisitWithJoinerData).category}
+              visitDate={(item as VisitWithJoinerData).visit_date}
+              visitTimeSlot={(item as VisitWithJoinerData).visit_time_slot}
+              estimatedCost={(item as VisitWithJoinerData).estimated_cost || undefined}
+              creatorName={(item as VisitWithJoinerData).creator_name || 'Neighbor'}
+              creatorFlat={(item as VisitWithJoinerData).creator_flat || undefined}
+              creatorAvatarUrl={(item as VisitWithJoinerData).creator_avatar_url || undefined}
+              createdAt={(item as VisitWithJoinerData).created_at}
+              isCreator={(item as VisitWithJoinerData).created_by === user?.id}
+              joinerCount={Number((item as VisitWithJoinerData).joiner_count || 0)}
+              maxJoiners={(item as VisitWithJoinerData).max_joiners || undefined}
+              hasUserJoined={!!(item as VisitWithJoinerData).has_user_joined}
+              status={(item as VisitWithJoinerData).status}
+              onJoin={() => handleJoinVisit(item.id)}
+              onUnjoin={() => router.push(`/visits/${item.id}`)}
+              onPress={() => router.push(`/visits/${item.id}`)}
+            />
+          )
         )}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -212,7 +312,7 @@ export default function HomeScreen() {
         }
         ListHeaderComponent={
           <>
-            {insights.length > 0 && <CommunityInsights insights={insights} />}
+            {activeSegment === 'providers' && insights.length > 0 && <CommunityInsights insights={insights} />}
             
             {activeFund && activeFund.goal > 0 && (
               <ActiveFundTeaser 
@@ -224,15 +324,19 @@ export default function HomeScreen() {
             )}
 
             <View style={styles.filterSection}>
-              <Text style={styles.sectionTitle}>Find Trusted Help</Text>
+              <Text style={styles.sectionTitle}>
+                {activeSegment === 'providers' ? 'Find Trusted Help' : 'Upcoming Community Visits'}
+              </Text>
               <SearchBar 
                 value={searchQuery} 
                 onChangeText={setSearchQuery} 
+                placeholder={activeSegment === 'providers' ? "Search help..." : "Search visits..."}
                 isLightMode={true} 
               />
               <CategoryFilter 
                 selectedCategory={selectedCategory} 
                 onSelectCategory={setSelectedCategory} 
+                categories={activeSegment === 'providers' ? undefined : VISIT_CATEGORIES}
                 isLightMode={true} 
               />
             </View>
@@ -240,9 +344,10 @@ export default function HomeScreen() {
         }
         ListEmptyComponent={
           <EmptyState 
-            icon="people" 
-            title="No Providers Found" 
-            message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to add a trusted service provider!"}
+            icon={activeSegment === 'providers' ? "people" : "calendar"} 
+            title={activeSegment === 'providers' ? "No Providers Found" : "No Upcoming Visits"} 
+            message={searchQuery || selectedCategory ? "Try adjusting your filters" : 
+              (activeSegment === 'providers' ? "Be the first to add a trusted service provider!" : "Be the first to share when a provider is coming!")}
             isLightMode={true}
           />
         }
@@ -250,7 +355,7 @@ export default function HomeScreen() {
 
       <TouchableOpacity 
         style={[styles.fab, { backgroundColor: colors.primary }]}
-        onPress={() => router.push('/provider/add')}
+        onPress={() => router.push(activeSegment === 'providers' ? '/provider/add' : '/visits/add')}
         activeOpacity={0.9}
       >
         <Ionicons name="add" size={32} color="#FFF" />
@@ -289,6 +394,26 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  segmentedControl: {
+    flexDirection: 'row',
+    marginHorizontal: 24,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 16,
+  },
+  segmentBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  segmentText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   filterSection: {
     paddingHorizontal: 24,

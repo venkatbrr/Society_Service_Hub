@@ -5,13 +5,19 @@ import { Colors } from '../constants/Colors';
 
 type RatingStarsProps = {
   rating: number;
-  onRating: (rating: number) => void;
+  onRating?: (rating: number) => void;
   size?: number;
   readonly?: boolean;
   isLightMode: boolean;
 };
 
-export const RatingStars = ({ rating, onRating, size = 24, readonly = false, isLightMode }: RatingStarsProps) => {
+export const RatingStars = ({ 
+  rating, 
+  onRating = () => {}, 
+  size = 24, 
+  readonly = false, 
+  isLightMode 
+}: RatingStarsProps) => {
   const colors = isLightMode ? Colors.light : Colors.dark;
 
   return (

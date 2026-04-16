@@ -28,6 +28,7 @@ export type Database = {
           avatar_url: string | null;
           community_id: string | null;
           app_role: 'admin' | 'resident';
+          flat_number: string | null;
           created_at: string;
         };
         Insert: {
@@ -36,6 +37,7 @@ export type Database = {
           avatar_url?: string | null;
           community_id?: string | null;
           app_role?: 'admin' | 'resident';
+          flat_number?: string | null;
           created_at?: string;
         };
         Update: {
@@ -44,6 +46,7 @@ export type Database = {
           avatar_url?: string | null;
           community_id?: string | null;
           app_role?: 'admin' | 'resident';
+          flat_number?: string | null;
           created_at?: string;
         };
       };
@@ -97,23 +100,228 @@ export type Database = {
           updated_at?: string;
         };
       };
+      service_visits: {
+        Row: {
+          id: string;
+          community_id: string;
+          created_by: string;
+          provider_id: string | null;
+          provider_name: string;
+          provider_phone: string | null;
+          provider_whatsapp: string | null;
+          title: string;
+          description: string | null;
+          category: string;
+          visit_date: string;
+          visit_time_slot: string;
+          estimated_cost: string | null;
+          max_joiners: number | null;
+          status: 'upcoming' | 'in_progress' | 'completed' | 'cancelled';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          community_id: string;
+          created_by: string;
+          provider_id?: string | null;
+          provider_name: string;
+          provider_phone?: string | null;
+          provider_whatsapp?: string | null;
+          title: string;
+          description?: string | null;
+          category: string;
+          visit_date: string;
+          visit_time_slot: string;
+          estimated_cost?: string | null;
+          max_joiners?: number | null;
+          status?: 'upcoming' | 'in_progress' | 'completed' | 'cancelled';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          community_id?: string;
+          created_by?: string;
+          provider_id?: string | null;
+          provider_name?: string;
+          provider_phone?: string | null;
+          provider_whatsapp?: string | null;
+          title?: string;
+          description?: string | null;
+          category?: string;
+          visit_date?: string;
+          visit_time_slot?: string;
+          estimated_cost?: string | null;
+          max_joiners?: number | null;
+          status?: 'upcoming' | 'in_progress' | 'completed' | 'cancelled';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      visit_joiners: {
+        Row: {
+          id: string;
+          visit_id: string;
+          user_id: string;
+          note: string | null;
+          flat_number: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          visit_id: string;
+          user_id: string;
+          note?: string | null;
+          flat_number?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          visit_id?: string;
+          user_id?: string;
+          note?: string | null;
+          flat_number?: string | null;
+          created_at?: string;
+        };
+      };
+      resident_businesses: {
+        Row: {
+          id: string;
+          community_id: string;
+          owner_id: string;
+          name: string;
+          description: string | null;
+          category: string;
+          cover_photo_url: string | null;
+          whatsapp_number: string | null;
+          phone_number: string | null;
+          operating_hours: string | null;
+          order_cutoff: string | null;
+          is_accepting_orders: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          community_id: string;
+          owner_id: string;
+          name: string;
+          description?: string | null;
+          category: string;
+          cover_photo_url?: string | null;
+          whatsapp_number?: string | null;
+          phone_number?: string | null;
+          operating_hours?: string | null;
+          order_cutoff?: string | null;
+          is_accepting_orders?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          community_id?: string;
+          owner_id?: string;
+          name?: string;
+          description?: string | null;
+          category?: string;
+          cover_photo_url?: string | null;
+          whatsapp_number?: string | null;
+          phone_number?: string | null;
+          operating_hours?: string | null;
+          order_cutoff?: string | null;
+          is_accepting_orders?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      business_offerings: {
+        Row: {
+          id: string;
+          business_id: string;
+          name: string;
+          description: string | null;
+          price: number;
+          price_unit: string;
+          category: string | null;
+          photo_url: string | null;
+          availability: string;
+          is_available: boolean;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          name: string;
+          description?: string | null;
+          price: number;
+          price_unit?: string;
+          category?: string | null;
+          photo_url?: string | null;
+          availability?: string;
+          is_available?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          business_id?: string;
+          name?: string;
+          description?: string | null;
+          price?: number;
+          price_unit?: string;
+          category?: string | null;
+          photo_url?: string | null;
+          availability?: string;
+          is_available?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+      };
+      business_inquiries: {
+        Row: {
+          id: string;
+          business_id: string;
+          user_id: string;
+          inquiry_type: 'whatsapp' | 'call';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          user_id: string;
+          inquiry_type: 'whatsapp' | 'call';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          business_id?: string;
+          user_id?: string;
+          inquiry_type?: 'whatsapp' | 'call';
+          created_at?: string;
+        };
+      };
       favorites: {
         Row: {
           id: string;
           user_id: string;
-          provider_id: string;
+          provider_id: string | null;
+          business_id: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          provider_id: string;
+          provider_id?: string | null;
+          business_id?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
-          provider_id?: string;
+          provider_id?: string | null;
+          business_id?: string | null;
           created_at?: string;
         };
       };
@@ -121,21 +329,24 @@ export type Database = {
         Row: {
           id: string;
           user_id: string;
-          provider_id: string;
+          provider_id: string | null;
+          business_id: string | null;
           rating: number;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          provider_id: string;
+          provider_id?: string | null;
+          business_id?: string | null;
           rating: number;
           created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
-          provider_id?: string;
+          provider_id?: string | null;
+          business_id?: string | null;
           rating?: number;
           created_at?: string;
         };
@@ -272,4 +483,29 @@ export type ProviderWithInteraction = BaseDatabaseProvider & {
   is_favorite?: boolean;
   user_rating?: number | null;
   hire_count?: number;
+};
+
+export type BaseResidentBusiness = Tables<'resident_businesses'>;
+export type BusinessWithInteraction = BaseResidentBusiness & {
+  is_favorite?: boolean;
+  user_rating?: number | null;
+  inquiry_count?: number;
+  avg_rating?: number;
+  rating_count?: number;
+  owner_name?: string;
+  owner_flat?: string;
+};
+
+export type VisitWithJoinerData = Tables<'service_visits'> & {
+  creator_name?: string;
+  creator_flat?: string;
+  creator_avatar_url?: string;
+  joiner_count?: number;
+  has_user_joined?: boolean;
+};
+
+export type VisitJoinerWithProfile = Tables<'visit_joiners'> & {
+  user_name?: string;
+  avatar_url?: string;
+  joined_at?: string;
 };

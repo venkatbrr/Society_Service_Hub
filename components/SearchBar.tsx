@@ -7,9 +7,10 @@ type SearchBarProps = {
   value: string;
   onChangeText: (text: string) => void;
   isLightMode: boolean;
+  placeholder?: string;
 };
 
-export const SearchBar = ({ value, onChangeText, isLightMode }: SearchBarProps) => {
+export const SearchBar = ({ value, onChangeText, isLightMode, placeholder = "Search..." }: SearchBarProps) => {
   const colors = isLightMode ? Colors.light : Colors.dark;
 
   return (
@@ -17,7 +18,7 @@ export const SearchBar = ({ value, onChangeText, isLightMode }: SearchBarProps) 
       <Ionicons name="search" size={20} color={colors.icon} style={styles.icon} />
       <TextInput
         style={[styles.input, { color: colors.text }]}
-        placeholder="Search providers..."
+        placeholder={placeholder}
         placeholderTextColor={colors.textMuted}
         value={value}
         onChangeText={onChangeText}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
@@ -7,8 +8,11 @@ import { Colors } from '../../constants/Colors';
 import Toast from 'react-native-toast-message';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, signOut, communityId, appRole } = useAuth();
   const [communityDetails, setCommunityDetails] = useState<{name: string, code: string} | null>(null);
+  const [userBusiness, setUserBusiness] = useState<{id: string, name: string, is_accepting_orders: boolean} | null>(null);
+  const [loadingBusiness, setLoadingBusiness] = useState(true);
 
   const colors = Colors.light;
 
@@ -26,8 +30,24 @@ export default function ProfileScreen() {
         }
       }
     }
+
+    async function fetchUserBusiness() {
+      if (user?.id && communityId) {
+        const { data } = await supabase
+          .from('resident_businesses')
+          .select('id, name, is_accepting_orders')
+          .eq('owner_id', user.id)
+          .eq('community_id', communityId)
+          .maybeSingle();
+        
+        setUserBusiness(data);
+        setLoadingBusiness(false);
+      }
+    }
+
     fetchCommunity();
-  }, [communityId]);
+    fetchUserBusiness();
+  }, [communityId, user?.id]);
 
   const handleSignOut = async () => {
     try {
@@ -73,9 +93,47 @@ export default function ProfileScreen() {
 
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeader}>
-          <Ionicons name="business" size={20} color={colors.primary} />
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>My Community</Text>
+          <Ionicons name="storefront-outline" size={20} color={colors.primary} />
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Resident Business</Text>
         </View>
+
+        {loadingBusiness ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : userBusiness ? (
+          <TouchableOpacity 
+            style={styles.businessCTA} 
+            onPress={() => router.push('/business/manage')}
+          >
+            <View style={styles.businessCTAContent}>
+              <View>
+                <Text style={[styles.businessNameText, { color: colors.text }]}>{userBusiness.name}</Text>
+                <View style={styles.statusBadgeRow}>
+                  <View style={[styles.statusDot, { backgroundColor: userBusiness.is_accepting_orders ? '#10B981' : '#EF4444' }]} />
+                  <Text style={[styles.statusText, { color: userBusiness.is_accepting_orders ? '#10B981' : '#EF4444' }]}>
+                    {userBusiness.is_accepting_orders ? 'Open' : 'Closed'}
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity 
+            style={[styles.startBusinessBtn, { backgroundColor: colors.primary + '10' }]}
+            onPress={() => router.push('/business/add')}
+          >
+            <View style={styles.startBusinessContent}>
+              <View style={styles.startBusinessText}>
+                <Text style={[styles.ctaTitle, { color: colors.primary }]}>Start Home Business</Text>
+                <Text style={[styles.ctaSub, { color: colors.textMuted }]}>Share your skills or products with neighbors</Text>
+              </View>
+              <Ionicons name="add-circle" size={24} color={colors.primary} />
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: colors.textMuted }]}>NAME</Text>
@@ -245,5 +303,56 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     fontSize: 12,
     fontWeight: '500',
+  },
+  businessCTA: {
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: '#F9FAFB',
+  },
+  businessCTAContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  businessNameText: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  statusBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  startBusinessBtn: {
+    padding: 16,
+    borderRadius: 16,
+  },
+  startBusinessContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  startBusinessText: {
+    flex: 1,
+  },
+  ctaTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  ctaSub: {
+    fontSize: 12,
+    lineHeight: 16,
   },
 });

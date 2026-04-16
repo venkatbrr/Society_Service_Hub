@@ -7,10 +7,17 @@ type CategoryFilterProps = {
   selectedCategory: string | null;
   onSelectCategory: (category: string | null) => void;
   isLightMode: boolean;
+  categories?: string[];
 };
 
-export const CategoryFilter = ({ selectedCategory, onSelectCategory, isLightMode }: CategoryFilterProps) => {
+export const CategoryFilter = ({ 
+  selectedCategory, 
+  onSelectCategory, 
+  isLightMode,
+  categories = CATEGORIES 
+}: CategoryFilterProps) => {
   const colors = isLightMode ? Colors.light : Colors.dark;
+  const displayCategories = categories.filter(c => c !== 'All');
 
   return (
     <View style={styles.container}>
@@ -35,7 +42,7 @@ export const CategoryFilter = ({ selectedCategory, onSelectCategory, isLightMode
           </Text>
         </TouchableOpacity>
 
-        {CATEGORIES.map((category) => {
+        {displayCategories.map((category) => {
           const isSelected = selectedCategory === category;
           return (
             <TouchableOpacity
