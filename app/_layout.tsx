@@ -3,6 +3,8 @@ import { Stack, useRouter, useSegments, Slot } from 'expo-router';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { configureGoogleSignIn } from '../lib/auth';
 import Toast from 'react-native-toast-message';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NotificationProvider } from '../context/NotificationContext';
 
 function RootLayoutNav() {
   const { session, communityId, isLoading } = useAuth();
@@ -44,9 +46,13 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-      <Toast />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <NotificationProvider>
+          <RootLayoutNav />
+          <Toast />
+        </NotificationProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

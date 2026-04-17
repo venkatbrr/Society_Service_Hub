@@ -30,15 +30,26 @@ export default function VisitDetailScreen() {
     if (!id || !user?.id) return;
 
     try {
-      // 1. Fetch Visit details (with creator info)
-      const { data, error } = await supabase.rpc('get_community_visits', {
-        p_community_id: profile?.community_id || '',
-        p_user_id: user.id
-      });
+      // 1. Start parallel fetch for visit and joiners
+      // 'get_community_visits' fetches upcoming visits, but may not include full details for direct link
+      const [visitsResult, joinersResult] = await Promise.all([
+        supabase.rpc('get_community_visits', {
+          p_community_id: profile?.community_id || '',
+          p_user_id: user.id
+        }),
+        supabase.rpc('get_visit_joiners', {
+          p_visit_id: id
+        })
+      ]);
+
+      if (joinersResult.error) throw joinersResult.error;
+      const joinersData = joinersResult.data || [];
+      setJoiners(joinersData);
+
+      const currentVisit = (visitsResult.data as VisitWithJoinerData[] || []).find(v => v.id === id);
       
-      const currentVisit = (data as VisitWithJoinerData[] || []).find(v => v.id === id);
       if (!currentVisit) {
-        // Might be in progress or completed, fallback to direct query if not in upcoming
+        // Fallback: If not in the "upcoming/activerpc" list, fetch direct
         const { data: directData, error: directError } = await supabase
           .from('service_visits')
           .select(`
@@ -55,22 +66,13 @@ export default function VisitDetailScreen() {
           creator_name: directData.creator.full_name,
           creator_flat: directData.creator.flat_number,
           creator_avatar_url: directData.creator.avatar_url,
-          joiner_count: 0 // Will be updated by joiners fetch
+          joiner_count: joinersData.length
         });
       } else {
-          setVisit(currentVisit);
-      }
-
-      // 2. Fetch Joiners
-      const { data: joinersData, error: joinersError } = await supabase.rpc('get_visit_joiners', {
-        p_visit_id: id
-      });
-      if (joinersError) throw joinersError;
-      setJoiners(joinersData || []);
-
-      // If we did direct fetch, update joiner count
-      if (!currentVisit) {
-          setVisit(prev => prev ? { ...prev, joiner_count: joinersData?.length || 0 } : null);
+          setVisit({
+            ...currentVisit,
+            joiner_count: joinersData.length // Ensure accurate count from dedicated joiners fetch
+          });
       }
 
     } catch (e) {
@@ -352,7 +354,10 @@ export default function VisitDetailScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.modalBody}>
+                <KeyboardAvoidingView 
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.modalBody}
+                >
                     <View style={styles.inputGroup}>
                         <Text style={[styles.label, { color: colors.text }]}>MY FLAT NUMBER</Text>
                         <TextInput 
@@ -382,7 +387,7 @@ export default function VisitDetailScreen() {
                     >
                         {joining ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryBtnText}>Confirm Join</Text>}
                     </TouchableOpacity>
-                </View>
+                </KeyboardAvoidingView>
             </View>
         </View>
       </Modal>
@@ -603,7 +608,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    flex: 1,
   },
   primaryBtnText: {
     color: '#FFF',
@@ -654,6 +658,7 @@ const styles = StyleSheet.create({
       borderTopLeftRadius: 32,
       borderTopRightRadius: 32,
       padding: 32,
+      paddingBottom: Platform.OS === 'ios' ? 44 : 32,
   },
   modalHeader: {
       flexDirection: 'row',

@@ -29,24 +29,23 @@ export default function BusinessBrowseScreen() {
     if (!communityId) return;
     
     try {
-      const { data, error } = await supabase.rpc('get_community_businesses', {
-        p_community_id: communityId
-      });
+      // Fetch businesses and favorites in parallel
+      const [bizResult, favoritesResult] = await Promise.all([
+        supabase.rpc('get_community_businesses', {
+          p_community_id: communityId
+        }),
+        supabase.from('favorites')
+          .select('business_id')
+          .eq('user_id', user?.id as string)
+          .not('business_id', 'is', null)
+      ]);
 
-      if (error) throw error;
+      if (bizResult.error) throw bizResult.error;
+      if (favoritesResult.error) throw favoritesResult.error;
 
-      // Fetch user's favorites for businesses
-      const { data: favoritesData, error: favoritesError } = await supabase
-        .from('favorites')
-        .select('business_id')
-        .eq('user_id', user?.id as string)
-        .not('business_id', 'is', null);
+      const favoriteIds = new Set(favoritesResult.data?.map(f => f.business_id));
 
-      if (favoritesError) throw favoritesError;
-
-      const favoriteIds = new Set(favoritesData?.map(f => f.business_id));
-
-      let processedData = (data as BusinessWithInteraction[]).map(biz => ({
+      let processedData = (bizResult.data as BusinessWithInteraction[]).map(biz => ({
         ...biz,
         is_favorite: favoriteIds.has(biz.id)
       }));
@@ -239,7 +238,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 32,
     right: 24,
     width: 64,
     height: 64,
@@ -251,5 +250,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+    zIndex: 10,
   },
 });

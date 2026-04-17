@@ -9,12 +9,14 @@ import { useAuth } from '../../context/AuthContext';
 import { Colors } from '../../constants/Colors';
 import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CATEGORIES = ['Food', 'Baked Goods', 'Crafts', 'Beauty', 'Tailoring', 'Tutoring', 'Other'];
 
 export default function AddBusinessScreen() {
   const { user, profile, communityId } = useAuth();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const colors = Colors.light;
 
   const [name, setName] = useState('');
@@ -285,7 +287,7 @@ export default function AddBusinessScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 24) }]}>
         <TouchableOpacity 
           style={[styles.submitBtn, { backgroundColor: colors.primary }]} 
           onPress={handleCreate}
@@ -321,7 +323,7 @@ const styles = StyleSheet.create({
   categoryText: { fontSize: 14, fontWeight: '600' },
   infoCard: { flexDirection: 'row', padding: 16, borderRadius: 16, gap: 12, alignItems: 'center' },
   infoText: { flex: 1, fontSize: 13, fontWeight: '600', lineHeight: 18 },
-  footer: { padding: 24, paddingBottom: 40 },
+  footer: { padding: 24 },
   submitBtn: { height: 58, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
   submitBtnText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
 });

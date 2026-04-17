@@ -32,45 +32,44 @@ export default function ProviderDetailScreen() {
     try {
       if (!id || id === 'add') return;
       
-      const { data, error } = await supabase
+      const { data: providerData, error: providerError } = await supabase
         .from('service_providers')
         .select('*')
         .eq('id', id)
         .single();
 
-      if (error) throw error;
+      if (providerError) throw providerError;
 
-      if (user) {
-         const { data: favs } = await supabase
-           .from('favorites')
-           .select('id')
-           .eq('user_id', user.id)
-           .eq('provider_id', id);
+      if (user && providerData) {
+        // Fetch favorites, ratings, and hire counts in parallel
+        const [favsResult, ratsResult, hireResult] = await Promise.all([
+          supabase.from('favorites')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('provider_id', id),
+          supabase.from('ratings')
+            .select('rating')
+            .eq('user_id', user.id)
+            .eq('provider_id', id)
+            .maybeSingle(),
+          supabase.from('provider_hires')
+            .select('*', { count: 'exact', head: true })
+            .eq('provider_id', id)
+        ]);
 
-         const { data: rats } = await supabase
-           .from('ratings')
-           .select('rating')
-           .eq('user_id', user.id)
-           .eq('provider_id', id)
-           .maybeSingle();
+        const hireCountError = hireResult.error;
+        if (hireCountError && !isMissingRelationError(hireCountError)) {
+          throw hireCountError;
+        }
 
-         const { count: hireCount, error: hireCountError } = await supabase
-           .from('provider_hires')
-           .select('*', { count: 'exact', head: true })
-           .eq('provider_id', id);
-
-         if (hireCountError && !isMissingRelationError(hireCountError)) {
-           throw hireCountError;
-         }
-
-         setProvider({
-           ...data,
-           is_favorite: favs && favs.length > 0,
-           user_rating: rats ? rats.rating : null,
-           hire_count: hireCount || 0
-         });
+        setProvider({
+          ...providerData,
+          is_favorite: !!(favsResult.data && favsResult.data.length > 0),
+          user_rating: ratsResult.data ? ratsResult.data.rating : null,
+          hire_count: hireResult.count || 0
+        });
       } else {
-         setProvider({ ...data, hire_count: 0 });
+        setProvider({ ...providerData, hire_count: 0 });
       }
     } catch (error: any) {
       console.error(error);

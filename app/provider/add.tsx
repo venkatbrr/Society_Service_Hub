@@ -7,10 +7,12 @@ import { Colors } from '../../constants/Colors';
 import { CATEGORIES } from '../../constants/categories';
 import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AddProviderScreen() {
   const { user, communityId } = useAuth();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const colors = Colors.light;
 
   const [name, setName] = useState('');
@@ -126,7 +128,7 @@ export default function AddProviderScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+      <View style={[styles.footer, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 24) }]}>
         <TouchableOpacity 
           style={[styles.saveButton, { backgroundColor: colors.primary }]} 
           onPress={handleSave}
@@ -206,7 +208,6 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 24,
-    paddingBottom: 40,
     borderTopWidth: 1,
     backgroundColor: 'white',
   },

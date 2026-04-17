@@ -8,12 +8,14 @@ import { useAuth } from '../../context/AuthContext';
 import { Colors } from '../../constants/Colors';
 import { ProviderSelector } from '../../components/ProviderSelector';
 import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CATEGORIES = ['Cleaning', 'Repair', 'Pest Control', 'Electrician', 'Plumber', 'AC Service', 'Painting', 'Carpentry', 'Appliance Service', 'Other'];
 
 export default function AddVisitScreen() {
   const router = useRouter();
   const { user, communityId } = useAuth();
+  const insets = useSafeAreaInsets();
   const colors = Colors.light;
 
   const [providerMode, setProviderMode] = useState<'existing' | 'new'>('existing');
@@ -264,7 +266,7 @@ export default function AddVisitScreen() {
         </View>
 
         <TouchableOpacity 
-          style={[styles.submitBtn, { backgroundColor: colors.primary }]} 
+          style={[styles.submitBtn, { backgroundColor: colors.primary, marginBottom: Math.max(insets.bottom, 40) }]} 
           onPress={handleSave}
           disabled={submitting}
         >
@@ -385,7 +387,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 20,
   },
   submitBtnText: {
     color: '#FFF',

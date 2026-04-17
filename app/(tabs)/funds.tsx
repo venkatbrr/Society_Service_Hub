@@ -52,11 +52,15 @@ export default function FundsScreen() {
     try {
       setLoading(true);
 
-      const [fundsResult, transactionsResult, rolesResult, profilesResult] = await Promise.all([
-        supabase.from('events').select('*').eq('community_id', communityId).order('created_at', { ascending: false }),
-        supabase.from('event_transactions').select('event_id, amount, type'),
-        supabase.from('fund_roles').select('*'),
-        supabase.from('profiles').select('id, full_name'),
+      // Fetch everything for these community funds in parallel
+      // We use Supabase resource embedding to get transactions and roles in one go
+      const [fundsResult, profilesResult] = await Promise.all([
+        supabase.from('events')
+          .select('*, event_transactions(amount, type), fund_roles(*)')
+          .eq('community_id', communityId)
+          .order('created_at', { ascending: false }),
+        supabase.from('profiles')
+          .select('id, full_name')
       ]);
 
       if (fundsResult.error) {
@@ -68,24 +72,7 @@ export default function FundsScreen() {
           }
           return;
         }
-
         throw fundsResult.error;
-      }
-
-      const transactions = isMissingFundSchemaError(transactionsResult.error) ? [] : (transactionsResult.data ?? []);
-      const roles = isMissingFundSchemaError(rolesResult.error) ? [] : (rolesResult.data ?? []);
-
-      if ((transactionsResult.error || rolesResult.error) && !hasShownSchemaToastRef.current) {
-        hasShownSchemaToastRef.current = true;
-        Toast.show({ type: 'error', text1: 'Funds partially loaded', text2: getMissingFundSchemaMessage() });
-      }
-
-      if (transactionsResult.error && !isMissingFundSchemaError(transactionsResult.error)) {
-        throw transactionsResult.error;
-      }
-
-      if (rolesResult.error && !isMissingFundSchemaError(rolesResult.error)) {
-        throw rolesResult.error;
       }
 
       if (profilesResult.error) throw profilesResult.error;
@@ -94,15 +81,17 @@ export default function FundsScreen() {
         (profilesResult.data ?? []).map((profile) => [profile.id, profile.full_name?.trim() || 'Resident'])
       );
 
-      const nextFunds = (fundsResult.data ?? []).map((fund) => {
-        const fundTransactions = transactions.filter((transaction) => transaction.event_id === fund.id);
-        const fundRoles = roles.filter((assignment) => assignment.event_id === fund.id);
+      const nextFunds = (fundsResult.data ?? []).map((fund: any) => {
+        const fundTransactions = fund.event_transactions || [];
+        const fundRoles = fund.fund_roles || [];
+        
         const income = fundTransactions
-          .filter((transaction) => transaction.type === 'income')
-          .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+          .filter((transaction: any) => transaction.type === 'income')
+          .reduce((sum: number, transaction: any) => sum + Number(transaction.amount), 0);
+        
         const expense = fundTransactions
-          .filter((transaction) => transaction.type === 'expense')
-          .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+          .filter((transaction: any) => transaction.type === 'expense')
+          .reduce((sum: number, transaction: any) => sum + Number(transaction.amount), 0);
 
         return {
           ...fund,
@@ -113,16 +102,14 @@ export default function FundsScreen() {
           },
           currentRole: getEffectiveFundRole(appRole, fundRoles, user?.id),
           treasurerNames: fundRoles
-            .filter((assignment) => assignment.role === 'treasurer')
-            .map((assignment) => profileNames.get(assignment.user_id) ?? 'Resident'),
-          collectorCount: fundRoles.filter((assignment) => assignment.role === 'collector').length,
+            .filter((assignment: any) => assignment.role === 'treasurer')
+            .map((assignment: any) => profileNames.get(assignment.user_id) ?? 'Resident'),
+          collectorCount: fundRoles.filter((assignment: any) => assignment.role === 'collector').length,
         };
       });
 
       setFunds(nextFunds);
-      if (!transactionsResult.error && !rolesResult.error) {
-        hasShownSchemaToastRef.current = false;
-      }
+      hasShownSchemaToastRef.current = false;
     } catch (error) {
       console.error('Error fetching funds:', error);
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load funds' });
@@ -371,7 +358,7 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 24,
-    bottom: 24,
+    bottom: 32,
     width: 64,
     height: 64,
     borderRadius: 32,
@@ -382,6 +369,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+    zIndex: 10,
   },
   emptyContainer: {
     marginTop: 80,

@@ -15,6 +15,7 @@ import { VisitCard } from '../../components/VisitCard';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
 import Toast from 'react-native-toast-message';
 import { isMissingFundSchemaError } from '../../lib/supabaseErrors';
+import { useNotifications } from '../../context/NotificationContext';
 
 const isMissingRelationError = (error: { code?: string; message?: string } | null) =>
   error?.code === 'PGRST205' ||
@@ -34,47 +35,34 @@ export default function HomeScreen() {
   const { user, communityId } = useAuth();
   const router = useRouter();
 
+  const { unreadCount } = useNotifications();
   const colors = Colors.light;
 
   const fetchCommunityStats = useCallback(async () => {
     if (!communityId) return;
     try {
-      // 1. Fetch Insights
-      const { data: insightsData, error: insightsError } = await supabase
-        .rpc('get_community_insights', { p_community_id: communityId });
-      
-      if (!insightsError && insightsData) {
+      // Fetch insights and active fund in parallel
+      const [insightsResult, fundResult] = await Promise.all([
+        supabase.rpc('get_community_insights', { p_community_id: communityId }),
+        supabase.from('events')
+          .select('*, event_transactions(amount, type)')
+          .eq('community_id', communityId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      ]);
+
+      if (!insightsResult.error && insightsResult.data) {
         setInsights([
-          { title: 'Most hired', value: insightsData.most_hired_category, icon: 'people', color: '#10B981' },
-          { title: 'Spent this month', value: `₹${insightsData.total_spent_month.toLocaleString()}`, icon: 'cash', color: '#3B82F6' },
-          { title: 'Contributions', value: `${insightsData.contribution_percentage}%`, icon: 'checkmark-circle', color: '#F59E0B' },
+          { title: 'Most hired', value: insightsResult.data.most_hired_category, icon: 'people', color: '#10B981' },
+          { title: 'Spent this month', value: `₹${insightsResult.data.total_spent_month.toLocaleString()}`, icon: 'cash', color: '#3B82F6' },
+          { title: 'Contributions', value: `${insightsResult.data.contribution_percentage}%`, icon: 'checkmark-circle', color: '#F59E0B' },
         ]);
       }
 
-      // 2. Fetch Active Fund (most recent event with a goal)
-      const { data: fundData, error: fundError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('community_id', communityId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (fundError && !isMissingFundSchemaError(fundError)) {
-        throw fundError;
-      }
-
+      const fundData = fundResult.data;
       if (fundData) {
-        const { data: transactionData, error: transactionError } = await supabase
-          .from('event_transactions')
-          .select('amount, type')
-          .eq('event_id', fundData.id);
-
-        if (transactionError && !isMissingFundSchemaError(transactionError)) {
-          throw transactionError;
-        }
-
-        const collected = (transactionData ?? [])
+        const collected = (fundData.event_transactions ?? [])
           .filter((t: any) => t.type === 'income')
           .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
         
@@ -94,7 +82,6 @@ export default function HomeScreen() {
     if (!communityId) return;
     
     try {
-      // 1. Fetch providers
       let query = supabase
         .from('service_providers')
         .select('*')
@@ -109,32 +96,29 @@ export default function HomeScreen() {
         query = query.or(`name.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
       }
 
-      const { data: providersData, error: providersError } = await query;
-      if (providersError) throw providersError;
+      // Fetch providers, favorites, and hire counts in parallel
+      const [providersResult, favoritesResult, hiresResult] = await Promise.all([
+        query,
+        supabase.from('favorites')
+          .select('provider_id')
+          .eq('user_id', user?.id as string),
+        supabase.from('provider_hires')
+          .select('provider_id')
+      ]);
 
-      // 2. Fetch user's favorites
-      const { data: favoritesData, error: favoritesError } = await supabase
-        .from('favorites')
-        .select('provider_id')
-        .eq('user_id', user?.id as string);
-
-      if (favoritesError) throw favoritesError;
-
-      // 3. Fetch hire counts for all providers in this community
-      const { data: hiresData, error: hiresError } = await supabase
-        .from('provider_hires')
-        .select('provider_id');
-
-      if (hiresError && !isMissingRelationError(hiresError)) throw hiresError;
+      if (providersResult.error) throw providersResult.error;
+      if (favoritesResult.error) throw favoritesResult.error;
 
       const hireCounts: Record<string, number> = {};
-      (hiresData ?? []).forEach(h => {
-        hireCounts[h.provider_id] = (hireCounts[h.provider_id] || 0) + 1;
-      });
+      if (!isMissingRelationError(hiresResult.error)) {
+        (hiresResult.data ?? []).forEach(h => {
+          hireCounts[h.provider_id] = (hireCounts[h.provider_id] || 0) + 1;
+        });
+      }
 
-      const favoriteIds = new Set(favoritesData?.map(f => f.provider_id));
+      const favoriteIds = new Set(favoritesResult.data?.map(f => f.provider_id));
 
-      const mergedData = providersData.map(provider => ({
+      const mergedData = providersResult.data.map(provider => ({
         ...provider,
         is_favorite: favoriteIds.has(provider.id),
         hire_count: hireCounts[provider.id] || 0
@@ -182,13 +166,13 @@ export default function HomeScreen() {
   }, [communityId, user?.id, searchQuery, selectedCategory]);
 
   useEffect(() => {
+    // Parallelize tab-specific fetch and community-wide stats
     if (activeSegment === 'providers') {
-      fetchProviders();
+      Promise.all([fetchProviders(), fetchCommunityStats()]);
     } else {
-      fetchVisits();
+      Promise.all([fetchVisits(), fetchCommunityStats()]);
     }
-    fetchCommunityStats();
-  }, [activeSegment, fetchProviders, fetchVisits, fetchCommunityStats]);
+  }, [activeSegment, communityId, selectedCategory, searchQuery]); // More specific dependencies
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -238,12 +222,25 @@ export default function HomeScreen() {
           <Text style={[styles.greeting, { color: colors.textMuted }]}>Tavern</Text>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Service Hub</Text>
         </View>
-        <TouchableOpacity 
-          style={[styles.profileButton, { backgroundColor: colors.surface2 }]}
-          onPress={() => router.push('/(tabs)/profile')}
-        >
-          <Ionicons name="person" size={20} color={colors.primary} />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={[styles.headerButton, { backgroundColor: colors.surface2 }]}
+            onPress={() => router.push('/notifications')}
+          >
+            <Ionicons name="notifications" size={20} color={colors.primary} />
+            {unreadCount > 0 && (
+              <View style={[styles.badge, { backgroundColor: '#EF4444' }]}>
+                <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.headerButton, { backgroundColor: colors.surface2 }]}
+            onPress={() => router.push('/(tabs)/profile')}
+          >
+            <Ionicons name="person" size={20} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.segmentedControl}>
@@ -388,12 +385,35 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 2,
   },
-  profileButton: {
+  headerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  headerButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '800',
   },
   segmentedControl: {
     flexDirection: 'row',
@@ -431,7 +451,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 32,
     right: 24,
     width: 64,
     height: 64,
@@ -443,5 +463,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+    zIndex: 10,
   },
 });
