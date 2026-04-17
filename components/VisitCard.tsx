@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { VisitStatusBadge } from './VisitStatusBadge';
 
@@ -72,13 +73,13 @@ export const VisitCard = ({
   const isFull = maxJoiners ? joinerCount >= maxJoiners : false;
 
   return (
-    <TouchableOpacity style={[styles.card, { backgroundColor: colors.surface }]} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder, shadowColor: colors.primary }]} onPress={onPress} activeOpacity={0.7}>
       {/* Creator Row */}
       <View style={styles.creatorRow}>
         {creatorAvatarUrl ? (
           <Image source={{ uri: creatorAvatarUrl }} style={styles.creatorAvatar} />
         ) : (
-          <View style={[styles.creatorAvatarPlaceholder, { backgroundColor: colors.primary + '15' }]}>
+          <View style={[styles.creatorAvatarPlaceholder, { backgroundColor: colors.primary + '12' }]}>
             <Text style={[styles.creatorInitials, { color: colors.primary }]}>{getInitials(creatorName)}</Text>
           </View>
         )}
@@ -107,7 +108,7 @@ export const VisitCard = ({
         </View>
 
         <View style={styles.tagRow}>
-          <View style={[styles.categoryPill, { backgroundColor: colors.surface2 }]}>
+          <View style={[styles.categoryPill, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
             <Text style={[styles.categoryText, { color: colors.textMuted }]}>{category}</Text>
           </View>
           {estimatedCost && (
@@ -126,17 +127,24 @@ export const VisitCard = ({
         </View>
 
         {isCreator ? (
-          <View style={[styles.hostLabel, { backgroundColor: '#10B98115' }]}>
+          <View style={[styles.hostLabel, { backgroundColor: '#10B98112' }]}>
             <Text style={styles.hostLabelText}>You're hosting</Text>
           </View>
         ) : hasUserJoined ? (
           <TouchableOpacity style={[styles.joinedBtn, { borderColor: colors.primary }]} onPress={onUnjoin}>
-            <Text style={[styles.joinedBtnText, { color: colors.primary }]}>Joined ✓</Text>
+            <Text style={[styles.joinedBtnText, { color: colors.primary }]}>Joined</Text>
           </TouchableOpacity>
         ) : status === 'upcoming' && !isFull ? (
-          <TouchableOpacity style={[styles.joinBtn, { backgroundColor: colors.primary }]} onPress={onJoin}>
-            <Text style={styles.joinBtnText}>Join</Text>
-          </TouchableOpacity>
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.joinBtn}
+          >
+            <TouchableOpacity onPress={onJoin} activeOpacity={0.8}>
+              <Text style={styles.joinBtnText}>Join</Text>
+            </TouchableOpacity>
+          </LinearGradient>
         ) : isFull ? (
           <View style={[styles.fullBadge, { backgroundColor: colors.border }]}>
             <Text style={[styles.fullText, { color: colors.textMuted }]}>Full</Text>
@@ -152,10 +160,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
     elevation: 3,
   },
   creatorRow: {
@@ -263,6 +271,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 14,
     fontWeight: '700',
+    textAlign: 'center',
   },
   joinedBtn: {
     paddingHorizontal: 16,

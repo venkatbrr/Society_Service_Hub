@@ -1,13 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
-import { Colors } from '../../constants/Colors';
-import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
-import { MAX_TREASURERS } from '../../lib/fundRoles';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
+import { MAX_TREASURERS } from '../../lib/fundRoles';
+import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role'>;
@@ -152,7 +153,7 @@ export default function AddFundScreen() {
           </Text>
         </View>
 
-        <View style={[styles.form, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.form, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>FUND TITLE</Text>
             <TextInput
@@ -192,7 +193,7 @@ export default function AddFundScreen() {
             {isFetchingMembers ? (
               <ActivityIndicator color={colors.primary} style={styles.memberLoader} />
             ) : members.length === 0 ? (
-              <View style={[styles.emptyState, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <View style={[styles.emptyState, { backgroundColor: colors.glass, borderColor: colors.border }]}>
                 <Text style={[styles.emptyStateText, { color: colors.textMuted }]}>
                   No community members are available to assign yet.
                 </Text>
@@ -208,7 +209,7 @@ export default function AddFundScreen() {
                     style={[
                       styles.memberRow,
                       {
-                        backgroundColor: isSelected ? colors.primary + '10' : colors.background,
+                        backgroundColor: isSelected ? colors.primary + '08' : colors.glass,
                         borderColor: isSelected ? colors.primary : colors.border,
                       },
                     ]}
@@ -219,17 +220,26 @@ export default function AddFundScreen() {
                       <Text style={[styles.memberName, { color: colors.text }]}>{memberName}</Text>
                       <Text style={[styles.memberMeta, { color: colors.textMuted }]}>Resident</Text>
                     </View>
-                    <View
-                      style={[
-                        styles.selector,
-                        {
-                          backgroundColor: isSelected ? colors.primary : 'transparent',
-                          borderColor: isSelected ? colors.primary : colors.border,
-                        },
-                      ]}
-                    >
-                      {isSelected ? <Ionicons name="checkmark" size={16} color="#FFF" /> : null}
-                    </View>
+                    {isSelected ? (
+                      <LinearGradient
+                        colors={[colors.gradientStart, colors.gradientEnd]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.selector}
+                      >
+                        <Ionicons name="checkmark" size={16} color="#FFF" />
+                      </LinearGradient>
+                    ) : (
+                      <View
+                        style={[
+                          styles.selector,
+                          {
+                            backgroundColor: 'transparent',
+                            borderColor: colors.border,
+                          },
+                        ]}
+                      />
+                    )}
                   </TouchableOpacity>
                 );
               })
@@ -242,13 +252,20 @@ export default function AddFundScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { borderTopColor: colors.border }]}>
-        <TouchableOpacity 
-          style={[styles.saveButton, { backgroundColor: colors.primary }]} 
+      <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.glass }]}>
+        <TouchableOpacity
           onPress={handleSave}
           disabled={isLoading}
+          activeOpacity={0.85}
         >
-          {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Create Fund</Text>}
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.saveButton}
+          >
+            {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Create Fund</Text>}
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </View>
@@ -280,6 +297,11 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 3,
   },
   inputGroup: {
     marginBottom: 20,
@@ -371,7 +393,6 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40,
     borderTopWidth: 1,
-    backgroundColor: 'white',
   },
   saveButton: {
     height: 58,

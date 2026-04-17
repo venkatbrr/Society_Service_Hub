@@ -1,15 +1,15 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Image, Linking, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
-import { Colors } from '../../constants/Colors';
-import { RatingStars } from '../../components/RatingStars';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { BusinessStatusBadge } from '../../components/BusinessStatusBadge';
 import { OfferingCard } from '../../components/OfferingCard';
+import { RatingStars } from '../../components/RatingStars';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
 import { BusinessWithInteraction } from '../../lib/database.types';
-import Toast from 'react-native-toast-message';
+import { supabase } from '../../lib/supabase';
 
 export default function BusinessDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,10 +23,10 @@ export default function BusinessDetailScreen() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    if (!id || id === 'add') return;
-    
+    if (!id || id === 'add' || !user?.id) return;
+
     try {
-      // 1. Fetch Business Detail
+      // 1. Fetch business detail first (need community_id for nothing else now)
       const { data: bizData, error: bizError } = await supabase
         .from('resident_businesses')
         .select(`
@@ -38,62 +38,68 @@ export default function BusinessDetailScreen() {
 
       if (bizError) throw bizError;
 
-      // 2. Fetch Offerings
-      const { data: offData, error: offError } = await supabase
-        .from('business_offerings')
-        .select('*')
-        .eq('business_id', id)
-        .order('sort_order', { ascending: true });
+      // 2. Fetch everything else in parallel
+      const [offResult, favResult, userRatingResult, reviewsResult, ratingStatsResult, inquiryCountResult] = await Promise.all([
+        supabase
+          .from('business_offerings')
+          .select('*')
+          .eq('business_id', id)
+          .order('sort_order', { ascending: true }),
+        supabase
+          .from('favorites')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('business_id', id)
+          .maybeSingle(),
+        supabase
+          .from('ratings')
+          .select('rating, id')
+          .eq('user_id', user.id)
+          .eq('business_id', id)
+          .maybeSingle(),
+        supabase
+          .from('ratings')
+          .select(`
+            id,
+            rating,
+            created_at,
+            profiles:user_id (full_name, flat_number)
+          `)
+          .eq('business_id', id)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('ratings')
+          .select('rating')
+          .eq('business_id', id),
+        supabase
+          .from('business_inquiries')
+          .select('id', { count: 'exact', head: true })
+          .eq('business_id', id),
+      ]);
 
-      if (offError) throw offError;
+      if (offResult.error) throw offResult.error;
 
-      // 3. Fetch Aggregate Stats (Rating, Inquiry)
-      const { data: statsData, error: statsError } = await supabase
-        .rpc('get_community_businesses', { p_community_id: bizData.community_id });
-      
-      const stats = (statsData as any[])?.find(s => s.id === id);
-
-      // 4. Fetch User Interactions
-      const { data: favs } = await supabase
-        .from('favorites')
-        .select('id')
-        .eq('user_id', user?.id as string)
-        .eq('business_id', id)
-        .maybeSingle();
-
-      const { data: rats } = await supabase
-        .from('ratings')
-        .select('rating, id')
-        .eq('user_id', user?.id as string)
-        .eq('business_id', id)
-        .maybeSingle();
-
-      // 5. Fetch Reviews
-      const { data: reviewsData } = await supabase
-        .from('ratings')
-        .select(`
-          id,
-          rating,
-          created_at,
-          profiles:user_id (full_name, flat_number)
-        `)
-        .eq('business_id', id)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // Calculate rating stats from direct query instead of fetching ALL businesses via RPC
+      const allRatings = ratingStatsResult.data || [];
+      const ratingCount = allRatings.length;
+      const avgRating = ratingCount > 0
+        ? allRatings.reduce((sum, r) => sum + Number(r.rating), 0) / ratingCount
+        : 0;
 
       setBusiness({
         ...bizData,
         owner_name: bizData.profiles?.full_name,
         owner_flat: bizData.profiles?.flat_number,
-        avg_rating: stats?.avg_rating || 0,
-        rating_count: stats?.rating_count || 0,
-        inquiry_count: stats?.inquiry_count || 0,
-        is_favorite: !!favs,
-        user_rating: rats?.rating || null
+        avg_rating: avgRating,
+        rating_count: ratingCount,
+        inquiry_count: inquiryCountResult.count || 0,
+        is_favorite: !!favResult.data,
+        user_rating: userRatingResult.data?.rating || null
       });
 
-      setOfferings(offData || []);
-      setReviews(reviewsData || []);
+      setOfferings(offResult.data || []);
+      setReviews(reviewsResult.data || []);
 
     } catch (error: any) {
       console.error(error);
@@ -183,7 +189,23 @@ export default function BusinessDetailScreen() {
       
       if (error) throw error;
       Toast.show({ type: 'success', text1: 'Rating saved' });
-      fetchData();
+
+      // Only refresh rating stats, not all data
+      const [ratingStatsResult, reviewsResult] = await Promise.all([
+        supabase.from('ratings').select('rating').eq('business_id', business.id),
+        supabase.from('ratings')
+          .select('id, rating, created_at, profiles:user_id (full_name, flat_number)')
+          .eq('business_id', business.id)
+          .order('created_at', { ascending: false })
+          .limit(5),
+      ]);
+      const allRatings = ratingStatsResult.data || [];
+      const ratingCount = allRatings.length;
+      const avgRating = ratingCount > 0
+        ? allRatings.reduce((sum, r) => sum + Number(r.rating), 0) / ratingCount
+        : 0;
+      setBusiness((prev: BusinessWithInteraction | null) => prev ? { ...prev, avg_rating: avgRating, rating_count: ratingCount, user_rating: rating } : null);
+      setReviews(reviewsResult.data || []);
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Error saving rating' });
     }

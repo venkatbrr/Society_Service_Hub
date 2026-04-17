@@ -1,23 +1,24 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
-import { Colors } from '../../constants/Colors';
-import { Tables } from '../../lib/database.types';
-import { FundCard } from '../../components/FundCard';
-import { useAuth } from '../../context/AuthContext';
-import { FundAccessRole, getEffectiveFundRole } from '../../lib/fundRoles';
+import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useRef, useState } from 'react';
+import {
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import Toast from 'react-native-toast-message';
+import { FundCard } from '../../components/FundCard';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
+import { Tables } from '../../lib/database.types';
+import { FundAccessRole, getEffectiveFundRole } from '../../lib/fundRoles';
+import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 type FundWithTotals = Tables<'events'> & {
@@ -84,11 +85,11 @@ export default function FundsScreen() {
       const nextFunds = (fundsResult.data ?? []).map((fund: any) => {
         const fundTransactions = fund.event_transactions || [];
         const fundRoles = fund.fund_roles || [];
-        
+
         const income = fundTransactions
           .filter((transaction: any) => transaction.type === 'income')
           .reduce((sum: number, transaction: any) => sum + Number(transaction.amount), 0);
-        
+
         const expense = fundTransactions
           .filter((transaction: any) => transaction.type === 'expense')
           .reduce((sum: number, transaction: any) => sum + Number(transaction.amount), 0);
@@ -118,10 +119,6 @@ export default function FundsScreen() {
       setRefreshing(false);
     }
   }, [appRole, communityId, user?.id]);
-
-  useEffect(() => {
-    fetchFunds();
-  }, [fetchFunds]);
 
   useFocusEffect(
     useCallback(() => {
@@ -154,21 +151,27 @@ export default function FundsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <View>
-          <Text style={[styles.greeting, { color: colors.textMuted }]}>Community Transparency</Text>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Society Funds</Text>
-          <Text style={[styles.headerHint, { color: colors.textMuted }]}>
-            {isAdmin ? 'You can create funds and assign treasurers.' : 'Only the admin can create new funds.'}
-          </Text>
+      <LinearGradient
+        colors={[colors.background, colors.surface2, colors.background]}
+        locations={[0, 0.5, 1]}
+        style={styles.headerGradient}
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={[styles.greeting, { color: colors.textMuted }]}>Community Transparency</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Society Funds</Text>
+            <Text style={[styles.headerHint, { color: colors.textMuted }]}>
+              {isAdmin ? 'You can create funds and assign treasurers.' : 'Only the admin can create new funds.'}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.profileButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
+            onPress={() => router.push('/(tabs)/profile')}
+          >
+            <Ionicons name="person" size={20} color={colors.primary} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={[styles.profileButton, { backgroundColor: colors.surface2 }]}
-          onPress={() => router.push('/(tabs)/profile')}
-        >
-          <Ionicons name="person" size={20} color={colors.primary} />
-        </TouchableOpacity>
-      </View>
+      </LinearGradient>
 
       <FlatList
         data={funds}
@@ -188,34 +191,41 @@ export default function FundsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListHeaderComponent={
           funds.length > 0 ? (
-            <View style={styles.summaryCard}>
-              <View style={styles.summaryHeader}>
-                <Text style={styles.summaryTitle}>Fund Snapshot</Text>
-                <Ionicons name="shield-checkmark" size={18} color={colors.primary} />
-              </View>
-              <View style={styles.summaryGrid}>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Total Collected</Text>
-                  <Text style={[styles.summaryValue, { color: '#10B981' }]}>
-                    Rs {communityTotals.income.toLocaleString()}
-                  </Text>
+            <View style={styles.summaryCardWrapper}>
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.summaryCard}
+              >
+                <View style={styles.summaryHeader}>
+                  <Text style={styles.summaryTitle}>Fund Snapshot</Text>
+                  <Ionicons name="shield-checkmark" size={18} color="rgba(255,255,255,0.7)" />
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Total Spent</Text>
-                  <Text style={[styles.summaryValue, { color: '#F43F5E' }]}>
-                    Rs {communityTotals.expense.toLocaleString()}
-                  </Text>
+                <View style={styles.summaryGrid}>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Total Collected</Text>
+                    <Text style={styles.summaryValue}>
+                      Rs {communityTotals.income.toLocaleString()}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Total Spent</Text>
+                    <Text style={styles.summaryValue}>
+                      Rs {communityTotals.expense.toLocaleString()}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Current Balance</Text>
+                    <Text style={[styles.summaryValue, { fontSize: 22 }]}>
+                      Rs {communityTotals.balance.toLocaleString()}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Current Balance</Text>
-                  <Text style={[styles.summaryValue, { color: colors.primary }]}>
-                    Rs {communityTotals.balance.toLocaleString()}
-                  </Text>
-                </View>
-              </View>
+              </LinearGradient>
             </View>
           ) : (
-            <View style={[styles.noticeCard, { backgroundColor: colors.surface }]}>
+            <View style={[styles.noticeCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
               <Ionicons name="information-circle" size={18} color={colors.primary} />
               <Text style={[styles.noticeText, { color: colors.textMuted }]}>
                 {isAdmin
@@ -227,7 +237,7 @@ export default function FundsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <View style={[styles.emptyIconWrapper, { backgroundColor: colors.surface2 }]}>
+            <View style={[styles.emptyIconWrapper, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
               <Ionicons name="wallet" size={40} color={colors.icon} />
             </View>
             <Text style={[styles.emptyText, { color: colors.text }]}>No funds created</Text>
@@ -242,11 +252,18 @@ export default function FundsScreen() {
 
       {isAdmin ? (
         <TouchableOpacity
-          style={[styles.fab, { backgroundColor: colors.primary }]}
+          style={styles.fab}
           onPress={() => router.push('/funds/add')}
           activeOpacity={0.9}
         >
-          <Ionicons name="add" size={32} color="#FFF" />
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.fabGradient}
+          >
+            <Ionicons name="add" size={32} color="#FFF" />
+          </LinearGradient>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -261,6 +278,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  headerGradient: {
+    paddingHorizontal: 0,
   },
   header: {
     flexDirection: 'row',
@@ -295,17 +315,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  summaryCard: {
-    backgroundColor: '#FFF',
+  summaryCardWrapper: {
     marginHorizontal: 4,
     marginBottom: 24,
+    borderRadius: 32,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 4,
+  },
+  summaryCard: {
     padding: 24,
     borderRadius: 32,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
+    overflow: 'hidden',
   },
   summaryHeader: {
     flexDirection: 'row',
@@ -318,7 +341,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 1,
-    color: '#718096',
+    color: 'rgba(255,255,255,0.7)',
   },
   summaryGrid: {
     gap: 16,
@@ -331,11 +354,12 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#718096',
+    color: 'rgba(255,255,255,0.7)',
   },
   summaryValue: {
     fontSize: 18,
     fontWeight: '800',
+    color: '#FFFFFF',
   },
   noticeCard: {
     flexDirection: 'row',
@@ -362,14 +386,19 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
     elevation: 8,
-    shadowColor: '#10B981',
+    shadowColor: '#6C63FF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: 12,
     zIndex: 10,
+  },
+  fabGradient: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyContainer: {
     marginTop: 80,

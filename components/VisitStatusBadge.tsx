@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface VisitStatusBadgeProps {
   status: 'upcoming' | 'in_progress' | 'completed' | 'cancelled';
@@ -9,15 +9,15 @@ export const VisitStatusBadge = ({ status }: VisitStatusBadgeProps) => {
   const getStatusStyles = () => {
     switch (status) {
       case 'upcoming':
-        return { bg: '#E1F9F1', text: '#10B981', label: 'Upcoming' };
+        return { bg: '#10B98112', text: '#10B981', label: 'Upcoming' };
       case 'in_progress':
-        return { bg: '#FEF3C7', text: '#F59E0B', label: 'In Progress' };
+        return { bg: '#FFB34712', text: '#FFB347', label: 'In Progress' };
       case 'completed':
-        return { bg: '#F3F4F6', text: '#6B7280', label: 'Completed' };
+        return { bg: '#E8E5F5', text: '#8B87B0', label: 'Completed' };
       case 'cancelled':
-        return { bg: '#FEE2E2', text: '#EF4444', label: 'Cancelled' };
+        return { bg: '#FF6B6B12', text: '#FF6B6B', label: 'Cancelled' };
       default:
-        return { bg: '#F3F4F6', text: '#6B7280', label: status };
+        return { bg: '#E8E5F5', text: '#8B87B0', label: status };
     }
   };
 

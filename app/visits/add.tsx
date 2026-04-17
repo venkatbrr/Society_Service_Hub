@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Image, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
-import { Colors } from '../../constants/Colors';
-import { ProviderSelector } from '../../components/ProviderSelector';
-import Toast from 'react-native-toast-message';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
+import { ProviderSelector } from '../../components/ProviderSelector';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 const CATEGORIES = ['Cleaning', 'Repair', 'Pest Control', 'Electrician', 'Plumber', 'AC Service', 'Painting', 'Carpentry', 'Appliance Service', 'Other'];
 
@@ -27,7 +28,7 @@ export default function AddVisitScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
-  
+
   // Date and Time state
   const [visitDate, setVisitDate] = useState(new Date());
   const [startTime, setStartTime] = useState(new Date());
@@ -104,7 +105,7 @@ export default function AddVisitScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerText}>
@@ -114,8 +115,8 @@ export default function AddVisitScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>1. WHICH PROVIDER IS VISITING?</Text>
-          <ProviderSelector 
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>1. WHICH PROVIDER IS VISITING?</Text>
+          <ProviderSelector
             communityId={communityId as string}
             mode={providerMode}
             onModeChange={setProviderMode}
@@ -131,13 +132,14 @@ export default function AddVisitScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>2. VISIT DETAILS</Text>
-          
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>2. VISIT DETAILS</Text>
+
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>VISIT TITLE *</Text>
-            <TextInput 
-              style={[styles.input, { borderColor: colors.border }]} 
-              placeholder="e.g. AC deep cleaning, pest control" 
+            <TextInput
+              style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
+              placeholder="e.g. AC deep cleaning, pest control"
+              placeholderTextColor={colors.textMuted}
               value={title}
               onChangeText={setTitle}
             />
@@ -147,25 +149,38 @@ export default function AddVisitScreen() {
             <Text style={[styles.label, { color: colors.text }]}>CATEGORY *</Text>
             <View style={categoryGridStyle.categoryGrid}>
               {CATEGORIES.map(cat => (
-                <TouchableOpacity 
-                  key={cat} 
-                  style={[
-                    categoryGridStyle.catChip, 
-                    { borderColor: colors.border },
-                    category === cat && { backgroundColor: colors.primary, borderColor: colors.primary }
-                  ]}
-                  onPress={() => setCategory(cat)}
-                >
-                  <Text style={[categoryGridStyle.catText, { color: category === cat ? '#FFF' : colors.text }]}>{cat}</Text>
-                </TouchableOpacity>
+                category === cat ? (
+                  <LinearGradient
+                    key={cat}
+                    colors={[colors.gradientStart, colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={categoryGridStyle.catChipGradient}
+                  >
+                    <TouchableOpacity onPress={() => setCategory(cat)}>
+                      <Text style={[categoryGridStyle.catText, { color: '#FFF' }]}>{cat}</Text>
+                    </TouchableOpacity>
+                  </LinearGradient>
+                ) : (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[
+                      categoryGridStyle.catChip,
+                      { borderColor: colors.border, backgroundColor: colors.glass }
+                    ]}
+                    onPress={() => setCategory(cat)}
+                  >
+                    <Text style={[categoryGridStyle.catText, { color: colors.text }]}>{cat}</Text>
+                  </TouchableOpacity>
+                )
               ))}
             </View>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>VISIT DATE *</Text>
-            <TouchableOpacity 
-              style={[styles.input, { borderColor: colors.border, justifyContent: 'center' }]} 
+            <TouchableOpacity
+              style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.glass }]}
               onPress={() => setShowDatePicker(true)}
             >
               <Text style={{ fontSize: 16, color: colors.text }}>
@@ -186,8 +201,8 @@ export default function AddVisitScreen() {
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.label, { color: colors.text }]}>START TIME *</Text>
-              <TouchableOpacity 
-                style={[styles.input, { borderColor: colors.border, justifyContent: 'center' }]} 
+              <TouchableOpacity
+                style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.glass }]}
                 onPress={() => setShowStartTimePicker(true)}
               >
                 <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(startTime)}</Text>
@@ -204,8 +219,8 @@ export default function AddVisitScreen() {
             <View style={{ width: 12 }} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.label, { color: colors.text }]}>END TIME *</Text>
-              <TouchableOpacity 
-                style={[styles.input, { borderColor: colors.border, justifyContent: 'center' }]} 
+              <TouchableOpacity
+                style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.glass }]}
                 onPress={() => setShowEndTimePicker(true)}
               >
                 <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(endTime)}</Text>
@@ -224,9 +239,10 @@ export default function AddVisitScreen() {
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.label, { color: colors.text }]}>EST. COST (OPTIONAL)</Text>
-              <TextInput 
-                style={[styles.input, { borderColor: colors.border }]} 
-                placeholder="e.g. ₹400 / unit" 
+              <TextInput
+                style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
+                placeholder="e.g. ₹400 / unit"
+                placeholderTextColor={colors.textMuted}
                 value={estimatedCost}
                 onChangeText={setEstimatedCost}
               />
@@ -234,9 +250,10 @@ export default function AddVisitScreen() {
             <View style={{ width: 12 }} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.label, { color: colors.text }]}>MAX JOINERS</Text>
-              <TextInput 
-                style={[styles.input, { borderColor: colors.border }]} 
-                placeholder="Empty for unlimited" 
+              <TextInput
+                style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
+                placeholder="Empty for unlimited"
+                placeholderTextColor={colors.textMuted}
                 keyboardType="numeric"
                 value={maxJoiners}
                 onChangeText={setMaxJoiners}
@@ -246,9 +263,10 @@ export default function AddVisitScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>DESCRIPTION (OPTIONAL)</Text>
-            <TextInput 
-              style={[styles.textArea, { borderColor: colors.border }]} 
-              placeholder="Any details neighbors should know..." 
+            <TextInput
+              style={[styles.textArea, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
+              placeholder="Any details neighbors should know..."
+              placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={4}
               value={description}
@@ -258,19 +276,27 @@ export default function AddVisitScreen() {
           </View>
         </View>
 
-        <View style={[styles.infoCard, { backgroundColor: colors.primary + '10' }]}>
+        <View style={[styles.infoCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
             <Ionicons name="bulb-outline" size={20} color={colors.primary} />
             <Text style={[styles.infoText, { color: colors.primary }]}>
                 Share visits to coordinate with neighbors. Providers often charge less for multiple jobs in one trip!
             </Text>
         </View>
 
-        <TouchableOpacity 
-          style={[styles.submitBtn, { backgroundColor: colors.primary, marginBottom: Math.max(insets.bottom, 40) }]} 
+        <TouchableOpacity
           onPress={handleSave}
           disabled={submitting}
+          activeOpacity={0.85}
+          style={{ marginBottom: Math.max(insets.bottom, 40) }}
         >
-          {submitting ? <ActivityIndicator color="#FFF" /> : <Text style={styles.submitBtnText}>Share Visit</Text>}
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.submitBtn}
+          >
+            {submitting ? <ActivityIndicator color="#FFF" /> : <Text style={styles.submitBtnText}>Share Visit</Text>}
+          </LinearGradient>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -288,6 +314,11 @@ const categoryGridStyle = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
+  },
+  catChipGradient: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   catText: {
     fontSize: 13,
@@ -315,6 +346,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    borderWidth: 1,
   },
   headerText: {
     flex: 1,
@@ -337,7 +369,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1.5,
     marginBottom: 20,
-    opacity: 0.6,
   },
   inputGroup: {
     marginBottom: 20,
@@ -375,6 +406,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 32,
     alignItems: 'center',
+    borderWidth: 1,
   },
   infoText: {
     flex: 1,
@@ -387,7 +419,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
   },
   submitBtnText: {
     color: '#FFF',

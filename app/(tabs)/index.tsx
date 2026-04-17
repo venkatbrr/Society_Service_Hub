@@ -1,21 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
-import { Colors } from '../../constants/Colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { ActiveFundTeaser } from '../../components/ActiveFundTeaser';
+import { CategoryFilter } from '../../components/CategoryFilter';
+import { CommunityInsights } from '../../components/CommunityInsights';
+import { EmptyState } from '../../components/EmptyState';
 import { ProviderCard } from '../../components/ProviderCard';
 import { SearchBar } from '../../components/SearchBar';
-import { CategoryFilter } from '../../components/CategoryFilter';
-import { EmptyState } from '../../components/EmptyState';
-import { CommunityInsights } from '../../components/CommunityInsights';
-import { ActiveFundTeaser } from '../../components/ActiveFundTeaser';
 import { VisitCard } from '../../components/VisitCard';
-import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
-import Toast from 'react-native-toast-message';
-import { isMissingFundSchemaError } from '../../lib/supabaseErrors';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
+import { supabase } from '../../lib/supabase';
 
 const isMissingRelationError = (error: { code?: string; message?: string } | null) =>
   error?.code === 'PGRST205' ||
@@ -54,9 +54,9 @@ export default function HomeScreen() {
 
       if (!insightsResult.error && insightsResult.data) {
         setInsights([
-          { title: 'Most hired', value: insightsResult.data.most_hired_category, icon: 'people', color: '#10B981' },
-          { title: 'Spent this month', value: `₹${insightsResult.data.total_spent_month.toLocaleString()}`, icon: 'cash', color: '#3B82F6' },
-          { title: 'Contributions', value: `${insightsResult.data.contribution_percentage}%`, icon: 'checkmark-circle', color: '#F59E0B' },
+          { title: 'Most hired', value: insightsResult.data.most_hired_category, icon: 'people', color: colors.secondary },
+          { title: 'Spent this month', value: `₹${insightsResult.data.total_spent_month.toLocaleString()}`, icon: 'cash', color: colors.primary },
+          { title: 'Contributions', value: `${insightsResult.data.contribution_percentage}%`, icon: 'checkmark-circle', color: colors.warning },
         ]);
       }
 
@@ -65,7 +65,7 @@ export default function HomeScreen() {
         const collected = (fundData.event_transactions ?? [])
           .filter((t: any) => t.type === 'income')
           .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
-        
+
         setActiveFund({
           id: fundData.id,
           title: fundData.title,
@@ -80,7 +80,7 @@ export default function HomeScreen() {
 
   const fetchProviders = useCallback(async () => {
     if (!communityId) return;
-    
+
     try {
       let query = supabase
         .from('service_providers')
@@ -137,7 +137,8 @@ export default function HomeScreen() {
     try {
       const { data, error } = await supabase.rpc('get_community_visits', {
         p_community_id: communityId,
-        p_user_id: user.id
+        p_user_id: user.id,
+        p_status: 'upcoming,cancelled'
       });
 
       if (error) throw error;
@@ -151,8 +152,8 @@ export default function HomeScreen() {
 
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        processedData = processedData.filter(v => 
-          v.title.toLowerCase().includes(query) || 
+        processedData = processedData.filter(v =>
+          v.title.toLowerCase().includes(query) ||
           v.provider_name.toLowerCase().includes(query) ||
           v.category.toLowerCase().includes(query)
         );
@@ -165,14 +166,19 @@ export default function HomeScreen() {
     }
   }, [communityId, user?.id, searchQuery, selectedCategory]);
 
+  // Fetch community stats once on mount / communityId change (not on every tab toggle)
   useEffect(() => {
-    // Parallelize tab-specific fetch and community-wide stats
+    fetchCommunityStats();
+  }, [fetchCommunityStats]);
+
+  // Fetch tab-specific data when segment, filters, or search changes
+  useEffect(() => {
     if (activeSegment === 'providers') {
-      Promise.all([fetchProviders(), fetchCommunityStats()]);
+      fetchProviders();
     } else {
-      Promise.all([fetchVisits(), fetchCommunityStats()]);
+      fetchVisits();
     }
-  }, [activeSegment, communityId, selectedCategory, searchQuery]); // More specific dependencies
+  }, [activeSegment, communityId, selectedCategory, searchQuery]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -185,7 +191,7 @@ export default function HomeScreen() {
   };
 
   const handleToggleFavorite = async (providerId: string, isCurrentlyFavorite: boolean) => {
-    setProviders(current => 
+    setProviders(current =>
       current.map(p => p.id === providerId ? { ...p, is_favorite: !isCurrentlyFavorite } : p)
     );
 
@@ -201,7 +207,7 @@ export default function HomeScreen() {
           .insert({ user_id: user?.id as string, provider_id: providerId });
       }
     } catch (error) {
-      setProviders(current => 
+      setProviders(current =>
         current.map(p => p.id === providerId ? { ...p, is_favorite: isCurrentlyFavorite } : p)
       );
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update favorites' });
@@ -217,53 +223,81 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <View>
-          <Text style={[styles.greeting, { color: colors.textMuted }]}>Tavern</Text>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Service Hub</Text>
+      <LinearGradient
+        colors={[colors.background, colors.surface2, colors.background]}
+        locations={[0, 0.5, 1]}
+        style={styles.headerGradient}
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={[styles.greeting, { color: colors.textMuted }]}>Tavern</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Service Hub</Text>
+          </View>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={[styles.headerButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
+              onPress={() => router.push('/notifications')}
+            >
+              <Ionicons name="notifications" size={20} color={colors.primary} />
+              {unreadCount > 0 && (
+                <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+                  <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.headerButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
+              onPress={() => router.push('/(tabs)/profile')}
+            >
+              <Ionicons name="person" size={20} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity 
-            style={[styles.headerButton, { backgroundColor: colors.surface2 }]}
-            onPress={() => router.push('/notifications')}
-          >
-            <Ionicons name="notifications" size={20} color={colors.primary} />
-            {unreadCount > 0 && (
-              <View style={[styles.badge, { backgroundColor: '#EF4444' }]}>
-                <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.headerButton, { backgroundColor: colors.surface2 }]}
-            onPress={() => router.push('/(tabs)/profile')}
-          >
-            <Ionicons name="person" size={20} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      </LinearGradient>
 
-      <View style={styles.segmentedControl}>
-        <TouchableOpacity 
-          style={[styles.segmentBtn, activeSegment === 'providers' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
-          onPress={() => {
-            setActiveSegment('providers');
-            setSelectedCategory(null);
-            setSearchQuery('');
-          }}
-        >
-          <Text style={[styles.segmentText, { color: activeSegment === 'providers' ? '#FFF' : colors.textMuted }]}>Providers</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.segmentBtn, activeSegment === 'visits' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
-          onPress={() => {
-            setActiveSegment('visits');
-            setSelectedCategory(null);
-            setSearchQuery('');
-          }}
-        >
-          <Text style={[styles.segmentText, { color: activeSegment === 'visits' ? '#FFF' : colors.textMuted }]}>Visits</Text>
-        </TouchableOpacity>
+      <View style={[styles.segmentedControl, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
+        {activeSegment === 'providers' ? (
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.segmentBtn, styles.segmentBtnActive]}
+          >
+            <Text style={[styles.segmentText, { color: '#FFF' }]}>Providers</Text>
+          </LinearGradient>
+        ) : (
+          <TouchableOpacity
+            style={styles.segmentBtn}
+            onPress={() => {
+              setActiveSegment('providers');
+              setSelectedCategory(null);
+              setSearchQuery('');
+            }}
+          >
+            <Text style={[styles.segmentText, { color: colors.textMuted }]}>Providers</Text>
+          </TouchableOpacity>
+        )}
+        {activeSegment === 'visits' ? (
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.segmentBtn, styles.segmentBtnActive]}
+          >
+            <Text style={[styles.segmentText, { color: '#FFF' }]}>Visits</Text>
+          </LinearGradient>
+        ) : (
+          <TouchableOpacity
+            style={styles.segmentBtn}
+            onPress={() => {
+              setActiveSegment('visits');
+              setSelectedCategory(null);
+              setSearchQuery('');
+            }}
+          >
+            <Text style={[styles.segmentText, { color: colors.textMuted }]}>Visits</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <FlatList
@@ -271,14 +305,14 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           activeSegment === 'providers' ? (
-            <ProviderCard 
-              provider={item as ProviderWithInteraction} 
+            <ProviderCard
+              provider={item as ProviderWithInteraction}
               onPress={() => router.push(`/provider/${item.id}`)}
               onToggleFavorite={handleToggleFavorite}
               isLightMode={true}
             />
           ) : (
-            <VisitCard 
+            <VisitCard
               id={item.id}
               title={(item as VisitWithJoinerData).title}
               providerName={(item as VisitWithJoinerData).provider_name}
@@ -310,9 +344,9 @@ export default function HomeScreen() {
         ListHeaderComponent={
           <>
             {activeSegment === 'providers' && insights.length > 0 && <CommunityInsights insights={insights} />}
-            
+
             {activeFund && activeFund.goal > 0 && (
-              <ActiveFundTeaser 
+              <ActiveFundTeaser
                 title={activeFund.title}
                 collected={activeFund.collected}
                 goal={activeFund.goal}
@@ -321,41 +355,48 @@ export default function HomeScreen() {
             )}
 
             <View style={styles.filterSection}>
-              <Text style={styles.sectionTitle}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
                 {activeSegment === 'providers' ? 'Find Trusted Help' : 'Upcoming Community Visits'}
               </Text>
-              <SearchBar 
-                value={searchQuery} 
-                onChangeText={setSearchQuery} 
+              <SearchBar
+                value={searchQuery}
+                onChangeText={setSearchQuery}
                 placeholder={activeSegment === 'providers' ? "Search help..." : "Search visits..."}
-                isLightMode={true} 
+                isLightMode={true}
               />
-              <CategoryFilter 
-                selectedCategory={selectedCategory} 
-                onSelectCategory={setSelectedCategory} 
+              <CategoryFilter
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
                 categories={activeSegment === 'providers' ? undefined : VISIT_CATEGORIES}
-                isLightMode={true} 
+                isLightMode={true}
               />
             </View>
           </>
         }
         ListEmptyComponent={
-          <EmptyState 
-            icon={activeSegment === 'providers' ? "people" : "calendar"} 
-            title={activeSegment === 'providers' ? "No Providers Found" : "No Upcoming Visits"} 
-            message={searchQuery || selectedCategory ? "Try adjusting your filters" : 
+          <EmptyState
+            icon={activeSegment === 'providers' ? "people" : "calendar"}
+            title={activeSegment === 'providers' ? "No Providers Found" : "No Upcoming Visits"}
+            message={searchQuery || selectedCategory ? "Try adjusting your filters" :
               (activeSegment === 'providers' ? "Be the first to add a trusted service provider!" : "Be the first to share when a provider is coming!")}
             isLightMode={true}
           />
         }
       />
 
-      <TouchableOpacity 
-        style={[styles.fab, { backgroundColor: colors.primary }]}
+      <TouchableOpacity
+        style={styles.fab}
         onPress={() => router.push(activeSegment === 'providers' ? '/provider/add' : '/visits/add')}
         activeOpacity={0.9}
       >
-        <Ionicons name="add" size={32} color="#FFF" />
+        <LinearGradient
+          colors={[colors.gradientStart, colors.gradientEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.fabGradient}
+        >
+          <Ionicons name="add" size={32} color="#FFF" />
+        </LinearGradient>
       </TouchableOpacity>
     </View>
   );
@@ -364,6 +405,9 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  headerGradient: {
+    paddingHorizontal: 0,
   },
   header: {
     flexDirection: 'row',
@@ -418,7 +462,6 @@ const styles = StyleSheet.create({
   segmentedControl: {
     flexDirection: 'row',
     marginHorizontal: 24,
-    backgroundColor: '#F3F4F6',
     borderRadius: 14,
     padding: 4,
     marginBottom: 16,
@@ -428,8 +471,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: 'center',
     borderRadius: 11,
-    borderWidth: 1,
-    borderColor: 'transparent',
+  },
+  segmentBtnActive: {
+    borderRadius: 11,
+    overflow: 'hidden',
   },
   segmentText: {
     fontSize: 14,
@@ -456,13 +501,18 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
     elevation: 8,
-    shadowColor: '#10B981',
+    shadowColor: '#6C63FF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: 12,
     zIndex: 10,
+  },
+  fabGradient: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

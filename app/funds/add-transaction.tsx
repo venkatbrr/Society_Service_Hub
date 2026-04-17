@@ -1,23 +1,24 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
-import { Colors } from '../../constants/Colors';
-import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import Toast from 'react-native-toast-message';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { formatRole, getEffectiveFundRole, getFundPermissions } from '../../lib/fundRoles';
+import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 type FundContext = Pick<Tables<'events'>, 'id' | 'community_id' | 'title'> & {
@@ -238,7 +239,7 @@ export default function AddTransactionScreen() {
 
   if (isFetchingContext || !fund) {
     return (
-      <View style={[styles.loadingState, { backgroundColor: colors.background }]}> 
+      <View style={[styles.loadingState, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -252,36 +253,36 @@ export default function AddTransactionScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>{type === 'income' ? 'Add Contribution' : 'Add Expense'}</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}> 
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
             {fund.title} - You are a {formatRole(fundRole)}
           </Text>
         </View>
 
-        <View style={[styles.form, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
-          <View style={[styles.tabContainer, { backgroundColor: colors.surface2 }]}> 
+        <View style={[styles.form, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+          <View style={[styles.tabContainer, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
             <TouchableOpacity
               style={[
                 styles.tab,
-                type === 'income' ? { backgroundColor: '#FFF', shadowColor: '#000', elevation: 2 } : {},
+                type === 'income' ? { backgroundColor: colors.glass, shadowColor: '#000', elevation: 2 } : {},
               ]}
               onPress={() => handleChangeType('income')}
             >
-              <Text style={[styles.tabText, { color: type === 'income' ? '#10B981' : colors.textMuted }]}>Contribution</Text>
+              <Text style={[styles.tabText, { color: type === 'income' ? colors.primary : colors.textMuted }]}>Contribution</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.tab,
-                type === 'expense' ? { backgroundColor: '#FFF', shadowColor: '#000', elevation: 2 } : {},
+                type === 'expense' ? { backgroundColor: colors.glass, shadowColor: '#000', elevation: 2 } : {},
               ]}
               onPress={() => handleChangeType('expense')}
             >
-              <Text style={[styles.tabText, { color: type === 'expense' ? '#F43F5E' : colors.textMuted }]}>Expense</Text>
+              <Text style={[styles.tabText, { color: type === 'expense' ? colors.accent : colors.textMuted }]}>Expense</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.notice, { backgroundColor: colors.background, borderColor: colors.border }]}> 
+          <View style={[styles.notice, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
             <Ionicons name="information-circle" size={18} color={colors.primary} />
-            <Text style={[styles.noticeText, { color: colors.textMuted }]}> 
+            <Text style={[styles.noticeText, { color: colors.textMuted }]}>
               {type === 'income'
                 ? permissions.canAddContribution
                   ? 'Select a resident, add the received amount, and they will appear as paid in the fund.'
@@ -317,7 +318,7 @@ export default function AddTransactionScreen() {
                     style={[
                       styles.memberRow,
                       {
-                        backgroundColor: isSelected ? colors.primary + '10' : colors.background,
+                        backgroundColor: isSelected ? colors.primary + '08' : colors.glass,
                         borderColor: isSelected ? colors.primary : colors.border,
                         opacity: isPaid ? 0.55 : 1,
                       },
@@ -374,17 +375,24 @@ export default function AddTransactionScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { borderTopColor: colors.border }]}> 
+      <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.glass }]}>
         <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: type === 'income' ? '#10B981' : '#F43F5E' }]}
           onPress={handleSave}
           disabled={isLoading}
+          activeOpacity={0.85}
         >
-          {isLoading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.saveButtonText}>{type === 'income' ? 'Save Contribution' : 'Save Expense'}</Text>
-          )}
+          <LinearGradient
+            colors={type === 'income' ? [colors.gradientStart, colors.gradientEnd] : ['#FF6B6B', '#FF8E8E']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.saveButton}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.saveButtonText}>{type === 'income' ? 'Save Contribution' : 'Save Expense'}</Text>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -421,6 +429,11 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 3,
   },
   notice: {
     flexDirection: 'row',
@@ -451,6 +464,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 4,
     marginBottom: 24,
+    borderWidth: 1,
   },
   tab: {
     flex: 1,
@@ -513,7 +527,6 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40,
     borderTopWidth: 1,
-    backgroundColor: '#FFF',
   },
   saveButton: {
     height: 60,
@@ -528,4 +541,3 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 });
-

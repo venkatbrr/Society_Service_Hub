@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { CATEGORY_COLORS } from '../constants/categories';
 import { Colors } from '../constants/Colors';
 import { ProviderWithInteraction } from '../lib/database.types';
-import { CATEGORY_COLORS } from '../constants/categories';
 
 type ProviderCardProps = {
   provider: ProviderWithInteraction;
@@ -17,13 +18,13 @@ export const ProviderCard = ({ provider, onPress, onToggleFavorite, isLightMode 
   const categoryColor = CATEGORY_COLORS[provider.category] || colors.primary;
 
   return (
-    <TouchableOpacity 
-      style={[styles.card, { backgroundColor: colors.card, shadowColor: '#000' }]} 
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder, shadowColor: colors.primary }]}
       onPress={onPress}
       activeOpacity={0.9}
     >
       <View style={styles.content}>
-        <View style={styles.imagePlaceholder}>
+        <View style={[styles.imagePlaceholder, { backgroundColor: colors.surface2 }]}>
            <Ionicons name="person" size={24} color={colors.icon} />
         </View>
 
@@ -33,34 +34,36 @@ export const ProviderCard = ({ provider, onPress, onToggleFavorite, isLightMode 
               {provider.name}
             </Text>
             {provider.is_verified && (
-              <Ionicons name="checkmark-circle" size={18} color={Colors.light.primary} style={styles.verifiedIcon} />
+              <Ionicons name="checkmark-circle" size={18} color={colors.primary} style={styles.verifiedIcon} />
             )}
           </View>
-          
-          <Text style={[styles.category, { color: colors.textMuted }]}>{provider.category}</Text>
+
+          <View style={[styles.categoryBadge, { backgroundColor: colors.primary + '12' }]}>
+            <Text style={[styles.category, { color: colors.primary }]}>{provider.category}</Text>
+          </View>
 
           <View style={styles.ratingRow}>
-            <Ionicons name="star" size={14} color={colors.warning} />
+            <Ionicons name="star" size={14} color="#FFB347" />
             <Text style={[styles.ratingText, { color: colors.text }]}>
               {Number(provider.avg_rating).toFixed(1)}
-              <Text style={styles.ratingCount}> ({provider.rating_count})</Text>
+              <Text style={[styles.ratingCount, { color: colors.textMuted }]}> ({provider.rating_count})</Text>
             </Text>
           </View>
         </View>
 
-        <TouchableOpacity 
-          style={styles.favoriteBtn} 
+        <TouchableOpacity
+          style={styles.favoriteBtn}
           onPress={() => onToggleFavorite(provider.id, !!provider.is_favorite)}
         >
-          <Ionicons 
-            name={provider.is_favorite ? 'heart' : 'heart-outline'} 
-            size={22} 
-            color={provider.is_favorite ? colors.accent : colors.icon} 
+          <Ionicons
+            name={provider.is_favorite ? 'heart' : 'heart-outline'}
+            size={22}
+            color={provider.is_favorite ? '#FF6B6B' : colors.icon}
           />
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.footer, { borderTopColor: colors.surface2 }]}>
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
         <View style={styles.trustIndicators}>
           <View style={styles.trustItem}>
             <Ionicons name="home-outline" size={14} color={colors.textMuted} />
@@ -69,9 +72,14 @@ export const ProviderCard = ({ provider, onPress, onToggleFavorite, isLightMode 
             </Text>
           </View>
           {provider.is_trending && (
-            <View style={[styles.trendingTag, { backgroundColor: Colors.light.primary + '15' }]}>
-              <Text style={[styles.trendingText, { color: Colors.light.primary }]}>Trending</Text>
-            </View>
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.trendingTag}
+            >
+              <Text style={styles.trendingText}>Trending</Text>
+            </LinearGradient>
           )}
         </View>
       </View>
@@ -84,9 +92,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
     elevation: 3,
   },
   content: {
@@ -98,7 +107,6 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 27,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -119,10 +127,17 @@ const styles = StyleSheet.create({
   verifiedIcon: {
     marginLeft: 2,
   },
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginBottom: 4,
+    marginTop: 2,
+  },
   category: {
     fontSize: 13,
     fontWeight: '500',
-    marginBottom: 4,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -135,7 +150,6 @@ const styles = StyleSheet.create({
   },
   ratingCount: {
     fontWeight: '400',
-    color: '#9CA3AF',
   },
   favoriteBtn: {
     padding: 8,
@@ -167,5 +181,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
+    color: '#FFF',
   },
 });

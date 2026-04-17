@@ -1,5 +1,6 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { ScrollView, TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CATEGORIES } from '../constants/categories';
 import { Colors } from '../constants/Colors';
 
@@ -10,59 +11,57 @@ type CategoryFilterProps = {
   categories?: string[];
 };
 
-export const CategoryFilter = ({ 
-  selectedCategory, 
-  onSelectCategory, 
+export const CategoryFilter = ({
+  selectedCategory,
+  onSelectCategory,
   isLightMode,
-  categories = CATEGORIES 
+  categories = CATEGORIES
 }: CategoryFilterProps) => {
   const colors = isLightMode ? Colors.light : Colors.dark;
   const displayCategories = categories.filter(c => c !== 'All');
 
+  const renderChip = (label: string, isSelected: boolean, onPress: () => void) => {
+    if (isSelected) {
+      return (
+        <TouchableOpacity key={label} onPress={onPress}>
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.chip}
+          >
+            <Text style={[styles.chipText, { color: '#FFF' }]}>{label}</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        key={label}
+        style={[
+          styles.chip,
+          { backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border }
+        ]}
+        onPress={onPress}
+      >
+        <Text style={[styles.chipText, { color: colors.text }]}>{label}</Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <TouchableOpacity
-          style={[
-            styles.chip,
-            { backgroundColor: selectedCategory === null ? colors.primary : colors.surface },
-            selectedCategory === null ? null : { borderWidth: 1, borderColor: colors.border }
-          ]}
-          onPress={() => onSelectCategory(null)}
-        >
-          <Text style={[
-            styles.chipText,
-            { color: selectedCategory === null ? '#FFF' : colors.text }
-          ]}>
-            All
-          </Text>
-        </TouchableOpacity>
+        {renderChip('All', selectedCategory === null, () => onSelectCategory(null))}
 
-        {displayCategories.map((category) => {
-          const isSelected = selectedCategory === category;
-          return (
-            <TouchableOpacity
-              key={category}
-              style={[
-                styles.chip,
-                { backgroundColor: isSelected ? colors.primary : colors.surface },
-                isSelected ? null : { borderWidth: 1, borderColor: colors.border }
-              ]}
-              onPress={() => onSelectCategory(category)}
-            >
-              <Text style={[
-                styles.chipText,
-                { color: isSelected ? '#FFF' : colors.text }
-              ]}>
-                {category}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        {displayCategories.map((category) =>
+          renderChip(category, selectedCategory === category, () => onSelectCategory(category))
+        )}
       </ScrollView>
     </View>
   );

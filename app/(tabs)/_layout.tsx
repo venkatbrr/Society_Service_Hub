@@ -1,9 +1,8 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
-import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Platform } from 'react-native';
+import { Colors } from '../../constants/Colors';
 
 export default function TabLayout() {
   // Enforced light mode per user
@@ -15,14 +14,25 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
+          backgroundColor: 'rgba(255, 255, 255, 0.92)',
+          borderTopColor: 'rgba(108, 99, 255, 0.06)',
+          borderTopWidth: 1,
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
           paddingTop: 8,
+          elevation: 0,
+          shadowColor: '#6C63FF',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.06,
+          shadowRadius: 16,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.icon,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+          letterSpacing: 0.2,
+        },
       }}
     >
       <Tabs.Screen
@@ -35,8 +45,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="business"
         options={{
-          title: 'Market',
-          tabBarIcon: ({ color }) => <Ionicons name="storefront" size={24} color={color} />,
+          href: null, // Hidden — business feature deferred
         }}
       />
       <Tabs.Screen

@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
 import { CATEGORIES } from '../../constants/categories';
-import Toast from 'react-native-toast-message';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 export default function AddProviderScreen() {
   const { user, communityId } = useAuth();
@@ -59,7 +59,7 @@ export default function AddProviderScreen() {
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>Help your neighbors find trusted local service providers</Text>
         </View>
 
-        <View style={[styles.form, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.form, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>NAME</Text>
             <TextInput
@@ -87,16 +87,27 @@ export default function AddProviderScreen() {
             <Text style={[styles.label, { color: colors.text }]}>CATEGORY</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
               {CATEGORIES.map(cat => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[
-                    styles.categoryChip,
-                    category === cat ? { backgroundColor: colors.primary, borderColor: colors.primary } : { backgroundColor: colors.background, borderColor: colors.border }
-                  ]}
-                  onPress={() => setCategory(cat)}
-                >
-                  <Text style={[styles.categoryText, { color: category === cat ? 'white' : colors.text }]}>{cat}</Text>
-                </TouchableOpacity>
+                category === cat ? (
+                  <LinearGradient
+                    key={cat}
+                    colors={[colors.gradientStart, colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.categoryChipGradient}
+                  >
+                    <TouchableOpacity onPress={() => setCategory(cat)}>
+                      <Text style={[styles.categoryText, { color: '#FFF' }]}>{cat}</Text>
+                    </TouchableOpacity>
+                  </LinearGradient>
+                ) : (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[styles.categoryChip, { backgroundColor: colors.glass, borderColor: colors.border }]}
+                    onPress={() => setCategory(cat)}
+                  >
+                    <Text style={[styles.categoryText, { color: colors.text }]}>{cat}</Text>
+                  </TouchableOpacity>
+                )
               ))}
             </ScrollView>
           </View>
@@ -128,13 +139,20 @@ export default function AddProviderScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 24) }]}>
-        <TouchableOpacity 
-          style={[styles.saveButton, { backgroundColor: colors.primary }]} 
+      <View style={[styles.footer, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 24), backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+        <TouchableOpacity
           onPress={handleSave}
           disabled={isLoading}
+          activeOpacity={0.85}
         >
-          {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Add Provider</Text>}
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.saveButton}
+          >
+            {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Add Provider</Text>}
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </View>
@@ -166,6 +184,11 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 3,
   },
   inputGroup: {
     marginBottom: 20,
@@ -194,6 +217,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderWidth: 1,
   },
+  categoryChipGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    marginRight: 8,
+  },
   categoryText: {
     fontSize: 14,
     fontWeight: '600',
@@ -209,7 +238,6 @@ const styles = StyleSheet.create({
   footer: {
     padding: 24,
     borderTopWidth: 1,
-    backgroundColor: 'white',
   },
   saveButton: {
     height: 58,

@@ -1,14 +1,15 @@
-import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
-import { Colors } from '../../constants/Colors';
-import { ProviderCard } from '../../components/ProviderCard';
-import { EmptyState } from '../../components/EmptyState';
-import { ProviderWithInteraction } from '../../lib/database.types';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { EmptyState } from '../../components/EmptyState';
+import { ProviderCard } from '../../components/ProviderCard';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
+import { ProviderWithInteraction } from '../../lib/database.types';
+import { supabase } from '../../lib/supabase';
 
 export default function FavoritesScreen() {
   const [providers, setProviders] = useState<ProviderWithInteraction[]>([]);
@@ -20,7 +21,7 @@ export default function FavoritesScreen() {
 
   const fetchFavorites = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('favorites')
@@ -77,12 +78,24 @@ export default function FavoritesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <LinearGradient
+        colors={[colors.background, colors.surface2, colors.background]}
+        locations={[0, 0.5, 1]}
+        style={styles.headerGradient}
+      >
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Saved</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>
+            Your favorite providers
+          </Text>
+        </View>
+      </LinearGradient>
       <FlatList
         data={providers}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <ProviderCard 
-            provider={item} 
+          <ProviderCard
+            provider={item}
             onPress={() => router.push(`/provider/${item.id}`)}
             onToggleFavorite={handleToggleFavorite}
             isLightMode={true}
@@ -93,9 +106,9 @@ export default function FavoritesScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
         ListEmptyComponent={
-          <EmptyState 
-            icon="heart-outline" 
-            title="No Favorites Yet" 
+          <EmptyState
+            icon="heart-outline"
+            title="No Favorites Yet"
             message="Tap the heart icon on a service provider to save them here."
             isLightMode={true}
           />
@@ -108,6 +121,24 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  headerGradient: {
+    paddingHorizontal: 0,
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginTop: 4,
   },
   listContent: {
     padding: 16,

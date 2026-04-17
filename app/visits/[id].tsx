@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Linking, Modal, TextInput, Alert, Image, Platform } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
-import { Colors } from '../../constants/Colors';
-import { VisitStatusBadge } from '../../components/VisitStatusBadge';
-import { JoinerListItem } from '../../components/JoinerListItem';
-import { VisitWithJoinerData, VisitJoinerWithProfile } from '../../lib/database.types';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { JoinerListItem } from '../../components/JoinerListItem';
+import { VisitStatusBadge } from '../../components/VisitStatusBadge';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
+import { VisitJoinerWithProfile, VisitWithJoinerData } from '../../lib/database.types';
+import { supabase } from '../../lib/supabase';
 
 export default function VisitDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -20,7 +21,7 @@ export default function VisitDetailScreen() {
   const [joiners, setJoiners] = useState<VisitJoinerWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
-  
+
   // Join Modal state
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [flatNo, setFlatNo] = useState(profile?.flat_number || '');
@@ -47,25 +48,29 @@ export default function VisitDetailScreen() {
       setJoiners(joinersData);
 
       const currentVisit = (visitsResult.data as VisitWithJoinerData[] || []).find(v => v.id === id);
-      
+
       if (!currentVisit) {
-        // Fallback: If not in the "upcoming/activerpc" list, fetch direct
+        // Fallback: If not in the "upcoming/active rpc" list, fetch direct
         const { data: directData, error: directError } = await supabase
           .from('service_visits')
-          .select(`
-            *,
-            creator:profiles!service_visits_created_by_fkey(full_name, flat_number, avatar_url)
-          `)
+          .select('*')
           .eq('id', id)
           .single();
-        
+
         if (directError) throw directError;
-        
+
+        // Fetch creator profile separately (created_by references auth.users, not profiles)
+        const { data: creatorProfile } = await supabase
+          .from('profiles')
+          .select('full_name, flat_number, avatar_url')
+          .eq('id', directData.created_by)
+          .maybeSingle();
+
         setVisit({
           ...directData,
-          creator_name: directData.creator.full_name,
-          creator_flat: directData.creator.flat_number,
-          creator_avatar_url: directData.creator.avatar_url,
+          creator_name: creatorProfile?.full_name || 'Unknown',
+          creator_flat: creatorProfile?.flat_number,
+          creator_avatar_url: creatorProfile?.avatar_url,
           joiner_count: joinersData.length
         });
       } else {
@@ -87,9 +92,17 @@ export default function VisitDetailScreen() {
     fetchVisitData();
   }, [fetchVisitData]);
 
+  const refreshJoiners = useCallback(async () => {
+    if (!id) return;
+    const { data } = await supabase.rpc('get_visit_joiners', { p_visit_id: id });
+    const joinersData = data || [];
+    setJoiners(joinersData);
+    setVisit(prev => prev ? { ...prev, joiner_count: joinersData.length, has_user_joined: joinersData.some((j: any) => j.user_id === user?.id) } : null);
+  }, [id, user?.id]);
+
   const handleJoin = async () => {
     if (!id || !user?.id) return;
-    
+
     setJoining(true);
     try {
       const { error } = await supabase.from('visit_joiners').insert({
@@ -103,7 +116,7 @@ export default function VisitDetailScreen() {
 
       Toast.show({ type: 'success', text1: 'Joined visit!' });
       setShowJoinModal(false);
-      fetchVisitData();
+      refreshJoiners();
     } catch (e: any) {
       console.error(e);
       Toast.show({ type: 'error', text1: 'Error joining', text2: e.message });
@@ -115,8 +128,8 @@ export default function VisitDetailScreen() {
   const handleLeave = async () => {
     Alert.alert('Leave Visit', 'Are you sure you want to leave this visit?', [
       { text: 'Cancel', style: 'cancel' },
-      { 
-        text: 'Leave', 
+      {
+        text: 'Leave',
         style: 'destructive',
         onPress: async () => {
           try {
@@ -124,10 +137,10 @@ export default function VisitDetailScreen() {
               .from('visit_joiners')
               .delete()
               .match({ visit_id: id, user_id: user?.id });
-            
+
             if (error) throw error;
             Toast.show({ type: 'success', text1: 'Left visit' });
-            fetchVisitData();
+            refreshJoiners();
           } catch (e) {
             console.error(e);
             Toast.show({ type: 'error', text1: 'Error leaving' });
@@ -143,10 +156,10 @@ export default function VisitDetailScreen() {
             .from('service_visits')
             .update({ status, updated_at: new Date().toISOString() })
             .eq('id', id);
-          
+
           if (error) throw error;
           Toast.show({ type: 'success', text1: `Visit marked as ${status}` });
-          fetchVisitData();
+          setVisit(prev => prev ? { ...prev, status } : null);
       } catch (e) {
           console.error(e);
           Toast.show({ type: 'error', text1: 'Error updating status' });
@@ -154,11 +167,11 @@ export default function VisitDetailScreen() {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-IN', { 
-        weekday: 'long', 
-        day: 'numeric', 
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+        weekday: 'long',
+        day: 'numeric',
         month: 'long',
-        year: 'numeric' 
+        year: 'numeric'
     });
   };
 
@@ -197,7 +210,7 @@ export default function VisitDetailScreen() {
             {visit.creator_avatar_url ? (
                <Image source={{ uri: visit.creator_avatar_url }} style={styles.creatorAvatar} />
             ) : (
-                <View style={[styles.creatorAvatarPlaceholder, { backgroundColor: colors.primary + '15' }]}>
+                <View style={[styles.creatorAvatarPlaceholder, { backgroundColor: colors.primary + '12' }]}>
                     <Text style={[styles.creatorInitials, { color: colors.primary }]}>
                         {visit.creator_name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
                     </Text>
@@ -208,8 +221,8 @@ export default function VisitDetailScreen() {
             <View style={styles.nameRow}>
                 <Text style={[styles.creatorName, { color: colors.text }]}>{visit.creator_name}</Text>
                 {isCreator && (
-                    <View style={[styles.hostBadge, { backgroundColor: '#10B98115' }]}>
-                        <Text style={styles.hostBadgeText}>Your visit</Text>
+                    <View style={[styles.hostBadge, { backgroundColor: '#10B98112' }]}>
+                        <Text style={[styles.hostBadgeText, { color: colors.secondary }]}>Your visit</Text>
                     </View>
                 )}
             </View>
@@ -218,7 +231,7 @@ export default function VisitDetailScreen() {
         </View>
 
         {/* Visit Details Card */}
-        <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
+        <View style={styles.detailCard}>
           <View style={styles.dateChipContainer}>
              <View style={[styles.dateChip, { backgroundColor: colors.primary + '10' }]}>
                 <Text style={[styles.dateChipText, { color: colors.primary }]}>{formatDate(visit.visit_date)}</Text>
@@ -238,32 +251,32 @@ export default function VisitDetailScreen() {
 
           <View style={styles.metaGrid}>
             <View style={styles.metaItem}>
-                <Text style={styles.metaLabel}>CATEGORY</Text>
+                <Text style={[styles.metaLabel, { color: colors.textMuted }]}>CATEGORY</Text>
                 <Text style={[styles.metaValue, { color: colors.text }]}>{visit.category}</Text>
             </View>
             <View style={styles.metaItem}>
-                <Text style={styles.metaLabel}>EST. COST</Text>
+                <Text style={[styles.metaLabel, { color: colors.textMuted }]}>EST. COST</Text>
                 <Text style={[styles.metaValue, { color: colors.text }]}>{visit.estimated_cost || 'Not specified'}</Text>
             </View>
           </View>
         </View>
 
         {/* Provider Profile */}
-        <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
-           <Text style={styles.cardTitle}>PROVIDER INFO</Text>
+        <View style={styles.infoCard}>
+           <Text style={[styles.cardTitle, { color: colors.textMuted }]}>PROVIDER INFO</Text>
            <View style={styles.providerHeader}>
               <View style={styles.providerMain}>
                 <Text style={[styles.providerName, { color: colors.text }]}>{visit.provider_name}</Text>
                 {(visit.provider_phone || visit.provider_whatsapp) && (
                     <View style={styles.contactRow}>
                         {visit.provider_phone && (
-                            <TouchableOpacity style={styles.contactBtn} onPress={() => Linking.openURL(`tel:${visit.provider_phone}`)}>
+                            <TouchableOpacity style={[styles.contactBtn, { backgroundColor: colors.surface2 }]} onPress={() => Linking.openURL(`tel:${visit.provider_phone}`)}>
                                 <Ionicons name="call" size={18} color={colors.primary} />
                             </TouchableOpacity>
                         )}
                         {visit.provider_whatsapp && (
-                            <TouchableOpacity style={styles.contactBtn} onPress={() => Linking.openURL(`https://wa.me/${visit.provider_whatsapp}`)}>
-                                <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
+                            <TouchableOpacity style={[styles.contactBtn, { backgroundColor: colors.surface2 }]} onPress={() => Linking.openURL(`https://wa.me/${visit.provider_whatsapp}`)}>
+                                <Ionicons name="logo-whatsapp" size={18} color={colors.secondary} />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -271,7 +284,7 @@ export default function VisitDetailScreen() {
               </View>
               {visit.provider_id && (
                   <TouchableOpacity onPress={() => router.push(`/provider/${visit.provider_id}`)}>
-                    <Text style={[styles.link, { color: colors.primary }]}>View profile →</Text>
+                    <Text style={[styles.link, { color: colors.primary }]}>View profile</Text>
                   </TouchableOpacity>
               )}
            </View>
@@ -279,13 +292,13 @@ export default function VisitDetailScreen() {
 
         {/* Joiners List */}
         <View style={styles.joinersSection}>
-           <Text style={[styles.cardTitle, { paddingHorizontal: 0 }]}>
+           <Text style={[styles.cardTitle, { paddingHorizontal: 0, color: colors.textMuted }]}>
              NEIGHBORS JOINING ({joiners.length} {visit.max_joiners ? `/ ${visit.max_joiners}` : ''})
            </Text>
-           
-           <View style={[styles.joinerList, { backgroundColor: colors.surface }]}>
+
+           <View style={styles.joinerList}>
               {/* Host is always first */}
-              <JoinerListItem 
+              <JoinerListItem
                 userName={visit.creator_name || 'Neighbor'}
                 flatNumber={visit.creator_flat || undefined}
                 avatarUrl={visit.creator_avatar_url || undefined}
@@ -295,7 +308,7 @@ export default function VisitDetailScreen() {
               {joiners.length > 0 ? (
                   joiners.map(joiner => (
                     <View key={joiner.id} style={{ borderTopWidth: 1, borderTopColor: colors.border }}>
-                        <JoinerListItem 
+                        <JoinerListItem
                             userName={joiner.user_name || 'Neighbor'}
                             flatNumber={joiner.flat_number || undefined}
                             avatarUrl={joiner.avatar_url || undefined}
@@ -319,22 +332,36 @@ export default function VisitDetailScreen() {
         {isCreator ? (
             <View style={styles.creatorActions}>
                 {visit.status === 'upcoming' && (
-                    <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.primary }]} onPress={() => updateStatus('completed')}>
-                        <Text style={styles.primaryBtnText}>Mark as Completed</Text>
+                    <TouchableOpacity style={styles.primaryBtn} onPress={() => updateStatus('completed')}>
+                        <LinearGradient
+                          colors={[colors.gradientStart, colors.gradientEnd]}
+                          style={styles.primaryBtnGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                        >
+                            <Text style={styles.primaryBtnText}>Mark as Completed</Text>
+                        </LinearGradient>
                     </TouchableOpacity>
                 )}
                 <TouchableOpacity style={styles.cancelBtn} onPress={() => updateStatus('cancelled')}>
-                    <Text style={styles.cancelBtnText}>Cancel Visit</Text>
+                    <Text style={[styles.cancelBtnText, { color: colors.accent }]}>Cancel Visit</Text>
                 </TouchableOpacity>
             </View>
         ) : visit.has_user_joined ? (
             <TouchableOpacity style={styles.leaveBtn} onPress={handleLeave}>
-                <Ionicons name="exit-outline" size={20} color="#EF4444" />
-                <Text style={styles.leaveBtnText}>Leave this visit</Text>
+                <Ionicons name="exit-outline" size={20} color={colors.accent} />
+                <Text style={[styles.leaveBtnText, { color: colors.accent }]}>Leave this visit</Text>
             </TouchableOpacity>
         ) : visit.status === 'upcoming' && !isFull ? (
-            <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.primary }]} onPress={() => setShowJoinModal(true)}>
-                <Text style={styles.primaryBtnText}>Join this visit</Text>
+            <TouchableOpacity style={styles.primaryBtn} onPress={() => setShowJoinModal(true)}>
+                <LinearGradient
+                  colors={[colors.gradientStart, colors.gradientEnd]}
+                  style={styles.primaryBtnGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                    <Text style={styles.primaryBtnText}>Join this visit</Text>
+                </LinearGradient>
             </TouchableOpacity>
         ) : isFull ? (
             <View style={[styles.disabledBtn, { backgroundColor: colors.border }]}>
@@ -354,15 +381,16 @@ export default function VisitDetailScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <KeyboardAvoidingView 
+                <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={styles.modalBody}
                 >
                     <View style={styles.inputGroup}>
                         <Text style={[styles.label, { color: colors.text }]}>MY FLAT NUMBER</Text>
-                        <TextInput 
-                            style={[styles.input, { borderColor: colors.border, color: colors.text }]} 
-                            placeholder="e.g. A-204" 
+                        <TextInput
+                            style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
+                            placeholder="e.g. A-204"
+                            placeholderTextColor={colors.textMuted}
                             value={flatNo}
                             onChangeText={setFlatNo}
                         />
@@ -370,9 +398,10 @@ export default function VisitDetailScreen() {
 
                     <View style={styles.inputGroup}>
                         <Text style={[styles.label, { color: colors.text }]}>NOTE FOR PROVIDER (OPTIONAL)</Text>
-                        <TextInput 
-                            style={[styles.modalTextArea, { borderColor: colors.border, color: colors.text }]} 
-                            placeholder="e.g. Need 2 ACs cleaned" 
+                        <TextInput
+                            style={[styles.modalTextArea, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
+                            placeholder="e.g. Need 2 ACs cleaned"
+                            placeholderTextColor={colors.textMuted}
                             multiline
                             value={note}
                             onChangeText={setNote}
@@ -380,12 +409,19 @@ export default function VisitDetailScreen() {
                         />
                     </View>
 
-                    <TouchableOpacity 
-                        style={[styles.primaryBtn, { backgroundColor: colors.primary, marginTop: 12 }]} 
+                    <TouchableOpacity
+                        style={[styles.primaryBtn, { marginTop: 12 }]}
                         onPress={handleJoin}
                         disabled={joining}
                     >
-                        {joining ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryBtnText}>Confirm Join</Text>}
+                        <LinearGradient
+                          colors={[colors.gradientStart, colors.gradientEnd]}
+                          style={styles.primaryBtnGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                        >
+                            {joining ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryBtnText}>Confirm Join</Text>}
+                        </LinearGradient>
                     </TouchableOpacity>
                 </KeyboardAvoidingView>
             </View>
@@ -465,7 +501,6 @@ const styles = StyleSheet.create({
   hostBadgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#10B981',
     textTransform: 'uppercase',
   },
   creatorFlat: {
@@ -478,11 +513,14 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 24,
     marginBottom: 20,
-    shadowColor: '#000',
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    shadowColor: '#6C63FF',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   dateChipContainer: {
     flexDirection: 'row',
@@ -531,7 +569,6 @@ const styles = StyleSheet.create({
   metaLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#9CA3AF',
     letterSpacing: 1,
     marginBottom: 4,
   },
@@ -544,11 +581,18 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 24,
     marginBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   cardTitle: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#9CA3AF',
     letterSpacing: 1.5,
     marginBottom: 16,
     paddingHorizontal: 24,
@@ -574,7 +618,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -589,6 +632,14 @@ const styles = StyleSheet.create({
   joinerList: {
     borderRadius: 24,
     padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   emptyJoiners: {
     padding: 20,
@@ -604,6 +655,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   primaryBtn: {
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  primaryBtnGradient: {
     height: 58,
     borderRadius: 18,
     justifyContent: 'center',
@@ -622,7 +677,6 @@ const styles = StyleSheet.create({
     height: 58,
   },
   leaveBtnText: {
-    color: '#EF4444',
     fontSize: 16,
     fontWeight: '700',
   },
@@ -635,7 +689,6 @@ const styles = StyleSheet.create({
       alignItems: 'center',
   },
   cancelBtnText: {
-      color: '#EF4444',
       fontSize: 14,
       fontWeight: '700',
   },
@@ -651,7 +704,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      backgroundColor: 'rgba(45, 43, 85, 0.5)',
       justifyContent: 'flex-end',
   },
   modalContent: {

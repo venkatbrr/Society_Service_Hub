@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Colors } from '../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Colors } from '../constants/Colors';
 
 type ActiveFundTeaserProps = {
   title: string;
@@ -15,44 +16,55 @@ export const ActiveFundTeaser = ({ title, collected, goal, onPress }: ActiveFund
   const progress = goal > 0 ? Math.min(collected / goal, 1) : 0;
 
   return (
-    <TouchableOpacity 
-      style={[styles.container, { backgroundColor: '#FFF', shadowColor: '#000' }]} 
+    <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
+      style={styles.wrapper}
     >
-      <View style={styles.header}>
-        <View style={styles.titleArea}>
-           <Text style={[styles.label, { color: colors.primary }]}>Active Fund</Text>
-           <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      <LinearGradient
+        colors={[colors.gradientStart, colors.gradientEnd]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.container}
+      >
+        <View style={styles.header}>
+          <View style={styles.titleArea}>
+            <Text style={styles.label}>Active Fund</Text>
+            <Text style={styles.title}>{title}</Text>
+          </View>
+          <View style={styles.iconContainer}>
+            <Ionicons name="wallet-outline" size={20} color="#FFF" />
+          </View>
         </View>
-        <View style={[styles.iconContainer, { backgroundColor: colors.primary + '15' }]}>
-           <Ionicons name="wallet-outline" size={20} color={colors.primary} />
+
+        <View style={styles.statsRow}>
+          <Text style={styles.amount}>{collected.toLocaleString()}</Text>
+          <Text style={styles.goal}>of {goal.toLocaleString()}</Text>
         </View>
-      </View>
 
-      <View style={styles.statsRow}>
-         <Text style={[styles.amount, { color: colors.text }]}>₹{collected.toLocaleString()}</Text>
-         <Text style={[styles.goal, { color: colors.textMuted }]}>of ₹{goal.toLocaleString()}</Text>
-      </View>
-
-      <View style={[styles.progressBg, { backgroundColor: colors.surface2 }]}>
-         <View style={[styles.progressFill, { backgroundColor: colors.primary, width: `${progress * 100}%` }]} />
-      </View>
+        <View style={styles.progressBg}>
+          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+        </View>
+      </LinearGradient>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     marginHorizontal: 20,
     marginTop: 8,
     marginBottom: 20,
-    padding: 20,
     borderRadius: 24,
     elevation: 4,
+    shadowColor: '#6C63FF',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+  },
+  container: {
+    padding: 20,
+    borderRadius: 24,
   },
   header: {
     flexDirection: 'row',
@@ -69,10 +81,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 4,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   title: {
     fontSize: 18,
     fontWeight: '700',
+    color: '#FFF',
   },
   iconContainer: {
     width: 40,
@@ -80,6 +94,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   statsRow: {
     flexDirection: 'row',
@@ -90,18 +105,22 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: 22,
     fontWeight: '800',
+    color: '#FFF',
   },
   goal: {
     fontSize: 14,
     fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   progressBg: {
     height: 8,
     borderRadius: 4,
     overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   progressFill: {
     height: '100%',
     borderRadius: 4,
+    backgroundColor: '#FFF',
   },
 });

@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Share } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as Linking from 'expo-linking';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
-import { Colors } from '../../constants/Colors';
-import { RatingStars } from '../../components/RatingStars';
-import { ProviderWithInteraction } from '../../lib/database.types';
-import { CATEGORY_COLORS } from '../../constants/categories';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Linking from 'expo-linking';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { RatingStars } from '../../components/RatingStars';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
+import { ProviderWithInteraction } from '../../lib/database.types';
+import { supabase } from '../../lib/supabase';
 
 const isMissingRelationError = (error: { code?: string; message?: string } | null) =>
   error?.code === 'PGRST205' ||
@@ -31,7 +31,7 @@ export default function ProviderDetailScreen() {
   const fetchProvider = async () => {
     try {
       if (!id || id === 'add') return;
-      
+
       const { data: providerData, error: providerError } = await supabase
         .from('service_providers')
         .select('*')
@@ -203,7 +203,10 @@ export default function ProviderDetailScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.headerCard, { backgroundColor: colors.primary }]}>
+      <LinearGradient
+        colors={[colors.gradientStart, colors.gradientEnd]}
+        style={styles.headerCard}
+      >
         <View style={styles.headerTop}>
            <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
              <Ionicons name="arrow-back" size={24} color="#FFF" />
@@ -212,7 +215,7 @@ export default function ProviderDetailScreen() {
              <Ionicons name={provider.is_favorite ? "heart" : "heart-outline"} size={28} color={provider.is_favorite ? colors.accent : "#FFF"} />
            </TouchableOpacity>
         </View>
-        
+
         <View style={styles.headerContent}>
           <View style={styles.imagePlaceholderLarge}>
             <Ionicons name="person" size={48} color="#FFF" />
@@ -229,59 +232,59 @@ export default function ProviderDetailScreen() {
             </View>
             <Text style={styles.categoryTextDisp}>{provider.category}</Text>
             <View style={styles.ratingRowDisp}>
-               <Ionicons name="star" size={18} color="#FFD700" />
+               <Ionicons name="star" size={18} color={colors.warning} />
                <Text style={styles.ratingValueDisp}>{Number(provider.avg_rating || 0).toFixed(1)}</Text>
                <Text style={styles.ratingCountDisp}>({provider.rating_count || 0} reviews)</Text>
             </View>
           </View>
         </View>
-      </View>
+      </LinearGradient>
 
       <View style={styles.trustBanner}>
          <View style={styles.trustStat}>
-            <Text style={styles.trustStatValue}>{provider.hire_count || 0}</Text>
-            <Text style={styles.trustStatLabel}>Homes used</Text>
+            <Text style={[styles.trustStatValue, { color: colors.text }]}>{provider.hire_count || 0}</Text>
+            <Text style={[styles.trustStatLabel, { color: colors.textMuted }]}>Homes used</Text>
          </View>
-         <View style={styles.trustDivider} />
+         <View style={[styles.trustDivider, { backgroundColor: colors.border }]} />
          <View style={styles.trustStat}>
-            <Text style={styles.trustStatValue}>{provider.rating_count || 0}</Text>
-            <Text style={styles.trustStatLabel}>Community reviews</Text>
+            <Text style={[styles.trustStatValue, { color: colors.text }]}>{provider.rating_count || 0}</Text>
+            <Text style={[styles.trustStatLabel, { color: colors.textMuted }]}>Community reviews</Text>
          </View>
       </View>
 
       <View style={styles.actionGrid}>
-        <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: '#10B981' }]} onPress={handleWhatsApp}>
+        <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: colors.secondary }]} onPress={handleWhatsApp}>
           <Ionicons name="logo-whatsapp" size={24} color="#FFF" />
           <Text style={styles.mainActionText}>WhatsApp</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: '#3B82F6' }]} onPress={handleCall}>
+        <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: colors.primary }]} onPress={handleCall}>
           <Ionicons name="call" size={24} color="#FFF" />
           <Text style={styles.mainActionText}>Call</Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.hireAgainBtn} onPress={handleHireAgain}>
+      <TouchableOpacity style={[styles.hireAgainBtn, { borderColor: colors.border }]} onPress={handleHireAgain}>
         <Ionicons name="refresh" size={20} color={colors.primary} />
         <Text style={[styles.hireAgainText, { color: colors.primary }]}>Hire Again</Text>
       </TouchableOpacity>
 
-      <View style={[styles.detailsCard, { backgroundColor: colors.surface }]}>
+      <View style={styles.detailsCard}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Experience Details</Text>
         <Text style={[styles.detailText, { color: colors.textMuted, marginTop: 8 }]}>
           {provider.description || `${provider.name} is a trusted provider in our gated community.`}
         </Text>
         {provider.flat_block ? (
-          <View style={styles.infoRow}>
+          <View style={[styles.infoRow, { borderTopColor: colors.border }]}>
             <Ionicons name="location-outline" size={20} color={colors.textMuted} />
             <Text style={[styles.infoText, { color: colors.text }]}>Usually works at {provider.flat_block}</Text>
           </View>
         ) : null}
       </View>
 
-      <View style={[styles.detailsCard, { backgroundColor: colors.surface }]}>
+      <View style={styles.detailsCard}>
          <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 16 }]}>Rate this Provider</Text>
          <RatingStars rating={provider.user_rating || 0} onRating={handleRating} size={36} isLightMode={true} />
-         <Text style={styles.reviewNote}>Reviews are only visible to our community members.</Text>
+         <Text style={[styles.reviewNote, { color: colors.textMuted }]}>Reviews are only visible to our community members.</Text>
       </View>
 
       <View style={styles.actionRowAlt}>
@@ -319,23 +322,50 @@ const styles = StyleSheet.create({
   ratingRowDisp: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   ratingValueDisp: { color: '#FFF', fontSize: 18, fontWeight: '700' },
   ratingCountDisp: { color: 'rgba(255,255,255,0.7)', fontSize: 14 },
-  iconButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
-  trustBanner: { flexDirection: 'row', backgroundColor: '#FFF', marginHorizontal: 20, marginTop: -25, borderRadius: 16, padding: 20, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 },
+  iconButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.18)', justifyContent: 'center', alignItems: 'center' },
+  trustBanner: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    marginHorizontal: 20,
+    marginTop: -25,
+    borderRadius: 16,
+    padding: 20,
+    elevation: 4,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
   trustStat: { flex: 1, alignItems: 'center' },
-  trustStatValue: { fontSize: 20, fontWeight: '800', color: '#1A202C' },
-  trustStatLabel: { fontSize: 12, color: '#718096', fontWeight: '500', marginTop: 2 },
-  trustDivider: { width: 1, height: '100%', backgroundColor: '#E2E8F0' },
+  trustStatValue: { fontSize: 20, fontWeight: '800' },
+  trustStatLabel: { fontSize: 12, fontWeight: '500', marginTop: 2 },
+  trustDivider: { width: 1, height: '100%' },
   actionGrid: { flexDirection: 'row', padding: 20, gap: 15 },
   mainActionBtn: { flex: 1, flexDirection: 'row', height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', gap: 10, elevation: 2 },
   mainActionText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-  hireAgainBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, marginBottom: 20, padding: 16, borderRadius: 16, borderWidth: 1.5, borderColor: '#E2E8F0', gap: 8 },
+  hireAgainBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, marginBottom: 20, padding: 16, borderRadius: 16, borderWidth: 1.5, gap: 8 },
   hireAgainText: { fontSize: 15, fontWeight: '700' },
-  detailsCard: { backgroundColor: '#FFF', marginHorizontal: 20, marginBottom: 20, padding: 24, borderRadius: 24, elevation: 1 },
+  detailsCard: {
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 24,
+    borderRadius: 24,
+    elevation: 1,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
   sectionTitle: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
   detailText: { fontSize: 15, lineHeight: 22 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 20, paddingTop: 20, borderTopWidth: 1 },
   infoText: { fontSize: 15, fontWeight: '500' },
-  reviewNote: { fontSize: 12, color: '#9CA3AF', marginTop: 12, textAlign: 'center' },
+  reviewNote: { fontSize: 12, marginTop: 12, textAlign: 'center' },
   actionRowAlt: { padding: 20, paddingBottom: 40, alignItems: 'center' },
   altBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   altBtnText: { fontSize: 14, fontWeight: '600' },

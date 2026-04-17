@@ -1,29 +1,30 @@
-﻿import React, { useCallback, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
-import { Colors } from '../../constants/Colors';
-import { Tables } from '../../lib/database.types';
-import { useAuth } from '../../context/AuthContext';
-import Toast from 'react-native-toast-message';
+import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  MAX_COLLECTORS,
-  MAX_TREASURERS,
-  MIN_TREASURERS,
-  formatRole,
-  getEffectiveFundRole,
-  getFundPermissions,
-  getRestrictionHint,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import Toast from 'react-native-toast-message';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
+import { Tables } from '../../lib/database.types';
+import {
+    MAX_COLLECTORS,
+    MAX_TREASURERS,
+    MIN_TREASURERS,
+    formatRole,
+    getEffectiveFundRole,
+    getFundPermissions,
+    getRestrictionHint,
 } from '../../lib/fundRoles';
+import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 type FundDetail = Tables<'events'> & {
@@ -102,7 +103,7 @@ export default function FundDetailScreen() {
 
   if (loading || !fund) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}> 
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -227,9 +228,12 @@ export default function FundDetailScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}> 
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={[styles.header, { backgroundColor: colors.primary }]}> 
+        <LinearGradient
+          colors={[colors.gradientStart, colors.gradientEnd]}
+          style={styles.header}
+        >
           <View style={styles.headerTop}>
             <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
               <Ionicons name="arrow-back" size={24} color="#FFF" />
@@ -265,16 +269,16 @@ export default function FundDetailScreen() {
               <Text style={styles.sumValue}>Rs {balance.toLocaleString()}</Text>
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
         <View style={styles.accessCard}>
           <View style={styles.accessHeader}>
-            <Text style={styles.accessTitle}>Role Access</Text>
+            <Text style={[styles.accessTitle, { color: colors.text }]}>Role Access</Text>
             <Ionicons name="shield-checkmark" size={18} color={colors.primary} />
           </View>
-          <Text style={styles.accessText}>{getRestrictionHint(fundRole)}</Text>
-          <Text style={styles.accessText}>{addContributionHint}</Text>
-          <Text style={styles.accessText}>{addExpenseHint}</Text>
+          <Text style={[styles.accessText, { color: colors.textMuted }]}>{getRestrictionHint(fundRole)}</Text>
+          <Text style={[styles.accessText, { color: colors.textMuted }]}>{addContributionHint}</Text>
+          <Text style={[styles.accessText, { color: colors.textMuted }]}>{addExpenseHint}</Text>
         </View>
 
         <View style={styles.actionsCard}>
@@ -282,7 +286,7 @@ export default function FundDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                { backgroundColor: permissions.canAddContribution ? '#10B981' : colors.surface2 },
+                { backgroundColor: permissions.canAddContribution ? colors.secondary : colors.surface2 },
               ]}
               onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=income`)}
               disabled={!permissions.canAddContribution}
@@ -305,7 +309,7 @@ export default function FundDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                { backgroundColor: permissions.canAddExpense ? '#F43F5E' : colors.surface2 },
+                { backgroundColor: permissions.canAddExpense ? colors.accent : colors.surface2 },
               ]}
               onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=expense`)}
               disabled={!permissions.canAddExpense}
@@ -329,8 +333,8 @@ export default function FundDetailScreen() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Contribution Status</Text>
-            <Text style={styles.sectionBadge}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Contribution Status</Text>
+            <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>
               {incomeTransactions.length} paid / {visibleMembers.length} members
             </Text>
           </View>
@@ -349,8 +353,8 @@ export default function FundDetailScreen() {
                   />
                 </View>
                 <View style={styles.transMain}>
-                  <Text style={styles.transName}>{profileNames.get(member.id) ?? 'Resident'}</Text>
-                  <Text style={styles.transDate}>
+                  <Text style={[styles.transName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
+                  <Text style={[styles.transDate, { color: colors.textMuted }]}>
                     {isPaid && contribution
                       ? `Paid on ${new Date(contribution.created_at).toLocaleDateString()}`
                       : 'Pending contribution'}
@@ -360,7 +364,7 @@ export default function FundDetailScreen() {
                   <Text style={[styles.statusLabel, { color: isPaid ? '#15803D' : '#B45309' }]}>
                     {isPaid ? 'Paid' : 'Pending'}
                   </Text>
-                  <Text style={[styles.transAmount, { color: isPaid ? '#10B981' : colors.textMuted }]}>
+                  <Text style={[styles.transAmount, { color: isPaid ? colors.secondary : colors.textMuted }]}>
                     {isPaid && contribution ? `Rs ${Number(contribution.amount).toLocaleString()}` : '--'}
                   </Text>
                 </View>
@@ -372,18 +376,18 @@ export default function FundDetailScreen() {
         {permissions.canManageTreasurers ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Manage Treasurers</Text>
-              <Text style={styles.sectionBadge}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Manage Treasurers</Text>
+              <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>
                 {treasurers.length}/{MAX_TREASURERS}
               </Text>
             </View>
-            <Text style={styles.helperText}>Keep at least 1 treasurer active on every fund.</Text>
+            <Text style={[styles.helperText, { color: colors.textMuted }]}>Keep at least 1 treasurer active on every fund.</Text>
 
             {treasurers.map((assignment) => (
               <View key={assignment.id} style={styles.roleRow}>
                 <View style={styles.roleInfo}>
-                  <Text style={styles.roleName}>{profileNames.get(assignment.user_id) ?? 'Resident'}</Text>
-                  <Text style={styles.roleMeta}>Treasurer</Text>
+                  <Text style={[styles.roleName, { color: colors.text }]}>{profileNames.get(assignment.user_id) ?? 'Resident'}</Text>
+                  <Text style={[styles.roleMeta, { color: colors.textMuted }]}>Treasurer</Text>
                 </View>
                 <TouchableOpacity
                   style={[
@@ -394,12 +398,12 @@ export default function FundDetailScreen() {
                   onPress={() => handleRemoveRole(assignment)}
                 >
                   {savingRoleId === assignment.id ? (
-                    <ActivityIndicator size="small" color="#EF4444" />
+                    <ActivityIndicator size="small" color={colors.accent} />
                   ) : (
                     <Text
                       style={[
                         styles.roleActionText,
-                        { color: treasurers.length <= MIN_TREASURERS ? colors.textMuted : '#EF4444' },
+                        { color: treasurers.length <= MIN_TREASURERS ? colors.textMuted : colors.accent },
                       ]}
                     >
                       Remove
@@ -412,8 +416,8 @@ export default function FundDetailScreen() {
             {availableTreasurers.map((member) => (
               <View key={member.id} style={styles.roleRow}>
                 <View style={styles.roleInfo}>
-                  <Text style={styles.roleName}>{profileNames.get(member.id) ?? 'Resident'}</Text>
-                  <Text style={styles.roleMeta}>
+                  <Text style={[styles.roleName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
+                  <Text style={[styles.roleMeta, { color: colors.textMuted }]}>
                     {collectors.some((assignment) => assignment.user_id === member.id)
                       ? 'Collector today'
                       : 'Resident'}
@@ -445,18 +449,18 @@ export default function FundDetailScreen() {
         {permissions.canManageCollectors ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Manage Collectors</Text>
-              <Text style={styles.sectionBadge}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Manage Collectors</Text>
+              <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>
                 {collectors.length}/{MAX_COLLECTORS}
               </Text>
             </View>
-            <Text style={styles.helperText}>Collectors can add contributions and mark residents as paid.</Text>
+            <Text style={[styles.helperText, { color: colors.textMuted }]}>Collectors can add contributions and mark residents as paid.</Text>
 
             {collectors.map((assignment) => (
               <View key={assignment.id} style={styles.roleRow}>
                 <View style={styles.roleInfo}>
-                  <Text style={styles.roleName}>{profileNames.get(assignment.user_id) ?? 'Resident'}</Text>
-                  <Text style={styles.roleMeta}>Collector</Text>
+                  <Text style={[styles.roleName, { color: colors.text }]}>{profileNames.get(assignment.user_id) ?? 'Resident'}</Text>
+                  <Text style={[styles.roleMeta, { color: colors.textMuted }]}>Collector</Text>
                 </View>
                 <TouchableOpacity
                   style={[styles.roleAction, { backgroundColor: '#FEE2E2' }]}
@@ -464,9 +468,9 @@ export default function FundDetailScreen() {
                   onPress={() => handleRemoveRole(assignment)}
                 >
                   {savingRoleId === assignment.id ? (
-                    <ActivityIndicator size="small" color="#EF4444" />
+                    <ActivityIndicator size="small" color={colors.accent} />
                   ) : (
-                    <Text style={[styles.roleActionText, { color: '#EF4444' }]}>Remove</Text>
+                    <Text style={[styles.roleActionText, { color: colors.accent }]}>Remove</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -475,8 +479,8 @@ export default function FundDetailScreen() {
             {availableCollectors.map((member) => (
               <View key={member.id} style={styles.roleRow}>
                 <View style={styles.roleInfo}>
-                  <Text style={styles.roleName}>{profileNames.get(member.id) ?? 'Resident'}</Text>
-                  <Text style={styles.roleMeta}>Resident</Text>
+                  <Text style={[styles.roleName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
+                  <Text style={[styles.roleMeta, { color: colors.textMuted }]}>Resident</Text>
                 </View>
                 <TouchableOpacity
                   style={[styles.roleAction, { backgroundColor: '#DCFCE7' }]}
@@ -503,28 +507,28 @@ export default function FundDetailScreen() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Expense List</Text>
-            <Text style={styles.sectionBadge}>{expenseTransactions.length} entries</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Expense List</Text>
+            <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>{expenseTransactions.length} entries</Text>
           </View>
           {expenseTransactions.map((transaction) => (
             <View key={transaction.id} style={styles.transactionRow}>
               <View style={[styles.avatar, { backgroundColor: '#FEE2E2' }]}>
-                <Ionicons name="receipt" size={16} color="#F43F5E" />
+                <Ionicons name="receipt" size={16} color={colors.accent} />
               </View>
               <View style={styles.transMain}>
-                <Text style={styles.transName}>{transaction.title || 'Expense'}</Text>
-                <Text style={styles.transDate}>
+                <Text style={[styles.transName, { color: colors.text }]}>{transaction.title || 'Expense'}</Text>
+                <Text style={[styles.transDate, { color: colors.textMuted }]}>
                   {transaction.description?.trim()
                     ? `${transaction.description.trim()} - ${new Date(transaction.created_at).toLocaleDateString()}`
                     : new Date(transaction.created_at).toLocaleDateString()}
                 </Text>
               </View>
-              <Text style={[styles.transAmount, { color: '#F43F5E' }]}>
+              <Text style={[styles.transAmount, { color: colors.accent }]}>
                 Rs {Number(transaction.amount).toLocaleString()}
               </Text>
             </View>
           ))}
-          {expenseTransactions.length === 0 ? <Text style={styles.emptyNote}>No expenses logged yet.</Text> : null}
+          {expenseTransactions.length === 0 ? <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No expenses logged yet.</Text> : null}
         </View>
 
         <View style={{ height: 100 }} />
@@ -559,7 +563,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -629,16 +633,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
   accessCard: {
-    backgroundColor: '#FFF',
+    backgroundColor: 'rgba(255,255,255,0.85)',
     marginHorizontal: 24,
     marginTop: -20,
     padding: 24,
     borderRadius: 24,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: '#6C63FF',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   accessHeader: {
     flexDirection: 'row',
@@ -653,7 +659,6 @@ const styles = StyleSheet.create({
   accessText: {
     fontSize: 13,
     lineHeight: 19,
-    color: '#64748B',
     marginBottom: 4,
   },
   actionsCard: {
@@ -696,13 +701,11 @@ const styles = StyleSheet.create({
   sectionBadge: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#64748B',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   helperText: {
     fontSize: 13,
-    color: '#64748B',
     lineHeight: 18,
     marginBottom: 12,
   },
@@ -710,9 +713,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
-    backgroundColor: '#FFF',
+    backgroundColor: 'rgba(255,255,255,0.85)',
     padding: 12,
     borderRadius: 20,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   avatar: {
     width: 40,
@@ -731,7 +741,6 @@ const styles = StyleSheet.create({
   },
   transDate: {
     fontSize: 12,
-    color: '#9CA3AF',
     marginTop: 2,
   },
   statusBlock: {
@@ -751,17 +760,23 @@ const styles = StyleSheet.create({
   },
   emptyNote: {
     fontSize: 14,
-    color: '#9CA3AF',
     fontStyle: 'italic',
   },
   roleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFF',
+    backgroundColor: 'rgba(255,255,255,0.85)',
     padding: 14,
     borderRadius: 20,
     marginBottom: 12,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   roleInfo: {
     flex: 1,
@@ -772,7 +787,6 @@ const styles = StyleSheet.create({
   },
   roleMeta: {
     fontSize: 12,
-    color: '#94A3B8',
     marginTop: 4,
   },
   roleAction: {
@@ -789,4 +803,3 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 });
-

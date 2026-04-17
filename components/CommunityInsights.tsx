@@ -1,8 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React, { ComponentProps } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
-import { ComponentProps } from 'react';
 
 type Insight = {
   title: string;
@@ -21,15 +20,15 @@ export const CommunityInsights = ({ insights }: CommunityInsightsProps) => {
   return (
     <View style={styles.container}>
       <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Community Insights</Text>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {insights.map((insight, index) => (
-          <View 
-            key={index} 
-            style={[styles.card, { backgroundColor: insight.color + '15' }]}
+          <View
+            key={index}
+            style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
           >
             <View style={[styles.iconContainer, { backgroundColor: insight.color }]}>
               <Ionicons name={insight.icon} size={18} color="#FFF" />
@@ -68,6 +67,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     minWidth: 180,
     gap: 12,
+    borderWidth: 1,
   },
   iconContainer: {
     width: 36,

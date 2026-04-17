@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  TextInput, 
-  ActivityIndicator, 
-  KeyboardAvoidingView, 
-  Platform, 
-  ScrollView 
-} from 'react-native';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
-import { useRouter } from 'expo-router';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
-import { Colors } from '../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
 import Toast from 'react-native-toast-message';
-import { signInWithEmail, signUpWithEmail, getAuthErrorMessage } from '../lib/auth';
+import { Colors } from '../constants/Colors';
+import { getAuthErrorMessage, signInWithEmail, signUpWithEmail } from '../lib/auth';
+import { supabase } from '../lib/supabase';
 
 type AuthMode = 'signIn' | 'signUp';
 
@@ -69,20 +69,20 @@ export default function LoginScreen() {
       if (mode === 'signUp') {
         const { data, error } = await signUpWithEmail(email.trim(), password, fullName.trim());
         if (error) throw error;
-        
+
         if (data.session) {
-          Toast.show({ 
-            type: 'success', 
-            text1: 'Welcome!', 
+          Toast.show({
+            type: 'success',
+            text1: 'Welcome!',
             text2: 'Account created and signed in successfully.',
             visibilityTime: 4000
           });
         } else {
-          Toast.show({ 
-            type: 'success', 
-            text1: 'Account Created', 
-            text2: 'Sign up successful! You can now try to sign in with your email.', 
-            visibilityTime: 8000 
+          Toast.show({
+            type: 'success',
+            text1: 'Account Created',
+            text2: 'Sign up successful! You can now try to sign in with your email.',
+            visibilityTime: 8000
           });
           // After a short delay, switch to sign-in mode for them
           setTimeout(() => setMode('signIn'), 2500);
@@ -103,13 +103,13 @@ export default function LoginScreen() {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      
+
       if (userInfo.data?.idToken) {
         const { error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: userInfo.data.idToken,
         });
-        
+
         if (error) throw error;
       } else {
         throw new Error('No ID token present!');
@@ -117,10 +117,10 @@ export default function LoginScreen() {
     } catch (error: any) {
       if (error.code !== statusCodes.SIGN_IN_CANCELLED) {
         console.error('Google Sign-In Error:', error);
-        Toast.show({ 
-          type: 'error', 
-          text1: 'Google Auth Error', 
-          text2: error.message || 'Failed to sign in with Google' 
+        Toast.show({
+          type: 'error',
+          text1: 'Google Auth Error',
+          text2: error.message || 'Failed to sign in with Google'
         });
       }
     } finally {
@@ -129,26 +129,81 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor: colors.background }]}
     >
+      {/* Subtle gradient overlay at top */}
+      <LinearGradient
+        colors={[colors.gradientStart + '12', colors.gradientEnd + '08', 'transparent']}
+        style={styles.gradientOverlay}
+      />
+
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Ionicons name="home" size={48} color={colors.primary} />
-          </View>
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            style={styles.logoContainer}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Ionicons name="home" size={36} color="#FFF" />
+          </LinearGradient>
           <Text style={[styles.title, { color: colors.text }]}>Society Service Hub</Text>
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>
             {mode === 'signIn' ? 'Welcome back! Sign in to continue.' : 'Join your community marketplace.'}
           </Text>
         </View>
 
+        {/* Tab toggle */}
+        <View style={[styles.tabContainer, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+          <TouchableOpacity
+            style={[styles.tabButton]}
+            onPress={() => { setMode('signIn'); setPassword(''); setConfirmPassword(''); }}
+            activeOpacity={0.7}
+          >
+            {mode === 'signIn' ? (
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                style={styles.tabGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.tabActiveText}>Sign In</Text>
+              </LinearGradient>
+            ) : (
+              <View style={styles.tabInactive}>
+                <Text style={[styles.tabInactiveText, { color: colors.textMuted }]}>Sign In</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabButton]}
+            onPress={() => { setMode('signUp'); setPassword(''); setConfirmPassword(''); }}
+            activeOpacity={0.7}
+          >
+            {mode === 'signUp' ? (
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                style={styles.tabGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.tabActiveText}>Sign Up</Text>
+              </LinearGradient>
+            ) : (
+              <View style={styles.tabInactive}>
+                <Text style={[styles.tabInactiveText, { color: colors.textMuted }]}>Sign Up</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.form}>
           {mode === 'signUp' && (
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: colors.text }]}>FULL NAME</Text>
-              <View style={[styles.inputContainer, { borderColor: colors.border }]}>
+              <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
                 <Ionicons name="person-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -163,7 +218,7 @@ export default function LoginScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>EMAIL ADDRESS</Text>
-            <View style={[styles.inputContainer, { borderColor: colors.border }]}>
+            <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
               <Ionicons name="mail-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
@@ -179,7 +234,7 @@ export default function LoginScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>PASSWORD</Text>
-            <View style={[styles.inputContainer, { borderColor: colors.border }]}>
+            <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
               <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
@@ -190,10 +245,10 @@ export default function LoginScreen() {
                 secureTextEntry={!showPassword}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons 
-                  name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                  size={20} 
-                  color={colors.textMuted} 
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color={colors.textMuted}
                 />
               </TouchableOpacity>
             </View>
@@ -202,7 +257,7 @@ export default function LoginScreen() {
           {mode === 'signUp' && (
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: colors.text }]}>CONFIRM PASSWORD</Text>
-              <View style={[styles.inputContainer, { borderColor: colors.border }]}>
+              <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
                 <Ionicons name="shield-checkmark-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -217,7 +272,7 @@ export default function LoginScreen() {
           )}
 
           {mode === 'signIn' && (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => router.push('/forgot-password')}
               style={styles.forgotPassword}
             >
@@ -226,17 +281,25 @@ export default function LoginScreen() {
           )}
 
           <TouchableOpacity
-            style={[styles.authButton, { backgroundColor: colors.primary }]}
             onPress={handleEmailAuth}
             disabled={loading || googleLoading}
+            activeOpacity={0.8}
+            style={styles.authButtonWrapper}
           >
-            {loading ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <Text style={styles.authButtonText}>
-                {mode === 'signIn' ? 'Sign In' : 'Create Account'}
-              </Text>
-            )}
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.authButton}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.authButtonText}>
+                  {mode === 'signIn' ? 'Sign In' : 'Create Account'}
+                </Text>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
 
           <View style={styles.dividerContainer}>
@@ -245,7 +308,7 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.googleButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            style={[styles.googleButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
             onPress={signInWithGoogle}
             disabled={loading || googleLoading}
           >
@@ -281,6 +344,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+    zIndex: 0,
+  },
   scrollContent: {
     padding: 24,
     paddingTop: 60,
@@ -288,16 +359,20 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
   },
   logoContainer: {
     width: 80,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: '#6C63FF15',
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
   },
   title: {
     fontSize: 26,
@@ -310,6 +385,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: 'center',
     lineHeight: 22,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    borderRadius: 20,
+    padding: 4,
+    marginBottom: 28,
+    borderWidth: 1,
+  },
+  tabButton: {
+    flex: 1,
+  },
+  tabGradient: {
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  tabActiveText: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  tabInactive: {
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  tabInactiveText: {
+    fontSize: 15,
+    fontWeight: '500',
   },
   form: {
     gap: 20,
@@ -346,17 +450,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  authButtonWrapper: {
+    marginTop: 10,
+  },
   authButton: {
     height: 56,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
   },
   authButtonText: {
     color: '#FFF',
@@ -386,6 +492,11 @@ const styles = StyleSheet.create({
     borderRadius: 27,
     borderWidth: 1.5,
     gap: 12,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   googleButtonText: {
     fontSize: 16,

@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { Tables } from '../lib/database.types';
 import { FundAccessRole, formatRole } from '../lib/fundRoles';
@@ -27,8 +27,8 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
   });
 
   return (
-    <TouchableOpacity 
-      style={[styles.card, { backgroundColor: colors.card, shadowColor: '#000' }]} 
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder, shadowColor: colors.primary }]}
       onPress={onPress}
       activeOpacity={0.9}
     >
@@ -37,9 +37,11 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
           <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
             {fund.title}
           </Text>
-          <Text style={[styles.date, { color: colors.textMuted }]}>Created {createdLabel}</Text>
+          <View style={[styles.dateBadge, { backgroundColor: colors.primary + '12' }]}>
+            <Text style={[styles.date, { color: colors.primary }]}>Created {createdLabel}</Text>
+          </View>
         </View>
-        <View style={[styles.rolePill, { backgroundColor: colors.surface2 }]}>
+        <View style={[styles.rolePill, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
           <Text style={[styles.roleText, { color: colors.primary }]}>You: {formatRole(currentRole)}</Text>
         </View>
       </View>
@@ -62,21 +64,21 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>Collected</Text>
           <Text style={[styles.statValue, { color: '#10B981' }]}>Rs {totals.income.toLocaleString()}</Text>
         </View>
-        <View style={styles.statDivider} />
+        <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
         <View style={styles.statItem}>
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>Spent</Text>
-          <Text style={[styles.statValue, { color: '#F43F5E' }]}>Rs {totals.expense.toLocaleString()}</Text>
+          <Text style={[styles.statValue, { color: '#FF6B6B' }]}>Rs {totals.expense.toLocaleString()}</Text>
         </View>
-        <View style={styles.statDivider} />
+        <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
         <View style={styles.statItem}>
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>Balance</Text>
-          <Text style={[styles.statValue, { color: colors.primary }]}>Rs {totals.balance.toLocaleString()}</Text>
+          <Text style={[styles.statValue, { color: '#6C63FF' }]}>Rs {totals.balance.toLocaleString()}</Text>
         </View>
       </View>
 
       <View style={styles.footer}>
         <Text style={[styles.footerText, { color: colors.textMuted }]}>Open fund details</Text>
-        <Ionicons name="chevron-forward" size={18} color={colors.border} />
+        <Ionicons name="chevron-forward" size={18} color={colors.icon} />
       </View>
     </TouchableOpacity>
   );
@@ -88,10 +90,11 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 24,
     marginBottom: 20,
+    borderWidth: 1,
     elevation: 4,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
   },
   header: {
     flexDirection: 'row',
@@ -108,15 +111,22 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.5,
   },
+  dateBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginTop: 6,
+  },
   date: {
     fontSize: 12,
     fontWeight: '600',
-    marginTop: 4,
   },
   rolePill: {
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    borderWidth: 1,
   },
   roleText: {
     fontSize: 11,
@@ -169,7 +179,6 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: '70%',
-    backgroundColor: '#F3F4F6',
     alignSelf: 'center',
   },
   footer: {

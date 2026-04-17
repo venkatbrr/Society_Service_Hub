@@ -1,9 +1,10 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
-import { Colors } from '../constants/Colors';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { Colors } from '../constants/Colors';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 
 export default function CommunitySelectScreen() {
   const { session, refreshSession } = useAuth();
@@ -33,11 +34,11 @@ export default function CommunitySelectScreen() {
         throw new Error('Community not found. Please check the code.');
       }
 
-      // 2. Update user's app_metadata (Server-side update theoretically needed for security, 
+      // 2. Update user's app_metadata (Server-side update theoretically needed for security,
       // but for this MVP we'll update the profile, and assume a backend function syncs it,
       // or we just update auth.users if we had service_role key, which we dont on client.
       // Supabase workaround: we'll store community_id in profile.)
-      
+
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ community_id: community.id })
@@ -50,7 +51,7 @@ export default function CommunitySelectScreen() {
       await supabase.auth.updateUser({
         data: { community_id: community.id } // Updates user_metadata, not app_metadata!
       });
-      
+
       Toast.show({ type: 'success', text1: 'Joined Community!' });
       await refreshSession();
 
@@ -96,66 +97,112 @@ export default function CommunitySelectScreen() {
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Welcome 👋</Text>
+      {/* Subtle gradient overlay at top */}
+      <LinearGradient
+        colors={[colors.gradientStart + '12', colors.gradientEnd + '08', 'transparent']}
+        style={styles.gradientOverlay}
+      />
+
+      <Text style={[styles.title, { color: colors.text }]}>Welcome</Text>
       <Text style={[styles.subtitle, { color: colors.textMuted }]}>
         Join your society to find trusted service providers.
       </Text>
 
-      <View style={[styles.tabs, { backgroundColor: colors.surface2 }]}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'join' && { backgroundColor: colors.background, shadowColor: '#000', elevation: 2 }]} 
+      {/* Tab toggle with glass background and gradient active pill */}
+      <View style={[styles.tabs, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
+        <TouchableOpacity
+          style={[styles.tab]}
           onPress={() => setActiveTab('join')}
+          activeOpacity={0.7}
         >
-          <Text style={[styles.tabText, { color: activeTab === 'join' ? colors.text : colors.textMuted, fontWeight: activeTab === 'join' ? '600' : '400' }]}>
-            Join Existing
-          </Text>
+          {activeTab === 'join' ? (
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              style={styles.tabGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={styles.tabActiveText}>Join Existing</Text>
+            </LinearGradient>
+          ) : (
+            <View style={styles.tabInactive}>
+              <Text style={[styles.tabInactiveText, { color: colors.textMuted }]}>Join Existing</Text>
+            </View>
+          )}
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'create' && { backgroundColor: colors.background, shadowColor: '#000', elevation: 2 }]} 
+        <TouchableOpacity
+          style={[styles.tab]}
           onPress={() => setActiveTab('create')}
+          activeOpacity={0.7}
         >
-          <Text style={[styles.tabText, { color: activeTab === 'create' ? colors.text : colors.textMuted, fontWeight: activeTab === 'create' ? '600' : '400' }]}>
-            Create New
-          </Text>
+          {activeTab === 'create' ? (
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              style={styles.tabGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={styles.tabActiveText}>Create New</Text>
+            </LinearGradient>
+          ) : (
+            <View style={styles.tabInactive}>
+              <Text style={[styles.tabInactiveText, { color: colors.textMuted }]}>Create New</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      {/* Form card with glass effect */}
+      <View style={[styles.formCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
         {activeTab === 'join' ? (
           <View>
             <Text style={[styles.label, { color: colors.text }]}>Invite Code</Text>
             <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
               placeholder="e.g. WOOD1234"
               placeholderTextColor={colors.textMuted}
               value={code}
               onChangeText={setCode}
               autoCapitalize="characters"
             />
-            <TouchableOpacity 
-              style={[styles.button, { backgroundColor: colors.primary }]} 
+            <TouchableOpacity
               onPress={handleJoin}
               disabled={isLoading}
+              activeOpacity={0.8}
             >
-              {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.buttonText}>Join Community</Text>}
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.button}
+              >
+                {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.buttonText}>Join Community</Text>}
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         ) : (
           <View>
             <Text style={[styles.label, { color: colors.text }]}>Community Name</Text>
             <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
               placeholder="e.g. Woodland Apartments"
               placeholderTextColor={colors.textMuted}
               value={name}
               onChangeText={setName}
             />
-            <TouchableOpacity 
-              style={[styles.button, { backgroundColor: colors.primary }]} 
+            <TouchableOpacity
               onPress={handleCreate}
               disabled={isLoading}
+              activeOpacity={0.8}
             >
-              {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.buttonText}>Create Community</Text>}
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.button}
+              >
+                {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.buttonText}>Create Community</Text>}
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         )}
@@ -170,10 +217,19 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 80,
   },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 250,
+    zIndex: 0,
+  },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '800',
     marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
@@ -182,46 +238,70 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: 'row',
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 4,
     marginBottom: 24,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
   },
-  tabText: {
-    fontSize: 16,
+  tabGradient: {
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  tabActiveText: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  tabInactive: {
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  tabInactiveText: {
+    fontSize: 15,
+    fontWeight: '500',
   },
   formCard: {
     padding: 24,
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     marginBottom: 8,
+    letterSpacing: 0.3,
   },
   input: {
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 8,
+    height: 52,
+    borderWidth: 1.5,
+    borderRadius: 16,
     paddingHorizontal: 16,
     fontSize: 16,
     marginBottom: 24,
   },
   button: {
-    height: 48,
-    borderRadius: 8,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   buttonText: {
     color: '#FFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
