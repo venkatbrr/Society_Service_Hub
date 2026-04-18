@@ -1,5 +1,6 @@
+import { Image } from 'expo-image';
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 
 interface JoinerListItemProps {
@@ -11,7 +12,7 @@ interface JoinerListItemProps {
   isHost: boolean;
 }
 
-export const JoinerListItem = ({ userName, flatNumber, avatarUrl, note, joinedAt, isHost }: JoinerListItemProps) => {
+export const JoinerListItem = React.memo(({ userName, flatNumber, avatarUrl, note, joinedAt, isHost }: JoinerListItemProps) => {
   const colors = Colors.light;
 
   const getInitials = (name: string) => {
@@ -48,7 +49,7 @@ export const JoinerListItem = ({ userName, flatNumber, avatarUrl, note, joinedAt
       )}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

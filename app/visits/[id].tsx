@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
 import Toast from 'react-native-toast-message';
 import { JoinerListItem } from '../../components/JoinerListItem';
 import { VisitStatusBadge } from '../../components/VisitStatusBadge';
@@ -59,18 +60,20 @@ export default function VisitDetailScreen() {
 
         if (directError) throw directError;
 
-        // Fetch creator profile separately (created_by references auth.users, not profiles)
-        const { data: creatorProfile } = await supabase
-          .from('profiles')
-          .select('full_name, flat_number, avatar_url')
-          .eq('id', directData.created_by)
-          .maybeSingle();
+        // Fetch creator profile in parallel (don't waterfall)
+        const [creatorResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('full_name, flat_number, avatar_url')
+            .eq('id', directData.created_by)
+            .maybeSingle()
+        ]);
 
         setVisit({
           ...directData,
-          creator_name: creatorProfile?.full_name || 'Unknown',
-          creator_flat: creatorProfile?.flat_number,
-          creator_avatar_url: creatorProfile?.avatar_url,
+          creator_name: creatorResult.data?.full_name || 'Unknown',
+          creator_flat: creatorResult.data?.flat_number,
+          creator_avatar_url: creatorResult.data?.avatar_url,
           joiner_count: joinersData.length
         });
       } else {

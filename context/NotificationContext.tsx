@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import * as Notifications from 'expo-notifications';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
-import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
 
 interface Notification {
   id: string;
@@ -114,7 +114,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           const newNotification = payload.new as Notification;
           setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
-          
+
           // Optional: Local in-app notification trigger
           if (Platform.OS !== 'web') {
             Notifications.presentNotificationAsync({
@@ -130,7 +130,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchNotifications]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   return (
     <NotificationContext.Provider 

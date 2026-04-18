@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
-import { Colors } from '../../constants/Colors';
-import { SearchBar } from '../../components/SearchBar';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { BusinessCard } from '../../components/BusinessCard';
 import { CategoryFilter } from '../../components/CategoryFilter';
 import { EmptyState } from '../../components/EmptyState';
-import { BusinessCard } from '../../components/BusinessCard';
+import { SearchBar } from '../../components/SearchBar';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
 import { BusinessWithInteraction } from '../../lib/database.types';
-import Toast from 'react-native-toast-message';
+import { supabase } from '../../lib/supabase';
 
 const BUSINESS_CATEGORIES = ['All', 'Food', 'Baked Goods', 'Crafts', 'Beauty', 'Tailoring', 'Tutoring', 'Other'];
 
@@ -128,7 +128,7 @@ export default function BusinessBrowseScreen() {
         data={businesses}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <BusinessCard 
+          <BusinessCard
             id={item.id}
             name={item.name}
             category={item.category}
@@ -147,6 +147,10 @@ export default function BusinessBrowseScreen() {
         )}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }

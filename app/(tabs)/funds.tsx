@@ -62,6 +62,7 @@ export default function FundsScreen() {
           .order('created_at', { ascending: false }),
         supabase.from('profiles')
           .select('id, full_name')
+          .eq('community_id', communityId)
       ]);
 
       if (fundsResult.error) {
@@ -188,6 +189,10 @@ export default function FundsScreen() {
         )}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListHeaderComponent={
           funds.length > 0 ? (

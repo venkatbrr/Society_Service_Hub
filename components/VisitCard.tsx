@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
 import { Colors } from '../constants/Colors';
 import { VisitStatusBadge } from './VisitStatusBadge';
 
@@ -28,7 +29,7 @@ interface VisitCardProps {
   onPress: () => void;
 }
 
-export const VisitCard = ({
+export const VisitCard = React.memo(({
   title,
   providerName,
   hasProviderProfile,
@@ -153,7 +154,7 @@ export const VisitCard = ({
       </View>
     </TouchableOpacity>
   );
-};
+});
 
 const styles = StyleSheet.create({
   card: {

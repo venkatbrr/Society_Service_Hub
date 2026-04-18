@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Switch, Image, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
-import { Colors } from '../../constants/Colors';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { OfferingCard } from '../../components/OfferingCard';
 import { RatingStars } from '../../components/RatingStars';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
 import { BusinessWithInteraction } from '../../lib/database.types';
-import Toast from 'react-native-toast-message';
+import { supabase } from '../../lib/supabase';
 
 export default function BusinessManageScreen() {
   const { user, communityId } = useAuth();

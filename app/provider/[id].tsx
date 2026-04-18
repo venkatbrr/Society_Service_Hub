@@ -32,17 +32,16 @@ export default function ProviderDetailScreen() {
     try {
       if (!id || id === 'add') return;
 
-      const { data: providerData, error: providerError } = await supabase
+      // Fetch provider data and user-specific data in parallel
+      const providerQuery = supabase
         .from('service_providers')
         .select('*')
         .eq('id', id)
         .single();
 
-      if (providerError) throw providerError;
-
-      if (user && providerData) {
-        // Fetch favorites, ratings, and hire counts in parallel
-        const [favsResult, ratsResult, hireResult] = await Promise.all([
+      if (user) {
+        const [providerResult, favsResult, ratsResult, hireResult] = await Promise.all([
+          providerQuery,
           supabase.from('favorites')
             .select('id')
             .eq('user_id', user.id)
@@ -57,18 +56,22 @@ export default function ProviderDetailScreen() {
             .eq('provider_id', id)
         ]);
 
+        if (providerResult.error) throw providerResult.error;
+
         const hireCountError = hireResult.error;
         if (hireCountError && !isMissingRelationError(hireCountError)) {
           throw hireCountError;
         }
 
         setProvider({
-          ...providerData,
+          ...providerResult.data,
           is_favorite: !!(favsResult.data && favsResult.data.length > 0),
           user_rating: ratsResult.data ? ratsResult.data.rating : null,
           hire_count: hireResult.count || 0
         });
       } else {
+        const { data: providerData, error: providerError } = await providerQuery;
+        if (providerError) throw providerError;
         setProvider({ ...providerData, hire_count: 0 });
       }
     } catch (error: any) {
@@ -171,7 +174,8 @@ export default function ProviderDetailScreen() {
         .upsert({ user_id: user.id, provider_id: provider.id, rating }, { onConflict: 'user_id,provider_id' });
       if (error) throw error;
       Toast.show({ type: 'success', text1: 'Rating saved' });
-      fetchProvider();
+      // Update rating locally instead of refetching entire provider
+      setProvider(prev => prev ? { ...prev, user_rating: rating } : null);
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Error saving rating' });
     }

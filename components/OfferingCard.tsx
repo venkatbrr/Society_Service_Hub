@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 
 interface OfferingCardProps {

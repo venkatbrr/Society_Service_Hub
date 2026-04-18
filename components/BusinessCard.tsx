@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
-import { RatingStars } from './RatingStars';
 import { BusinessStatusBadge } from './BusinessStatusBadge';
+import { RatingStars } from './RatingStars';
 
 interface BusinessCardProps {
   id: string;
@@ -22,7 +23,7 @@ interface BusinessCardProps {
   onPress: () => void;
 }
 
-export const BusinessCard = ({
+export const BusinessCard = React.memo(({
   name,
   category,
   coverPhotoUrl,
@@ -116,7 +117,7 @@ export const BusinessCard = ({
       </View>
     </TouchableOpacity>
   );
-};
+});
 
 const styles = StyleSheet.create({
   card: {

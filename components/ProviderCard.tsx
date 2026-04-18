@@ -13,7 +13,7 @@ type ProviderCardProps = {
   isLightMode: boolean;
 };
 
-export const ProviderCard = ({ provider, onPress, onToggleFavorite, isLightMode }: ProviderCardProps) => {
+export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, isLightMode }: ProviderCardProps) => {
   const colors = isLightMode ? Colors.light : Colors.dark;
   const categoryColor = CATEGORY_COLORS[provider.category] || colors.primary;
 
@@ -85,7 +85,7 @@ export const ProviderCard = ({ provider, onPress, onToggleFavorite, isLightMode 
       </View>
     </TouchableOpacity>
   );
-};
+});
 
 const styles = StyleSheet.create({
   card: {
