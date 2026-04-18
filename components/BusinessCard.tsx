@@ -4,6 +4,7 @@ import React from 'react';
 import { Colors } from '../constants/Colors';
 import { BusinessStatusBadge } from './BusinessStatusBadge';
 import { RatingStars } from './RatingStars';
+import { BaseCard } from './BaseCard';
 
 interface BusinessCardProps {
   id: string;
@@ -40,94 +41,86 @@ export const BusinessCard = React.memo(({
   const colors = Colors.light;
 
   return (
-    <TouchableOpacity 
-      style={[styles.card, { backgroundColor: colors.card }]} 
-      onPress={onPress}
-      activeOpacity={0.9}
-    >
-      <View style={styles.coverContainer}>
-        {coverPhotoUrl ? (
-          <Image source={{ uri: coverPhotoUrl }} style={styles.coverImage} />
-        ) : (
-          <View style={[styles.coverPlaceholder, { backgroundColor: colors.surface2 }]}>
-            <Ionicons name="storefront-outline" size={40} color={colors.primary} />
+    <BaseCard padding={0} onPress={onPress}>
+      <View style={styles.cardInner}>
+        <View style={styles.coverContainer}>
+          {coverPhotoUrl ? (
+            <Image source={{ uri: coverPhotoUrl }} style={styles.coverImage} />
+          ) : (
+            <View style={[styles.coverPlaceholder, { backgroundColor: colors.surface2 }]}>
+              <Ionicons name="storefront-outline" size={40} color={colors.primary} />
+            </View>
+          )}
+          <View style={styles.badgeContainer}>
+            <BusinessStatusBadge isAcceptingOrders={isAcceptingOrders} />
           </View>
-        )}
-        <View style={styles.badgeContainer}>
-          <BusinessStatusBadge isAcceptingOrders={isAcceptingOrders} />
+          <TouchableOpacity 
+            style={[styles.favoriteBtn, { backgroundColor: 'white' }]} 
+            onPress={(e) => {
+              e.stopPropagation();
+              onToggleFavorite();
+            }}
+          >
+            <Ionicons 
+              name={isFavorited ? "heart" : "heart-outline"} 
+              size={20} 
+              color={isFavorited ? colors.accent : colors.icon} 
+            />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity 
-          style={[styles.favoriteBtn, { backgroundColor: 'white' }]} 
-          onPress={(e) => {
-            e.stopPropagation();
-            onToggleFavorite();
-          }}
-        >
-          <Ionicons 
-            name={isFavorited ? "heart" : "heart-outline"} 
-            size={20} 
-            color={isFavorited ? colors.accent : colors.icon} 
-          />
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.content}>
-        <View style={styles.headerRow}>
-          <View style={styles.nameContainer}>
-            <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{name}</Text>
-            <View style={[styles.categoryBadge, { backgroundColor: colors.primary + '10' }]}>
-              <Text style={[styles.categoryText, { color: colors.primary }]}>{category}</Text>
+        <View style={styles.content}>
+          <View style={styles.headerRow}>
+            <View style={styles.nameContainer}>
+              <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{name}</Text>
+              <View style={[styles.categoryBadge, { backgroundColor: colors.primary + '10' }]}>
+                <Text style={[styles.categoryText, { color: colors.primary }]}>{category}</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.ownerRow}>
-          <Ionicons name="person-outline" size={14} color={colors.textMuted} />
-          <Text style={[styles.ownerText, { color: colors.textMuted }]}>
-            {ownerName} {ownerFlat ? `• ${ownerFlat}` : ''}
-          </Text>
-        </View>
-
-        <View style={styles.ratingRow}>
-          <RatingStars rating={avgRating} size={16} isLightMode={true} readonly={true} />
-          <Text style={[styles.ratingCount, { color: colors.textMuted }]}>({ratingCount})</Text>
-        </View>
-
-        {(operatingHours || orderCutoff) && (
-          <View style={[styles.footer, { borderTopColor: colors.border }]}>
-            {operatingHours && (
-              <View style={styles.footerItem}>
-                <Ionicons name="time-outline" size={14} color={colors.textMuted} />
-                <Text style={[styles.footerText, { color: colors.textMuted }]} numberOfLines={1}>
-                  {operatingHours}
-                </Text>
-              </View>
-            )}
-            {orderCutoff && (
-              <View style={styles.footerItem}>
-                <Ionicons name="alert-circle-outline" size={14} color={colors.textMuted} />
-                <Text style={[styles.footerText, { color: colors.textMuted }]} numberOfLines={1}>
-                  Cutoff: {orderCutoff}
-                </Text>
-              </View>
-            )}
+          <View style={styles.ownerRow}>
+            <Ionicons name="person-outline" size={14} color={colors.textMuted} />
+            <Text style={[styles.ownerText, { color: colors.textMuted }]}>
+              {ownerName} {ownerFlat ? `• ${ownerFlat}` : ''}
+            </Text>
           </View>
-        )}
+
+          <View style={styles.ratingRow}>
+            <RatingStars rating={avgRating} size={16} isLightMode={true} readonly={true} />
+            <Text style={[styles.ratingCount, { color: colors.textMuted }]}>({ratingCount})</Text>
+          </View>
+
+          {(operatingHours || orderCutoff) && (
+            <View style={[styles.footer, { borderTopColor: colors.border }]}>
+              {operatingHours && (
+                <View style={styles.footerItem}>
+                  <Ionicons name="time-outline" size={14} color={colors.textMuted} />
+                  <Text style={[styles.footerText, { color: colors.textMuted }]} numberOfLines={1}>
+                    {operatingHours}
+                  </Text>
+                </View>
+              )}
+              {orderCutoff && (
+                <View style={styles.footerItem}>
+                  <Ionicons name="alert-circle-outline" size={14} color={colors.textMuted} />
+                  <Text style={[styles.footerText, { color: colors.textMuted }]} numberOfLines={1}>
+                    Cutoff: {orderCutoff}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
       </View>
-    </TouchableOpacity>
+    </BaseCard>
   );
 });
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 24,
-    marginBottom: 20,
+  cardInner: {
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    borderRadius: 20,
   },
   coverContainer: {
     height: 160,

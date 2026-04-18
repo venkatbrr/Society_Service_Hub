@@ -16,12 +16,47 @@ export default function NotificationsScreen() {
     // return () => markAllAsRead();
   }, []);
 
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'new_visit':
+        return 'calendar';
+      case 'community_approved':
+        return 'checkmark-circle';
+      case 'community_rejected':
+        return 'close-circle';
+      case 'promoted_to_admin':
+      case 'promotion_approved':
+        return 'arrow-up-circle';
+      case 'promotion_rejected':
+        return 'alert-circle';
+      case 'removed_from_community':
+        return 'person-remove';
+      default:
+        return 'notifications';
+    }
+  };
+
   const handleNotificationPress = async (notification: any) => {
     await markAsRead(notification.id);
 
     // Navigate based on type
     if (notification.type === 'new_visit' && notification.data?.visit_id) {
       router.push(`/visits/${notification.data.visit_id}`);
+      return;
+    }
+
+    if (notification.type === 'community_approved' || notification.type === 'community_rejected') {
+      router.push('/community-select');
+      return;
+    }
+
+    if (notification.type === 'promoted_to_admin' || notification.type === 'promotion_approved' || notification.type === 'promotion_rejected') {
+      router.push('/admin/approvals');
+      return;
+    }
+
+    if (notification.type === 'removed_from_community') {
+      router.push('/community-select');
     }
   };
 
@@ -49,14 +84,14 @@ export default function NotificationsScreen() {
             end={{ x: 1, y: 1 }}
           >
             <Ionicons
-              name={item.type === 'new_visit' ? 'calendar' : 'notifications'}
+              name={getNotificationIcon(item.type) as any}
               size={22}
               color="#FFF"
             />
           </LinearGradient>
         ) : (
           <Ionicons
-            name={item.type === 'new_visit' ? 'calendar' : 'notifications'}
+            name={getNotificationIcon(item.type) as any}
             size={22}
             color={colors.textMuted}
           />

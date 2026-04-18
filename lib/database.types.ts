@@ -135,6 +135,71 @@ export type Database = {
         }
         Relationships: []
       }
+      community_admin_requests: {
+        Row: {
+          community_id: string
+          created_at: string
+          id: string
+          rejection_reason: string | null
+          requested_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          target_user_id: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          requested_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_user_id: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          requested_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_admin_requests_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_admin_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_admin_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_admin_requests_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_requests: {
         Row: {
           approximate_units: string | null
@@ -147,6 +212,7 @@ export type Database = {
           nominated_admin_contact: string | null
           nominated_admin_name: string | null
           pincode: string
+          rejection_reason: string | null
           requested_by: string
           requester_role: string
           resulting_community_id: string | null
@@ -165,6 +231,7 @@ export type Database = {
           nominated_admin_contact?: string | null
           nominated_admin_name?: string | null
           pincode: string
+          rejection_reason?: string | null
           requested_by: string
           requester_role: string
           resulting_community_id?: string | null
@@ -183,6 +250,7 @@ export type Database = {
           nominated_admin_contact?: string | null
           nominated_admin_name?: string | null
           pincode?: string
+          rejection_reason?: string | null
           requested_by?: string
           requester_role?: string
           resulting_community_id?: string | null
@@ -433,9 +501,57 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_audit_log: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          field: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          profile_id: string
+          reason: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          field: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          profile_id: string
+          reason?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          field?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          profile_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_audit_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
-          app_role: string | null
+          app_role: Database["public"]["Enums"]["app_role_type"]
           approval_status: Database["public"]["Enums"]["approval_status_type"]
           avatar_url: string | null
           community_id: string | null
@@ -446,10 +562,12 @@ export type Database = {
           id: string
           join_note: string | null
           phone_number: string | null
+          removed_at: string | null
+          removed_by: string | null
           requested_at: string | null
         }
         Insert: {
-          app_role?: string | null
+          app_role?: Database["public"]["Enums"]["app_role_type"]
           approval_status?: Database["public"]["Enums"]["approval_status_type"]
           avatar_url?: string | null
           community_id?: string | null
@@ -460,10 +578,12 @@ export type Database = {
           id: string
           join_note?: string | null
           phone_number?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
           requested_at?: string | null
         }
         Update: {
-          app_role?: string | null
+          app_role?: Database["public"]["Enums"]["app_role_type"]
           approval_status?: Database["public"]["Enums"]["approval_status_type"]
           avatar_url?: string | null
           community_id?: string | null
@@ -474,6 +594,8 @@ export type Database = {
           id?: string
           join_note?: string | null
           phone_number?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
           requested_at?: string | null
         }
         Relationships: [
@@ -482,6 +604,13 @@ export type Database = {
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_removed_by_fkey"
+            columns: ["removed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -795,6 +924,26 @@ export type Database = {
         Returns: undefined
       }
       auto_complete_past_visits: { Args: never; Returns: undefined }
+      cancel_community_admin_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
+      create_community_admin_request: {
+        Args: { p_target_user_id: string }
+        Returns: string
+      }
+      get_all_communities: {
+        Args: { p_search?: string }
+        Returns: {
+          area: string
+          city: string
+          community_type: string
+          id: string
+          name: string
+          pincode: string
+          resident_count: number
+        }[]
+      }
       get_community_businesses: {
         Args: { p_community_id: string }
         Returns: {
@@ -852,6 +1001,16 @@ export type Database = {
         Args: { p_event_id: string; p_user_id?: string }
         Returns: string
       }
+      get_residents_directory: {
+        Args: { p_include_phone?: boolean }
+        Returns: {
+          app_role: Database["public"]["Enums"]["app_role_type"]
+          flat_number: string
+          full_name: string
+          id: string
+          phone_number: string
+        }[]
+      }
       get_user_community_id: { Args: never; Returns: string }
       get_visit_joiners: {
         Args: { p_visit_id: string }
@@ -866,7 +1025,28 @@ export type Database = {
         }[]
       }
       is_admin: { Args: { p_user_id?: string }; Returns: boolean }
+      is_platform_admin: { Args: { p_user_id?: string }; Returns: boolean }
       is_user_approved: { Args: { p_user_id?: string }; Returns: boolean }
+      platform_approve_community_admin_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
+      platform_approve_community_request: {
+        Args: { p_request_id: string }
+        Returns: string
+      }
+      platform_reject_community_admin_request: {
+        Args: { p_rejection_reason?: string; p_request_id: string }
+        Returns: undefined
+      }
+      platform_reject_community_request: {
+        Args: { p_rejection_reason?: string; p_request_id: string }
+        Returns: undefined
+      }
+      platform_soft_remove_resident: {
+        Args: { p_reason?: string; p_target_profile_id: string }
+        Returns: undefined
+      }
       reject_profile_membership: {
         Args: { p_profile_id: string }
         Returns: undefined
@@ -881,6 +1061,11 @@ export type Database = {
           name: string
           resident_count: number
         }[]
+      }
+      set_audit_actor: { Args: { p_actor_id: string }; Returns: undefined }
+      set_audit_context: {
+        Args: { p_actor_id: string; p_reason?: string }
+        Returns: undefined
       }
       submit_community_request: {
         Args: {
@@ -898,6 +1083,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role_type: "admin" | "community_admin" | "resident"
       approval_status_type: "pending" | "approved" | "rejected"
       community_request_status_type:
         | "pending"
@@ -1031,6 +1217,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role_type: ["admin", "community_admin", "resident"],
       approval_status_type: ["pending", "approved", "rejected"],
       community_request_status_type: [
         "pending",
@@ -1041,36 +1228,3 @@ export const Constants = {
     },
   },
 } as const
-
-export type ProviderWithInteraction = Tables<'service_providers'> & {
-  is_favorite?: boolean
-  user_rating?: number | null
-  hire_count?: number
-}
-
-export type BusinessWithInteraction = Tables<'resident_businesses'> & {
-  is_favorite?: boolean
-  avg_rating?: number
-  rating_count?: number
-  inquiry_count?: number
-  owner_name?: string
-  owner_flat?: string
-  user_rating?: number | null
-}
-
-export type VisitWithJoinerData = Tables<'service_visits'> & {
-  creator_name?: string
-  creator_flat?: string | null
-  creator_avatar_url?: string | null
-  joiner_count?: number
-  has_user_joined?: boolean
-}
-
-export type VisitJoinerWithProfile = Database['public']['Functions']['get_visit_joiners']['Returns'][number]
-
-export type FundWithTotals = Tables<'events'> & {
-  totals: { income: number; expense: number; balance: number }
-  currentRole: 'admin' | 'treasurer' | 'collector' | 'resident'
-  treasurerNames: string[]
-  collectorCount: number
-}

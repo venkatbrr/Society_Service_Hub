@@ -24,7 +24,7 @@ export default function AddFundScreen() {
   const [selectedTreasurers, setSelectedTreasurers] = useState<string[]>([]);
   const [isFetchingMembers, setIsFetchingMembers] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const isAdmin = appRole === 'admin';
+  const isAdmin = appRole === 'community_admin';
 
   useEffect(() => {
     if (!isAdmin) {
@@ -49,7 +49,7 @@ export default function AddFundScreen() {
 
         if (error) throw error;
 
-        const assignableMembers = (data ?? []).filter((member) => member.app_role !== 'admin');
+        const assignableMembers = (data ?? []).filter((member) => member.app_role !== 'community_admin');
         setMembers(assignableMembers);
       } catch (error: any) {
         Toast.show({ type: 'error', text1: 'Error', text2: error.message });

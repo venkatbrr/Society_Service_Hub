@@ -1,8 +1,19 @@
+import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 interface Notification {
   id: string;
@@ -30,6 +41,74 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const registerForPushNotifications = useCallback(async () => {
+    if (!user || Platform.OS === 'web') {
+      return;
+    }
+
+    try {
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'Default',
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#6C63FF',
+        });
+      }
+
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        console.warn('Push notification permission not granted');
+        return;
+      }
+
+      const isPhysicalDevice = Boolean((Constants as any).isDevice ?? true);
+      if (!isPhysicalDevice) {
+        // Expo push token registration is not supported on emulators/simulators.
+        return;
+      }
+
+      const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId ??
+        Constants.easConfig?.projectId;
+
+      if (!projectId) {
+        console.warn('Missing EAS projectId; cannot register Expo push token');
+        return;
+      }
+
+      const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ expo_push_token: token })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error saving expo push token:', error);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      // Expected in unsupported local setups (emulator/simulator, missing native push wiring).
+      if (
+        /physical device|firebaseapp|fcm|projectid|project id|not initialized/i.test(message)
+      ) {
+        console.warn('Skipping Expo push token registration:', message);
+        return;
+      }
+
+      console.error('Error registering for push notifications:', error);
+    }
+  }, [user]);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -97,6 +176,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       return;
     }
 
+    void registerForPushNotifications();
     fetchNotifications();
 
     // Subscribe to new notifications
@@ -117,14 +197,32 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
           // Optional: Local in-app notification trigger
           if (Platform.OS !== 'web') {
-            void Notifications.scheduleNotificationAsync({
-              content: {
-                title: newNotification.title,
-                body: newNotification.body,
-                data: newNotification.data,
-              },
-              trigger: null,
-            });
+            void Notifications.scheduleNotificationAsync(
+              Platform.OS === 'android'
+                ? {
+                    content: {
+                      title: newNotification.title,
+                      body: newNotification.body,
+                      data: newNotification.data,
+                      sound: 'default',
+                    },
+                    trigger: {
+                      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+                      seconds: 1,
+                      repeats: false,
+                      channelId: 'default',
+                    },
+                  }
+                : {
+                    content: {
+                      title: newNotification.title,
+                      body: newNotification.body,
+                      data: newNotification.data,
+                      sound: 'default',
+                    },
+                    trigger: null,
+                  }
+            );
           }
         }
       )
@@ -134,7 +232,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       supabase.removeChannel(channel);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [fetchNotifications, registerForPushNotifications, user]);
 
   return (
     <NotificationContext.Provider 

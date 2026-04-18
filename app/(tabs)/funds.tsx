@@ -39,7 +39,7 @@ export default function FundsScreen() {
   const router = useRouter();
   const { user, communityId, appRole } = useAuth();
   const colors = Colors.light;
-  const isAdmin = appRole === 'admin';
+  const isAdmin = appRole === 'community_admin';
   const hasShownSchemaToastRef = useRef(false);
 
   const fetchFunds = useCallback(async () => {

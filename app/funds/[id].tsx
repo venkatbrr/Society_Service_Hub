@@ -123,7 +123,7 @@ export default function FundDetailScreen() {
   const balance = income - expense;
   const treasurers = (fund.fund_roles ?? []).filter((assignment) => assignment.role === 'treasurer');
   const collectors = (fund.fund_roles ?? []).filter((assignment) => assignment.role === 'collector');
-  const visibleMembers = members.filter((member) => member.app_role !== 'admin');
+  const visibleMembers = members.filter((member) => member.app_role !== 'community_admin');
   const paidByMemberId = new Map(
     incomeTransactions
       .filter((transaction) => transaction.contributor_user_id)

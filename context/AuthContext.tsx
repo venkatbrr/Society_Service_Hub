@@ -1,17 +1,20 @@
 import { Session, User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Tables } from '../lib/database.types';
+import { Enums, Tables } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 
 type ActiveCommunityRequest = Pick<Tables<'community_requests'>, 'id' | 'status' | 'created_at' | 'name'> | null;
+type AppRole = Enums<'app_role_type'>;
 
 type AuthContextType = {
   session: Session | null;
   user: User | null;
   profile: Tables<'profiles'> | null;
-  appRole: Tables<'profiles'>['app_role'];
+  appRole: AppRole;
   approvalStatus: Tables<'profiles'>['approval_status'];
   communityId: string | null;
+  isPlatformAdmin: boolean;
+  isCommunityAdmin: boolean;
   activeCommunityRequest: ActiveCommunityRequest;
   isLoading: boolean;
   refreshSession: () => Promise<void>;
@@ -25,6 +28,8 @@ const AuthContext = createContext<AuthContextType>({
   appRole: 'resident',
   approvalStatus: 'pending',
   communityId: null,
+  isPlatformAdmin: false,
+  isCommunityAdmin: false,
   activeCommunityRequest: null,
   isLoading: true,
   refreshSession: async () => {},
@@ -142,6 +147,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         appRole: profile?.app_role ?? 'resident',
         approvalStatus: profile?.approval_status ?? 'pending',
         communityId,
+        isPlatformAdmin: (profile?.app_role ?? 'resident') === 'admin' && !communityId,
+        isCommunityAdmin: (profile?.app_role ?? 'resident') === 'community_admin',
         activeCommunityRequest,
         isLoading,
         refreshSession,

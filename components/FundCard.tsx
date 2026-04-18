@@ -4,6 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { Tables } from '../lib/database.types';
 import { FundAccessRole, formatRole } from '../lib/fundRoles';
+import { BaseCard } from './BaseCard';
 
 type FundCardProps = {
   fund: Tables<'events'>;
@@ -27,11 +28,7 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
   });
 
   return (
-    <TouchableOpacity
-      style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder, shadowColor: colors.primary }]}
-      onPress={onPress}
-      activeOpacity={0.9}
-    >
+    <BaseCard padding={24} onPress={onPress}>
       <View style={styles.header}>
         <View style={styles.titleArea}>
           <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
@@ -80,22 +77,12 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
         <Text style={[styles.footerText, { color: colors.textMuted }]}>Open fund details</Text>
         <Ionicons name="chevron-forward" size={18} color={colors.icon} />
       </View>
-    </TouchableOpacity>
+    </BaseCard>
   );
 };
 
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 20,
-    borderWidth: 1,
-    elevation: 4,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

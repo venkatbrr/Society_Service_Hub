@@ -13,7 +13,7 @@ export function getEffectiveFundRole(
   assignments: Tables<'fund_roles'>[],
   userId: string | null | undefined
 ): FundAccessRole {
-  if (appRole === 'admin') {
+  if (appRole === 'admin' || appRole === 'community_admin') {
     return 'admin';
   }
 

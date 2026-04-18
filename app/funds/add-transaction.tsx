@@ -68,7 +68,7 @@ export default function AddTransactionScreen() {
 
         if (profilesResult.error) throw profilesResult.error;
 
-        const visibleMembers = (profilesResult.data ?? []).filter((member) => member.app_role !== 'admin');
+        const visibleMembers = (profilesResult.data ?? []).filter((member) => member.app_role !== 'community_admin');
         const paidMemberIds = new Set(
           (transactionsResult.data ?? [])
             .filter((transaction) => transaction.type === 'income' && transaction.contributor_user_id)

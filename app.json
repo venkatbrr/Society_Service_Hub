@@ -45,6 +45,13 @@
         {
           "photosPermission": "The app accesses your photos to let you share business and product images."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#6C63FF"
+        }
       ]
     ],
     "experiments": {

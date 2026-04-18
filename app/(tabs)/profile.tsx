@@ -10,7 +10,7 @@ import { supabase } from '../../lib/supabase';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, signOut, communityId, appRole } = useAuth();
+  const { user, signOut, communityId, appRole, isCommunityAdmin } = useAuth();
   const [communityDetails, setCommunityDetails] = useState<{ name: string; city: string | null; area: string | null; community_type: string | null } | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
 
@@ -38,7 +38,7 @@ export default function ProfileScreen() {
     }
 
     async function fetchPendingCount() {
-      if (appRole !== 'admin' || !communityId) {
+      if (!isCommunityAdmin || !communityId) {
         setPendingCount(0);
         return;
       }
@@ -59,7 +59,7 @@ export default function ProfileScreen() {
 
     fetchCommunity();
     fetchPendingCount();
-  }, [appRole, communityId]);
+  }, [appRole, communityId, isCommunityAdmin]);
 
   const handleSignOut = async () => {
     try {
@@ -131,7 +131,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {appRole === 'admin' ? (
+        {isCommunityAdmin ? (
           <TouchableOpacity
             onPress={() => router.push('/admin/approvals')}
             style={[styles.adminCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
@@ -152,6 +152,21 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
           </TouchableOpacity>
         ) : null}
+
+        <TouchableOpacity
+          onPress={() => router.push('/residents' as any)}
+          style={[styles.adminCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          activeOpacity={0.82}
+        >
+          <View style={[styles.adminIconWrap, { backgroundColor: `${colors.secondary}12` }]}>
+            <Ionicons name="people-outline" size={22} color={colors.secondary} />
+          </View>
+          <View style={styles.adminContent}>
+            <Text style={[styles.adminTitle, { color: colors.text }]}>Community directory</Text>
+            <Text style={[styles.adminCopy, { color: colors.textMuted }]}>Browse approved residents in your community</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
 
         <View style={styles.spacer} />
 

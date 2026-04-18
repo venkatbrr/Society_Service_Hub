@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Pressable,
@@ -19,7 +19,7 @@ import { Database } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 import { getMissingOnboardingSchemaMessage, isMissingOnboardingSchemaError } from '../lib/supabaseErrors';
 
-type CommunitySearchResult = Database['public']['Functions']['search_communities_by_pincode']['Returns'][number];
+type CommunitySearchResult = Database['public']['Functions']['get_all_communities']['Returns'][number];
 
 const COUNTRY_CODES = [
   { label: 'India', value: '+91' },
@@ -40,7 +40,6 @@ export default function CommunitySelectScreen() {
   const colors = Colors.light;
 
   const [step, setStep] = useState<1 | 2>(1);
-  const [pincode, setPincode] = useState('');
   const [search, setSearch] = useState('');
   const [communities, setCommunities] = useState<CommunitySearchResult[]>([]);
   const [selectedCommunity, setSelectedCommunity] = useState<CommunitySearchResult | null>(null);
@@ -48,36 +47,18 @@ export default function CommunitySelectScreen() {
   const [phoneNumber, setPhoneNumber] = useState(profile?.phone_number?.replace(/^\+\d+\s*/, '') ?? '');
   const [countryCode, setCountryCode] = useState('+91');
   const [joinNote, setJoinNote] = useState(profile?.join_note ?? '');
-  const [loadingCommunities, setLoadingCommunities] = useState(false);
+  const [loadingCommunities, setLoadingCommunities] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showCountryOptions, setShowCountryOptions] = useState(false);
-
-  const filteredCommunities = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) {
-      return communities;
-    }
-
-    return communities.filter((community) => community.name.toLowerCase().includes(term));
-  }, [communities, search]);
 
   const fullName = profile?.full_name || session?.user.user_metadata?.full_name || 'Resident';
   const email = session?.user.email || '';
 
-  const fetchCommunities = async () => {
-    if (!/^\d{6}$/.test(pincode.trim())) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid pincode',
-        text2: 'Enter a valid 6-digit pincode to find your community.',
-      });
-      return;
-    }
-
+  const fetchCommunities = useCallback(async (searchTerm?: string) => {
     setLoadingCommunities(true);
     try {
-      const { data, error } = await supabase.rpc('search_communities_by_pincode', {
-        p_pincode: pincode.trim(),
+      const { data, error } = await supabase.rpc('get_all_communities', {
+        p_search: searchTerm?.trim() || null,
       });
 
       if (error) {
@@ -89,27 +70,29 @@ export default function CommunitySelectScreen() {
           });
           return;
         }
-
         throw error;
       }
 
       setCommunities(data ?? []);
-      setSelectedCommunity(null);
-      setSearch('');
-
-      if (!data?.length) {
-        Toast.show({
-          type: 'info',
-          text1: 'No communities found',
-          text2: 'You can request a new community from the option below.',
-        });
-      }
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: 'Search failed', text2: error.message });
+      Toast.show({ type: 'error', text1: 'Unable to load communities', text2: error.message });
     } finally {
       setLoadingCommunities(false);
     }
-  };
+  }, []);
+
+  // Load all communities on mount
+  useEffect(() => {
+    fetchCommunities();
+  }, [fetchCommunities]);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCommunities(search);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search, fetchCommunities]);
 
   const submitJoinRequest = async () => {
     if (!selectedCommunity) {
@@ -205,8 +188,8 @@ export default function CommunitySelectScreen() {
         </View>
         <View style={styles.communityBody}>
           <Text style={[styles.communityName, { color: colors.text }]}>{community.name}</Text>
-          <Text style={[styles.communityMeta, { color: colors.textMuted }]}>{community.resident_count} residents</Text>
-          <Text style={[styles.communityArea, { color: colors.textMuted }]}>{community.area || community.city || 'Area not listed'}</Text>
+          <Text style={[styles.communityMeta, { color: colors.textMuted }]}>{community.resident_count} {community.resident_count === 1 ? 'member' : 'members'}</Text>
+          <Text style={[styles.communityArea, { color: colors.textMuted }]}>{[community.area || community.city, community.pincode].filter(Boolean).join(' · ') || 'Location not listed'}</Text>
         </View>
         {isSelected ? <Ionicons name="checkmark-circle" size={24} color={colors.primary} /> : null}
       </Pressable>
@@ -231,47 +214,37 @@ export default function CommunitySelectScreen() {
 
       {step === 1 ? (
         <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Step 1 — Find your community</Text>
-          <Text style={[styles.sectionCopy, { color: colors.textMuted }]}>Start with the exact pincode. Search then filters the matching communities by name.</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Join a community</Text>
+          <Text style={[styles.sectionCopy, { color: colors.textMuted }]}>Search by name, city, area or pincode. Select your community to continue.</Text>
 
-          <Text style={[styles.label, { color: colors.text }]}>PINCODE</Text>
-          <TextInput
-            style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
-            placeholder="560001"
-            placeholderTextColor={colors.textMuted}
-            keyboardType="number-pad"
-            maxLength={6}
-            value={pincode}
-            onChangeText={(value) => setPincode(value.replace(/\D/g, ''))}
-          />
+          <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+            <Ionicons name="search" size={18} color={colors.textMuted} />
+            <TextInput
+              style={[styles.searchInput, { color: colors.text }]}
+              placeholder="Search communities..."
+              placeholderTextColor={colors.textMuted}
+              value={search}
+              onChangeText={setSearch}
+              autoCorrect={false}
+            />
+            {search.length > 0 ? (
+              <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+              </TouchableOpacity>
+            ) : null}
+          </View>
 
-          <TouchableOpacity onPress={fetchCommunities} disabled={loadingCommunities} activeOpacity={0.8}>
-            <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={styles.primaryButton}>
-              {loadingCommunities ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryButtonText}>Find Communities</Text>}
-            </LinearGradient>
-          </TouchableOpacity>
-
-          {communities.length > 0 ? (
-            <>
-              <Text style={[styles.label, styles.searchLabel, { color: colors.text }]}>SEARCH BY NAME</Text>
-              <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-                <Ionicons name="search" size={18} color={colors.textMuted} />
-                <TextInput
-                  style={[styles.searchInput, { color: colors.text }]}
-                  placeholder="Maple Grove"
-                  placeholderTextColor={colors.textMuted}
-                  value={search}
-                  onChangeText={setSearch}
-                />
-              </View>
-
-              <View style={styles.communityList}>{filteredCommunities.map(renderCommunityCard)}</View>
-            </>
-          ) : null}
-
-          {communities.length > 0 && filteredCommunities.length === 0 ? (
-            <Text style={[styles.emptyHint, { color: colors.textMuted }]}>No matches in this pincode. Try another name or request a new community.</Text>
-          ) : null}
+          {loadingCommunities ? (
+            <View style={styles.loaderWrap}>
+              <ActivityIndicator color={colors.primary} />
+            </View>
+          ) : communities.length > 0 ? (
+            <View style={styles.communityList}>{communities.map(renderCommunityCard)}</View>
+          ) : (
+            <Text style={[styles.emptyHint, { color: colors.textMuted }]}>
+              {search.trim() ? 'No communities match your search.' : 'No communities available yet.'}
+            </Text>
+          )}
 
           <TouchableOpacity
             onPress={() => router.push('/community-request')}
@@ -534,6 +507,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     marginVertical: 14,
+    textAlign: 'center',
+  },
+  loaderWrap: {
+    paddingVertical: 32,
+    alignItems: 'center',
   },
   requestRow: {
     flexDirection: 'row',

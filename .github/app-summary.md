@@ -60,8 +60,15 @@ Society_Service_Hub/
 │   ├── community-request.tsx     # Submit a new community review request
 │   ├── community-request-submitted.tsx # Holding screen for pending community requests
 │   ├── notifications.tsx         # Notification list screen
+│   ├── residents.tsx             # Community residents directory + promotion requests
 │   ├── pending.tsx               # Holding screen for join approval
 │   ├── rejected.tsx              # Rejected join request state
+│   ├── platform/                 # Platform admin console
+│   │   ├── _layout.tsx           # Platform tab shell
+│   │   ├── approvals.tsx         # Community request approvals
+│   │   ├── promotions.tsx        # Community-admin promotion approvals
+│   │   ├── communities.tsx       # Community directory
+│   │   └── community/[id].tsx    # Community detail + resident removal
 │   ├── (tabs)/                   # Bottom tab navigator (5 tabs)
 │   │   ├── _layout.tsx           # Tab bar configuration
 │   │   ├── index.tsx             # Tab 1: Help — Services dashboard
@@ -105,7 +112,7 @@ Society_Service_Hub/
 │   ├── VisitStatusBadge.tsx      # Visit status pill
 │   └── BusinessStatusBadge.tsx   # Business open/closed badge
 ├── context/                      # React Context providers
-│   ├── AuthContext.tsx            # Session, user, profile, communityId, appRole
+│   ├── AuthContext.tsx            # Session, user, profile, appRole, approvalStatus, communityId, activeCommunityRequest, isPlatformAdmin, isCommunityAdmin
 │   └── NotificationContext.tsx   # Real-time notifications via Supabase Realtime
 ├── lib/                          # Backend utilities
 │   ├── supabase.ts               # Supabase client (AsyncStorage adapter)
@@ -117,7 +124,7 @@ Society_Service_Hub/
 │   ├── Colors.ts                 # Theme colors & glassmorphism tokens
 │   └── categories.ts             # Service provider categories
 ├── supabase/
-│   └── migrations/               # 15 SQL migration files
+│   └── migrations/               # 16 SQL migration files
 ├── assets/                       # Images, icons, splash screens
 ├── app.json                      # Expo configuration
 ├── package.json                  # Dependencies & scripts
@@ -194,10 +201,11 @@ Session, community, approval_status = approved  → /(tabs)
 
 | Role | Capabilities |
 |------|-------------|
-| `admin` | Create funds, manage treasurers, full CRUD on fund transactions, all resident capabilities |
+| `admin` | Platform-level control: approve/reject new community requests, approve/reject promotion requests, inspect communities, soft-remove residents |
+| `community_admin` | Community-level control: approve resident join requests, create funds, request resident promotions |
 | `resident` | Browse providers, create visits, join visits, rate/favorite, view funds |
 
-> Community membership is approval-gated. Admins approve residents for their own community from the in-app approval queue.
+> Community membership is approval-gated. Community admins approve residents for their own community from the in-app approval queue.
 
 ### Fund-Level Roles (`fund_roles.role`)
 
@@ -209,7 +217,7 @@ Per-fund assignments stored in the `fund_roles` table:
 | `collector` | Log contributions only (max 6 per fund) |
 | `resident` | View-only |
 
-Role resolution: `admin` > assigned fund role > `resident`.
+Role resolution: `community_admin` > assigned fund role > `resident`.
 
 ### Permission Matrix
 
@@ -339,7 +347,7 @@ Personal bookmarks of favorited service providers. Toggle on/off with optimistic
 
 ### 8.5 Profile (Tab 5)
 
-User info, app role badge, community invite code for sharing, linked business status, sign-out.
+User info, app role badge, community details (name/location/type), admin-only member approvals entry point with pending count badge, sign-out.
 
 ### 8.6 Onboarding Approval
 
@@ -351,7 +359,7 @@ User info, app role badge, community invite code for sharing, linked business st
 
 ### 8.7 Notifications
 
-Real-time via Supabase Realtime channel. Database trigger creates notification rows when visits are scheduled. Bell icon with unread badge on home screen.
+Real-time via Supabase Realtime channel. Database trigger creates notification rows when visits are scheduled. On mobile, the app requests notification permission, configures Android channel `default`, and triggers local native alerts for new notification rows while active. Bell icon shows unread badge on home screen.
 
 ---
 
@@ -394,7 +402,7 @@ service_visit INSERT
 | Supabase Auth | Login, Signup, Reset | Email/password, session persistence via AsyncStorage |
 | Supabase Realtime | Notifications | `postgres_changes` INSERT on `notifications` table |
 | Supabase Storage | Business photos | `business-photos` bucket, public URLs |
-| Expo Notifications | Alerts | Local push on new notification INSERT |
+| Expo Notifications | Alerts | Runtime permission + Android channel setup + local native alert on new notification INSERT |
 | Phone Dialer | Provider detail, Visit detail | `Linking.openURL('tel:...')` |
 | WhatsApp | Provider detail, Business detail | `whatsapp://send?phone=` or `https://wa.me/` |
 | Native Share | Provider detail | `Share.share()` with provider contact info |

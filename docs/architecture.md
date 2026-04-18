@@ -23,10 +23,14 @@ User Action
 ```
 AuthProvider (context/AuthContext.tsx)
   ├── session, user, profile, communityId, appRole, approvalStatus, activeCommunityRequest
+  ├── isPlatformAdmin, isCommunityAdmin
   └── Consumed via useAuth() hook
 
 NotificationProvider (context/NotificationContext.tsx)
   ├── notifications[], unreadCount
+  ├── requests native notification permissions (mobile)
+  ├── creates Android notification channel `default`
+  ├── stores `profiles.expo_push_token` for authenticated users
   └── Consumed via useNotifications() hook
 ```
 
@@ -74,7 +78,7 @@ App Boot
     → loadProfile(userId)
       → fetch profiles row by id
       → setCommunityId (fallback: profile → user_metadata → app_metadata)
-      → setAppRole ('admin' | 'resident')
+      → setAppRole ('admin' | 'community_admin' | 'resident')
       → setApprovalStatus ('pending' | 'approved' | 'rejected')
       → if needed, load the latest active community request
   → supabase.auth.onAuthStateChange(callback)
@@ -94,7 +98,9 @@ type AuthContextType = {
   session: Session | null
   user: User | null
   profile: Tables<'profiles'> | null
-  appRole: 'admin' | 'resident'
+  appRole: 'admin' | 'community_admin' | 'resident'
+  isPlatformAdmin: boolean
+  isCommunityAdmin: boolean
   approvalStatus: 'pending' | 'approved' | 'rejected'
   communityId: string | null
   activeCommunityRequest: { id, status, created_at, name } | null
@@ -115,6 +121,8 @@ type AuthContextType = {
 | `communities` | Society grouping | `code` UNIQUE, stores pincode/city/area/type metadata |
 | `profiles` | User extension of `auth.users` | PK = `auth.users.id`, `app_role`, `approval_status`, request details |
 | `community_requests` | Platform-reviewed onboarding requests | requester-owned read access only |
+| `community_admin_requests` | Promotion workflow from resident to community admin | pending/approved/rejected lifecycle |
+| `profile_audit_log` | Audit trail of profile field changes | records actor, field, old/new values, reason |
 | `service_providers` | Trusted provider listings | `community_id` FK |
 | `service_visits` | Group visit coordination | `provider_id` nullable, `status` enum |
 | `visit_joiners` | Visit RSVPs | UNIQUE(`visit_id`, `user_id`) |
@@ -144,12 +152,22 @@ CHECK (
 |----------|---------|
 | `handle_new_user()` | Trigger: auto-creates `profiles` row on signup with resident role and pending approval status. |
 | `get_user_community_id()` | Returns community_id from JWT (`app_metadata` → `user_metadata` fallback) |
-| `is_admin(p_user_id)` | Checks if user has `app_role = 'admin'` |
+| `is_admin(p_user_id)` | Checks if user is `community_admin` |
+| `is_platform_admin(p_user_id)` | Checks if user is platform admin (`app_role = 'admin'` and no community) |
 | `is_user_approved(p_user_id)` | Checks if user has `approval_status = 'approved'` |
 | `search_communities_by_pincode(p_pincode)` | RPC: returns communities matching exact pincode with resident counts |
 | `submit_community_request(...)` | RPC: creates a reviewed `community_requests` row |
 | `approve_profile_membership(p_profile_id)` | RPC: admin-only approval + notification insert |
 | `reject_profile_membership(p_profile_id)` | RPC: admin-only rejection + notification insert |
+| `create_community_admin_request(p_target_user_id)` | Community admin creates a promotion request |
+| `cancel_community_admin_request(p_request_id)` | Request creator cancels own pending promotion request |
+| `platform_approve_community_request(p_request_id)` | Platform admin approves a pending community request |
+| `platform_reject_community_request(p_request_id, p_rejection_reason)` | Platform admin rejects a pending community request |
+| `platform_approve_community_admin_request(p_request_id)` | Platform admin approves a promotion request |
+| `platform_reject_community_admin_request(p_request_id, p_rejection_reason)` | Platform admin rejects a promotion request |
+| `platform_soft_remove_resident(p_target_profile_id, p_reason)` | Platform admin soft-removes a resident from a community |
+| `set_audit_actor(p_actor_id)` / `set_audit_context(...)` | Sets audit context for profile mutation logging |
+| `get_residents_directory(p_include_phone)` | Returns approved residents of current community for directory UI |
 | `get_fund_role(p_event_id, p_user_id)` | Resolves effective fund role (admin > assigned > resident) |
 | `get_community_insights(p_community_id)` | RPC: returns most hired category, monthly spending, contribution % |
 | `get_community_businesses(p_community_id)` | RPC: returns businesses with aggregated ratings + inquiry counts |
@@ -227,6 +245,8 @@ const channel = supabase
   .subscribe()
 ```
 
+**Mobile setup detail:** `NotificationContext` configures foreground display via `Notifications.setNotificationHandler(...)`, requests permission at runtime, and persists Expo push tokens on `profiles.expo_push_token`.
+
 **Cleanup:** `supabase.removeChannel(channel)` on unmount or user logout.
 
 **Notification trigger (database):** When a `service_visit` is inserted, a trigger inserts `notifications` rows for all other community members with `type = 'new_visit'`.
@@ -251,6 +271,7 @@ app/_layout.tsx (RootLayout)
 
 ```
 if (!session) → router.replace('/login')
+else if (isPlatformAdmin) → router.replace('/platform/approvals')
 else if (!communityId && activeCommunityRequest) → router.replace('/community-request-submitted')
 else if (!communityId) → router.replace('/community-select')
 else if (communityId && approvalStatus === 'pending') → router.replace('/pending')
@@ -260,7 +281,9 @@ else if (communityId && approvalStatus === 'approved' && on onboarding/auth page
 
 ### Tab Navigator (`app/(tabs)/_layout.tsx`)
 
-5 tabs: Help (index), Market (business), Saved (favorites), Funds (funds), Profile (profile).
+Main tabs: Help (index), Market (business, hidden), Saved (favorites), Funds (funds), Profile (profile).
+
+Platform tabs: Approvals, Promotions, Communities (under `app/platform/*`).
 
 ### Dynamic Routes
 

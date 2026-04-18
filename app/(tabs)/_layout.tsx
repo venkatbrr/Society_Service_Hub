@@ -16,7 +16,7 @@ export default function TabLayout() {
   useFocusEffect(
     useCallback(() => {
       async function loadPendingCount() {
-        if (appRole !== 'admin' || !communityId) {
+        if (appRole !== 'community_admin' || !communityId) {
           setPendingCount(0);
           return;
         }
@@ -96,7 +96,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarBadge: appRole === 'admin' && pendingCount > 0 ? pendingCount : undefined,
+          tabBarBadge: appRole === 'community_admin' && pendingCount > 0 ? pendingCount : undefined,
           tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />,
         }}
       />

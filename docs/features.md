@@ -125,7 +125,7 @@ This document describes every user-facing feature, the screens involved, databas
 |--------|---------|
 | **Purpose** | List all community funds with aggregate totals (collected, spent, balance) |
 | **Tables** | Reads: `events`, `event_transactions`, `fund_roles`, `profiles`. |
-| **Business rules** | Only admin can create funds. Each fund has 1–2 treasurers (min 1, max 2) and 0–6 collectors. Balance = sum(income) − sum(expense). Schema validation checks for missing fund tables before displaying. |
+| **Business rules** | Only community admins can create funds. Each fund has 1–2 treasurers (min 1, max 2) and 0–6 collectors. Balance = sum(income) − sum(expense). Schema validation checks for missing fund tables before displaying. |
 | **Navigation** | To: `/funds/add` (admin only), `/funds/[id]` (detail). |
 | **Roles** | All residents see funds. Admin-only FAB for creating. Role-based permissions per fund. |
 | **Components** | `FundCard`, `EmptyState` |
@@ -136,20 +136,67 @@ This document describes every user-facing feature, the screens involved, databas
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Display user info, app role, community details, sign out, and admin approval entry point |
+| **Purpose** | Display user info, app role, community details, sign out, community directory entry point, and approval management entry point |
 | **Tables** | Reads: `profiles`, `communities`. |
-| **Business rules** | Invite code sharing is removed. Admins see a member approvals card with pending count and can open the approval queue. |
-| **Navigation** | To: `/admin/approvals`, `/community-select` (after sign-out). |
+| **Business rules** | Invite code sharing is removed. Community admins see a member approvals card with pending count and can open the approval queue. All approved members can open the residents directory. |
+| **Navigation** | To: `/admin/approvals`, `/residents`, `/community-select` (after sign-out). |
 | **Roles** | Personal profile only |
 
 ### Admin Approvals (`app/admin/approvals.tsx`)
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Review pending residents for the admin's community |
-| **Tables** | Reads: `profiles` filtered by `community_id` + `approval_status = 'pending'`. Writes: approval decisions via `approve_profile_membership` and `reject_profile_membership` RPCs, which also insert `notifications`. |
-| **Business rules** | Each row shows resident details and requested_at relative time. Approve grants access; reject routes the resident to the rejected state. |
-| **Navigation** | From: Profile tab admin card. |
+| **Purpose** | Review pending residents and request/cancel community-admin promotions for approved residents |
+| **Tables** | Reads: `profiles`, `community_admin_requests`. Writes: membership decisions via `approve_profile_membership` and `reject_profile_membership`; promotion requests via `create_community_admin_request` and `cancel_community_admin_request`. |
+| **Business rules** | Pending queue remains community-scoped. A promotion request can be raised for approved residents and may be cancelled only by the requester while still pending. |
+| **Navigation** | From: Profile tab community-admin card. |
+
+### Residents Directory (`app/residents.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Community-level approved resident directory with optional promotion request actions for community admins |
+| **Tables** | Reads via RPC `get_residents_directory` and `community_admin_requests`. Writes via `create_community_admin_request` and `cancel_community_admin_request`. |
+| **Business rules** | Directory includes approved residents only. Phone numbers are included only for community admins. Community admins can tap a resident name to open a contact details sheet (flat, phone, role). Promotion requests show pending/cancel states based on requester ownership. |
+| **Navigation** | From: Profile tab card. |
+| **Roles** | Approved residents can view. Community admins can request promotions. |
+
+---
+
+## Platform Admin Console (`app/platform/*`)
+
+### Platform Tabs (`app/platform/_layout.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Dedicated platform-only tab shell for approvals, promotions, and community inspection |
+| **Business rules** | Root routing redirects platform admins into this area and blocks non-platform users from accessing it. Each platform screen header includes a logout action for app admins. |
+| **Navigation** | `/platform/approvals`, `/platform/promotions`, `/platform/communities` |
+| **Roles** | Platform admin only (`profiles.app_role = 'admin'` with `community_id = null`) |
+
+### Community Approvals (`app/platform/approvals.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Process pending `community_requests` |
+| **Tables** | Reads: `community_requests`, `profiles`. Writes via RPC: `platform_approve_community_request`, `platform_reject_community_request`. |
+| **Business rules** | Approval creates the community and promotes requester to community admin. Rejection supports optional reason and triggers user notification. |
+
+### Promotion Reviews (`app/platform/promotions.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Process pending `community_admin_requests` |
+| **Tables** | Reads: `community_admin_requests`, `communities`, `profiles`. Writes via RPC: `platform_approve_community_admin_request`, `platform_reject_community_admin_request`. |
+| **Business rules** | Community admin cap is enforced server-side (max 5). Rejections can include optional reason. |
+
+### Communities Directory + Detail (`app/platform/communities.tsx`, `app/platform/community/[id].tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Search communities, inspect membership/admin counts, and remove residents where required |
+| **Tables** | Reads: `communities`, `profiles`. Writes via RPC: `platform_soft_remove_resident`. |
+| **Business rules** | Platform removal is soft-delete style on profile (`removed_at`, `removed_by`) and resets role to resident. Last-community-admin guard is enforced before removal. |
 
 ---
 
@@ -306,7 +353,7 @@ This document describes every user-facing feature, the screens involved, databas
 | **Business rules** | Types include `new_visit`, `generic`. Tapping a `new_visit` notification navigates to visit detail. Mark individual or all as read. |
 | **Navigation** | From: Header bell icon on Home tab (with badge count). To: `/visits/[visit_id]` for `new_visit` type. |
 | **Roles** | Personal notifications only |
-| **Real-time** | Supabase Realtime channel listens for INSERT on `notifications` table filtered by `user_id`. New notifications trigger native push alert via `expo-notifications` (non-web). |
+| **Real-time** | Supabase Realtime channel listens for INSERT on `notifications` table filtered by `user_id`. On mobile, app requests notification permissions, configures Android channel `default`, and triggers native local alerts via `expo-notifications` for new INSERT rows while the app is active. |
 
 ---
 
@@ -344,7 +391,7 @@ This document describes every user-facing feature, the screens involved, databas
 | Supabase Auth | Login, Signup, Password Reset | Email/password, session persistence via AsyncStorage |
 | Supabase Realtime | Notifications | `postgres_changes` INSERT on `notifications` table |
 | Supabase Storage | Business photos | `business-photos` bucket, public URLs |
-| Expo Notifications | Notifications | Local push alerts on new notification INSERT |
+| Expo Notifications | Notifications | Runtime permission + Android channel setup + local alerts on new notification INSERT |
 | Phone dialer | Provider detail, Visit detail | `Linking.openURL('tel:...')` |
 | WhatsApp | Provider detail, Business detail | `whatsapp://send?phone=` or `https://wa.me/` |
 | Native Share | Provider detail | `Share.share()` with provider contact info |

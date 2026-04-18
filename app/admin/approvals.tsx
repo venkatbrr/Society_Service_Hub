@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     FlatList,
@@ -20,6 +20,13 @@ type PendingProfile = Pick<
   Tables<'profiles'>,
   'id' | 'full_name' | 'flat_number' | 'phone_number' | 'join_note' | 'requested_at'
 >;
+
+type ApprovedResident = Pick<
+  Tables<'profiles'>,
+  'id' | 'full_name' | 'flat_number' | 'phone_number' | 'app_role'
+>;
+
+type PromotionRequest = Pick<Tables<'community_admin_requests'>, 'id' | 'target_user_id' | 'requested_by' | 'status'>;
 
 const relativeTime = (dateValue: string | null) => {
   if (!dateValue) {
@@ -44,16 +51,20 @@ const relativeTime = (dateValue: string | null) => {
 
 export default function AdminApprovalsScreen() {
   const router = useRouter();
-  const { appRole, communityId } = useAuth();
+  const { appRole, communityId, user, isCommunityAdmin } = useAuth();
   const colors = Colors.light;
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [requests, setRequests] = useState<PendingProfile[]>([]);
+  const [approvedResidents, setApprovedResidents] = useState<ApprovedResident[]>([]);
+  const [promotionRequests, setPromotionRequests] = useState<PromotionRequest[]>([]);
 
   const loadRequests = useCallback(async (showRefreshing = false) => {
-    if (!communityId || appRole !== 'admin') {
+    if (!communityId || appRole !== 'community_admin') {
       setRequests([]);
+      setApprovedResidents([]);
+      setPromotionRequests([]);
       setLoading(false);
       setRefreshing(false);
       return;
@@ -78,6 +89,26 @@ export default function AdminApprovalsScreen() {
       }
 
       setRequests(data ?? []);
+
+      const [{ data: approvedData, error: approvedError }, { data: promotionData, error: promotionError }] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, full_name, flat_number, phone_number, app_role')
+          .eq('community_id', communityId)
+          .eq('approval_status', 'approved')
+          .order('full_name', { ascending: true }),
+        supabase
+          .from('community_admin_requests')
+          .select('id, target_user_id, requested_by, status')
+          .eq('community_id', communityId)
+          .eq('status', 'pending'),
+      ]);
+
+      if (approvedError) throw approvedError;
+      if (promotionError) throw promotionError;
+
+      setApprovedResidents((approvedData ?? []).filter((row) => row.app_role !== 'community_admin'));
+      setPromotionRequests(promotionData ?? []);
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Unable to load requests', text2: error.message });
     } finally {
@@ -118,6 +149,40 @@ export default function AdminApprovalsScreen() {
     }
   };
 
+  const handlePromote = async (targetUserId: string) => {
+    setProcessingId(targetUserId);
+    try {
+      const { error } = await supabase.rpc('create_community_admin_request', { p_target_user_id: targetUserId });
+      if (error) throw error;
+      Toast.show({ type: 'success', text1: 'Promotion request sent' });
+      await loadRequests();
+    } catch (error: any) {
+      Toast.show({ type: 'error', text1: 'Promotion failed', text2: error.message });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleCancelPromotion = async (requestId: string) => {
+    setProcessingId(requestId);
+    try {
+      const { error } = await supabase.rpc('cancel_community_admin_request', { p_request_id: requestId });
+      if (error) throw error;
+      Toast.show({ type: 'success', text1: 'Promotion request cancelled' });
+      await loadRequests();
+    } catch (error: any) {
+      Toast.show({ type: 'error', text1: 'Cancel failed', text2: error.message });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const pendingByTarget = useMemo(() => {
+    const map = new Map<string, PromotionRequest>();
+    promotionRequests.forEach((row) => map.set(row.target_user_id, row));
+    return map;
+  }, [promotionRequests]);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
@@ -140,6 +205,41 @@ export default function AdminApprovalsScreen() {
           keyExtractor={(item) => item.id}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadRequests(true)} />}
           contentContainerStyle={requests.length ? styles.listContent : styles.emptyContent}
+          ListHeaderComponent={
+            isCommunityAdmin && approvedResidents.length ? (
+              <View style={styles.promoteSection}>
+                <Text style={[styles.promoteTitle, { color: colors.text }]}>Promote to community admin</Text>
+                {approvedResidents.map((resident) => {
+                  const pending = pendingByTarget.get(resident.id);
+                  const canCancel = pending && pending.requested_by === user?.id;
+
+                  return (
+                    <View key={resident.id} style={[styles.promoteCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}> 
+                      <View style={styles.promoteCopy}>
+                        <Text style={[styles.promoteName, { color: colors.text }]}>{resident.full_name || 'Resident'}</Text>
+                        <Text style={[styles.promoteMeta, { color: colors.textMuted }]}>Flat: {resident.flat_number || 'N/A'} • {resident.phone_number || 'No phone'}</Text>
+                      </View>
+                      {pending ? (
+                        canCancel ? (
+                          <TouchableOpacity style={[styles.promoteBtn, { borderColor: colors.border }]} onPress={() => handleCancelPromotion(pending.id)}>
+                            <Text style={[styles.promoteBtnText, { color: colors.text }]}>Cancel request</Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <View style={[styles.pendingPill, { backgroundColor: `${colors.warning}20` }]}>
+                            <Text style={[styles.pendingPillText, { color: colors.warning }]}>Promotion pending</Text>
+                          </View>
+                        )
+                      ) : (
+                        <TouchableOpacity style={[styles.promoteBtn, { borderColor: colors.primary }]} onPress={() => handlePromote(resident.id)}>
+                          <Text style={[styles.promoteBtnText, { color: colors.primary }]}>Promote</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+            ) : null
+          }
           ListEmptyComponent={
             <View style={[styles.emptyState, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
               <Ionicons name="checkmark-done-circle-outline" size={28} color={colors.secondary} />
@@ -250,6 +350,53 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: 'center',
     marginTop: 6,
+  },
+  promoteSection: {
+    gap: 10,
+    marginBottom: 16,
+  },
+  promoteTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  promoteCard: {
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  promoteCopy: {
+    flex: 1,
+  },
+  promoteName: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  promoteMeta: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  promoteBtn: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  promoteBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  pendingPill: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  pendingPillText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   requestCard: {
     borderWidth: 1,
