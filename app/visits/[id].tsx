@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Image } from 'expo-image';
+import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { JoinerListItem } from '../../components/JoinerListItem';
 import { VisitStatusBadge } from '../../components/VisitStatusBadge';
@@ -100,7 +99,7 @@ export default function VisitDetailScreen() {
     const { data } = await supabase.rpc('get_visit_joiners', { p_visit_id: id });
     const joinersData = data || [];
     setJoiners(joinersData);
-    setVisit(prev => prev ? { ...prev, joiner_count: joinersData.length, has_user_joined: joinersData.some((j: any) => j.user_id === user?.id) } : null);
+    setVisit((prev: VisitWithJoinerData | null) => prev ? { ...prev, joiner_count: joinersData.length, has_user_joined: joinersData.some((j: VisitJoinerWithProfile) => j.user_id === user?.id) } : null);
   }, [id, user?.id]);
 
   const handleJoin = async () => {
@@ -162,7 +161,7 @@ export default function VisitDetailScreen() {
 
           if (error) throw error;
           Toast.show({ type: 'success', text1: `Visit marked as ${status}` });
-          setVisit(prev => prev ? { ...prev, status } : null);
+          setVisit((prev: VisitWithJoinerData | null) => prev ? { ...prev, status } : null);
       } catch (e) {
           console.error(e);
           Toast.show({ type: 'error', text1: 'Error updating status' });
@@ -215,7 +214,7 @@ export default function VisitDetailScreen() {
             ) : (
                 <View style={[styles.creatorAvatarPlaceholder, { backgroundColor: colors.primary + '12' }]}>
                     <Text style={[styles.creatorInitials, { color: colors.primary }]}>
-                        {visit.creator_name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
+                        {visit.creator_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2)}
                     </Text>
                 </View>
             )}
@@ -239,7 +238,7 @@ export default function VisitDetailScreen() {
              <View style={[styles.dateChip, { backgroundColor: colors.primary + '10' }]}>
                 <Text style={[styles.dateChipText, { color: colors.primary }]}>{formatDate(visit.visit_date)}</Text>
              </View>
-             <VisitStatusBadge status={visit.status} />
+             <VisitStatusBadge status={visit.status as 'upcoming' | 'in_progress' | 'completed' | 'cancelled'} />
           </View>
 
           <Text style={[styles.visitTitle, { color: colors.text }]}>{visit.title}</Text>

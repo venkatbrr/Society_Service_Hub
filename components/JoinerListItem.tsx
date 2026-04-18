@@ -1,6 +1,5 @@
-import { Image } from 'expo-image';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 
 interface JoinerListItemProps {

@@ -5,6 +5,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CATEGORY_COLORS } from '../constants/categories';
 import { Colors } from '../constants/Colors';
 import { ProviderWithInteraction } from '../lib/database.types';
+import { BaseCard } from './BaseCard';
 
 type ProviderCardProps = {
   provider: ProviderWithInteraction;
@@ -18,14 +19,14 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
   const categoryColor = CATEGORY_COLORS[provider.category] || colors.primary;
 
   return (
-    <TouchableOpacity
-      style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder, shadowColor: colors.primary }]}
+    <BaseCard
       onPress={onPress}
-      activeOpacity={0.9}
+      isLightMode={isLightMode}
+      padding={20}
     >
       <View style={styles.content}>
-        <View style={[styles.imagePlaceholder, { backgroundColor: colors.surface2 }]}>
-           <Ionicons name="person" size={24} color={colors.icon} />
+        <View style={[styles.imagePlaceholder, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
+           <Ionicons name="person" size={28} color={colors.icon} />
         </View>
 
         <View style={styles.mainInfo}>
@@ -83,30 +84,20 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
           )}
         </View>
       </View>
-    </TouchableOpacity>
+    </BaseCard>
   );
 });
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 3,
-  },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   imagePlaceholder: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -117,27 +108,27 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+    marginBottom: 4,
   },
   name: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
     letterSpacing: -0.2,
   },
   verifiedIcon: {
-    marginLeft: 2,
+    marginTop: 1,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginBottom: 4,
-    marginTop: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 8,
   },
   category: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '600',
   },
   ratingRow: {
     flexDirection: 'row',

@@ -20,7 +20,7 @@ type FundCardProps = {
 
 export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorCount, onPress }: FundCardProps) => {
   const colors = Colors.light;
-  const createdLabel = new Date(fund.created_at).toLocaleDateString('en-IN', {
+  const createdLabel = new Date(fund.created_at ?? Date.now()).toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

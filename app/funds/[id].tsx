@@ -111,12 +111,13 @@ export default function FundDetailScreen() {
 
   const fundRole = getEffectiveFundRole(appRole, fund.fund_roles ?? [], user?.id);
   const permissions = getFundPermissions(fundRole);
+  const getCreatedAtTime = (value: string | null) => (value ? new Date(value).getTime() : 0);
   const incomeTransactions = [...(fund.event_transactions ?? [])]
     .filter((transaction) => transaction.type === 'income')
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    .sort((a, b) => getCreatedAtTime(b.created_at) - getCreatedAtTime(a.created_at));
   const expenseTransactions = [...(fund.event_transactions ?? [])]
     .filter((transaction) => transaction.type === 'expense')
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    .sort((a, b) => getCreatedAtTime(b.created_at) - getCreatedAtTime(a.created_at));
   const income = incomeTransactions.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
   const expense = expenseTransactions.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
   const balance = income - expense;
@@ -356,7 +357,7 @@ export default function FundDetailScreen() {
                   <Text style={[styles.transName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
                   <Text style={[styles.transDate, { color: colors.textMuted }]}>
                     {isPaid && contribution
-                      ? `Paid on ${new Date(contribution.created_at).toLocaleDateString()}`
+                      ? `Paid on ${new Date(contribution.created_at ?? Date.now()).toLocaleDateString()}`
                       : 'Pending contribution'}
                   </Text>
                 </View>
@@ -519,8 +520,8 @@ export default function FundDetailScreen() {
                 <Text style={[styles.transName, { color: colors.text }]}>{transaction.title || 'Expense'}</Text>
                 <Text style={[styles.transDate, { color: colors.textMuted }]}>
                   {transaction.description?.trim()
-                    ? `${transaction.description.trim()} - ${new Date(transaction.created_at).toLocaleDateString()}`
-                    : new Date(transaction.created_at).toLocaleDateString()}
+                    ? `${transaction.description.trim()} - ${new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}`
+                    : new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}
                 </Text>
               </View>
               <Text style={[styles.transAmount, { color: colors.accent }]}>

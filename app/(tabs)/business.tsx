@@ -137,7 +137,7 @@ export default function BusinessBrowseScreen() {
             ownerFlat={item.owner_flat}
             avgRating={Number(item.avg_rating || 0)}
             ratingCount={Number(item.rating_count || 0)}
-            isAcceptingOrders={item.is_accepting_orders}
+            isAcceptingOrders={!!item.is_accepting_orders}
             operatingHours={item.operating_hours}
             orderCutoff={item.order_cutoff}
             isFavorited={!!item.is_favorite}

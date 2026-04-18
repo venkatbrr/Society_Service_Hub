@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -101,24 +101,118 @@ export type Database = {
       }
       communities: {
         Row: {
+          approximate_units: string | null
+          area: string | null
+          city: string | null
           code: string
+          community_type: string | null
           created_at: string | null
           id: string
           name: string
+          pincode: string | null
         }
         Insert: {
+          approximate_units?: string | null
+          area?: string | null
+          city?: string | null
           code: string
+          community_type?: string | null
           created_at?: string | null
           id?: string
           name: string
+          pincode?: string | null
         }
         Update: {
+          approximate_units?: string | null
+          area?: string | null
+          city?: string | null
           code?: string
+          community_type?: string | null
           created_at?: string | null
           id?: string
           name?: string
+          pincode?: string | null
         }
         Relationships: []
+      }
+      community_requests: {
+        Row: {
+          approximate_units: string | null
+          area: string | null
+          city: string
+          community_type: string
+          created_at: string
+          id: string
+          name: string
+          nominated_admin_contact: string | null
+          nominated_admin_name: string | null
+          pincode: string
+          requested_by: string
+          requester_role: string
+          resulting_community_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["community_request_status_type"]
+        }
+        Insert: {
+          approximate_units?: string | null
+          area?: string | null
+          city: string
+          community_type: string
+          created_at?: string
+          id?: string
+          name: string
+          nominated_admin_contact?: string | null
+          nominated_admin_name?: string | null
+          pincode: string
+          requested_by: string
+          requester_role: string
+          resulting_community_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["community_request_status_type"]
+        }
+        Update: {
+          approximate_units?: string | null
+          area?: string | null
+          city?: string
+          community_type?: string
+          created_at?: string
+          id?: string
+          name?: string
+          nominated_admin_contact?: string | null
+          nominated_admin_name?: string | null
+          pincode?: string
+          requested_by?: string
+          requester_role?: string
+          resulting_community_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["community_request_status_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_requests_resulting_community_id_fkey"
+            columns: ["resulting_community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       event_transactions: {
         Row: {
@@ -342,6 +436,7 @@ export type Database = {
       profiles: {
         Row: {
           app_role: string | null
+          approval_status: Database["public"]["Enums"]["approval_status_type"]
           avatar_url: string | null
           community_id: string | null
           created_at: string | null
@@ -349,9 +444,13 @@ export type Database = {
           flat_number: string | null
           full_name: string | null
           id: string
+          join_note: string | null
+          phone_number: string | null
+          requested_at: string | null
         }
         Insert: {
           app_role?: string | null
+          approval_status?: Database["public"]["Enums"]["approval_status_type"]
           avatar_url?: string | null
           community_id?: string | null
           created_at?: string | null
@@ -359,9 +458,13 @@ export type Database = {
           flat_number?: string | null
           full_name?: string | null
           id: string
+          join_note?: string | null
+          phone_number?: string | null
+          requested_at?: string | null
         }
         Update: {
           app_role?: string | null
+          approval_status?: Database["public"]["Enums"]["approval_status_type"]
           avatar_url?: string | null
           community_id?: string | null
           created_at?: string | null
@@ -369,6 +472,9 @@ export type Database = {
           flat_number?: string | null
           full_name?: string | null
           id?: string
+          join_note?: string | null
+          phone_number?: string | null
+          requested_at?: string | null
         }
         Relationships: [
           {
@@ -684,6 +790,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_profile_membership: {
+        Args: { p_profile_id: string }
+        Returns: undefined
+      }
       auto_complete_past_visits: { Args: never; Returns: undefined }
       get_community_businesses: {
         Args: { p_community_id: string }
@@ -709,7 +819,12 @@ export type Database = {
         Returns: Json
       }
       get_community_visits: {
-        Args: { p_community_id: string; p_status?: string; p_user_id: string }
+        Args: {
+          p_community_id: string
+          p_status?: string
+          p_time_scope?: string
+          p_user_id: string
+        }
         Returns: {
           category: string
           created_at: string
@@ -751,9 +866,44 @@ export type Database = {
         }[]
       }
       is_admin: { Args: { p_user_id?: string }; Returns: boolean }
+      is_user_approved: { Args: { p_user_id?: string }; Returns: boolean }
+      reject_profile_membership: {
+        Args: { p_profile_id: string }
+        Returns: undefined
+      }
+      search_communities_by_pincode: {
+        Args: { p_pincode: string }
+        Returns: {
+          area: string
+          city: string
+          community_type: string
+          id: string
+          name: string
+          resident_count: number
+        }[]
+      }
+      submit_community_request: {
+        Args: {
+          p_approximate_units?: string
+          p_area?: string
+          p_city: string
+          p_community_type: string
+          p_name: string
+          p_nominated_admin_contact?: string
+          p_nominated_admin_name?: string
+          p_pincode: string
+          p_requester_role?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      approval_status_type: "pending" | "approved" | "rejected"
+      community_request_status_type:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "needs_info"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -880,6 +1030,47 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      approval_status_type: ["pending", "approved", "rejected"],
+      community_request_status_type: [
+        "pending",
+        "approved",
+        "rejected",
+        "needs_info",
+      ],
+    },
   },
 } as const
+
+export type ProviderWithInteraction = Tables<'service_providers'> & {
+  is_favorite?: boolean
+  user_rating?: number | null
+  hire_count?: number
+}
+
+export type BusinessWithInteraction = Tables<'resident_businesses'> & {
+  is_favorite?: boolean
+  avg_rating?: number
+  rating_count?: number
+  inquiry_count?: number
+  owner_name?: string
+  owner_flat?: string
+  user_rating?: number | null
+}
+
+export type VisitWithJoinerData = Tables<'service_visits'> & {
+  creator_name?: string
+  creator_flat?: string | null
+  creator_avatar_url?: string | null
+  joiner_count?: number
+  has_user_joined?: boolean
+}
+
+export type VisitJoinerWithProfile = Database['public']['Functions']['get_visit_joiners']['Returns'][number]
+
+export type FundWithTotals = Tables<'events'> & {
+  totals: { income: number; expense: number; balance: number }
+  currentRole: 'admin' | 'treasurer' | 'collector' | 'resident'
+  treasurerNames: string[]
+  collectorCount: number
+}

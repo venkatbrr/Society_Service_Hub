@@ -6,7 +6,6 @@ import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } fr
 import Toast from 'react-native-toast-message';
 import { ActiveFundTeaser } from '../../components/ActiveFundTeaser';
 import { CategoryFilter } from '../../components/CategoryFilter';
-import { CommunityInsights } from '../../components/CommunityInsights';
 import { EmptyState } from '../../components/EmptyState';
 import { ProviderCard } from '../../components/ProviderCard';
 import { SearchBar } from '../../components/SearchBar';
@@ -27,10 +26,11 @@ export default function HomeScreen() {
   const [activeSegment, setActiveSegment] = useState<'providers' | 'visits'>('providers');
   const [providers, setProviders] = useState<ProviderWithInteraction[]>([]);
   const [visits, setVisits] = useState<VisitWithJoinerData[]>([]);
+  const [pastVisits, setPastVisits] = useState<VisitWithJoinerData[]>([]);
+  const [visitTab, setVisitTab] = useState<'upcoming' | 'past'>('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [insights, setInsights] = useState<any[]>([]);
   const [activeFund, setActiveFund] = useState<any>(null);
   const { user, communityId } = useAuth();
   const router = useRouter();
@@ -41,24 +41,13 @@ export default function HomeScreen() {
   const fetchCommunityStats = useCallback(async () => {
     if (!communityId) return;
     try {
-      // Fetch insights and active fund in parallel
-      const [insightsResult, fundResult] = await Promise.all([
-        supabase.rpc('get_community_insights', { p_community_id: communityId }),
-        supabase.from('events')
-          .select('*, event_transactions(amount, type)')
-          .eq('community_id', communityId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-      ]);
-
-      if (!insightsResult.error && insightsResult.data) {
-        setInsights([
-          { title: 'Most hired', value: insightsResult.data.most_hired_category, icon: 'people', color: colors.secondary },
-          { title: 'Spent this month', value: `₹${insightsResult.data.total_spent_month.toLocaleString()}`, icon: 'cash', color: colors.primary },
-          { title: 'Contributions', value: `${insightsResult.data.contribution_percentage}%`, icon: 'checkmark-circle', color: colors.warning },
-        ]);
-      }
+      // Fetch active fund
+      const fundResult = await supabase.from('events')
+        .select('*, event_transactions(amount, type)')
+        .eq('community_id', communityId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       const fundData = fundResult.data;
       if (fundData) {
@@ -135,33 +124,113 @@ export default function HomeScreen() {
     if (!communityId || !user?.id) return;
 
     try {
-      const { data, error } = await supabase.rpc('get_community_visits', {
-        p_community_id: communityId,
-        p_user_id: user.id,
-        p_status: 'upcoming,cancelled'
+      // Fetch visits and user's joined visits in parallel
+      const [visitsResult, joinersResult] = await Promise.all([
+        supabase
+          .from('service_visits')
+          .select('*')
+          .eq('community_id', communityId)
+          .order('visit_date', { ascending: true }),
+        supabase
+          .from('visit_joiners')
+          .select('visit_id, user_id')
+          .eq('user_id', user.id),
+      ]);
+
+      if (visitsResult.error) throw visitsResult.error;
+
+      const visits = visitsResult.data || [];
+      if (visits.length === 0) {
+        setVisits([]);
+        setPastVisits([]);
+        return;
+      }
+
+      // Batch-fetch creator profiles
+      const creatorIds = [...new Set(visits.map((v: any) => v.created_by))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, flat_number, avatar_url')
+        .in('id', creatorIds);
+
+      const profileMap: Record<string, any> = {};
+      (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
+
+      // Count joiners per visit
+      const { data: joinerCounts } = await supabase
+        .from('visit_joiners')
+        .select('visit_id');
+
+      const joinerCountMap: Record<string, number> = {};
+      (joinerCounts || []).forEach((j: any) => {
+        joinerCountMap[j.visit_id] = (joinerCountMap[j.visit_id] || 0) + 1;
       });
 
-      if (error) throw error;
+      const userJoinedSet = new Set(
+        (joinersResult.data || []).map((j: any) => j.visit_id)
+      );
 
-      let processedData = data as VisitWithJoinerData[];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-      // Client-side filtering for search and category (RPC already filters date)
+      const allVisits: VisitWithJoinerData[] = visits.map((sv: any) => {
+        const creator = profileMap[sv.created_by] || {};
+        
+        let adjustedStatus = sv.status;
+        const visitDate = new Date(sv.visit_date);
+        visitDate.setHours(0, 0, 0, 0);
+        if (visitDate < today && adjustedStatus === 'upcoming') {
+          adjustedStatus = 'completed';
+        }
+
+        return {
+          ...sv,
+          status: adjustedStatus,
+          creator_name: creator.full_name || 'Neighbor',
+          creator_flat: creator.flat_number || undefined,
+          creator_avatar_url: creator.avatar_url || undefined,
+          joiner_count: joinerCountMap[sv.id] || 0,
+          has_user_joined: userJoinedSet.has(sv.id),
+        };
+      });
+
+      // Split into upcoming (date >= today) and past (date < today)
+      let upcomingData = allVisits.filter(v => {
+        const visitDate = new Date(v.visit_date);
+        visitDate.setHours(0, 0, 0, 0);
+        return visitDate >= today && (v.status === 'upcoming' || v.status === 'cancelled');
+      });
+
+      let pastData = allVisits.filter(v => {
+        const visitDate = new Date(v.visit_date);
+        visitDate.setHours(0, 0, 0, 0);
+        return visitDate < today;
+      });
+
+      // Sort: upcoming ASC, past DESC
+      upcomingData.sort((a, b) => new Date(a.visit_date).getTime() - new Date(b.visit_date).getTime());
+      pastData.sort((a, b) => new Date(b.visit_date).getTime() - new Date(a.visit_date).getTime());
+
+      // Client-side filtering for search and category
       if (selectedCategory && selectedCategory !== 'All') {
-        processedData = processedData.filter(v => v.category === selectedCategory);
+        upcomingData = upcomingData.filter(v => v.category === selectedCategory);
+        pastData = pastData.filter(v => v.category === selectedCategory);
       }
 
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        processedData = processedData.filter(v =>
+        const filterFn = (v: VisitWithJoinerData) =>
           v.title.toLowerCase().includes(query) ||
           v.provider_name.toLowerCase().includes(query) ||
-          v.category.toLowerCase().includes(query)
-        );
+          v.category.toLowerCase().includes(query);
+        upcomingData = upcomingData.filter(filterFn);
+        pastData = pastData.filter(filterFn);
       }
 
-      setVisits(processedData);
+      setVisits(upcomingData);
+      setPastVisits(pastData);
     } catch (error: any) {
-      console.error(error);
+      console.error('fetchVisits error:', error);
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load visits' });
     }
   }, [communityId, user?.id, searchQuery, selectedCategory]);
@@ -284,7 +353,7 @@ export default function HomeScreen() {
             end={{ x: 1, y: 0 }}
             style={[styles.segmentBtn, styles.segmentBtnActive]}
           >
-            <Text style={[styles.segmentText, { color: '#FFF' }]}>Visits</Text>
+            <Text style={[styles.segmentText, { color: '#FFF' }]}>Service Visits</Text>
           </LinearGradient>
         ) : (
           <TouchableOpacity
@@ -293,100 +362,167 @@ export default function HomeScreen() {
               setActiveSegment('visits');
               setSelectedCategory(null);
               setSearchQuery('');
+              setVisitTab('upcoming');
             }}
           >
-            <Text style={[styles.segmentText, { color: colors.textMuted }]}>Visits</Text>
+            <Text style={[styles.segmentText, { color: colors.textMuted }]}>Service Visits</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      <FlatList
-        data={activeSegment === 'providers' ? providers : visits}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          activeSegment === 'providers' ? (
+      {activeSegment === 'providers' ? (
+        <FlatList
+          data={providers}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
             <ProviderCard
               provider={item as ProviderWithInteraction}
               onPress={() => router.push(`/provider/${item.id}`)}
               onToggleFavorite={handleToggleFavorite}
               isLightMode={true}
             />
-          ) : (
+          )}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          initialNumToRender={8}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
+          ListHeaderComponent={
+            <>
+              {activeFund && activeFund.goal > 0 && (
+                <ActiveFundTeaser
+                  title={activeFund.title}
+                  collected={activeFund.collected}
+                  goal={activeFund.goal}
+                  onPress={() => router.push(`/funds/${activeFund.id}`)}
+                />
+              )}
+
+              <View style={styles.filterSection}>
+                <SearchBar
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Search help..."
+                  isLightMode={true}
+                />
+                <CategoryFilter
+                  selectedCategory={selectedCategory}
+                  onSelectCategory={setSelectedCategory}
+                  isLightMode={true}
+                />
+              </View>
+            </>
+          }
+          ListEmptyComponent={
+            <EmptyState
+              icon="people"
+              title="No Providers Found"
+              message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to add a trusted service provider!"}
+              isLightMode={true}
+            />
+          }
+        />
+      ) : (
+        <FlatList
+          data={visitTab === 'upcoming' ? visits : pastVisits}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
             <VisitCard
               id={item.id}
-              title={(item as VisitWithJoinerData).title}
-              providerName={(item as VisitWithJoinerData).provider_name}
-              hasProviderProfile={!!(item as VisitWithJoinerData).provider_id}
-              category={(item as VisitWithJoinerData).category}
-              visitDate={(item as VisitWithJoinerData).visit_date}
-              visitTimeSlot={(item as VisitWithJoinerData).visit_time_slot}
-              estimatedCost={(item as VisitWithJoinerData).estimated_cost || undefined}
-              creatorName={(item as VisitWithJoinerData).creator_name || 'Neighbor'}
-              creatorFlat={(item as VisitWithJoinerData).creator_flat || undefined}
-              creatorAvatarUrl={(item as VisitWithJoinerData).creator_avatar_url || undefined}
-              createdAt={(item as VisitWithJoinerData).created_at}
-              isCreator={(item as VisitWithJoinerData).created_by === user?.id}
-              joinerCount={Number((item as VisitWithJoinerData).joiner_count || 0)}
-              maxJoiners={(item as VisitWithJoinerData).max_joiners || undefined}
-              hasUserJoined={!!(item as VisitWithJoinerData).has_user_joined}
-              status={(item as VisitWithJoinerData).status}
+              title={item.title}
+              providerName={item.provider_name}
+              hasProviderProfile={!!item.provider_id}
+              category={item.category}
+              visitDate={item.visit_date}
+              visitTimeSlot={item.visit_time_slot}
+              estimatedCost={item.estimated_cost || undefined}
+              creatorName={item.creator_name || 'Neighbor'}
+              creatorFlat={item.creator_flat || undefined}
+              creatorAvatarUrl={item.creator_avatar_url || undefined}
+              createdAt={item.created_at ?? new Date().toISOString()}
+              isCreator={item.created_by === user?.id}
+              joinerCount={Number(item.joiner_count || 0)}
+              maxJoiners={item.max_joiners || undefined}
+              hasUserJoined={!!item.has_user_joined}
+              status={item.status as 'upcoming' | 'in_progress' | 'completed' | 'cancelled'}
               onJoin={() => handleJoinVisit(item.id)}
               onUnjoin={() => router.push(`/visits/${item.id}`)}
               onPress={() => router.push(`/visits/${item.id}`)}
             />
-          )
-        )}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        initialNumToRender={8}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-        }
-        ListHeaderComponent={
-          <>
-            {activeSegment === 'providers' && insights.length > 0 && <CommunityInsights insights={insights} />}
+          )}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
+          ListHeaderComponent={
+            <>
+              {activeFund && activeFund.goal > 0 && (
+                <ActiveFundTeaser
+                  title={activeFund.title}
+                  collected={activeFund.collected}
+                  goal={activeFund.goal}
+                  onPress={() => router.push(`/funds/${activeFund.id}`)}
+                />
+              )}
+              <View style={styles.filterSection}>
+                <View style={[styles.subTabControl, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
+                  <TouchableOpacity
+                    style={[styles.subTabBtn, visitTab === 'upcoming' && { backgroundColor: colors.primary + '15' }]}
+                    onPress={() => setVisitTab('upcoming')}
+                  >
+                    <Text style={[styles.subTabText, visitTab === 'upcoming' ? { color: colors.primary, fontWeight: '700' } : { color: colors.textMuted }]}>
+                      Upcoming ({visits.length})
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.subTabBtn, visitTab === 'past' && { backgroundColor: colors.primary + '15' }]}
+                    onPress={() => setVisitTab('past')}
+                  >
+                    <Text style={[styles.subTabText, visitTab === 'past' ? { color: colors.primary, fontWeight: '700' } : { color: colors.textMuted }]}>
+                      Past ({pastVisits.length})
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
-            {activeFund && activeFund.goal > 0 && (
-              <ActiveFundTeaser
-                title={activeFund.title}
-                collected={activeFund.collected}
-                goal={activeFund.goal}
-                onPress={() => router.push(`/funds/${activeFund.id}`)}
-              />
-            )}
-
-            <View style={styles.filterSection}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                {activeSegment === 'providers' ? 'Find Trusted Help' : 'Upcoming Community Visits'}
-              </Text>
-              <SearchBar
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholder={activeSegment === 'providers' ? "Search help..." : "Search visits..."}
+                <SearchBar
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Search visits..."
+                  isLightMode={true}
+                />
+                <CategoryFilter
+                  selectedCategory={selectedCategory}
+                  onSelectCategory={setSelectedCategory}
+                  categories={VISIT_CATEGORIES}
+                  isLightMode={true}
+                />
+              </View>
+            </>
+          }
+          ListEmptyComponent={
+            visitTab === 'upcoming' ? (
+              <EmptyState
+                icon="calendar"
+                title="No Upcoming Visits"
+                message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to share when a provider is coming!"}
                 isLightMode={true}
               />
-              <CategoryFilter
-                selectedCategory={selectedCategory}
-                onSelectCategory={setSelectedCategory}
-                categories={activeSegment === 'providers' ? undefined : VISIT_CATEGORIES}
+            ) : (
+              <EmptyState
+                icon="time"
+                title="No Past Visits"
+                message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Completed and expired visits will appear here"}
                 isLightMode={true}
               />
-            </View>
-          </>
-        }
-        ListEmptyComponent={
-          <EmptyState
-            icon={activeSegment === 'providers' ? "people" : "calendar"}
-            title={activeSegment === 'providers' ? "No Providers Found" : "No Upcoming Visits"}
-            message={searchQuery || selectedCategory ? "Try adjusting your filters" :
-              (activeSegment === 'providers' ? "Be the first to add a trusted service provider!" : "Be the first to share when a provider is coming!")}
-            isLightMode={true}
-          />
-        }
-      />
+            )
+          }
+        />
+      )}
 
       <TouchableOpacity
         style={styles.fab}
@@ -485,7 +621,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   filterSection: {
-    paddingHorizontal: 24,
     marginTop: 10,
     marginBottom: 8,
   },
@@ -497,6 +632,25 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 100,
+    paddingHorizontal: 24,
+  },
+  subTabControl: {
+    flexDirection: 'row',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  subTabBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subTabText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   fab: {
     position: 'absolute',

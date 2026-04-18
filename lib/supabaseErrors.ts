@@ -41,3 +41,20 @@ export const isMissingFundSchemaError = (error: PostgrestLikeError) => {
 
 export const getMissingFundSchemaMessage = () =>
   'Funds need the latest Supabase migrations before every feature can load.';
+
+export const isMissingOnboardingSchemaError = (error: PostgrestLikeError) => {
+  if (!error) {
+    return false;
+  }
+
+  const text = getErrorText(error);
+  return (
+    isSupabaseSchemaError(error) &&
+    ['approval_status', 'community_requests', 'join_note', 'requested_at', 'pincode'].some((resource) =>
+      text.includes(resource)
+    )
+  );
+};
+
+export const getMissingOnboardingSchemaMessage = () =>
+  'Onboarding needs the latest Supabase migrations before this flow can load.';

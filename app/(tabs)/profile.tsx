@@ -2,8 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Image } from 'expo-image';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
@@ -12,20 +11,25 @@ import { supabase } from '../../lib/supabase';
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, signOut, communityId, appRole } = useAuth();
-  const [communityDetails, setCommunityDetails] = useState<{name: string, code: string} | null>(null);
-  const [userBusiness, setUserBusiness] = useState<{id: string, name: string, is_accepting_orders: boolean} | null>(null);
-  const [loadingBusiness, setLoadingBusiness] = useState(true);
+  const [communityDetails, setCommunityDetails] = useState<{ name: string; city: string | null; area: string | null; community_type: string | null } | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const colors = Colors.light;
+  const roleLabel = (appRole ?? 'resident').charAt(0).toUpperCase() + (appRole ?? 'resident').slice(1);
 
   useEffect(() => {
     async function fetchCommunity() {
       if (communityId) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('communities')
-          .select('name, code')
+          .select('name, city, area, community_type')
           .eq('id', communityId)
-          .single();
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading community details:', error);
+          return;
+        }
 
         if (data) {
           setCommunityDetails(data);
@@ -33,23 +37,29 @@ export default function ProfileScreen() {
       }
     }
 
-    async function fetchUserBusiness() {
-      if (user?.id && communityId) {
-        const { data } = await supabase
-          .from('resident_businesses')
-          .select('id, name, is_accepting_orders')
-          .eq('owner_id', user.id)
-          .eq('community_id', communityId)
-          .maybeSingle();
-
-        setUserBusiness(data);
-        setLoadingBusiness(false);
+    async function fetchPendingCount() {
+      if (appRole !== 'admin' || !communityId) {
+        setPendingCount(0);
+        return;
       }
+
+      const { count, error } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('community_id', communityId)
+          .eq('approval_status', 'pending');
+
+      if (error) {
+        console.error('Error loading pending approvals:', error);
+        return;
+      }
+
+      setPendingCount(count ?? 0);
     }
 
     fetchCommunity();
-    // fetchUserBusiness(); // Business feature deferred
-  }, [communityId, user?.id]);
+    fetchPendingCount();
+  }, [appRole, communityId]);
 
   const handleSignOut = async () => {
     try {
@@ -93,17 +103,14 @@ export default function ProfileScreen() {
               </Text>
               <View style={[styles.roleBadge, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
                 <Text style={[styles.roleBadgeText, { color: colors.primary }]}>
-                  App Role: {appRole.charAt(0).toUpperCase() + appRole.slice(1)}
+                  App Role: {roleLabel}
                 </Text>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Business section hidden — feature deferred */}
-
         <View style={[styles.section, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-
           <View style={styles.infoRow}>
             <Text style={[styles.label, { color: colors.textMuted }]}>NAME</Text>
             <Text style={[styles.value, { color: colors.text }]}>{communityDetails?.name || '---'}</Text>
@@ -112,18 +119,39 @@ export default function ProfileScreen() {
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <Text style={[styles.label, { color: colors.textMuted }]}>INVITE CODE</Text>
-            <View style={[styles.codeBadge, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
-              <Text style={[styles.codeValue, { color: colors.primary }]}>
-                {communityDetails?.code || '---'}
-              </Text>
-            </View>
+            <Text style={[styles.label, { color: colors.textMuted }]}>LOCATION</Text>
+            <Text style={[styles.value, { color: colors.text }]}>{communityDetails?.area || communityDetails?.city || '---'}</Text>
           </View>
 
-          <Text style={[styles.hint, { color: colors.textMuted }]}>
-            Share this code with your neighbors so they can join!
-          </Text>
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, { color: colors.textMuted }]}>TYPE</Text>
+            <Text style={[styles.value, { color: colors.text, textTransform: 'capitalize' }]}>{communityDetails?.community_type || '---'}</Text>
+          </View>
         </View>
+
+        {appRole === 'admin' ? (
+          <TouchableOpacity
+            onPress={() => router.push('/admin/approvals')}
+            style={[styles.adminCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+            activeOpacity={0.82}
+          >
+            <View style={[styles.adminIconWrap, { backgroundColor: `${colors.primary}12` }]}>
+              <Ionicons name="shield-checkmark-outline" size={22} color={colors.primary} />
+            </View>
+            <View style={styles.adminContent}>
+              <Text style={[styles.adminTitle, { color: colors.text }]}>Member approvals</Text>
+              <Text style={[styles.adminCopy, { color: colors.textMuted }]}>{pendingCount > 0 ? `${pendingCount} requests waiting for review` : 'No pending requests right now'}</Text>
+            </View>
+            {pendingCount > 0 ? (
+              <View style={[styles.pendingBadge, { backgroundColor: colors.primary }]}>
+                <Text style={styles.pendingBadgeText}>{pendingCount}</Text>
+              </View>
+            ) : null}
+            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        ) : null}
 
         <View style={styles.spacer} />
 
@@ -270,6 +298,52 @@ const styles = StyleSheet.create({
     marginTop: 12,
     lineHeight: 18,
   },
+  adminCard: {
+    borderWidth: 1,
+    borderRadius: 24,
+    padding: 18,
+    marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 20,
+    elevation: 2,
+  },
+  adminIconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adminContent: {
+    flex: 1,
+  },
+  adminTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  adminCopy: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  pendingBadge: {
+    minWidth: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  pendingBadgeText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
   spacer: {
     flex: 1,
   },
@@ -291,56 +365,5 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     fontSize: 12,
     fontWeight: '500',
-  },
-  businessCTA: {
-    padding: 12,
-    borderRadius: 16,
-    backgroundColor: '#F9FAFB',
-  },
-  businessCTAContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  businessNameText: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  statusBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  startBusinessBtn: {
-    padding: 16,
-    borderRadius: 16,
-  },
-  startBusinessContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  startBusinessText: {
-    flex: 1,
-  },
-  ctaTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  ctaSub: {
-    fontSize: 12,
-    lineHeight: 16,
   },
 });

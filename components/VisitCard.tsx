@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Image } from 'expo-image';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
+import { BaseCard } from './BaseCard';
 import { VisitStatusBadge } from './VisitStatusBadge';
 
 interface VisitCardProps {
@@ -74,7 +74,7 @@ export const VisitCard = React.memo(({
   const isFull = maxJoiners ? joinerCount >= maxJoiners : false;
 
   return (
-    <TouchableOpacity style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder, shadowColor: colors.primary }]} onPress={onPress} activeOpacity={0.7}>
+    <BaseCard padding={24} onPress={onPress}>
       {/* Creator Row */}
       <View style={styles.creatorRow}>
         {creatorAvatarUrl ? (
@@ -152,61 +152,51 @@ export const VisitCard = React.memo(({
           </View>
         ) : null}
       </View>
-    </TouchableOpacity>
+    </BaseCard>
   );
 });
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 3,
-  },
   creatorRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
   creatorAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   creatorAvatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
   },
   creatorInitials: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
   },
   creatorInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 14,
   },
   creatorName: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
   },
   relativeTime: {
-    fontSize: 12,
-    marginTop: 1,
+    fontSize: 13,
+    marginTop: 2,
   },
   mainInfo: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
-    marginBottom: 8,
+    marginBottom: 10,
     letterSpacing: -0.5,
   },
   providerRow: {

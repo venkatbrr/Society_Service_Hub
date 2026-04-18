@@ -35,6 +35,10 @@ export function getFundPermissions(role: FundAccessRole) {
 }
 
 export function formatRole(role: FundAccessRole | AppRole | AssignmentRole) {
+  if (!role) {
+    return 'Resident';
+  }
+
   return role.charAt(0).toUpperCase() + role.slice(1);
 }
 

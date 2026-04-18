@@ -96,7 +96,7 @@ export default function ProviderDetailScreen() {
         throw error;
       }
 
-      setProvider(prev => prev ? { ...prev, hire_count: (prev.hire_count || 0) + 1 } : null);
+      setProvider((prev: ProviderWithInteraction | null) => prev ? { ...prev, hire_count: (prev.hire_count || 0) + 1 } : null);
     } catch (err) {
       console.error('Error logging hire:', err);
     }
@@ -175,7 +175,7 @@ export default function ProviderDetailScreen() {
       if (error) throw error;
       Toast.show({ type: 'success', text1: 'Rating saved' });
       // Update rating locally instead of refetching entire provider
-      setProvider(prev => prev ? { ...prev, user_rating: rating } : null);
+      setProvider((prev: ProviderWithInteraction | null) => prev ? { ...prev, user_rating: rating } : null);
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Error saving rating' });
     }

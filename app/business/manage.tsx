@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { OfferingCard } from '../../components/OfferingCard';
 import { RatingStars } from '../../components/RatingStars';
@@ -190,7 +189,7 @@ export default function BusinessManageScreen() {
               </Text>
             </View>
             <Switch
-              value={business.is_accepting_orders}
+              value={!!business.is_accepting_orders}
               onValueChange={toggleAcceptingOrders}
               trackColor={{ false: '#767577', true: colors.primary + '80' }}
               thumbColor={business.is_accepting_orders ? colors.primary : '#f4f3f4'}

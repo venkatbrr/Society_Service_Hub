@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { Tables } from '../lib/database.types';
 
@@ -12,7 +12,11 @@ export const TransactionItem = ({ transaction }: TransactionItemProps) => {
   const isIncome = transaction.type === 'income';
   const colors = Colors.light;
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) {
+      return 'Today';
+    }
+
     const date = new Date(dateString);
     return date.toLocaleDateString('en-IN', {
       day: 'numeric',

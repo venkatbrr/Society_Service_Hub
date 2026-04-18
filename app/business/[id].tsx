@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Image } from 'expo-image';
+import { ActivityIndicator, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BusinessStatusBadge } from '../../components/BusinessStatusBadge';
 import { OfferingCard } from '../../components/OfferingCard';
@@ -123,7 +122,7 @@ export default function BusinessDetailScreen() {
         user_id: user.id,
         inquiry_type: type
       });
-      setBusiness(prev => prev ? { ...prev, inquiry_count: (prev.inquiry_count || 0) + 1 } : null);
+      setBusiness((prev: BusinessWithInteraction | null) => prev ? { ...prev, inquiry_count: (prev.inquiry_count || 0) + 1 } : null);
     } catch (err) {
       console.error('Error logging inquiry:', err);
     }
@@ -243,7 +242,7 @@ export default function BusinessDetailScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.statusBadgeWrapper}>
-            <BusinessStatusBadge isAcceptingOrders={business.is_accepting_orders} />
+            <BusinessStatusBadge isAcceptingOrders={!!business.is_accepting_orders} />
           </View>
         </View>
 

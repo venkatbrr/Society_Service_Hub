@@ -70,9 +70,10 @@ export const CategoryFilter = ({
 const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
+    marginHorizontal: -24,
   },
   scrollContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     gap: 8,
   },
   chip: {

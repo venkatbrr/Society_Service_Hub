@@ -1,14 +1,18 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Tables } from '../lib/database.types';
+import { supabase } from '../lib/supabase';
+
+type ActiveCommunityRequest = Pick<Tables<'community_requests'>, 'id' | 'status' | 'created_at' | 'name'> | null;
 
 type AuthContextType = {
   session: Session | null;
   user: User | null;
   profile: Tables<'profiles'> | null;
   appRole: Tables<'profiles'>['app_role'];
+  approvalStatus: Tables<'profiles'>['approval_status'];
   communityId: string | null;
+  activeCommunityRequest: ActiveCommunityRequest;
   isLoading: boolean;
   refreshSession: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -19,7 +23,9 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   appRole: 'resident',
+  approvalStatus: 'pending',
   communityId: null,
+  activeCommunityRequest: null,
   isLoading: true,
   refreshSession: async () => {},
   signOut: async () => {},
@@ -32,12 +38,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Tables<'profiles'> | null>(null);
   const [communityId, setCommunityId] = useState<string | null>(null);
+  const [activeCommunityRequest, setActiveCommunityRequest] = useState<ActiveCommunityRequest>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadProfile = async (userId: string | null | undefined) => {
     if (!userId) {
       setProfile(null);
       setCommunityId(null);
+      setActiveCommunityRequest(null);
       return;
     }
 
@@ -53,6 +61,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    let nextActiveRequest: ActiveCommunityRequest = null;
+
+    if (!data?.community_id) {
+      const { data: requestData, error: requestError } = await supabase
+        .from('community_requests')
+        .select('id, status, created_at, name')
+        .eq('requested_by', userId)
+        .in('status', ['pending', 'needs_info'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (requestError) {
+        console.error('Error loading active community request:', requestError);
+      } else {
+        nextActiveRequest = requestData ?? null;
+      }
+    }
+
     setProfile(data ?? null);
     setCommunityId(
       data?.community_id ??
@@ -60,6 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       session?.user?.app_metadata?.community_id ??
       null
     );
+    setActiveCommunityRequest(nextActiveRequest);
   };
 
   const fetchSession = async () => {
@@ -112,7 +140,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         user,
         profile,
         appRole: profile?.app_role ?? 'resident',
+        approvalStatus: profile?.approval_status ?? 'pending',
         communityId,
+        activeCommunityRequest,
         isLoading,
         refreshSession,
         signOut,

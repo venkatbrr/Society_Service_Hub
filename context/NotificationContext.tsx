@@ -117,10 +117,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
           // Optional: Local in-app notification trigger
           if (Platform.OS !== 'web') {
-            Notifications.presentNotificationAsync({
-              title: newNotification.title,
-              body: newNotification.body,
-              data: newNotification.data,
+            void Notifications.scheduleNotificationAsync({
+              content: {
+                title: newNotification.title,
+                body: newNotification.body,
+                data: newNotification.data,
+              },
+              trigger: null,
             });
           }
         }

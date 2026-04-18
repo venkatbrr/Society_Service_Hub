@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { BusinessStatusBadge } from './BusinessStatusBadge';
 import { RatingStars } from './RatingStars';

@@ -22,7 +22,7 @@ User Action
 
 ```
 AuthProvider (context/AuthContext.tsx)
-  ├── session, user, profile, communityId, appRole
+  ├── session, user, profile, communityId, appRole, approvalStatus, activeCommunityRequest
   └── Consumed via useAuth() hook
 
 NotificationProvider (context/NotificationContext.tsx)
@@ -75,6 +75,8 @@ App Boot
       → fetch profiles row by id
       → setCommunityId (fallback: profile → user_metadata → app_metadata)
       → setAppRole ('admin' | 'resident')
+      → setApprovalStatus ('pending' | 'approved' | 'rejected')
+      → if needed, load the latest active community request
   → supabase.auth.onAuthStateChange(callback)
     → re-runs loadProfile on every auth event
 ```
@@ -93,7 +95,9 @@ type AuthContextType = {
   user: User | null
   profile: Tables<'profiles'> | null
   appRole: 'admin' | 'resident'
+  approvalStatus: 'pending' | 'approved' | 'rejected'
   communityId: string | null
+  activeCommunityRequest: { id, status, created_at, name } | null
   isLoading: boolean
   refreshSession: () => Promise<void>
   signOut: () => Promise<void>
@@ -108,8 +112,9 @@ type AuthContextType = {
 
 | Table | Purpose | Key Constraints |
 |-------|---------|-----------------|
-| `communities` | Society grouping | `code` UNIQUE |
-| `profiles` | User extension of `auth.users` | PK = `auth.users.id`, `app_role` enum |
+| `communities` | Society grouping | `code` UNIQUE, stores pincode/city/area/type metadata |
+| `profiles` | User extension of `auth.users` | PK = `auth.users.id`, `app_role`, `approval_status`, request details |
+| `community_requests` | Platform-reviewed onboarding requests | requester-owned read access only |
 | `service_providers` | Trusted provider listings | `community_id` FK |
 | `service_visits` | Group visit coordination | `provider_id` nullable, `status` enum |
 | `visit_joiners` | Visit RSVPs | UNIQUE(`visit_id`, `user_id`) |
@@ -137,13 +142,18 @@ CHECK (
 
 | Function | Purpose |
 |----------|---------|
-| `handle_new_user()` | Trigger: auto-creates `profiles` row on signup. First user in community gets `admin` role. |
+| `handle_new_user()` | Trigger: auto-creates `profiles` row on signup with resident role and pending approval status. |
 | `get_user_community_id()` | Returns community_id from JWT (`app_metadata` → `user_metadata` fallback) |
 | `is_admin(p_user_id)` | Checks if user has `app_role = 'admin'` |
+| `is_user_approved(p_user_id)` | Checks if user has `approval_status = 'approved'` |
+| `search_communities_by_pincode(p_pincode)` | RPC: returns communities matching exact pincode with resident counts |
+| `submit_community_request(...)` | RPC: creates a reviewed `community_requests` row |
+| `approve_profile_membership(p_profile_id)` | RPC: admin-only approval + notification insert |
+| `reject_profile_membership(p_profile_id)` | RPC: admin-only rejection + notification insert |
 | `get_fund_role(p_event_id, p_user_id)` | Resolves effective fund role (admin > assigned > resident) |
 | `get_community_insights(p_community_id)` | RPC: returns most hired category, monthly spending, contribution % |
 | `get_community_businesses(p_community_id)` | RPC: returns businesses with aggregated ratings + inquiry counts |
-| `get_community_visits(p_community_id, p_user_id, p_status)` | RPC: returns visits with creator info + joiner counts. `p_status` supports comma-separated values (e.g. `'upcoming,cancelled'`). Default: `'upcoming'`. |
+| `get_community_visits(p_community_id, p_user_id, p_status, p_time_scope)` | RPC: returns visits with creator info + joiner counts. `p_status` supports comma-separated values (e.g. `'upcoming,cancelled'`). Default: `'upcoming'`. `p_time_scope`: `'upcoming'` (visit_date ≥ today) or `'past'` (visit_date < today). Default: `'upcoming'`. |
 | `get_visit_joiners(p_visit_id)` | RPC: returns joiner details with profile info |
 | `auto_complete_past_visits()` | Marks past visits as completed |
 
@@ -159,11 +169,12 @@ CHECK (
 
 ### RLS Policies
 
-All tables have Row Level Security enabled. Community isolation enforced via `get_user_community_id()`.
+All tables have Row Level Security enabled. Community isolation is enforced via `get_user_community_id()`, and community-scoped access is additionally gated by `is_user_approved()`.
 
 | Table | SELECT | INSERT | UPDATE | DELETE |
 |-------|--------|--------|--------|--------|
 | `profiles` | Own or same community | Own record | Own record | — |
+| `community_requests` | Requester only | Via RPC only | Via review tooling only | Via review tooling only |
 | `service_providers` | Same community | Same community | Creator only | Creator only |
 | `service_visits` | Same community | Same community | Creator only | Creator only |
 | `visit_joiners` | Same community | Own (if visit is upcoming) | — | Own only |
@@ -174,7 +185,9 @@ All tables have Row Level Security enabled. Community isolation enforced via `ge
 | `events` | Same community | Admin only | Admin only | Admin only |
 | `event_transactions` | Same community | Role-gated (see below) | Role-gated | Role-gated |
 | `fund_roles` | Same community | Admin or treasurer | Admin/treasurer | Admin/treasurer |
-| `notifications` | Own only | System only | Own only | — |
+| `notifications` | Own only, approved members only | System only | Own only, approved members only | — |
+
+**Approval gating detail:** Pending and rejected users cannot read `service_providers`, `service_visits`, `visit_joiners`, `favorites`, `ratings`, `provider_hires`, `events`, `event_transactions`, `fund_roles`, or `notifications`, even if they already have a `community_id`.
 
 **Transaction RLS detail:**
 - Income: `get_fund_role()` must return `admin`, `treasurer`, or `collector`
@@ -238,8 +251,11 @@ app/_layout.tsx (RootLayout)
 
 ```
 if (!session) → router.replace('/login')
-else if (session && !communityId) → router.replace('/community-select')
-else if (session && communityId && on auth page) → router.replace('/(tabs)')
+else if (!communityId && activeCommunityRequest) → router.replace('/community-request-submitted')
+else if (!communityId) → router.replace('/community-select')
+else if (communityId && approvalStatus === 'pending') → router.replace('/pending')
+else if (communityId && approvalStatus === 'rejected') → router.replace('/rejected')
+else if (communityId && approvalStatus === 'approved' && on onboarding/auth page) → router.replace('/(tabs)')
 ```
 
 ### Tab Navigator (`app/(tabs)/_layout.tsx`)

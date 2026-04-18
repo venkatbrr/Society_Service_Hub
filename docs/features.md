@@ -23,11 +23,48 @@ This document describes every user-facing feature, the screens involved, databas
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Join an existing community by invite code, or create a new one |
-| **Tables** | Reads: `communities`. Writes: `communities` (create), `profiles` (update `community_id`), `auth.users` user_metadata. |
-| **Business rules** | Code lookup is case-insensitive. Auto-generated code: first 4 letters of name (uppercase) + 4-digit random number. Session refreshed after community assignment. |
-| **Navigation** | From: root layout (session exists, no `community_id`). To: `/(tabs)` on success. |
+| **Purpose** | Step 1 of onboarding: find an existing community by exact pincode, then request to join it |
+| **Tables** | Reads: `communities` via `search_communities_by_pincode` RPC. Writes: `profiles` (`community_id`, `flat_number`, `phone_number`, `join_note`, `approval_status`, `requested_at`), `auth.users` user_metadata. |
+| **Business rules** | Pincode is required and server-side exact match for v1. Search filters the pincode-scoped list client-side by name. Continue is disabled until a community is selected. Submitting stores onboarding details and leaves the user in `approval_status = 'pending'`. |
+| **Navigation** | From: root layout (session exists, no `community_id`). To: `/pending` after submit, `/community-request` if community is missing. |
 | **Roles** | Any authenticated user |
+
+### Community Request (`app/community-request.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Replace self-serve community creation with a reviewed request flow |
+| **Tables** | Writes: `community_requests` via `submit_community_request` RPC |
+| **Business rules** | Required: name, type, city, pincode, requester role, accuracy confirmation. Optional: area, approximate units, nominated admin details. Requests default to `pending`. |
+| **Navigation** | From: community select empty state or rejected screen. To: `/community-request-submitted` on success. |
+| **Roles** | Any authenticated user |
+
+### Community Request Submitted (`app/community-request-submitted.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Holding screen for users with an active community request and no community assignment |
+| **Tables** | Reads: `community_requests` (latest active row for requester) |
+| **Business rules** | Root routing sends signed-in users here whenever they have an active request but no `community_id`. |
+| **Navigation** | From: `community-request`, root layout redirects. |
+
+### Pending Approval (`app/pending.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Hold users who have requested to join a community but are still awaiting admin approval |
+| **Tables** | Reads: `communities` basic fields for the selected community |
+| **Business rules** | Pending users cannot access providers, visits, funds, favorites, ratings, or notifications. |
+| **Navigation** | From: community select submit, root layout redirects while `approval_status = 'pending'`. |
+
+### Rejected Request (`app/rejected.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Show the rejected join state and route the resident toward a new community request |
+| **Tables** | None directly |
+| **Business rules** | Rejected users can request a community directly or sign out. |
+| **Navigation** | From: root layout redirects while `approval_status = 'rejected'`. To: `/community-request` or `/login` after sign-out. |
 
 ### Forgot Password (`app/forgot-password.tsx`)
 
@@ -46,7 +83,7 @@ This document describes every user-facing feature, the screens involved, databas
 |--------|---------|
 | **Purpose** | Main discovery hub with two segments: **Trusted Providers** and **Service Visits** |
 | **Tables** | Reads: `service_providers`, `visit_joiners`, `favorites`, `provider_hires`, `events`, `event_transactions`, `profiles`. |
-| **Business rules** | Providers sorted by `avg_rating` DESC. Visits show `upcoming` and `cancelled` statuses — cancelled visits remain visible with a red badge but Join is disabled. Community insights via `get_community_insights` RPC (most hired category, monthly spending, contribution %). Active fund teaser shows ongoing collection. |
+| **Business rules** | Providers sorted by `avg_rating` DESC. Service Visits segment has two sections: **Upcoming Visits** (visit_date ≥ today, statuses: `upcoming` + `cancelled`) and **Past Visits** (visit_date < today, all statuses — collapsible, hidden by default). Cancelled visits remain in Upcoming Visits until their planned date passes, then move to Past Visits. Community insights via `get_community_insights` RPC (most hired category, monthly spending, contribution %). Active fund teaser shows ongoing collection. |
 | **Navigation** | To: `/provider/[id]`, `/visits/[id]`, `/provider/add`, `/visits/add`, `/notifications`, `/(tabs)/profile`. |
 | **Roles** | All residents view. All can add providers/visits. |
 | **Integrations** | None directly (detail screens handle calls/WhatsApp). Notification badge from `NotificationContext`. |
@@ -99,11 +136,20 @@ This document describes every user-facing feature, the screens involved, databas
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Display user info, app role, linked business, community details, sign out |
-| **Tables** | Reads: `profiles`, `resident_businesses`, `communities`. |
-| **Business rules** | Shows business status toggle (Open/Closed) if owner. "Start Home Business" CTA if not owner. Community invite code shown for sharing. |
-| **Navigation** | To: `/business/manage`, `/business/add`, `/community-select` (after sign-out). |
+| **Purpose** | Display user info, app role, community details, sign out, and admin approval entry point |
+| **Tables** | Reads: `profiles`, `communities`. |
+| **Business rules** | Invite code sharing is removed. Admins see a member approvals card with pending count and can open the approval queue. |
+| **Navigation** | To: `/admin/approvals`, `/community-select` (after sign-out). |
 | **Roles** | Personal profile only |
+
+### Admin Approvals (`app/admin/approvals.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Review pending residents for the admin's community |
+| **Tables** | Reads: `profiles` filtered by `community_id` + `approval_status = 'pending'`. Writes: approval decisions via `approve_profile_membership` and `reject_profile_membership` RPCs, which also insert `notifications`. |
+| **Business rules** | Each row shows resident details and requested_at relative time. Approve grants access; reject routes the resident to the rejected state. |
+| **Navigation** | From: Profile tab admin card. |
 
 ---
 
