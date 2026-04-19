@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
+import { APP_EMOJIS } from '../constants/emojis';
 
 type SearchBarProps = {
   value: string;
@@ -15,7 +15,7 @@ export const SearchBar = ({ value, onChangeText, isLightMode, placeholder = "Sea
 
   return (
     <View style={[styles.container, { backgroundColor: colors.glass, borderColor: colors.border, shadowColor: colors.primary }]}>
-      <Ionicons name="search" size={20} color={colors.icon} style={styles.icon} />
+      <Text style={[styles.icon, { fontSize: 20 }]}>{APP_EMOJIS.search}</Text>
       <TextInput
         style={[styles.input, { color: colors.text }]}
         placeholder={placeholder}
@@ -25,7 +25,7 @@ export const SearchBar = ({ value, onChangeText, isLightMode, placeholder = "Sea
       />
       {value.length > 0 && (
         <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearButton}>
-          <Ionicons name="close-circle" size={20} color={colors.icon} />
+          <Text style={styles.clearIcon}>{APP_EMOJIS.close}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -56,5 +56,9 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 4,
+  },
+  clearIcon: {
+    fontSize: 18,
+    lineHeight: 20,
   },
 });

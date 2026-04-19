@@ -8,6 +8,7 @@ import { CategoryFilter } from '../../components/CategoryFilter';
 import { EmptyState } from '../../components/EmptyState';
 import { SearchBar } from '../../components/SearchBar';
 import { Colors } from '../../constants/Colors';
+import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { BusinessWithInteraction } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
@@ -174,7 +175,7 @@ export default function BusinessBrowseScreen() {
         ListEmptyComponent={
           !loading ? (
             <EmptyState 
-              icon="storefront-outline" 
+              icon={APP_EMOJIS.community} 
               title="No Businesses Found" 
               message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to start a home business in your community!"}
               isLightMode={true}

@@ -83,7 +83,7 @@ This document describes every user-facing feature, the screens involved, databas
 |--------|---------|
 | **Purpose** | Main discovery hub with two segments: **Trusted Providers** and **Service Visits** |
 | **Tables** | Reads: `service_providers`, `visit_joiners`, `favorites`, `provider_hires`, `events`, `event_transactions`, `profiles`. |
-| **Business rules** | Providers sorted by `avg_rating` DESC. Service Visits segment has two sections: **Upcoming Visits** (visit_date ≥ today, statuses: `upcoming` + `cancelled`) and **Past Visits** (visit_date < today, all statuses — collapsible, hidden by default). Cancelled visits remain in Upcoming Visits until their planned date passes, then move to Past Visits. Community insights via `get_community_insights` RPC (most hired category, monthly spending, contribution %). Active fund teaser shows ongoing collection. |
+| **Business rules** | Providers sorted by `avg_rating` DESC. Service Visits segment has two sections: **Upcoming Visits** (visit_date ≥ today, statuses: `upcoming` + `cancelled`) and **Past Visits** (visit_date < today, all statuses — collapsible, hidden by default). Cancelled visits remain in Upcoming Visits until their planned date passes, then move to Past Visits. Opening a visit card carries segment/sub-tab context so the detail back action returns to the same Service Visits state (including Past tab). Community insights via `get_community_insights` RPC (most hired category, monthly spending, contribution %). Active fund teaser shows ongoing collection. |
 | **Navigation** | To: `/provider/[id]`, `/visits/[id]`, `/provider/add`, `/visits/add`, `/notifications`, `/(tabs)/profile`. |
 | **Roles** | All residents view. All can add providers/visits. |
 | **Integrations** | None directly (detail screens handle calls/WhatsApp). Notification badge from `NotificationContext`. |
@@ -157,7 +157,7 @@ This document describes every user-facing feature, the screens involved, databas
 |--------|---------|
 | **Purpose** | Community-level approved resident directory with optional promotion request actions for community admins |
 | **Tables** | Reads via RPC `get_residents_directory` and `community_admin_requests`. Writes via `create_community_admin_request` and `cancel_community_admin_request`. |
-| **Business rules** | Directory includes approved residents only. Phone numbers are included only for community admins. Community admins can tap a resident name to open a contact details sheet (flat, phone, role). Promotion requests show pending/cancel states based on requester ownership. |
+| **Business rules** | Directory includes approved residents only. Phone numbers are included only for community admins. Community admins can tap a resident name to open a contact details sheet (flat, phone, role). Promotion requests show pending/cancel states based on requester ownership. When opened from Profile, the directory back action returns to the Profile tab. |
 | **Navigation** | From: Profile tab card. |
 | **Roles** | Approved residents can view. Community admins can request promotions. |
 

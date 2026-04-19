@@ -12,7 +12,7 @@ import { VisitJoinerWithProfile, VisitWithJoinerData } from '../../lib/database.
 import { supabase } from '../../lib/supabase';
 
 export default function VisitDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, returnTo, visitTab } = useLocalSearchParams<{ id: string; returnTo?: string; visitTab?: 'upcoming' | 'past' }>();
   const router = useRouter();
   const { user, profile } = useAuth();
   const colors = Colors.light;
@@ -177,6 +177,18 @@ export default function VisitDetailScreen() {
     });
   };
 
+  const handleBack = () => {
+    if (returnTo === 'visits') {
+      router.push({
+        pathname: '/(tabs)',
+        params: { segment: 'visits', visitTab: visitTab === 'past' ? 'past' : 'upcoming' },
+      });
+      return;
+    }
+
+    router.back();
+  };
+
   if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
@@ -201,7 +213,7 @@ export default function VisitDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>

@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,6 +6,7 @@ import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text, Touchabl
 import Toast from 'react-native-toast-message';
 import { RatingStars } from '../../components/RatingStars';
 import { Colors } from '../../constants/Colors';
+import { APP_EMOJIS, getServiceCategoryEmoji } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { ProviderWithInteraction } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
@@ -213,30 +213,30 @@ export default function ProviderDetailScreen() {
       >
         <View style={styles.headerTop}>
            <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-             <Ionicons name="arrow-back" size={24} color="#FFF" />
+             <Text style={styles.headerButtonIcon}>{APP_EMOJIS.back}</Text>
            </TouchableOpacity>
            <TouchableOpacity onPress={handleToggleFavorite} style={styles.iconButton}>
-             <Ionicons name={provider.is_favorite ? "heart" : "heart-outline"} size={28} color={provider.is_favorite ? colors.accent : "#FFF"} />
+             <Text style={styles.favoriteHeaderIcon}>{provider.is_favorite ? APP_EMOJIS.favoritesFilled : APP_EMOJIS.favoritesEmpty}</Text>
            </TouchableOpacity>
         </View>
 
         <View style={styles.headerContent}>
           <View style={styles.imagePlaceholderLarge}>
-            <Ionicons name="person" size={48} color="#FFF" />
+            <Text style={styles.headerEmoji}>{getServiceCategoryEmoji(provider.category)}</Text>
           </View>
           <View style={styles.headerInfo}>
             <View style={styles.nameRow}>
               <Text style={styles.name}>{provider.name}</Text>
               {provider.is_verified && (
                 <View style={styles.verifiedBadge}>
-                  <Ionicons name="checkmark-circle" size={16} color="#FFF" />
+                  <Text style={styles.verifiedBadgeIcon}>{APP_EMOJIS.verified}</Text>
                   <Text style={styles.verifiedText}>Verified</Text>
                 </View>
               )}
             </View>
-            <Text style={styles.categoryTextDisp}>{provider.category}</Text>
+            <Text style={styles.categoryTextDisp}>{`${getServiceCategoryEmoji(provider.category)} ${provider.category}`}</Text>
             <View style={styles.ratingRowDisp}>
-               <Ionicons name="star" size={18} color={colors.warning} />
+               <Text style={styles.ratingIcon}>{APP_EMOJIS.starFilled}</Text>
                <Text style={styles.ratingValueDisp}>{Number(provider.avg_rating || 0).toFixed(1)}</Text>
                <Text style={styles.ratingCountDisp}>({provider.rating_count || 0} reviews)</Text>
             </View>
@@ -258,17 +258,17 @@ export default function ProviderDetailScreen() {
 
       <View style={styles.actionGrid}>
         <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: colors.secondary }]} onPress={handleWhatsApp}>
-          <Ionicons name="logo-whatsapp" size={24} color="#FFF" />
+          <Text style={styles.mainActionIcon}>{APP_EMOJIS.whatsapp}</Text>
           <Text style={styles.mainActionText}>WhatsApp</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: colors.primary }]} onPress={handleCall}>
-          <Ionicons name="call" size={24} color="#FFF" />
+          <Text style={styles.mainActionIcon}>{APP_EMOJIS.call}</Text>
           <Text style={styles.mainActionText}>Call</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={[styles.hireAgainBtn, { borderColor: colors.border }]} onPress={handleHireAgain}>
-        <Ionicons name="refresh" size={20} color={colors.primary} />
+        <Text style={styles.hireAgainIcon}>{APP_EMOJIS.call}</Text>
         <Text style={[styles.hireAgainText, { color: colors.primary }]}>Hire Again</Text>
       </TouchableOpacity>
 
@@ -279,7 +279,7 @@ export default function ProviderDetailScreen() {
         </Text>
         {provider.flat_block ? (
           <View style={[styles.infoRow, { borderTopColor: colors.border }]}>
-            <Ionicons name="location-outline" size={20} color={colors.textMuted} />
+            <Text style={styles.infoIcon}>{APP_EMOJIS.house}</Text>
             <Text style={[styles.infoText, { color: colors.text }]}>Usually works at {provider.flat_block}</Text>
           </View>
         ) : null}
@@ -293,7 +293,7 @@ export default function ProviderDetailScreen() {
 
       <View style={styles.actionRowAlt}>
          <TouchableOpacity style={styles.altBtn} onPress={handleShare}>
-            <Ionicons name="share-outline" size={20} color={colors.textMuted} />
+          <Text style={styles.altIcon}>{APP_EMOJIS.share}</Text>
             <Text style={[styles.altBtnText, { color: colors.textMuted }]}>Share Contact</Text>
          </TouchableOpacity>
       </View>
@@ -301,7 +301,7 @@ export default function ProviderDetailScreen() {
       {user?.id === provider.created_by ? (
          <View style={styles.adminControls}>
             <TouchableOpacity style={[styles.dangerBtn, { borderColor: colors.accent }]} onPress={handleDelete}>
-              <Ionicons name="trash-outline" size={20} color={colors.accent} />
+            <Text style={styles.dangerIcon}>{APP_EMOJIS.close}</Text>
               <Text style={{ color: colors.accent, marginLeft: 8, fontWeight: '600' }}>Delete Provider</Text>
             </TouchableOpacity>
          </View>
@@ -317,16 +317,21 @@ const styles = StyleSheet.create({
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   headerContent: { flexDirection: 'row', alignItems: 'center', gap: 20, marginBottom: 10 },
   imagePlaceholderLarge: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+  headerEmoji: { fontSize: 48, lineHeight: 54 },
   headerInfo: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
   name: { fontSize: 24, fontWeight: '800', color: '#FFF', letterSpacing: -0.5 },
   verifiedBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, gap: 4 },
+  verifiedBadgeIcon: { fontSize: 16, lineHeight: 18 },
   verifiedText: { color: '#FFF', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
   categoryTextDisp: { fontSize: 16, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginTop: 4 },
   ratingRowDisp: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  ratingIcon: { fontSize: 18, lineHeight: 20, color: '#FFB347' },
   ratingValueDisp: { color: '#FFF', fontSize: 18, fontWeight: '700' },
   ratingCountDisp: { color: 'rgba(255,255,255,0.7)', fontSize: 14 },
   iconButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.18)', justifyContent: 'center', alignItems: 'center' },
+  headerButtonIcon: { fontSize: 24, lineHeight: 28, color: '#FFF' },
+  favoriteHeaderIcon: { fontSize: 28, lineHeight: 32 },
   trustBanner: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.85)',
@@ -348,8 +353,10 @@ const styles = StyleSheet.create({
   trustDivider: { width: 1, height: '100%' },
   actionGrid: { flexDirection: 'row', padding: 20, gap: 15 },
   mainActionBtn: { flex: 1, flexDirection: 'row', height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', gap: 10, elevation: 2 },
+  mainActionIcon: { fontSize: 24, lineHeight: 28 },
   mainActionText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
   hireAgainBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, marginBottom: 20, padding: 16, borderRadius: 16, borderWidth: 1.5, gap: 8 },
+  hireAgainIcon: { fontSize: 20, lineHeight: 24 },
   hireAgainText: { fontSize: 15, fontWeight: '700' },
   detailsCard: {
     backgroundColor: 'rgba(255,255,255,0.85)',
@@ -368,11 +375,14 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
   detailText: { fontSize: 15, lineHeight: 22 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 20, paddingTop: 20, borderTopWidth: 1 },
+  infoIcon: { fontSize: 20, lineHeight: 24 },
   infoText: { fontSize: 15, fontWeight: '500' },
   reviewNote: { fontSize: 12, marginTop: 12, textAlign: 'center' },
   actionRowAlt: { padding: 20, paddingBottom: 40, alignItems: 'center' },
   altBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  altIcon: { fontSize: 20, lineHeight: 24 },
   altBtnText: { fontSize: 14, fontWeight: '600' },
   adminControls: { padding: 20, paddingBottom: 60 },
-  dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 18, borderRadius: 16, borderWidth: 1 }
+  dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 18, borderRadius: 16, borderWidth: 1 },
+  dangerIcon: { fontSize: 20, lineHeight: 24 }
 });

@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
+import { APP_EMOJIS } from '../constants/emojis';
 import { useAuth } from '../context/AuthContext';
 import { Database } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
@@ -191,7 +191,7 @@ export default function CommunitySelectScreen() {
           <Text style={[styles.communityMeta, { color: colors.textMuted }]}>{community.resident_count} {community.resident_count === 1 ? 'member' : 'members'}</Text>
           <Text style={[styles.communityArea, { color: colors.textMuted }]}>{[community.area || community.city, community.pincode].filter(Boolean).join(' · ') || 'Location not listed'}</Text>
         </View>
-        {isSelected ? <Ionicons name="checkmark-circle" size={24} color={colors.primary} /> : null}
+        {isSelected ? <Text style={styles.selectedIcon}>{APP_EMOJIS.success}</Text> : null}
       </Pressable>
     );
   };
@@ -218,7 +218,7 @@ export default function CommunitySelectScreen() {
           <Text style={[styles.sectionCopy, { color: colors.textMuted }]}>Search by name, city, area or pincode. Select your community to continue.</Text>
 
           <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-            <Ionicons name="search" size={18} color={colors.textMuted} />
+            <Text style={styles.searchIcon}>{APP_EMOJIS.search}</Text>
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search communities..."
@@ -229,7 +229,7 @@ export default function CommunitySelectScreen() {
             />
             {search.length > 0 ? (
               <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+                <Text style={styles.clearIcon}>{APP_EMOJIS.close}</Text>
               </TouchableOpacity>
             ) : null}
           </View>
@@ -251,7 +251,7 @@ export default function CommunitySelectScreen() {
             style={[styles.requestRow, { borderColor: colors.primary, backgroundColor: `${colors.primary}08` }]}
             activeOpacity={0.85}
           >
-            <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
+            <Text style={styles.requestIcon}>{APP_EMOJIS.add}</Text>
             <Text style={[styles.requestRowText, { color: colors.primary }]}>Can't find your community? Request a new one</Text>
           </TouchableOpacity>
 
@@ -264,13 +264,13 @@ export default function CommunitySelectScreen() {
       ) : (
         <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
           <TouchableOpacity onPress={() => setStep(1)} style={styles.backLink} activeOpacity={0.7}>
-            <Ionicons name="chevron-back" size={18} color={colors.primary} />
+            <Text style={styles.backIcon}>{APP_EMOJIS.back}</Text>
             <Text style={[styles.backLinkText, { color: colors.primary }]}>Back to community list</Text>
           </TouchableOpacity>
 
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Step 2 — Your details</Text>
           <View style={[styles.communityPill, { backgroundColor: `${colors.primary}10`, borderColor: `${colors.primary}30` }]}>
-            <Ionicons name="location" size={16} color={colors.primary} />
+            <Text style={styles.communityPillIcon}>{APP_EMOJIS.community}</Text>
             <Text style={[styles.communityPillText, { color: colors.primary }]}>{selectedCommunity?.name}</Text>
           </View>
 
@@ -298,7 +298,7 @@ export default function CommunitySelectScreen() {
             <View style={styles.countryWrap}>
               <TouchableOpacity activeOpacity={0.75} onPress={() => setShowCountryOptions((prev) => !prev)} style={[styles.countrySelect, { borderColor: colors.border, backgroundColor: colors.surface2 }]}>
                 <Text style={[styles.countryValue, { color: colors.text }]}>{countryCode}</Text>
-                <Ionicons name={showCountryOptions ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
+                <Text style={styles.countryChevron}>{showCountryOptions ? '▲' : '▼'}</Text>
               </TouchableOpacity>
               {showCountryOptions ? (
                 <View style={[styles.countryDropdown, { backgroundColor: colors.surface, borderColor: colors.glassBorder }]}>
@@ -452,6 +452,15 @@ const styles = StyleSheet.create({
   searchLabel: {
     marginTop: 18,
   },
+  searchIcon: {
+    fontSize: 18,
+    lineHeight: 20,
+    marginRight: 10,
+  },
+  clearIcon: {
+    fontSize: 18,
+    lineHeight: 20,
+  },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -491,6 +500,10 @@ const styles = StyleSheet.create({
   communityBody: {
     flex: 1,
   },
+  selectedIcon: {
+    fontSize: 24,
+    lineHeight: 28,
+  },
   communityName: {
     fontSize: 16,
     fontWeight: '700',
@@ -529,6 +542,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     flex: 1,
   },
+  requestIcon: {
+    fontSize: 20,
+    lineHeight: 22,
+  },
   disabledButtonWrap: {
     opacity: 0.55,
   },
@@ -537,6 +554,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     marginBottom: 16,
+  },
+  backIcon: {
+    fontSize: 18,
+    lineHeight: 20,
   },
   backLinkText: {
     fontSize: 14,
@@ -556,6 +577,10 @@ const styles = StyleSheet.create({
   communityPillText: {
     fontSize: 13,
     fontWeight: '800',
+  },
+  communityPillIcon: {
+    fontSize: 16,
+    lineHeight: 18,
   },
   readOnlyInput: {
     borderWidth: 1.5,
@@ -591,6 +616,10 @@ const styles = StyleSheet.create({
   countryValue: {
     fontSize: 15,
     fontWeight: '700',
+  },
+  countryChevron: {
+    fontSize: 12,
+    lineHeight: 14,
   },
   countryDropdown: {
     position: 'absolute',

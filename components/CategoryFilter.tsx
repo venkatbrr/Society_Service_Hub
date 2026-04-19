@@ -3,6 +3,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CATEGORIES } from '../constants/categories';
 import { Colors } from '../constants/Colors';
+import { getServiceCategoryEmoji } from '../constants/emojis';
 
 type CategoryFilterProps = {
   selectedCategory: string | null;
@@ -21,6 +22,8 @@ export const CategoryFilter = ({
   const displayCategories = categories.filter(c => c !== 'All');
 
   const renderChip = (label: string, isSelected: boolean, onPress: () => void) => {
+    const chipLabel = `${getServiceCategoryEmoji(label)} ${label}`;
+
     if (isSelected) {
       return (
         <TouchableOpacity key={label} onPress={onPress}>
@@ -30,7 +33,7 @@ export const CategoryFilter = ({
             end={{ x: 1, y: 0 }}
             style={styles.chip}
           >
-            <Text style={[styles.chipText, { color: '#FFF' }]}>{label}</Text>
+            <Text style={[styles.chipText, { color: '#FFF' }]}>{chipLabel}</Text>
           </LinearGradient>
         </TouchableOpacity>
       );
@@ -45,7 +48,7 @@ export const CategoryFilter = ({
         ]}
         onPress={onPress}
       >
-        <Text style={[styles.chipText, { color: colors.text }]}>{label}</Text>
+        <Text style={[styles.chipText, { color: colors.text }]}>{chipLabel}</Text>
       </TouchableOpacity>
     );
   };

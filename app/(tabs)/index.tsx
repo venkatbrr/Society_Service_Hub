@@ -1,6 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -11,6 +10,7 @@ import { ProviderCard } from '../../components/ProviderCard';
 import { SearchBar } from '../../components/SearchBar';
 import { VisitCard } from '../../components/VisitCard';
 import { Colors } from '../../constants/Colors';
+import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
@@ -23,6 +23,7 @@ const isMissingRelationError = (error: { code?: string; message?: string } | nul
 const VISIT_CATEGORIES = ['All', 'Cleaning', 'Repair', 'Pest Control', 'Electrician', 'Plumber', 'AC Service', 'Painting', 'Other'];
 
 export default function HomeScreen() {
+  const { segment, visitTab: visitTabParam } = useLocalSearchParams<{ segment?: string; visitTab?: 'upcoming' | 'past' }>();
   const [activeSegment, setActiveSegment] = useState<'providers' | 'visits'>('providers');
   const [providers, setProviders] = useState<ProviderWithInteraction[]>([]);
   const [visits, setVisits] = useState<VisitWithJoinerData[]>([]);
@@ -242,6 +243,16 @@ export default function HomeScreen() {
 
   // Fetch tab-specific data when segment, filters, or search changes
   useEffect(() => {
+    if (segment === 'providers' || segment === 'visits') {
+      setActiveSegment(segment);
+    }
+
+    if (visitTabParam === 'upcoming' || visitTabParam === 'past') {
+      setVisitTab(visitTabParam);
+    }
+  }, [segment, visitTabParam]);
+
+  useEffect(() => {
     if (activeSegment === 'providers') {
       fetchProviders();
     } else {
@@ -287,7 +298,10 @@ export default function HomeScreen() {
     // Navigate to detail for the join flow or handle a quick join if needed.
     // Spec says Join button on card keep friction low, so maybe a quick join modal later.
     // For now, let's navigate to detail or show a toast.
-    router.push(`/visits/${visitId}`);
+    router.push({
+      pathname: '/visits/[id]',
+      params: { id: visitId, returnTo: 'visits', visitTab },
+    });
   };
 
   return (
@@ -307,7 +321,7 @@ export default function HomeScreen() {
               style={[styles.headerButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
               onPress={() => router.push('/notifications')}
             >
-              <Ionicons name="notifications" size={20} color={colors.primary} />
+              <Text style={styles.headerIcon}>{APP_EMOJIS.notifications}</Text>
               {unreadCount > 0 && (
                 <View style={[styles.badge, { backgroundColor: colors.accent }]}>
                   <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
@@ -318,7 +332,7 @@ export default function HomeScreen() {
               style={[styles.headerButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
               onPress={() => router.push('/(tabs)/profile')}
             >
-              <Ionicons name="person" size={20} color={colors.primary} />
+              <Text style={styles.headerIcon}>{APP_EMOJIS.profile}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -419,7 +433,7 @@ export default function HomeScreen() {
           }
           ListEmptyComponent={
             <EmptyState
-              icon="people"
+              icon={APP_EMOJIS.members}
               title="No Providers Found"
               message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to add a trusted service provider!"}
               isLightMode={true}
@@ -450,8 +464,18 @@ export default function HomeScreen() {
               hasUserJoined={!!item.has_user_joined}
               status={item.status as 'upcoming' | 'in_progress' | 'completed' | 'cancelled'}
               onJoin={() => handleJoinVisit(item.id)}
-              onUnjoin={() => router.push(`/visits/${item.id}`)}
-              onPress={() => router.push(`/visits/${item.id}`)}
+              onUnjoin={() =>
+                router.push({
+                  pathname: '/visits/[id]',
+                  params: { id: item.id, returnTo: 'visits', visitTab },
+                })
+              }
+              onPress={() =>
+                router.push({
+                  pathname: '/visits/[id]',
+                  params: { id: item.id, returnTo: 'visits', visitTab },
+                })
+              }
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -507,14 +531,14 @@ export default function HomeScreen() {
           ListEmptyComponent={
             visitTab === 'upcoming' ? (
               <EmptyState
-                icon="calendar"
+                icon={APP_EMOJIS.community}
                 title="No Upcoming Visits"
                 message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to share when a provider is coming!"}
                 isLightMode={true}
               />
             ) : (
               <EmptyState
-                icon="time"
+                icon={APP_EMOJIS.loading}
                 title="No Past Visits"
                 message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Completed and expired visits will appear here"}
                 isLightMode={true}
@@ -535,7 +559,7 @@ export default function HomeScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.fabGradient}
         >
-          <Ionicons name="add" size={32} color="#FFF" />
+          <Text style={styles.fabIcon}>{APP_EMOJIS.add}</Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>
@@ -580,6 +604,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+  },
+  headerIcon: {
+    fontSize: 20,
+    lineHeight: 24,
   },
   badge: {
     position: 'absolute',
@@ -672,5 +700,10 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  fabIcon: {
+    fontSize: 32,
+    lineHeight: 34,
+    color: '#FFF',
   },
 });

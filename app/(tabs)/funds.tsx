@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -15,6 +14,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { FundCard } from '../../components/FundCard';
 import { Colors } from '../../constants/Colors';
+import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { FundAccessRole, getEffectiveFundRole } from '../../lib/fundRoles';
@@ -169,7 +169,7 @@ export default function FundsScreen() {
             style={[styles.profileButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
             onPress={() => router.push('/(tabs)/profile')}
           >
-            <Ionicons name="person" size={20} color={colors.primary} />
+            <Text style={styles.profileIcon}>{APP_EMOJIS.profile}</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -205,7 +205,7 @@ export default function FundsScreen() {
               >
                 <View style={styles.summaryHeader}>
                   <Text style={styles.summaryTitle}>Fund Snapshot</Text>
-                  <Ionicons name="shield-checkmark" size={18} color="rgba(255,255,255,0.7)" />
+                  <Text style={styles.summaryIcon}>{APP_EMOJIS.admin}</Text>
                 </View>
                 <View style={styles.summaryGrid}>
                   <View style={styles.summaryItem}>
@@ -231,7 +231,7 @@ export default function FundsScreen() {
             </View>
           ) : (
             <View style={[styles.noticeCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
-              <Ionicons name="information-circle" size={18} color={colors.primary} />
+              <Text style={styles.noticeIcon}>{APP_EMOJIS.info}</Text>
               <Text style={[styles.noticeText, { color: colors.textMuted }]}>
                 {isAdmin
                   ? 'Create the first fund to start transparent role-based tracking.'
@@ -243,7 +243,7 @@ export default function FundsScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View style={[styles.emptyIconWrapper, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
-              <Ionicons name="wallet" size={40} color={colors.icon} />
+              <Text style={styles.emptyIcon}>{APP_EMOJIS.wallet}</Text>
             </View>
             <Text style={[styles.emptyText, { color: colors.text }]}>No funds created</Text>
             <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>
@@ -267,7 +267,7 @@ export default function FundsScreen() {
             end={{ x: 1, y: 1 }}
             style={styles.fabGradient}
           >
-            <Ionicons name="add" size={32} color="#FFF" />
+            <Text style={styles.fabIcon}>{APP_EMOJIS.add}</Text>
           </LinearGradient>
         </TouchableOpacity>
       ) : null}
@@ -320,6 +320,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  profileIcon: {
+    fontSize: 20,
+    lineHeight: 24,
+  },
   summaryCardWrapper: {
     marginHorizontal: 4,
     marginBottom: 24,
@@ -347,6 +351,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     color: 'rgba(255,255,255,0.7)',
+  },
+  summaryIcon: {
+    fontSize: 18,
+    lineHeight: 20,
   },
   summaryGrid: {
     gap: 16,
@@ -380,6 +388,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  noticeIcon: {
+    fontSize: 18,
+    lineHeight: 20,
+  },
   listContent: {
     padding: 20,
     paddingBottom: 100,
@@ -405,6 +417,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  fabIcon: {
+    fontSize: 32,
+    lineHeight: 34,
+    color: '#FFF',
+  },
   emptyContainer: {
     marginTop: 80,
     alignItems: 'center',
@@ -417,6 +434,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  emptyIcon: {
+    fontSize: 40,
+    lineHeight: 46,
   },
   emptyText: {
     fontSize: 20,

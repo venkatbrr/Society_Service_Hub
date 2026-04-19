@@ -1,11 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 
 type EmptyStateProps = {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: string;
   title: string;
   message: string;
   isLightMode: boolean;
@@ -22,7 +21,7 @@ export const EmptyState = ({ icon, title, message, isLightMode }: EmptyStateProp
         end={{ x: 1, y: 1 }}
         style={styles.iconContainer}
       >
-        <Ionicons name={icon} size={48} color={colors.primary} />
+        <Text style={styles.iconText}>{icon}</Text>
       </LinearGradient>
       <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
       <Text style={[styles.message, { color: colors.textMuted }]}>{message}</Text>
@@ -45,6 +44,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
+  },
+  iconText: {
+    fontSize: 48,
+    lineHeight: 56,
   },
   title: {
     fontSize: 20,

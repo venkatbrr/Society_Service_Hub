@@ -1,9 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Tabs } from 'expo-router';
 import React, { useCallback, useState } from 'react';
+import { Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
+import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -69,7 +70,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Help',
-          tabBarIcon: ({ color }) => <Ionicons name="people" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <Text style={{ fontSize: 24, opacity: focused ? 1 : 0.45 }}>{APP_EMOJIS.home}</Text>,
         }}
       />
       <Tabs.Screen
@@ -82,14 +83,14 @@ export default function TabLayout() {
         name="favorites"
         options={{
           title: 'Saved',
-          tabBarIcon: ({ color }) => <Ionicons name="heart" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <Text style={{ fontSize: 24, opacity: focused ? 1 : 0.45 }}>{APP_EMOJIS.favoritesFilled}</Text>,
         }}
       />
       <Tabs.Screen
         name="funds"
         options={{
           title: 'Funds',
-          tabBarIcon: ({ color }) => <Ionicons name="wallet" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <Text style={{ fontSize: 24, opacity: focused ? 1 : 0.45 }}>{APP_EMOJIS.funds}</Text>,
         }}
       />
       <Tabs.Screen
@@ -97,7 +98,7 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarBadge: appRole === 'community_admin' && pendingCount > 0 ? pendingCount : undefined,
-          tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <Text style={{ fontSize: 24, opacity: focused ? 1 : 0.45 }}>{APP_EMOJIS.profile}</Text>,
         }}
       />
     </Tabs>

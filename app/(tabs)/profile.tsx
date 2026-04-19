@@ -1,10 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
+import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -91,7 +91,7 @@ export default function ProfileScreen() {
               />
             ) : (
               <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '12' }]}>
-                <Ionicons name="person" size={32} color={colors.primary} />
+                <Text style={styles.avatarEmoji}>{APP_EMOJIS.profile}</Text>
               </View>
             )}
             <View style={styles.profileInfo}>
@@ -138,7 +138,7 @@ export default function ProfileScreen() {
             activeOpacity={0.82}
           >
             <View style={[styles.adminIconWrap, { backgroundColor: `${colors.primary}12` }]}>
-              <Ionicons name="shield-checkmark-outline" size={22} color={colors.primary} />
+              <Text style={styles.adminIcon}>{APP_EMOJIS.admin}</Text>
             </View>
             <View style={styles.adminContent}>
               <Text style={[styles.adminTitle, { color: colors.text }]}>Member approvals</Text>
@@ -149,23 +149,23 @@ export default function ProfileScreen() {
                 <Text style={styles.pendingBadgeText}>{pendingCount}</Text>
               </View>
             ) : null}
-            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
           </TouchableOpacity>
         ) : null}
 
         <TouchableOpacity
-          onPress={() => router.push('/residents' as any)}
+          onPress={() => router.push({ pathname: '/residents', params: { returnTo: 'profile' } } as any)}
           style={[styles.adminCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
           activeOpacity={0.82}
         >
           <View style={[styles.adminIconWrap, { backgroundColor: `${colors.secondary}12` }]}>
-            <Ionicons name="people-outline" size={22} color={colors.secondary} />
+            <Text style={styles.adminIcon}>{APP_EMOJIS.members}</Text>
           </View>
           <View style={styles.adminContent}>
             <Text style={[styles.adminTitle, { color: colors.text }]}>Community directory</Text>
             <Text style={[styles.adminCopy, { color: colors.textMuted }]}>Browse approved residents in your community</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
         </TouchableOpacity>
 
         <View style={styles.spacer} />
@@ -174,7 +174,7 @@ export default function ProfileScreen() {
           style={[styles.signOutButton, { backgroundColor: colors.accent + '10' }]}
           onPress={handleSignOut}
         >
-          <Ionicons name="log-out-outline" size={20} color={colors.accent} />
+          <Text style={styles.signOutIcon}>{APP_EMOJIS.close}</Text>
           <Text style={[styles.signOutText, { color: colors.accent }]}>Sign Out</Text>
         </TouchableOpacity>
 
@@ -233,6 +233,10 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  avatarEmoji: {
+    fontSize: 32,
+    lineHeight: 36,
   },
   profileInfo: {
     flex: 1,
@@ -334,6 +338,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  adminIcon: {
+    fontSize: 22,
+    lineHeight: 24,
+  },
   adminContent: {
     flex: 1,
   },
@@ -359,6 +367,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
+  chevronIcon: {
+    fontSize: 18,
+    lineHeight: 20,
+  },
   spacer: {
     flex: 1,
   },
@@ -370,6 +382,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     gap: 8,
     marginBottom: 16,
+  },
+  signOutIcon: {
+    fontSize: 20,
+    lineHeight: 22,
   },
   signOutText: {
     fontSize: 16,

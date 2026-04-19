@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -13,6 +12,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
+import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import {
@@ -237,11 +237,11 @@ export default function FundDetailScreen() {
         >
           <View style={styles.headerTop}>
             <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-              <Ionicons name="arrow-back" size={24} color="#FFF" />
+              <Text style={styles.headerIcon}>{APP_EMOJIS.back}</Text>
             </TouchableOpacity>
             <Text style={styles.headerLabel}>Fund Transparency</Text>
             <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="share-outline" size={24} color="#FFF" />
+              <Text style={styles.headerIcon}>{APP_EMOJIS.share}</Text>
             </TouchableOpacity>
           </View>
 
@@ -275,7 +275,7 @@ export default function FundDetailScreen() {
         <View style={styles.accessCard}>
           <View style={styles.accessHeader}>
             <Text style={[styles.accessTitle, { color: colors.text }]}>Role Access</Text>
-            <Ionicons name="shield-checkmark" size={18} color={colors.primary} />
+            <Text style={styles.accessIcon}>{APP_EMOJIS.admin}</Text>
           </View>
           <Text style={[styles.accessText, { color: colors.textMuted }]}>{getRestrictionHint(fundRole)}</Text>
           <Text style={[styles.accessText, { color: colors.textMuted }]}>{addContributionHint}</Text>
@@ -292,11 +292,7 @@ export default function FundDetailScreen() {
               onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=income`)}
               disabled={!permissions.canAddContribution}
             >
-              <Ionicons
-                name="add-circle-outline"
-                size={18}
-                color={permissions.canAddContribution ? '#FFF' : colors.textMuted}
-              />
+              <Text style={styles.actionIcon}>{APP_EMOJIS.contribution}</Text>
               <Text
                 style={[
                   styles.actionButtonText,
@@ -315,11 +311,7 @@ export default function FundDetailScreen() {
               onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=expense`)}
               disabled={!permissions.canAddExpense}
             >
-              <Ionicons
-                name="receipt-outline"
-                size={18}
-                color={permissions.canAddExpense ? '#FFF' : colors.textMuted}
-              />
+              <Text style={styles.actionIcon}>{APP_EMOJIS.expense}</Text>
               <Text
                 style={[
                   styles.actionButtonText,
@@ -347,11 +339,7 @@ export default function FundDetailScreen() {
             return (
               <View key={member.id} style={styles.transactionRow}>
                 <View style={[styles.avatar, { backgroundColor: isPaid ? '#DCFCE7' : '#FEF3C7' }]}>
-                  <Ionicons
-                    name={isPaid ? 'checkmark' : 'time-outline'}
-                    size={16}
-                    color={isPaid ? '#15803D' : '#B45309'}
-                  />
+                  <Text style={styles.statusEmoji}>{isPaid ? APP_EMOJIS.success : APP_EMOJIS.loading}</Text>
                 </View>
                 <View style={styles.transMain}>
                   <Text style={[styles.transName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
@@ -514,7 +502,7 @@ export default function FundDetailScreen() {
           {expenseTransactions.map((transaction) => (
             <View key={transaction.id} style={styles.transactionRow}>
               <View style={[styles.avatar, { backgroundColor: '#FEE2E2' }]}>
-                <Ionicons name="receipt" size={16} color={colors.accent} />
+                <Text style={styles.statusEmoji}>{APP_EMOJIS.expense}</Text>
               </View>
               <View style={styles.transMain}>
                 <Text style={[styles.transName, { color: colors.text }]}>{transaction.title || 'Expense'}</Text>
@@ -567,6 +555,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  headerIcon: {
+    fontSize: 24,
+    lineHeight: 28,
+    color: '#FFF',
   },
   headerLabel: {
     color: '#FFF',
@@ -653,6 +646,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+  accessIcon: {
+    fontSize: 18,
+    lineHeight: 20,
+  },
   accessTitle: {
     fontSize: 15,
     fontWeight: '800',
@@ -679,6 +676,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     paddingHorizontal: 12,
+  },
+  actionIcon: {
+    fontSize: 18,
+    lineHeight: 20,
   },
   actionButtonText: {
     fontSize: 14,
@@ -732,6 +733,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+  },
+  statusEmoji: {
+    fontSize: 16,
+    lineHeight: 18,
   },
   transMain: {
     flex: 1,

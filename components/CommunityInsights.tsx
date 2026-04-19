@@ -1,12 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
-import React, { ComponentProps } from 'react';
+import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 
 type Insight = {
   title: string;
   value: string | number;
-  icon: ComponentProps<typeof Ionicons>['name'];
+  icon: string;
   color: string;
 };
 
@@ -31,7 +30,7 @@ export const CommunityInsights = ({ insights }: CommunityInsightsProps) => {
             style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
           >
             <View style={[styles.iconContainer, { backgroundColor: insight.color }]}>
-              <Ionicons name={insight.icon} size={18} color="#FFF" />
+              <Text style={styles.iconText}>{insight.icon}</Text>
             </View>
             <View>
               <Text style={[styles.insightValue, { color: colors.text }]}>{insight.value}</Text>
@@ -75,6 +74,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  iconText: {
+    fontSize: 18,
+    lineHeight: 20,
   },
   insightValue: {
     fontSize: 16,

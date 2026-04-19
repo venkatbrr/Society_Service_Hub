@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
 import { CATEGORIES } from '../../constants/categories';
+import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -105,7 +106,7 @@ export default function AddProviderScreen() {
                     style={[styles.categoryChip, { backgroundColor: colors.glass, borderColor: colors.border }]}
                     onPress={() => setCategory(cat)}
                   >
-                    <Text style={[styles.categoryText, { color: colors.text }]}>{cat}</Text>
+                    <Text style={[styles.categoryText, { color: colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
                   </TouchableOpacity>
                 )
               ))}

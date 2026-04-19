@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Colors } from '../constants/Colors';
+import { APP_EMOJIS } from '../constants/emojis';
 
 type RatingStarsProps = {
   rating: number;
@@ -29,12 +29,26 @@ export const RatingStars = ({
           onPress={() => onRating(star)}
           activeOpacity={readonly ? 1 : 0.7}
         >
-          <Ionicons
-            name={star <= rating ? 'star' : 'star-outline'}
-            size={size}
-            color={colors.warning}
-            style={styles.star}
-          />
+          <Text
+            style={[
+              styles.star,
+              {
+                fontSize: size,
+                color:
+                  star <= Math.floor(rating)
+                    ? colors.warning
+                    : star - rating <= 0.5 && star > rating
+                      ? colors.warning
+                      : colors.border,
+              },
+            ]}
+          >
+            {star <= Math.floor(rating)
+              ? APP_EMOJIS.starFilled
+              : star - rating <= 0.5 && star > rating
+                ? APP_EMOJIS.starHalf
+                : APP_EMOJIS.starEmpty}
+          </Text>
         </TouchableOpacity>
       ))}
     </View>

@@ -7,6 +7,7 @@ import Toast from 'react-native-toast-message';
 import { EmptyState } from '../../components/EmptyState';
 import { ProviderCard } from '../../components/ProviderCard';
 import { Colors } from '../../constants/Colors';
+import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { ProviderWithInteraction } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
@@ -111,7 +112,7 @@ export default function FavoritesScreen() {
         }
         ListEmptyComponent={
           <EmptyState
-            icon="heart-outline"
+            icon={APP_EMOJIS.favoritesEmpty}
             title="No Favorites Yet"
             message="Tap the heart icon on a service provider to save them here."
             isLightMode={true}

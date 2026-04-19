@@ -1,9 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { CATEGORY_COLORS } from '../constants/categories';
 import { Colors } from '../constants/Colors';
+import { APP_EMOJIS, getServiceCategoryEmoji } from '../constants/emojis';
 import { ProviderWithInteraction } from '../lib/database.types';
 import { BaseCard } from './BaseCard';
 
@@ -16,7 +15,6 @@ type ProviderCardProps = {
 
 export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, isLightMode }: ProviderCardProps) => {
   const colors = isLightMode ? Colors.light : Colors.dark;
-  const categoryColor = CATEGORY_COLORS[provider.category] || colors.primary;
 
   return (
     <BaseCard
@@ -26,7 +24,7 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
     >
       <View style={styles.content}>
         <View style={[styles.imagePlaceholder, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
-           <Ionicons name="person" size={28} color={colors.icon} />
+           <Text style={styles.avatarEmoji}>{getServiceCategoryEmoji(provider.category)}</Text>
         </View>
 
         <View style={styles.mainInfo}>
@@ -35,16 +33,16 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
               {provider.name}
             </Text>
             {provider.is_verified && (
-              <Ionicons name="checkmark-circle" size={18} color={colors.primary} style={styles.verifiedIcon} />
+              <Text style={styles.verifiedIcon}>{APP_EMOJIS.verified}</Text>
             )}
           </View>
 
           <View style={[styles.categoryBadge, { backgroundColor: colors.primary + '12' }]}>
-            <Text style={[styles.category, { color: colors.primary }]}>{provider.category}</Text>
+            <Text style={[styles.category, { color: colors.primary }]}>{`${getServiceCategoryEmoji(provider.category)} ${provider.category}`}</Text>
           </View>
 
           <View style={styles.ratingRow}>
-            <Ionicons name="star" size={14} color="#FFB347" />
+            <Text style={styles.ratingIcon}>{APP_EMOJIS.starFilled}</Text>
             <Text style={[styles.ratingText, { color: colors.text }]}>
               {Number(provider.avg_rating).toFixed(1)}
               <Text style={[styles.ratingCount, { color: colors.textMuted }]}> ({provider.rating_count})</Text>
@@ -56,18 +54,14 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
           style={styles.favoriteBtn}
           onPress={() => onToggleFavorite(provider.id, !!provider.is_favorite)}
         >
-          <Ionicons
-            name={provider.is_favorite ? 'heart' : 'heart-outline'}
-            size={22}
-            color={provider.is_favorite ? '#FF6B6B' : colors.icon}
-          />
+          <Text style={styles.favoriteIcon}>{provider.is_favorite ? APP_EMOJIS.favoritesFilled : APP_EMOJIS.favoritesEmpty}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
         <View style={styles.trustIndicators}>
           <View style={styles.trustItem}>
-            <Ionicons name="home-outline" size={14} color={colors.textMuted} />
+            <Text style={styles.trustIcon}>{APP_EMOJIS.house}</Text>
             <Text style={[styles.trustText, { color: colors.textMuted }]}>
               Used by {provider.hire_count || 0} homes
             </Text>
@@ -102,6 +96,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
+  avatarEmoji: {
+    fontSize: 28,
+    lineHeight: 32,
+  },
   mainInfo: {
     flex: 1,
   },
@@ -118,6 +116,8 @@ const styles = StyleSheet.create({
   },
   verifiedIcon: {
     marginTop: 1,
+    fontSize: 16,
+    lineHeight: 18,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
@@ -135,6 +135,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  ratingIcon: {
+    fontSize: 14,
+    lineHeight: 16,
+    color: '#FFB347',
+  },
   ratingText: {
     fontSize: 13,
     fontWeight: '600',
@@ -144,6 +149,10 @@ const styles = StyleSheet.create({
   },
   favoriteBtn: {
     padding: 8,
+  },
+  favoriteIcon: {
+    fontSize: 22,
+    lineHeight: 24,
   },
   footer: {
     borderTopWidth: 1,
@@ -158,6 +167,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  trustIcon: {
+    fontSize: 14,
+    lineHeight: 16,
   },
   trustText: {
     fontSize: 12,

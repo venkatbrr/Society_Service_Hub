@@ -87,7 +87,7 @@ Controlled via `lib/fundRoles.ts`:
 
 - **Visual Style**: Premium, minimalistic, light-theme oriented.
 - **Components**: Rounded corners (`border-radius: 20-24`), soft shadows, clean typography.
-- **Icons**: Only use `Ionicons`.
+- **Icons**: Use inline `Text` emoji or unicode characters for UI icons instead of vector icon components.
 - **Shared Components**:
   - `EmptyState`: Standardized placeholder for empty lists.
   - `VisitCard` / `BusinessCard`: High-trust cards showing user identity.

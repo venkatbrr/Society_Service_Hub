@@ -1,10 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
+import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { MAX_TREASURERS } from '../../lib/fundRoles';
@@ -227,7 +227,7 @@ export default function AddFundScreen() {
                         end={{ x: 1, y: 1 }}
                         style={styles.selector}
                       >
-                        <Ionicons name="checkmark" size={16} color="#FFF" />
+                        <Text style={styles.selectorEmoji}>{APP_EMOJIS.success}</Text>
                       </LinearGradient>
                     ) : (
                       <View
@@ -374,6 +374,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 12,
+  },
+  selectorEmoji: {
+    fontSize: 16,
+    lineHeight: 18,
+    color: '#FFF',
   },
   selectionSummary: {
     marginTop: 8,

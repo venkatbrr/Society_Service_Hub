@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Modal, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -25,6 +25,7 @@ type PromotionRequest = {
 
 export default function ResidentsScreen() {
   const router = useRouter();
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
   const colors = Colors.light;
   const { user, communityId, approvalStatus, isCommunityAdmin } = useAuth();
 
@@ -123,10 +124,19 @@ export default function ResidentsScreen() {
     }
   };
 
+  const handleBack = () => {
+    if (returnTo === 'profile') {
+      router.push('/(tabs)/profile');
+      return;
+    }
+
+    router.back();
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}> 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+        <TouchableOpacity onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
           <Ionicons name="chevron-back" size={20} color={colors.primary} />
         </TouchableOpacity>
         <View style={styles.headerCopy}>

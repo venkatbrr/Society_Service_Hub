@@ -1,8 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
+import { APP_EMOJIS } from '../constants/emojis';
 
 type ActiveFundTeaserProps = {
   title: string;
@@ -33,7 +33,7 @@ export const ActiveFundTeaser = ({ title, collected, goal, onPress }: ActiveFund
             <Text style={styles.title}>{title}</Text>
           </View>
           <View style={styles.iconContainer}>
-            <Ionicons name="wallet-outline" size={20} color="#FFF" />
+            <Text style={styles.iconText}>{APP_EMOJIS.fundActive}</Text>
           </View>
         </View>
 
@@ -95,6 +95,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  iconText: {
+    fontSize: 20,
+    lineHeight: 24,
   },
   statsRow: {
     flexDirection: 'row',

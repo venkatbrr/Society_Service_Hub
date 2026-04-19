@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
+import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { formatRole, getEffectiveFundRole, getFundPermissions } from '../../lib/fundRoles';
@@ -281,7 +281,7 @@ export default function AddTransactionScreen() {
           </View>
 
           <View style={[styles.notice, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-            <Ionicons name="information-circle" size={18} color={colors.primary} />
+            <Text style={styles.noticeIcon}>{APP_EMOJIS.info}</Text>
             <Text style={[styles.noticeText, { color: colors.textMuted }]}>
               {type === 'income'
                 ? permissions.canAddContribution
@@ -472,6 +472,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+  noticeIcon: {
+    fontSize: 18,
+    lineHeight: 20,
+  },
   },
   tabText: {
     fontWeight: '800',

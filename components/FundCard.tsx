@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
+import { APP_EMOJIS } from '../constants/emojis';
 import { Tables } from '../lib/database.types';
 import { FundAccessRole, formatRole } from '../lib/fundRoles';
 import { BaseCard } from './BaseCard';
@@ -75,7 +75,7 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
 
       <View style={styles.footer}>
         <Text style={[styles.footerText, { color: colors.textMuted }]}>Open fund details</Text>
-        <Ionicons name="chevron-forward" size={18} color={colors.icon} />
+        <Text style={styles.footerIcon}>{APP_EMOJIS.chevronRight}</Text>
       </View>
     </BaseCard>
   );
@@ -177,5 +177,9 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 13,
     fontWeight: '700',
+  },
+  footerIcon: {
+    fontSize: 18,
+    lineHeight: 20,
   },
 });

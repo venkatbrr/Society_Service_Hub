@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -16,6 +15,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
+import { APP_EMOJIS } from '../constants/emojis';
 import { getAuthErrorMessage, signInWithEmail, signUpWithEmail } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 
@@ -147,7 +147,7 @@ export default function LoginScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Ionicons name="home" size={36} color="#FFF" />
+            <Text style={styles.logoEmoji}>{APP_EMOJIS.community}</Text>
           </LinearGradient>
           <Text style={[styles.title, { color: colors.text }]}>Society Service Hub</Text>
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>
@@ -204,7 +204,7 @@ export default function LoginScreen() {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: colors.text }]}>FULL NAME</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
-                <Ionicons name="person-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
+                <Text style={styles.inputEmoji}>{APP_EMOJIS.profile}</Text>
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
                   placeholder="John Doe"
@@ -219,7 +219,7 @@ export default function LoginScreen() {
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>EMAIL ADDRESS</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
-              <Ionicons name="mail-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
+              <Text style={styles.inputEmoji}>{APP_EMOJIS.mail}</Text>
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder="your@email.com"
@@ -235,7 +235,7 @@ export default function LoginScreen() {
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>PASSWORD</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
-              <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
+              <Text style={styles.inputEmoji}>{APP_EMOJIS.lock}</Text>
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder="Password"
@@ -245,11 +245,7 @@ export default function LoginScreen() {
                 secureTextEntry={!showPassword}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={20}
-                  color={colors.textMuted}
-                />
+                <Text style={styles.inputEmoji}>{showPassword ? APP_EMOJIS.hidden : APP_EMOJIS.visible}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -258,7 +254,7 @@ export default function LoginScreen() {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: colors.text }]}>CONFIRM PASSWORD</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
-                <Ionicons name="shield-checkmark-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
+                <Text style={styles.inputEmoji}>{APP_EMOJIS.admin}</Text>
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
                   placeholder="Confirm Password"
@@ -316,7 +312,7 @@ export default function LoginScreen() {
               <ActivityIndicator color={colors.primary} />
             ) : (
               <>
-                <Ionicons name="logo-google" size={20} color={colors.primary} />
+                <Text style={styles.googleEmoji}>{APP_EMOJIS.google}</Text>
                 <Text style={[styles.googleButtonText, { color: colors.text }]}>
                   Continue with Google
                 </Text>
@@ -373,6 +369,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 8,
+  },
+  logoEmoji: {
+    fontSize: 36,
+    lineHeight: 40,
+    color: '#FFF',
   },
   title: {
     fontSize: 26,
@@ -435,7 +436,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 54,
   },
-  inputIcon: {
+  inputEmoji: {
+    fontSize: 20,
+    lineHeight: 24,
     marginRight: 12,
   },
   input: {
@@ -497,6 +500,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 2,
+  },
+  googleEmoji: {
+    fontSize: 20,
+    lineHeight: 24,
+    color: '#6C63FF',
   },
   googleButtonText: {
     fontSize: 16,
