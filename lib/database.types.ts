@@ -1228,3 +1228,29 @@ export const Constants = {
     },
   },
 } as const
+
+export type ProviderWithInteraction = Tables<'service_providers'> & {
+  is_favorite?: boolean
+  user_rating?: number | null
+  hire_count?: number
+}
+
+export type BusinessWithInteraction = Tables<'resident_businesses'> & {
+  owner_name?: string | null
+  owner_flat?: string | null
+  avg_rating?: number | null
+  rating_count?: number | null
+  inquiry_count?: number | null
+  is_favorite?: boolean
+  user_rating?: number | null
+}
+
+export type VisitWithJoinerData = Tables<'service_visits'> & {
+  creator_name?: string | null
+  creator_flat?: string | null
+  creator_avatar_url?: string | null
+  joiner_count?: number
+  has_user_joined?: boolean
+}
+
+export type VisitJoinerWithProfile = Database['public']['Functions']['get_visit_joiners']['Returns'][number]

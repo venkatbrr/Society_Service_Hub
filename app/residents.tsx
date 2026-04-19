@@ -126,7 +126,7 @@ export default function ResidentsScreen() {
 
   const handleBack = () => {
     if (returnTo === 'profile') {
-      router.push('/(tabs)/profile');
+      router.replace('/(tabs)/profile');
       return;
     }
 

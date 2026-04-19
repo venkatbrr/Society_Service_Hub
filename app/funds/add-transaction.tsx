@@ -472,10 +472,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+  },
   noticeIcon: {
     fontSize: 18,
     lineHeight: 20,
-  },
   },
   tabText: {
     fontWeight: '800',
