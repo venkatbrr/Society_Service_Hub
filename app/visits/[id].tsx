@@ -180,7 +180,7 @@ export default function VisitDetailScreen() {
   const handleBack = () => {
     if (returnTo === 'visits') {
       router.replace({
-        pathname: '/(tabs)',
+        pathname: '/',
         params: { segment: 'visits', visitTab: visitTab === 'past' ? 'past' : 'upcoming' },
       });
       return;

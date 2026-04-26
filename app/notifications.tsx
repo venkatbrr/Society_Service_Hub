@@ -31,6 +31,8 @@ export default function NotificationsScreen() {
         return 'alert-circle';
       case 'removed_from_community':
         return 'person-remove';
+      case 'service_reminder':
+        return 'construct';
       default:
         return 'notifications';
     }
@@ -51,12 +53,16 @@ export default function NotificationsScreen() {
     }
 
     if (notification.type === 'promoted_to_admin' || notification.type === 'promotion_approved' || notification.type === 'promotion_rejected') {
-      router.push('/admin/approvals');
+      router.push('/admin/approvals' as any);
       return;
     }
 
     if (notification.type === 'removed_from_community') {
       router.push('/community-select');
+    }
+
+    if (notification.type === 'service_reminder' && notification.data?.service_id) {
+      router.push({ pathname: '/services/[id]', params: { id: notification.data.service_id } } as any);
     }
   };
 

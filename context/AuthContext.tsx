@@ -11,10 +11,9 @@ type AuthContextType = {
   user: User | null;
   profile: Tables<'profiles'> | null;
   appRole: AppRole;
-  approvalStatus: Tables<'profiles'>['approval_status'];
   communityId: string | null;
   isPlatformAdmin: boolean;
-  isCommunityAdmin: boolean;
+  isCommunityLead: boolean;
   activeCommunityRequest: ActiveCommunityRequest;
   isLoading: boolean;
   refreshSession: () => Promise<void>;
@@ -26,10 +25,9 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   appRole: 'resident',
-  approvalStatus: 'pending',
   communityId: null,
   isPlatformAdmin: false,
-  isCommunityAdmin: false,
+  isCommunityLead: false,
   activeCommunityRequest: null,
   isLoading: true,
   refreshSession: async () => {},
@@ -73,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('community_requests')
         .select('id, status, created_at, name')
         .eq('requested_by', userId)
-        .in('status', ['pending', 'needs_info'])
+        .in('status', ['pending', 'needs_info', 'rejected'])
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -138,17 +136,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setProfile(null);
   };
 
+  const rawRole = profile?.app_role ?? 'resident';
+  const isPlatformAdmin = rawRole === 'admin' && !communityId;
+  const isCommunityLead = rawRole === 'community_lead' && !!communityId;
+
   return (
     <AuthContext.Provider
       value={{
         session,
         user,
         profile,
-        appRole: profile?.app_role ?? 'resident',
-        approvalStatus: profile?.approval_status ?? 'pending',
+        appRole: rawRole,
         communityId,
-        isPlatformAdmin: (profile?.app_role ?? 'resident') === 'admin' && !communityId,
-        isCommunityAdmin: (profile?.app_role ?? 'resident') === 'community_admin',
+        isPlatformAdmin,
+        isCommunityLead,
         activeCommunityRequest,
         isLoading,
         refreshSession,

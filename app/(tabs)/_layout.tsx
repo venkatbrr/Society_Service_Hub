@@ -1,44 +1,13 @@
-import { useFocusEffect } from '@react-navigation/native';
 import { Tabs } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import { Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
-import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../lib/supabase';
 
 export default function TabLayout() {
   const colors = Colors.light;
   const insets = useSafeAreaInsets();
-  const { appRole, communityId } = useAuth();
-  const [pendingCount, setPendingCount] = useState(0);
-
-  useFocusEffect(
-    useCallback(() => {
-      async function loadPendingCount() {
-        if (appRole !== 'community_admin' || !communityId) {
-          setPendingCount(0);
-          return;
-        }
-
-        const { count, error } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('community_id', communityId)
-          .eq('approval_status', 'pending');
-
-        if (error) {
-          console.error('Error loading pending approval count:', error);
-          return;
-        }
-
-        setPendingCount(count ?? 0);
-      }
-
-      loadPendingCount();
-    }, [appRole, communityId])
-  );
 
   return (
     <Tabs
@@ -74,12 +43,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="business"
-        options={{
-          href: null, // Hidden — business feature deferred
-        }}
-      />
-      <Tabs.Screen
         name="favorites"
         options={{
           title: 'Saved',
@@ -97,7 +60,6 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarBadge: appRole === 'community_admin' && pendingCount > 0 ? pendingCount : undefined,
           tabBarIcon: ({ focused }) => <Text style={{ fontSize: 24, opacity: focused ? 1 : 0.45 }}>{APP_EMOJIS.profile}</Text>,
         }}
       />

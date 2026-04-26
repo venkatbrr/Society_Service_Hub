@@ -23,48 +23,30 @@ This document describes every user-facing feature, the screens involved, databas
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Step 1 of onboarding: find an existing community by exact pincode, then request to join it |
-| **Tables** | Reads: `communities` via `search_communities_by_pincode` RPC. Writes: `profiles` (`community_id`, `flat_number`, `phone_number`, `join_note`, `approval_status`, `requested_at`), `auth.users` user_metadata. |
-| **Business rules** | Pincode is required and server-side exact match for v1. Search filters the pincode-scoped list client-side by name. Continue is disabled until a community is selected. Submitting stores onboarding details and leaves the user in `approval_status = 'pending'`. |
-| **Navigation** | From: root layout (session exists, no `community_id`). To: `/pending` after submit, `/community-request` if community is missing. |
+| **Purpose** | Two-option onboarding: join an existing community by code, or request a new one |
+| **Tables** | Writes: `profiles` (via `join_community_by_code` RPC). |
+| **Business rules** | Code is 6 uppercase alphanumeric characters. Join is instant — no approval needed, the code is the gate. On success, calls `refreshSession()` which updates `communityId` and triggers redirect to `/(tabs)`. |
+| **Navigation** | From: root layout (session exists, no `community_id`, no active request). To: `/(tabs)` on success, `/community-request` for new request. |
 | **Roles** | Any authenticated user |
 
 ### Community Request (`app/community-request.tsx`)
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Replace self-serve community creation with a reviewed request flow |
+| **Purpose** | Submit a request for platform review to create a new community |
 | **Tables** | Writes: `community_requests` via `submit_community_request` RPC |
-| **Business rules** | Required: name, type, city, pincode, requester role, accuracy confirmation. Optional: area, approximate units, nominated admin details. Requests default to `pending`. |
-| **Navigation** | From: community select empty state or rejected screen. To: `/community-request-submitted` on success. |
+| **Business rules** | Required: name, city, pincode (6-digit), flat/house number, accuracy confirmation. Optional: full address, area, community type chips, approximate units chips. Requests default to `pending`. |
+| **Navigation** | From: community select. To: `/community-request-submitted` on success. |
 | **Roles** | Any authenticated user |
 
 ### Community Request Submitted (`app/community-request-submitted.tsx`)
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Holding screen for users with an active community request and no community assignment |
-| **Tables** | Reads: `community_requests` (latest active row for requester) |
-| **Business rules** | Root routing sends signed-in users here whenever they have an active request but no `community_id`. |
+| **Purpose** | Status screen for users with an active community request |
+| **Tables** | Reads: `community_requests`, `communities` (for code on approval). |
+| **Business rules** | Root routing sends here when `activeCommunityRequest` is non-null (pending, needs_info, or rejected). **Approved**: shows community join code prominently with Share and Share via WhatsApp buttons; "Enter my community" calls `refreshSession()` which triggers redirect. **Rejected**: shows rejection reason + "Request again" and "Join existing" options. **Pending**: shows holding message with refresh button. |
 | **Navigation** | From: `community-request`, root layout redirects. |
-
-### Pending Approval (`app/pending.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Hold users who have requested to join a community but are still awaiting admin approval |
-| **Tables** | Reads: `communities` basic fields for the selected community |
-| **Business rules** | Pending users cannot access providers, visits, funds, favorites, ratings, or notifications. |
-| **Navigation** | From: community select submit, root layout redirects while `approval_status = 'pending'`. |
-
-### Rejected Request (`app/rejected.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Show the rejected join state and route the resident toward a new community request |
-| **Tables** | None directly |
-| **Business rules** | Rejected users can request a community directly or sign out. |
-| **Navigation** | From: root layout redirects while `approval_status = 'rejected'`. To: `/community-request` or `/login` after sign-out. |
 
 ### Forgot Password (`app/forgot-password.tsx`)
 
@@ -91,18 +73,9 @@ This document describes every user-facing feature, the screens involved, databas
 
 ---
 
-## Tab 2: Market — Resident Marketplace (`app/(tabs)/business.tsx`) ⚠️ DISABLED
+## Tab 2: Market — Resident Marketplace ⚠️ REMOVED
 
-> **This feature is currently hidden from the UI.** The tab is set to `href: null` in `_layout.tsx` and the business section is removed from the Profile screen. All code and database objects remain intact. See `disabled-features.md` for re-enablement steps.
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Browse resident-owned home businesses with search and category filtering |
-| **Tables** | Reads: `resident_businesses`, `favorites`. Uses RPC: `get_community_businesses` (aggregates ratings + inquiry counts). |
-| **Business rules** | 8 business categories: Food, Baked Goods, Crafts, Beauty, Tailoring, Tutoring, Other. Each resident can own max 1 business per community. Search is case-insensitive across name, description, category. |
-| **Navigation** | To: `/business/[id]` (detail), `/business/add` (create). On create attempt: if business exists, redirects to `/business/manage`. |
-| **Roles** | All residents view and favorite. Only business owners edit/manage. |
-| **Components** | `BusinessCard`, `SearchBar`, `CategoryFilter`, `EmptyState` |
+> **This feature has been permanently removed.** All marketplace tables (`resident_businesses`, `business_offerings`, `business_inquiries`), screens, and components have been deleted. The `business_id` columns have been removed from `favorites` and `ratings`.
 
 ---
 
@@ -125,9 +98,9 @@ This document describes every user-facing feature, the screens involved, databas
 |--------|---------|
 | **Purpose** | List all community funds with aggregate totals (collected, spent, balance) |
 | **Tables** | Reads: `events`, `event_transactions`, `fund_roles`, `profiles`. |
-| **Business rules** | Only community admins can create funds. Each fund has 1–2 treasurers (min 1, max 2) and 0–6 collectors. Balance = sum(income) − sum(expense). Schema validation checks for missing fund tables before displaying. |
-| **Navigation** | To: `/funds/add` (admin only), `/funds/[id]` (detail). |
-| **Roles** | All residents see funds. Admin-only FAB for creating. Role-based permissions per fund. |
+| **Business rules** | Only community leads can create funds. Each fund has 1–2 treasurers (min 1, max 2) and 0–6 collectors. Balance = sum(income) − sum(expense). Schema validation checks for missing fund tables before displaying. |
+| **Navigation** | To: `/funds/add` (community lead only), `/funds/[id]` (detail). |
+| **Roles** | All residents see funds. Community lead FAB for creating. Role-based permissions per fund. |
 | **Components** | `FundCard`, `EmptyState` |
 
 ---
@@ -136,30 +109,21 @@ This document describes every user-facing feature, the screens involved, databas
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Display user info, app role, community details, sign out, community directory entry point, and approval management entry point |
-| **Tables** | Reads: `profiles`, `communities`. |
-| **Business rules** | Invite code sharing is removed. Community admins see a member approvals card with pending count and can open the approval queue. All approved members can open the residents directory. |
-| **Navigation** | To: `/admin/approvals`, `/residents`, `/community-select` (after sign-out). |
+| **Purpose** | Display user info, app role, community details, join code (community leads only), sign out, and community directory entry point |
+| **Tables** | Reads: `profiles`, `communities` (including `code`). |
+| **Business rules** | Community leads see their community's 6-char join code with a Share button. All members can open the residents directory. No approval queue — that workflow is removed. |
+| **Navigation** | To: `/residents`, `/login` after sign-out. |
 | **Roles** | Personal profile only |
-
-### Admin Approvals (`app/admin/approvals.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Review pending residents and request/cancel community-admin promotions for approved residents |
-| **Tables** | Reads: `profiles`, `community_admin_requests`. Writes: membership decisions via `approve_profile_membership` and `reject_profile_membership`; promotion requests via `create_community_admin_request` and `cancel_community_admin_request`. |
-| **Business rules** | Pending queue remains community-scoped. A promotion request can be raised for approved residents and may be cancelled only by the requester while still pending. |
-| **Navigation** | From: Profile tab community-admin card. |
 
 ### Residents Directory (`app/residents.tsx`)
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Community-level approved resident directory with optional promotion request actions for community admins |
-| **Tables** | Reads via RPC `get_residents_directory` and `community_admin_requests`. Writes via `create_community_admin_request` and `cancel_community_admin_request`. |
-| **Business rules** | Directory includes approved residents only. Phone numbers are included only for community admins. Community admins can tap a resident name to open a contact details sheet (flat, phone, role). Promotion requests show pending/cancel states based on requester ownership. When opened from Profile, the directory back action returns to the Profile tab. |
+| **Purpose** | Community-level resident directory with soft-remove for community leads |
+| **Tables** | Reads via RPC `get_residents_directory`. Writes via `community_lead_remove_resident` RPC. |
+| **Business rules** | Directory shows active (non-removed) residents. Phone numbers visible to community leads and platform admins. Community leads can tap a resident name to open a detail sheet with a Remove option (non-leads only). Cannot remove the last community lead. |
 | **Navigation** | From: Profile tab card. |
-| **Roles** | Approved residents can view. Community admins can request promotions. |
+| **Roles** | All residents can view. Community leads can remove residents (except other leads). |
 
 ---
 
@@ -169,9 +133,9 @@ This document describes every user-facing feature, the screens involved, databas
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Dedicated platform-only tab shell for approvals, promotions, and community inspection |
-| **Business rules** | Root routing redirects platform admins into this area and blocks non-platform users from accessing it. Each platform screen header includes a logout action for app admins. |
-| **Navigation** | `/platform/approvals`, `/platform/promotions`, `/platform/communities` |
+| **Purpose** | Dedicated platform-only tab shell for approvals and community inspection |
+| **Business rules** | Root routing redirects platform admins into this area and blocks non-platform users from accessing it. Each platform screen header includes a logout action. |
+| **Navigation** | `/platform/approvals`, `/platform/communities` |
 | **Roles** | Platform admin only (`profiles.app_role = 'admin'` with `community_id = null`) |
 
 ### Community Approvals (`app/platform/approvals.tsx`)
@@ -180,23 +144,15 @@ This document describes every user-facing feature, the screens involved, databas
 |--------|---------|
 | **Purpose** | Process pending `community_requests` |
 | **Tables** | Reads: `community_requests`, `profiles`. Writes via RPC: `platform_approve_community_request`, `platform_reject_community_request`. |
-| **Business rules** | Approval creates the community and promotes requester to community admin. Rejection supports optional reason and triggers user notification. |
-
-### Promotion Reviews (`app/platform/promotions.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Process pending `community_admin_requests` |
-| **Tables** | Reads: `community_admin_requests`, `communities`, `profiles`. Writes via RPC: `platform_approve_community_admin_request`, `platform_reject_community_admin_request`. |
-| **Business rules** | Community admin cap is enforced server-side (max 5). Rejections can include optional reason. |
+| **Business rules** | Approval creates the community, generates a 6-char join code, and sets requester as `community_lead`. Rejection supports optional reason and triggers user notification. Shows requester details: name, phone, email, flat number, address. |
 
 ### Communities Directory + Detail (`app/platform/communities.tsx`, `app/platform/community/[id].tsx`)
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Search communities, inspect membership/admin counts, and remove residents where required |
+| **Purpose** | Search communities, inspect membership/lead counts, and remove residents where required |
 | **Tables** | Reads: `communities`, `profiles`. Writes via RPC: `platform_soft_remove_resident`. |
-| **Business rules** | Platform removal is soft-delete style on profile (`removed_at`, `removed_by`) and resets role to resident. Last-community-admin guard is enforced before removal. |
+| **Business rules** | Platform removal is soft-delete style on profile (`removed_at`, `removed_by`) and resets role to resident. Last-community-lead guard is enforced before removal. Member counts exclude removed users. |
 
 ---
 
@@ -397,3 +353,93 @@ This document describes every user-facing feature, the screens involved, databas
 | Native Share | Provider detail | `Share.share()` with provider contact info |
 | Image Picker | Business add, Offering add | `expo-image-picker` → base64 → Supabase Storage |
 | DateTimePicker | Visit add | `@react-native-community/datetimepicker` |
+
+---
+
+## Personal Service Reminders
+
+### Overview
+
+Allows users to track household appliances and periodic services (AC, RO purifier, pest control, etc.) with automatic due-date reminders. Data is private and user-scoped, so other users cannot access these rows.
+
+### Screens
+
+#### `app/services/index.tsx` - My Services List
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | List all user services sorted by `next_due_on` ascending |
+| **Tables** | Reads: `user_services` via `get_my_upcoming_services()` RPC |
+| **Business rules** | Pull-to-refresh enabled. Sorted by urgency (nearest due first). |
+| **Navigation** | Tap item -> `/services/[id]`. Add button -> `/services/add`. |
+| **Roles** | Any authenticated user |
+
+#### `app/services/add.tsx` - Add Service
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Create a new service reminder |
+| **Tables** | Writes: `user_services` |
+| **Business rules** | Required: `service_name` (max 100), `category`, `last_serviced_on` (not future), `frequency_months` (1-60). Optional: `notes` (max 500). `next_due_on` is computed by DB trigger. Category selection pre-fills frequency defaults. |
+| **Navigation** | On success -> back to list |
+| **Integrations** | `@react-native-community/datetimepicker` |
+
+#### `app/services/[id].tsx` - Service Detail / Edit
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | View due date, mark done, edit details, find technicians, delete reminder |
+| **Tables** | Reads/Writes: `user_services` (direct UPDATE/DELETE + `mark_service_done()` RPC) |
+| **Business rules** | "Mark as serviced today" calls `mark_service_done()` with optimistic UI + refresh. "Find technicians" routes to providers segment with mapped provider category. Edit form reuses add validations. Delete requires confirmation. |
+| **Navigation** | "Find technicians" -> `/(tabs)/` with `segment=providers` and `filterCategory` param |
+
+### Home Dashboard Card (`components/UpcomingServicesCard.tsx`)
+
+Placed above `ActiveFundTeaser` on `app/(tabs)/index.tsx` for both Providers and Visits segments.
+
+States:
+- Has due items (<= 30 days): shows up to 2 urgent reminders, urgency badges, and quick "Find tech" links.
+- All on track: condensed success row with "View all" action.
+- Zero reminders: dismissible onboarding prompt.
+
+Dismissal persistence uses AsyncStorage key `serviceReminderHomePromptDismissed:{userId}`.
+
+### Profile Entry
+
+`app/(tabs)/profile.tsx` includes a "My Service Reminders" row. If `get_my_due_soon_count() > 0`, it shows an amber badge and subtitle (`N due this week`).
+
+### Notification Flow
+
+- Daily scheduler invokes `notify_due_services()`.
+- Trigger condition: `next_due_on <= today + 7 days` and `notified_at IS NULL`.
+- Action: insert `service_reminder` notifications, then set `notified_at = now()`.
+- Notification press deep-links to `/services/[id]`.
+
+Cron fallback uses Edge Function `supabase/functions/check_due_services/index.ts` at `30 3 * * *` UTC (9:00 AM IST).
+
+### Business Rules
+
+1. `next_due_on` is DB-computed as `last_serviced_on + frequency_months` months.
+2. Updating `last_serviced_on` or `frequency_months` resets `notified_at` to start a new reminder cycle.
+3. `mark_service_done()` is `SECURITY DEFINER`, but ownership checks still enforce access by caller.
+4. RLS on `user_services` is user-based (`auth.uid() = user_id`), not community-based.
+
+### Components
+
+| Component | Purpose |
+|-----------|---------|
+| `components/ServiceCard.tsx` | Reminder row: icon, name, category, urgency, chevron |
+| `components/UrgencyBadge.tsx` | Visual urgency by days until due |
+| `components/UpcomingServicesCard.tsx` | Home widget with zero / on-track / due states |
+
+### Category to Provider Mapping
+
+| Service Category | Mapped Provider Category |
+|------------------|--------------------------|
+| `ac` | AC Technician |
+| `ro_water_purifier` | Plumber |
+| `pest_control` | Pest Control |
+| `chimney` | Electrician |
+| `water_tank_cleaning` | Water Supply |
+| `washing_machine` / `refrigerator` / `geyser` | Electrician |
+| `car` / `inverter_battery` / `other` | Other |

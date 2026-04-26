@@ -8,6 +8,7 @@ import { CategoryFilter } from '../../components/CategoryFilter';
 import { EmptyState } from '../../components/EmptyState';
 import { ProviderCard } from '../../components/ProviderCard';
 import { SearchBar } from '../../components/SearchBar';
+import { UpcomingServicesCard } from '../../components/UpcomingServicesCard';
 import { VisitCard } from '../../components/VisitCard';
 import { Colors } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
@@ -407,6 +408,7 @@ export default function HomeScreen() {
           }
           ListHeaderComponent={
             <>
+              <UpcomingServicesCard />
               {activeFund && activeFund.goal > 0 && (
                 <ActiveFundTeaser
                   title={activeFund.title}
@@ -485,6 +487,7 @@ export default function HomeScreen() {
           }
           ListHeaderComponent={
             <>
+              <UpcomingServicesCard />
               {activeFund && activeFund.goal > 0 && (
                 <ActiveFundTeaser
                   title={activeFund.title}

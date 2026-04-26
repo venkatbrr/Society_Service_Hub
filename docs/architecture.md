@@ -78,9 +78,8 @@ App Boot
     → loadProfile(userId)
       → fetch profiles row by id
       → setCommunityId (fallback: profile → user_metadata → app_metadata)
-      → setAppRole ('admin' | 'community_admin' | 'resident')
-      → setApprovalStatus ('pending' | 'approved' | 'rejected')
-      → if needed, load the latest active community request
+      → setAppRole ('admin' | 'community_lead' | 'resident')
+      → if needed, load the latest active community request (pending, needs_info, or rejected)
   → supabase.auth.onAuthStateChange(callback)
     → re-runs loadProfile on every auth event
 ```
@@ -98,12 +97,11 @@ type AuthContextType = {
   session: Session | null
   user: User | null
   profile: Tables<'profiles'> | null
-  appRole: 'admin' | 'community_admin' | 'resident'
+  appRole: 'admin' | 'community_lead' | 'resident'
   isPlatformAdmin: boolean
-  isCommunityAdmin: boolean
-  approvalStatus: 'pending' | 'approved' | 'rejected'
+  isCommunityLead: boolean
   communityId: string | null
-  activeCommunityRequest: { id, status, created_at, name } | null
+  activeCommunityRequest: { id, status, created_at, name } | null  // pending, needs_info, or rejected
   isLoading: boolean
   refreshSession: () => Promise<void>
   signOut: () => Promise<void>
@@ -118,24 +116,21 @@ type AuthContextType = {
 
 | Table | Purpose | Key Constraints |
 |-------|---------|-----------------|
-| `communities` | Society grouping | `code` UNIQUE, stores pincode/city/area/type metadata |
-| `profiles` | User extension of `auth.users` | PK = `auth.users.id`, `app_role`, `approval_status`, request details |
-| `community_requests` | Platform-reviewed onboarding requests | requester-owned read access only |
-| `community_admin_requests` | Promotion workflow from resident to community admin | pending/approved/rejected lifecycle |
+| `communities` | Society grouping | `code` UNIQUE (6-char join code), stores pincode/city/area/type/address metadata |
+| `profiles` | User extension of `auth.users` | PK = `auth.users.id`, `email` mirrored from `auth.users.email`, `app_role` |
+| `community_requests` | Platform-reviewed community creation requests | requester-owned read access; `resulting_community_id` set on approval |
 | `profile_audit_log` | Audit trail of profile field changes | records actor, field, old/new values, reason |
 | `service_providers` | Trusted provider listings | `community_id` FK |
 | `service_visits` | Group visit coordination | `provider_id` nullable, `status` enum |
 | `visit_joiners` | Visit RSVPs | UNIQUE(`visit_id`, `user_id`) |
-| `resident_businesses` | Resident-run businesses | UNIQUE(`owner_id`, `community_id`) |
-| `business_offerings` | Business catalog items | `business_id` FK, `sort_order` |
-| `business_inquiries` | Contact tracking | `inquiry_type`: whatsapp or call |
-| `favorites` | Bookmarks | Dual-target: `provider_id` XOR `business_id` |
-| `ratings` | 1–5 star reviews | Dual-target: `provider_id` XOR `business_id` |
+| `favorites` | Bookmarks | Target: `provider_id` (business columns dropped) |
+| `ratings` | 1–5 star reviews | Target: `provider_id` (business columns dropped) |
 | `provider_hires` | Hire interaction count | `user_id` + `provider_id` |
 | `events` | Community funds | `goal_amount`, `event_date` |
 | `event_transactions` | Fund ledger entries | `type`: income or expense, `amount > 0` |
 | `fund_roles` | Per-fund role assignments | UNIQUE(`event_id`, `user_id`), `role` enum |
 | `notifications` | User notifications | `data` JSONB, `is_read` boolean |
+| `user_services` | **User-scoped** personal service reminders | RLS: `auth.uid() = user_id` (NOT community-scoped). `next_due_on` auto-computed by trigger. |
 
 ### Dual-Target Check Constraint (favorites, ratings)
 
@@ -149,29 +144,28 @@ CHECK (
 ### Database Functions
 
 | Function | Purpose |
+| `get_my_upcoming_services()` | Caller's services ordered by `next_due_on` ASC with `days_until_due`. User-scoped. |
+| `get_my_due_soon_count()` | Count of caller's services due within 7 days. |
+| `mark_service_done(p_service_id)` | Sets `last_serviced_on = today`, clears `notified_at`. Security-definer. |
+| `notify_due_services()` | Inserts `service_reminder` notifications for all users with services due ≤ 7 days; sets `notified_at`. Idempotent. |
 |----------|---------|
-| `handle_new_user()` | Trigger: auto-creates `profiles` row on signup with resident role and pending approval status. |
+| `handle_new_user()` | Trigger: auto-creates `profiles` row on signup with resident role |
 | `get_user_community_id()` | Returns community_id from JWT (`app_metadata` → `user_metadata` fallback) |
-| `is_admin(p_user_id)` | Checks if user is `community_admin` |
+| `is_admin(p_user_id)` | Alias for `is_community_lead()` — kept for backward-compatible RLS policies |
+| `is_community_lead(p_user_id)` | Checks if user is `community_lead` in their community |
 | `is_platform_admin(p_user_id)` | Checks if user is platform admin (`app_role = 'admin'` and no community) |
-| `is_user_approved(p_user_id)` | Checks if user has `approval_status = 'approved'` |
-| `search_communities_by_pincode(p_pincode)` | RPC: returns communities matching exact pincode with resident counts |
+| `is_user_approved(p_user_id)` | Checks if user has `community_id IS NOT NULL AND removed_at IS NULL` |
+| `generate_community_code()` | Generates a random unique 6-character uppercase alphanumeric code |
 | `submit_community_request(...)` | RPC: creates a reviewed `community_requests` row |
-| `approve_profile_membership(p_profile_id)` | RPC: admin-only approval + notification insert |
-| `reject_profile_membership(p_profile_id)` | RPC: admin-only rejection + notification insert |
-| `create_community_admin_request(p_target_user_id)` | Community admin creates a promotion request |
-| `cancel_community_admin_request(p_request_id)` | Request creator cancels own pending promotion request |
-| `platform_approve_community_request(p_request_id)` | Platform admin approves a pending community request |
+| `join_community_by_code(p_code)` | RPC: resident joins a community by 6-char code — no approval needed |
+| `community_lead_remove_resident(p_target_profile_id)` | RPC: community lead removes a non-lead resident |
+| `platform_approve_community_request(p_request_id)` | Platform admin approves request: creates community, sets requester as community_lead, generates join code |
 | `platform_reject_community_request(p_request_id, p_rejection_reason)` | Platform admin rejects a pending community request |
-| `platform_approve_community_admin_request(p_request_id)` | Platform admin approves a promotion request |
-| `platform_reject_community_admin_request(p_request_id, p_rejection_reason)` | Platform admin rejects a promotion request |
 | `platform_soft_remove_resident(p_target_profile_id, p_reason)` | Platform admin soft-removes a resident from a community |
 | `set_audit_actor(p_actor_id)` / `set_audit_context(...)` | Sets audit context for profile mutation logging |
-| `get_residents_directory(p_include_phone)` | Returns approved residents of current community for directory UI |
-| `get_fund_role(p_event_id, p_user_id)` | Resolves effective fund role (admin > assigned > resident) |
-| `get_community_insights(p_community_id)` | RPC: returns most hired category, monthly spending, contribution % |
-| `get_community_businesses(p_community_id)` | RPC: returns businesses with aggregated ratings + inquiry counts |
-| `get_community_visits(p_community_id, p_user_id, p_status, p_time_scope)` | RPC: returns visits with creator info + joiner counts. `p_status` supports comma-separated values (e.g. `'upcoming,cancelled'`). Default: `'upcoming'`. `p_time_scope`: `'upcoming'` (visit_date ≥ today) or `'past'` (visit_date < today). Default: `'upcoming'`. |
+| `get_residents_directory(p_include_phone)` | Returns active residents of current community. Phone visible to community leads and platform admins. |
+| `get_fund_role(p_event_id, p_user_id)` | Resolves effective fund role (community_lead/admin > assigned > resident) |
+| `get_community_visits(p_community_id, p_user_id, p_status, p_time_scope)` | RPC: returns visits with creator info + joiner counts |
 | `get_visit_joiners(p_visit_id)` | RPC: returns joiner details with profile info |
 | `auto_complete_past_visits()` | Marks past visits as completed |
 
@@ -181,6 +175,7 @@ CHECK (
 |---------|-------|-------|--------|
 | `on_auth_user_created` | `auth.users` | INSERT | Auto-create profile row |
 | `on_rating_change` | `ratings` | INSERT/UPDATE/DELETE | Recalculate `service_providers.avg_rating` |
+| `user_services_compute_fields_trigger` | `user_services` | BEFORE INSERT/UPDATE | Auto-compute `next_due_on`; reset `notified_at` when `last_serviced_on` or `frequency_months` changes |
 | `fund_role_guard` | `fund_roles` | INSERT/UPDATE/DELETE | Validate treasurer/collector limits + community |
 | `event_transaction_guard` | `event_transactions` | INSERT/UPDATE | Validate title, contributor community |
 | `on_service_visit_created` | `service_visits` | INSERT | Notify all community members |

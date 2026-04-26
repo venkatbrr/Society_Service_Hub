@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -6,6 +5,7 @@ import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
+import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -16,14 +16,14 @@ type PendingRequest = {
   city: string;
   pincode: string;
   area: string | null;
+  address: string | null;
   approximate_units: string | null;
-  requester_role: string;
-  nominated_admin_name: string | null;
-  nominated_admin_contact: string | null;
+  requester_flat_number: string | null;
   requested_by: string;
   created_at: string;
   requester_name: string | null;
   requester_phone: string | null;
+  requester_email: string | null;
 };
 
 const relativeTime = (dateValue: string) => {
@@ -60,7 +60,7 @@ export default function PlatformApprovalsScreen() {
     try {
       const { data, error } = await supabase
         .from('community_requests')
-        .select('id, name, community_type, city, pincode, area, approximate_units, requester_role, nominated_admin_name, nominated_admin_contact, requested_by, created_at')
+        .select('id, name, community_type, city, pincode, area, address, approximate_units, requester_flat_number, requested_by, created_at')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
@@ -75,7 +75,7 @@ export default function PlatformApprovalsScreen() {
       const requesterIds = [...new Set(requestRows.map((row) => row.requested_by))];
       const { data: requesterProfiles, error: requesterError } = await supabase
         .from('profiles')
-        .select('id, full_name, phone_number')
+        .select('id, full_name, phone_number, email')
         .in('id', requesterIds);
 
       if (requesterError) throw requesterError;
@@ -87,6 +87,7 @@ export default function PlatformApprovalsScreen() {
           ...row,
           requester_name: profileMap.get(row.requested_by)?.full_name ?? null,
           requester_phone: profileMap.get(row.requested_by)?.phone_number ?? null,
+          requester_email: profileMap.get(row.requested_by)?.email ?? null,
         }))
       );
     } catch (error: any) {
@@ -104,7 +105,7 @@ export default function PlatformApprovalsScreen() {
   );
 
   const handleApprove = async (requestId: string) => {
-    Alert.alert('Approve community request?', 'This will create the community and promote the requester to community admin.', [
+    Alert.alert('Approve community request?', 'This will create the community and set the requester as community lead.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Approve',
@@ -158,13 +159,13 @@ export default function PlatformApprovalsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}> 
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient colors={[`${colors.primary}18`, `${colors.gradientEnd}10`, 'transparent']} style={styles.gradientOverlay} />
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Text style={[styles.title, { color: colors.text }]}>Community approvals</Text>
           <TouchableOpacity style={[styles.signOutBtn, { borderColor: colors.border }]} onPress={handleSignOut}>
-            <Ionicons name="log-out-outline" size={16} color={colors.text} />
+            <Text style={styles.signOutIcon}>{APP_EMOJIS.close}</Text>
             <Text style={[styles.signOutText, { color: colors.text }]}>Logout</Text>
           </TouchableOpacity>
         </View>
@@ -180,8 +181,8 @@ export default function PlatformApprovalsScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadRequests(true)} />}
           contentContainerStyle={requests.length ? styles.listContent : styles.emptyContent}
           ListEmptyComponent={
-            <View style={[styles.emptyState, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}> 
-              <Ionicons name="checkmark-done-circle-outline" size={28} color={colors.secondary} />
+            <View style={[styles.emptyState, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+              <Text style={styles.emptyIcon}>{APP_EMOJIS.success}</Text>
               <Text style={[styles.emptyTitle, { color: colors.text }]}>No pending requests</Text>
               <Text style={[styles.emptyCopy, { color: colors.textMuted }]}>New community requests will show up here.</Text>
             </View>
@@ -191,38 +192,39 @@ export default function PlatformApprovalsScreen() {
             const rejecting = rejectingId === item.id;
 
             return (
-              <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}> 
+              <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
                 <View style={styles.cardHeader}>
                   <Text style={[styles.communityName, { color: colors.text }]}>{item.name}</Text>
                   <Text style={[styles.time, { color: colors.textMuted }]}>{relativeTime(item.created_at)}</Text>
                 </View>
                 <Text style={[styles.meta, { color: colors.textMuted }]}>Type: {item.community_type}</Text>
-                <Text style={[styles.meta, { color: colors.textMuted }]}>Location: {item.city} {item.area ? `• ${item.area}` : ''}</Text>
+                <Text style={[styles.meta, { color: colors.textMuted }]}>
+                  Location: {item.city}{item.area ? ` • ${item.area}` : ''}
+                </Text>
                 <Text style={[styles.meta, { color: colors.textMuted }]}>Pincode: {item.pincode}</Text>
+                {item.address ? <Text style={[styles.meta, { color: colors.textMuted }]}>Address: {item.address}</Text> : null}
                 {item.approximate_units ? <Text style={[styles.meta, { color: colors.textMuted }]}>Approx units: {item.approximate_units}</Text> : null}
-                <Text style={[styles.metaStrong, { color: colors.text }]}>Requester: {item.requester_name || 'Resident'} ({item.requester_role})</Text>
-                <Text style={[styles.meta, { color: colors.textMuted }]}>Phone: {item.requester_phone || 'Not provided'}</Text>
-                <Text style={[styles.meta, { color: colors.textMuted }]}>Email: Unavailable in current profile schema</Text>
-                {item.nominated_admin_name ? <Text style={[styles.meta, { color: colors.textMuted }]}>Nominated admin: {item.nominated_admin_name}</Text> : null}
-                {item.nominated_admin_contact ? <Text style={[styles.meta, { color: colors.textMuted }]}>Admin contact: {item.nominated_admin_contact}</Text> : null}
+                {item.requester_flat_number ? <Text style={[styles.meta, { color: colors.textMuted }]}>Requester flat: {item.requester_flat_number}</Text> : null}
+                <Text style={[styles.metaStrong, { color: colors.text }]}>
+                  Requester: {item.requester_name || 'Unknown'}
+                </Text>
+                {item.requester_phone ? <Text style={[styles.meta, { color: colors.textMuted }]}>Phone: {item.requester_phone}</Text> : null}
+                {item.requester_email ? <Text style={[styles.meta, { color: colors.textMuted }]}>Email: {item.requester_email}</Text> : null}
 
                 {rejecting ? (
-                  <View style={[styles.rejectWrap, { borderColor: colors.border }]}> 
+                  <View style={[styles.rejectWrap, { borderColor: colors.border }]}>
                     <TextInput
                       value={rejectionReason}
                       onChangeText={setRejectionReason}
                       placeholder="Optional rejection reason"
                       placeholderTextColor={colors.textMuted}
-                      style={[styles.rejectInput, { color: colors.text }]}
+                      style={[styles.rejectInput, { color: colors.text, borderColor: colors.border }]}
                       multiline
                     />
                     <View style={styles.actionRow}>
                       <TouchableOpacity
                         style={[styles.secondaryAction, { borderColor: colors.border }]}
-                        onPress={() => {
-                          setRejectingId(null);
-                          setRejectionReason('');
-                        }}
+                        onPress={() => { setRejectingId(null); setRejectionReason(''); }}
                       >
                         <Text style={[styles.secondaryActionText, { color: colors.text }]}>Cancel</Text>
                       </TouchableOpacity>
@@ -258,11 +260,13 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
   subtitle: { marginTop: 4, fontSize: 14, lineHeight: 20 },
   signOutBtn: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  signOutIcon: { fontSize: 14, lineHeight: 16 },
   signOutText: { fontSize: 12, fontWeight: '700' },
   loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingBottom: 32, gap: 14 },
   emptyContent: { flexGrow: 1, justifyContent: 'center' },
   emptyState: { borderWidth: 1, borderRadius: 24, padding: 24, alignItems: 'center' },
+  emptyIcon: { fontSize: 28, lineHeight: 32 },
   emptyTitle: { fontSize: 18, fontWeight: '800', marginTop: 12 },
   emptyCopy: { fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 6 },
   card: { borderWidth: 1, borderRadius: 24, padding: 18 },
@@ -277,5 +281,5 @@ const styles = StyleSheet.create({
   primaryAction: { flex: 1, borderRadius: 18, paddingVertical: 14, alignItems: 'center' },
   primaryActionText: { color: '#FFF', fontSize: 14, fontWeight: '800' },
   rejectWrap: { borderTopWidth: 1, marginTop: 14, paddingTop: 12 },
-  rejectInput: { minHeight: 78, borderWidth: 1, borderColor: '#E8E5F5', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 },
+  rejectInput: { minHeight: 78, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, marginBottom: 10 },
 });

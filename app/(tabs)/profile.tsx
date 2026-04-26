@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
@@ -10,9 +10,9 @@ import { supabase } from '../../lib/supabase';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, signOut, communityId, appRole, isCommunityAdmin } = useAuth();
-  const [communityDetails, setCommunityDetails] = useState<{ name: string; city: string | null; area: string | null; community_type: string | null } | null>(null);
-  const [pendingCount, setPendingCount] = useState(0);
+  const { user, signOut, communityId, appRole, isCommunityLead } = useAuth();
+  const [communityDetails, setCommunityDetails] = useState<{ name: string; city: string | null; area: string | null; community_type: string | null; code: string | null } | null>(null);
+  const [dueSoonCount, setDueSoonCount] = useState<number>(0);
 
   const colors = Colors.light;
   const roleLabel = (appRole ?? 'resident').charAt(0).toUpperCase() + (appRole ?? 'resident').slice(1);
@@ -22,7 +22,7 @@ export default function ProfileScreen() {
       if (communityId) {
         const { data, error } = await supabase
           .from('communities')
-          .select('name, city, area, community_type')
+          .select('name, city, area, community_type, code')
           .eq('id', communityId)
           .maybeSingle();
 
@@ -37,29 +37,21 @@ export default function ProfileScreen() {
       }
     }
 
-    async function fetchPendingCount() {
-      if (!isCommunityAdmin || !communityId) {
-        setPendingCount(0);
-        return;
-      }
-
-      const { count, error } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('community_id', communityId)
-          .eq('approval_status', 'pending');
-
-      if (error) {
-        console.error('Error loading pending approvals:', error);
-        return;
-      }
-
-      setPendingCount(count ?? 0);
-    }
-
     fetchCommunity();
-    fetchPendingCount();
-  }, [appRole, communityId, isCommunityAdmin]);
+  }, [communityId]);
+
+  useEffect(() => {
+    async function fetchDueSoon() {
+      if (!user) return;
+      try {
+        const { data } = await supabase.rpc('get_my_due_soon_count');
+        setDueSoonCount(data ?? 0);
+      } catch {
+        // Non-critical; badge stays at 0
+      }
+    }
+    fetchDueSoon();
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -129,29 +121,51 @@ export default function ProfileScreen() {
             <Text style={[styles.label, { color: colors.textMuted }]}>TYPE</Text>
             <Text style={[styles.value, { color: colors.text, textTransform: 'capitalize' }]}>{communityDetails?.community_type || '---'}</Text>
           </View>
+
+          {isCommunityLead && communityDetails?.code ? (
+            <>
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <View style={styles.infoRow}>
+                <Text style={[styles.label, { color: colors.textMuted }]}>JOIN CODE</Text>
+                <View style={styles.codeRow}>
+                  <Text style={[styles.codeValue, { color: colors.primary }]}>{communityDetails.code}</Text>
+                  <TouchableOpacity
+                    onPress={() => Share.share({ message: `Join my community on Society Service Hub! Code: ${communityDetails.code}` })}
+                    style={[styles.shareBtn, { backgroundColor: `${colors.primary}10` }]}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[styles.shareBtnText, { color: colors.primary }]}>{APP_EMOJIS.share} Share</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </>
+          ) : null}
         </View>
 
-        {isCommunityAdmin ? (
-          <TouchableOpacity
-            onPress={() => router.push('/admin/approvals')}
-            style={[styles.adminCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
-            activeOpacity={0.82}
-          >
-            <View style={[styles.adminIconWrap, { backgroundColor: `${colors.primary}12` }]}>
-              <Text style={styles.adminIcon}>{APP_EMOJIS.admin}</Text>
+        <TouchableOpacity
+          onPress={() => router.push('/services/index' as any)}
+          style={[styles.adminCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          activeOpacity={0.82}
+        >
+          <View style={[styles.adminIconWrap, { backgroundColor: `${colors.primary}12` }]}>
+            <Text style={styles.adminIcon}>🔧</Text>
+          </View>
+          <View style={styles.adminContent}>
+            <Text style={[styles.adminTitle, { color: colors.text }]}>My Service Reminders</Text>
+            {dueSoonCount > 0 ? (
+              <Text style={[styles.adminCopy, { color: '#B45309' }]}>{dueSoonCount} due this week</Text>
+            ) : (
+              <Text style={[styles.adminCopy, { color: colors.textMuted }]}>Track appliances & maintenance</Text>
+            )}
+          </View>
+          {dueSoonCount > 0 ? (
+            <View style={[styles.pendingBadge, { backgroundColor: '#F59E0B' }]}>
+              <Text style={styles.pendingBadgeText}>{dueSoonCount}</Text>
             </View>
-            <View style={styles.adminContent}>
-              <Text style={[styles.adminTitle, { color: colors.text }]}>Member approvals</Text>
-              <Text style={[styles.adminCopy, { color: colors.textMuted }]}>{pendingCount > 0 ? `${pendingCount} requests waiting for review` : 'No pending requests right now'}</Text>
-            </View>
-            {pendingCount > 0 ? (
-              <View style={[styles.pendingBadge, { backgroundColor: colors.primary }]}>
-                <Text style={styles.pendingBadgeText}>{pendingCount}</Text>
-              </View>
-            ) : null}
+          ) : (
             <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
-          </TouchableOpacity>
-        ) : null}
+          )}
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.push({ pathname: '/residents', params: { returnTo: 'profile' } } as any)}
@@ -163,7 +177,7 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.adminContent}>
             <Text style={[styles.adminTitle, { color: colors.text }]}>Community directory</Text>
-            <Text style={[styles.adminCopy, { color: colors.textMuted }]}>Browse approved residents in your community</Text>
+            <Text style={[styles.adminCopy, { color: colors.textMuted }]}>Browse residents in your community</Text>
           </View>
           <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
         </TouchableOpacity>
@@ -303,11 +317,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 12,
   },
-  codeValue: {
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 2,
-  },
   divider: {
     height: 1,
     marginVertical: 16,
@@ -389,6 +398,25 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     fontSize: 16,
+    fontWeight: '700',
+  },
+  codeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  codeValue: {
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 3,
+  },
+  shareBtn: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  shareBtnText: {
+    fontSize: 13,
     fontWeight: '700',
   },
   version: {

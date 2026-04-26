@@ -27,9 +27,9 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 
 ### Layers
 
-- **Screens** (`app/`): expo-router file-based routing. 5 bottom tabs in `app/(tabs)/`, feature screens under `app/business/`, `app/visits/`, `app/funds/`, `app/provider/`.
-- **Components** (`components/`): Reusable UI — `ProviderCard`, `VisitCard`, `BusinessCard`, `FundCard`, `EmptyState`, `SearchBar`, `CategoryFilter`, etc.
-- **State** (`context/`): Two React Context providers — `AuthContext` (session, profile, communityId, appRole) and `NotificationContext` (real-time via Supabase Realtime).
+- **Screens** (`app/`): expo-router file-based routing. 4 bottom tabs in `app/(tabs)/`, feature screens under `app/visits/`, `app/funds/`, `app/provider/`.
+- **Components** (`components/`): Reusable UI — `ProviderCard`, `VisitCard`, `FundCard`, `EmptyState`, `SearchBar`, `CategoryFilter`, etc.
+- **State** (`context/`): Two React Context providers — `AuthContext` (session, profile, communityId, appRole, isCommunityLead, isPlatformAdmin) and `NotificationContext` (real-time via Supabase Realtime).
 - **Backend** (`lib/`): Supabase client (`supabase.ts`), auth helpers (`auth.ts`), auto-generated DB types (`database.types.ts`), fund role logic (`fundRoles.ts`), error utilities (`supabaseErrors.ts`).
 - **Migrations** (`supabase/migrations/`): SQL migration files applied via `npm run db:push`.
 
@@ -37,17 +37,22 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 
 Every user belongs to a community. **All data queries must filter by `communityId`** from `useAuth()`. Supabase RLS policies enforce community-level isolation.
 
+> **Exception — User-Scoped Data**: The `user_services` table (Personal Service Reminders feature) is **not** community-scoped. Its RLS uses `auth.uid() = user_id`. Queries do NOT pass `communityId`. This is the only table with this pattern.
+
 ### Auth Flow
 
 1. Root layout (`app/_layout.tsx`) initializes Google Sign-In and wraps app in `AuthProvider` + `NotificationProvider`
 2. `AuthContext` watches `supabase.auth.onAuthStateChange`, auto-fetches profile
-3. Redirect logic: no session → `/login`, no community → `/community-select`, else → `/(tabs)`
+3. Redirect logic: no session → `/login`; platform admin → `/platform/approvals`; no community + active request → `/community-request-submitted`; no community + no request → `/community-select`; community present → `/(tabs)`
 4. Auth methods: Google OAuth (requires dev build, not Expo Go) and email/password
 5. Session persisted via AsyncStorage adapter (not SecureStore, due to Android 2KB limit)
 
 ### Role System
 
-- **App-level** (`profiles.app_role`): `admin` or `resident`
+- **App-level** (`profiles.app_role`): `admin` (platform admin), `community_lead`, or `resident`
+  - `community_lead` is auto-assigned when a community request is approved — never promoted through a workflow
+  - `isPlatformAdmin` = `app_role === 'admin' && !communityId`
+  - `isCommunityLead` = `app_role === 'community_lead' && !!communityId`
 - **Fund-level** (`fund_roles.role`): `treasurer` (manage fund, log expenses), `collector` (log contributions), `resident` (view only). Permissions checked via `lib/fundRoles.ts` — use `getEffectiveFundRole()` and `getFundPermissions()`.
 
 ## Key Conventions
@@ -62,11 +67,14 @@ Every user belongs to a community. **All data queries must filter by `communityI
 
 ## Database
 
-14 tables — key ones: `communities`, `profiles`, `service_providers`, `service_visits`, `visit_joiners`, `resident_businesses`, `business_offerings`, `events` (funds), `event_transactions`, `fund_roles`, `notifications`, `favorites`, `ratings`, `provider_hires`.
+15 tables — key ones: `communities` (with `code` for join), `profiles`, `service_providers`, `service_visits`, `visit_joiners`, `events` (funds), `event_transactions`, `fund_roles`, `notifications`, `favorites`, `ratings`, `provider_hires`, `community_requests`, `profile_audit_log`, `user_services` (user-scoped, no community filter).
 
-Storage bucket: `business-photos` (public).
+Storage bucket: `community-uploads` (public).
 
-DB functions: `handle_new_user()` (auto-creates profile on signup), `get_community_insights()` and `get_community_visits()` RPCs for aggregations.
+DB functions: `handle_new_user()` (auto-creates profile on signup), `join_community_by_code(p_code)` (instant join by 6-char code), `get_community_visits()` and `get_visit_joiners()` RPCs for aggregations, `get_my_upcoming_services()`, `get_my_due_soon_count()`, `mark_service_done(p_service_id)`, `notify_due_services()` (service reminder RPCs).
+
+Edge Function `supabase/functions/check_due_services/index.ts` calls `notify_due_services()` daily. **Must be scheduled in the Supabase Dashboard** under Edge Functions → Schedules, cron expression `30 3 * * *` (3:30 UTC = 9 AM IST).
+- **Service categories**: `lib/serviceCategories.ts` is the single source of truth for service category labels, emoji, and default frequencies. Import from there, not hardcoded strings.
 
 ## Intentionally Disabled Features
 

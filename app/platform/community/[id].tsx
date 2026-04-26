@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -6,6 +5,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../../constants/Colors';
+import { APP_EMOJIS } from '../../../constants/emojis';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
 
@@ -26,7 +26,7 @@ type Resident = {
   flat_number: string | null;
   phone_number: string | null;
   app_role: string;
-  approval_status: string;
+  removed_at: string | null;
   created_at: string | null;
   community_id: string | null;
 };
@@ -45,10 +45,9 @@ export default function PlatformCommunityDetailScreen() {
   const [processingRemove, setProcessingRemove] = useState(false);
 
   const counts = useMemo(() => {
-    const approved = residents.filter((row) => row.approval_status === 'approved').length;
-    const pending = residents.filter((row) => row.approval_status === 'pending').length;
-    const admins = residents.filter((row) => row.app_role === 'community_admin' && row.approval_status === 'approved').length;
-    return { approved, pending, admins };
+    const active = residents.filter((row) => !row.removed_at).length;
+    const leads = residents.filter((row) => row.app_role === 'community_lead' && !row.removed_at).length;
+    return { active, leads };
   }, [residents]);
 
   const loadData = useCallback(async (showRefreshing = false) => {
@@ -70,7 +69,7 @@ export default function PlatformCommunityDetailScreen() {
           .maybeSingle(),
         supabase
           .from('profiles')
-          .select('id, full_name, flat_number, phone_number, app_role, approval_status, created_at, community_id')
+          .select('id, full_name, flat_number, phone_number, app_role, removed_at, created_at, community_id')
           .eq('community_id', id)
           .order('created_at', { ascending: false }),
       ]);
@@ -97,9 +96,9 @@ export default function PlatformCommunityDetailScreen() {
   const removeResident = async () => {
     if (!selectedResident) return;
 
-    const adminCount = residents.filter((row) => row.app_role === 'community_admin' && row.approval_status === 'approved').length;
-    if (selectedResident.app_role === 'community_admin' && adminCount <= 1) {
-      Toast.show({ type: 'error', text1: 'Cannot remove only community admin' });
+    const leadCount = residents.filter((row) => row.app_role === 'community_lead' && !row.removed_at).length;
+    if (selectedResident.app_role === 'community_lead' && leadCount <= 1) {
+      Toast.show({ type: 'error', text1: 'Cannot remove the only community lead' });
       return;
     }
 
@@ -132,11 +131,11 @@ export default function PlatformCommunityDetailScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}> 
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient colors={[`${colors.primary}14`, `${colors.gradientEnd}10`, 'transparent']} style={styles.gradientOverlay} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-          <Ionicons name="chevron-back" size={20} color={colors.primary} />
+          <Text style={[styles.backIcon, { color: colors.primary }]}>{APP_EMOJIS.back}</Text>
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>Community detail</Text>
       </View>
@@ -146,15 +145,18 @@ export default function PlatformCommunityDetailScreen() {
       ) : (
         <>
           {community ? (
-            <View style={[styles.communityCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}> 
+            <View style={[styles.communityCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
               <Text style={[styles.communityName, { color: colors.text }]}>{community.name}</Text>
-              <Text style={[styles.meta, { color: colors.textMuted }]}>{community.community_type || 'Type unavailable'} • {community.city || 'City unavailable'}</Text>
-              <Text style={[styles.meta, { color: colors.textMuted }]}>Pincode: {community.pincode || 'N/A'} • Area: {community.area || 'N/A'}</Text>
-              <Text style={[styles.meta, { color: colors.textMuted }]}>Invite code: {community.code}</Text>
+              <Text style={[styles.meta, { color: colors.textMuted }]}>
+                {community.community_type || 'Type unavailable'} • {community.city || 'City unavailable'}
+              </Text>
+              <Text style={[styles.meta, { color: colors.textMuted }]}>
+                Pincode: {community.pincode || 'N/A'} • Area: {community.area || 'N/A'}
+              </Text>
+              <Text style={[styles.meta, { color: colors.textMuted }]}>Join code: {community.code}</Text>
               <View style={styles.countRow}>
-                <Text style={[styles.count, { color: colors.textMuted }]}>Approved: {counts.approved}</Text>
-                <Text style={[styles.count, { color: colors.textMuted }]}>Pending: {counts.pending}</Text>
-                <Text style={[styles.count, { color: colors.textMuted }]}>Admins: {counts.admins}</Text>
+                <Text style={[styles.count, { color: colors.textMuted }]}>Members: {counts.active}</Text>
+                <Text style={[styles.count, { color: colors.textMuted }]}>Leads: {counts.leads}</Text>
               </View>
             </View>
           ) : null}
@@ -167,16 +169,27 @@ export default function PlatformCommunityDetailScreen() {
             ListEmptyComponent={<Text style={[styles.emptyText, { color: colors.textMuted }]}>No residents found.</Text>}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={[styles.row, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
-                onPress={() => setSelectedResident(item)}
-                activeOpacity={0.82}
+                style={[
+                  styles.row,
+                  { backgroundColor: colors.glass, borderColor: colors.glassBorder },
+                  item.removed_at ? styles.rowRemoved : null,
+                ]}
+                onPress={() => !item.removed_at && setSelectedResident(item)}
+                activeOpacity={item.removed_at ? 1 : 0.82}
               >
                 <View style={styles.rowText}>
-                  <Text style={[styles.rowName, { color: colors.text }]}>{item.full_name || 'Resident'}</Text>
-                  <Text style={[styles.rowMeta, { color: colors.textMuted }]}>Flat: {item.flat_number || 'N/A'} • {item.phone_number || 'No phone'}</Text>
+                  <Text style={[styles.rowName, { color: item.removed_at ? colors.textMuted : colors.text }]}>
+                    {item.full_name || 'Resident'}
+                    {item.removed_at ? ' (removed)' : ''}
+                  </Text>
+                  <Text style={[styles.rowMeta, { color: colors.textMuted }]}>
+                    Flat: {item.flat_number || 'N/A'} • {item.phone_number || 'No phone'}
+                  </Text>
                 </View>
-                <View style={[styles.badge, { backgroundColor: item.app_role === 'community_admin' ? `${colors.primary}18` : colors.surface2 }]}>
-                  <Text style={[styles.badgeText, { color: item.app_role === 'community_admin' ? colors.primary : colors.textMuted }]}>{item.app_role}</Text>
+                <View style={[styles.badge, { backgroundColor: item.app_role === 'community_lead' ? `${colors.primary}18` : colors.surface2 }]}>
+                  <Text style={[styles.badgeText, { color: item.app_role === 'community_lead' ? colors.primary : colors.textMuted }]}>
+                    {item.app_role === 'community_lead' ? 'Lead' : item.app_role}
+                  </Text>
                 </View>
               </TouchableOpacity>
             )}
@@ -186,12 +199,13 @@ export default function PlatformCommunityDetailScreen() {
 
       <Modal visible={!!selectedResident} transparent animationType="slide" onRequestClose={() => setSelectedResident(null)}>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}> 
+          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>{selectedResident?.full_name || 'Resident'}</Text>
             <Text style={[styles.modalMeta, { color: colors.textMuted }]}>Flat: {selectedResident?.flat_number || 'N/A'}</Text>
             <Text style={[styles.modalMeta, { color: colors.textMuted }]}>Phone: {selectedResident?.phone_number || 'N/A'}</Text>
-            <Text style={[styles.modalMeta, { color: colors.textMuted }]}>Role: {selectedResident?.app_role}</Text>
-            <Text style={[styles.modalMeta, { color: colors.textMuted }]}>Status: {selectedResident?.approval_status}</Text>
+            <Text style={[styles.modalMeta, { color: colors.textMuted }]}>
+              Role: {selectedResident?.app_role === 'community_lead' ? 'Community Lead' : selectedResident?.app_role}
+            </Text>
 
             <View style={styles.modalActions}>
               <TouchableOpacity style={[styles.modalSecondary, { borderColor: colors.border }]} onPress={() => setSelectedResident(null)}>
@@ -200,7 +214,7 @@ export default function PlatformCommunityDetailScreen() {
               <TouchableOpacity
                 style={[styles.modalDanger, { backgroundColor: colors.accent }]}
                 onPress={removeResident}
-                disabled={processingRemove || selectedResident?.approval_status !== 'approved'}
+                disabled={processingRemove}
               >
                 {processingRemove ? <ActivityIndicator color="#FFF" /> : <Text style={styles.modalDangerText}>Remove from community</Text>}
               </TouchableOpacity>
@@ -217,6 +231,7 @@ const styles = StyleSheet.create({
   gradientOverlay: { position: 'absolute', top: 0, left: 0, right: 0, height: 240 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
   backButton: { width: 40, height: 40, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  backIcon: { fontSize: 18, lineHeight: 20 },
   title: { fontSize: 24, fontWeight: '800' },
   loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   communityCard: { borderWidth: 1, borderRadius: 22, padding: 16, marginBottom: 14 },
@@ -226,6 +241,7 @@ const styles = StyleSheet.create({
   count: { fontSize: 12, fontWeight: '700' },
   listContent: { paddingBottom: 32, gap: 10 },
   row: { borderWidth: 1, borderRadius: 18, padding: 14, flexDirection: 'row', gap: 8, alignItems: 'center' },
+  rowRemoved: { opacity: 0.5 },
   rowText: { flex: 1 },
   rowName: { fontSize: 15, fontWeight: '700' },
   rowMeta: { fontSize: 12, marginTop: 3 },

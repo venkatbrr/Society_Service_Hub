@@ -11,7 +11,6 @@
 - **Discover & share trusted service providers** (plumbers, electricians, maids, etc.)
 - **Coordinate group service visits** to split costs and logistics
 - **Manage community funds** with transparent ledger tracking
-- **Browse resident-run home businesses** (marketplace — currently disabled)
 - **Receive real-time notifications** when neighbors schedule service visits
 
 The app is built for **iOS, Android, and Web** using a single codebase.
@@ -28,7 +27,7 @@ The app is built for **iOS, Android, and Web** using a single codebase.
 | **Backend** | Supabase | PostgreSQL, Auth, Realtime, Storage, Edge Functions |
 | **Auth** | Supabase Auth | Google OAuth + Email/Password + Password Reset |
 | **State** | React Context | `AuthContext` + `NotificationContext` |
-| **UI** | Vanilla React Native + custom styling | Glassmorphism theme, Ionicons only |
+| **UI** | Vanilla React Native + custom styling | Glassmorphism theme, emoji/text icons (no vector icon library) |
 | **Notifications** | Supabase Realtime + expo-notifications | In-app + native push |
 | **Build** | EAS Build | Android package: `com.gatebond.app` |
 
@@ -56,63 +55,47 @@ Society_Service_Hub/
 │   ├── _layout.tsx               # Root layout: AuthProvider, NotificationProvider, redirect logic
 │   ├── login.tsx                 # Email/password + Google Sign-In (dual mode: sign in / sign up)
 │   ├── forgot-password.tsx       # Password reset flow
-│   ├── community-select.tsx      # Find a community by pincode and request to join
-│   ├── community-request.tsx     # Submit a new community review request
-│   ├── community-request-submitted.tsx # Holding screen for pending community requests
+│   ├── community-select.tsx      # Join by 6-char code or request a new community
+│   ├── community-request.tsx     # Submit a new community creation request
+│   ├── community-request-submitted.tsx # Status screen: pending / approved (shows join code) / rejected
 │   ├── notifications.tsx         # Notification list screen
-│   ├── residents.tsx             # Community residents directory + promotion requests
-│   ├── pending.tsx               # Holding screen for join approval
-│   ├── rejected.tsx              # Rejected join request state
+│   ├── residents.tsx             # Community residents directory; community lead can remove residents
 │   ├── platform/                 # Platform admin console
-│   │   ├── _layout.tsx           # Platform tab shell
+│   │   ├── _layout.tsx           # Platform tab shell (approvals + communities)
 │   │   ├── approvals.tsx         # Community request approvals
-│   │   ├── promotions.tsx        # Community-admin promotion approvals
 │   │   ├── communities.tsx       # Community directory
 │   │   └── community/[id].tsx    # Community detail + resident removal
-│   ├── (tabs)/                   # Bottom tab navigator (5 tabs)
+│   ├── (tabs)/                   # Bottom tab navigator (4 tabs)
 │   │   ├── _layout.tsx           # Tab bar configuration
 │   │   ├── index.tsx             # Tab 1: Help — Services dashboard
-│   │   ├── business.tsx          # Tab 2: Market — Resident marketplace (⚠️ HIDDEN)
-│   │   ├── favorites.tsx         # Tab 3: Saved — Favorited providers
-│   │   ├── funds.tsx             # Tab 4: Funds — Community fund management
-│   │   └── profile.tsx           # Tab 5: Profile — User settings & info
+│   │   ├── favorites.tsx         # Tab 2: Saved — Favorited providers
+│   │   ├── funds.tsx             # Tab 3: Funds — Community fund management
+│   │   └── profile.tsx           # Tab 4: Profile — User settings, community code (leads)
 │   ├── provider/                 # Service provider screens
 │   │   ├── add.tsx               # Register new provider
 │   │   └── [id].tsx              # Provider detail (ratings, contact, share)
 │   ├── visits/                   # Service visit screens
 │   │   ├── add.tsx               # Schedule a group visit
 │   │   └── [id].tsx              # Visit detail (joiners, status management)
-│   ├── funds/                    # Fund management screens
-│   │   ├── add.tsx               # Create fund + assign treasurers (admin only)
-│   │   ├── [id].tsx              # Fund ledger, roles, transactions
-│   │   └── add-transaction.tsx   # Log contribution or expense
-│   ├── admin/
-│   │   └── approvals.tsx         # Admin-only queue for pending join approvals
-│   └── business/                 # Resident business screens (disabled in UI)
-│       ├── add.tsx               # Create business listing
-│       ├── manage.tsx            # Owner dashboard
-│       ├── [id].tsx              # Public business storefront
-│       ├── add-offering.tsx      # Add product/service to catalog
-│       └── catalog/[id].tsx      # Full catalog view
+│   └── funds/                    # Fund management screens
+│       ├── add.tsx               # Create fund + assign treasurers (community lead only)
+│       ├── [id].tsx              # Fund ledger, roles, transactions
+│       └── add-transaction.tsx   # Log contribution or expense
 ├── components/                   # Reusable UI components
 │   ├── ProviderCard.tsx          # Service provider list card
 │   ├── VisitCard.tsx             # Visit coordination card
-│   ├── BusinessCard.tsx          # Business marketplace card
 │   ├── FundCard.tsx              # Fund overview card
 │   ├── ActiveFundTeaser.tsx      # Home screen fund widget
-│   ├── CommunityInsights.tsx     # Analytics widget
 │   ├── SearchBar.tsx             # Universal search input
 │   ├── CategoryFilter.tsx        # Horizontal category pills
 │   ├── EmptyState.tsx            # Empty list placeholder
 │   ├── ProviderSelector.tsx      # Provider search/select for visits
 │   ├── JoinerListItem.tsx        # Visit joiner row
 │   ├── TransactionItem.tsx       # Fund transaction row
-│   ├── OfferingCard.tsx          # Business offering card
 │   ├── RatingStars.tsx           # Star rating display
-│   ├── VisitStatusBadge.tsx      # Visit status pill
-│   └── BusinessStatusBadge.tsx   # Business open/closed badge
+│   └── VisitStatusBadge.tsx      # Visit status pill
 ├── context/                      # React Context providers
-│   ├── AuthContext.tsx            # Session, user, profile, appRole, approvalStatus, communityId, activeCommunityRequest, isPlatformAdmin, isCommunityAdmin
+│   ├── AuthContext.tsx            # Session, user, profile, appRole, communityId, isCommunityLead, isPlatformAdmin, activeCommunityRequest
 │   └── NotificationContext.tsx   # Real-time notifications via Supabase Realtime
 ├── lib/                          # Backend utilities
 │   ├── supabase.ts               # Supabase client (AsyncStorage adapter)
@@ -124,7 +107,7 @@ Society_Service_Hub/
 │   ├── Colors.ts                 # Theme colors & glassmorphism tokens
 │   └── categories.ts             # Service provider categories
 ├── supabase/
-│   └── migrations/               # 16 SQL migration files
+│   └── migrations/               # 19 SQL migration files
 ├── assets/                       # Images, icons, splash screens
 ├── app.json                      # Expo configuration
 ├── package.json                  # Dependencies & scripts
@@ -146,11 +129,11 @@ The app is **community-scoped**. Every data table is filtered by `community_id`.
 ### Community Lifecycle
 
 1. User signs up (email/password or Google)
-2. Database trigger `handle_new_user()` auto-creates a `profiles` row with resident role and pending approval
-3. User either requests to join an existing community or submits a reviewed new-community request
-4. Join requests write `profiles.community_id`, onboarding details, and keep the user in a pending state until approved
-5. Only `approval_status = 'approved'` members can read community-scoped data
-6. Supabase RLS policies enforce both community isolation and approval gating server-side
+2. Database trigger `handle_new_user()` auto-creates a `profiles` row with `resident` role
+3. User either joins an existing community instantly via 6-character code, or submits a new-community request for platform review
+4. Code join calls `join_community_by_code()` — sets `profiles.community_id` immediately, no approval needed
+5. On joining, Supabase RLS grants access to all community-scoped data
+6. Community requests that are approved auto-set the requester as `community_lead` and generate a join code
 
 ### Community ID Resolution (Priority Order)
 
@@ -181,11 +164,10 @@ The app is **community-scoped**. Every data table is filtered by `community_id`.
 
 ```
 No session                                      → /login
-Session, no community, no active request        → /community-select
+Session, platform admin                         → /platform/approvals
 Session, no community, active request           → /community-request-submitted
-Session, community, approval_status = pending   → /pending
-Session, community, approval_status = rejected  → /rejected
-Session, community, approval_status = approved  → /(tabs)
+Session, no community, no request               → /community-select
+Session, community                              → /(tabs)
 ```
 
 ### Intentionally Disabled
@@ -197,15 +179,23 @@ Session, community, approval_status = approved  → /(tabs)
 
 ## 6. Role System
 
-### App-Level Roles (`profiles.app_role`)
+### App-Level Roles (`profiles.app_role` — typed as `app_role_type` ENUM)
 
 | Role | Capabilities |
 |------|-------------|
-| `admin` | Platform-level control: approve/reject new community requests, approve/reject promotion requests, inspect communities, soft-remove residents |
-| `community_admin` | Community-level control: approve resident join requests, create funds, request resident promotions |
+| `admin` | **Platform admin**: approve/reject community creation requests, inspect all communities, soft-remove residents from any community. Identified by `app_role = 'admin'` **and** `community_id IS NULL`. |
+| `community_lead` | **Community lead**: create funds, remove residents from their community, view community join code, see resident phone numbers. Auto-assigned when a community request is approved — never promoted through a workflow. Identified by `app_role = 'community_lead'` and `community_id IS NOT NULL` and `removed_at IS NULL`. |
 | `resident` | Browse providers, create visits, join visits, rate/favorite, view funds |
 
-> Community membership is approval-gated. Community admins approve residents for their own community from the in-app approval queue.
+> Community membership requires no approval — residents join instantly via the community's 6-character join code.
+
+### Helper Functions for Role Checks
+
+| Function | What it checks |
+|----------|---------------|
+| `is_platform_admin(user_id)` | `app_role = 'admin'` AND `community_id IS NULL` |
+| `is_community_lead(user_id)` | `app_role = 'community_lead'` AND `community_id IS NOT NULL` AND `removed_at IS NULL` |
+| `is_admin(user_id)` | Alias for `is_community_lead()` — kept for backward-compatible RLS policies |
 
 ### Fund-Level Roles (`fund_roles.role`)
 
@@ -217,12 +207,12 @@ Per-fund assignments stored in the `fund_roles` table:
 | `collector` | Log contributions only (max 6 per fund) |
 | `resident` | View-only |
 
-Role resolution: `community_admin` > assigned fund role > `resident`.
+Role resolution: `community_lead` > assigned fund role > `resident`.
 
 ### Permission Matrix
 
-| Action | Resident | Admin | Treasurer | Collector |
-|--------|----------|-------|-----------|-----------|
+| Action | Resident | Community Lead | Treasurer | Collector |
+|--------|----------|----------------|-----------|-----------|
 | View/search providers | ✅ | ✅ | — | — |
 | Add provider | ✅ | ✅ | — | — |
 | Rate/favorite | ✅ | ✅ | — | — |
@@ -241,28 +231,34 @@ Role resolution: `community_admin` > assigned fund role > `resident`.
 
 ## 7. Database Schema
 
-**15 tables** across 5 domains, all with Row Level Security (RLS) enabled.
+**14 tables** across 5 domains, all with Row Level Security (RLS) enabled.
 
 ### Foundation
 
 | Table | Purpose |
 |-------|---------|
-| `communities` | Society groups with unique invite `code` |
-| `profiles` | User profiles (extends `auth.users`), stores `app_role`, `approval_status`, `community_id`, `full_name`, `flat_number`, and onboarding request details |
+| `communities` | Society groups with unique 6-char `code` for instant joining |
+| `profiles` | User profiles (extends `auth.users`), stores `app_role`, `community_id`, `full_name`, `flat_number`, `email`, `phone_number`, `removed_at` |
 
 ### Onboarding Requests
 
 | Table | Purpose |
 |-------|---------|
-| `community_requests` | Review queue for new community requests awaiting platform approval |
+| `community_requests` | Review queue for new community creation requests. Statuses: `pending`, `needs_info`, `approved`, `rejected`. Stores `rejection_reason`, `resulting_community_id`, requester flat number and address. |
+
+### Audit
+
+| Table | Purpose |
+|-------|---------|
+| `profile_audit_log` | Immutable audit trail of `app_role` and `community_id` changes on `profiles`. Fields: `profile_id`, `actor_id`, `field`, `old_value`, `new_value`, `reason`. |
 
 ### Service Providers
 
 | Table | Purpose |
 |-------|---------|
 | `service_providers` | Trusted provider listings (name, phone, category, avg_rating) |
-| `favorites` | Bookmarks (dual-target: `provider_id` XOR `business_id`) |
-| `ratings` | 1–5 star reviews (dual-target: `provider_id` XOR `business_id`) |
+| `favorites` | Provider bookmarks (`provider_id` only) |
+| `ratings` | 1–5 star reviews (`provider_id` only) |
 | `provider_hires` | Contact interaction counter |
 
 ### Service Visits
@@ -271,14 +267,6 @@ Role resolution: `community_admin` > assigned fund role > `resident`.
 |-------|---------|
 | `service_visits` | Scheduled group visits (status: upcoming → in_progress → completed/cancelled) |
 | `visit_joiners` | RSVPs with optional flat_number and note |
-
-### Marketplace (Disabled in UI)
-
-| Table | Purpose |
-|-------|---------|
-| `resident_businesses` | Home business listings (1 per owner per community) |
-| `business_offerings` | Product/service catalog items |
-| `business_inquiries` | WhatsApp/call interaction logs |
 
 ### Fund Management
 
@@ -298,22 +286,39 @@ Role resolution: `community_admin` > assigned fund role > `resident`.
 
 | Function | Purpose |
 |----------|---------|
-| `handle_new_user()` | Trigger: auto-creates profile on signup with resident role and pending approval |
+| `handle_new_user()` | Trigger: auto-creates profile on signup with `resident` role |
 | `get_user_community_id()` | Extracts community_id from JWT metadata |
-| `is_admin(user_id)` | Checks admin role |
+| `is_platform_admin(user_id)` | Checks `app_role = 'admin'` AND `community_id IS NULL` |
+| `is_community_lead(user_id)` | Checks `app_role = 'community_lead'` AND `community_id IS NOT NULL` AND `removed_at IS NULL` |
+| `is_admin(user_id)` | Alias for `is_community_lead()` — kept for backward-compatible RLS policies |
+| `is_user_approved(user_id)` | Checks `community_id IS NOT NULL AND removed_at IS NULL` |
+| `generate_community_code()` | Generates a random unique 6-char uppercase alphanumeric code |
+| `set_audit_actor(actor_id)` | Sets `app.audit_actor_id` session config for audit trail |
+| `set_audit_context(actor_id, reason)` | Sets both actor and reason for audit trail |
 | `get_fund_role(event_id, user_id)` | Resolves effective fund role |
-| `get_community_insights(community_id)` | RPC: analytics (most hired category, spending, contributions) |
-| `get_community_businesses(community_id)` | RPC: businesses with aggregated ratings |
-| `get_community_visits(p_community_id, p_user_id, p_status, p_time_scope)` | RPC: visits with creator info + joiner counts. `p_status` supports comma-separated values (e.g. `'upcoming,cancelled'`). `p_time_scope`: `'upcoming'` (visit_date ≥ today) or `'past'` (visit_date < today). Both default to `'upcoming'`. |
+| `join_community_by_code(p_code)` | RPC: resident joins a community by 6-char code instantly |
+| `submit_community_request(...)` | RPC: creates a `community_requests` row for platform review |
+| `community_lead_remove_resident(target_profile_id)` | RPC: community lead removes a non-lead resident |
+| `platform_approve_community_request(request_id)` | Platform admin creates community + sets requester as `community_lead` + generates join code |
+| `platform_reject_community_request(request_id, reason)` | Platform admin rejects a community creation request |
+| `platform_soft_remove_resident(target_profile_id, reason)` | Platform admin removes a resident from their community |
+| `get_community_visits(p_community_id, p_user_id, p_status, p_time_scope)` | RPC: visits with creator info + joiner counts |
 | `get_visit_joiners(visit_id)` | RPC: joiner details with profiles |
+| `get_residents_directory(include_phone)` | RPC: active residents in caller's community. Phone visible to community leads and platform admins. |
 | `auto_complete_past_visits()` | Marks past visits as completed |
+
+### Key Database Triggers
+
+| Trigger | Function | Event |
+|---------|----------|-------|
+| `on_auth_user_created` | `handle_new_user()` | AFTER INSERT on `auth.users` |
+| `profile_audit_log_on_profiles` | `profile_audit_log_trigger()` | AFTER UPDATE on `profiles` when `app_role` or `community_id` changes |
+| `enforce_profile_role_change_permissions_on_profiles` | `enforce_profile_role_change_permissions()` | BEFORE UPDATE on `profiles` — blocks non-platform-admins from changing `app_role` via API |
 
 ### Storage
 
-- **Bucket**: `business-photos` (public) — business cover photos, offering images
-- **Upload flow**: `expo-image-picker` → base64 → Supabase Storage upload
-- **Provider images**: Icon placeholders (no uploads)
-- **Profile avatars**: Google avatar URL from auth metadata
+- **Bucket**: `community-uploads` (public) — community-related file uploads
+- **Profile avatars**: Google avatar URL from auth metadata (no upload flow)
 
 ---
 
@@ -328,42 +333,76 @@ The main screen with two segments:
   - **Upcoming Visits** — visits with `visit_date ≥ today`, statuses: `upcoming` + `cancelled`. Cancelled visits remain here until their planned date passes.
   - **Past Visits** — visits with `visit_date < today`, all statuses. Collapsible section, hidden by default.
   - Schedule new visits linked to providers. Join existing visits to split costs.
-- **Widgets**: Community Insights (analytics), Active Fund Teaser (ongoing collections), Notification bell with badge.
+- **Widgets**: Active Fund Teaser (ongoing collections), Notification bell with badge.
 
-### 8.2 Resident Marketplace (Tab 2: Market) — ⚠️ DISABLED
+### 8.2 Resident Marketplace — ⚠️ REMOVED
 
-Hidden from UI but fully implemented. Allows residents to list, browse, and contact home businesses. Features catalog management, ratings, and inquiry logging.
+All marketplace tables (`resident_businesses`, `business_offerings`, `business_inquiries`), screens, and components have been permanently deleted. The `business_id` columns have been removed from `favorites` and `ratings`.
 
-### 8.3 Favorites (Tab 3: Saved)
+### 8.3 Favorites (Tab 2: Saved)
 
 Personal bookmarks of favorited service providers. Toggle on/off with optimistic UI updates.
 
-### 8.4 Fund Management (Tab 4: Funds)
+### 8.4 Fund Management (Tab 3: Funds)
 
-- Admin creates funds with 1–2 assigned treasurers
+- Community leads create funds with 1–2 assigned treasurers
 - Transparent ledger: contributions (income) and expenses tracked per-resident
-- Role-gated actions: admin > treasurer > collector > resident (view-only)
-- Double-enforced permissions: client-side via `getFundPermissions()` + database-side via RLS + triggers
+- Role-gated actions: community_lead > treasurer > collector > resident (view-only)
+- Double-enforced permissions: client-side via `getFundPermissions()` + database-side via RLS
 
-### 8.5 Profile (Tab 5)
+### 8.5 Profile (Tab 4)
 
-User info, app role badge, community details (name/location/type), admin-only member approvals entry point with pending count badge, sign-out.
+User info, app role badge, community details (name/location/type). Community leads see their 6-char join code with a Share button. All members can open the residents directory. Sign-out.
 
-### 8.6 Onboarding Approval
+### 8.6 Onboarding
 
-- Community discovery is pincode-scoped, then filtered client-side by name
-- Joining an existing community writes onboarding details to `profiles` and sets `approval_status = 'pending'`
-- Requesting a new community creates a `community_requests` row and routes the user to a request-received holding screen
-- Pending and rejected users are blocked from community-scoped providers, visits, funds, favorites, ratings, and notifications until approval
-- Admins review pending members from `app/admin/approvals.tsx` and approve or reject requests in-app
+- **Join by code**: Enter the community's 6-character join code → `join_community_by_code()` RPC → immediate `community_id` set → redirected to `/(tabs)`. No approval needed.
+- **Request new community**: Fill in community details → `submit_community_request()` RPC → routed to request-status holding screen.
+- **Request status screen**: Shows pending/approved/rejected state. When approved: displays join code with Share + WhatsApp buttons, "Enter my community" refreshes session. When rejected: shows reason + "Request again" option.
 
-### 8.7 Notifications
+### 8.7 Platform Admin Console (`app/platform/`)
+
+A dedicated tab shell accessible only to `app_role = 'admin'` users with `community_id = null`. Screens:
+
+| Screen | Purpose |
+|--------|---------|
+| `app/platform/approvals.tsx` | Review and approve/reject new community creation requests. Approval creates community, generates 6-char join code, sets requester as `community_lead`. Calls `platform_approve_community_request()` / `platform_reject_community_request()`. |
+| `app/platform/communities.tsx` | List all communities with member/lead counts. |
+| `app/platform/community/[id].tsx` | Community detail: resident list, soft-remove a resident via `platform_soft_remove_resident()`. |
+
+### 8.8 Notifications
 
 Real-time via Supabase Realtime channel. Database trigger creates notification rows when visits are scheduled. On mobile, the app requests notification permission, configures Android channel `default`, and triggers local native alerts for new notification rows while active. Bell icon shows unread badge on home screen.
+
+Notification types used across the system:
+
+| Type | Trigger |
+|------|---------|
+| `community_approved` | Platform admin approves a new community request (includes join code in data) |
+| `community_rejected` | Platform admin rejects a new community request |
+| `removed_from_community` | Platform admin or community lead soft-removes a resident |
+| `visit_scheduled` | A new service visit is scheduled in the community |
+| `service_reminder` | Daily cron via `notify_due_services()` — fires when a service is due within 7 days. Data: `{ service_id, service_name, category, next_due_on, days_until_due }`. |
 
 ---
 
 ## 9. Real-Time System
+### 8.9 Personal Service Reminders
+
+User-scoped feature. Each user can track home appliances/services (AC, RO, pest control, etc.) with periodic reminders. Data is private — RLS enforces `auth.uid() = user_id` on all rows.
+
+**New table:** `user_services` — `id`, `user_id`, `community_id` (nullable), `service_name`, `category`, `last_serviced_on`, `frequency_months`, `next_due_on` (auto-computed by trigger), `notes`, `notified_at`.
+
+**New RPCs:** `get_my_upcoming_services()`, `get_my_due_soon_count()`, `mark_service_done(p_service_id)`, `notify_due_services()`.
+
+**Screens:** `app/services/index.tsx` · `app/services/add.tsx` · `app/services/[id].tsx`.
+
+**Cron:** Edge Function `supabase/functions/check_due_services/index.ts` at `30 3 * * *` UTC (9:00 AM IST). Configure schedule in Supabase Dashboard.
+
+**UI entry points:** Home dashboard card (`UpcomingServicesCard`) + Profile tab nav row with due-soon badge.
+
+---
+
 
 ```
 service_visit INSERT
@@ -387,7 +426,7 @@ service_visit INSERT
 | **Theme** | Light mode only |
 | **Style** | Glassmorphism, rounded corners (20-24px), soft indigo shadows |
 | **Gradients** | `expo-linear-gradient` for headers and buttons |
-| **Icons** | `Ionicons` from `@expo/vector-icons` only |
+| **Icons** | Emoji/Text characters via inline `Text` | No vector icon libraries used in app UI |
 | **Typography** | Clean, system fonts |
 | **Feedback** | `react-native-toast-message` for all user-facing messages |
 | **Date inputs** | `@react-native-community/datetimepicker` (never raw TextInput) |
@@ -401,12 +440,12 @@ service_visit INSERT
 | Google Sign-In | Login | `@react-native-google-signin/google-signin` → `signInWithIdToken()` |
 | Supabase Auth | Login, Signup, Reset | Email/password, session persistence via AsyncStorage |
 | Supabase Realtime | Notifications | `postgres_changes` INSERT on `notifications` table |
-| Supabase Storage | Business photos | `business-photos` bucket, public URLs |
+| Supabase Storage | Community uploads | `community-uploads` bucket, public URLs |
 | Expo Notifications | Alerts | Runtime permission + Android channel setup + local native alert on new notification INSERT |
 | Phone Dialer | Provider detail, Visit detail | `Linking.openURL('tel:...')` |
-| WhatsApp | Provider detail, Business detail | `whatsapp://send?phone=` or `https://wa.me/` |
-| Native Share | Provider detail | `Share.share()` with provider contact info |
-| Image Picker | Business add, Offering add | `expo-image-picker` → base64 → Supabase Storage |
+| WhatsApp | Provider detail | `whatsapp://send?phone=` or `https://wa.me/` |
+| Native Share | Provider detail, Community code | `Share.share()` |
+| Image Picker | Provider add | `expo-image-picker` |
 
 ---
 
@@ -429,7 +468,7 @@ service_visit INSERT
 
 ### Layer 1: Global Context
 
-- **AuthContext**: `session`, `user`, `profile`, `communityId`, `appRole`, `isLoading`, `refreshSession`, `signOut`
+- **AuthContext**: `session`, `user`, `profile`, `communityId`, `appRole`, `isPlatformAdmin`, `isCommunityLead`, `activeCommunityRequest`, `isLoading`, `refreshSession`, `signOut`
 - **NotificationContext**: `notifications[]`, `unreadCount`, `loading`, `fetchNotifications`, `markAsRead`, `markAllAsRead`
 
 ### Layer 2: Screen State
@@ -464,13 +503,13 @@ Standard pattern: `try/catch` → `Toast.show()` → `finally { setLoading(false
 
 1. **Multi-tenant**: ALL queries must filter by `communityId` from `useAuth()`
 2. **Single-row queries**: Use `.maybeSingle()` not `.single()`
-3. **Icons**: Only `Ionicons` from `@expo/vector-icons`
+3. **Icons**: Use emoji/text characters in inline `<Text>` elements. Do NOT add vector icon components
 4. **Date inputs**: Always `@react-native-community/datetimepicker`
 5. **Toast**: Use `react-native-toast-message` for user feedback
 6. **Theme**: Light mode only. Use colors from `constants/Colors.ts`
 7. **RLS**: All tables have Row Level Security. Community isolation is enforced server-side
 8. **Types**: Regenerate `database.types.ts` after any schema change
-9. **Docs**: Update `docs/` files when modifying code (architecture.md, features.md, CLAUDE.md, disabled-features.md)
+9. **Docs**: Update `docs/` files when modifying code (architecture.md, features.md, CLAUDE.md)
 10. **Migrations**: Deploy with `npm run db:push` → regenerate types → verify with `npx tsc --noEmit`
 
 ---
@@ -481,13 +520,17 @@ Standard pattern: `try/catch` → `Toast.show()` → `finally { setLoading(false
 |---------|--------|--------|
 | Email verification | Disabled | Faster onboarding during pilot |
 | Password strength validation | Removed | Simplified signup flow |
-| Resident Marketplace (Market tab) | Hidden from UI | Deferred to later release; code fully intact |
+| Resident Marketplace | Permanently removed | Tables, screens, and components deleted |
 
 ### Re-enablement Plan
 
 1. **Email verification**: Re-enable in Supabase dashboard, update login screen for verification phase
 2. **Password strength**: Re-add validation in `validateForm()` in `app/login.tsx`
-3. **Marketplace**: Restore tab `href` in `app/(tabs)/_layout.tsx`, uncomment business section in profile
+
+### Known DB Quirks
+
+- The `enforce_profile_role_change_permissions` trigger blocks `app_role` changes via API for non-platform-admins. When running direct SQL in the Supabase Dashboard, `auth.uid()` is `NULL`; the guard was updated to `auth.uid() IS NOT NULL AND NOT is_platform_admin(auth.uid())` to allow dashboard SQL updates.
+- `community_admin` enum value still exists in `app_role_type` as an orphaned value — it cannot be dropped without `DROP TYPE CASCADE` which would destroy all RLS policies. No code sets this value; all logic uses `community_lead`.
 
 ---
 

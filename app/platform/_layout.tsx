@@ -1,7 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { Text } from 'react-native';
 import { Colors } from '../../constants/Colors';
+
+const TabIcon = ({ emoji, size = 22 }: { emoji: string; size?: number }) => (
+  <Text style={{ fontSize: size, lineHeight: size + 4 }}>{emoji}</Text>
+);
 
 export default function PlatformLayout() {
   const colors = Colors.light;
@@ -36,21 +40,14 @@ export default function PlatformLayout() {
         name="approvals"
         options={{
           title: 'Approvals',
-          tabBarIcon: ({ color }) => <Ionicons name="clipboard-outline" size={22} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="promotions"
-        options={{
-          title: 'Promotions',
-          tabBarIcon: ({ color }) => <Ionicons name="arrow-up-circle-outline" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon emoji="📋" />,
         }}
       />
       <Tabs.Screen
         name="communities"
         options={{
           title: 'Communities',
-          tabBarIcon: ({ color }) => <Ionicons name="people-outline" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon emoji="🏘️" />,
         }}
       />
       <Tabs.Screen

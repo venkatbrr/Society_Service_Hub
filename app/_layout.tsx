@@ -7,7 +7,7 @@ import { NotificationProvider } from '../context/NotificationContext';
 import { configureGoogleSignIn } from '../lib/auth';
 
 function RootLayoutNav() {
-  const { session, communityId, approvalStatus, activeCommunityRequest, isPlatformAdmin, isLoading } = useAuth();
+  const { session, communityId, activeCommunityRequest, isPlatformAdmin, isLoading } = useAuth();
   const segments = useSegments();
   const pathname = usePathname();
   const router = useRouter();
@@ -32,46 +32,39 @@ function RootLayoutNav() {
     const isOnCommunityRequest = currentRoute === 'community-request';
     const isOnCommunityRequestSubmitted = currentRoute === 'community-request-submitted';
     const isOnCommunitySelect = currentRoute === 'community-select';
-    const isOnPending = currentRoute === 'pending';
-    const isOnRejected = currentRoute === 'rejected';
 
     let redirectTo: string | null = null;
 
     if (!session) {
+      // No session → login
       if (!inAuthGroup) {
         redirectTo = '/login';
       }
     } else if (isPlatformAdmin) {
+      // Platform admin → platform console
       if (!isOnPlatformRoute) {
         redirectTo = '/platform/approvals';
       }
     } else if (isOnPlatformRoute) {
-      if (communityId && approvalStatus === 'approved') {
+      // Non-admin landed on platform route → redirect appropriately
+      if (communityId) {
         redirectTo = '/(tabs)';
-      } else if (!communityId && activeCommunityRequest) {
+      } else if (activeCommunityRequest) {
         redirectTo = '/community-request-submitted';
       } else {
         redirectTo = '/community-select';
       }
     } else if (!communityId && activeCommunityRequest && !isOnCommunityRequestSubmitted) {
+      // Has pending request, show status screen
       redirectTo = '/community-request-submitted';
     } else if (!communityId && !activeCommunityRequest && !isOnCommunitySelect && !isOnCommunityRequest) {
+      // No community, no request → select/request community
       redirectTo = '/community-select';
-    } else if (communityId && approvalStatus === 'pending' && !isOnPending) {
-      redirectTo = '/pending';
     } else if (
       communityId &&
-      approvalStatus === 'rejected' &&
-      !isOnRejected &&
-      !isOnCommunityRequest &&
-      !isOnCommunityRequestSubmitted
+      (inAuthGroup || isOnCommunitySelect || isOnCommunityRequest || isOnCommunityRequestSubmitted)
     ) {
-      redirectTo = '/rejected';
-    } else if (
-      communityId &&
-      approvalStatus === 'approved' &&
-      (inAuthGroup || isOnCommunitySelect || isOnPending || isOnRejected || isOnCommunityRequest || isOnCommunityRequestSubmitted)
-    ) {
+      // Has community → main app
       redirectTo = '/(tabs)';
     }
 
@@ -80,7 +73,7 @@ function RootLayoutNav() {
       return;
     }
 
-    // Prevent re-entrant navigation: if we already issued this redirect, skip
+    // Prevent re-entrant navigation
     if (lastRedirectRef.current === redirectTo) {
       return;
     }
@@ -94,10 +87,10 @@ function RootLayoutNav() {
       lastRedirectRef.current = redirectTo;
       router.replace(redirectTo as any);
     }
-  }, [session, communityId, approvalStatus, activeCommunityRequest, isPlatformAdmin, isLoading, segments]);
+  }, [session, communityId, activeCommunityRequest, isPlatformAdmin, isLoading, segments]);
 
   if (isLoading) {
-    return null; // Or a splash screen
+    return null;
   }
 
   return <Slot />;

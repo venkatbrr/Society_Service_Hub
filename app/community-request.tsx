@@ -15,11 +15,9 @@ import {
 import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
 import { supabase } from '../lib/supabase';
-import { getMissingOnboardingSchemaMessage, isMissingOnboardingSchemaError } from '../lib/supabaseErrors';
 
 const COMMUNITY_TYPES = ['apartment', 'gated villas', 'housing society', 'township'] as const;
 const APPROXIMATE_UNITS = ['<25', '25-100', '100-500', '500+'] as const;
-const REQUESTER_ROLES = ['Resident', 'Secretary', 'Chairperson', 'Treasurer', 'Mgmt committee', 'Builder', 'Other'] as const;
 
 export default function CommunityRequestScreen() {
   const router = useRouter();
@@ -27,14 +25,12 @@ export default function CommunityRequestScreen() {
 
   const [name, setName] = useState('');
   const [communityType, setCommunityType] = useState<(typeof COMMUNITY_TYPES)[number]>('apartment');
+  const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [pincode, setPincode] = useState('');
   const [area, setArea] = useState('');
   const [approximateUnits, setApproximateUnits] = useState<string>('');
-  const [requesterRole, setRequesterRole] = useState<(typeof REQUESTER_ROLES)[number]>('Resident');
-  const [showNominateAdmin, setShowNominateAdmin] = useState(false);
-  const [nominatedAdminName, setNominatedAdminName] = useState('');
-  const [nominatedAdminContact, setNominatedAdminContact] = useState('');
+  const [requesterFlatNumber, setRequesterFlatNumber] = useState('');
   const [confirmedAccuracy, setConfirmedAccuracy] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,6 +44,11 @@ export default function CommunityRequestScreen() {
       return;
     }
 
+    if (!requesterFlatNumber.trim()) {
+      Toast.show({ type: 'error', text1: 'Missing flat number', text2: 'Enter your flat or house number.' });
+      return;
+    }
+
     if (!confirmedAccuracy) {
       Toast.show({ type: 'error', text1: 'Confirmation needed', text2: 'Please confirm the details are accurate.' });
       return;
@@ -57,33 +58,21 @@ export default function CommunityRequestScreen() {
     try {
       const { error } = await supabase.rpc('submit_community_request', {
         p_name: name.trim(),
-        p_community_type: communityType,
         p_city: city.trim(),
         p_pincode: pincode.trim(),
+        p_address: address.trim() || undefined,
         p_area: area.trim() || undefined,
+        p_community_type: communityType,
         p_approximate_units: approximateUnits || undefined,
-        p_requester_role: requesterRole,
-        p_nominated_admin_name: nominatedAdminName.trim() || undefined,
-        p_nominated_admin_contact: nominatedAdminContact.trim() || undefined,
+        p_requester_flat_number: requesterFlatNumber.trim() || undefined,
       });
 
-      if (error) {
-        if (isMissingOnboardingSchemaError(error)) {
-          Toast.show({
-            type: 'error',
-            text1: 'Onboarding unavailable',
-            text2: getMissingOnboardingSchemaMessage(),
-          });
-          return;
-        }
-
-        throw error;
-      }
+      if (error) throw error;
 
       Toast.show({
         type: 'success',
         text1: 'Request submitted',
-        text2: 'We will review the community request within about 24 hours.',
+        text2: 'We will review your request within about 24 hours.',
       });
       router.replace('/community-request-submitted');
     } catch (error: any) {
@@ -105,11 +94,13 @@ export default function CommunityRequestScreen() {
       <Text style={[styles.title, { color: colors.text }]}>Request a new community</Text>
       <View style={[styles.banner, { backgroundColor: `${colors.warning}18`, borderColor: `${colors.warning}40` }]}>
         <Ionicons name="time-outline" size={20} color={colors.warning} />
-        <Text style={[styles.bannerText, { color: colors.text }]}>Requests are reviewed — we verify each community. You'll hear back in ~24 hours.</Text>
+        <Text style={[styles.bannerText, { color: colors.text }]}>
+          Requests are reviewed — we verify each community. You'll hear back in ~24 hours.
+        </Text>
       </View>
 
       <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-        <Text style={[styles.label, { color: colors.text }]}>COMMUNITY NAME</Text>
+        <Text style={[styles.label, { color: colors.text }]}>COMMUNITY NAME *</Text>
         <TextInput
           style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
           value={name}
@@ -126,7 +117,13 @@ export default function CommunityRequestScreen() {
               <Pressable
                 key={option}
                 onPress={() => setCommunityType(option)}
-                style={[styles.chip, { borderColor: active ? colors.primary : colors.glassBorder, backgroundColor: active ? `${colors.primary}14` : colors.surface }]}
+                style={[
+                  styles.chip,
+                  {
+                    borderColor: active ? colors.primary : colors.glassBorder,
+                    backgroundColor: active ? `${colors.primary}14` : colors.surface,
+                  },
+                ]}
               >
                 <Text style={[styles.chipText, { color: active ? colors.primary : colors.text }]}>{option}</Text>
               </Pressable>
@@ -134,7 +131,16 @@ export default function CommunityRequestScreen() {
           })}
         </View>
 
-        <Text style={[styles.label, { color: colors.text }]}>CITY</Text>
+        <Text style={[styles.label, { color: colors.text }]}>FULL ADDRESS</Text>
+        <TextInput
+          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          value={address}
+          onChangeText={setAddress}
+          placeholder="42, MG Road, Koramangala"
+          placeholderTextColor={colors.textMuted}
+        />
+
+        <Text style={[styles.label, { color: colors.text }]}>CITY *</Text>
         <TextInput
           style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
           value={city}
@@ -143,7 +149,7 @@ export default function CommunityRequestScreen() {
           placeholderTextColor={colors.textMuted}
         />
 
-        <Text style={[styles.label, { color: colors.text }]}>PINCODE</Text>
+        <Text style={[styles.label, { color: colors.text }]}>PINCODE *</Text>
         <TextInput
           style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
           value={pincode}
@@ -154,12 +160,12 @@ export default function CommunityRequestScreen() {
           keyboardType="number-pad"
         />
 
-        <Text style={[styles.label, { color: colors.text }]}>AREA / SECTOR</Text>
+        <Text style={[styles.label, { color: colors.text }]}>AREA / NEIGHBOURHOOD</Text>
         <TextInput
           style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
           value={area}
           onChangeText={setArea}
-          placeholder="Sector 14"
+          placeholder="Koramangala"
           placeholderTextColor={colors.textMuted}
         />
 
@@ -171,7 +177,13 @@ export default function CommunityRequestScreen() {
               <Pressable
                 key={option}
                 onPress={() => setApproximateUnits(option)}
-                style={[styles.chip, { borderColor: active ? colors.primary : colors.glassBorder, backgroundColor: active ? `${colors.primary}14` : colors.surface }]}
+                style={[
+                  styles.chip,
+                  {
+                    borderColor: active ? colors.primary : colors.glassBorder,
+                    backgroundColor: active ? `${colors.primary}14` : colors.surface,
+                  },
+                ]}
               >
                 <Text style={[styles.chipText, { color: active ? colors.primary : colors.text }]}>{option}</Text>
               </Pressable>
@@ -179,54 +191,34 @@ export default function CommunityRequestScreen() {
           })}
         </View>
 
-        <Text style={[styles.label, { color: colors.text }]}>YOUR ROLE IN THE COMMUNITY</Text>
-        <View style={styles.chipRow}>
-          {REQUESTER_ROLES.map((option) => {
-            const active = option === requesterRole;
-            return (
-              <Pressable
-                key={option}
-                onPress={() => setRequesterRole(option)}
-                style={[styles.chip, { borderColor: active ? colors.primary : colors.glassBorder, backgroundColor: active ? `${colors.primary}14` : colors.surface }]}
-              >
-                <Text style={[styles.chipText, { color: active ? colors.primary : colors.text }]}>{option}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <Text style={[styles.label, { color: colors.text }]}>YOUR FLAT / HOUSE NUMBER *</Text>
+        <TextInput
+          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          value={requesterFlatNumber}
+          onChangeText={setRequesterFlatNumber}
+          placeholder="A-402"
+          placeholderTextColor={colors.textMuted}
+        />
 
-        <TouchableOpacity onPress={() => setShowNominateAdmin((prev) => !prev)} style={[styles.collapseHeader, { borderColor: colors.glassBorder }]} activeOpacity={0.75}>
-          <Text style={[styles.collapseTitle, { color: colors.text }]}>Nominate admin</Text>
-          <Ionicons name={showNominateAdmin ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
-        </TouchableOpacity>
-
-        {showNominateAdmin ? (
-          <>
-            <Text style={[styles.label, { color: colors.text }]}>NOMINATED ADMIN NAME</Text>
-            <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
-              value={nominatedAdminName}
-              onChangeText={setNominatedAdminName}
-              placeholder="Asha Menon"
-              placeholderTextColor={colors.textMuted}
-            />
-
-            <Text style={[styles.label, { color: colors.text }]}>NOMINATED ADMIN CONTACT</Text>
-            <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
-              value={nominatedAdminContact}
-              onChangeText={setNominatedAdminContact}
-              placeholder="Phone or email"
-              placeholderTextColor={colors.textMuted}
-            />
-          </>
-        ) : null}
-
-        <TouchableOpacity onPress={() => setConfirmedAccuracy((prev) => !prev)} style={styles.checkboxRow} activeOpacity={0.75}>
-          <View style={[styles.checkbox, { borderColor: confirmedAccuracy ? colors.primary : colors.border, backgroundColor: confirmedAccuracy ? colors.primary : 'transparent' }]}>
+        <TouchableOpacity
+          onPress={() => setConfirmedAccuracy((prev) => !prev)}
+          style={styles.checkboxRow}
+          activeOpacity={0.75}
+        >
+          <View
+            style={[
+              styles.checkbox,
+              {
+                borderColor: confirmedAccuracy ? colors.primary : colors.border,
+                backgroundColor: confirmedAccuracy ? colors.primary : 'transparent',
+              },
+            ]}
+          >
             {confirmedAccuracy ? <Ionicons name="checkmark" size={14} color="#FFF" /> : null}
           </View>
-          <Text style={[styles.checkboxText, { color: colors.text }]}>I confirm the details provided are accurate to the best of my knowledge.</Text>
+          <Text style={[styles.checkboxText, { color: colors.text }]}>
+            I confirm the details provided are accurate to the best of my knowledge.
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={submitRequest} disabled={submitting} activeOpacity={0.8}>
@@ -323,19 +315,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     textTransform: 'capitalize',
-  },
-  collapseHeader: {
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 18,
-  },
-  collapseTitle: {
-    fontSize: 15,
-    fontWeight: '700',
   },
   checkboxRow: {
     flexDirection: 'row',
