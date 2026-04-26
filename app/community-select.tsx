@@ -28,10 +28,10 @@ const COUNTRY_CODES = [
 ];
 
 const COMMUNITY_TYPE_COLORS: Record<string, string> = {
-  apartment: '#6C63FF',
-  'gated villas': '#10B981',
-  'housing society': '#FF6B6B',
-  township: '#F59E0B',
+  apartment: '#16A34A',
+  'gated villas': '#22C55E',
+  'housing society': '#4ADE80',
+  township: '#059669',
 };
 
 export default function CommunitySelectScreen() {
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 1,
     padding: 22,
-    shadowColor: '#6C63FF',
+    shadowColor: '#16A34A',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.08,
     shadowRadius: 18,
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 4,
-    shadowColor: '#6C63FF',
+    shadowColor: '#16A34A',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.24,
     shadowRadius: 14,

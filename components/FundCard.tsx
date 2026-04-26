@@ -69,7 +69,7 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
         <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
         <View style={styles.statItem}>
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>Balance</Text>
-          <Text style={[styles.statValue, { color: '#6C63FF' }]}>Rs {totals.balance.toLocaleString()}</Text>
+          <Text style={[styles.statValue, { color: '#16A34A' }]}>Rs {totals.balance.toLocaleString()}</Text>
         </View>
       </View>
 
