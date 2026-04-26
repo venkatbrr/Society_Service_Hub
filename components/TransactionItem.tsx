@@ -26,7 +26,7 @@ export const TransactionItem = ({ transaction }: TransactionItemProps) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, borderColor: colors.border }]}>
-      <View style={[styles.iconWrapper, { backgroundColor: isIncome ? colors.secondary + '10' : colors.accent + '10' }]}>
+      <View style={[styles.iconWrapper, { backgroundColor: isIncome ? colors.secondary + '18' : colors.accent + '18', borderColor: isIncome ? colors.secondary + '35' : colors.accent + '35' }]}>
         <Ionicons 
           name={isIncome ? 'chevron-down-circle' : 'chevron-up-circle'} 
           size={24} 
@@ -61,12 +61,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 10,
-    backgroundColor: '#fff',
   },
   iconWrapper: {
     width: 44,
     height: 44,
     borderRadius: 12,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

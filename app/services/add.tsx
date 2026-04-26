@@ -1,8 +1,9 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -16,6 +17,7 @@ import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import {
+    mapServiceCategoryToProviderCategory,
     SERVICE_CATEGORIES,
     SERVICE_CATEGORY_DEFAULT_FREQUENCY,
     SERVICE_CATEGORY_EMOJI,
@@ -23,6 +25,14 @@ import {
     ServiceCategory,
 } from '../../lib/serviceCategories';
 import { supabase } from '../../lib/supabase';
+
+type ProviderOption = {
+  id: string;
+  name: string;
+  category: string;
+  phone: string | null;
+  whatsapp: string | null;
+};
 
 export default function AddServiceScreen() {
   const router = useRouter();
@@ -35,12 +45,71 @@ export default function AddServiceScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [frequencyMonths, setFrequencyMonths] = useState('6');
   const [notes, setNotes] = useState('');
+  const [providers, setProviders] = useState<ProviderOption[]>([]);
+  const [providersLoading, setProvidersLoading] = useState(false);
+  const [providerPickerOpen, setProviderPickerOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<ProviderOption | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchProviders() {
+      if (!communityId) {
+        if (isMounted) {
+          setProviders([]);
+          setSelectedProvider(null);
+        }
+        return;
+      }
+
+      setProvidersLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('service_providers')
+          .select('id, name, category, phone, whatsapp')
+          .eq('community_id', communityId)
+          .order('name', { ascending: true });
+
+        if (error) throw error;
+
+        if (isMounted) {
+          setProviders((data ?? []) as ProviderOption[]);
+        }
+      } catch {
+        if (isMounted) {
+          setProviders([]);
+        }
+      } finally {
+        if (isMounted) {
+          setProvidersLoading(false);
+        }
+      }
+    }
+
+    fetchProviders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [communityId]);
 
   const handleCategorySelect = (cat: ServiceCategory) => {
     setCategory(cat);
     setFrequencyMonths(String(SERVICE_CATEGORY_DEFAULT_FREQUENCY[cat]));
   };
+
+  const suggestedProviderCategory = category ? mapServiceCategoryToProviderCategory(category) : null;
+  const providerOptions = [...providers].sort((left, right) => {
+    const leftSuggested = suggestedProviderCategory ? left.category === suggestedProviderCategory : false;
+    const rightSuggested = suggestedProviderCategory ? right.category === suggestedProviderCategory : false;
+
+    if (leftSuggested !== rightSuggested) {
+      return leftSuggested ? -1 : 1;
+    }
+
+    return left.name.localeCompare(right.name);
+  });
 
   const handleSubmit = async () => {
     if (!serviceName.trim()) {
@@ -78,6 +147,7 @@ export default function AddServiceScreen() {
         frequency_months: freq,
         next_due_on: nextDueOn, // DB trigger will overwrite
         notes: notes.trim() || null,
+        provider_id: selectedProvider?.id ?? null,
       });
 
       if (error) throw error;
@@ -201,6 +271,94 @@ export default function AddServiceScreen() {
           returnKeyType="next"
         />
 
+        {/* Optional provider mapping */}
+        <Text style={[styles.label, { color: colors.textMuted }]}>LINK TO SERVICE PROVIDER (OPTIONAL)</Text>
+        <Text style={[styles.helperText, { color: colors.textMuted }]}>Choose a saved provider now, or skip this and add the reminder without linking anyone.</Text>
+
+        {providersLoading ? (
+          <View style={[styles.providerStateCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <ActivityIndicator color={colors.primary} />
+            <Text style={[styles.providerStateText, { color: colors.textMuted }]}>Loading providers...</Text>
+          </View>
+        ) : providerOptions.length === 0 ? (
+          <View style={[styles.providerStateCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <Text style={styles.providerStateIcon}>👥</Text>
+            <Text style={[styles.providerStateText, { color: colors.textMuted }]}>No saved providers yet. You can still create the reminder now and link a provider later.</Text>
+          </View>
+        ) : (
+          <View style={styles.providerPickerWrap}>
+            <TouchableOpacity
+              style={[styles.input, styles.providerSelector, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+              onPress={() => setProviderPickerOpen((current) => !current)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.providerSelectorContent}>
+                <Text style={[styles.providerSelectorText, { color: selectedProvider ? colors.text : colors.textMuted }]} numberOfLines={1}>
+                  {selectedProvider ? selectedProvider.name : 'No provider linked'}
+                </Text>
+                {selectedProvider?.category ? (
+                  <Text style={[styles.providerSelectorSubtext, { color: colors.textMuted }]} numberOfLines={1}>
+                    {selectedProvider.category}
+                  </Text>
+                ) : (
+                  <Text style={[styles.providerSelectorSubtext, { color: colors.textMuted }]} numberOfLines={1}>
+                    Optional: map this reminder to a known technician
+                  </Text>
+                )}
+              </View>
+              <Text style={[styles.selectorChevron, { color: colors.textMuted }]}>{providerPickerOpen ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+
+            {providerPickerOpen ? (
+              <View style={[styles.providerDropdown, { backgroundColor: colors.surface, borderColor: colors.glassBorder }]}>
+                <TouchableOpacity
+                  style={[styles.providerOption, !selectedProvider && { backgroundColor: colors.primary + '10' }]}
+                  onPress={() => {
+                    setSelectedProvider(null);
+                    setProviderPickerOpen(false);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.providerOptionBody}>
+                    <Text style={[styles.providerOptionName, { color: colors.text }]}>No linked provider</Text>
+                    <Text style={[styles.providerOptionMeta, { color: colors.textMuted }]}>Create the reminder without mapping a technician</Text>
+                  </View>
+                  {!selectedProvider ? <Text style={[styles.providerSuggestedTag, { color: colors.primary }]}>Selected</Text> : null}
+                </TouchableOpacity>
+
+                <ScrollView nestedScrollEnabled style={styles.providerDropdownScroll}>
+                  {providerOptions.map((provider) => {
+                    const isSuggested = suggestedProviderCategory && provider.category === suggestedProviderCategory;
+                    const isSelected = selectedProvider?.id === provider.id;
+
+                    return (
+                      <TouchableOpacity
+                        key={provider.id}
+                        style={[styles.providerOption, isSelected && { backgroundColor: colors.primary + '10' }]}
+                        onPress={() => {
+                          setSelectedProvider(provider);
+                          setProviderPickerOpen(false);
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.providerOptionBody}>
+                          <Text style={[styles.providerOptionName, { color: colors.text }]} numberOfLines={1}>{provider.name}</Text>
+                          <Text style={[styles.providerOptionMeta, { color: colors.textMuted }]} numberOfLines={1}>{provider.category}</Text>
+                        </View>
+                        {isSuggested ? (
+                          <Text style={[styles.providerSuggestedTag, { color: colors.primary }]}>Suggested</Text>
+                        ) : isSelected ? (
+                          <Text style={[styles.providerSuggestedTag, { color: colors.primary }]}>Selected</Text>
+                        ) : null}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            ) : null}
+          </View>
+        )}
+
         {/* Notes */}
         <Text style={[styles.label, { color: colors.textMuted }]}>NOTES (OPTIONAL)</Text>
         <TextInput
@@ -285,6 +443,10 @@ const styles = StyleSheet.create({
     height: 90,
     paddingTop: 12,
   },
+  helperText: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -303,6 +465,84 @@ const styles = StyleSheet.create({
   },
   catEmoji: { fontSize: 16 },
   catLabel: { fontSize: 12, fontWeight: '600', flexShrink: 1 },
+  providerStateCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 8,
+  },
+  providerStateIcon: {
+    fontSize: 18,
+    lineHeight: 20,
+  },
+  providerStateText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  providerPickerWrap: {
+    marginTop: 8,
+  },
+  providerSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  providerSelectorContent: {
+    flex: 1,
+    marginRight: 12,
+  },
+  providerSelectorText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  providerSelectorSubtext: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  selectorChevron: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  providerDropdown: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 16,
+    maxHeight: 260,
+    overflow: 'hidden',
+  },
+  providerDropdownScroll: {
+    maxHeight: 196,
+  },
+  providerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#DDEFE1',
+  },
+  providerOptionBody: {
+    flex: 1,
+    marginRight: 12,
+  },
+  providerOptionName: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  providerOptionMeta: {
+    fontSize: 12,
+    marginTop: 3,
+  },
+  providerSuggestedTag: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
   submitButton: { marginTop: 32, borderRadius: 16, overflow: 'hidden' },
   submitGradient: { paddingVertical: 16, alignItems: 'center', borderRadius: 16 },
   submitText: { color: '#FFF', fontSize: 16, fontWeight: '800' },

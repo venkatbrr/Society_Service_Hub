@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.08,
     shadowRadius: 18,
-    elevation: 4,
+    elevation: 0,
   },
   label: {
     fontSize: 12,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.24,
     shadowRadius: 14,
-    elevation: 5,
+    elevation: 0,
   },
   primaryButtonText: {
     color: '#FFF',

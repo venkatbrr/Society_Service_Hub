@@ -143,7 +143,7 @@ export default function ProfileScreen() {
         </View>
 
         <TouchableOpacity
-          onPress={() => router.push('/services/index' as any)}
+          onPress={() => router.push('/services' as any)}
           style={[styles.adminCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
           activeOpacity={0.82}
         >
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 20,
-    elevation: 2,
+    elevation: 0,
   },
   profileHeader: {
     flexDirection: 'row',
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 20,
-    elevation: 2,
+    elevation: 0,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 20,
-    elevation: 2,
+    elevation: 0,
   },
   adminIconWrap: {
     width: 46,

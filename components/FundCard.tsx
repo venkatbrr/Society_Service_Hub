@@ -43,7 +43,7 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
         </View>
       </View>
 
-      <View style={[styles.metaCard, { backgroundColor: colors.surface2 }]}>
+      <View style={[styles.metaCard, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '20' }]}>
         <View style={styles.metaRow}>
           <Text style={[styles.metaLabel, { color: colors.textMuted }]}>Treasurers</Text>
           <Text style={[styles.metaValue, { color: colors.text }]} numberOfLines={1}>
@@ -126,6 +126,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
     gap: 10,
+    borderWidth: 1,
   },
   metaRow: {
     flexDirection: 'row',

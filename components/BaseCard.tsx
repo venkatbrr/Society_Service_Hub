@@ -47,10 +47,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 16,
     borderWidth: 1,
-    // Modern soft shadow
-    shadowOffset: { width: 0, height: 8 },
+    overflow: 'hidden',
+    // iOS-only soft shadow (Android elevation causes white rectangle artifacts)
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
-    shadowRadius: 24,
-    elevation: 2,
+    shadowRadius: 16,
+    elevation: 0,
   },
 });

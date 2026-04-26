@@ -113,7 +113,7 @@ export function UpcomingServicesCard() {
       <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
         <View style={styles.trackRow}>
           <Text style={[styles.trackText, { color: colors.secondary }]}>✓ All services on track</Text>
-          <TouchableOpacity onPress={() => router.push('/services/index' as any)} activeOpacity={0.8}>
+          <TouchableOpacity onPress={() => router.push('/services' as any)} activeOpacity={0.8}>
             <Text style={[styles.viewAll, { color: colors.primary }]}>View all ({totalCount})</Text>
           </TouchableOpacity>
         </View>
@@ -153,7 +153,7 @@ export function UpcomingServicesCard() {
         <TouchableOpacity onPress={() => router.push('/services/add')} activeOpacity={0.8}>
           <Text style={[styles.footerLink, { color: colors.primary }]}>+ Add service</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/services/index' as any)} activeOpacity={0.8}>
+        <TouchableOpacity onPress={() => router.push('/services' as any)} activeOpacity={0.8}>
           <Text style={[styles.footerLink, { color: colors.textMuted }]}>View all ({totalCount})</Text>
         </TouchableOpacity>
       </View>
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
-    elevation: 2,
+    elevation: 0,
   },
   // Zero state
   zeroRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },

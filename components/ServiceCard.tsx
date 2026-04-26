@@ -30,7 +30,7 @@ export function ServiceCard({ item, onPress }: ServiceCardProps) {
       onPress={onPress}
       activeOpacity={0.82}
     >
-      <View style={[styles.iconWrap, { backgroundColor: colors.primary + '12' }]}>
+      <View style={[styles.iconWrap, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '35' }]}>
         <Text style={styles.emoji}>{emoji}</Text>
       </View>
       <View style={styles.content}>
@@ -60,17 +60,18 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 10,
-    shadowColor: '#6C63FF',
+    shadowColor: '#16A34A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 1,
+    elevation: 0,
     gap: 12,
   },
   iconWrap: {
     width: 44,
     height: 44,
     borderRadius: 12,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },

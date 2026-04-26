@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
-    elevation: 8,
+    elevation: 0,
   },
   title: {
     fontSize: 28,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 16,
-    elevation: 4,
+    elevation: 0,
     gap: 24,
   },
   inputGroup: {
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 12,
-    elevation: 6,
+    elevation: 0,
   },
   resetButtonText: {
     color: '#FFF',

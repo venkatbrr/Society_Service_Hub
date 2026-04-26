@@ -1,5 +1,5 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 
 interface JoinerListItemProps {
@@ -23,7 +23,7 @@ export const JoinerListItem = React.memo(({ userName, flatNumber, avatarUrl, not
       {avatarUrl ? (
         <Image source={{ uri: avatarUrl }} style={styles.avatar} />
       ) : (
-        <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '15' }]}>
+        <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '35' }]}>
           <Text style={[styles.initials, { color: colors.primary }]}>{getInitials(userName)}</Text>
         </View>
       )}
@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },

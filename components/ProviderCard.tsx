@@ -23,8 +23,8 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
       padding={20}
     >
       <View style={styles.content}>
-        <View style={[styles.imagePlaceholder, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
-           <Text style={styles.avatarEmoji}>{getServiceCategoryEmoji(provider.category)}</Text>
+        <View style={[styles.imagePlaceholder, { backgroundColor: colors.primary + '24', borderColor: colors.primary + '38' }]}>
+          <Text style={styles.avatarEmoji}>{getServiceCategoryEmoji(provider.category)}</Text>
         </View>
 
         <View style={styles.mainInfo}>
@@ -89,16 +89,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   imagePlaceholder: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 14,
+    overflow: 'hidden',
   },
   avatarEmoji: {
     fontSize: 28,
     lineHeight: 32,
+    backgroundColor: 'transparent',
   },
   mainInfo: {
     flex: 1,

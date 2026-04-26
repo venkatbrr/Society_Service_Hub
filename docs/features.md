@@ -380,7 +380,7 @@ Allows users to track household appliances and periodic services (AC, RO purifie
 |--------|---------|
 | **Purpose** | Create a new service reminder |
 | **Tables** | Writes: `user_services` |
-| **Business rules** | Required: `service_name` (max 100), `category`, `last_serviced_on` (not future), `frequency_months` (1-60). Optional: `notes` (max 500). `next_due_on` is computed by DB trigger. Category selection pre-fills frequency defaults. |
+| **Business rules** | Required: `service_name` (max 100), `category`, `last_serviced_on` (not future), `frequency_months` (1-60). Optional: `notes` (max 500) and linked `provider_id`. If the user's community already has saved providers, the form suggests relevant providers first based on the selected reminder category, but linking remains optional. `next_due_on` is computed by DB trigger. Category selection pre-fills frequency defaults. |
 | **Navigation** | On success -> back to list |
 | **Integrations** | `@react-native-community/datetimepicker` |
 

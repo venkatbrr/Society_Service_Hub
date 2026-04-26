@@ -80,7 +80,7 @@ export const VisitCard = React.memo(({
         {creatorAvatarUrl ? (
           <Image source={{ uri: creatorAvatarUrl }} style={styles.creatorAvatar} />
         ) : (
-          <View style={[styles.creatorAvatarPlaceholder, { backgroundColor: colors.primary + '12' }]}>
+          <View style={[styles.creatorAvatarPlaceholder, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '35' }]}>
             <Text style={[styles.creatorInitials, { color: colors.primary }]}>{getInitials(creatorName)}</Text>
           </View>
         )}
@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },

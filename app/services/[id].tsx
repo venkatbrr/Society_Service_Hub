@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 16,
-    elevation: 2,
+    elevation: 0,
   },
   dueLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1 },
   dueDate: { fontSize: 22, fontWeight: '800' },
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
-    elevation: 1,
+    elevation: 0,
   },
   fieldLabel: {
     fontSize: 10,

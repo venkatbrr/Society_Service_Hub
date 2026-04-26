@@ -1,30 +1,31 @@
 // Service categories for Personal Service Reminders feature.
 // These are stored as text in the DB; this file is the single source of truth
 // for display labels, emoji icons, default frequencies, and provider category mapping.
+// Ordered by relevance to gated community flat residents.
 
 export type ServiceCategory =
   | 'ac'
   | 'ro_water_purifier'
-  | 'pest_control'
-  | 'chimney'
-  | 'water_tank_cleaning'
+  | 'geyser'
   | 'washing_machine'
   | 'refrigerator'
-  | 'geyser'
+  | 'chimney'
+  | 'pest_control'
   | 'car'
+  | 'bike'
   | 'inverter_battery'
   | 'other';
 
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
   'ac',
   'ro_water_purifier',
-  'pest_control',
-  'chimney',
-  'water_tank_cleaning',
+  'geyser',
   'washing_machine',
   'refrigerator',
-  'geyser',
+  'chimney',
+  'pest_control',
   'car',
+  'bike',
   'inverter_battery',
   'other',
 ];
@@ -32,13 +33,13 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
 export const SERVICE_CATEGORY_LABELS: Record<ServiceCategory, string> = {
   ac: 'AC / Air Conditioner',
   ro_water_purifier: 'RO Water Purifier',
-  pest_control: 'Pest Control',
-  chimney: 'Kitchen Chimney',
-  water_tank_cleaning: 'Water Tank Cleaning',
+  geyser: 'Geyser / Water Heater',
   washing_machine: 'Washing Machine',
   refrigerator: 'Refrigerator',
-  geyser: 'Geyser / Water Heater',
+  chimney: 'Kitchen Chimney',
+  pest_control: 'Pest Control',
   car: 'Car Service',
+  bike: 'Bike Service',
   inverter_battery: 'Inverter / Battery',
   other: 'Other',
 };
@@ -46,13 +47,13 @@ export const SERVICE_CATEGORY_LABELS: Record<ServiceCategory, string> = {
 export const SERVICE_CATEGORY_EMOJI: Record<ServiceCategory, string> = {
   ac: '❄️',
   ro_water_purifier: '💧',
-  pest_control: '🐜',
-  chimney: '🔥',
-  water_tank_cleaning: '🪣',
+  geyser: '♨️',
   washing_machine: '🫧',
   refrigerator: '🧊',
-  geyser: '♨️',
+  chimney: '🔥',
+  pest_control: '🐜',
   car: '🚗',
+  bike: '🏍️',
   inverter_battery: '🔋',
   other: '🔧',
 };
@@ -61,13 +62,13 @@ export const SERVICE_CATEGORY_EMOJI: Record<ServiceCategory, string> = {
 export const SERVICE_CATEGORY_DEFAULT_FREQUENCY: Record<ServiceCategory, number> = {
   ac: 6,
   ro_water_purifier: 3,
-  pest_control: 3,
-  chimney: 12,
-  water_tank_cleaning: 6,
+  geyser: 12,
   washing_machine: 12,
   refrigerator: 12,
-  geyser: 12,
+  chimney: 12,
+  pest_control: 3,
   car: 6,
+  bike: 6,
   inverter_battery: 6,
   other: 6,
 };
@@ -81,13 +82,13 @@ export function mapServiceCategoryToProviderCategory(category: ServiceCategory):
   const mapping: Record<ServiceCategory, string> = {
     ac: 'AC Technician',
     ro_water_purifier: 'Plumber',
-    pest_control: 'Pest Control',
-    chimney: 'Electrician',
-    water_tank_cleaning: 'Water Supply',
+    geyser: 'Electrician',
     washing_machine: 'Electrician',
     refrigerator: 'Electrician',
-    geyser: 'Electrician',
+    chimney: 'Electrician',
+    pest_control: 'Pest Control',
     car: 'Other',
+    bike: 'Other',
     inverter_battery: 'Electrician',
     other: 'Other',
   };

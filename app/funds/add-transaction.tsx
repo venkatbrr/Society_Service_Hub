@@ -263,7 +263,7 @@ export default function AddTransactionScreen() {
             <TouchableOpacity
               style={[
                 styles.tab,
-                type === 'income' ? { backgroundColor: colors.glass, shadowColor: '#000', elevation: 2 } : {},
+                type === 'income' ? { backgroundColor: colors.glass, shadowColor: '#000', elevation: 0 } : {},
               ]}
               onPress={() => handleChangeType('income')}
             >
@@ -272,7 +272,7 @@ export default function AddTransactionScreen() {
             <TouchableOpacity
               style={[
                 styles.tab,
-                type === 'expense' ? { backgroundColor: colors.glass, shadowColor: '#000', elevation: 2 } : {},
+                type === 'expense' ? { backgroundColor: colors.glass, shadowColor: '#000', elevation: 0 } : {},
               ]}
               onPress={() => handleChangeType('expense')}
             >
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 16,
-    elevation: 3,
+    elevation: 0,
   },
   notice: {
     flexDirection: 'row',
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
+    elevation: 0,
   },
   saveButtonText: {
     color: '#FFF',

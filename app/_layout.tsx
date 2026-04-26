@@ -1,4 +1,4 @@
-import { Slot, usePathname, useRouter, useSegments } from 'expo-router';
+import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -93,7 +93,15 @@ function RootLayoutNav() {
     return null;
   }
 
-  return <Slot />;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: '#F0FDF4' },
+        animation: 'slide_from_right',
+      }}
+    />
+  );
 }
 
 export default function RootLayout() {
