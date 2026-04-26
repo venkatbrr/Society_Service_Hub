@@ -29,7 +29,7 @@ export const Colors = {
   dark: {
     text: '#F7FAFC',
     textMuted: '#A0AEC0',
-    background: '#052E16',
+    background: '#091E14',
     surface: '#14532D',
     surface2: '#166534',
     primary: '#4ADE80',

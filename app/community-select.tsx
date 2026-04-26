@@ -29,9 +29,9 @@ const COUNTRY_CODES = [
 
 const COMMUNITY_TYPE_COLORS: Record<string, string> = {
   apartment: '#16A34A',
-  'gated villas': '#10B981',
-  'housing society': '#FF6B6B',
-  township: '#F59E0B',
+  'gated villas': '#22C55E',
+  'housing society': '#4ADE80',
+  township: '#059669',
 };
 
 export default function CommunitySelectScreen() {
