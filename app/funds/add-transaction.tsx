@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -252,6 +253,9 @@ export default function AddTransactionScreen() {
     >
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
           <Text style={[styles.title, { color: colors.text }]}>{type === 'income' ? 'Add Contribution' : 'Add Expense'}</Text>
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>
             {fund.title} - You are a {formatRole(fundRole)}
@@ -414,6 +418,16 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 32,
+    gap: 12,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: -4,
   },
   title: {
     fontSize: 28,

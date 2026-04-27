@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -120,7 +121,7 @@ export default function ResidentsScreen() {
           onPress={handleBack}
           style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
         >
-          <Text style={[styles.backIcon, { color: colors.primary }]}>{APP_EMOJIS.back}</Text>
+          <Ionicons name="arrow-back" size={20} color={colors.primary} />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
           <Text style={[styles.title, { color: colors.text }]}>Community directory</Text>
@@ -233,7 +234,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 56 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   backButton: { width: 40, height: 40, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 18, lineHeight: 20 },
   headerCopy: { flex: 1 },
   title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.4 },
   subtitle: { fontSize: 13, marginTop: 2 },

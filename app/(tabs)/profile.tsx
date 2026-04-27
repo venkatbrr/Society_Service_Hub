@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
@@ -73,7 +73,7 @@ export default function ProfileScreen() {
         </View>
       </LinearGradient>
 
-      <View style={styles.scrollContent}>
+      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
           <View style={styles.profileHeader}>
             {user?.user_metadata?.avatar_url ? (
@@ -95,7 +95,7 @@ export default function ProfileScreen() {
               </Text>
               <View style={[styles.roleBadge, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
                 <Text style={[styles.roleBadgeText, { color: colors.primary }]}>
-                  App Role: {roleLabel}
+                  You are: {roleLabel}
                 </Text>
               </View>
             </View>
@@ -182,8 +182,6 @@ export default function ProfileScreen() {
           <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
         </TouchableOpacity>
 
-        <View style={styles.spacer} />
-
         <TouchableOpacity
           style={[styles.signOutButton, { backgroundColor: colors.accent + '10' }]}
           onPress={handleSignOut}
@@ -193,7 +191,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         <Text style={[styles.version, { color: colors.textMuted }]}>Society Service Hub v1.0.0</Text>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -216,14 +214,13 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   scrollContent: {
-    flex: 1,
     paddingHorizontal: 20,
     paddingTop: 12,
   },
   card: {
     padding: 20,
     borderRadius: 24,
-    marginBottom: 24,
+    marginBottom: 14,
     borderWidth: 1,
     shadowColor: '#16A34A',
     shadowOffset: { width: 0, height: 4 },
@@ -280,7 +277,7 @@ const styles = StyleSheet.create({
   section: {
     padding: 20,
     borderRadius: 24,
-    marginBottom: 24,
+    marginBottom: 14,
     borderWidth: 1,
     shadowColor: '#16A34A',
     shadowOffset: { width: 0, height: 4 },
@@ -299,13 +296,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   infoRow: {
-    marginVertical: 4,
+    marginVertical: 2,
   },
   label: {
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   value: {
     fontSize: 16,
@@ -319,7 +316,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    marginVertical: 16,
+    marginVertical: 12,
   },
   hint: {
     fontSize: 12,
@@ -330,7 +327,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 24,
     padding: 18,
-    marginBottom: 24,
+    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -237,12 +238,10 @@ export default function FundDetailScreen() {
         >
           <View style={styles.headerTop}>
             <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-              <Text style={styles.headerIcon}>{APP_EMOJIS.back}</Text>
+              <Ionicons name="arrow-back" size={24} color="#FFF" />
             </TouchableOpacity>
             <Text style={styles.headerLabel}>Fund Transparency</Text>
-            <TouchableOpacity style={styles.iconButton}>
-              <Text style={styles.headerIcon}>{APP_EMOJIS.share}</Text>
-            </TouchableOpacity>
+            <View style={{ width: 40 }} />
           </View>
 
           <Text style={styles.fundTitle}>{fund.title}</Text>
@@ -537,7 +536,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 60,
-    paddingBottom: 40,
+    paddingBottom: 70,
     paddingHorizontal: 24,
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
@@ -557,8 +556,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerIcon: {
-    fontSize: 24,
-    lineHeight: 28,
     color: '#FFF',
   },
   headerLabel: {
@@ -627,9 +624,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
   accessCard: {
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     marginHorizontal: 24,
-    marginTop: -20,
+    marginTop: -30,
     padding: 24,
     borderRadius: 24,
     elevation: 0,

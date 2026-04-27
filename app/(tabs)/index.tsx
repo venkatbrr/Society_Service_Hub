@@ -109,11 +109,17 @@ export default function HomeScreen() {
 
       const favoriteIds = new Set(favoritesResult.data?.map(f => f.provider_id));
 
-      const mergedData = providersResult.data.map(provider => ({
-        ...provider,
-        is_favorite: favoriteIds.has(provider.id),
-        hire_count: hireCounts[provider.id] || 0
-      }));
+      const mergedData = providersResult.data
+        .filter((provider: any) => {
+          // Client-side fraud filter — works before and after migration
+          const status = provider.fraud_status;
+          return !status || status === 'pass' || status === 'queued_low';
+        })
+        .map((provider: any) => ({
+          ...provider,
+          is_favorite: favoriteIds.has(provider.id),
+          hire_count: hireCounts[provider.id] || 0
+        }));
 
       setProviders(mergedData);
     } catch (error: any) {

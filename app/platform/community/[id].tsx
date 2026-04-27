@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -135,7 +136,7 @@ export default function PlatformCommunityDetailScreen() {
       <LinearGradient colors={[`${colors.primary}14`, `${colors.gradientEnd}10`, 'transparent']} style={styles.gradientOverlay} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-          <Text style={[styles.backIcon, { color: colors.primary }]}>{APP_EMOJIS.back}</Text>
+          <Ionicons name="arrow-back" size={20} color={colors.primary} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>Community detail</Text>
       </View>
@@ -231,7 +232,6 @@ const styles = StyleSheet.create({
   gradientOverlay: { position: 'absolute', top: 0, left: 0, right: 0, height: 240 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
   backButton: { width: 40, height: 40, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 18, lineHeight: 20 },
   title: { fontSize: 24, fontWeight: '800' },
   loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   communityCard: { borderWidth: 1, borderRadius: 22, padding: 16, marginBottom: 14 },

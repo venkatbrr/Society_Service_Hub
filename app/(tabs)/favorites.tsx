@@ -37,6 +37,7 @@ export default function FavoritesScreen() {
       const formattedData = data
         .map(item => item.service_providers as unknown as ProviderWithInteraction)
         .filter(Boolean)
+        .filter(p => !p.fraud_status || p.fraud_status === 'pass' || p.fraud_status === 'queued_low')
         .map(p => ({ ...p, is_favorite: true }));
 
       setProviders(formattedData);

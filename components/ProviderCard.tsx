@@ -20,13 +20,9 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
     <BaseCard
       onPress={onPress}
       isLightMode={isLightMode}
-      padding={20}
+      padding={16}
     >
       <View style={styles.content}>
-        <View style={[styles.imagePlaceholder, { backgroundColor: colors.primary + '24', borderColor: colors.primary + '38' }]}>
-          <Text style={styles.avatarEmoji}>{getServiceCategoryEmoji(provider.category)}</Text>
-        </View>
-
         <View style={styles.mainInfo}>
           <View style={styles.headerRow}>
             <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
@@ -39,14 +35,6 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
 
           <View style={[styles.categoryBadge, { backgroundColor: colors.primary + '12' }]}>
             <Text style={[styles.category, { color: colors.primary }]}>{`${getServiceCategoryEmoji(provider.category)} ${provider.category}`}</Text>
-          </View>
-
-          <View style={styles.ratingRow}>
-            <Text style={styles.ratingIcon}>{APP_EMOJIS.starFilled}</Text>
-            <Text style={[styles.ratingText, { color: colors.text }]}>
-              {Number(provider.avg_rating).toFixed(1)}
-              <Text style={[styles.ratingCount, { color: colors.textMuted }]}> ({provider.rating_count})</Text>
-            </Text>
           </View>
         </View>
 
@@ -66,16 +54,25 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
               Used by {provider.hire_count || 0} homes
             </Text>
           </View>
-          {provider.is_trending && (
-            <LinearGradient
-              colors={[colors.gradientStart, colors.gradientEnd]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.trendingTag}
-            >
-              <Text style={styles.trendingText}>Trending</Text>
-            </LinearGradient>
-          )}
+          <View style={styles.footerRight}>
+            <View style={styles.ratingRow}>
+              <Text style={styles.ratingIcon}>{APP_EMOJIS.starFilled}</Text>
+              <Text style={[styles.ratingText, { color: colors.text }]}> 
+                {Number(provider.avg_rating).toFixed(1)}
+                <Text style={[styles.ratingCount, { color: colors.textMuted }]}> ({provider.rating_count})</Text>
+              </Text>
+            </View>
+            {provider.is_trending && (
+              <LinearGradient
+                colors={[colors.gradientStart, colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.trendingTag}
+              >
+                <Text style={styles.trendingText}>Trending</Text>
+              </LinearGradient>
+            )}
+          </View>
         </View>
       </View>
     </BaseCard>
@@ -85,23 +82,8 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
 const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  imagePlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-    overflow: 'hidden',
-  },
-  avatarEmoji: {
-    fontSize: 28,
-    lineHeight: 32,
-    backgroundColor: 'transparent',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
   mainInfo: {
     flex: 1,
@@ -124,7 +106,7 @@ const styles = StyleSheet.create({
   },
   categoryBadge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
     marginBottom: 8,
@@ -151,7 +133,8 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   favoriteBtn: {
-    padding: 8,
+    paddingVertical: 4,
+    paddingLeft: 10,
   },
   favoriteIcon: {
     fontSize: 22,
@@ -159,7 +142,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     borderTopWidth: 1,
-    paddingTop: 12,
+    paddingTop: 10,
   },
   trustIndicators: {
     flexDirection: 'row',
@@ -169,6 +152,10 @@ const styles = StyleSheet.create({
   trustItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+  },
+  footerRight: {
+    alignItems: 'flex-end',
     gap: 6,
   },
   trustIcon: {

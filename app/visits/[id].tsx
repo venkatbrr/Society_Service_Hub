@@ -207,6 +207,7 @@ export default function VisitDetailScreen() {
 
   const isCreator = visit.created_by === user?.id;
   const isFull = visit.max_joiners ? visit.joiner_count! >= visit.max_joiners : false;
+  const isPast = new Date(visit.visit_date) < new Date(new Date().toDateString());
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -341,7 +342,8 @@ export default function VisitDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Action Buttons */}
+      {/* Action Buttons — hidden for past visits */}
+      {!isPast && (
       <View style={[styles.footer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
         {isCreator ? (
             <View style={styles.creatorActions}>
@@ -383,6 +385,7 @@ export default function VisitDetailScreen() {
             </View>
         ) : null}
       </View>
+      )}
 
       {/* Join Modal */}
       <Modal visible={showJoinModal} animationType="slide" transparent={true}>
