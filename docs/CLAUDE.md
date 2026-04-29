@@ -50,20 +50,21 @@ Every user belongs to a community. **All data queries must filter by `communityI
 ### Role System
 
 - **App-level** (`profiles.app_role`): `admin` (platform admin), `community_lead`, or `resident`
-  - `community_lead` is auto-assigned when a community request is approved — never promoted through a workflow
+  - approved community requesters are assigned as `resident` by default; `community_lead` is no longer auto-assigned in that flow
   - `isPlatformAdmin` = `app_role === 'admin' && !communityId`
   - `isCommunityLead` = `app_role === 'community_lead' && !!communityId`
 - **Fund-level** (`fund_roles.role`): `treasurer` (manage fund, log expenses), `collector` (log contributions), `resident` (view only). Permissions checked via `lib/fundRoles.ts` — use `getEffectiveFundRole()` and `getFundPermissions()`.
 
 ## Key Conventions
 
-- **Icons**: Render UI icons with inline `Text` emoji or unicode characters. Do not add vector icon components for app UI.
+- **Icons**: Use `APP_EMOJIS` for tab and decorative iconography. Use `Ionicons` from `@expo/vector-icons` for interactive controls where the existing code already does so.
 - **Date/Time inputs**: Always use `@react-native-community/datetimepicker`, never raw TextInput
 - **Theme**: Enforced light mode. Colors in `constants/Colors.ts` — primary `#6C63FF` (soft indigo), secondary `#10B981` (emerald), accent `#FF6B6B` (coral). Glassmorphism style with `expo-linear-gradient` for gradient headers/buttons.
 - **Style**: Rounded corners (20-24px border-radius), glassmorphism cards (`glass`, `glassBorder` from Colors.ts), soft indigo shadows (`shadowColor: '#6C63FF'`), premium pastel look
 - **Toast feedback**: Use `react-native-toast-message` for user-facing messages
 - **Single-row queries**: Use `.maybeSingle()` instead of `.single()`
 - **TypeScript**: Strict mode enabled. Path alias `@/*` maps to project root
+- **Android dev networking**: Keep `android.usesCleartextTraffic=true` so development builds can load Metro bundles over HTTP
 
 ## Database
 

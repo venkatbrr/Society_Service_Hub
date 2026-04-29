@@ -8,10 +8,10 @@ const AsyncStorageAdapter = {
     return AsyncStorage.getItem(key);
   },
   setItem: (key: string, value: string) => {
-    AsyncStorage.setItem(key, value);
+    return AsyncStorage.setItem(key, value);
   },
   removeItem: (key: string) => {
-    AsyncStorage.removeItem(key);
+    return AsyncStorage.removeItem(key);
   },
 };
 

@@ -9,6 +9,7 @@ import Toast from 'react-native-toast-message';
 import { ProviderSelector } from '../../components/ProviderSelector';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
+import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
 
 const CATEGORIES = ['Cleaning', 'Repair', 'Pest Control', 'Electrician', 'Plumber', 'AC Service', 'Painting', 'Carpentry', 'Appliance Service', 'Other'];
@@ -68,6 +69,27 @@ export default function AddVisitScreen() {
     const pName = providerMode === 'existing' ? selectedProvider?.name : manualProviderName;
     if (!pName) return Toast.show({ type: 'error', text1: 'Provider name is required' });
 
+    const normalizedManualPhone = manualProviderPhone.trim()
+      ? normalizeIndianMobile(manualProviderPhone)
+      : null;
+    if (manualProviderPhone.trim() && !normalizedManualPhone) {
+      return Toast.show({ type: 'error', text1: 'Invalid Phone', text2: 'Enter a valid 10-digit mobile number.' });
+    }
+
+    const normalizedManualWhatsapp = manualProviderWhatsapp.trim()
+      ? normalizeIndianMobile(manualProviderWhatsapp)
+      : null;
+    if (manualProviderWhatsapp.trim() && !normalizedManualWhatsapp) {
+      return Toast.show({ type: 'error', text1: 'Invalid WhatsApp', text2: 'Enter a valid 10-digit mobile number.' });
+    }
+
+    const normalizedExistingPhone = selectedProvider?.phone
+      ? (normalizeIndianMobile(selectedProvider.phone) ?? selectedProvider.phone)
+      : null;
+    const normalizedExistingWhatsapp = selectedProvider?.whatsapp
+      ? (normalizeIndianMobile(selectedProvider.whatsapp) ?? selectedProvider.whatsapp)
+      : null;
+
     const timeSlot = `${formatTime(startTime)} - ${formatTime(endTime)}`;
 
     setSubmitting(true);
@@ -77,8 +99,8 @@ export default function AddVisitScreen() {
         created_by: user?.id as string,
         provider_id: providerMode === 'existing' ? selectedProvider.id : null,
         provider_name: pName,
-        provider_phone: providerMode === 'existing' ? selectedProvider.phone : manualProviderPhone || null,
-        provider_whatsapp: providerMode === 'existing' ? selectedProvider.whatsapp : manualProviderWhatsapp || null,
+        provider_phone: providerMode === 'existing' ? normalizedExistingPhone : normalizedManualPhone,
+        provider_whatsapp: providerMode === 'existing' ? normalizedExistingWhatsapp : normalizedManualWhatsapp,
         title: title.trim(),
         description: description.trim() || null,
         category,

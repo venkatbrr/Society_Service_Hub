@@ -1,5 +1,7 @@
 # Society Service Hub — Implementation Plan
 
+> **Historical reference**: this file captures the original build plan and early assumptions. It is not the source of truth for the current app surface. Use `docs/architecture.md`, `docs/features.md`, `docs/copilot-instructions.md`, and `.github/app-summary.md` for the current product state.
+
 A mobile application for gated communities to manage and access trusted service providers, built with **React Native (Expo)** and **Supabase**.
 
 ---

@@ -102,6 +102,14 @@ export default function LoginScreen() {
     setGoogleLoading(true);
     try {
       await GoogleSignin.hasPlayServices();
+
+      // Force account picker instead of silently reusing the last Google account.
+      try {
+        await GoogleSignin.signOut();
+      } catch {
+        // Ignore: no active cached Google session is a valid state.
+      }
+
       const userInfo = await GoogleSignin.signIn();
 
       if (userInfo.data?.idToken) {
@@ -116,7 +124,7 @@ export default function LoginScreen() {
       }
     } catch (error: any) {
       if (error.code !== statusCodes.SIGN_IN_CANCELLED) {
-        console.error('Google Sign-In Error:', error);
+        console.warn('Google Sign-In Error:', error);
         Toast.show({
           type: 'error',
           text1: 'Google Auth Error',

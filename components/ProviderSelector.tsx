@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { supabase } from '../lib/supabase';
 
@@ -9,7 +9,7 @@ interface ProviderSelectorProps {
   mode: 'existing' | 'new';
   onModeChange: (mode: 'existing' | 'new') => void;
   selectedProviderId?: string;
-  onSelectProvider: (provider: { id: string; name: string; phone?: string; whatsapp?: string }) => void;
+  onSelectProvider: (provider: { id: string; name: string; phone?: string | null; whatsapp?: string | null }) => void;
   manualProviderName: string;
   onManualNameChange: (name: string) => void;
   manualProviderPhone: string;

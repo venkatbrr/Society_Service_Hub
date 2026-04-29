@@ -1,96 +1,82 @@
 # Architecture Reference
 
-> **AI agents must review this file before modifying any code.**
+> **AI agents must review this file before modifying the codebase.**
 
-This document covers the technical architecture: data flow, auth, database schema, real-time system, navigation, state management, type system, permissions, error handling, and storage.
+This document covers the active technical architecture: data flow, auth, schema, RLS, navigation, notifications, state management, fund permissions, storage, and the current route model.
 
 ---
 
 ## Data Flow
 
 ```
-User Action
-  → Component (local useState)
-    → supabase.from('table').select/insert/update/delete()
-      → Supabase PostgreSQL (RLS enforced by community_id in JWT)
-        → Response
-      → Component updates local state
-    → UI re-renders
+User interaction
+  -> Screen state (`useState`, `useEffect`, `useFocusEffect`)
+    -> Supabase query or RPC
+      -> PostgreSQL tables, triggers, RPCs, and RLS
+    -> Local screen state update
+  -> UI re-render
 ```
 
-**Global state flows through two React Context providers:**
+Global state flows through two React Context providers:
 
 ```
 AuthProvider (context/AuthContext.tsx)
-  ├── session, user, profile, communityId, appRole, approvalStatus, activeCommunityRequest
-  ├── isPlatformAdmin, isCommunityAdmin
-  └── Consumed via useAuth() hook
+  -> session, user, profile, appRole, communityId
+  -> isPlatformAdmin, isCommunityLead
+  -> activeCommunityRequest, isLoading
 
 NotificationProvider (context/NotificationContext.tsx)
-  ├── notifications[], unreadCount
-  ├── requests native notification permissions (mobile)
-  ├── creates Android notification channel `default`
-  ├── stores `profiles.expo_push_token` for authenticated users
-  └── Consumed via useNotifications() hook
+  -> notifications, unreadCount, loading
+  -> fetchNotifications, markAsRead, markAllAsRead
+  -> push-permission registration and realtime subscription
 ```
 
-**Typical screen data flow:**
-1. Screen calls `useAuth()` → gets `communityId`
-2. `useEffect` or `useFocusEffect` triggers fetch
-3. Supabase query with `.eq('community_id', communityId)` filter
-4. Results stored in local `useState`
-5. User interaction → optimistic UI update → Supabase mutation → error reverts if needed
+### Query Scoping Rule
+
+Most application data is community-scoped and must be filtered by `communityId` from `useAuth()`. The main exception is `user_services`, which is user-scoped and protected by `auth.uid() = user_id` instead of community membership.
+Database RLS uses `get_user_community_id()` which resolves from `profiles.community_id` first and falls back to JWT metadata for compatibility.
 
 ---
 
 ## Auth Architecture
 
-### Supabase Client (`lib/supabase.ts`)
+### Root Layout (`app/_layout.tsx`)
 
-```typescript
-// Custom AsyncStorage adapter (not SecureStore — Android 2KB limit)
-const AsyncStorageAdapter = { getItem, setItem, removeItem }
+`RootLayout` wraps the app in:
 
-export const supabase = createClient(url, anonKey, {
-  auth: {
-    storage: AsyncStorageAdapter,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false
-  }
-})
+1. `SafeAreaProvider`
+2. `AuthProvider`
+3. `NotificationProvider`
+4. `Toast`
+
+`RootLayoutNav` configures Google Sign-In on mount and centralizes redirect logic.
+
+### Redirect Logic
+
+```text
+No session -> /login
+Platform admin session -> /platform/approvals
+Authenticated, no community, active request -> /community-request-submitted
+Authenticated, no community, no request -> /community-select
+Authenticated with community -> /(tabs)
 ```
 
-### Auth Helpers (`lib/auth.ts`)
+### AuthContext (`context/AuthContext.tsx`)
 
-- `configureGoogleSignIn()` — sets web client ID for Google OAuth
-- `signUpWithEmail(email, password, fullName)` — creates account + passes `full_name` in metadata
-- `signInWithEmail(email, password)` — standard email/password auth
-- `resetPassword(email)` — sends reset link to `societyservicehub://reset-password`
-- `getAuthErrorMessage(error)` — maps Supabase auth errors to user-friendly messages
+`AuthContext` loads the session from Supabase Auth, fetches the `profiles` row, resolves `communityId`, and loads the latest active community request when the user is still unassigned.
 
-### Session Lifecycle (`context/AuthContext.tsx`)
+Community ID resolution order:
 
-```
-App Boot
-  → supabase.auth.getSession()
-    → setSession, setUser
-    → loadProfile(userId)
-      → fetch profiles row by id
-      → setCommunityId (fallback: profile → user_metadata → app_metadata)
-      → setAppRole ('admin' | 'community_lead' | 'resident')
-      → if needed, load the latest active community request (pending, needs_info, or rejected)
-  → supabase.auth.onAuthStateChange(callback)
-    → re-runs loadProfile on every auth event
-```
-
-**Community ID resolution order:**
 1. `profile.community_id`
 2. `session.user.user_metadata.community_id`
 3. `session.user.app_metadata.community_id`
-4. `null` (triggers redirect to `/community-select`)
+4. `null`
 
-### Exported AuthContext values
+Exception: if `profile.app_role = 'admin'`, `communityId` is forced to `null` even when auth metadata still has an old `community_id` value.
+
+Compatibility note: legacy `community_lead` profiles created by older approval logic are normalized to `resident` by current app role resolution and migration backfills.
+
+Exported shape:
 
 ```typescript
 type AuthContextType = {
@@ -98,323 +84,250 @@ type AuthContextType = {
   user: User | null
   profile: Tables<'profiles'> | null
   appRole: 'admin' | 'community_lead' | 'resident'
+  communityId: string | null
   isPlatformAdmin: boolean
   isCommunityLead: boolean
-  communityId: string | null
-  activeCommunityRequest: { id, status, created_at, name } | null  // pending, needs_info, or rejected
+  activeCommunityRequest: { id, status, created_at, name } | null
   isLoading: boolean
   refreshSession: () => Promise<void>
   signOut: () => Promise<void>
 }
 ```
 
+### Auth Helpers (`lib/auth.ts`)
+
+- `configureGoogleSignIn()`
+- `signUpWithEmail(email, password, fullName)`
+- `signInWithEmail(email, password)`
+- `resetPassword(email)`
+- `getAuthErrorMessage(error)`
+
 ---
 
 ## Database Schema
 
-### Tables Overview
+### Active Product Tables
 
-| Table | Purpose | Key Constraints |
-|-------|---------|-----------------|
-| `communities` | Society grouping | `code` UNIQUE (6-char join code), stores pincode/city/area/type/address metadata |
-| `profiles` | User extension of `auth.users` | PK = `auth.users.id`, `email` mirrored from `auth.users.email`, `app_role` |
-| `community_requests` | Platform-reviewed community creation requests | requester-owned read access; `resulting_community_id` set on approval |
-| `profile_audit_log` | Audit trail of profile field changes | records actor, field, old/new values, reason |
-| `service_providers` | Trusted provider listings | `community_id` FK |
-| `service_visits` | Group visit coordination | `provider_id` nullable, `status` enum |
-| `visit_joiners` | Visit RSVPs | UNIQUE(`visit_id`, `user_id`) |
-| `favorites` | Bookmarks | Target: `provider_id` (business columns dropped) |
-| `ratings` | 1–5 star reviews | Target: `provider_id` (business columns dropped) |
-| `provider_hires` | Hire interaction count | `user_id` + `provider_id` |
-| `events` | Community funds | `goal_amount`, `event_date` |
-| `event_transactions` | Fund ledger entries | `type`: income or expense, `amount > 0` |
-| `fund_roles` | Per-fund role assignments | UNIQUE(`event_id`, `user_id`), `role` enum |
-| `notifications` | User notifications | `data` JSONB, `is_read` boolean |
-| `user_services` | **User-scoped** personal service reminders | RLS: `auth.uid() = user_id` (NOT community-scoped). `next_due_on` auto-computed by trigger. |
+| Table | Purpose | Scope |
+|-------|---------|-------|
+| `communities` | Community metadata and 6-character join code | Community |
+| `profiles` | User profile extension of `auth.users` | Community or self |
+| `community_requests` | Reviewed community creation requests | Requester or platform |
+| `profile_audit_log` | Audit trail for profile mutations | Admin or internal |
+| `service_providers` | Trusted provider listings | Community |
+| `service_visits` | Group visit coordination | Community |
+| `visit_joiners` | RSVPs for service visits | Community |
+| `favorites` | Saved providers | User |
+| `ratings` | Provider reviews | Community |
+| `provider_hires` | Contact and hire history | Community |
+| `events` | Community funds | Community |
+| `event_transactions` | Fund ledger entries | Community |
+| `fund_roles` | Treasurer and collector assignments per fund | Community |
+| `notifications` | User notification feed | User |
+| `user_services` | Personal service reminders | User |
 
-### Dual-Target Check Constraint (favorites, ratings)
+### Removed Marketplace Tables
 
-```sql
-CHECK (
-  (provider_id IS NOT NULL AND business_id IS NULL) OR
-  (provider_id IS NULL AND business_id IS NOT NULL)
-)
-```
+The marketplace tables `resident_businesses`, `business_offerings`, and `business_inquiries` were removed in the `20260422010000_simplify_roles_and_remove_marketplace.sql` migration. Provider favorites and ratings are now single-target tables.
 
-### Database Functions
+### Key Database Functions
 
 | Function | Purpose |
-| `get_my_upcoming_services()` | Caller's services ordered by `next_due_on` ASC with `days_until_due`. User-scoped. |
-| `get_my_due_soon_count()` | Count of caller's services due within 7 days. |
-| `mark_service_done(p_service_id)` | Sets `last_serviced_on = today`, clears `notified_at`. Security-definer. |
-| `notify_due_services()` | Inserts `service_reminder` notifications for all users with services due ≤ 7 days; sets `notified_at`. Idempotent. |
 |----------|---------|
-| `handle_new_user()` | Trigger: auto-creates `profiles` row on signup with resident role |
-| `get_user_community_id()` | Returns community_id from JWT (`app_metadata` → `user_metadata` fallback) |
-| `is_admin(p_user_id)` | Alias for `is_community_lead()` — kept for backward-compatible RLS policies |
-| `is_community_lead(p_user_id)` | Checks if user is `community_lead` in their community |
-| `is_platform_admin(p_user_id)` | Checks if user is platform admin (`app_role = 'admin'` and no community) |
-| `is_user_approved(p_user_id)` | Checks if user has `community_id IS NOT NULL AND removed_at IS NULL` |
-| `generate_community_code()` | Generates a random unique 6-character uppercase alphanumeric code |
-| `submit_community_request(...)` | RPC: creates a reviewed `community_requests` row |
-| `join_community_by_code(p_code)` | RPC: resident joins a community by 6-char code — no approval needed |
-| `community_lead_remove_resident(p_target_profile_id)` | RPC: community lead removes a non-lead resident |
-| `platform_approve_community_request(p_request_id)` | Platform admin approves request: creates community, sets requester as community_lead, generates join code |
-| `platform_reject_community_request(p_request_id, p_rejection_reason)` | Platform admin rejects a pending community request |
-| `platform_soft_remove_resident(p_target_profile_id, p_reason)` | Platform admin soft-removes a resident from a community |
-| `set_audit_actor(p_actor_id)` / `set_audit_context(...)` | Sets audit context for profile mutation logging |
-| `get_residents_directory(p_include_phone)` | Returns active residents of current community. Phone visible to community leads and platform admins. |
-| `get_fund_role(p_event_id, p_user_id)` | Resolves effective fund role (community_lead/admin > assigned > resident) |
-| `get_community_visits(p_community_id, p_user_id, p_status, p_time_scope)` | RPC: returns visits with creator info + joiner counts |
-| `get_visit_joiners(p_visit_id)` | RPC: returns joiner details with profile info |
-| `auto_complete_past_visits()` | Marks past visits as completed |
+| `handle_new_user()` | Trigger helper that creates a `profiles` row after auth signup |
+| `join_community_by_code(p_code)` | Join community immediately by code |
+| `submit_community_request(...)` | Insert a new community request |
+| `platform_approve_community_request(p_request_id)` | Create community, generate code, and assign requester to the community as resident |
+| `platform_reject_community_request(p_request_id, p_rejection_reason)` | Reject pending community request |
+| `community_lead_remove_resident(p_target_profile_id)` | Remove a non-lead resident from the lead's community |
+| `platform_soft_remove_resident(p_target_profile_id, p_reason)` | Platform-admin soft removal |
+| `get_residents_directory(p_include_phone)` | Community resident list with conditional phone visibility |
+| `get_community_visits(...)` | Visit aggregation RPC |
+| `get_visit_joiners(p_visit_id)` | Visit joiner detail RPC |
+| `get_fund_role(p_event_id, p_user_id)` | Database-side fund role resolution |
+| `get_my_upcoming_services()` | User-scoped reminders ordered by due date |
+| `get_my_due_soon_count()` | Count reminders due within 7 days |
+| `mark_service_done(p_service_id)` | Reset a reminder to serviced today |
+| `notify_due_services()` | Create due-soon reminder notifications |
+| `normalize_indian_mobile(p_value)` | Canonicalize flexible phone input to a validated 10-digit Indian mobile |
+| `set_audit_actor(p_actor_id)` / `set_audit_context(...)` | Attach audit metadata to profile changes |
 
-### Database Triggers
+### Triggers
 
 | Trigger | Table | Event | Action |
 |---------|-------|-------|--------|
-| `on_auth_user_created` | `auth.users` | INSERT | Auto-create profile row |
-| `on_rating_change` | `ratings` | INSERT/UPDATE/DELETE | Recalculate `service_providers.avg_rating` |
-| `user_services_compute_fields_trigger` | `user_services` | BEFORE INSERT/UPDATE | Auto-compute `next_due_on`; reset `notified_at` when `last_serviced_on` or `frequency_months` changes |
-| `fund_role_guard` | `fund_roles` | INSERT/UPDATE/DELETE | Validate treasurer/collector limits + community |
-| `event_transaction_guard` | `event_transactions` | INSERT/UPDATE | Validate title, contributor community |
-| `on_service_visit_created` | `service_visits` | INSERT | Notify all community members |
+| `on_auth_user_created` | `auth.users` | INSERT | Create profile row |
+| `on_rating_change` | `ratings` | INSERT/UPDATE/DELETE | Recompute provider rating aggregates |
+| `user_services_compute_fields_trigger` | `user_services` | BEFORE INSERT/UPDATE | Recompute `next_due_on` and clear `notified_at` when relevant |
+| `fund_role_guard` | `fund_roles` | INSERT/UPDATE/DELETE | Enforce fund assignment limits and community rules |
+| `event_transaction_guard` | `event_transactions` | INSERT/UPDATE | Validate transaction semantics |
+| `service_provider_phone_guard_trigger` | `service_providers` | BEFORE INSERT/UPDATE | Normalize provider phones and reject duplicates within the same community |
+| `on_service_visit_created` | `service_visits` | INSERT | Insert visit notifications |
 
-### RLS Policies
+### RLS Summary
 
-All tables have Row Level Security enabled. Community isolation is enforced via `get_user_community_id()`, and community-scoped access is additionally gated by `is_user_approved()`.
+All active tables have RLS enabled.
 
-| Table | SELECT | INSERT | UPDATE | DELETE |
-|-------|--------|--------|--------|--------|
-| `profiles` | Own or same community | Own record | Own record | — |
-| `community_requests` | Requester only | Via RPC only | Via review tooling only | Via review tooling only |
-| `service_providers` | Same community | Same community | Creator only | Creator only |
-| `service_visits` | Same community | Same community | Creator only | Creator only |
-| `visit_joiners` | Same community | Own (if visit is upcoming) | — | Own only |
-| `resident_businesses` | Same community | Same community | Owner only | Owner only |
-| `business_offerings` | Via business visibility | Business owner | Business owner | Business owner |
-| `favorites` | Own only | Own only | — | Own only |
-| `ratings` | Same community | Own only | Own only | — |
-| `events` | Same community | Admin only | Admin only | Admin only |
-| `event_transactions` | Same community | Role-gated (see below) | Role-gated | Role-gated |
-| `fund_roles` | Same community | Admin or treasurer | Admin/treasurer | Admin/treasurer |
-| `notifications` | Own only, approved members only | System only | Own only, approved members only | — |
+| Table | Access model |
+|-------|--------------|
+| `profiles` | Own profile or same community |
+| `community_requests` | Requester read access and platform review workflows |
+| `service_providers` | Same community; creator manages own rows |
+| `service_visits` | Same community; creator manages own rows |
+| `visit_joiners` | Same community; users manage their own joins |
+| `favorites` | User-owned only |
+| `ratings` | Same community for reads; owner-managed writes |
+| `provider_hires` | Community-scoped usage history |
+| `events`, `event_transactions`, `fund_roles` | Community-scoped with role-gated writes |
+| `notifications` | User-owned read and mark-read updates |
+| `user_services` | User-owned only, independent of community filters |
 
-**Approval gating detail:** Pending and rejected users cannot read `service_providers`, `service_visits`, `visit_joiners`, `favorites`, `ratings`, `provider_hires`, `events`, `event_transactions`, `fund_roles`, or `notifications`, even if they already have a `community_id`.
-
-**Transaction RLS detail:**
-- Income: `get_fund_role()` must return `admin`, `treasurer`, or `collector`
-- Expense: `get_fund_role()` must return `admin` or `treasurer`
+Pending or rejected users are blocked from normal community content even if a stale `community_id` exists.
 
 ---
 
-## Real-Time System
+## Real-Time Notifications
 
 ### NotificationContext (`context/NotificationContext.tsx`)
 
-```typescript
-interface NotificationContextType {
-  notifications: Notification[]
-  unreadCount: number
-  loading: boolean
-  fetchNotifications: () => Promise<void>
-  markAsRead: (id: string) => Promise<void>
-  markAllAsRead: () => Promise<void>
-}
-```
+`NotificationProvider`:
 
-**Subscription setup:**
-```typescript
-const channel = supabase
-  .channel(`user_notifications_${user.id}`)
-  .on('postgres_changes', {
-    event: 'INSERT',
-    schema: 'public',
-    table: 'notifications',
-    filter: `user_id=eq.${user.id}`,
-  }, (payload) => {
-    // Prepend to local state
-    // Increment unreadCount
-    // Trigger native notification (non-web) via expo-notifications
-  })
-  .subscribe()
-```
+- loads the latest 50 rows from `notifications`
+- tracks unread count in memory
+- subscribes to `postgres_changes` INSERT events filtered by `user_id`
+- requests notification permissions on mobile
+- creates the Android `default` notification channel
+- stores `profiles.expo_push_token` when Expo token registration succeeds
 
-**Mobile setup detail:** `NotificationContext` configures foreground display via `Notifications.setNotificationHandler(...)`, requests permission at runtime, and persists Expo push tokens on `profiles.expo_push_token`.
+When a new notification arrives:
 
-**Cleanup:** `supabase.removeChannel(channel)` on unmount or user logout.
+1. the row is prepended to local state
+2. `unreadCount` increments
+3. a local device notification is scheduled on iOS or Android
 
-**Notification trigger (database):** When a `service_visit` is inserted, a trigger inserts `notifications` rows for all other community members with `type = 'new_visit'`.
+Current active notification flows:
+
+- `new_visit`
+- `community_approved`
+- `community_rejected`
+- `removed_from_community`
+- `service_reminder`
+
+The notification screen still contains defensive handling for some legacy promotion-related payloads.
 
 ---
 
 ## Navigation Architecture
 
-### Layout Hierarchy
+### Route Hierarchy
 
-```
-app/_layout.tsx (RootLayout)
-  ├── SafeAreaProvider
-  ├── AuthProvider
-  ├── NotificationProvider
-  ├── RootLayoutNav (redirect logic)
-  │   └── Slot (renders matched route)
-  └── Toast
-```
-
-### Redirect Logic (`app/_layout.tsx`)
-
-```
-if (!session) → router.replace('/login')
-else if (isPlatformAdmin) → router.replace('/platform/approvals')
-else if (!communityId && activeCommunityRequest) → router.replace('/community-request-submitted')
-else if (!communityId) → router.replace('/community-select')
-else if (communityId && approvalStatus === 'pending') → router.replace('/pending')
-else if (communityId && approvalStatus === 'rejected') → router.replace('/rejected')
-else if (communityId && approvalStatus === 'approved' && on onboarding/auth page) → router.replace('/(tabs)')
+```text
+app/_layout.tsx
+  -> /login
+  -> /forgot-password
+  -> /community-select
+  -> /community-request
+  -> /community-request-submitted
+  -> /(tabs)
+  -> /notifications
+  -> /residents
+  -> /provider/*
+  -> /visits/*
+  -> /funds/*
+  -> /services/*
+  -> /platform/*
 ```
 
-### Tab Navigator (`app/(tabs)/_layout.tsx`)
+### Main Tabs (`app/(tabs)/_layout.tsx`)
 
-Main tabs: Help (index), Market (business, hidden), Saved (favorites), Funds (funds), Profile (profile).
+- Help
+- Saved
+- Funds
+- Profile
 
-Platform tabs: Approvals, Promotions, Communities (under `app/platform/*`).
+Tab icons are currently rendered with `APP_EMOJIS` inside `Text` elements.
 
-### Dynamic Routes
+### Platform Tabs (`app/platform/_layout.tsx`)
 
-All detail screens use `[id].tsx` pattern. Params accessed via `useLocalSearchParams()`.
+- Approvals
+- Communities
 
-```
-app/provider/[id].tsx   → /provider/abc-123
-app/business/[id].tsx   → /business/abc-123
-app/visits/[id].tsx     → /visits/abc-123
-app/funds/[id].tsx      → /funds/abc-123
-app/business/catalog/[id].tsx → /business/catalog/abc-123
-```
+### Dynamic Detail Routes
 
-### Navigation Patterns
+- `/provider/[id]`
+- `/visits/[id]`
+- `/funds/[id]`
+- `/services/[id]`
+- `/platform/community/[id]`
 
-```typescript
-router.push('/business/add')                    // Stack push
-router.push(`/business/${businessId}`)           // Dynamic route
-router.replace('/login')                         // Replace (no back)
-router.back()                                    // Go back
-```
+### Route Parameter Patterns
+
+- Help screen preserves state via params like `segment` and `visitTab`
+- Residents screen can receive `returnTo=profile`
+- Fund transactions use `event_id` and `type`
 
 ---
 
 ## State Management Patterns
 
-### Three Layers
+### Common Fetching Shapes
 
-1. **Global Context** — `AuthContext` + `NotificationContext` (persists across app lifetime)
-2. **Screen State** — `useState` for fetched data, loading, refreshing
-3. **Component State** — minimal UI state in presentational components
+1. `useEffect` for initial fetches and dependency-driven reloads
+2. `useFocusEffect` for screens that must refresh when revisited
+3. `useCallback`-wrapped loaders for stable dependencies
+4. `Promise.all` for batched Supabase reads
+5. Optimistic UI updates for lightweight user actions like marking notifications or toggling favorites
 
-### Data Fetching Patterns
+### Screen-State Conventions
 
-**Pattern A — useEffect with dependencies:**
-```typescript
-useEffect(() => { fetchData() }, [fetchData])
-```
-
-**Pattern B — useFocusEffect (re-fetch on screen focus):**
-```typescript
-useFocusEffect(useCallback(() => { fetchData() }, [deps]))
-```
-
-**Pattern C — useCallback memoization:**
-```typescript
-const fetchData = useCallback(async () => {
-  if (!communityId) return
-  const { data } = await supabase.from('table').select('*').eq('community_id', communityId)
-  setData(data)
-}, [communityId])
-```
-
-**Pattern D — Parallel fetching:**
-```typescript
-const [result1, result2] = await Promise.all([query1, query2])
-```
-
-**Pattern E — Optimistic UI:**
-```typescript
-setItems(prev => prev.map(i => i.id === id ? { ...i, is_favorite: !i.is_favorite } : i))
-// Then call API; if fails, next fetch corrects state
-```
-
-**Pattern F — Pull-to-refresh:**
-```typescript
-<FlatList refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />} />
-```
+- `loading` for initial fetch state
+- `refreshing` for pull-to-refresh
+- `isLoading` for form submission state
+- Toasts for all user-visible success and failure messages
 
 ---
 
 ## Type System
 
-### Generated Types (`lib/database.types.ts`)
+### Generated Types
 
-Auto-generated from Supabase schema. Regenerate with:
+`lib/database.types.ts` is generated from Supabase and provides:
+
+```typescript
+type Tables<T>
+type InsertTables<T>
+type UpdateTables<T>
+type Enums<T>
+```
+
+Regenerate with:
+
 ```bash
 npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 ```
 
-Exports:
-```typescript
-type Tables<T>       // Row type for table T
-type InsertTables<T> // Insert type for table T
-type UpdateTables<T> // Update type for table T
-```
-
-### Enriched Domain Types
+### Important App Types
 
 ```typescript
-// Provider with UI interaction state
-type ProviderWithInteraction = Tables<'service_providers'> & {
-  is_favorite?: boolean
-  user_rating?: number | null
-  hire_count?: number
-}
-
-// Business with aggregated data
-type BusinessWithInteraction = Tables<'resident_businesses'> & {
-  is_favorite?: boolean
-  avg_rating?: number
-  rating_count?: number
-  inquiry_count?: number
-  owner_name?: string
-  owner_flat?: string
-}
-
-// Visit with creator + joiner info
-type VisitWithJoinerData = Tables<'service_visits'> & {
-  creator_name?: string
-  joiner_count?: number
-  has_user_joined?: boolean
-}
-
-// Fund with computed totals
-type FundWithTotals = Tables<'events'> & {
-  totals: { income: number; expense: number; balance: number }
-  currentRole: FundAccessRole
-  treasurerNames: string[]
-  collectorCount: number
-}
-```
-
-### Role Types
-
-```typescript
-type AppRole = 'admin' | 'resident'
-type AssignmentRole = 'treasurer' | 'collector'
+type AppRole = Tables<'profiles'>['app_role']
+type AssignmentRole = Tables<'fund_roles'>['role']
 type FundAccessRole = 'admin' | AssignmentRole | 'resident'
 ```
 
+`lib/fundRoles.ts` still treats both `admin` and legacy `community_admin` values as fund-admin equivalents for compatibility. The active auth model exposed by `AuthContext` is `admin | community_lead | resident`.
+
+Representative enriched types used in screens include:
+
+- `ProviderWithInteraction`
+- `VisitWithJoinerData`
+- locally composed fund summary objects in the Funds tab
+- `ServiceCardItem` for reminder list cards
+
 ---
 
-## Fund Roles & Permissions (`lib/fundRoles.ts`)
+## Fund Permissions (`lib/fundRoles.ts`)
 
-### Constants
+Constants:
 
 ```typescript
 MAX_TREASURERS = 2
@@ -422,72 +335,48 @@ MIN_TREASURERS = 1
 MAX_COLLECTORS = 6
 ```
 
-### Role Resolution
+Helper behavior:
 
 ```typescript
-getEffectiveFundRole(appRole, assignments, userId): FundAccessRole
-// 1. If appRole === 'admin' → 'admin'
-// 2. If userId in fund_roles → assigned role
-// 3. Otherwise → 'resident'
+getEffectiveFundRole(appRole, assignments, userId)
+getFundPermissions(role)
+formatRole(role)
+getRestrictionHint(role)
 ```
 
-### Permission Model
+Permission model returned by `getFundPermissions()`:
 
-```typescript
-getFundPermissions(role: FundAccessRole) → {
-  canCreateFund:        role === 'admin'
-  canManageTreasurers:  role === 'admin'
-  canManageCollectors:  role === 'treasurer'
-  canAddContribution:   role in ['admin', 'treasurer', 'collector']
-  canAddExpense:        role in ['admin', 'treasurer']
-}
-```
+- `canCreateFund`
+- `canManageTreasurers`
+- `canManageCollectors`
+- `canAddContribution`
+- `canAddExpense`
 
-### Helper Functions
-
-- `formatRole(role)` — capitalizes role name for display
-- `getRestrictionHint(role)` — returns descriptive text explaining what the role can do
-
-### Database Enforcement
-
-Fund role limits and transaction access are double-enforced:
-1. **Client-side** via `getFundPermissions()` (UI gating)
-2. **Database-side** via RLS policies + `fund_role_guard` and `event_transaction_guard` triggers
+Database rules remain the source of truth through RLS, `fund_role_guard`, and `event_transaction_guard`.
 
 ---
 
 ## Error Handling
 
-### Centralized Error Detection (`lib/supabaseErrors.ts`)
+### Shared Helpers
 
-```typescript
-isSupabaseSchemaError(error)       // Detects PGRST200/204/205, schema cache errors
-isMissingFundSchemaError(error)    // Schema error specific to fund tables
-getMissingFundSchemaMessage()      // User-friendly message for fund schema errors
-```
+`lib/supabaseErrors.ts` detects schema and cache issues, especially around the funds feature:
 
-### Auth Error Messages (`lib/auth.ts`)
+- `isMissingFundSchemaError(error)`
+- `getMissingFundSchemaMessage()`
 
-```typescript
-getAuthErrorMessage(error) // Maps Supabase auth errors to friendly strings:
-// 'Invalid login credentials' → 'Invalid email or password. Please try again.'
-// 'User already registered' → 'An account with this email already exists.'
-// etc.
-```
+`lib/auth.ts` maps Supabase auth failures into user-facing strings with `getAuthErrorMessage(error)`.
 
-### Standard Screen Pattern
+### UI Feedback Pattern
+
+Every screen uses `react-native-toast-message` for success and failure feedback.
+
+Typical shape:
 
 ```typescript
 try {
-  setLoading(true)
   const { data, error } = await supabase.from('table').select('*')
-  if (error) {
-    if (isMissingFundSchemaError(error)) {
-      Toast.show({ type: 'error', text1: '...', text2: getMissingFundSchemaMessage() })
-      return
-    }
-    throw error
-  }
+  if (error) throw error
   setData(data)
 } catch (error: any) {
   Toast.show({ type: 'error', text1: 'Error', text2: error.message })
@@ -496,25 +385,10 @@ try {
 }
 ```
 
-### Toast Feedback
-
-All user feedback via `react-native-toast-message`:
-```typescript
-Toast.show({ type: 'success' | 'error' | 'info', text1: 'Title', text2: 'Details' })
-```
-
 ---
 
 ## Storage
 
-### Business Photos Bucket
+The current live UI does not have an active file-upload feature.
 
-- Bucket name: `business-photos` (public)
-- Used for: business cover photos, offering photos
-- Upload flow: `expo-image-picker` → base64 → `supabase.storage.from('business-photos').upload(path, file)`
-- Public URL: `supabase.storage.from('business-photos').getPublicUrl(path)`
-- Rendered via `<Image source={{ uri: photoUrl }} />`
-
-### No image storage for:
-- Service providers (use icon placeholders)
-- Profiles (use Google avatar URL from auth metadata)
+The database setup still includes the public `community-uploads` bucket, but no current screen writes to it. Profile avatars come from auth metadata, and provider or reminder flows do not upload media.

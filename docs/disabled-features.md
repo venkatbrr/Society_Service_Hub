@@ -1,35 +1,40 @@
 # Disabled Features Log
 
-This document tracks features that have been intentionally disabled or simplified in the Society Service Hub to streamline development, testing, or initial user onboarding.
+This document tracks product behavior that is intentionally disabled, simplified, or removed from the active app.
 
 ---
 
-## 🚫 Authentication & Security
+## Authentication and Security
 
 ### 1. Email Verification
-- **Status**: Disabled / Simplified.
-- **Details**: New users are not required to verify their email address before accessing the application. 
-- **Requirement**: The "Confirm email" toggle must be set to **OFF** in the Supabase Authentication Dashboard settings for this to take effect.
-- **Reasoning**: To reduce friction during initial pilot testing and community recruitment.
+
+- **Status**: Disabled
+- **Details**: New users are not blocked on email confirmation before using the app.
+- **Operational requirement**: Supabase Auth "Confirm email" must remain OFF for this flow to work as implemented.
+- **Reason**: Lower-friction onboarding during pilot usage.
 
 ### 2. Password Strength Constraints
-- **Status**: Removed.
-- **Details**: Standard password complexity requirements (e.g., minimum symbols, uppercase letters) are not enforced at the application level during signup.
-- **Reasoning**: To simplify the user onboarding process during early-stage development and testing.
+
+- **Status**: Simplified
+- **Details**: The sign-up flow does not enforce custom password-complexity rules beyond the basic form checks in the app and Supabase Auth requirements.
+- **Reason**: Reduced friction during early adoption.
 
 ---
 
-## 🛒 Business / Marketplace
+## Removed Product Area
 
-### 3. Resident Marketplace (Market Tab)
-- **Status**: Hidden from UI.
-- **Details**: The Market tab (resident home businesses) is hidden from the tab bar and the "Resident Business" section is removed from the Profile screen. All code, components, screens (`app/business/*`), and database objects (`resident_businesses`, `business_offerings`, `business_inquiries` tables, RLS policies, RPCs) remain intact.
-- **Reasoning**: Feature deferred to a later release to focus on core service provider and visit features.
+### 3. Resident Marketplace
+
+- **Status**: Removed from the shipped product
+- **Details**: The former marketplace screens under `app/business/*` are not present in the app. Marketplace tables were removed in `supabase/migrations/20260422010000_simplify_roles_and_remove_marketplace.sql`. Provider `favorites` and `ratings` no longer support business targets.
+- **Reason**: Scope was narrowed to provider discovery, service visits, funds, onboarding, and personal reminders.
 
 ---
 
-## 🏗️ Future Re-enablement Plan
-When the app transitions to a formal production release:
-1.  **Email Verification**: Re-enable "Confirm email" in Supabase and update `app/login.tsx` to handle the verification phase.
-2.  **Security Audit**: Re-introduce password strength validation in `validateForm()` within `app/login.tsx` and `resetPassword` flows.
-3.  **Business / Marketplace**: Restore the Market tab in `app/(tabs)/_layout.tsx` (change `href: null` back to title/icon), uncomment the business section in `app/(tabs)/profile.tsx`, and uncomment `fetchUserBusiness()` call.
+## Notes for Reintroduction
+
+If these areas are reintroduced later:
+
+1. Email verification will require auth-flow updates in `app/login.tsx` and related messaging.
+2. Password strength rules will require explicit validation logic in the sign-up form.
+3. A marketplace return would require fresh schema, routes, components, and documentation rather than re-enabling hidden screens.

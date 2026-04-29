@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
+    Modal,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -14,6 +15,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
+import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
 const COMMUNITY_TYPES = ['apartment', 'gated villas', 'housing society', 'township'] as const;
@@ -21,12 +23,15 @@ const APPROXIMATE_UNITS = ['<25', '25-100', '100-500', '500+'] as const;
 
 export default function CommunityRequestScreen() {
   const router = useRouter();
+  const { refreshSession } = useAuth();
   const colors = Colors.light;
 
   const [name, setName] = useState('');
   const [communityType, setCommunityType] = useState<(typeof COMMUNITY_TYPES)[number]>('apartment');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
+  const [city, setCity] = useState('Hyderabad');
+  const [showCityPicker, setShowCityPicker] = useState(false);
+  const CITIES = ['Hyderabad'];
   const [pincode, setPincode] = useState('');
   const [area, setArea] = useState('');
   const [approximateUnits, setApproximateUnits] = useState<string>('');
@@ -74,6 +79,7 @@ export default function CommunityRequestScreen() {
         text1: 'Request submitted',
         text2: 'We will review your request within about 24 hours.',
       });
+      await refreshSession();
       router.replace('/community-request-submitted');
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Request failed', text2: error.message });
@@ -141,13 +147,37 @@ export default function CommunityRequestScreen() {
         />
 
         <Text style={[styles.label, { color: colors.text }]}>CITY *</Text>
-        <TextInput
-          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
-          value={city}
-          onChangeText={setCity}
-          placeholder="Bengaluru"
-          placeholderTextColor={colors.textMuted}
-        />
+        <TouchableOpacity
+          style={[styles.input, { justifyContent: 'center', borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          onPress={() => setShowCityPicker(true)}
+          activeOpacity={0.7}
+        >
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: colors.text, fontSize: 16 }}>{city}</Text>
+            <Ionicons name="chevron-down" size={20} color={colors.textMuted} />
+          </View>
+        </TouchableOpacity>
+
+        <Modal visible={showCityPicker} transparent animationType="fade">
+          <Pressable style={styles.modalOverlay} onPress={() => setShowCityPicker(false)}>
+            <View style={[styles.modalContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Select City</Text>
+              {CITIES.map((c) => (
+                <TouchableOpacity
+                  key={c}
+                  style={[styles.modalOption, city === c && { backgroundColor: `${colors.primary}14` }]}
+                  onPress={() => {
+                    setCity(c);
+                    setShowCityPicker(false);
+                  }}
+                >
+                  <Text style={[styles.modalOptionText, { color: city === c ? colors.primary : colors.text }]}>{c}</Text>
+                  {city === c && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
 
         <Text style={[styles.label, { color: colors.text }]}>PINCODE *</Text>
         <TextInput
@@ -351,5 +381,38 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '800',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 16,
+  },
+  modalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  modalOptionText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

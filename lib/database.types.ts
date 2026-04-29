@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -259,6 +259,45 @@ export type Database = {
           },
         ]
       }
+      fraud_verdicts: {
+        Row: {
+          action: string
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          flag_count: number
+          hard_block_triggered: boolean
+          id: string
+          input_snapshot: Json | null
+          summary: string | null
+          triggered_rules: Json
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          flag_count?: number
+          hard_block_triggered?: boolean
+          id?: string
+          input_snapshot?: Json | null
+          summary?: string | null
+          triggered_rules?: Json
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          flag_count?: number
+          hard_block_triggered?: boolean
+          id?: string
+          input_snapshot?: Json | null
+          summary?: string | null
+          triggered_rules?: Json
+        }
+        Relationships: []
+      }
       fund_roles: {
         Row: {
           assigned_by: string
@@ -484,23 +523,32 @@ export type Database = {
       ratings: {
         Row: {
           created_at: string | null
+          fraud_rules_triggered: Json | null
+          fraud_status: string | null
           id: string
           provider_id: string
           rating: number
+          review_text: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          fraud_rules_triggered?: Json | null
+          fraud_status?: string | null
           id?: string
           provider_id: string
           rating: number
+          review_text?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
+          fraud_rules_triggered?: Json | null
+          fraud_status?: string | null
           id?: string
           provider_id?: string
           rating?: number
+          review_text?: string | null
           user_id?: string
         }
         Relationships: [
@@ -521,7 +569,9 @@ export type Database = {
           created_at: string | null
           created_by: string
           description: string | null
+          details: Json | null
           flat_block: string | null
+          fraud_status: string | null
           id: string
           is_trending: boolean | null
           is_verified: boolean | null
@@ -537,7 +587,9 @@ export type Database = {
           created_at?: string | null
           created_by: string
           description?: string | null
+          details?: Json | null
           flat_block?: string | null
+          fraud_status?: string | null
           id?: string
           is_trending?: boolean | null
           is_verified?: boolean | null
@@ -553,7 +605,9 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           description?: string | null
+          details?: Json | null
           flat_block?: string | null
+          fraud_status?: string | null
           id?: string
           is_trending?: boolean | null
           is_verified?: boolean | null
@@ -755,6 +809,10 @@ export type Database = {
         Args: { p_reason?: string; p_target_profile_id: string }
         Returns: undefined
       }
+      create_community_admin_request: {
+        Args: { p_target_user_id: string }
+        Returns: string
+      }
       generate_community_code: { Args: never; Returns: string }
       get_all_communities: {
         Args: { p_search?: string }
@@ -878,6 +936,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      normalize_indian_mobile: { Args: { p_value: string }; Returns: string }
       notify_due_services: { Args: never; Returns: number }
       platform_approve_community_request: {
         Args: { p_request_id: string }
@@ -896,6 +955,8 @@ export type Database = {
         Args: { p_actor_id: string; p_reason?: string }
         Returns: undefined
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       submit_community_request: {
         Args: {
           p_address?: string
@@ -1058,38 +1119,32 @@ export const Constants = {
   },
 } as const
 
-// ─── Custom composite types (hand-authored; NOT generated) ───────────────────
-// These extend generated Row types with computed/joined fields used by the app.
-// NOTE: Use Database['public']['Tables'][...]['Row'] to avoid self-import.
-
-type ServiceProviderRow = Database['public']['Tables']['service_providers']['Row'];
-
+// Custom composite types (hand-authored; NOT generated)
+type ServiceProviderRow = Database["public"]["Tables"]["service_providers"]["Row"]
 export interface ProviderWithInteraction extends ServiceProviderRow {
-  is_favorite: boolean;
-  hire_count: number;
-  user_rating?: number | null;
-  fraud_status?: string | null;
+  is_favorite: boolean
+  hire_count: number
+  user_rating?: number | null
+  fraud_status: string | null
 }
 
-type ServiceVisitRow = Database['public']['Tables']['service_visits']['Row'];
-
+type ServiceVisitRow = Database["public"]["Tables"]["service_visits"]["Row"]
 export interface VisitWithJoinerData extends ServiceVisitRow {
-  creator_name?: string;
-  creator_flat?: string;
-  creator_avatar_url?: string;
-  joiner_count: number;
-  has_user_joined: boolean;
+  creator_name?: string
+  creator_flat?: string
+  creator_avatar_url?: string
+  joiner_count: number
+  has_user_joined: boolean
 }
 
 export interface VisitJoinerWithProfile {
-  id: string;
-  visit_id: string;
-  user_id: string;
-  joined_at?: string;
-  full_name: string | null;
-  flat_number: string | null;
-  avatar_url: string | null;
-  user_name?: string;
-  note?: string;
+  id: string
+  visit_id: string
+  user_id: string
+  joined_at?: string
+  full_name: string | null
+  flat_number: string | null
+  avatar_url: string | null
+  user_name?: string
+  note?: string
 }
-

@@ -45,7 +45,7 @@ export const BaseCard = React.memo(({ children, onPress, isLightMode = true, sty
 const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
-    marginBottom: 16,
+    marginBottom: 10,
     borderWidth: 1,
     overflow: 'hidden',
     // iOS-only soft shadow (Android elevation causes white rectangle artifacts)

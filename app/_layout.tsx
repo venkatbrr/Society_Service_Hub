@@ -5,6 +5,12 @@ import Toast from 'react-native-toast-message';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import { configureGoogleSignIn } from '../lib/auth';
+import { LogBox } from 'react-native';
+
+LogBox.ignoreLogs([
+  'AuthApiError: Invalid Refresh Token: Refresh Token Not Found',
+  'AuthApiError',
+]);
 
 function RootLayoutNav() {
   const { session, communityId, activeCommunityRequest, isPlatformAdmin, isLoading } = useAuth();

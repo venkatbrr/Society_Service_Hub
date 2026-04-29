@@ -31,7 +31,6 @@ type ProviderOption = {
   name: string;
   category: string;
   phone: string | null;
-  whatsapp: string | null;
 };
 
 export default function AddServiceScreen() {
@@ -55,21 +54,18 @@ export default function AddServiceScreen() {
     let isMounted = true;
 
     async function fetchProviders() {
-      if (!communityId) {
-        if (isMounted) {
-          setProviders([]);
-          setSelectedProvider(null);
-        }
-        return;
-      }
-
       setProvidersLoading(true);
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('service_providers')
-          .select('id, name, category, phone, whatsapp')
-          .eq('community_id', communityId)
+          .select('id, name, category, phone')
           .order('name', { ascending: true });
+
+        if (communityId) {
+          query = query.eq('community_id', communityId);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
 
@@ -281,10 +277,19 @@ export default function AddServiceScreen() {
             <Text style={[styles.providerStateText, { color: colors.textMuted }]}>Loading providers...</Text>
           </View>
         ) : providerOptions.length === 0 ? (
-          <View style={[styles.providerStateCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-            <Text style={styles.providerStateIcon}>👥</Text>
-            <Text style={[styles.providerStateText, { color: colors.textMuted }]}>No saved providers yet. You can still create the reminder now and link a provider later.</Text>
-          </View>
+          <>
+            <View style={[styles.providerStateCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+              <Text style={styles.providerStateIcon}>👥</Text>
+              <Text style={[styles.providerStateText, { color: colors.textMuted }]}>No saved providers yet. You can still create the reminder now and link a provider later.</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.providerActionBtn, { backgroundColor: colors.primary + '12', borderColor: colors.primary + '30' }]}
+              onPress={() => router.push('/provider/add' as any)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.providerActionBtnText, { color: colors.primary }]}>+ Add provider now</Text>
+            </TouchableOpacity>
+          </>
         ) : (
           <View style={styles.providerPickerWrap}>
             <TouchableOpacity
@@ -483,6 +488,17 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     lineHeight: 18,
+  },
+  providerActionBtn: {
+    marginTop: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  providerActionBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   providerPickerWrap: {
     marginTop: 8,

@@ -5,6 +5,21 @@ import { supabase } from '../lib/supabase';
 
 type ActiveCommunityRequest = Pick<Tables<'community_requests'>, 'id' | 'status' | 'created_at' | 'name'> | null;
 type AppRole = Enums<'app_role_type'>;
+const PLATFORM_ADMIN_EMAIL = 'societyservicehub@gmail.com';
+
+function normalizeAppRole(role: AppRole | null | undefined, isKnownPlatformAdminEmail: boolean): AppRole {
+  if (isKnownPlatformAdminEmail) {
+    return 'admin';
+  }
+
+  // Backward-compatibility: first users that were auto-promoted previously
+  // must be treated as residents in the app.
+  if (role === 'community_lead') {
+    return 'resident';
+  }
+
+  return role ?? 'resident';
+}
 
 type AuthContextType = {
   session: Session | null;
@@ -44,7 +59,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeCommunityRequest, setActiveCommunityRequest] = useState<ActiveCommunityRequest>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadProfile = async (userId: string | null | undefined) => {
+  const loadProfile = async (userId: string | null | undefined, currentSession?: Session | null) => {
     if (!userId) {
       setProfile(null);
       setCommunityId(null);
@@ -83,13 +98,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
+    const effectiveSession = currentSession ?? session;
+    const isKnownPlatformAdminEmail =
+      (effectiveSession?.user?.email ?? '').trim().toLowerCase() === PLATFORM_ADMIN_EMAIL;
+    const profileRole = normalizeAppRole(data?.app_role, isKnownPlatformAdminEmail);
+    const resolvedCommunityId =
+      profileRole === 'admin' || isKnownPlatformAdminEmail
+        ? null
+        : data?.community_id ??
+          effectiveSession?.user?.user_metadata?.community_id ??
+          effectiveSession?.user?.app_metadata?.community_id ??
+          null;
+
     setProfile(data ?? null);
-    setCommunityId(
-      data?.community_id ??
-      session?.user?.user_metadata?.community_id ??
-      session?.user?.app_metadata?.community_id ??
-      null
-    );
+    setCommunityId(resolvedCommunityId);
     setActiveCommunityRequest(nextActiveRequest);
   };
 
@@ -98,7 +120,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
-      await loadProfile(session?.user?.id);
+      await loadProfile(session?.user?.id, session);
     } catch (error) {
       console.error('Error fetching session:', error);
     } finally {
@@ -112,7 +134,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      loadProfile(session?.user?.id).finally(() => {
+      loadProfile(session?.user?.id, session).finally(() => {
         setIsLoading(false);
       });
     });
@@ -127,7 +149,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (data.session) {
       setSession(data.session);
       setUser(data.session.user);
-      await loadProfile(data.session.user.id);
+      await loadProfile(data.session.user.id, data.session);
     }
   };
 
@@ -136,8 +158,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setProfile(null);
   };
 
-  const rawRole = profile?.app_role ?? 'resident';
-  const isPlatformAdmin = rawRole === 'admin' && !communityId;
+  const isKnownPlatformAdminEmail =
+    ((session?.user?.email ?? user?.email ?? '').trim().toLowerCase() === PLATFORM_ADMIN_EMAIL);
+  const rawRole = normalizeAppRole(profile?.app_role, isKnownPlatformAdminEmail);
+  // Platform admins must remain in the platform console even if the profile has stale/legacy community linkage.
+  const isPlatformAdmin = rawRole === 'admin' || isKnownPlatformAdminEmail;
   const isCommunityLead = rawRole === 'community_lead' && !!communityId;
 
   return (

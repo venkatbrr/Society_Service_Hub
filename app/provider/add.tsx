@@ -11,6 +11,7 @@ import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { DetailField, getDetailFieldsForCategory } from '../../constants/providerDetails';
 import { useAuth } from '../../context/AuthContext';
 import { actionToFraudStatus, checkProviderFraud, getFraudActionMessage } from '../../lib/fraudCheck';
+import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
 
 export default function AddProviderScreen() {
@@ -65,10 +66,42 @@ export default function AddProviderScreen() {
       return;
     }
 
+    const normalizedPhone = normalizeIndianMobile(phone);
+    if (!normalizedPhone) {
+      Toast.show({ type: 'error', text1: 'Invalid Phone', text2: 'Enter a valid 10-digit mobile number. Country code is optional.' });
+      return;
+    }
+
+    if (!user?.id || !communityId) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Your session is missing community details. Please re-login and try again.' });
+      return;
+    }
+
     setIsLoading(true);
     try {
+      const { data: existingProviders, error: duplicateCheckError } = await supabase
+        .from('service_providers')
+        .select('id, name, category')
+        .eq('community_id', communityId)
+        .eq('phone', normalizedPhone)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (duplicateCheckError) throw duplicateCheckError;
+
+      const existingProvider = existingProviders?.[0];
+      if (existingProvider) {
+        Toast.show({
+          type: 'info',
+          text1: 'Provider already saved',
+          text2: `Opening ${existingProvider.name}${existingProvider.category ? ` (${existingProvider.category})` : ''}`,
+        });
+        router.replace(`/provider/${existingProvider.id}` as any);
+        return;
+      }
+
       // Run fraud check before inserting
-      const verdict = await checkProviderFraud(phone.trim(), communityId as string);
+      const verdict = await checkProviderFraud(normalizedPhone, communityId);
 
       if (verdict.action === 'BLOCK') {
         const msg = getFraudActionMessage(verdict);
@@ -80,10 +113,10 @@ export default function AddProviderScreen() {
       const cleanedDetails = cleanDetails();
 
       const { error } = await supabase.from('service_providers').insert({
-        community_id: communityId as string,
-        created_by: user?.id as string,
+        community_id: communityId,
+        created_by: user.id,
         name: name.trim(),
-        phone: phone.trim(),
+        phone: normalizedPhone,
         category,
         description: description.trim() || null,
         flat_block: flatBlock.trim() || null,

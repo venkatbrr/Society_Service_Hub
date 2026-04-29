@@ -1,3 +1,4 @@
+import { normalizeIndianMobile } from './phone';
 import { supabase } from './supabase';
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -43,12 +44,14 @@ export async function checkProviderFraud(
   phone: string,
   communityId: string
 ): Promise<FraudVerdict> {
+  const normalizedPhone = normalizeIndianMobile(phone) ?? phone;
+
   try {
     const { data, error } = await supabase.functions.invoke('fraud-check', {
       body: {
         type: 'provider',
         data: {
-          phone,
+          phone: normalizedPhone,
           community_id: communityId,
         },
       },

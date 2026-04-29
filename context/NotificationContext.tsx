@@ -57,6 +57,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         });
       }
 
+      const isPhysicalDevice = Boolean((Constants as any).isDevice ?? true);
+      if (!isPhysicalDevice) {
+        // Expo push token registration is not supported on emulators/simulators.
+        console.log('Skipping push token registration: not a physical device.');
+        return;
+      }
+
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 
@@ -67,12 +74,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
       if (finalStatus !== 'granted') {
         console.warn('Push notification permission not granted');
-        return;
-      }
-
-      const isPhysicalDevice = Boolean((Constants as any).isDevice ?? true);
-      if (!isPhysicalDevice) {
-        // Expo push token registration is not supported on emulators/simulators.
         return;
       }
 

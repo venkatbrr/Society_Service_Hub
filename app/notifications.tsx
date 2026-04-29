@@ -24,6 +24,9 @@ export default function NotificationsScreen() {
         return 'checkmark-circle';
       case 'community_rejected':
         return 'close-circle';
+      case 'new_community_request':
+        return 'document-text';
+      case 'new_promotion_request':
       case 'promoted_to_admin':
       case 'promotion_approved':
         return 'arrow-up-circle';
@@ -52,8 +55,14 @@ export default function NotificationsScreen() {
       return;
     }
 
-    if (notification.type === 'promoted_to_admin' || notification.type === 'promotion_approved' || notification.type === 'promotion_rejected') {
-      router.push('/admin/approvals' as any);
+    if (
+      notification.type === 'promoted_to_admin' || 
+      notification.type === 'promotion_approved' || 
+      notification.type === 'promotion_rejected' ||
+      notification.type === 'new_community_request' ||
+      notification.type === 'new_promotion_request'
+    ) {
+      router.push('/platform/approvals' as any);
       return;
     }
 

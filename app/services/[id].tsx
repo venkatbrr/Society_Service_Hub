@@ -1,7 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -37,12 +37,20 @@ interface ServiceDetail {
   next_due_on: string;
   notes: string | null;
   days_until_due: number;
+  provider_id: string | null;
 }
+
+type ProviderOption = {
+  id: string;
+  name: string;
+  category: string;
+  phone: string | null;
+};
 
 export default function ServiceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuth();
+  const { communityId } = useAuth();
   const colors = Colors.light;
 
   const [service, setService] = useState<ServiceDetail | null>(null);
@@ -58,6 +66,10 @@ export default function ServiceDetailScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [editFrequency, setEditFrequency] = useState('6');
   const [editNotes, setEditNotes] = useState('');
+  const [providers, setProviders] = useState<ProviderOption[]>([]);
+  const [providersLoading, setProvidersLoading] = useState(false);
+  const [providerPickerOpen, setProviderPickerOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<ProviderOption | null>(null);
 
   const fetchService = useCallback(async () => {
     if (!id) return;
@@ -88,6 +100,72 @@ export default function ServiceDetailScreen() {
   useEffect(() => {
     fetchService();
   }, [fetchService]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchProviders() {
+      setProvidersLoading(true);
+      try {
+        let query = supabase
+          .from('service_providers')
+          .select('id, name, category, phone')
+          .order('name', { ascending: true });
+
+        if (communityId) {
+          query = query.eq('community_id', communityId);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        if (isMounted) {
+          setProviders((data ?? []) as ProviderOption[]);
+        }
+      } catch {
+        if (isMounted) {
+          setProviders([]);
+        }
+      } finally {
+        if (isMounted) {
+          setProvidersLoading(false);
+        }
+      }
+    }
+
+    fetchProviders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [communityId]);
+
+  useEffect(() => {
+    if (!service?.provider_id) {
+      setSelectedProvider(null);
+      return;
+    }
+
+    const linkedProvider = providers.find((provider) => provider.id === service.provider_id) ?? null;
+    if (linkedProvider) {
+      setSelectedProvider(linkedProvider);
+    }
+  }, [providers, service?.provider_id]);
+
+  const suggestedProviderCategory = editCategory ? mapServiceCategoryToProviderCategory(editCategory) : null;
+  const providerOptions = useMemo(() => {
+    return [...providers].sort((left, right) => {
+      const leftSuggested = suggestedProviderCategory ? left.category === suggestedProviderCategory : false;
+      const rightSuggested = suggestedProviderCategory ? right.category === suggestedProviderCategory : false;
+
+      if (leftSuggested !== rightSuggested) {
+        return leftSuggested ? -1 : 1;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
+  }, [providers, suggestedProviderCategory]);
 
   const handleMarkDone = () => {
     Alert.alert(
@@ -167,6 +245,7 @@ export default function ServiceDetailScreen() {
           last_serviced_on: dateStr,
           frequency_months: freq,
           notes: editNotes.trim() || null,
+          provider_id: selectedProvider?.id ?? null,
           // next_due_on is recomputed by DB trigger on UPDATE
           next_due_on: dateStr, // placeholder; trigger overwrites
         })
@@ -380,6 +459,102 @@ export default function ServiceDetailScreen() {
               maxLength={2}
             />
 
+            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>LINKED PROVIDER (OPTIONAL)</Text>
+            <Text style={[styles.providerHelperText, { color: colors.textMuted }]}>Map this reminder to any saved provider from your community.</Text>
+
+            {providersLoading ? (
+              <View style={[styles.providerStateCard, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
+                <ActivityIndicator color={colors.primary} />
+                <Text style={[styles.providerStateText, { color: colors.textMuted }]}>Loading providers...</Text>
+              </View>
+            ) : providerOptions.length === 0 ? (
+              <>
+                <View style={[styles.providerStateCard, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
+                  <Text style={styles.providerStateIcon}>👥</Text>
+                  <Text style={[styles.providerStateText, { color: colors.textMuted }]}>No saved providers available to map yet.</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.providerActionBtn, { backgroundColor: colors.primary + '12', borderColor: colors.primary + '30' }]}
+                  onPress={() => router.push('/provider/add' as any)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.providerActionBtnText, { color: colors.primary }]}>+ Add provider now</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <View style={styles.providerPickerWrap}>
+                <TouchableOpacity
+                  style={[styles.input, styles.providerSelector, { backgroundColor: colors.surface2, borderColor: colors.border }]}
+                  onPress={() => setProviderPickerOpen((current) => !current)}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.providerSelectorContent}>
+                    <Text style={[styles.providerSelectorText, { color: selectedProvider ? colors.text : colors.textMuted }]} numberOfLines={1}>
+                      {selectedProvider ? selectedProvider.name : 'No provider linked'}
+                    </Text>
+                    {selectedProvider?.category ? (
+                      <Text style={[styles.providerSelectorSubtext, { color: colors.textMuted }]} numberOfLines={1}>
+                        {selectedProvider.category}
+                      </Text>
+                    ) : (
+                      <Text style={[styles.providerSelectorSubtext, { color: colors.textMuted }]} numberOfLines={1}>
+                        Optional: link a known technician for quick follow-up
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={[styles.selectorChevron, { color: colors.textMuted }]}>{providerPickerOpen ? '▲' : '▼'}</Text>
+                </TouchableOpacity>
+
+                {providerPickerOpen ? (
+                  <View style={[styles.providerDropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={[styles.providerOption, !selectedProvider && { backgroundColor: colors.primary + '10' }]}
+                      onPress={() => {
+                        setSelectedProvider(null);
+                        setProviderPickerOpen(false);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.providerOptionBody}>
+                        <Text style={[styles.providerOptionName, { color: colors.text }]}>No linked provider</Text>
+                        <Text style={[styles.providerOptionMeta, { color: colors.textMuted }]}>Keep this reminder independent</Text>
+                      </View>
+                      {!selectedProvider ? <Text style={[styles.providerSuggestedTag, { color: colors.primary }]}>Selected</Text> : null}
+                    </TouchableOpacity>
+
+                    <ScrollView nestedScrollEnabled style={styles.providerDropdownScroll}>
+                      {providerOptions.map((provider) => {
+                        const isSuggested = suggestedProviderCategory && provider.category === suggestedProviderCategory;
+                        const isSelected = selectedProvider?.id === provider.id;
+
+                        return (
+                          <TouchableOpacity
+                            key={provider.id}
+                            style={[styles.providerOption, isSelected && { backgroundColor: colors.primary + '10' }]}
+                            onPress={() => {
+                              setSelectedProvider(provider);
+                              setProviderPickerOpen(false);
+                            }}
+                            activeOpacity={0.8}
+                          >
+                            <View style={styles.providerOptionBody}>
+                              <Text style={[styles.providerOptionName, { color: colors.text }]} numberOfLines={1}>{provider.name}</Text>
+                              <Text style={[styles.providerOptionMeta, { color: colors.textMuted }]} numberOfLines={1}>{provider.category}</Text>
+                            </View>
+                            {isSuggested ? (
+                              <Text style={[styles.providerSuggestedTag, { color: colors.primary }]}>Suggested</Text>
+                            ) : isSelected ? (
+                              <Text style={[styles.providerSuggestedTag, { color: colors.primary }]}>Selected</Text>
+                            ) : null}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+                ) : null}
+              </View>
+            )}
+
             <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>NOTES (OPTIONAL)</Text>
             <TextInput
               style={[styles.input, styles.notesInput, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
@@ -495,6 +670,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 4,
   },
+  providerHelperText: {
+    fontSize: 12,
+    marginBottom: 8,
+    lineHeight: 18,
+  },
   input: {
     borderRadius: 12,
     borderWidth: 1,
@@ -509,6 +689,91 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   notesInput: { height: 76, paddingTop: 10 },
+  providerStateCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 6,
+    marginTop: 4,
+  },
+  providerStateIcon: {
+    fontSize: 16,
+  },
+  providerStateText: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  providerActionBtn: {
+    marginTop: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  providerActionBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  providerPickerWrap: {
+    gap: 8,
+    marginTop: 4,
+  },
+  providerSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 58,
+  },
+  providerSelectorContent: {
+    flex: 1,
+    gap: 2,
+    paddingRight: 8,
+  },
+  providerSelectorText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  providerSelectorSubtext: {
+    fontSize: 12,
+  },
+  selectorChevron: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  providerDropdown: {
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  providerDropdownScroll: {
+    maxHeight: 240,
+  },
+  providerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#00000014',
+    gap: 12,
+  },
+  providerOptionBody: {
+    flex: 1,
+    gap: 2,
+  },
+  providerOptionName: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  providerOptionMeta: {
+    fontSize: 12,
+  },
+  providerSuggestedTag: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   categoryChip: {
     flexDirection: 'row',

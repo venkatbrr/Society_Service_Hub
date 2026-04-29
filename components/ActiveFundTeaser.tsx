@@ -53,8 +53,8 @@ export const ActiveFundTeaser = ({ title, collected, goal, onPress }: ActiveFund
 const styles = StyleSheet.create({
   wrapper: {
     marginHorizontal: 20,
-    marginTop: 8,
-    marginBottom: 20,
+    marginTop: 0,
+    marginBottom: 10,
     borderRadius: 24,
     elevation: 0,
     shadowColor: '#16A34A',

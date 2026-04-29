@@ -1,113 +1,165 @@
 # Society Service Hub - Technical & Functional Specifications
 
-This document provides comprehensive technical and functional context for the Society Service Hub, an Expo-based community management platform.
+This document is a compact implementation brief for the current Expo + Supabase app.
 
 ---
 
-## 🚀 Technical Stack & Architecture
+## Technical Stack
 
-### Core Framework
-- **Frontend**: Expo (React Native) with TypeScript.
-- **Routing**: `expo-router` (File-based routing).
-- **State Management**: React Context via `AuthProvider`.
-- **Auth**: Supabase Auth (Supporting Google OAuth, Email/Password, and Password Reset).
-- **Backend**: Supabase (PostgreSQL, Realtime, Storage, Edge Functions).
-
-### Key Libraries & Native Modules
-- **UI Components**: `react-native-paper` (if used, otherwise vanilla components with custom styling).
-- **Images**: `expo-image-picker` for business/profile photos.
-- **Date/Time**: `@react-native-community/datetimepicker` for native entry.
-- **Notifications/Feedback**: `react-native-toast-message`.
-- **Authentication**: `@react-native-google-signin/google-signin` for native Google integration.
-
-### Data Flow & Bootstrapping
-1. **Auth Initialization**: `configureGoogleSignIn()` is called in `RootLayoutNav`.
-2. **Session Monitoring**: `AuthProvider` listens to `onAuthStateChange`.
-3. **Profile hydration**: Upon login, the app fetches the user's profile from `profiles`.
-4. **Community Scoping**: `communityId` is resolved from `profiles` or `session.user.user_metadata`.
-5. **Redirection Logic** (`_layout.tsx`):
-   - No Session → `/login`.
-   - Session but no `community_id` → `/community-select`.
-   - Fully Auth'd → `/(tabs)`.
+- **Frontend**: Expo SDK 54, React Native 0.81, TypeScript strict mode
+- **Routing**: `expo-router` with typed routes enabled
+- **State**: React Context through `AuthProvider` and `NotificationProvider`
+- **Backend**: Supabase PostgreSQL, Auth, Realtime, RPCs, Edge Functions
+- **Feedback**: `react-native-toast-message`
+- **Notifications**: `expo-notifications`
+- **Native auth**: `@react-native-google-signin/google-signin`
+- **Date input**: `@react-native-community/datetimepicker`
 
 ---
 
-## 📂 Project Structure (App Directory)
+## Active App Surface
 
-### Navigation Tabs (`app/(tabs)/`)
-- `index.tsx`: **Services Dashboard**. Top-level switcher between "Trusted Providers" and "Service Visits".
-- `business.tsx`: **Resident Marketplace**. Browse home-based businesses within the community.
-- `funds.tsx`: **Financial Dashboard**. Community fund stats and active collection teasers.
-- `profile.tsx`: **Personal Hub**. Manage linked businesses, role info, and settings.
+### Main tabs (`app/(tabs)/`)
 
-### Feature Screens (`app/`)
-- **/visits/**: `add.tsx` (Schedule a visit), `[id].tsx` (Visit details/Joiner list).
-- **/business/**: `add.tsx` (Register business), `manage.tsx` (Dashboard), `[id].tsx` (Public storefront), `catalog/` (Offering management).
-- **/funds/**: `add.tsx` (Create fund), `[id].tsx` (Fund ledger/roles), `add-transaction.tsx` (Debit/Credit log).
-- **/provider/**: `add.tsx` (Register technician), `[id].tsx` (Provider profile, reviews).
+- `index.tsx`: Help dashboard with Providers and Service Visits segments
+- `favorites.tsx`: Saved providers
+- `funds.tsx`: Community funds overview
+- `profile.tsx`: User and community hub
 
----
+### Standalone routes
 
-## 🛠️ Database Schema & Logic
+- `login.tsx`
+- `forgot-password.tsx`
+- `community-select.tsx`
+- `community-request.tsx`
+- `community-request-submitted.tsx`
+- `notifications.tsx`
+- `residents.tsx`
 
-### Tables (`lib/database.types.ts`)
-- **Foundation**: `communities`, `profiles`.
-- **Providers**: `service_providers`, `favorites`, `ratings`.
-- **Marketplace**: `resident_businesses`, `business_offerings`, `business_inquiries`.
-- **Logistics**: `service_visits`, `visit_joiners`.
-- **Finance**: `events` (Funds), `event_transactions`, `fund_roles`.
+### Feature route groups
 
-### Storage Buckets
-- `business-photos`: Publicly accessible images for business catalogs and profiles.
+- `/provider/*`: add and detail
+- `/visits/*`: add and detail
+- `/funds/*`: add, detail, transaction entry
+- `/services/*`: reminder list, add, detail or edit
+- `/platform/*`: platform approvals and community inspection
 
-### PostgreSQL Logic
-- `handle_new_user()` trigger: Automatically creates a `profile` row when a user signs up via Supabase Auth.
-- **Verification Policy**: Email confirmation is intentionally simplified/omitted for faster onboarding (requires "Confirm email" to be OFF in Supabase Dashboard settings).
-- `get_community_visits()` RPC: Aggregates visits with join counts for faster performance.
+### Removed surface
+
+The resident marketplace is not part of the current product. `app/business/*` is gone and the supporting tables were dropped in the marketplace-removal migration.
 
 ---
 
-## 👤 Roles & Permissions
+## Bootstrapping and Routing
 
-The app uses a hybrid role system (Global + Local):
-
-### App-Level Roles (`profiles.app_role`)
-- **Admin**: Can create new Communities, approve global providers, and initialize Community Funds/Events.
-- **Resident**: Default role. Can use all browsing, favorite, and visiting features.
-
-### Fund-Level Roles (`fund_roles.role`)
-Controlled via `lib/fundRoles.ts`:
-- **Treasurer**: Assigned to a specific Fund. Can manage Collectors and log **Expenses (Debits)**.
-- **Collector**: Assigned to a specific Fund. Can log **Contributions (Credits)**.
-- **Resident (Observer)**: Can view the ledger transparently but cannot log transactions.
+1. `configureGoogleSignIn()` runs in `RootLayoutNav`
+2. `AuthProvider` hydrates session and profile
+3. `NotificationProvider` becomes active for signed-in users
+4. Root redirects are:
+   - No session -> `/login`
+   - Platform admin -> `/platform/approvals`
+   - No community with active request -> `/community-request-submitted`
+   - No community and no request -> `/community-select`
+   - Community member -> `/(tabs)`
 
 ---
 
-## 🎨 UI & UX Standards
+## Data Model
 
-- **Visual Style**: Premium, minimalistic, light-theme oriented.
-- **Components**: Rounded corners (`border-radius: 20-24`), soft shadows, clean typography.
-- **Icons**: Use inline `Text` emoji or unicode characters for UI icons instead of vector icon components.
-- **Shared Components**:
-  - `EmptyState`: Standardized placeholder for empty lists.
-  - `VisitCard` / `BusinessCard`: High-trust cards showing user identity.
-  - `ActiveFundTeaser`: Home screen widget for ongoing collections.
-- **Input Patterns**: Always use `@react-native-community/datetimepicker` for dates; never raw text inputs.
+### Core tables
+
+- `communities`
+- `profiles`
+- `community_requests`
+- `profile_audit_log`
+
+### Service discovery and visits
+
+- `service_providers`
+- `favorites`
+- `ratings`
+- `provider_hires`
+- `service_visits`
+- `visit_joiners`
+
+### Funds
+
+- `events`
+- `event_transactions`
+- `fund_roles`
+
+### Messaging and reminders
+
+- `notifications`
+- `user_services`
 
 ---
 
-## 🛡️ Implementation Guidelines
+## Roles and Permissions
 
-1. **Security**: Every data query MUST filter by `community_id`.
-2. **Identity**: This is a high-trust platform. User profiles (names, flat numbers) must be prominent in collaborative features (Visits, Businesses).
-3. **TypeScript**: Strict typing is mandatory. Update `database.types.ts` whenever the schema changes.
-4. **Offline Resilience**: Use `maybeSingle()` and robust error handling for network-dependent Supabase calls.
-5. **Native Rebuilds**: Adding new libraries (e.g. `expo-camera`) requires a full `npm run android` to rebuild the dev client.
+### App roles
+
+- `admin`: platform admin only, and only when `community_id` is null
+- `community_lead`: community-level lead role for approved requesters
+- `resident`: default member role
+
+### Fund roles
+
+- `treasurer`
+- `collector`
+- `resident` view-only fallback
+
+Notes:
+
+- The intended product rule is community-lead-led fund administration.
+- Some fund helpers and screens still accept legacy `community_admin` strings for compatibility.
 
 ---
 
-## 💡 Common Commands
-- `npm run android`: Build and run on emulator.
-- `npm run web`: Preview on web (best for layout testing).
-- `npm run db:push`: Apply local migrations to Supabase.
-- `npx tsc --noEmit`: Verify type integrity.
+## Notifications
+
+`NotificationContext`:
+
+- fetches the latest 50 notifications for the signed-in user
+- subscribes to realtime INSERT events on `notifications`
+- requests native permissions on mobile
+- schedules a local alert when new rows arrive
+
+Current notification flows include:
+
+- `new_visit`
+- `community_approved`
+- `community_rejected`
+- `removed_from_community`
+- `service_reminder`
+
+The notification UI also contains legacy handling for some promotion-related payloads.
+
+---
+
+## UI and Implementation Conventions
+
+- **Theme**: Light mode visual system using `constants/Colors.ts`
+- **Icons**: Use `APP_EMOJIS` for tab and decorative iconography. Use `Ionicons` from `@expo/vector-icons` for interactive controls where the codebase already does so.
+- **Toasts**: Use `react-native-toast-message` for user-visible feedback
+- **Single-row fetches**: Prefer `.maybeSingle()`
+- **Community filtering**: Filter community-scoped queries by `communityId`
+- **Personal reminders**: `user_services` is user-scoped, not community-scoped
+
+---
+
+## Commands
+
+- `npm start`
+- `npm run web`
+- `npm run android`
+- `npm run ios`
+- `npx tsc --noEmit`
+- `npm run db:push`
+- `npm run db:link`
+
+Database type generation:
+
+```bash
+npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
+```

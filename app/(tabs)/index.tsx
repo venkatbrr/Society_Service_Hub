@@ -320,7 +320,6 @@ export default function HomeScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={[styles.greeting, { color: colors.textMuted }]}>Tavern</Text>
             <Text style={[styles.headerTitle, { color: colors.text }]}>Service Hub</Text>
           </View>
           <View style={styles.headerActions}>
@@ -595,13 +594,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.5,
   },
-  greeting: {
-    fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 2,
-  },
   headerActions: {
     flexDirection: 'row',
     gap: 12,
@@ -658,8 +650,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   filterSection: {
-    marginTop: 10,
-    marginBottom: 8,
+    marginTop: 8,
+    marginBottom: 2,
   },
   sectionTitle: {
     fontSize: 18,
