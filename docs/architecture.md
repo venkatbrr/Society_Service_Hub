@@ -36,6 +36,8 @@ NotificationProvider (context/NotificationContext.tsx)
 Most application data is community-scoped and must be filtered by `communityId` from `useAuth()`. The main exception is `user_services`, which is user-scoped and protected by `auth.uid() = user_id` instead of community membership.
 Database RLS uses `get_user_community_id()` which resolves from `profiles.community_id` first and falls back to JWT metadata for compatibility.
 
+For personal reminders, the list view uses `get_my_upcoming_services()` while detail and edit flows read the target row directly from `user_services` by reminder ID.
+
 ---
 
 ## Auth Architecture

@@ -164,7 +164,9 @@ export default function ProviderDetailScreen() {
   };
 
   const handleSubmitReview = async () => {
-    if (!provider || !user || selectedRating === 0) {
+    const effectiveRating = selectedRating || provider?.user_rating || 0;
+
+    if (!provider || !user || effectiveRating === 0) {
       Toast.show({ type: 'error', text1: 'Rating required', text2: 'Please tap a star to rate this provider' });
       return;
     }
@@ -176,7 +178,7 @@ export default function ProviderDetailScreen() {
         reviewerId: user.id,
         providerId: provider.id,
         reviewText: reviewText.trim(),
-        rating: selectedRating,
+        rating: effectiveRating,
       });
 
       if (verdict.action === 'BLOCK') {
@@ -193,7 +195,7 @@ export default function ProviderDetailScreen() {
           {
             user_id: user.id,
             provider_id: provider.id,
-            rating: selectedRating,
+            rating: effectiveRating,
             review_text: reviewText.trim() || null,
             fraud_status: fraudStatus,
             fraud_rules_triggered: verdict.triggered_rules,
@@ -211,7 +213,7 @@ export default function ProviderDetailScreen() {
 
       // Update rating locally
       setProvider((prev: ProviderWithInteraction | null) =>
-        prev ? { ...prev, user_rating: selectedRating } : null
+        prev ? { ...prev, user_rating: effectiveRating } : null
       );
       setReviewText('');
     } catch (error) {
@@ -368,7 +370,7 @@ export default function ProviderDetailScreen() {
          />
          <TouchableOpacity
            onPress={handleSubmitReview}
-           disabled={isSubmittingReview || selectedRating === 0}
+           disabled={isSubmittingReview || (selectedRating === 0 && !provider.user_rating)}
            activeOpacity={0.85}
            style={{ marginTop: 12 }}
          >

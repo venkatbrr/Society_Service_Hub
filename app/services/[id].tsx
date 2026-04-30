@@ -40,6 +40,17 @@ interface ServiceDetail {
   provider_id: string | null;
 }
 
+type UserServiceRow = {
+  id: string;
+  service_name: string;
+  category: string;
+  last_serviced_on: string;
+  frequency_months: number;
+  next_due_on: string;
+  notes: string | null;
+  provider_id: string | null;
+};
+
 type ProviderOption = {
   id: string;
   name: string;
@@ -75,20 +86,30 @@ export default function ServiceDetailScreen() {
     if (!id) return;
     try {
       const { data, error } = await supabase
-        .rpc('get_my_upcoming_services')
-        .then((res) => ({
-          data: (res.data ?? []).find((s: any) => s.id === id) ?? null,
-          error: res.error,
-        }));
+        .from('user_services')
+        .select('id, service_name, category, last_serviced_on, frequency_months, next_due_on, notes, provider_id')
+        .eq('id', id)
+        .maybeSingle();
 
       if (error) throw error;
       if (data) {
-        setService(data as ServiceDetail);
-        setEditName(data.service_name);
-        setEditCategory(data.category as ServiceCategory);
-        setEditLastServiced(new Date(data.last_serviced_on));
-        setEditFrequency(String(data.frequency_months));
-        setEditNotes(data.notes ?? '');
+        const serviceRow = data as UserServiceRow;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dueDate = new Date(serviceRow.next_due_on);
+        dueDate.setHours(0, 0, 0, 0);
+        const msPerDay = 1000 * 60 * 60 * 24;
+        const daysUntilDue = Math.round((dueDate.getTime() - today.getTime()) / msPerDay);
+
+        setService({
+          ...serviceRow,
+          days_until_due: daysUntilDue,
+        });
+        setEditName(serviceRow.service_name);
+        setEditCategory(serviceRow.category as ServiceCategory);
+        setEditLastServiced(new Date(serviceRow.last_serviced_on));
+        setEditFrequency(String(serviceRow.frequency_months));
+        setEditNotes(serviceRow.notes ?? '');
       }
     } catch (err: any) {
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load service' });

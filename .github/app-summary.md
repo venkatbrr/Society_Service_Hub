@@ -104,7 +104,9 @@ Authenticated with community -> /(tabs)
 
 - Residents can add providers to the trusted provider list
 - Residents can rate, save, call, message, and share provider contacts
+- Existing ratings can be reused when updating review text without re-tapping stars
 - Residents can create shared service visits and manage participation
+- Past visits are shown without an `upcoming` status badge even when stale visit status values exist
 - The Help tab preserves segment and visit-subtab state through route params
 
 ### Funds
@@ -118,11 +120,13 @@ Authenticated with community -> /(tabs)
 
 - Residents can join communities instantly by code
 - New communities require a platform approval workflow
-- Approvals create the community and promote the requester to `community_lead`
+- Approvals create the community and assign the requester to that community as `resident`
 
 ### Personal Service Reminders
 
 - Users can maintain private reminders in `user_services`
+- Reminder detail/edit screens read by reminder ID from `user_services` for reliable single-record edits
+- Reminders can be mapped or remapped to any provider shown in the saved provider picker list
 - Home and Profile both surface due-soon reminders
 - Due reminders generate `service_reminder` notifications through the daily scheduler flow
 

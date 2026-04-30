@@ -207,7 +207,15 @@ export default function VisitDetailScreen() {
 
   const isCreator = visit.created_by === user?.id;
   const isFull = visit.max_joiners ? visit.joiner_count! >= visit.max_joiners : false;
-  const isPast = new Date(visit.visit_date) < new Date(new Date().toDateString());
+  const visitDate = new Date(visit.visit_date);
+  visitDate.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isPast = visitDate < today;
+  const displayStatus =
+    isPast && visit.status === 'upcoming'
+      ? 'completed'
+      : (visit.status as 'upcoming' | 'in_progress' | 'completed' | 'cancelled');
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -251,7 +259,7 @@ export default function VisitDetailScreen() {
              <View style={[styles.dateChip, { backgroundColor: colors.primary + '10' }]}>
                 <Text style={[styles.dateChipText, { color: colors.primary }]}>{formatDate(visit.visit_date)}</Text>
              </View>
-             <VisitStatusBadge status={visit.status as 'upcoming' | 'in_progress' | 'completed' | 'cancelled'} />
+             <VisitStatusBadge status={displayStatus} />
           </View>
 
           <Text style={[styles.visitTitle, { color: colors.text }]}>{visit.title}</Text>

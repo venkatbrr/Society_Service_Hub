@@ -67,7 +67,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Main discovery hub with two switchable segments: Trusted Providers and Service Visits |
 | **Tables** | Reads: `service_providers`, `favorites`, `provider_hires`, `service_visits`, `visit_joiners`, `profiles`, `events`, `event_transactions` |
-| **Business rules** | Providers are sorted by `avg_rating` descending. Service Visits split into Upcoming and Past buckets based on date. Cancelled visits stay in Upcoming until their planned date passes. The screen preserves the active segment and visit sub-tab in route params when users drill into details and return. The home stack also shows `UpcomingServicesCard` and `ActiveFundTeaser` above the main list. |
+| **Business rules** | Providers are sorted by `avg_rating` descending. Service Visits split into Upcoming and Past buckets based on date. Cancelled visits stay in Upcoming until their planned date passes. Past visits do not display an `upcoming` status badge even if a stale row still has `status = 'upcoming'`. The screen preserves the active segment and visit sub-tab in route params when users drill into details and return. The home stack also shows `UpcomingServicesCard` and `ActiveFundTeaser` above the main list. |
 | **Navigation** | To `/provider/[id]`, `/provider/add`, `/visits/[id]`, `/visits/add`, `/notifications`, and `/(tabs)/profile` |
 | **Roles** | All community members can browse and create providers or visits |
 | **Components** | `UpcomingServicesCard`, `ActiveFundTeaser`, `ProviderCard`, `VisitCard`, `SearchBar`, `CategoryFilter`, `EmptyState` |
@@ -165,7 +165,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Show provider profile, ratings, save state, contact actions, and creator-only deletion |
 | **Tables** | Reads: `service_providers`, `favorites`, `ratings`, `provider_hires`; writes: `favorites`, `ratings`, `provider_hires` |
-| **Business rules** | Ratings are 1-5 stars with one upserted rating per user. Contact actions increment provider hire history. Creator-only deletion remains enforced in the UI and database. |
+| **Business rules** | Ratings are 1-5 stars with one upserted rating per user. Users can submit or edit review text without re-tapping stars when an existing rating already exists. Contact actions increment provider hire history. Creator-only deletion remains enforced in the UI and database. |
 | **Navigation** | From the Help tab, Favorites, Visit Detail, and Service Reminder technician lookup |
 | **Integrations** | Phone, WhatsApp, native Share |
 
@@ -265,8 +265,8 @@ This document describes the current user-facing product surface, the screens inv
 | Aspect | Details |
 |--------|---------|
 | **Purpose** | View urgency, edit reminder details, mark work completed, find a technician, or delete the reminder |
-| **Tables** | Reads via `get_my_upcoming_services()`; writes directly to `user_services`; RPC: `mark_service_done(p_service_id)` |
-| **Business rules** | Mark-done uses optimistic UI then refreshes from the RPC-backed source of truth. Editing reuses add validations and supports mapping or remapping to any saved community provider. Delete requires confirmation. The technician shortcut routes users back to the Providers segment of the Help screen with a mapped category filter. |
+| **Tables** | Reads directly from `user_services` by reminder ID; writes directly to `user_services`; RPC: `mark_service_done(p_service_id)` |
+| **Business rules** | Mark-done uses optimistic UI then refreshes from the database source of truth. Editing reuses add validations and supports mapping or remapping to any saved community provider from the picker list. Delete requires confirmation. The technician shortcut routes users back to the Providers segment of the Help screen with a mapped category filter. |
 
 ### Home and Profile Surfaces
 

@@ -451,7 +451,13 @@ export default function HomeScreen() {
         <FlatList
           data={visitTab === 'upcoming' ? visits : pastVisits}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          renderItem={({ item }) => {
+            const displayStatus =
+              visitTab === 'past' && item.status === 'upcoming'
+                ? 'completed'
+                : (item.status as 'upcoming' | 'in_progress' | 'completed' | 'cancelled');
+
+            return (
             <VisitCard
               id={item.id}
               title={item.title}
@@ -469,7 +475,7 @@ export default function HomeScreen() {
               joinerCount={Number(item.joiner_count || 0)}
               maxJoiners={item.max_joiners || undefined}
               hasUserJoined={!!item.has_user_joined}
-              status={item.status as 'upcoming' | 'in_progress' | 'completed' | 'cancelled'}
+              status={displayStatus}
               onJoin={() => handleJoinVisit(item.id)}
               onUnjoin={() =>
                 router.push({
@@ -484,7 +490,8 @@ export default function HomeScreen() {
                 })
               }
             />
-          )}
+            );
+          }}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
