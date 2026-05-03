@@ -45,6 +45,7 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedGroupCategories, setSelectedGroupCategories] = useState<string[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeFund, setActiveFund] = useState<any>(null);
   const { user, communityId } = useAuth();
@@ -94,6 +95,8 @@ export default function HomeScreen() {
 
       if (selectedCategory && selectedCategory !== 'All') {
         query = query.eq('category', selectedCategory);
+      } else if (selectedGroupCategories && selectedGroupCategories.length > 0) {
+        query = query.in('category', selectedGroupCategories);
       }
 
       if (debouncedSearchQuery) {
@@ -140,7 +143,7 @@ export default function HomeScreen() {
       console.error(error);
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load providers' });
     }
-  }, [communityId, selectedCategory, debouncedSearchQuery, user?.id]);
+  }, [communityId, selectedCategory, selectedGroupCategories, debouncedSearchQuery, user?.id]);
 
   const fetchVisits = useCallback(async () => {
     if (!communityId || !user?.id) return;
@@ -380,6 +383,7 @@ export default function HomeScreen() {
             onPress={() => {
               setActiveSegment('providers');
               setSelectedCategory(null);
+              setSelectedGroupCategories(null);
               setSearchQuery('');
             }}
           >
@@ -401,6 +405,7 @@ export default function HomeScreen() {
             onPress={() => {
               setActiveSegment('visits');
               setSelectedCategory(null);
+              setSelectedGroupCategories(null);
               setSearchQuery('');
               setVisitTab('upcoming');
             }}
@@ -453,6 +458,7 @@ export default function HomeScreen() {
                 <CategoryFilter
                   selectedCategory={selectedCategory}
                   onSelectCategory={setSelectedCategory}
+                  onSelectGroupCategories={setSelectedGroupCategories}
                   isLightMode={true}
                 />
               </View>

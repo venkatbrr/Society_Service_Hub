@@ -8,6 +8,7 @@ import { getServiceCategoryEmoji } from '../constants/emojis';
 type CategoryFilterProps = {
   selectedCategory: string | null;
   onSelectCategory: (category: string | null) => void;
+  onSelectGroupCategories?: (categories: string[] | null) => void;
   isLightMode: boolean;
   categories?: string[];
 };
@@ -15,6 +16,7 @@ type CategoryFilterProps = {
 export const CategoryFilter = ({
   selectedCategory,
   onSelectCategory,
+  onSelectGroupCategories,
   isLightMode,
   categories = CATEGORIES
 }: CategoryFilterProps) => {
@@ -112,11 +114,13 @@ export const CategoryFilter = ({
         {renderChip('All Services', selectedGroupId === 'all', () => {
           setSelectedGroupId('all');
           onSelectCategory(null);
+          onSelectGroupCategories?.(null);
         })}
         {groups.map((group) =>
           renderChip(group.label, selectedGroupId === group.id, () => {
             setSelectedGroupId(group.id);
             onSelectCategory(null);
+            onSelectGroupCategories?.(group.categories);
           })
         )}
       </ScrollView>

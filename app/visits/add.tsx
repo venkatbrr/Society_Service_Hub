@@ -2,17 +2,34 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { ProviderSelector } from '../../components/ProviderSelector';
 import { Colors } from '../../constants/Colors';
+import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/categories';
+import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
 
-const CATEGORIES = ['Cleaning', 'Repair', 'Pest Control', 'Electrician', 'Plumber', 'AC Service', 'Painting', 'Photography', 'Decoration', 'Carpentry', 'Appliance Service', 'Other'];
+const buildVisitCategoryGroups = (sourceCategories: string[]): CategoryGroup[] => {
+  const included = new Set(sourceCategories);
+  const groups = CATEGORY_GROUPS
+    .map((group) => ({
+      ...group,
+      categories: group.categories.filter((cat) => included.has(cat)),
+    }))
+    .filter((group) => group.categories.length > 0);
+  const groupedSet = new Set(groups.flatMap((g) => g.categories));
+  const rest = sourceCategories.filter((cat) => !groupedSet.has(cat));
+  if (rest.length > 0) groups.push({ id: 'more', label: 'More', categories: rest });
+  return groups;
+};
+
+const findVisitGroupId = (groups: CategoryGroup[], cat: string) =>
+  groups.find((g) => g.categories.includes(cat))?.id ?? 'all';
 
 export default function AddVisitScreen() {
   const router = useRouter();
@@ -28,6 +45,27 @@ export default function AddVisitScreen() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+
+  const visitCategoryGroups = useMemo(() => buildVisitCategoryGroups(CATEGORIES), []);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
+
+  const visibleCategories = useMemo(() => {
+    if (selectedGroupId === 'all') return CATEGORIES;
+    return visitCategoryGroups.find((g) => g.id === selectedGroupId)?.categories ?? CATEGORIES;
+  }, [visitCategoryGroups, selectedGroupId]);
+
+  const handleCategorySelect = (cat: string) => {
+    setCategory(cat);
+    setSelectedGroupId(findVisitGroupId(visitCategoryGroups, cat));
+  };
+
+  const handleGroupSelect = (groupId: string) => {
+    setSelectedGroupId(groupId);
+    if (groupId !== 'all') {
+      const first = visitCategoryGroups.find((g) => g.id === groupId)?.categories[0];
+      if (first) setCategory(first);
+    }
+  };
   const [category, setCategory] = useState('');
 
   // Date and Time state
@@ -169,8 +207,36 @@ export default function AddVisitScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>CATEGORY *</Text>
-            <View style={categoryGridStyle.categoryGrid}>
-              {CATEGORIES.map(cat => (
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={categoryGridStyle.groupScroll}>
+              {[{ id: 'all', label: 'All Services' }, ...visitCategoryGroups.map((g) => ({ id: g.id, label: g.label }))].map((group) => {
+                const selected = selectedGroupId === group.id;
+                return selected ? (
+                  <LinearGradient
+                    key={group.id}
+                    colors={[colors.gradientStart, colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={categoryGridStyle.catChipGradient}
+                  >
+                    <TouchableOpacity onPress={() => handleGroupSelect(group.id)}>
+                      <Text style={[categoryGridStyle.catText, { color: '#FFF' }]}>{group.label}</Text>
+                    </TouchableOpacity>
+                  </LinearGradient>
+                ) : (
+                  <TouchableOpacity
+                    key={group.id}
+                    style={[categoryGridStyle.catChip, { borderColor: colors.border, backgroundColor: colors.glass }]}
+                    onPress={() => handleGroupSelect(group.id)}
+                  >
+                    <Text style={[categoryGridStyle.catText, { color: colors.text }]}>{group.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={categoryGridStyle.categoryScroll}>
+              {visibleCategories.map(cat => (
                 category === cat ? (
                   <LinearGradient
                     key={cat}
@@ -179,24 +245,21 @@ export default function AddVisitScreen() {
                     end={{ x: 1, y: 0 }}
                     style={categoryGridStyle.catChipGradient}
                   >
-                    <TouchableOpacity onPress={() => setCategory(cat)}>
-                      <Text style={[categoryGridStyle.catText, { color: '#FFF' }]}>{cat}</Text>
+                    <TouchableOpacity onPress={() => handleCategorySelect(cat)}>
+                      <Text style={[categoryGridStyle.catText, { color: '#FFF' }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
                     </TouchableOpacity>
                   </LinearGradient>
                 ) : (
                   <TouchableOpacity
                     key={cat}
-                    style={[
-                      categoryGridStyle.catChip,
-                      { borderColor: colors.border, backgroundColor: colors.glass }
-                    ]}
-                    onPress={() => setCategory(cat)}
+                    style={[categoryGridStyle.catChip, { borderColor: colors.border, backgroundColor: colors.glass }]}
+                    onPress={() => handleCategorySelect(cat)}
                   >
-                    <Text style={[categoryGridStyle.catText, { color: colors.text }]}>{cat}</Text>
+                    <Text style={[categoryGridStyle.catText, { color: colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
                   </TouchableOpacity>
                 )
               ))}
-            </View>
+            </ScrollView>
           </View>
 
           <View style={styles.inputGroup}>
@@ -326,10 +389,12 @@ export default function AddVisitScreen() {
 }
 
 const categoryGridStyle = StyleSheet.create({
-  categoryGrid: {
+  groupScroll: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    marginBottom: 10,
+  },
+  categoryScroll: {
+    flexDirection: 'row',
   },
   catChip: {
     paddingHorizontal: 14,
