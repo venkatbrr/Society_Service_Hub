@@ -63,6 +63,8 @@ Every user belongs to a community. **All data queries must filter by `communityI
 - **Style**: Rounded corners (20-24px border-radius), glassmorphism cards (`glass`, `glassBorder` from Colors.ts), soft indigo shadows (`shadowColor: '#6C63FF'`), premium pastel look
 - **Toast feedback**: Use `react-native-toast-message` for user-facing messages
 - **Single-row queries**: Use `.maybeSingle()` instead of `.single()`
+- **Debounced search**: When a text input drives a Supabase list query, always debounce 300 ms using a `debouncedSearchQuery` state updated in a `setTimeout` effect. Use `debouncedSearchQuery` in fetch dependency arrays, not the raw input state.
+- **Provider phone search**: When filtering providers in a picker, strip non-digits from both the query and stored phone value (`replace(/\D/g, '')`) before comparing. Display placeholder `"Search by name or phone number..."`.
 - **TypeScript**: Strict mode enabled. Path alias `@/*` maps to project root
 - **Android dev networking**: Keep `android.usesCleartextTraffic=true` so development builds can load Metro bundles over HTTP
 

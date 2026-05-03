@@ -47,6 +47,7 @@ export default function AddServiceScreen() {
   const [providers, setProviders] = useState<ProviderOption[]>([]);
   const [providersLoading, setProvidersLoading] = useState(false);
   const [providerPickerOpen, setProviderPickerOpen] = useState(false);
+  const [providerSearch, setProviderSearch] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<ProviderOption | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -294,7 +295,11 @@ export default function AddServiceScreen() {
           <View style={styles.providerPickerWrap}>
             <TouchableOpacity
               style={[styles.input, styles.providerSelector, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
-              onPress={() => setProviderPickerOpen((current) => !current)}
+              onPress={() => {
+                const next = !providerPickerOpen;
+                if (next) setProviderSearch('');
+                setProviderPickerOpen(next);
+              }}
               activeOpacity={0.8}
             >
               <View style={styles.providerSelectorContent}>
@@ -316,10 +321,21 @@ export default function AddServiceScreen() {
 
             {providerPickerOpen ? (
               <View style={[styles.providerDropdown, { backgroundColor: colors.surface, borderColor: colors.glassBorder }]}>
+                <TextInput
+                  style={[styles.providerSearchInput, { color: colors.text, borderBottomColor: colors.glassBorder }]}
+                  placeholder="Search by name or phone number..."
+                  placeholderTextColor={colors.textMuted}
+                  value={providerSearch}
+                  onChangeText={setProviderSearch}
+                  autoFocus
+                  autoCorrect={false}
+                  clearButtonMode="while-editing"
+                />
                 <TouchableOpacity
                   style={[styles.providerOption, !selectedProvider && { backgroundColor: colors.primary + '10' }]}
                   onPress={() => {
                     setSelectedProvider(null);
+                    setProviderSearch('');
                     setProviderPickerOpen(false);
                   }}
                   activeOpacity={0.8}
@@ -332,7 +348,17 @@ export default function AddServiceScreen() {
                 </TouchableOpacity>
 
                 <ScrollView nestedScrollEnabled style={styles.providerDropdownScroll}>
-                  {providerOptions.map((provider) => {
+                  {providerOptions
+                    .filter((p) => {
+                      if (!providerSearch.trim()) return true;
+                      const q = providerSearch.toLowerCase().replace(/\D/g, '');
+                      const qRaw = providerSearch.toLowerCase();
+                      return (
+                        p.name.toLowerCase().includes(qRaw) ||
+                        (q.length > 0 && (p.phone ?? '').replace(/\D/g, '').includes(q))
+                      );
+                    })
+                    .map((provider) => {
                     const isSuggested = suggestedProviderCategory && provider.category === suggestedProviderCategory;
                     const isSelected = selectedProvider?.id === provider.id;
 
@@ -342,6 +368,7 @@ export default function AddServiceScreen() {
                         style={[styles.providerOption, isSelected && { backgroundColor: colors.primary + '10' }]}
                         onPress={() => {
                           setSelectedProvider(provider);
+                          setProviderSearch('');
                           setProviderPickerOpen(false);
                         }}
                         activeOpacity={0.8}
@@ -528,8 +555,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
     borderWidth: 1,
     borderRadius: 16,
-    maxHeight: 260,
+    maxHeight: 300,
     overflow: 'hidden',
+  },
+  providerSearchInput: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   providerDropdownScroll: {
     maxHeight: 196,

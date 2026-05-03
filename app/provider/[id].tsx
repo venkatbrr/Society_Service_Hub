@@ -217,7 +217,8 @@ export default function ProviderDetailScreen() {
       );
       setReviewText('');
     } catch (error) {
-      Toast.show({ type: 'error', text1: 'Error saving review' });
+      console.error('Error saving review:', error);
+      Toast.show({ type: 'error', text1: 'Error saving review', text2: error?.message || String(error) });
     } finally {
       setIsSubmittingReview(false);
     }

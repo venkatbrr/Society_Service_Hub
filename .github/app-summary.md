@@ -103,11 +103,13 @@ Authenticated with community -> /(tabs)
 ### Providers and Visits
 
 - Residents can add providers to the trusted provider list
+- Provider categories include Photography and Decoration (with category-specific detail fields) alongside the full list of community service types
 - Residents can rate, save, call, message, and share provider contacts
 - Existing ratings can be reused when updating review text without re-tapping stars
-- Residents can create shared service visits and manage participation
+- Residents can create shared service visits and manage participation; visit categories also include Photography and Decoration
 - Past visits are shown without an `upcoming` status badge even when stale visit status values exist
 - The Help tab preserves segment and visit-subtab state through route params
+- Provider and visit search inputs are debounced (300 ms) to avoid query-per-keystroke on Supabase
 
 ### Funds
 
@@ -126,7 +128,7 @@ Authenticated with community -> /(tabs)
 
 - Users can maintain private reminders in `user_services`
 - Reminder detail/edit screens read by reminder ID from `user_services` for reliable single-record edits
-- Reminders can be mapped or remapped to any provider shown in the saved provider picker list
+- Reminders can be mapped or remapped to any provider shown in the saved provider picker list, with picker search by provider name or phone number
 - Home and Profile both surface due-soon reminders
 - Due reminders generate `service_reminder` notifications through the daily scheduler flow
 

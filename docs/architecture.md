@@ -38,6 +38,22 @@ Database RLS uses `get_user_community_id()` which resolves from `profiles.commun
 
 For personal reminders, the list view uses `get_my_upcoming_services()` while detail and edit flows read the target row directly from `user_services` by reminder ID.
 
+### Debounced Search Pattern
+
+The Help tab (`app/(tabs)/index.tsx`) uses a debounced search to prevent a Supabase query on every keystroke. The pattern:
+
+```tsx
+const [searchQuery, setSearchQuery] = useState('');
+const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+useEffect(() => {
+  const t = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
+  return () => clearTimeout(t);
+}, [searchQuery]);
+```
+
+`debouncedSearchQuery` (not `searchQuery`) is used in fetch dependency arrays. This pattern must be applied to any screen that filters a Supabase list via a text input. The `provider_hires` query on the Help tab is scoped to `communityId`. The `visit_joiners` query is scoped to only the current page's visit IDs to avoid full-table scans.
+
 ---
 
 ## Auth Architecture

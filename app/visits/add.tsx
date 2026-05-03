@@ -12,7 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
 
-const CATEGORIES = ['Cleaning', 'Repair', 'Pest Control', 'Electrician', 'Plumber', 'AC Service', 'Painting', 'Carpentry', 'Appliance Service', 'Other'];
+const CATEGORIES = ['Cleaning', 'Repair', 'Pest Control', 'Electrician', 'Plumber', 'AC Service', 'Painting', 'Photography', 'Decoration', 'Carpentry', 'Appliance Service', 'Other'];
 
 export default function AddVisitScreen() {
   const router = useRouter();

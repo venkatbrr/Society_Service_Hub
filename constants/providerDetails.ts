@@ -56,6 +56,16 @@ export const CATEGORY_DETAIL_FIELDS: Record<string, DetailField[]> = {
     { key: 'paintType', label: 'Type', type: 'radio', options: ['Interior', 'Exterior', 'Both'] },
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 15', suffix: '/sqft' },
   ],
+  Photography: [
+    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Events', 'Portrait', 'Family', 'Candid', 'Drone'] },
+    { key: 'equipment', label: 'Equipment', type: 'text', placeholder: 'e.g. DSLR, mirrorless, drone' },
+    { key: 'charges', label: 'Starting From', type: 'number', placeholder: 'e.g. 5000', suffix: '/event' },
+  ],
+  Decoration: [
+    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Birthday', 'Festival', 'Wedding', 'Theme Decor', 'Balloon Decor'] },
+    { key: 'materials', label: 'Materials Included', type: 'radio', options: ['Yes', 'No', 'Depends on package'] },
+    { key: 'charges', label: 'Starting From', type: 'number', placeholder: 'e.g. 3000', suffix: '/event' },
+  ],
   Driver: [
     { key: 'vehicleType', label: 'Vehicle Type', type: 'radio', options: ['Car', 'Two-wheeler', 'Both'] },
     { key: 'licenseType', label: 'License Type', type: 'text', placeholder: 'e.g. LMV, HMV' },

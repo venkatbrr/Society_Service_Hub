@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, RefreshControl, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { ActiveFundTeaser } from '../../components/ActiveFundTeaser';
 import { CategoryFilter } from '../../components/CategoryFilter';
@@ -10,8 +10,9 @@ import { ProviderCard } from '../../components/ProviderCard';
 import { SearchBar } from '../../components/SearchBar';
 import { UpcomingServicesCard } from '../../components/UpcomingServicesCard';
 import { VisitCard } from '../../components/VisitCard';
+import { CATEGORY_COLORS } from '../../constants/categories';
 import { Colors } from '../../constants/Colors';
-import { APP_EMOJIS } from '../../constants/emojis';
+import { APP_EMOJIS, getServiceCategoryEmoji } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
@@ -21,7 +22,18 @@ const isMissingRelationError = (error: { code?: string; message?: string } | nul
   error?.code === 'PGRST205' ||
   error?.message?.includes("Could not find the table 'public.provider_hires'");
 
-const VISIT_CATEGORIES = ['All', 'Cleaning', 'Repair', 'Pest Control', 'Electrician', 'Plumber', 'AC Service', 'Painting', 'Other'];
+
+function groupVisitsByCategory(visitList: VisitWithJoinerData[]) {
+  const grouped: Record<string, VisitWithJoinerData[]> = {};
+  visitList.forEach(v => {
+    const cat = v.category || 'Other';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(v);
+  });
+  return Object.entries(grouped)
+    .map(([title, data]) => ({ title, data }))
+    .sort((a, b) => b.data.length - a.data.length);
+}
 
 export default function HomeScreen() {
   const { segment, visitTab: visitTabParam } = useLocalSearchParams<{ segment?: string; visitTab?: 'upcoming' | 'past' }>();
@@ -31,6 +43,7 @@ export default function HomeScreen() {
   const [pastVisits, setPastVisits] = useState<VisitWithJoinerData[]>([]);
   const [visitTab, setVisitTab] = useState<'upcoming' | 'past'>('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeFund, setActiveFund] = useState<any>(null);
@@ -83,8 +96,8 @@ export default function HomeScreen() {
         query = query.eq('category', selectedCategory);
       }
 
-      if (searchQuery) {
-        query = query.or(`name.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
+      if (debouncedSearchQuery) {
+        query = query.or(`name.ilike.%${debouncedSearchQuery}%,category.ilike.%${debouncedSearchQuery}%`);
       }
 
       // Fetch providers, favorites, and hire counts in parallel
@@ -95,6 +108,7 @@ export default function HomeScreen() {
           .eq('user_id', user?.id as string),
         supabase.from('provider_hires')
           .select('provider_id')
+          .eq('community_id', communityId)
       ]);
 
       if (providersResult.error) throw providersResult.error;
@@ -126,7 +140,7 @@ export default function HomeScreen() {
       console.error(error);
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load providers' });
     }
-  }, [communityId, selectedCategory, searchQuery, user?.id]);
+  }, [communityId, selectedCategory, debouncedSearchQuery, user?.id]);
 
   const fetchVisits = useCallback(async () => {
     if (!communityId || !user?.id) return;
@@ -164,10 +178,12 @@ export default function HomeScreen() {
       const profileMap: Record<string, any> = {};
       (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
 
-      // Count joiners per visit
+      // Count joiners only for the currently fetched visits to avoid scanning the full table
+      const visitIds = visits.map((v: any) => v.id);
       const { data: joinerCounts } = await supabase
         .from('visit_joiners')
-        .select('visit_id');
+        .select('visit_id')
+        .in('visit_id', visitIds);
 
       const joinerCountMap: Record<string, number> = {};
       (joinerCounts || []).forEach((j: any) => {
@@ -219,14 +235,9 @@ export default function HomeScreen() {
       upcomingData.sort((a, b) => new Date(a.visit_date).getTime() - new Date(b.visit_date).getTime());
       pastData.sort((a, b) => new Date(b.visit_date).getTime() - new Date(a.visit_date).getTime());
 
-      // Client-side filtering for search and category
-      if (selectedCategory && selectedCategory !== 'All') {
-        upcomingData = upcomingData.filter(v => v.category === selectedCategory);
-        pastData = pastData.filter(v => v.category === selectedCategory);
-      }
-
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
+      // Client-side filtering for search
+      if (debouncedSearchQuery) {
+        const query = debouncedSearchQuery.toLowerCase();
         const filterFn = (v: VisitWithJoinerData) =>
           v.title.toLowerCase().includes(query) ||
           v.provider_name.toLowerCase().includes(query) ||
@@ -241,12 +252,21 @@ export default function HomeScreen() {
       console.error('fetchVisits error:', error);
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load visits' });
     }
-  }, [communityId, user?.id, searchQuery, selectedCategory]);
+  }, [communityId, user?.id, debouncedSearchQuery]);
 
   // Fetch community stats once on mount / communityId change (not on every tab toggle)
   useEffect(() => {
     fetchCommunityStats();
   }, [fetchCommunityStats]);
+
+  // Debounce free-text search so we don't fire heavy data fetches on every keystroke
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
 
   // Fetch tab-specific data when segment, filters, or search changes
   useEffect(() => {
@@ -265,7 +285,7 @@ export default function HomeScreen() {
     } else {
       fetchVisits();
     }
-  }, [activeSegment, communityId, selectedCategory, searchQuery]);
+  }, [activeSegment, communityId, selectedCategory, debouncedSearchQuery]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -448,50 +468,66 @@ export default function HomeScreen() {
           }
         />
       ) : (
-        <FlatList
-          data={visitTab === 'upcoming' ? visits : pastVisits}
+        <SectionList
+          sections={groupVisitsByCategory(visitTab === 'upcoming' ? visits : pastVisits)}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => {
             const displayStatus =
               visitTab === 'past' && item.status === 'upcoming'
                 ? 'completed'
                 : (item.status as 'upcoming' | 'in_progress' | 'completed' | 'cancelled');
-
             return (
-            <VisitCard
-              id={item.id}
-              title={item.title}
-              providerName={item.provider_name}
-              hasProviderProfile={!!item.provider_id}
-              category={item.category}
-              visitDate={item.visit_date}
-              visitTimeSlot={item.visit_time_slot}
-              estimatedCost={item.estimated_cost || undefined}
-              creatorName={item.creator_name || 'Neighbor'}
-              creatorFlat={item.creator_flat || undefined}
-              creatorAvatarUrl={item.creator_avatar_url || undefined}
-              createdAt={item.created_at ?? new Date().toISOString()}
-              isCreator={item.created_by === user?.id}
-              joinerCount={Number(item.joiner_count || 0)}
-              maxJoiners={item.max_joiners || undefined}
-              hasUserJoined={!!item.has_user_joined}
-              status={displayStatus}
-              onJoin={() => handleJoinVisit(item.id)}
-              onUnjoin={() =>
-                router.push({
-                  pathname: '/visits/[id]',
-                  params: { id: item.id, returnTo: 'visits', visitTab },
-                })
-              }
-              onPress={() =>
-                router.push({
-                  pathname: '/visits/[id]',
-                  params: { id: item.id, returnTo: 'visits', visitTab },
-                })
-              }
-            />
+              <VisitCard
+                id={item.id}
+                title={item.title}
+                providerName={item.provider_name}
+                hasProviderProfile={!!item.provider_id}
+                category={item.category}
+                visitDate={item.visit_date}
+                visitTimeSlot={item.visit_time_slot}
+                estimatedCost={item.estimated_cost || undefined}
+                creatorName={item.creator_name || 'Neighbor'}
+                creatorFlat={item.creator_flat || undefined}
+                creatorAvatarUrl={item.creator_avatar_url || undefined}
+                createdAt={item.created_at ?? new Date().toISOString()}
+                isCreator={item.created_by === user?.id}
+                joinerCount={Number(item.joiner_count || 0)}
+                maxJoiners={item.max_joiners || undefined}
+                hasUserJoined={!!item.has_user_joined}
+                status={displayStatus}
+                onJoin={() => handleJoinVisit(item.id)}
+                onUnjoin={() =>
+                  router.push({
+                    pathname: '/visits/[id]',
+                    params: { id: item.id, returnTo: 'visits', visitTab },
+                  })
+                }
+                onPress={() =>
+                  router.push({
+                    pathname: '/visits/[id]',
+                    params: { id: item.id, returnTo: 'visits', visitTab },
+                  })
+                }
+              />
             );
           }}
+          renderSectionHeader={({ section }) => (
+            <View style={styles.categoryHeader}>
+              <View style={[styles.categoryHeaderAccent, { backgroundColor: CATEGORY_COLORS[section.title] || '#A0AEC0' }]} />
+              <Text style={styles.categoryHeaderEmoji}>
+                {getServiceCategoryEmoji(section.title)}
+              </Text>
+              <Text style={[styles.categoryHeaderTitle, { color: colors.text }]}>
+                {section.title}
+              </Text>
+              <View style={[styles.categoryCountBadge, { backgroundColor: (CATEGORY_COLORS[section.title] || '#A0AEC0') + '22' }]}>
+                <Text style={[styles.categoryCountText, { color: CATEGORY_COLORS[section.title] || '#A0AEC0' }]}>
+                  {section.data.length}
+                </Text>
+              </View>
+            </View>
+          )}
+          stickySectionHeadersEnabled={false}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -527,17 +563,10 @@ export default function HomeScreen() {
                     </Text>
                   </TouchableOpacity>
                 </View>
-
                 <SearchBar
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   placeholder="Search visits..."
-                  isLightMode={true}
-                />
-                <CategoryFilter
-                  selectedCategory={selectedCategory}
-                  onSelectCategory={setSelectedCategory}
-                  categories={VISIT_CATEGORIES}
                   isLightMode={true}
                 />
               </View>
@@ -548,14 +577,14 @@ export default function HomeScreen() {
               <EmptyState
                 icon={APP_EMOJIS.community}
                 title="No Upcoming Visits"
-                message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to share when a provider is coming!"}
+                message={searchQuery ? 'No visits match your search' : 'Be the first to share when a provider is coming!'}
                 isLightMode={true}
               />
             ) : (
               <EmptyState
                 icon={APP_EMOJIS.loading}
                 title="No Past Visits"
-                message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Completed and expired visits will appear here"}
+                message={searchQuery ? 'No visits match your search' : 'Completed and expired visits will appear here'}
                 isLightMode={true}
               />
             )
@@ -687,6 +716,39 @@ const styles = StyleSheet.create({
   subTabText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    marginTop: 8,
+    marginBottom: 4,
+    gap: 8,
+  },
+  categoryHeaderAccent: {
+    width: 4,
+    height: 22,
+    borderRadius: 2,
+  },
+  categoryHeaderEmoji: {
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  categoryHeaderTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    flex: 1,
+    letterSpacing: -0.2,
+  },
+  categoryCountBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  categoryCountText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   fab: {
     position: 'absolute',

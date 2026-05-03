@@ -21,7 +21,7 @@ This document is a compact implementation brief for the current Expo + Supabase 
 
 ### Main tabs (`app/(tabs)/`)
 
-- `index.tsx`: Help dashboard with Providers and Service Visits segments
+- `index.tsx`: Help dashboard with Providers and Service Visits segments (debounced search, Photography/Decoration in visit categories)
 - `favorites.tsx`: Saved providers
 - `funds.tsx`: Community funds overview
 - `profile.tsx`: User and community hub
@@ -145,6 +145,8 @@ The notification UI also contains legacy handling for some promotion-related pay
 - **Single-row fetches**: Prefer `.maybeSingle()`
 - **Community filtering**: Filter community-scoped queries by `communityId`
 - **Personal reminders**: `user_services` is user-scoped, not community-scoped
+- **Debounced search**: Wrap any text-input-driven Supabase query with a 300 ms `setTimeout` debounce. Store the debounced value in a separate state variable and use that in fetch dependency arrays.
+- **Provider phone search**: Provider picker dropdowns (e.g. in service reminder add/edit screens) must support search by both provider name and phone number. Strip non-digits with `replace(/\D/g, '')` before comparing phone strings. Placeholder text: `"Search by name or phone number..."`.
 
 ---
 

@@ -67,7 +67,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Main discovery hub with two switchable segments: Trusted Providers and Service Visits |
 | **Tables** | Reads: `service_providers`, `favorites`, `provider_hires`, `service_visits`, `visit_joiners`, `profiles`, `events`, `event_transactions` |
-| **Business rules** | Providers are sorted by `avg_rating` descending. Service Visits split into Upcoming and Past buckets based on date. Cancelled visits stay in Upcoming until their planned date passes. Past visits do not display an `upcoming` status badge even if a stale row still has `status = 'upcoming'`. The screen preserves the active segment and visit sub-tab in route params when users drill into details and return. The home stack also shows `UpcomingServicesCard` and `ActiveFundTeaser` above the main list. |
+| **Business rules** | Providers are sorted by `avg_rating` descending. Service Visits split into Upcoming and Past buckets based on date. Cancelled visits stay in Upcoming until their planned date passes. Past visits do not display an `upcoming` status badge even if a stale row still has `status = 'upcoming'`. The screen preserves the active segment and visit sub-tab in route params when users drill into details and return. The home stack also shows `UpcomingServicesCard` and `ActiveFundTeaser` above the main list. Provider search and visit search are debounced (300 ms) to avoid firing Supabase queries on every keystroke. The `provider_hires` query is scoped to the current `communityId`. The `visit_joiners` query is scoped to the ID set of the current page of visits only. |
 | **Navigation** | To `/provider/[id]`, `/provider/add`, `/visits/[id]`, `/visits/add`, `/notifications`, and `/(tabs)/profile` |
 | **Roles** | All community members can browse and create providers or visits |
 | **Components** | `UpcomingServicesCard`, `ActiveFundTeaser`, `ProviderCard`, `VisitCard`, `SearchBar`, `CategoryFilter`, `EmptyState` |
@@ -155,7 +155,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Register a trusted service provider for the current community |
 | **Tables** | Writes: `service_providers` |
-| **Business rules** | Required: name, phone, and category. Categories come from `constants/categories.ts`. The form supports category-specific structured details via `constants/providerDetails.ts`, optional description, and optional flat or block note. Phone accepts flexible input formats (for example with country code), then normalizes to a validated 10-digit mobile number before duplicate checks, fraud checks, and insert. If a provider with the same normalized phone already exists in the same community, the form routes users to that existing provider instead of creating a duplicate row. Provider creation runs the fraud check helper before insert and stores the resulting `fraud_status`. |
+| **Business rules** | Required: name, phone, and category. Categories come from `constants/categories.ts` (including options such as Photography and Decoration). The form supports category-specific structured details via `constants/providerDetails.ts`, optional description, and optional flat or block note. Phone accepts flexible input formats (for example with country code), then normalizes to a validated 10-digit mobile number before duplicate checks, fraud checks, and insert. If a provider with the same normalized phone already exists in the same community, the form routes users to that existing provider instead of creating a duplicate row. Provider creation runs the fraud check helper before insert and stores the resulting `fraud_status`. |
 | **Navigation** | From the Help tab add action. Returns back on success. |
 | **Roles** | All residents can add providers |
 
@@ -179,7 +179,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Schedule a group visit for a service, optionally linked to an existing provider |
 | **Tables** | Reads: `service_providers`; writes: `service_visits` |
-| **Business rules** | Required: title, category, provider context, and date. Users can link an existing provider or enter a manual provider name and phone. Manual phone and WhatsApp values accept flexible formats but are validated and normalized to 10-digit mobile numbers before save. New visits start as `upcoming`. |
+| **Business rules** | Required: title, category, provider context, and date. Categories include Photography and Decoration among the full list. Users can link an existing provider or enter a manual provider name and phone. Manual phone and WhatsApp values accept flexible formats but are validated and normalized to 10-digit mobile numbers before save. New visits start as `upcoming`. |
 | **Navigation** | From the Help tab add action. Returns back on success. |
 | **Roles** | All residents can create visits |
 
@@ -257,7 +257,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Create a personal maintenance reminder for an appliance or recurring service |
 | **Tables** | Writes: `user_services`; reads community providers from `service_providers` for optional linking |
-| **Business rules** | Required: `service_name`, `category`, `last_serviced_on`, and `frequency_months`. Date cannot be in the future; frequency must be between 1 and 60 months. Category choice pre-fills the default reminder frequency from `lib/serviceCategories.ts`. Linking a provider is optional. When no providers are available, the form surfaces a direct shortcut to add a provider and return. |
+| **Business rules** | Required: `service_name`, `category`, `last_serviced_on`, and `frequency_months`. Date cannot be in the future; frequency must be between 1 and 60 months. Category choice pre-fills the default reminder frequency from `lib/serviceCategories.ts`. Linking a provider is optional. The linked-provider dropdown supports search by provider name and phone number. When no providers are available, the form surfaces a direct shortcut to add a provider and return. |
 | **Integrations** | `@react-native-community/datetimepicker` |
 
 ### Service Reminder Detail (`app/services/[id].tsx`)
@@ -266,7 +266,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | View urgency, edit reminder details, mark work completed, find a technician, or delete the reminder |
 | **Tables** | Reads directly from `user_services` by reminder ID; writes directly to `user_services`; RPC: `mark_service_done(p_service_id)` |
-| **Business rules** | Mark-done uses optimistic UI then refreshes from the database source of truth. Editing reuses add validations and supports mapping or remapping to any saved community provider from the picker list. Delete requires confirmation. The technician shortcut routes users back to the Providers segment of the Help screen with a mapped category filter. |
+| **Business rules** | Mark-done uses optimistic UI then refreshes from the database source of truth. Editing reuses add validations and supports mapping or remapping to any saved community provider from the picker list, including search by provider name and phone number. Delete requires confirmation. The technician shortcut routes users back to the Providers segment of the Help screen with a mapped category filter. |
 
 ### Home and Profile Surfaces
 
