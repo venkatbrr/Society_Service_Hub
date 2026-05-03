@@ -110,6 +110,8 @@ Authenticated with community -> /(tabs)
 - Past visits are shown without an `upcoming` status badge even when stale visit status values exist
 - The Help tab preserves segment and visit-subtab state through route params
 - Provider and visit search inputs are debounced (300 ms) to avoid query-per-keystroke on Supabase
+- Service Visits are displayed grouped by category (SectionList) instead of a horizontal filter strip; each section header shows the category emoji (via `getServiceCategoryEmoji`), name, and a visit count badge; sections are sorted by count (busiest first) and empty categories are hidden automatically
+- Category emojis are shared between the Providers `CategoryFilter` and the Service Visits section headers via the same `getServiceCategoryEmoji` helper
 
 ### Funds
 
