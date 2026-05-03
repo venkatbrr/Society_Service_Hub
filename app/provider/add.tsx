@@ -6,13 +6,37 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOp
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
-import { CATEGORIES } from '../../constants/categories';
+import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/categories';
 import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { DetailField, getDetailFieldsForCategory } from '../../constants/providerDetails';
 import { useAuth } from '../../context/AuthContext';
 import { actionToFraudStatus, checkProviderFraud, getFraudActionMessage } from '../../lib/fraudCheck';
 import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
+
+const buildProviderCategoryGroups = (sourceCategories: string[]): CategoryGroup[] => {
+  const included = new Set(sourceCategories);
+  const groups = CATEGORY_GROUPS
+    .map((group) => ({
+      ...group,
+      categories: group.categories.filter((cat) => included.has(cat)),
+    }))
+    .filter((group) => group.categories.length > 0);
+
+  const groupedSet = new Set(groups.flatMap((group) => group.categories));
+  const uncategorized = sourceCategories.filter((cat) => !groupedSet.has(cat));
+
+  if (uncategorized.length > 0) {
+    groups.push({ id: 'more', label: 'More', categories: uncategorized });
+  }
+
+  return groups;
+};
+
+const findGroupIdByCategory = (groups: CategoryGroup[], selectedCategory: string) => {
+  const group = groups.find((entry) => entry.categories.includes(selectedCategory));
+  return group?.id ?? 'all';
+};
 
 export default function AddProviderScreen() {
   const { user, communityId } = useAuth();
@@ -28,11 +52,39 @@ export default function AddProviderScreen() {
   const [details, setDetails] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(false);
 
+  const categoryGroups = useMemo(() => buildProviderCategoryGroups(CATEGORIES), []);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>(() =>
+    findGroupIdByCategory(categoryGroups, CATEGORIES[0])
+  );
+
+  const visibleCategories = useMemo(() => {
+    if (selectedGroupId === 'all') {
+      return CATEGORIES;
+    }
+
+    return categoryGroups.find((group) => group.id === selectedGroupId)?.categories ?? CATEGORIES;
+  }, [categoryGroups, selectedGroupId]);
+
   const detailFields = useMemo(() => getDetailFieldsForCategory(category), [category]);
 
   const handleCategoryChange = (cat: string) => {
     setCategory(cat);
+    setSelectedGroupId(findGroupIdByCategory(categoryGroups, cat));
     setDetails({}); // reset details when category changes
+  };
+
+  const handleGroupChange = (groupId: string) => {
+    setSelectedGroupId(groupId);
+
+    if (groupId === 'all') {
+      return;
+    }
+
+    const firstCategory = categoryGroups.find((group) => group.id === groupId)?.categories[0];
+    if (firstCategory && firstCategory !== category) {
+      setCategory(firstCategory);
+      setDetails({});
+    }
   };
 
   const updateDetail = (key: string, value: any) => {
@@ -282,8 +334,39 @@ export default function AddProviderScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>CATEGORY</Text>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryGroupScroll}>
+              {[
+                { id: 'all', label: 'All Services' },
+                ...categoryGroups.map((group) => ({ id: group.id, label: group.label })),
+              ].map((group) => {
+                const selected = selectedGroupId === group.id;
+                return selected ? (
+                  <LinearGradient
+                    key={group.id}
+                    colors={[colors.gradientStart, colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.categoryChipGradient}
+                  >
+                    <TouchableOpacity onPress={() => handleGroupChange(group.id)}>
+                      <Text style={[styles.categoryText, { color: '#FFF' }]}>{group.label}</Text>
+                    </TouchableOpacity>
+                  </LinearGradient>
+                ) : (
+                  <TouchableOpacity
+                    key={group.id}
+                    style={[styles.categoryChip, { backgroundColor: colors.glass, borderColor: colors.border }]}
+                    onPress={() => handleGroupChange(group.id)}
+                  >
+                    <Text style={[styles.categoryText, { color: colors.text }]}>{group.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-              {CATEGORIES.map(cat =>
+              {visibleCategories.map(cat =>
                 category === cat ? (
                   <LinearGradient
                     key={cat}
@@ -293,7 +376,7 @@ export default function AddProviderScreen() {
                     style={styles.categoryChipGradient}
                   >
                     <TouchableOpacity onPress={() => handleCategoryChange(cat)}>
-                      <Text style={[styles.categoryText, { color: '#FFF' }]}>{cat}</Text>
+                      <Text style={[styles.categoryText, { color: '#FFF' }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
                     </TouchableOpacity>
                   </LinearGradient>
                 ) : (
@@ -423,6 +506,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     fontSize: 16,
+  },
+  categoryGroupScroll: {
+    flexDirection: 'row',
+    marginBottom: 10,
   },
   categoryScroll: {
     flexDirection: 'row',

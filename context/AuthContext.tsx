@@ -117,12 +117,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchSession = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        // Stale or invalid token (e.g. emulator wipe, server-side revocation).
+        // Clear local state so the user lands on the login screen cleanly.
+        console.warn('Session error — signing out:', error.message);
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setCommunityId(null);
+        setActiveCommunityRequest(null);
+        return;
+      }
       setSession(session);
       setUser(session?.user ?? null);
       await loadProfile(session?.user?.id, session);
     } catch (error) {
       console.error('Error fetching session:', error);
+      // Treat any unexpected auth error as a sign-out to avoid a broken state.
+      await supabase.auth.signOut().catch(() => {});
+      setSession(null);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -146,6 +162,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshSession = async () => {
     const { data, error } = await supabase.auth.refreshSession();
+    if (error) {
+      console.warn('Token refresh failed — signing out:', error.message);
+      await supabase.auth.signOut().catch(() => {});
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setCommunityId(null);
+      return;
+    }
     if (data.session) {
       setSession(data.session);
       setUser(data.session.user);

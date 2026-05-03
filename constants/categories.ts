@@ -32,6 +32,74 @@ export const CATEGORIES = [
   'Other',
 ];
 
+export type CategoryGroup = {
+  id: string;
+  label: string;
+  categories: string[];
+};
+
+export const CATEGORY_GROUPS: CategoryGroup[] = [
+  {
+    id: 'home_support',
+    label: 'Home Support',
+    categories: [
+      'Maid',
+      'Cook',
+      'Driver',
+      'Gardener',
+      'Washroom Cleaner',
+      'Ironing / Press',
+      'Car Wash',
+      'Milkman',
+      'Water Cans',
+      'Water Supply',
+    ],
+  },
+  {
+    id: 'repairs',
+    label: 'Repairs',
+    categories: [
+      'Electrician',
+      'Plumber',
+      'AC Technician',
+      'Carpenter',
+      'Painter',
+      'Gas Repair',
+      'Gas Agency',
+      'Cycle Repair',
+      'RO / Water Purifier',
+      'Pest Control',
+    ],
+  },
+  {
+    id: 'personal',
+    label: 'Personal',
+    categories: [
+      'Tailor',
+      'Salon / Beautician',
+      'Door Rangoli',
+      'Boutique',
+      'Tutor / Home Teacher',
+    ],
+  },
+  {
+    id: 'events',
+    label: 'Events',
+    categories: [
+      'Tent House',
+      'Catering',
+      'Photography',
+      'Decoration',
+      'Movers & Packers',
+    ],
+  },
+  {
+    id: 'other',
+    label: 'Other',
+    categories: ['Other'],
+  },
+];
+
 export const CATEGORY_COLORS: Record<string, string> = {
   Maid: '#FF6B6B',
   Cook: '#FF9F1C',
