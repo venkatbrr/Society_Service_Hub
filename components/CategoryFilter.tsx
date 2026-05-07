@@ -142,13 +142,13 @@ export const CategoryFilter = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 10,
+    marginBottom: 6,
     marginHorizontal: -24,
   },
   groupScrollContent: {
     paddingHorizontal: 24,
     gap: 8,
-    paddingBottom: 8,
+    paddingBottom: 6,
   },
   scrollContent: {
     paddingHorizontal: 24,

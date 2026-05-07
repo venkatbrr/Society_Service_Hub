@@ -1,7 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, RefreshControl, SectionList, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { ActiveFundTeaser } from '../../components/ActiveFundTeaser';
 import { CategoryFilter } from '../../components/CategoryFilter';
@@ -48,6 +50,7 @@ export default function HomeScreen() {
   const [selectedGroupCategories, setSelectedGroupCategories] = useState<string[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeFund, setActiveFund] = useState<any>(null);
+  const [communityInvite, setCommunityInvite] = useState<{ name: string; code: string | null } | null>(null);
   const { user, communityId } = useAuth();
   const router = useRouter();
 
@@ -82,6 +85,47 @@ export default function HomeScreen() {
       console.error('Error fetching stats:', err);
     }
   }, [communityId]);
+
+  useEffect(() => {
+    async function fetchCommunityInvite() {
+      if (!communityId) {
+        setCommunityInvite(null);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('communities')
+        .select('name, code')
+        .eq('id', communityId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading invite code:', error);
+        return;
+      }
+
+      if (data) {
+        setCommunityInvite({ name: data.name, code: data.code });
+      }
+    }
+
+    fetchCommunityInvite();
+  }, [communityId]);
+
+  const handleInviteNeighbors = useCallback(async () => {
+    if (!communityInvite?.code) {
+      Toast.show({ type: 'error', text1: 'Invite code unavailable', text2: 'Community code is not ready yet.' });
+      return;
+    }
+
+    try {
+      await Share.share({
+        message: `Join my community on Society Service Hub!${communityInvite.name ? `\nCommunity: ${communityInvite.name}` : ''}\nCode: ${communityInvite.code}`,
+      });
+    } catch (error) {
+      Toast.show({ type: 'error', text1: 'Share failed', text2: 'Could not open share options.' });
+    }
+  }, [communityInvite]);
 
   const fetchProviders = useCallback(async () => {
     if (!communityId) return;
@@ -282,13 +326,15 @@ export default function HomeScreen() {
     }
   }, [segment, visitTabParam]);
 
-  useEffect(() => {
-    if (activeSegment === 'providers') {
-      fetchProviders();
-    } else {
-      fetchVisits();
-    }
-  }, [activeSegment, communityId, selectedCategory, debouncedSearchQuery]);
+  useFocusEffect(
+    useCallback(() => {
+      if (activeSegment === 'providers') {
+        fetchProviders();
+      } else {
+        fetchVisits();
+      }
+    }, [activeSegment, fetchProviders, fetchVisits])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -348,6 +394,13 @@ export default function HomeScreen() {
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={[styles.headerButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
+              onPress={handleInviteNeighbors}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="person-add-outline" size={20} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.headerButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
               onPress={() => router.push('/notifications')}
             >
               <Text style={styles.headerIcon}>{APP_EMOJIS.notifications}</Text>
@@ -356,12 +409,6 @@ export default function HomeScreen() {
                   <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
                 </View>
               )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.headerButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
-              onPress={() => router.push('/(tabs)/profile')}
-            >
-              <Text style={styles.headerIcon}>{APP_EMOJIS.profile}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -675,7 +722,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 24,
     borderRadius: 14,
     padding: 4,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   segmentBtn: {
     flex: 1,
@@ -692,8 +739,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   filterSection: {
-    marginTop: 8,
-    marginBottom: 2,
+    marginTop: 0,
+    marginBottom: 0,
   },
   sectionTitle: {
     fontSize: 18,
@@ -704,6 +751,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 100,
     paddingHorizontal: 24,
+    paddingTop: 0,
   },
   subTabControl: {
     flexDirection: 'row',

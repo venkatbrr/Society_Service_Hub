@@ -1,7 +1,8 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
@@ -51,45 +52,47 @@ export default function AddServiceScreen() {
   const [selectedProvider, setSelectedProvider] = useState<ProviderOption | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
 
-    async function fetchProviders() {
-      setProvidersLoading(true);
-      try {
-        let query = supabase
-          .from('service_providers')
-          .select('id, name, category, phone')
-          .order('name', { ascending: true });
+      async function fetchProviders() {
+        setProvidersLoading(true);
+        try {
+          let query = supabase
+            .from('service_providers')
+            .select('id, name, category, phone')
+            .order('name', { ascending: true });
 
-        if (communityId) {
-          query = query.eq('community_id', communityId);
-        }
+          if (communityId) {
+            query = query.eq('community_id', communityId);
+          }
 
-        const { data, error } = await query;
+          const { data, error } = await query;
 
-        if (error) throw error;
+          if (error) throw error;
 
-        if (isMounted) {
-          setProviders((data ?? []) as ProviderOption[]);
-        }
-      } catch {
-        if (isMounted) {
-          setProviders([]);
-        }
-      } finally {
-        if (isMounted) {
-          setProvidersLoading(false);
+          if (isMounted) {
+            setProviders((data ?? []) as ProviderOption[]);
+          }
+        } catch {
+          if (isMounted) {
+            setProviders([]);
+          }
+        } finally {
+          if (isMounted) {
+            setProvidersLoading(false);
+          }
         }
       }
-    }
 
-    fetchProviders();
+      fetchProviders();
 
-    return () => {
-      isMounted = false;
-    };
-  }, [communityId]);
+      return () => {
+        isMounted = false;
+      };
+    }, [communityId])
+  );
 
   const handleCategorySelect = (cat: ServiceCategory) => {
     setCategory(cat);

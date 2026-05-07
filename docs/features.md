@@ -67,10 +67,11 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Main discovery hub with two switchable segments: Trusted Providers and Service Visits |
 | **Tables** | Reads: `service_providers`, `favorites`, `provider_hires`, `service_visits`, `visit_joiners`, `profiles`, `events`, `event_transactions` |
-| **Business rules** | Providers are sorted by `avg_rating` descending. Provider filters are grouped into high-level sections (for example Home Support, Repairs, Events) so users can narrow category chips before selecting a specific service like Maid or Electrician. Service Visits split into Upcoming and Past buckets based on date. Cancelled visits stay in Upcoming until their planned date passes. Past visits do not display an `upcoming` status badge even if a stale row still has `status = 'upcoming'`. The screen preserves the active segment and visit sub-tab in route params when users drill into details and return. The home stack also shows `UpcomingServicesCard` and `ActiveFundTeaser` above the main list. Provider search and visit search are debounced (300 ms) to avoid firing Supabase queries on every keystroke. The `provider_hires` query is scoped to the current `communityId`. The `visit_joiners` query is scoped to the ID set of the current page of visits only. |
-| **Navigation** | To `/provider/[id]`, `/provider/add`, `/visits/[id]`, `/visits/add`, `/notifications`, and `/(tabs)/profile` |
+| **Business rules** | Providers are sorted by `avg_rating` descending. The provider filter uses a two-level grouped navigation: a group row (All Services, Home Support, Repairs, Personal, Events, Other) followed by a category chip row that shows only categories within the selected group. Selecting a group without a specific category filters the provider query to all categories in that group using an `IN` clause, so Events + All returns only Photography, Decoration, Catering, etc. and never shows Maid. Selecting a specific category adds a single equality filter. Service Visits split into Upcoming and Past buckets based on date. Cancelled visits stay in Upcoming until their planned date passes. Past visits do not display an `upcoming` status badge even if a stale row still has `status = 'upcoming'`. The screen preserves the active segment and visit sub-tab in route params when users drill into details and return. Provider and visit data are refreshed whenever the screen regains focus so newly added records appear immediately after returning. The header includes an Invite Neighbors action beside notifications that opens the native share sheet with the current community join code. The home stack also shows `UpcomingServicesCard` and `ActiveFundTeaser` above the main list. Provider search and visit search are debounced (300 ms) to avoid firing Supabase queries on every keystroke. The `provider_hires` query is scoped to the current `communityId`. The `visit_joiners` query is scoped to the ID set of the current page of visits only. |
+| **Navigation** | To `/provider/[id]`, `/provider/add`, `/visits/[id]`, `/visits/add`, and `/notifications` |
 | **Roles** | All community members can browse and create providers or visits |
 | **Components** | `UpcomingServicesCard`, `ActiveFundTeaser`, `ProviderCard`, `VisitCard`, `SearchBar`, `CategoryFilter`, `EmptyState` |
+| **State additions** | `selectedGroupCategories: string[] \| null` — set by `CategoryFilter` via `onSelectGroupCategories` callback; used to build the `IN` clause on the provider query when a group (but not specific category) is active. |
 
 ### Tab 2: Saved - Favorites (`app/(tabs)/favorites.tsx`)
 
@@ -98,7 +99,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Show user identity, role, community details, service reminder entry point, community directory shortcut, and sign-out |
 | **Tables** | Reads: `communities`; RPC: `get_my_due_soon_count()` |
-| **Business rules** | Community leads see the 6-character join code and can share it. The profile screen surfaces a due-soon badge for personal service reminders and links into the residents directory. |
+| **Business rules** | Community leads see the 6-character join code and can share it. The profile section also includes an Invite neighbours action that opens the native share sheet with the current community code. The profile screen surfaces a due-soon badge for personal service reminders and links into the residents directory. |
 | **Navigation** | To `/services`, `/residents`, and `/login` after sign-out |
 | **Roles** | Personal profile only |
 
@@ -179,7 +180,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Schedule a group visit for a service, optionally linked to an existing provider |
 | **Tables** | Reads: `service_providers`; writes: `service_visits` |
-| **Business rules** | Required: title, category, provider context, and date. Categories include Photography and Decoration among the full list. Users can link an existing provider or enter a manual provider name and phone. Manual phone and WhatsApp values accept flexible formats but are validated and normalized to 10-digit mobile numbers before save. New visits start as `upcoming`. |
+| **Business rules** | Required: title, category, provider context, and date. Categories are drawn from the full shared list in `constants/categories.ts` and presented through the same two-level grouped picker (Home Support, Repairs, Personal, Events, Other) used on the Add Provider form. Users can link an existing provider or enter a manual provider name and phone. Manual phone and WhatsApp values accept flexible formats but are validated and normalized to 10-digit mobile numbers before save. New visits start as `upcoming`. |
 | **Navigation** | From the Help tab add action. Returns back on success. |
 | **Roles** | All residents can create visits |
 
@@ -257,7 +258,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Create a personal maintenance reminder for an appliance or recurring service |
 | **Tables** | Writes: `user_services`; reads community providers from `service_providers` for optional linking |
-| **Business rules** | Required: `service_name`, `category`, `last_serviced_on`, and `frequency_months`. Date cannot be in the future; frequency must be between 1 and 60 months. Category choice pre-fills the default reminder frequency from `lib/serviceCategories.ts`. Linking a provider is optional. The linked-provider dropdown supports search by provider name and phone number. When no providers are available, the form surfaces a direct shortcut to add a provider and return. |
+| **Business rules** | Required: `service_name`, `category`, `last_serviced_on`, and `frequency_months`. Date cannot be in the future; frequency must be between 1 and 60 months. Category choice pre-fills the default reminder frequency from `lib/serviceCategories.ts`. Linking a provider is optional. The linked-provider dropdown supports search by provider name and phone number. Provider options refresh when the screen regains focus, so a newly added provider appears immediately after returning from the add-provider flow. When no providers are available, the form surfaces a direct shortcut to add a provider and return. |
 | **Integrations** | `@react-native-community/datetimepicker` |
 
 ### Service Reminder Detail (`app/services/[id].tsx`)
@@ -266,7 +267,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | View urgency, edit reminder details, mark work completed, find a technician, or delete the reminder |
 | **Tables** | Reads directly from `user_services` by reminder ID; writes directly to `user_services`; RPC: `mark_service_done(p_service_id)` |
-| **Business rules** | Mark-done uses optimistic UI then refreshes from the database source of truth. Editing reuses add validations and supports mapping or remapping to any saved community provider from the picker list, including search by provider name and phone number. Delete requires confirmation. The technician shortcut routes users back to the Providers segment of the Help screen with a mapped category filter. |
+| **Business rules** | Mark-done uses optimistic UI then refreshes from the database source of truth. Editing reuses add validations and supports mapping or remapping to any saved community provider from the picker list, including search by provider name and phone number. Provider options refresh when the screen regains focus, so newly added providers are available immediately after returning. Delete requires confirmation. The technician shortcut routes users back to the Providers segment of the Help screen with a mapped category filter. |
 
 ### Home and Profile Surfaces
 

@@ -1,4 +1,5 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -123,45 +124,47 @@ export default function ServiceDetailScreen() {
     fetchService();
   }, [fetchService]);
 
-  useEffect(() => {
-    let isMounted = true;
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
 
-    async function fetchProviders() {
-      setProvidersLoading(true);
-      try {
-        let query = supabase
-          .from('service_providers')
-          .select('id, name, category, phone')
-          .order('name', { ascending: true });
+      async function fetchProviders() {
+        setProvidersLoading(true);
+        try {
+          let query = supabase
+            .from('service_providers')
+            .select('id, name, category, phone')
+            .order('name', { ascending: true });
 
-        if (communityId) {
-          query = query.eq('community_id', communityId);
-        }
+          if (communityId) {
+            query = query.eq('community_id', communityId);
+          }
 
-        const { data, error } = await query;
+          const { data, error } = await query;
 
-        if (error) throw error;
+          if (error) throw error;
 
-        if (isMounted) {
-          setProviders((data ?? []) as ProviderOption[]);
-        }
-      } catch {
-        if (isMounted) {
-          setProviders([]);
-        }
-      } finally {
-        if (isMounted) {
-          setProvidersLoading(false);
+          if (isMounted) {
+            setProviders((data ?? []) as ProviderOption[]);
+          }
+        } catch {
+          if (isMounted) {
+            setProviders([]);
+          }
+        } finally {
+          if (isMounted) {
+            setProvidersLoading(false);
+          }
         }
       }
-    }
 
-    fetchProviders();
+      fetchProviders();
 
-    return () => {
-      isMounted = false;
-    };
-  }, [communityId]);
+      return () => {
+        isMounted = false;
+      };
+    }, [communityId])
+  );
 
   useEffect(() => {
     if (!service?.provider_id) {

@@ -54,6 +54,17 @@ useEffect(() => {
 
 `debouncedSearchQuery` (not `searchQuery`) is used in fetch dependency arrays. This pattern must be applied to any screen that filters a Supabase list via a text input. The `provider_hires` query on the Help tab is scoped to `communityId`. The `visit_joiners` query is scoped to only the current page's visit IDs to avoid full-table scans.
 
+### Category Group Filter Pattern
+
+The Help tab provider list supports a two-level category filter:
+
+1. `selectedCategory: string | null` — set when a specific category chip is tapped; applied as `.eq('category', selectedCategory)` in the query.
+2. `selectedGroupCategories: string[] | null` — set via the `onSelectGroupCategories` callback on `CategoryFilter` when a group chip is tapped; applied as `.in('category', selectedGroupCategories)` in the query when no specific category is active.
+
+When switching tabs or clearing the search the group categories state is also reset to `null`. Both states are passed as dependencies to `fetchProviders`.
+
+The `CategoryFilter` component in `components/CategoryFilter.tsx` derives groups from `CATEGORY_GROUPS` in `constants/categories.ts`. The same grouped-picker pattern (group row + filtered category scroll) is used in `app/provider/add.tsx` and `app/visits/add.tsx` for consistent category selection UX across the app.
+
 ---
 
 ## Auth Architecture

@@ -77,7 +77,8 @@ Storage bucket: `community-uploads` (public).
 DB functions: `handle_new_user()` (auto-creates profile on signup), `join_community_by_code(p_code)` (instant join by 6-char code), `get_community_visits()` and `get_visit_joiners()` RPCs for aggregations, `get_my_upcoming_services()`, `get_my_due_soon_count()`, `mark_service_done(p_service_id)`, `notify_due_services()` (service reminder RPCs).
 
 Edge Function `supabase/functions/check_due_services/index.ts` calls `notify_due_services()` daily. **Must be scheduled in the Supabase Dashboard** under Edge Functions → Schedules, cron expression `30 3 * * *` (3:30 UTC = 9 AM IST).
-- **Service categories**: `lib/serviceCategories.ts` is the single source of truth for service category labels, emoji, and default frequencies. Import from there, not hardcoded strings.
+- **Service categories**: `lib/serviceCategories.ts` is the single source of truth for service category labels, emoji, and default frequencies used in personal reminders. Import from there, not hardcoded strings.
+- **Provider/visit categories**: `constants/categories.ts` owns the full provider and visit category list (`CATEGORIES`) and the group taxonomy (`CATEGORY_GROUPS`). Do not define local category arrays in screens — always import from `constants/categories.ts`. The `CategoryFilter` component builds two-level grouped UI from this. On the Help tab, group selection flows through the `onSelectGroupCategories` callback and is applied as an `IN` clause in the provider query.
 
 ## Intentionally Disabled Features
 

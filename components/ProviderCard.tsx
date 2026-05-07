@@ -21,6 +21,7 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
       onPress={onPress}
       isLightMode={isLightMode}
       padding={16}
+      style={styles.card}
     >
       <View style={styles.content}>
         <View style={styles.mainInfo}>
@@ -80,6 +81,9 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
 });
 
 const styles = StyleSheet.create({
+  card: {
+    marginBottom: 8,
+  },
   content: {
     flexDirection: 'row',
     alignItems: 'flex-start',

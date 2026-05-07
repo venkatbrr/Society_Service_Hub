@@ -21,7 +21,7 @@ This document is a compact implementation brief for the current Expo + Supabase 
 
 ### Main tabs (`app/(tabs)/`)
 
-- `index.tsx`: Help dashboard with Providers and Service Visits segments (debounced search, Photography/Decoration in visit categories)
+- `index.tsx`: Help dashboard with Providers and Service Visits segments (debounced search, grouped category filter with two-level navigation: group row then category chip row; group selection applies an `IN` filter to the provider query)
 - `favorites.tsx`: Saved providers
 - `funds.tsx`: Community funds overview
 - `profile.tsx`: User and community hub
@@ -147,6 +147,7 @@ The notification UI also contains legacy handling for some promotion-related pay
 - **Personal reminders**: `user_services` is user-scoped, not community-scoped
 - **Debounced search**: Wrap any text-input-driven Supabase query with a 300 ms `setTimeout` debounce. Store the debounced value in a separate state variable and use that in fetch dependency arrays.
 - **Provider phone search**: Provider picker dropdowns (e.g. in service reminder add/edit screens) must support search by both provider name and phone number. Strip non-digits with `replace(/\D/g, '')` before comparing phone strings. Placeholder text: `"Search by name or phone number..."`.
+- **Category grouping**: Categories in `constants/categories.ts` are also organised into groups via `CATEGORY_GROUPS` (`CategoryGroup[]`). The `CategoryFilter` component renders a two-level UI: a group chip row exposes `onSelectGroupCategories(categories: string[] | null)` so the host screen can build an `IN` query clause; a category chip row scoped to the active group provides single-category `eq` filtering. The same grouped picker (group row + filtered category scroll) is used in `app/provider/add.tsx` and `app/visits/add.tsx`.
 
 ---
 

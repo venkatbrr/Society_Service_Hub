@@ -61,6 +61,21 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleInviteNeighbors = async () => {
+    if (!communityDetails?.code) {
+      Toast.show({ type: 'error', text1: 'Invite code unavailable', text2: 'Community code is not ready yet.' });
+      return;
+    }
+
+    try {
+      await Share.share({
+        message: `Join my community on Society Service Hub!${communityDetails.name ? `\nCommunity: ${communityDetails.name}` : ''}\nCode: ${communityDetails.code}`,
+      });
+    } catch {
+      Toast.show({ type: 'error', text1: 'Share failed', text2: 'Could not open share options.' });
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
@@ -130,7 +145,7 @@ export default function ProfileScreen() {
                 <View style={styles.codeRow}>
                   <Text style={[styles.codeValue, { color: colors.primary }]}>{communityDetails.code}</Text>
                   <TouchableOpacity
-                    onPress={() => Share.share({ message: `Join my community on Society Service Hub! Code: ${communityDetails.code}` })}
+                    onPress={handleInviteNeighbors}
                     style={[styles.shareBtn, { backgroundColor: `${colors.primary}10` }]}
                     activeOpacity={0.75}
                   >
@@ -141,6 +156,21 @@ export default function ProfileScreen() {
             </>
           ) : null}
         </View>
+
+        <TouchableOpacity
+          onPress={handleInviteNeighbors}
+          style={[styles.adminCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          activeOpacity={0.82}
+        >
+          <View style={[styles.adminIconWrap, { backgroundColor: `${colors.secondary}12` }]}>
+            <Text style={styles.adminIcon}>{APP_EMOJIS.share}</Text>
+          </View>
+          <View style={styles.adminContent}>
+            <Text style={[styles.adminTitle, { color: colors.text }]}>Invite neighbours</Text>
+            <Text style={[styles.adminCopy, { color: colors.textMuted }]}>Share your community code so others can join</Text>
+          </View>
+          <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.push('/services' as any)}
