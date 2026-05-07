@@ -60,8 +60,8 @@ The app targets iOS, Android, and Web from one Expo codebase.
 
 - `index.tsx`: Help dashboard with Providers and Visits segments
 - `favorites.tsx`: Saved providers
-- `funds.tsx`: Community fund list
-- `profile.tsx`: Personal and community hub
+- `community.tsx`: Community tab with pulse, fund list, residents shortcut, and community info
+- `profile.tsx`: Personal hub for identity, reminders, recent service history, and sign-out
 
 ### Feature route groups
 
@@ -107,6 +107,7 @@ Authenticated with community -> /(tabs)
 - Residents can rate, save, call, message, and share provider contacts
 - Existing ratings can be reused when updating review text without re-tapping stars
 - Residents can create shared service visits and manage participation; visit categories also include Photography and Decoration
+- Visit joiners can reuse their saved flat number in the join modal and edited flat numbers are formatted to uppercase without spaces or hyphens on blur
 - Past visits are shown without an `upcoming` status badge even when stale visit status values exist
 - The Help tab preserves segment and visit-subtab state through route params
 - Provider and visit search inputs are debounced (300 ms) to avoid query-per-keystroke on Supabase
@@ -118,6 +119,7 @@ Authenticated with community -> /(tabs)
 - Community funds live in `events`
 - Treasurers and collectors are assigned through `fund_roles`
 - Ledger rows live in `event_transactions`
+- The Community tab funds overview banner uses the bundled JPEG asset `assets/images/funds_bg.jpg`; mismatched static-image extensions can break Android release builds
 - The intended product rule is community-lead-administered funds, though some fund code still tolerates a legacy `community_admin` string internally
 
 ### Onboarding and Platform Review
@@ -125,6 +127,8 @@ Authenticated with community -> /(tabs)
 - Residents can join communities instantly by code
 - New communities require a platform approval workflow
 - Approvals create the community and assign the requester to that community as `resident`
+- Email sign-up requires a flat number; the value is normalized before signup and stored in `profiles.flat_number` via the auth trigger
+- Community-request flat or house numbers are formatted in uppercase and strip spaces and hyphens on blur for cleaner approval records
 
 ### Personal Service Reminders
 
@@ -232,6 +236,7 @@ The notification screen also contains compatibility handling for some older prom
 - The current product does not expose an active media-upload feature
 - The Supabase setup still includes a public `community-uploads` bucket, but no current screen writes to it
 - Profile avatars come from auth metadata when available
+- The Community tab funds overview background is a bundled JPEG asset at `assets/images/funds_bg.jpg`
 
 ---
 

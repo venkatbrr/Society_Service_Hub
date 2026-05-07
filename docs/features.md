@@ -14,7 +14,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Sign up or sign in via email/password or Google OAuth |
 | **Tables** | Writes: `auth.users` through Supabase Auth. Trigger auto-creates `profiles` row. |
-| **Business rules** | Email must contain `@`. Sign-up requires full name, matching password and confirm password. Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection (does not silently reuse the last Google account). |
+| **Business rules** | Email must contain `@`. Sign-up requires full name, flat number, and matching password and confirm password. Flat numbers entered at sign-up are normalized to uppercase with spaces and hyphens removed before being sent as auth metadata, and `handle_new_user()` copies that value into `profiles.flat_number`. Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection (does not silently reuse the last Google account). |
 | **Navigation** | Entry point for unauthenticated users. Links to `/forgot-password`. Post-auth routing is handled by the root layout. |
 | **Roles** | N/A (pre-auth) |
 | **Integrations** | Supabase Auth, Google Sign-In |
@@ -35,7 +35,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Submit a new community creation request for platform review |
 | **Tables** | Writes: `community_requests` through `submit_community_request(...)` RPC |
-| **Business rules** | Required: community name, city, pincode, flat or house number, and accuracy confirmation. Optional: area, address, community type, approximate units. New requests enter `pending` status. |
+| **Business rules** | Required: community name, city, pincode, flat or house number, and accuracy confirmation. Optional: area, address, community type, approximate units. The requester flat or house number input is formatted in uppercase and strips spaces and hyphens on blur to keep approval data consistent. New requests enter `pending` status. |
 | **Navigation** | From `/community-select`. To `/community-request-submitted` on success. |
 | **Roles** | Any authenticated user |
 
@@ -89,7 +89,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Consolidated building-level view: pulse updates, funds section, residents shortcut, and community info in one tab |
 | **Tables / RPCs** | Reads: `communities`, `events`, `event_transactions`, `fund_roles`, `profiles`, `funds_access_requests`; RPCs: `get_community_pulse(p_limit)`, `get_my_community_funds_overview()`, `withdraw_funds_access_request(...)` |
-| **Business rules** | Section order is fixed: pulse, funds, residents tile, community info. Pulse is read-only aggregated activity with no comments, reactions, or feed drill-down, and the entire section is hidden when empty. Funds are now activation-gated: when `funds_enabled = false`, the section renders request/status cards (request CTA, pending, rejected retry, and previously-active note) instead of fund tiles. When `funds_enabled = true`, the existing funds summary + list is shown. Funds request CTA entry is only in this section. |
+| **Business rules** | Section order is fixed: pulse, funds, residents tile, community info. Pulse is read-only aggregated activity with no comments, reactions, or feed drill-down, and the entire section is hidden when empty. Funds are now activation-gated: when `funds_enabled = false`, the section renders request/status cards (request CTA, pending, rejected retry, and previously-active note) instead of fund tiles. When `funds_enabled = true`, the existing funds summary + list is shown, with the overview banner using the bundled JPEG asset `assets/images/funds_bg.jpg`. Funds request CTA entry is only in this section. |
 | **Navigation** | To `/funds/[id]`, `/funds/add`, and `/residents?returnTo=community` |
 | **Roles** | All residents can view; create-fund action remains role-gated exactly as before. |
 
@@ -228,7 +228,7 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | Show visit details, joiners, join and leave actions, and creator-side status controls |
 | **Tables** | Reads: `service_visits`, `visit_joiners`, `profiles`; RPC: `get_visit_joiners`; writes: `visit_joiners`, `service_visits.status` |
-| **Business rules** | Joiners can add optional flat number and note. Only the creator can move the visit between `upcoming`, `in_progress`, `completed`, and `cancelled`. Back navigation preserves the prior Help tab state through route params. |
+| **Business rules** | Joiners can add optional flat number and note. The join modal seeds the flat number from `profile.flat_number` when available and formats edited flat numbers to uppercase without spaces or hyphens on blur. Only the creator can move the visit between `upcoming`, `in_progress`, `completed`, and `cancelled`. Back navigation preserves the prior Help tab state through route params. |
 | **Navigation** | From Help and Notifications. Can deep-link to `/provider/[id]` when the visit is linked to a provider. |
 
 ---
@@ -242,7 +242,7 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 | **Purpose** | Create a fund and assign 1-2 treasurers |
 | **Tables** | Reads: `profiles`; writes: `events`, `fund_roles` |
 | **Business rules** | Fund title is required. At least one treasurer must be selected, with a max of two. The fund starts with `goal_amount = 0` and `event_date = now`. |
-| **Navigation** | From the Funds tab action. Redirects to `/funds/[id]` after success. |
+| **Navigation** | From the Community tab funds action. Redirects to `/funds/[id]` after success. |
 | **Roles** | Intended for community leads or equivalent fund admins |
 
 ### Fund Detail (`app/funds/[id].tsx`)

@@ -81,8 +81,9 @@ Run each section in order. For each check, record ✅ pass or ❌ fail with a br
 
 ---
 
-### 5. Funds Tab
-- [ ] Community funds list with income, expense, and balance totals
+### 5. Community Tab
+- [ ] Community tab shows pulse, funds list, residents shortcut, and community info
+- [ ] Funds area shows income, expense, and balance totals when funds are active
 - [ ] Tapping a fund opens Fund Detail
   - [ ] Transaction history visible
   - [ ] Role badge shows (viewer/collector/treasurer)

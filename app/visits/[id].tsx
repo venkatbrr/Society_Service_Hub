@@ -414,10 +414,12 @@ export default function VisitDetailScreen() {
                         <Text style={[styles.label, { color: colors.text }]}>MY FLAT NUMBER</Text>
                         <TextInput
                             style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
-                            placeholder="e.g. A-204"
+                            placeholder="e.g. A412"
                             placeholderTextColor={colors.textMuted}
                             value={flatNo}
                             onChangeText={setFlatNo}
+                            onBlur={() => setFlatNo(prev => prev.toUpperCase().replace(/[\s-]/g, ''))}
+                            autoCapitalize="characters"
                         />
                     </View>
 

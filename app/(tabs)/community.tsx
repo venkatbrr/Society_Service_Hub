@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ImageBackground } from 'react-native';
+import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../components/BaseCard';
 import { FundsList } from '../../components/FundsList';
@@ -200,7 +200,7 @@ export default function CommunityScreen() {
 
           {fundsEnabled && overview && overview.active_funds_count > 0 ? (
             <ImageBackground 
-              source={require('../../assets/images/funds_bg.png')} 
+              source={require('../../assets/images/funds_bg.jpg')} 
               style={[styles.fundsOverviewBg]}
               imageStyle={{ borderRadius: 16 }}
             >

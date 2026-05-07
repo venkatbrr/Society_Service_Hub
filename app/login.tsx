@@ -3,15 +3,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
@@ -34,6 +34,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [flatNumber, setFlatNumber] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleMode = () => {
@@ -41,6 +42,7 @@ export default function LoginScreen() {
     // Clear passwords on toggle
     setPassword('');
     setConfirmPassword('');
+    setFlatNumber('');
   };
 
   const validateForm = () => {
@@ -51,6 +53,10 @@ export default function LoginScreen() {
     if (mode === 'signUp') {
       if (!fullName.trim()) {
         Toast.show({ type: 'error', text1: 'Missing Name', text2: 'Please enter your full name.' });
+        return false;
+      }
+      if (!flatNumber.trim()) {
+        Toast.show({ type: 'error', text1: 'Missing Flat Number', text2: 'Please enter your flat number.' });
         return false;
       }
       if (password !== confirmPassword) {
@@ -67,7 +73,8 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       if (mode === 'signUp') {
-        const { data, error } = await signUpWithEmail(email.trim(), password, fullName.trim());
+        const normalizedFlat = flatNumber.toUpperCase().replace(/[\s-]/g, '');
+        const { data, error } = await signUpWithEmail(email.trim(), password, fullName.trim(), normalizedFlat);
         if (error) throw error;
 
         if (data.session) {
@@ -209,19 +216,37 @@ export default function LoginScreen() {
 
         <View style={styles.form}>
           {mode === 'signUp' && (
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>FULL NAME</Text>
-              <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
-                <Text style={styles.inputEmoji}>{APP_EMOJIS.profile}</Text>
-                <TextInput
-                  style={[styles.input, { color: colors.text }]}
-                  placeholder="John Doe"
-                  placeholderTextColor={colors.textMuted}
-                  value={fullName}
-                  onChangeText={setFullName}
-                />
+            <>
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: colors.text }]}>FULL NAME</Text>
+                <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
+                  <Text style={styles.inputEmoji}>{APP_EMOJIS.profile}</Text>
+                  <TextInput
+                    style={[styles.input, { color: colors.text }]}
+                    placeholder="John Doe"
+                    placeholderTextColor={colors.textMuted}
+                    value={fullName}
+                    onChangeText={setFullName}
+                  />
+                </View>
               </View>
-            </View>
+              
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: colors.text }]}>FLAT NUMBER</Text>
+                <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
+                  <Text style={styles.inputEmoji}>🚪</Text>
+                  <TextInput
+                    style={[styles.input, { color: colors.text }]}
+                    placeholder="e.g. A412"
+                    placeholderTextColor={colors.textMuted}
+                    value={flatNumber}
+                    onChangeText={setFlatNumber}
+                    onBlur={() => setFlatNumber(prev => prev.toUpperCase().replace(/[\s-]/g, ''))}
+                    autoCapitalize="characters"
+                  />
+                </View>
+              </View>
+            </>
           )}
 
           <View style={styles.inputGroup}>

@@ -223,11 +223,13 @@ export default function CommunityRequestScreen() {
 
         <Text style={[styles.label, { color: colors.text }]}>YOUR FLAT / HOUSE NUMBER *</Text>
         <TextInput
-          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+          placeholder="e.g. A101"
+          placeholderTextColor={colors.textMuted}
           value={requesterFlatNumber}
           onChangeText={setRequesterFlatNumber}
-          placeholder="A-402"
-          placeholderTextColor={colors.textMuted}
+          onBlur={() => setRequesterFlatNumber(prev => prev.toUpperCase().replace(/[\s-]/g, ''))}
+          autoCapitalize="characters"
         />
 
         <TouchableOpacity

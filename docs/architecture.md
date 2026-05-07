@@ -130,7 +130,7 @@ type AuthContextType = {
 ### Auth Helpers (`lib/auth.ts`)
 
 - `configureGoogleSignIn()`
-- `signUpWithEmail(email, password, fullName)`
+- `signUpWithEmail(email, password, fullName, flatNumber?)`
 - `signInWithEmail(email, password)`
 - `resetPassword(email)`
 - `getAuthErrorMessage(error)`
@@ -144,7 +144,7 @@ type AuthContextType = {
 | Table | Purpose | Scope |
 |-------|---------|-------|
 | `communities` | Community metadata, join code, and funds/block activation flags (`funds_enabled`, `blocks_enabled`) | Community |
-| `profiles` | User profile extension of `auth.users`, including optional `block_id` when blocks are enabled | Community or self |
+| `profiles` | User profile extension of `auth.users`, including `flat_number` from signup metadata and optional `block_id` when blocks are enabled | Community or self |
 | `community_requests` | Reviewed community creation requests | Requester or platform |
 | `profile_audit_log` | Audit trail for profile mutations | Admin or internal |
 | `service_providers` | Trusted provider listings | Community |
@@ -179,7 +179,7 @@ The marketplace tables `resident_businesses`, `business_offerings`, and `busines
 
 | Function | Purpose |
 |----------|---------|
-| `handle_new_user()` | Trigger helper that creates a `profiles` row after auth signup |
+| `handle_new_user()` | Trigger helper that creates a `profiles` row after auth signup and copies `raw_user_meta_data.flat_number` into `profiles.flat_number` |
 | `join_community_by_code(p_code)` | Join community immediately by code |
 | `submit_community_request(...)` | Insert a new community request |
 | `platform_approve_community_request(p_request_id)` | Create community, generate code, and assign requester to the community as resident |
@@ -387,6 +387,7 @@ The community tab consolidates the read-only pulse line, funds list and summary,
 - `refreshing` for pull-to-refresh
 - `isLoading` for form submission state
 - Toasts for all user-visible success and failure messages
+- Flat or house number inputs should normalize to uppercase and strip spaces and hyphens on blur so values stay consistent across signup, onboarding, and visit joins
 
 ---
 

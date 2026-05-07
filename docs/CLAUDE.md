@@ -44,7 +44,7 @@ Every user belongs to a community. **All data queries must filter by `communityI
 1. Root layout (`app/_layout.tsx`) initializes Google Sign-In and wraps app in `AuthProvider` + `NotificationProvider`
 2. `AuthContext` watches `supabase.auth.onAuthStateChange`, auto-fetches profile
 3. Redirect logic: no session → `/login`; platform admin → `/platform/approvals`; no community + active request → `/community-request-submitted`; no community + no request → `/community-select`; community present → `/(tabs)`
-4. Auth methods: Google OAuth (requires dev build, not Expo Go) and email/password
+4. Auth methods: Google OAuth (requires dev build, not Expo Go) and email/password; email sign-up requires a flat number and forwards it through auth metadata into `profiles.flat_number`
 5. Session persisted via AsyncStorage adapter (not SecureStore, due to Android 2KB limit)
 
 ### Role System
@@ -70,8 +70,10 @@ Funds activation is gated by platform-admin approval. A community without `funds
 - **Information architecture**: Community-level info is rendered in the Community tab. Profile tab is account-level only.
 - **Debounced search**: When a text input drives a Supabase list query, always debounce 300 ms using a `debouncedSearchQuery` state updated in a `setTimeout` effect. Use `debouncedSearchQuery` in fetch dependency arrays, not the raw input state.
 - **Provider phone search**: When filtering providers in a picker, strip non-digits from both the query and stored phone value (`replace(/\D/g, '')`) before comparing. Display placeholder `"Search by name or phone number..."`.
+- **Flat/house number inputs**: Normalize to uppercase and strip spaces and hyphens on blur. Use placeholders like `A101` or `A412`, not hyphenated examples.
 - **TypeScript**: Strict mode enabled. Path alias `@/*` maps to project root
 - **Android dev networking**: Keep `android.usesCleartextTraffic=true` so development builds can load Metro bundles over HTTP
+- **Bundled image assets**: Keep import extensions aligned with the real file type. The Community tab funds overview background is `assets/images/funds_bg.jpg`; importing it as `.png` breaks Android release resource compilation.
 
 ## Database
 
@@ -79,7 +81,7 @@ Funds activation is gated by platform-admin approval. A community without `funds
 
 Storage bucket: `community-uploads` (public).
 
-DB functions: `handle_new_user()` (auto-creates profile on signup), `join_community_by_code(p_code)` (instant join by 6-char code), `get_community_visits()` and `get_visit_joiners()` RPCs for aggregations, `get_my_upcoming_services()`, `get_my_due_soon_count()`, `mark_service_done(p_service_id)`, `notify_due_services()` (service reminder RPCs).
+DB functions: `handle_new_user()` (auto-creates profile on signup and copies signup `flat_number` metadata into `profiles.flat_number`), `join_community_by_code(p_code)` (instant join by 6-char code), `get_community_visits()` and `get_visit_joiners()` RPCs for aggregations, `get_my_upcoming_services()`, `get_my_due_soon_count()`, `mark_service_done(p_service_id)`, `notify_due_services()` (service reminder RPCs).
 
 Edge Function `supabase/functions/check_due_services/index.ts` calls `notify_due_services()` daily. **Must be scheduled in the Supabase Dashboard** under Edge Functions → Schedules, cron expression `30 3 * * *` (3:30 UTC = 9 AM IST).
 - **Service categories**: `lib/serviceCategories.ts` is the single source of truth for service category labels, emoji, and default frequencies used in personal reminders. Import from there, not hardcoded strings.
