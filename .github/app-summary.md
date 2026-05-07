@@ -134,6 +134,13 @@ Authenticated with community -> /(tabs)
 - Home and Profile both surface due-soon reminders
 - Due reminders generate `service_reminder` notifications through the daily scheduler flow
 
+### Cross-Community Federation (Backend Active, UI Deferred)
+
+- Cross-community schema, helper predicates, and RPCs are live in Supabase
+- Existing app screens do not call cross-community RPCs yet
+- Current user-visible behavior remains single-community by default
+- Canonical backend reference: `docs/cross-community.md`
+
 ---
 
 ## 6. Roles
@@ -173,6 +180,13 @@ Authenticated with community -> /(tabs)
 - `fund_roles`
 - `notifications`
 - `user_services`
+- `community_partnerships` (backend only)
+- `community_groups` (backend only)
+- `community_group_members` (backend only)
+- `provider_shares` (backend only)
+- `service_visit_communities` (backend only)
+- `community_announcements` (backend only)
+- `announcement_audiences` (backend only)
 
 Removed marketplace tables:
 
@@ -193,6 +207,11 @@ Live product notification types include:
 - `community_rejected`
 - `removed_from_community`
 - `service_reminder`
+
+Reserved for cross-community workflows (backend available, no current UI emission path):
+
+- `partnership_request`
+- `partnership_accepted`
 
 The notification screen also contains compatibility handling for some older promotion-related payloads.
 
@@ -237,3 +256,4 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 - Community membership does not use a resident approval queue
 - `user_services` is user-scoped, not community-scoped
 - Platform admins are separated from community members by the `admin` plus no-community rule
+- Cross-community UI is deferred even though backend federation objects are active

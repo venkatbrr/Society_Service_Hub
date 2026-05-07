@@ -154,6 +154,13 @@ type AuthContextType = {
 | `fund_roles` | Treasurer and collector assignments per fund | Community |
 | `notifications` | User notification feed | User |
 | `user_services` | Personal service reminders | User |
+| `community_partnerships` | Pairwise federation relationships across communities | Cross-community (backend only) |
+| `community_groups` | Named clusters of communities for federation scopes | Cross-community (backend only) |
+| `community_group_members` | Community memberships inside federation groups | Cross-community (backend only) |
+| `provider_shares` | Explicit provider share targets by community/group/partnership | Cross-community (backend only) |
+| `service_visit_communities` | Community audience mapping for cross-community visits | Cross-community (backend only) |
+| `community_announcements` | Cross-community-capable announcements authored by communities | Cross-community (backend only) |
+| `announcement_audiences` | Explicit announcement audience targets | Cross-community (backend only) |
 
 ### Removed Marketplace Tables
 
@@ -180,6 +187,16 @@ The marketplace tables `resident_businesses`, `business_offerings`, and `busines
 | `notify_due_services()` | Create due-soon reminder notifications |
 | `normalize_indian_mobile(p_value)` | Canonicalize flexible phone input to a validated 10-digit Indian mobile |
 | `set_audit_actor(p_actor_id)` / `set_audit_context(...)` | Attach audit metadata to profile changes |
+| `get_user_partner_community_ids(...)` | Resolve caller-visible community set for a capability (`providers`, `visits`, `funds`, `announcements`) |
+| `can_user_see_provider(...)` | Provider visibility predicate for additive cross-community read policies |
+| `can_user_see_visit(...)` | Visit visibility predicate for additive cross-community read policies |
+| `can_user_see_announcement(...)` | Announcement visibility predicate for additive cross-community read policies |
+| `request_community_partnership(...)` | Community-lead RPC to initiate/reset partnerships |
+| `accept_community_partnership(...)` | Community-lead RPC to accept pending partnerships |
+| `set_partnership_status(...)` | Community-lead RPC to pause/revoke/reactivate partnerships |
+| `set_provider_visibility(...)` | Creator/lead RPC to widen provider visibility and optional explicit targets |
+| `list_visible_providers(...)` | Read RPC returning providers visible to the caller across federation rules |
+| `list_partner_communities()` | Read RPC listing partner communities and scope metadata |
 
 ### Triggers
 
@@ -421,3 +438,15 @@ try {
 The current live UI does not have an active file-upload feature.
 
 The database setup still includes the public `community-uploads` bucket, but no current screen writes to it. Profile avatars come from auth metadata, and provider or reminder flows do not upload media.
+
+---
+
+## Cross-Community Federation (Backend Foundation)
+
+The cross-community backend foundation is now active at the database layer only. New federation tables, helper predicates, and RPCs have been added without changing existing UI behavior.
+
+- Tables and schema surface are documented in `docs/cross-community.md` Section 4.
+- Helper functions and predicates are documented in `docs/cross-community.md` Section 5.
+- The additive RLS approach (new permissive SELECT policies that union with existing policies) is documented in `docs/cross-community.md` Section 6.
+
+No UI consumes these objects today. See `docs/cross-community.md` for the full reference and `docs/cross-community-changelog.md` for the change log.

@@ -80,6 +80,13 @@ Edge Function `supabase/functions/check_due_services/index.ts` calls `notify_due
 - **Service categories**: `lib/serviceCategories.ts` is the single source of truth for service category labels, emoji, and default frequencies used in personal reminders. Import from there, not hardcoded strings.
 - **Provider/visit categories**: `constants/categories.ts` owns the full provider and visit category list (`CATEGORIES`) and the group taxonomy (`CATEGORY_GROUPS`). Do not define local category arrays in screens — always import from `constants/categories.ts`. The `CategoryFilter` component builds two-level grouped UI from this. On the Help tab, group selection flows through the `onSelectGroupCategories` callback and is applied as an `IN` clause in the provider query.
 
+## Cross-Community Conventions
+
+- **RPC naming pattern**: Use `list_visible_*`, `can_user_see_*`, `set_*_visibility`, and `*_community_partnership` for new cross-community database functions.
+- **Delivery rule**: Backend may evolve independently, but any new UI consuming cross-community objects must be shipped in a dedicated task and must append an entry to `docs/cross-community-changelog.md`.
+- **Helper rule**: Never modify `get_user_community_id()` for federation behavior. Use `get_user_partner_community_ids()` for cross-community access-set checks.
+- **References**: `docs/cross-community.md` is the canonical federation reference and `docs/decisions/0001-additive-rls-for-cross-community.md` captures the additive-RLS decision.
+
 ## Intentionally Disabled Features
 
 - **Email verification**: Turned off in Supabase for faster onboarding during pilot

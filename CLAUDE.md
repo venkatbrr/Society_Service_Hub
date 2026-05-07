@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [docs/copilot-instructions.md](docs/copilot-instructions.md) — Technical and functional specifications
 - [docs/disabled-features.md](docs/disabled-features.md) — Intentionally disabled features and re-enablement plan
 - [docs/implementation_plan.md](docs/implementation_plan.md) — Original implementation plan and schema design
+- [docs/cross-community.md](docs/cross-community.md) — Cross-community federation (backend active, UI deferred)
 
 ## Keeping Docs in Sync
 

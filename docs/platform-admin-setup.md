@@ -15,6 +15,7 @@ Notes:
 - Client-side auth routing also treats `societyservicehub@gmail.com` as the canonical platform-admin identity to avoid onboarding-route misclassification when profile hydration is delayed.
 - Client-side routing gives `app_role = 'admin'` precedence and routes to platform screens even if `profiles.community_id` is stale; database data should still be corrected to `NULL` for platform admins.
 - Database migrations now also enforce canonical admin restoration for `societyservicehub@gmail.com` (auto-assigns `app_role = 'admin'` on profile creation and repairs role/community linkage if profiles were reset).
+- Cross-community federation is backend-active, but there is no platform-admin UI for partnerships/groups moderation yet.
 
 ## Platform Admin Responsibilities
 
@@ -46,6 +47,10 @@ Platform admins can:
 ### Removed promotion flow
 
 The old `community_admin_requests` flow and related approval RPCs are not part of the current app surface.
+
+### Cross-community scope note
+
+Cross-community RPCs and tables now exist in the database, but platform routes currently do not expose review, moderation, or diagnostics for those objects. Any future admin UI for partnerships or announcements moderation must be documented in `docs/features.md`, `docs/architecture.md`, and `docs/cross-community.md` together.
 
 ## UI Routes
 

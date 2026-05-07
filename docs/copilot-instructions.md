@@ -93,6 +93,18 @@ The resident marketplace is not part of the current product. `app/business/*` is
 - `notifications`
 - `user_services`
 
+### Cross-community backend foundation (UI deferred)
+
+- `community_partnerships`
+- `community_groups`
+- `community_group_members`
+- `provider_shares`
+- `service_visit_communities`
+- `community_announcements`
+- `announcement_audiences`
+
+These tables and supporting RPCs/helpers are active in the database, but the current app UI does not consume them yet. See `docs/cross-community.md` for full details.
+
 ---
 
 ## Roles and Permissions
@@ -132,6 +144,11 @@ Current notification flows include:
 - `community_rejected`
 - `removed_from_community`
 - `service_reminder`
+
+Reserved cross-community notification types (not currently emitted by app UI):
+
+- `partnership_request`
+- `partnership_accepted`
 
 The notification UI also contains legacy handling for some promotion-related payloads.
 

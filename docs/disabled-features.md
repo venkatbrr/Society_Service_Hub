@@ -31,6 +31,16 @@ This document tracks product behavior that is intentionally disabled, simplified
 
 ---
 
+## Deferred Product Area
+
+### 4. Cross-Community UI Surface
+
+- **Status**: Deferred (backend-only foundation is active)
+- **Details**: Cross-community federation objects are present in the database (`community_partnerships`, `community_groups`, sharing/audience tables, and related RPCs), but no current app screen exposes partnerships, cross-community provider discovery controls, cross-community visit audience pickers, shared funds UI, or announcements UI.
+- **Reason**: Delivery is phased; backend foundation was shipped first to keep future UI tasks smaller and safer.
+
+---
+
 ## Notes for Reintroduction
 
 If these areas are reintroduced later:
@@ -38,3 +48,4 @@ If these areas are reintroduced later:
 1. Email verification will require auth-flow updates in `app/login.tsx` and related messaging.
 2. Password strength rules will require explicit validation logic in the sign-up form.
 3. A marketplace return would require fresh schema, routes, components, and documentation rather than re-enabling hidden screens.
+4. Cross-community UI enablement must follow `docs/cross-community.md` and append an entry to `docs/cross-community-changelog.md` in the same change set.

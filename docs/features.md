@@ -279,6 +279,12 @@ This document describes the current user-facing product surface, the screens inv
 
 ---
 
+## Cross-Community (Backend Only)
+
+Cross-community backend foundations are live in the database: partnerships, groups, provider sharing, cross-community visit audiences, scoped fund metadata, announcements audiences, additive visibility helpers, and federation RPCs are now available for future product phases. The current app ships no user-facing cross-community UI yet, so existing screens and flows remain unchanged. See `docs/cross-community.md` for the full backend reference.
+
+---
+
 ## Removed Product Surface
 
 ### Resident Marketplace
