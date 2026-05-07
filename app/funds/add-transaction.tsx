@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -14,6 +15,7 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { BlockPicker } from '../../components/BlockPicker';
 import { Colors } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
@@ -23,40 +25,52 @@ import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 type FundContext = Pick<Tables<'events'>, 'id' | 'community_id' | 'title'> & {
+  community: Pick<Tables<'communities'>, 'funds_enabled' | 'blocks_enabled'> | null;
   fund_roles: Tables<'fund_roles'>[];
   event_transactions: Pick<Tables<'event_transactions'>, 'contributor_user_id' | 'type'>[];
 };
 
-type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role'>;
+type EligibleContributor = {
+  user_id: string;
+  full_name: string;
+  flat_no: string | null;
+  has_contributed: boolean;
+};
 
 export default function AddTransactionScreen() {
   const { event_id, type: initialType } = useLocalSearchParams();
-  const { user, appRole } = useAuth();
+  const { user, appRole, myBlockId, refreshSession } = useAuth();
   const router = useRouter();
   const colors = Colors.light;
 
   const [type, setType] = useState<'income' | 'expense'>((initialType as 'income' | 'expense') || 'income');
   const [fund, setFund] = useState<FundContext | null>(null);
-  const [members, setMembers] = useState<CommunityMember[]>([]);
+  const [members, setMembers] = useState<EligibleContributor[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingContext, setIsFetchingContext] = useState(true);
+  const [showBlockPrompt, setShowBlockPrompt] = useState(false);
+  const [selectedMyBlock, setSelectedMyBlock] = useState<string | null>(myBlockId ?? null);
 
   useEffect(() => {
     const loadContext = async () => {
       try {
         setIsFetchingContext(true);
-        const { data, error } = await supabase.from('events').select('id, community_id, title').eq('id', event_id as string).single();
+        const { data, error } = await supabase
+          .from('events')
+          .select('id, community_id, title, community:communities!inner(funds_enabled, blocks_enabled)')
+          .eq('id', event_id as string)
+          .single();
 
         if (error) throw error;
 
-        const [rolesResult, transactionsResult, profilesResult] = await Promise.all([
+        const [rolesResult, transactionsResult, contributorsResult] = await Promise.all([
           supabase.from('fund_roles').select('*').eq('event_id', data.id),
           supabase.from('event_transactions').select('contributor_user_id, type').eq('event_id', data.id),
-          supabase.from('profiles').select('id, full_name, app_role').eq('community_id', data.community_id).order('full_name', { ascending: true }),
+          supabase.rpc('list_eligible_contributors_for_collector', { p_event_id: data.id }),
         ]);
 
         if (rolesResult.error && !isMissingFundSchemaError(rolesResult.error)) {
@@ -67,23 +81,22 @@ export default function AddTransactionScreen() {
           throw transactionsResult.error;
         }
 
-        if (profilesResult.error) throw profilesResult.error;
+        if (contributorsResult.error) throw contributorsResult.error;
 
-        const visibleMembers = (profilesResult.data ?? []).filter((member) => member.app_role !== 'community_admin');
+        const visibleMembers = (contributorsResult.data ?? []) as EligibleContributor[];
         const paidMemberIds = new Set(
-          (transactionsResult.data ?? [])
-            .filter((transaction) => transaction.type === 'income' && transaction.contributor_user_id)
-            .map((transaction) => transaction.contributor_user_id as string)
+          visibleMembers.filter((member) => member.has_contributed).map((member) => member.user_id)
         );
-        const defaultMember = visibleMembers.find((member) => !paidMemberIds.has(member.id));
+        const defaultMember = visibleMembers.find((member) => !paidMemberIds.has(member.user_id));
 
         setFund({
           ...data,
+          community: (data as any).community ?? null,
           fund_roles: rolesResult.data ?? [],
           event_transactions: transactionsResult.data ?? [],
         });
         setMembers(visibleMembers);
-        setSelectedMemberId(defaultMember?.id ?? null);
+        setSelectedMemberId(defaultMember?.user_id ?? null);
 
         if (rolesResult.error || transactionsResult.error) {
           Toast.show({ type: 'error', text1: 'Funds partially loaded', text2: getMissingFundSchemaMessage() });
@@ -105,6 +118,10 @@ export default function AddTransactionScreen() {
     loadContext();
   }, [event_id, router]);
 
+  useEffect(() => {
+    setSelectedMyBlock(myBlockId ?? null);
+  }, [myBlockId]);
+
   const fundRole = useMemo(() => {
     if (!fund) {
       return 'resident' as const;
@@ -124,6 +141,8 @@ export default function AddTransactionScreen() {
     [fund?.event_transactions]
   );
 
+  const fundsInactive = Boolean(fund && !fund.community?.funds_enabled);
+
   useEffect(() => {
     if (!permissions.canAddContribution && type === 'income' && !isFetchingContext) {
       Toast.show({
@@ -141,6 +160,18 @@ export default function AddTransactionScreen() {
       });
     }
   }, [isFetchingContext, permissions.canAddContribution, permissions.canAddExpense, type]);
+
+  useEffect(() => {
+    if (
+      !isFetchingContext &&
+      type === 'income' &&
+      fund?.community?.blocks_enabled &&
+      !myBlockId &&
+      permissions.canAddContribution
+    ) {
+      setShowBlockPrompt(true);
+    }
+  }, [fund?.community?.blocks_enabled, isFetchingContext, myBlockId, permissions.canAddContribution, type]);
 
   const handleChangeType = (nextType: 'income' | 'expense') => {
     if (nextType === 'income' && !permissions.canAddContribution) {
@@ -193,7 +224,7 @@ export default function AddTransactionScreen() {
 
     setIsLoading(true);
     try {
-      const memberName = members.find((member) => member.id === selectedMemberId)?.full_name?.trim() || 'Resident';
+      const memberName = members.find((member) => member.user_id === selectedMemberId)?.full_name?.trim() || 'Resident';
       const payload =
         type === 'income'
           ? {
@@ -242,6 +273,17 @@ export default function AddTransactionScreen() {
     return (
       <View style={[styles.loadingState, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (fundsInactive) {
+    return (
+      <View style={[styles.loadingState, { backgroundColor: colors.background }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Funds are not active in this community.</Text>
+        <TouchableOpacity style={[styles.backInactiveBtn, { borderColor: colors.border }]} onPress={() => router.replace('/(tabs)/community')}>
+          <Text style={[styles.backInactiveText, { color: colors.primary }]}>Back to community</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -313,12 +355,12 @@ export default function AddTransactionScreen() {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: colors.text }]}>SELECT RESIDENT</Text>
               {members.map((member) => {
-                const isPaid = paidMemberIds.has(member.id);
-                const isSelected = selectedMemberId === member.id;
+                const isPaid = paidMemberIds.has(member.user_id);
+                const isSelected = selectedMemberId === member.user_id;
 
                 return (
                   <TouchableOpacity
-                    key={member.id}
+                    key={member.user_id}
                     style={[
                       styles.memberRow,
                       {
@@ -333,13 +375,13 @@ export default function AddTransactionScreen() {
                         return;
                       }
 
-                      setSelectedMemberId(member.id);
+                      setSelectedMemberId(member.user_id);
                     }}
                     activeOpacity={0.85}
                   >
                     <View style={styles.memberInfo}>
                       <Text style={[styles.memberName, { color: colors.text }]}>{member.full_name?.trim() || 'Resident'}</Text>
-                      <Text style={[styles.memberMeta, { color: colors.textMuted }]}>{isPaid ? 'Paid' : 'Pending'}</Text>
+                      <Text style={[styles.memberMeta, { color: colors.textMuted }]}>{member.flat_no ? `Flat ${member.flat_no}` : 'Flat not set'}</Text>
                     </View>
                     <View style={styles.memberStatus}>
                       <Text style={[styles.memberStatusText, { color: isPaid ? '#15803D' : '#B45309' }]}>
@@ -399,6 +441,29 @@ export default function AddTransactionScreen() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
+
+      <Modal visible={showBlockPrompt} transparent animationType="slide" onRequestClose={() => setShowBlockPrompt(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Set your block to continue</Text>
+            {fund?.community_id ? <BlockPicker value={selectedMyBlock} onChange={setSelectedMyBlock} communityId={fund.community_id} /> : null}
+            <TouchableOpacity
+              style={[styles.modalPrimary, { backgroundColor: colors.primary }]}
+              onPress={async () => {
+                const { error } = await supabase.rpc('set_my_block', { p_block_id: selectedMyBlock });
+                if (error) {
+                  Toast.show({ type: 'error', text1: 'Unable to set block', text2: error.message });
+                  return;
+                }
+                await refreshSession();
+                setShowBlockPrompt(false);
+              }}
+            >
+              <Text style={styles.modalPrimaryText}>Continue</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -556,6 +621,42 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#FFF',
     fontSize: 17,
+    fontWeight: '800',
+  },
+  backInactiveBtn: {
+    marginTop: 14,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  backInactiveText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    padding: 20,
+    gap: 12,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  modalPrimary: {
+    borderRadius: 12,
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  modalPrimaryText: {
+    color: '#FFF',
+    fontSize: 14,
     fontWeight: '800',
   },
 });

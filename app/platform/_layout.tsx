@@ -51,7 +51,20 @@ export default function PlatformLayout() {
         }}
       />
       <Tabs.Screen
+        name="funds-requests"
+        options={{
+          title: 'Funds requests',
+          tabBarIcon: ({ color }) => <TabIcon emoji="💰" />,
+        }}
+      />
+      <Tabs.Screen
         name="community/[id]"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="funds-access/[requestId]"
         options={{
           href: null,
         }}

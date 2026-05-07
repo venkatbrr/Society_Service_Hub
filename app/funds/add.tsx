@@ -14,7 +14,7 @@ import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib
 type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role'>;
 
 export default function AddFundScreen() {
-  const { user, communityId, appRole } = useAuth();
+  const { user, communityId, appRole, fundsEnabled } = useAuth();
   const router = useRouter();
   const colors = Colors.light;
 
@@ -24,12 +24,18 @@ export default function AddFundScreen() {
   const [selectedTreasurers, setSelectedTreasurers] = useState<string[]>([]);
   const [isFetchingMembers, setIsFetchingMembers] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const isAdmin = appRole === 'community_admin';
+  const isAdmin = appRole === 'community_lead' || appRole === 'admin';
 
   useEffect(() => {
+    if (!fundsEnabled) {
+      Toast.show({ type: 'error', text1: 'Funds inactive', text2: 'Funds are not active in this community.' });
+      router.replace('/(tabs)/community');
+      return;
+    }
+
     if (!isAdmin) {
       Toast.show({ type: 'error', text1: 'Access denied', text2: 'Only the admin can create a fund.' });
-      router.replace('/(tabs)/funds');
+      router.replace('/(tabs)/community');
       return;
     }
 
@@ -49,7 +55,7 @@ export default function AddFundScreen() {
 
         if (error) throw error;
 
-        const assignableMembers = (data ?? []).filter((member) => member.app_role !== 'community_admin');
+        const assignableMembers = (data ?? []).filter((member) => member.app_role !== 'admin');
         setMembers(assignableMembers);
       } catch (error: any) {
         Toast.show({ type: 'error', text1: 'Error', text2: error.message });
@@ -59,7 +65,7 @@ export default function AddFundScreen() {
     };
 
     loadMembers();
-  }, [communityId, isAdmin, router]);
+  }, [communityId, fundsEnabled, isAdmin, router]);
 
   const selectedNames = useMemo(
     () =>

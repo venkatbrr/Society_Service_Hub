@@ -36,6 +36,16 @@ export default function NotificationsScreen() {
         return 'person-remove';
       case 'service_reminder':
         return 'construct';
+      case 'funds_access_requested':
+        return 'cash';
+      case 'funds_access_approved':
+        return 'checkmark-done-circle';
+      case 'funds_access_rejected':
+        return 'close-circle';
+      case 'community_lead_appointed':
+        return 'ribbon';
+      case 'funds_access_revoked':
+        return 'ban';
       default:
         return 'notifications';
     }
@@ -60,9 +70,20 @@ export default function NotificationsScreen() {
       notification.type === 'promotion_approved' || 
       notification.type === 'promotion_rejected' ||
       notification.type === 'new_community_request' ||
-      notification.type === 'new_promotion_request'
+      notification.type === 'new_promotion_request' ||
+      notification.type === 'funds_access_requested'
     ) {
       router.push('/platform/approvals' as any);
+      return;
+    }
+
+    if (
+      notification.type === 'funds_access_approved' ||
+      notification.type === 'funds_access_rejected' ||
+      notification.type === 'community_lead_appointed' ||
+      notification.type === 'funds_access_revoked'
+    ) {
+      router.push('/(tabs)/community');
       return;
     }
 

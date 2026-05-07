@@ -8,6 +8,16 @@ export const MAX_TREASURERS = 2;
 export const MIN_TREASURERS = 1;
 export const MAX_COLLECTORS = 6;
 
+type CommunityLike = {
+  funds_enabled?: boolean | null;
+  blocks_enabled?: boolean | null;
+} | null | undefined;
+
+type FundRoleAssignmentLike = {
+  role?: AssignmentRole | null;
+  block_id?: string | null;
+} | null | undefined;
+
 export function getEffectiveFundRole(
   appRole: AppRole | null | undefined,
   assignments: Tables<'fund_roles'>[],
@@ -40,6 +50,34 @@ export function formatRole(role: FundAccessRole | AppRole | AssignmentRole) {
   }
 
   return role.charAt(0).toUpperCase() + role.slice(1);
+}
+
+export function isFundsEnabled(community: CommunityLike) {
+  return Boolean(community?.funds_enabled);
+}
+
+export function isBlockScopedAssignment(assignment: FundRoleAssignmentLike) {
+  return assignment?.role === 'collector' && !!assignment?.block_id;
+}
+
+export function formatRoleForFundContext(role: FundAccessRole | AssignmentRole, assignment?: FundRoleAssignmentLike) {
+  if (!role) {
+    return 'Resident';
+  }
+
+  if (role === 'admin') {
+    return 'Fund admin';
+  }
+
+  if (role === 'collector') {
+    return isBlockScopedAssignment(assignment) ? 'Block in-charge' : 'Collector';
+  }
+
+  if (role === 'treasurer') {
+    return 'Treasurer';
+  }
+
+  return 'Resident';
 }
 
 export function getRestrictionHint(role: FundAccessRole) {

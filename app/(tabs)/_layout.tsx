@@ -50,10 +50,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="funds"
+        name="community"
         options={{
-          title: 'Funds',
-          tabBarIcon: ({ focused }) => <Text style={{ fontSize: 24, opacity: focused ? 1 : 0.45 }}>{APP_EMOJIS.funds}</Text>,
+          title: 'Community',
+          tabBarIcon: ({ focused }) => <Text style={{ fontSize: 24, opacity: focused ? 1 : 0.45 }}>{APP_EMOJIS.community}</Text>,
         }}
       />
       <Tabs.Screen

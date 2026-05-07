@@ -5,17 +5,17 @@ import { supabase } from '../lib/supabase';
 
 type ActiveCommunityRequest = Pick<Tables<'community_requests'>, 'id' | 'status' | 'created_at' | 'name'> | null;
 type AppRole = Enums<'app_role_type'>;
+type FundsAccessStatus = {
+  id: string;
+  status: string;
+  rejection_reason: string | null;
+  decided_at: string | null;
+} | null;
 const PLATFORM_ADMIN_EMAIL = 'societyservicehub@gmail.com';
 
 function normalizeAppRole(role: AppRole | null | undefined, isKnownPlatformAdminEmail: boolean): AppRole {
   if (isKnownPlatformAdminEmail) {
     return 'admin';
-  }
-
-  // Backward-compatibility: first users that were auto-promoted previously
-  // must be treated as residents in the app.
-  if (role === 'community_lead') {
-    return 'resident';
   }
 
   return role ?? 'resident';
@@ -29,6 +29,10 @@ type AuthContextType = {
   communityId: string | null;
   isPlatformAdmin: boolean;
   isCommunityLead: boolean;
+  fundsEnabled: boolean;
+  blocksEnabled: boolean;
+  myBlockId: string | null;
+  myFundsAccessRequest: FundsAccessStatus;
   activeCommunityRequest: ActiveCommunityRequest;
   isLoading: boolean;
   refreshSession: () => Promise<void>;
@@ -43,6 +47,10 @@ const AuthContext = createContext<AuthContextType>({
   communityId: null,
   isPlatformAdmin: false,
   isCommunityLead: false,
+  fundsEnabled: false,
+  blocksEnabled: false,
+  myBlockId: null,
+  myFundsAccessRequest: null,
   activeCommunityRequest: null,
   isLoading: true,
   refreshSession: async () => {},
@@ -56,6 +64,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Tables<'profiles'> | null>(null);
   const [communityId, setCommunityId] = useState<string | null>(null);
+  const [fundsEnabled, setFundsEnabled] = useState(false);
+  const [blocksEnabled, setBlocksEnabled] = useState(false);
+  const [myBlockId, setMyBlockId] = useState<string | null>(null);
+  const [myFundsAccessRequest, setMyFundsAccessRequest] = useState<FundsAccessStatus>(null);
   const [activeCommunityRequest, setActiveCommunityRequest] = useState<ActiveCommunityRequest>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -63,6 +75,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!userId) {
       setProfile(null);
       setCommunityId(null);
+      setFundsEnabled(false);
+      setBlocksEnabled(false);
+      setMyBlockId(null);
+      setMyFundsAccessRequest(null);
       setActiveCommunityRequest(null);
       return;
     }
@@ -76,6 +92,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) {
       console.error('Error loading profile:', error);
       setProfile(null);
+      setFundsEnabled(false);
+      setBlocksEnabled(false);
+      setMyBlockId(null);
+      setMyFundsAccessRequest(null);
       return;
     }
 
@@ -112,7 +132,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     setProfile(data ?? null);
     setCommunityId(resolvedCommunityId);
+    setMyBlockId(data?.block_id ?? null);
     setActiveCommunityRequest(nextActiveRequest);
+
+    if (!resolvedCommunityId || profileRole === 'admin') {
+      setFundsEnabled(false);
+      setBlocksEnabled(false);
+      setMyFundsAccessRequest(null);
+      return;
+    }
+
+    const [{ data: communityData, error: communityError }, { data: fundsRequestStatus, error: fundsStatusError }] = await Promise.all([
+      supabase
+        .from('communities')
+        .select('funds_enabled, blocks_enabled')
+        .eq('id', resolvedCommunityId)
+        .maybeSingle(),
+      supabase.rpc('get_funds_access_status', { p_community_id: resolvedCommunityId }),
+    ]);
+
+    if (communityError) {
+      console.error('Error loading community activation status:', communityError);
+      setFundsEnabled(false);
+      setBlocksEnabled(false);
+    } else {
+      const enabledFunds = Boolean(communityData?.funds_enabled);
+      setFundsEnabled(enabledFunds);
+      setBlocksEnabled(enabledFunds && Boolean(communityData?.blocks_enabled));
+    }
+
+    if (fundsStatusError) {
+      console.error('Error loading funds access status:', fundsStatusError);
+      setMyFundsAccessRequest(null);
+    } else {
+      const latest = (fundsRequestStatus ?? [])[0] ?? null;
+      setMyFundsAccessRequest(
+        latest
+          ? {
+              id: latest.request_id,
+              status: latest.status,
+              rejection_reason: latest.rejection_reason,
+              decided_at: latest.decided_at,
+            }
+          : null
+      );
+    }
   };
 
   const fetchSession = async () => {
@@ -127,6 +191,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setProfile(null);
         setCommunityId(null);
+        setFundsEnabled(false);
+        setBlocksEnabled(false);
+        setMyBlockId(null);
+        setMyFundsAccessRequest(null);
         setActiveCommunityRequest(null);
         return;
       }
@@ -139,6 +207,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await supabase.auth.signOut().catch(() => {});
       setSession(null);
       setUser(null);
+      setFundsEnabled(false);
+      setBlocksEnabled(false);
+      setMyBlockId(null);
+      setMyFundsAccessRequest(null);
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +241,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setProfile(null);
       setCommunityId(null);
+      setFundsEnabled(false);
+      setBlocksEnabled(false);
+      setMyBlockId(null);
+      setMyFundsAccessRequest(null);
       return;
     }
     if (data.session) {
@@ -200,6 +276,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         communityId,
         isPlatformAdmin,
         isCommunityLead,
+        fundsEnabled,
+        blocksEnabled,
+        myBlockId,
+        myFundsAccessRequest,
         activeCommunityRequest,
         isLoading,
         refreshSession,

@@ -51,10 +51,12 @@ export type Database = {
           address: string | null
           approximate_units: string | null
           area: string | null
+          blocks_enabled: boolean
           city: string | null
           code: string
           community_type: string | null
           created_at: string | null
+          funds_enabled: boolean
           id: string
           name: string
           pincode: string | null
@@ -63,10 +65,12 @@ export type Database = {
           address?: string | null
           approximate_units?: string | null
           area?: string | null
+          blocks_enabled?: boolean
           city?: string | null
           code: string
           community_type?: string | null
           created_at?: string | null
+          funds_enabled?: boolean
           id?: string
           name: string
           pincode?: string | null
@@ -75,10 +79,12 @@ export type Database = {
           address?: string | null
           approximate_units?: string | null
           area?: string | null
+          blocks_enabled?: boolean
           city?: string | null
           code?: string
           community_type?: string | null
           created_at?: string | null
+          funds_enabled?: boolean
           id?: string
           name?: string
           pincode?: string | null
@@ -132,6 +138,41 @@ export type Database = {
           },
           {
             foreignKeyName: "community_announcements_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_blocks: {
+        Row: {
+          archived_at: string | null
+          community_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          community_id: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          community_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_blocks_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
@@ -549,6 +590,7 @@ export type Database = {
       fund_roles: {
         Row: {
           assigned_by: string
+          block_id: string | null
           created_at: string | null
           event_id: string
           id: string
@@ -558,6 +600,7 @@ export type Database = {
         }
         Insert: {
           assigned_by: string
+          block_id?: string | null
           created_at?: string | null
           event_id: string
           id?: string
@@ -567,6 +610,7 @@ export type Database = {
         }
         Update: {
           assigned_by?: string
+          block_id?: string | null
           created_at?: string | null
           event_id?: string
           id?: string
@@ -583,6 +627,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fund_roles_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "community_blocks"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fund_roles_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
@@ -592,6 +643,119 @@ export type Database = {
           {
             foreignKeyName: "fund_roles_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funds_access_requests: {
+        Row: {
+          community_id: string
+          contact_name: string
+          contact_phone: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          designated_lead_id: string | null
+          id: string
+          purpose: string | null
+          rejection_reason: string | null
+          requested_by: string
+          status: string
+        }
+        Insert: {
+          community_id: string
+          contact_name: string
+          contact_phone: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          designated_lead_id?: string | null
+          id?: string
+          purpose?: string | null
+          rejection_reason?: string | null
+          requested_by: string
+          status?: string
+        }
+        Update: {
+          community_id?: string
+          contact_name?: string
+          contact_phone?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          designated_lead_id?: string | null
+          id?: string
+          purpose?: string | null
+          rejection_reason?: string | null
+          requested_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funds_access_requests_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funds_access_requests_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funds_access_requests_designated_lead_id_fkey"
+            columns: ["designated_lead_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funds_access_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funds_access_revocations: {
+        Row: {
+          community_id: string
+          id: string
+          reason: string
+          revoked_at: string
+          revoked_by: string | null
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          reason: string
+          revoked_at?: string
+          revoked_by?: string | null
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          reason?: string
+          revoked_at?: string
+          revoked_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funds_access_revocations_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funds_access_revocations_revoked_by_fkey"
+            columns: ["revoked_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -728,6 +892,7 @@ export type Database = {
         Row: {
           app_role: Database["public"]["Enums"]["app_role_type"]
           avatar_url: string | null
+          block_id: string | null
           community_id: string | null
           created_at: string | null
           email: string | null
@@ -742,6 +907,7 @@ export type Database = {
         Insert: {
           app_role?: Database["public"]["Enums"]["app_role_type"]
           avatar_url?: string | null
+          block_id?: string | null
           community_id?: string | null
           created_at?: string | null
           email?: string | null
@@ -756,6 +922,7 @@ export type Database = {
         Update: {
           app_role?: Database["public"]["Enums"]["app_role_type"]
           avatar_url?: string | null
+          block_id?: string | null
           community_id?: string | null
           created_at?: string | null
           email?: string | null
@@ -768,6 +935,13 @@ export type Database = {
           removed_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "community_blocks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_community_id_fkey"
             columns: ["community_id"]
@@ -1282,6 +1456,46 @@ export type Database = {
         Args: { p_partnership_id: string }
         Returns: undefined
       }
+      add_community_block: {
+        Args: { p_name: string }
+        Returns: {
+          archived_at: string | null
+          community_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "community_blocks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      archive_community_block: {
+        Args: { p_block_id: string }
+        Returns: undefined
+      }
+      assign_block_in_charge: {
+        Args: { p_block_id: string; p_event_id: string; p_user_id: string }
+        Returns: {
+          assigned_by: string
+          block_id: string | null
+          created_at: string | null
+          event_id: string
+          id: string
+          role: string
+          updated_at: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "fund_roles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       auto_complete_past_visits: { Args: never; Returns: undefined }
       can_user_see_announcement: {
         Args: { p_announcement_id: string; p_user_id?: string }
@@ -1320,6 +1534,15 @@ export type Database = {
         Args: { p_community_id: string }
         Returns: Json
       }
+      get_community_pulse: {
+        Args: { p_limit?: number }
+        Returns: {
+          entity_id: string
+          happened_at: string
+          kind: string
+          summary: string
+        }[]
+      }
       get_community_visits: {
         Args: {
           p_community_id: string
@@ -1353,6 +1576,27 @@ export type Database = {
       get_fund_role: {
         Args: { p_event_id: string; p_user_id?: string }
         Returns: string
+      }
+      get_funds_access_status: {
+        Args: { p_community_id: string }
+        Returns: {
+          decided_at: string
+          rejection_reason: string
+          request_id: string
+          status: string
+        }[]
+      }
+      get_my_block_id: { Args: never; Returns: string }
+      get_my_community_funds_overview: {
+        Args: never
+        Returns: {
+          active_funds_count: number
+          funds_contributed_to: number
+          total_available: number
+          total_collected: number
+          total_spent: number
+          your_total_contributed: number
+        }[]
       }
       get_my_due_soon_count: { Args: never; Returns: number }
       get_my_provider_history: {
@@ -1440,10 +1684,40 @@ export type Database = {
         }[]
       }
       is_admin: { Args: { p_user_id?: string }; Returns: boolean }
+      is_blocks_enabled: { Args: { p_community_id: string }; Returns: boolean }
       is_community_lead: { Args: { p_user_id?: string }; Returns: boolean }
+      is_funds_enabled: { Args: { p_community_id: string }; Returns: boolean }
       is_platform_admin: { Args: { p_user_id?: string }; Returns: boolean }
       is_user_approved: { Args: { p_user_id?: string }; Returns: boolean }
       join_community_by_code: { Args: { p_code: string }; Returns: Json }
+      list_community_blocks: {
+        Args: { p_community_id: string }
+        Returns: {
+          archived_at: string | null
+          community_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "community_blocks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      list_eligible_contributors_for_collector: {
+        Args: { p_event_id: string }
+        Returns: {
+          block_id: string
+          block_name: string
+          flat_no: string
+          full_name: string
+          has_contributed: boolean
+          user_id: string
+        }[]
+      }
       list_partner_communities: {
         Args: never
         Returns: {
@@ -1548,12 +1822,76 @@ export type Database = {
           }
       normalize_indian_mobile: { Args: { p_value: string }; Returns: string }
       notify_due_services: { Args: never; Returns: number }
+      platform_add_community_block: {
+        Args: { p_community_id: string; p_name: string }
+        Returns: {
+          archived_at: string | null
+          community_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "community_blocks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       platform_approve_community_request: {
         Args: { p_request_id: string }
         Returns: string
       }
+      platform_approve_funds_access_request: {
+        Args: { p_lead_user_id: string; p_request_id: string }
+        Returns: undefined
+      }
+      platform_archive_community_block: {
+        Args: { p_block_id: string }
+        Returns: undefined
+      }
+      platform_assign_block_in_charge: {
+        Args: { p_block_id: string; p_event_id: string; p_user_id: string }
+        Returns: {
+          assigned_by: string
+          block_id: string | null
+          created_at: string | null
+          event_id: string
+          id: string
+          role: string
+          updated_at: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "fund_roles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       platform_reject_community_request: {
         Args: { p_rejection_reason?: string; p_request_id: string }
+        Returns: undefined
+      }
+      platform_reject_funds_access_request: {
+        Args: { p_rejection_reason: string; p_request_id: string }
+        Returns: undefined
+      }
+      platform_remove_block_in_charge: {
+        Args: { p_event_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      platform_remove_community_lead: {
+        Args: { p_target_user_id: string }
+        Returns: undefined
+      }
+      platform_revoke_funds_access: {
+        Args: { p_community_id: string; p_revoke_reason: string }
+        Returns: undefined
+      }
+      platform_set_community_lead: {
+        Args: { p_community_id: string; p_target_user_id: string }
         Returns: undefined
       }
       platform_soft_remove_resident: {
@@ -1578,6 +1916,27 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      remove_block_in_charge: {
+        Args: { p_event_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      rename_community_block: {
+        Args: { p_block_id: string; p_new_name: string }
+        Returns: {
+          archived_at: string | null
+          community_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "community_blocks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       request_community_partnership: {
         Args: { p_scope?: Json; p_target_community_id: string }
         Returns: string
@@ -1587,6 +1946,34 @@ export type Database = {
         Args: { p_actor_id: string; p_reason?: string }
         Returns: undefined
       }
+      set_community_blocks_enabled: {
+        Args: { p_enabled: boolean }
+        Returns: undefined
+      }
+      set_my_block: {
+        Args: { p_block_id: string }
+        Returns: {
+          app_role: Database["public"]["Enums"]["app_role_type"]
+          avatar_url: string | null
+          block_id: string | null
+          community_id: string | null
+          created_at: string | null
+          email: string | null
+          expo_push_token: string | null
+          flat_number: string | null
+          full_name: string | null
+          id: string
+          phone_number: string | null
+          removed_at: string | null
+          removed_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_partnership_status: {
         Args: { p_partnership_id: string; p_status: string }
         Returns: undefined
@@ -1594,6 +1981,30 @@ export type Database = {
       set_provider_visibility: {
         Args: { p_provider_id: string; p_targets?: Json; p_visibility: string }
         Returns: undefined
+      }
+      set_resident_block: {
+        Args: { p_block_id: string; p_resident_id: string }
+        Returns: {
+          app_role: Database["public"]["Enums"]["app_role_type"]
+          avatar_url: string | null
+          block_id: string | null
+          community_id: string | null
+          created_at: string | null
+          email: string | null
+          expo_push_token: string | null
+          flat_number: string | null
+          full_name: string | null
+          id: string
+          phone_number: string | null
+          removed_at: string | null
+          removed_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       should_show_public_rating_nudge: {
         Args: { p_provider_id: string }
@@ -1614,6 +2025,18 @@ export type Database = {
           p_requester_flat_number?: string
         }
         Returns: string
+      }
+      submit_funds_access_request: {
+        Args: {
+          p_contact_name: string
+          p_contact_phone: string
+          p_purpose?: string
+        }
+        Returns: string
+      }
+      withdraw_funds_access_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
       }
     }
     Enums: {
@@ -1762,3 +2185,29 @@ export const Constants = {
     },
   },
 } as const
+
+// App-level compatibility aliases used across screens/components.
+export type ProviderWithInteraction = Tables<'service_providers'> & {
+  is_favorite?: boolean
+  has_hired?: boolean
+  hire_count?: number
+  user_rating?: number | null
+  user_review?: string | null
+  user_hires?: number
+}
+
+export type VisitWithJoinerData = Tables<'service_visits'> & {
+  joiner_count?: number
+  has_user_joined?: boolean
+  joiners?: VisitJoinerWithProfile[]
+  creator_name?: string | null
+  creator_flat?: string | null
+  creator_avatar_url?: string | null
+}
+
+export type VisitJoinerWithProfile = Tables<'visit_joiners'> & {
+  profile?: Pick<Tables<'profiles'>, 'id' | 'full_name' | 'flat_number' | 'phone_number'> | null
+  user_name?: string | null
+  avatar_url?: string | null
+  joined_at?: string
+}

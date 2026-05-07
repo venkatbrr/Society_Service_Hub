@@ -83,24 +83,44 @@ This document describes the current user-facing product surface, the screens inv
 | **Navigation** | To `/provider/[id]` |
 | **Roles** | Personal favorites only |
 
-### Tab 3: Funds - Society Funds (`app/(tabs)/funds.tsx`)
+### Tab 3: Community (`app/(tabs)/community.tsx`)
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | List community funds with rolled-up totals and each viewer's effective fund role |
-| **Tables** | Reads: `events`, `event_transactions`, `fund_roles`, `profiles` |
-| **Business rules** | Funds display income, expense, and balance totals. The UI computes the viewer's role through `getEffectiveFundRole()`. The intended product rule is that community leads create funds and treasurers manage collections; some fund screens still contain legacy `community_admin` compatibility checks internally. |
-| **Navigation** | To `/funds/[id]` and `/funds/add` |
-| **Roles** | All residents can view funds. Fund creation and management actions are role-gated. |
+| **Purpose** | Consolidated building-level view: pulse updates, funds section, residents shortcut, and community info in one tab |
+| **Tables / RPCs** | Reads: `communities`, `events`, `event_transactions`, `fund_roles`, `profiles`, `funds_access_requests`; RPCs: `get_community_pulse(p_limit)`, `get_my_community_funds_overview()`, `withdraw_funds_access_request(...)` |
+| **Business rules** | Section order is fixed: pulse, funds, residents tile, community info. Pulse is read-only aggregated activity with no comments, reactions, or feed drill-down, and the entire section is hidden when empty. Funds are now activation-gated: when `funds_enabled = false`, the section renders request/status cards (request CTA, pending, rejected retry, and previously-active note) instead of fund tiles. When `funds_enabled = true`, the existing funds summary + list is shown. Funds request CTA entry is only in this section. |
+| **Navigation** | To `/funds/[id]`, `/funds/add`, and `/residents?returnTo=community` |
+| **Roles** | All residents can view; create-fund action remains role-gated exactly as before. |
+
+## Funds - Activation
+
+Residents in communities with `funds_enabled = false` can submit a funds-support request from `/funds-access/request`. The Community tab funds section renders one of the activation states:
+
+- State B: CTA card with "Request funds support"
+- State C: pending review card (requester name/date/phone) with withdraw action for requester only
+- State D: rejected status with reason and "Request again"
+- State E: previously active note after revocation
+
+Platform admin approval promotes one designated resident to `community_lead` and enables funds in the same transaction. Revocation disables funds and blocks while preserving ledger history.
+
+## Blocks (Optional)
+
+Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_enabled = true`.
+
+- Join flow: after `join_community_by_code`, users are routed to `/community-join-block` when blocks are enabled.
+- Profile override: Profile tab shows "Your block" row and block picker modal only when blocks are active.
+- Community lead setup: `/community/blocks` allows block toggling, create/rename/archive, and scoped management.
+- Contribution flow: contributor options are loaded through `list_eligible_contributors_for_collector(...)` so block in-charges only see eligible residents.
 
 ### Tab 4: Profile - Personal Hub (`app/(tabs)/profile.tsx`)
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Show user identity, role, community details, service reminder entry point, community directory shortcut, and sign-out |
-| **Tables** | Reads: `communities`; RPC: `get_my_due_soon_count()` |
-| **Business rules** | Community leads see the 6-character join code and can share it. The profile section also includes an Invite neighbours action that opens the native share sheet with the current community code. The profile screen surfaces a due-soon badge for personal service reminders and links into the residents directory. |
-| **Navigation** | To `/services`, `/residents`, and `/login` after sign-out |
+| **Purpose** | Account-level hub for user identity, personal service reminders, recent personal service history, and sign-out |
+| **Tables / RPCs** | RPCs: `get_my_due_soon_count()`, `get_my_recent_service_history(p_limit)` |
+| **Business rules** | Profile now avoids building-level sections. Community metadata and residents-directory access are rendered in the Community tab only. |
+| **Navigation** | To `/services` and `/login` after sign-out |
 | **Roles** | Personal profile only |
 
 ---
@@ -111,9 +131,9 @@ This document describes the current user-facing product surface, the screens inv
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Standalone community directory screen linked from the Profile tab |
+| **Purpose** | Standalone community directory screen linked from the Community tab |
 | **Tables** | Reads via RPC: `get_residents_directory(p_include_phone)`; writes via RPC: `community_lead_remove_resident(p_target_profile_id)` |
-| **Business rules** | Directory shows active residents only. Phone numbers are exposed only to community leads and platform admins. Community leads can open a resident sheet and remove non-lead residents. When launched from Profile, the screen uses `returnTo=profile` so the back action returns to the profile tab explicitly. |
+| **Business rules** | Directory shows active residents only. Phone numbers are exposed only to community leads and platform admins. Community leads can open a resident sheet and remove non-lead residents. The screen supports a `returnTo` param to return to the caller tab context. |
 | **Navigation** | Standalone route: `/residents` |
 | **Roles** | All residents can view. Community leads can remove non-lead residents. Platform admins can view phone numbers. |
 
@@ -127,8 +147,16 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Dedicated platform-admin-only tab shell |
 | **Business rules** | Root routing redirects platform admins into this area and blocks non-admins from entering it. Each screen exposes a logout action in the header. |
-| **Navigation** | `/platform/approvals`, `/platform/communities` |
+| **Navigation** | `/platform/approvals`, `/platform/communities`, `/platform/funds-requests`, `/platform/funds-access/[requestId]` |
 | **Roles** | Platform admin only |
+
+### Funds Requests (`app/platform/funds-requests.tsx`, `app/platform/funds-access/[requestId].tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Review pending/decided funds-access requests, designate lead on approval, or reject with reason |
+| **Tables / RPCs** | Reads: `funds_access_requests`, `communities`, `profiles`; writes via RPC: `platform_approve_funds_access_request`, `platform_reject_funds_access_request` |
+| **Business rules** | Approval requires selecting a resident lead (default requester when possible). Rejection supports a 280-char reason. Both actions route back to list and emit notifications. |
 
 ### Community Approvals (`app/platform/approvals.tsx`)
 
@@ -144,7 +172,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Inspect communities, see membership counts, and remove residents if required |
 | **Tables** | Reads: `communities`, `profiles`; writes via RPC: `platform_soft_remove_resident` |
-| **Business rules** | Platform removals are soft deletes on the profile, reset the role to resident, and preserve last-lead protection. Counts exclude removed residents. |
+| **Business rules** | Platform removals are soft deletes on the profile, reset the role to resident, and preserve last-lead protection. Counts exclude removed residents. Detail screen now also includes funds status, revoke action, lead set/remove controls, block list management, and block in-charge removals across funds. |
 
 ---
 
@@ -223,7 +251,7 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Show ledger totals, transaction history, and role assignment controls |
 | **Tables** | Reads: `events`, `event_transactions`, `fund_roles`, `profiles`; writes: `fund_roles` |
-| **Business rules** | Treasurers can manage collectors and all transactions. Collectors can add contributions only. Residents stay view-only. Minimum treasurer count is one, max treasurers is two, and max collectors is six. |
+| **Business rules** | Treasurers can manage collectors and all transactions. Collectors can add contributions only. Residents stay view-only. Minimum treasurer count is one, max treasurers is two. Collector assignment now supports optional block-scoped assignment when blocks are enabled. If funds are inactive, stale links render a safe inactive state instead of loading ledger actions. |
 | **Navigation** | To `/funds/add-transaction?event_id=...&type=income|expense` |
 
 ### Add Transaction (`app/funds/add-transaction.tsx`)
@@ -231,8 +259,8 @@ This document describes the current user-facing product surface, the screens inv
 | Aspect | Details |
 |--------|---------|
 | **Purpose** | Log either an income contribution or an expense against a fund |
-| **Tables** | Reads: `events`, `fund_roles`, `event_transactions`, `profiles`; writes: `event_transactions` |
-| **Business rules** | Contribution mode selects a resident and prevents duplicate paid entries. Expense mode requires title and amount and does not set `contributor_user_id`. Permissions are enforced both in the UI and through database rules. |
+| **Tables** | Reads: `events`, `fund_roles`, `event_transactions`; RPC read: `list_eligible_contributors_for_collector`; writes: `event_transactions` |
+| **Business rules** | Contribution mode uses block-aware eligible contributor list and marks already-contributed residents as disabled. Expense mode requires title and amount and does not set `contributor_user_id`. If funds are inactive, screen shows a graceful error state. |
 | **Roles** | Contributions: collector or treasurer. Expenses: treasurer only. |
 
 ---
@@ -243,8 +271,8 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Show a per-user notification feed with mark-as-read actions |
 | **Tables** | Reads and writes: `notifications` |
-| **Business rules** | Current notification UI handles `new_visit`, `community_approved`, `community_rejected`, `removed_from_community`, and `service_reminder` as active product flows. The screen also includes defensive icon and navigation handling for legacy promotion-related types. Users can mark individual rows or the full list as read. |
-| **Navigation** | From the header bell on the Help tab. `new_visit` opens `/visits/[id]`; `service_reminder` opens `/services/[id]`; community-status notifications return users to onboarding screens. |
+| **Business rules** | Notification UI handles funds-activation types (`funds_access_requested`, `funds_access_approved`, `funds_access_rejected`, `community_lead_appointed`, `funds_access_revoked`) in addition to existing flows, and unknown types still fall through safely. Users can mark individual rows or the full list as read. |
+| **Navigation** | From the header bell on the Help tab. `new_visit` opens `/visits/[id]`; `service_reminder` opens `/services/[id]`; funds-requested opens platform approvals; funds approval/rejection/lead/revoked route to Community tab. |
 | **Roles** | Personal notifications only |
 | **Real-time** | Supabase Realtime subscribes to INSERT events on the signed-in user's notifications, updates local state, and triggers a local native alert on mobile. |
 

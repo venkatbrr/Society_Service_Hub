@@ -42,13 +42,30 @@ export default function CommunitySelectScreen() {
 
       if (error) throw error;
 
+      const joinedCommunityId = (data as any)?.community_id as string | undefined;
+      let shouldPickBlock = false;
+
+      if (joinedCommunityId) {
+        const { data: joinedCommunity } = await supabase
+          .from('communities')
+          .select('blocks_enabled, funds_enabled')
+          .eq('id', joinedCommunityId)
+          .maybeSingle();
+
+        shouldPickBlock = Boolean(joinedCommunity?.funds_enabled && joinedCommunity?.blocks_enabled);
+      }
+
       await refreshSession();
       Toast.show({
         type: 'success',
         text1: 'Welcome!',
         text2: `You joined ${(data as any)?.community_name ?? 'the community'}.`,
       });
-      router.replace('/(tabs)');
+      if (shouldPickBlock && joinedCommunityId) {
+        router.replace({ pathname: '/community-join-block', params: { communityId: joinedCommunityId } } as any);
+      } else {
+        router.replace('/(tabs)');
+      }
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Join failed', text2: error.message });
     } finally {

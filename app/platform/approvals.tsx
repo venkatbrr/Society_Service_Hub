@@ -44,6 +44,7 @@ export default function PlatformApprovalsScreen() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [editingNames, setEditingNames] = useState<Record<string, string>>({});
   const [requests, setRequests] = useState<PendingRequest[]>([]);
 
   const loadRequests = useCallback(async (showRefreshing = false) => {
@@ -104,8 +105,8 @@ export default function PlatformApprovalsScreen() {
     }, [loadRequests])
   );
 
-  const handleApprove = async (requestId: string) => {
-    Alert.alert('Approve community request?', 'This will create the community and set the requester as community lead.', [
+  const handleApprove = async (requestId: string, newName: string) => {
+    Alert.alert('Approve community request?', `This will create the community "${newName}" and set the requester as community lead.`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Approve',
@@ -113,6 +114,13 @@ export default function PlatformApprovalsScreen() {
           setProcessingId(requestId);
           try {
             await supabase.rpc('set_audit_actor', { p_actor_id: (await supabase.auth.getUser()).data.user?.id });
+            
+            const { error: updateError } = await supabase
+              .from('community_requests')
+              .update({ name: newName })
+              .eq('id', requestId);
+            if (updateError) throw updateError;
+
             const { error } = await supabase.rpc('platform_approve_community_request', { p_request_id: requestId });
             if (error) throw error;
 
@@ -190,11 +198,18 @@ export default function PlatformApprovalsScreen() {
           renderItem={({ item }) => {
             const busy = processingId === item.id;
             const rejecting = rejectingId === item.id;
+            const currentName = editingNames[item.id] !== undefined ? editingNames[item.id] : item.name;
 
             return (
               <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
                 <View style={styles.cardHeader}>
-                  <Text style={[styles.communityName, { color: colors.text }]}>{item.name}</Text>
+                  <TextInput
+                    style={[styles.communityNameInput, { color: colors.text, borderBottomColor: colors.border }]}
+                    value={currentName}
+                    onChangeText={(val) => setEditingNames(prev => ({ ...prev, [item.id]: val }))}
+                    placeholder="Community Name"
+                    placeholderTextColor={colors.textMuted}
+                  />
                   <Text style={[styles.time, { color: colors.textMuted }]}>{relativeTime(item.created_at)}</Text>
                 </View>
                 <Text style={[styles.meta, { color: colors.textMuted }]}>Type: {item.community_type}</Text>
@@ -238,7 +253,7 @@ export default function PlatformApprovalsScreen() {
                     <TouchableOpacity style={[styles.secondaryAction, { borderColor: colors.border }]} onPress={() => setRejectingId(item.id)} disabled={busy}>
                       <Text style={[styles.secondaryActionText, { color: colors.text }]}>Reject</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.primaryAction, { backgroundColor: colors.primary }]} onPress={() => handleApprove(item.id)} disabled={busy}>
+                    <TouchableOpacity style={[styles.primaryAction, { backgroundColor: colors.primary }]} onPress={() => handleApprove(item.id, currentName)} disabled={busy}>
                       {busy ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryActionText}>Approve</Text>}
                     </TouchableOpacity>
                   </View>
@@ -271,7 +286,7 @@ const styles = StyleSheet.create({
   emptyCopy: { fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 6 },
   card: { borderWidth: 1, borderRadius: 24, padding: 18 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 },
-  communityName: { flex: 1, fontSize: 18, fontWeight: '800' },
+  communityNameInput: { flex: 1, fontSize: 18, fontWeight: '800', borderBottomWidth: 1, paddingVertical: 2, marginRight: 10 },
   time: { fontSize: 12, fontWeight: '700' },
   meta: { fontSize: 13, marginTop: 3 },
   metaStrong: { fontSize: 14, fontWeight: '700', marginTop: 10 },

@@ -27,7 +27,7 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 
 ### Layers
 
-- **Screens** (`app/`): expo-router file-based routing. 4 bottom tabs in `app/(tabs)/`, feature screens under `app/visits/`, `app/funds/`, `app/provider/`.
+- **Screens** (`app/`): expo-router file-based routing. 4 bottom tabs in `app/(tabs)/` (Help, Saved, Community, Profile), feature screens under `app/visits/`, `app/funds/`, `app/provider/`.
 - **Components** (`components/`): Reusable UI — `ProviderCard`, `VisitCard`, `FundCard`, `EmptyState`, `SearchBar`, `CategoryFilter`, etc.
 - **State** (`context/`): Two React Context providers — `AuthContext` (session, profile, communityId, appRole, isCommunityLead, isPlatformAdmin) and `NotificationContext` (real-time via Supabase Realtime).
 - **Backend** (`lib/`): Supabase client (`supabase.ts`), auth helpers (`auth.ts`), auto-generated DB types (`database.types.ts`), fund role logic (`fundRoles.ts`), error utilities (`supabaseErrors.ts`).
@@ -51,9 +51,13 @@ Every user belongs to a community. **All data queries must filter by `communityI
 
 - **App-level** (`profiles.app_role`): `admin` (platform admin), `community_lead`, or `resident`
   - approved community requesters are assigned as `resident` by default; `community_lead` is no longer auto-assigned in that flow
+  - `community_lead` is valid only in communities where `communities.funds_enabled = true`
+  - the UI label "Fund admin" is contextual on fund/block management surfaces and is not a distinct role
   - `isPlatformAdmin` = `app_role === 'admin' && !communityId`
   - `isCommunityLead` = `app_role === 'community_lead' && !!communityId`
 - **Fund-level** (`fund_roles.role`): `treasurer` (manage fund, log expenses), `collector` (log contributions), `resident` (view only). Permissions checked via `lib/fundRoles.ts` — use `getEffectiveFundRole()` and `getFundPermissions()`.
+
+Funds activation is gated by platform-admin approval. A community without `funds_enabled = true` has no active community lead in app logic. All funds-related RPCs and trigger guards check `is_funds_enabled(community_id)` before downstream validation. Existing collectors with `block_id = NULL` continue to work in non-block-enabled communities.
 
 ## Key Conventions
 
@@ -63,6 +67,7 @@ Every user belongs to a community. **All data queries must filter by `communityI
 - **Style**: Rounded corners (20-24px border-radius), glassmorphism cards (`glass`, `glassBorder` from Colors.ts), soft indigo shadows (`shadowColor: '#6C63FF'`), premium pastel look
 - **Toast feedback**: Use `react-native-toast-message` for user-facing messages
 - **Single-row queries**: Use `.maybeSingle()` instead of `.single()`
+- **Information architecture**: Community-level info is rendered in the Community tab. Profile tab is account-level only.
 - **Debounced search**: When a text input drives a Supabase list query, always debounce 300 ms using a `debouncedSearchQuery` state updated in a `setTimeout` effect. Use `debouncedSearchQuery` in fetch dependency arrays, not the raw input state.
 - **Provider phone search**: When filtering providers in a picker, strip non-digits from both the query and stored phone value (`replace(/\D/g, '')`) before comparing. Display placeholder `"Search by name or phone number..."`.
 - **TypeScript**: Strict mode enabled. Path alias `@/*` maps to project root

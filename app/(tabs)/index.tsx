@@ -393,11 +393,12 @@ export default function HomeScreen() {
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity
-              style={[styles.headerButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
+              style={[styles.headerButtonWithText, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
               onPress={handleInviteNeighbors}
               activeOpacity={0.8}
             >
-              <Ionicons name="person-add-outline" size={20} color={colors.primary} />
+              <Ionicons name="person-add-outline" size={18} color={colors.primary} />
+              <Text style={[styles.headerButtonText, { color: colors.primary }]}>Invite neighbours</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.headerButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
@@ -444,7 +445,7 @@ export default function HomeScreen() {
             end={{ x: 1, y: 0 }}
             style={[styles.segmentBtn, styles.segmentBtnActive]}
           >
-            <Text style={[styles.segmentText, { color: '#FFF' }]}>Service Visits</Text>
+            <Text style={[styles.segmentText, { color: '#FFF' }]}>Plan Service Visit</Text>
           </LinearGradient>
         ) : (
           <TouchableOpacity
@@ -457,7 +458,7 @@ export default function HomeScreen() {
               setVisitTab('upcoming');
             }}
           >
-            <Text style={[styles.segmentText, { color: colors.textMuted }]}>Service Visits</Text>
+            <Text style={[styles.segmentText, { color: colors.textMuted }]}>Plan Service Visit</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -694,6 +695,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+  },
+  headerButtonWithText: {
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    gap: 6,
+    position: 'relative',
+  },
+  headerButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   headerIcon: {
     fontSize: 20,

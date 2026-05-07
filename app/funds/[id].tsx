@@ -5,6 +5,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
+    Modal,
     ScrollView,
     StyleSheet,
     Text,
@@ -12,6 +14,7 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { BlockPicker } from '../../components/BlockPicker';
 import { Colors } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
@@ -21,6 +24,7 @@ import {
     MAX_TREASURERS,
     MIN_TREASURERS,
     formatRole,
+    formatRoleForFundContext,
     getEffectiveFundRole,
     getFundPermissions,
     getRestrictionHint,
@@ -29,6 +33,7 @@ import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 type FundDetail = Tables<'events'> & {
+  community?: Pick<Tables<'communities'>, 'funds_enabled' | 'blocks_enabled'> | null;
   event_transactions: Tables<'event_transactions'>[];
   fund_roles: Tables<'fund_roles'>[];
 };
@@ -41,6 +46,9 @@ export default function FundDetailScreen() {
   const [members, setMembers] = useState<CommunityMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
+  const [pendingCollectorId, setPendingCollectorId] = useState<string | null>(null);
+  const [selectedCollectorBlockId, setSelectedCollectorBlockId] = useState<string | null>(null);
+  const [blockNames, setBlockNames] = useState<Map<string, string>>(new Map());
   const { user, appRole } = useAuth();
   const router = useRouter();
   const colors = Colors.light;
@@ -48,14 +56,19 @@ export default function FundDetailScreen() {
   const fetchFundDetail = useCallback(async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from('events').select('*').eq('id', id as string).single();
+      const { data, error } = await supabase
+        .from('events')
+        .select('*, community:communities!inner(funds_enabled, blocks_enabled)')
+        .eq('id', id as string)
+        .single();
 
       if (error) throw error;
 
-      const [transactionsResult, rolesResult, profilesResult] = await Promise.all([
+      const [transactionsResult, rolesResult, profilesResult, blocksResult] = await Promise.all([
         supabase.from('event_transactions').select('*').eq('event_id', data.id),
         supabase.from('fund_roles').select('*').eq('event_id', data.id),
         supabase.from('profiles').select('id, full_name, app_role').eq('community_id', data.community_id).order('full_name', { ascending: true }),
+        supabase.rpc('list_community_blocks', { p_community_id: data.community_id }),
       ]);
 
       if (transactionsResult.error && !isMissingFundSchemaError(transactionsResult.error)) {
@@ -67,13 +80,16 @@ export default function FundDetailScreen() {
       }
 
       if (profilesResult.error) throw profilesResult.error;
+      if (blocksResult.error) throw blocksResult.error;
 
       setFund({
         ...data,
+        community: (data as any).community ?? null,
         event_transactions: transactionsResult.data ?? [],
         fund_roles: rolesResult.data ?? [],
       });
       setMembers(profilesResult.data ?? []);
+      setBlockNames(new Map(((blocksResult.data ?? []) as Tables<'community_blocks'>[]).map((block) => [block.id, block.name])));
 
       if (transactionsResult.error || rolesResult.error) {
         Toast.show({ type: 'error', text1: 'Funds partially loaded', text2: getMissingFundSchemaMessage() });
@@ -110,6 +126,17 @@ export default function FundDetailScreen() {
     );
   }
 
+  if (!fund.community?.funds_enabled) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Funds are not active in this community.</Text>
+        <TouchableOpacity style={[styles.roleAction, { backgroundColor: colors.surface2, marginTop: 12 }]} onPress={() => router.replace('/(tabs)/community')}>
+          <Text style={[styles.roleActionText, { color: colors.primary }]}>Back to community</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   const fundRole = getEffectiveFundRole(appRole, fund.fund_roles ?? [], user?.id);
   const permissions = getFundPermissions(fundRole);
   const getCreatedAtTime = (value: string | null) => (value ? new Date(value).getTime() : 0);
@@ -124,7 +151,7 @@ export default function FundDetailScreen() {
   const balance = income - expense;
   const treasurers = (fund.fund_roles ?? []).filter((assignment) => assignment.role === 'treasurer');
   const collectors = (fund.fund_roles ?? []).filter((assignment) => assignment.role === 'collector');
-  const visibleMembers = members.filter((member) => member.app_role !== 'community_admin');
+  const visibleMembers = members.filter((member) => member.app_role !== 'admin');
   const paidByMemberId = new Map(
     incomeTransactions
       .filter((transaction) => transaction.contributor_user_id)
@@ -175,15 +202,22 @@ export default function FundDetailScreen() {
 
     try {
       setSavingRoleId(targetUserId);
-      const { error } = await supabase.from('fund_roles').upsert(
-        {
-          event_id: fund.id,
-          user_id: targetUserId,
-          role,
-          assigned_by: user.id,
-        },
-        { onConflict: 'event_id,user_id' }
-      );
+      const { error } = role === 'collector' && fund.community?.blocks_enabled && selectedCollectorBlockId
+        ? await supabase.rpc('assign_block_in_charge', {
+            p_event_id: fund.id,
+            p_user_id: targetUserId,
+            p_block_id: selectedCollectorBlockId,
+          })
+        : await supabase.from('fund_roles').upsert(
+            {
+              event_id: fund.id,
+              user_id: targetUserId,
+              role,
+              assigned_by: user.id,
+              block_id: role === 'collector' ? null : null,
+            },
+            { onConflict: 'event_id,user_id' }
+          );
 
       if (error) throw error;
 
@@ -193,6 +227,8 @@ export default function FundDetailScreen() {
         text2: `${profileNames.get(targetUserId) ?? 'Resident'} now has fund access.`,
       });
       await fetchFundDetail();
+      setPendingCollectorId(null);
+      setSelectedCollectorBlockId(null);
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Error', text2: error.message });
     } finally {
@@ -210,23 +246,43 @@ export default function FundDetailScreen() {
       return;
     }
 
-    try {
-      setSavingRoleId(assignment.id);
-      const { error } = await supabase.from('fund_roles').delete().eq('id', assignment.id);
+    const removeNow = async () => {
+      try {
+        setSavingRoleId(assignment.id);
+        const { error } = assignment.role === 'collector' && assignment.block_id
+          ? await supabase.rpc('remove_block_in_charge', { p_event_id: assignment.event_id, p_user_id: assignment.user_id })
+          : await supabase.from('fund_roles').delete().eq('id', assignment.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      Toast.show({
-        type: 'success',
-        text1: `${formatRole(assignment.role)} removed`,
-        text2: `${profileNames.get(assignment.user_id) ?? 'Resident'} is now view-only for this fund.`,
-      });
-      await fetchFundDetail();
-    } catch (error: any) {
-      Toast.show({ type: 'error', text1: 'Error', text2: error.message });
-    } finally {
-      setSavingRoleId(null);
+        Toast.show({
+          type: 'success',
+          text1: `${formatRole(assignment.role)} removed`,
+          text2: `${profileNames.get(assignment.user_id) ?? 'Resident'} is now view-only for this fund.`,
+        });
+        await fetchFundDetail();
+      } catch (error: any) {
+        Toast.show({ type: 'error', text1: 'Error', text2: error.message });
+      } finally {
+        setSavingRoleId(null);
+      }
+    };
+
+    if (assignment.role === 'collector' && assignment.block_id) {
+      const assigneeName = profileNames.get(assignment.user_id) ?? 'Resident';
+      const blockName = blockNames.get(assignment.block_id) ?? 'this block';
+      Alert.alert(
+        'Remove block in-charge?',
+        `Remove ${assigneeName} as block in-charge for ${blockName}? Past contributions they recorded will remain in the ledger.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Remove', style: 'destructive', onPress: removeNow },
+        ]
+      );
+      return;
     }
+
+    removeNow();
   };
 
   return (
@@ -248,7 +304,7 @@ export default function FundDetailScreen() {
           <Text style={styles.fundDesc}>{fund.description || 'Transparent community fund tracking for every resident.'}</Text>
 
           <View style={styles.roleSummaryCard}>
-            <Text style={styles.roleSummaryTitle}>You are a {formatRole(fundRole)}</Text>
+            <Text style={styles.roleSummaryTitle}>You are a {formatRoleForFundContext(fundRole)}</Text>
             <Text style={styles.roleSummaryText}>Treasurers: {roleSummary.treasurers || 'Not assigned yet'}</Text>
             <Text style={styles.roleSummaryText}>Collectors: {roleSummary.collectors || 'None assigned'}</Text>
           </View>
@@ -448,7 +504,7 @@ export default function FundDetailScreen() {
               <View key={assignment.id} style={styles.roleRow}>
                 <View style={styles.roleInfo}>
                   <Text style={[styles.roleName, { color: colors.text }]}>{profileNames.get(assignment.user_id) ?? 'Resident'}</Text>
-                  <Text style={[styles.roleMeta, { color: colors.textMuted }]}>Collector</Text>
+                  <Text style={[styles.roleMeta, { color: colors.textMuted }]}>{assignment.block_id ? `Block: ${blockNames.get(assignment.block_id) ?? 'Unknown'}` : 'All residents'}</Text>
                 </View>
                 <TouchableOpacity
                   style={[styles.roleAction, { backgroundColor: '#FEE2E2' }]}
@@ -473,7 +529,13 @@ export default function FundDetailScreen() {
                 <TouchableOpacity
                   style={[styles.roleAction, { backgroundColor: '#DCFCE7' }]}
                   disabled={savingRoleId === member.id || collectors.length >= MAX_COLLECTORS}
-                  onPress={() => handleAssignRole(member.id, 'collector')}
+                  onPress={() => {
+                    if (fund.community?.blocks_enabled) {
+                      setPendingCollectorId(member.id);
+                    } else {
+                      void handleAssignRole(member.id, 'collector');
+                    }
+                  }}
                 >
                   {savingRoleId === member.id ? (
                     <ActivityIndicator size="small" color="#15803D" />
@@ -521,6 +583,32 @@ export default function FundDetailScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      <Modal visible={!!pendingCollectorId} transparent animationType="slide" onRequestClose={() => setPendingCollectorId(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Assign collector scope</Text>
+            {fund.community_id ? (
+              <BlockPicker value={selectedCollectorBlockId} onChange={setSelectedCollectorBlockId} communityId={fund.community_id} />
+            ) : null}
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={[styles.roleAction, { backgroundColor: '#EEF2FF', flex: 1 }]} onPress={() => setPendingCollectorId(null)}>
+                <Text style={[styles.roleActionText, { color: colors.primary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.roleAction, { backgroundColor: '#DCFCE7', flex: 1 }]}
+                onPress={() => {
+                  if (pendingCollectorId) {
+                    void handleAssignRole(pendingCollectorId, 'collector');
+                  }
+                }}
+              >
+                <Text style={[styles.roleActionText, { color: '#15803D' }]}>Assign</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -804,5 +892,26 @@ const styles = StyleSheet.create({
   roleActionText: {
     fontSize: 13,
     fontWeight: '800',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    gap: 12,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 10,
   },
 });

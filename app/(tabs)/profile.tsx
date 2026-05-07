@@ -1,8 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { BlockPicker } from '../../components/BlockPicker';
 import { Colors } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
@@ -10,8 +11,7 @@ import { supabase } from '../../lib/supabase';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, signOut, communityId, appRole, isCommunityLead } = useAuth();
-  const [communityDetails, setCommunityDetails] = useState<{ name: string; city: string | null; area: string | null; community_type: string | null; code: string | null } | null>(null);
+  const { user, signOut, appRole, communityId, fundsEnabled, blocksEnabled, myBlockId, refreshSession } = useAuth();
   const [dueSoonCount, setDueSoonCount] = useState<number>(0);
   const [recentServices, setRecentServices] = useState<Array<{
     id: string;
@@ -21,32 +21,12 @@ export default function ProfileScreen() {
     provider_name: string | null;
     cost_paid: number | null;
   }>>([]);
+  const [blockPickerVisible, setBlockPickerVisible] = useState(false);
+  const [nextBlockId, setNextBlockId] = useState<string | null>(myBlockId);
+  const [blockName, setBlockName] = useState<string>('not set');
 
   const colors = Colors.light;
   const roleLabel = (appRole ?? 'resident').charAt(0).toUpperCase() + (appRole ?? 'resident').slice(1);
-
-  useEffect(() => {
-    async function fetchCommunity() {
-      if (communityId) {
-        const { data, error } = await supabase
-          .from('communities')
-          .select('name, city, area, community_type, code')
-          .eq('id', communityId)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error loading community details:', error);
-          return;
-        }
-
-        if (data) {
-          setCommunityDetails(data);
-        }
-      }
-    }
-
-    fetchCommunity();
-  }, [communityId]);
 
   useEffect(() => {
     async function fetchDueSoon() {
@@ -60,6 +40,25 @@ export default function ProfileScreen() {
     }
     fetchDueSoon();
   }, [user]);
+
+  useEffect(() => {
+    setNextBlockId(myBlockId ?? null);
+  }, [myBlockId]);
+
+  useEffect(() => {
+    const loadBlockName = async () => {
+      if (!communityId || !blocksEnabled || !myBlockId) {
+        setBlockName('not set');
+        return;
+      }
+
+      const { data } = await supabase.rpc('list_community_blocks', { p_community_id: communityId });
+      const matched = (data ?? []).find((block: any) => block.id === myBlockId);
+      setBlockName(matched?.name ?? 'not set');
+    };
+
+    loadBlockName();
+  }, [blocksEnabled, communityId, myBlockId]);
 
   useEffect(() => {
     async function fetchRecentServices() {
@@ -91,18 +90,15 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleInviteNeighbors = async () => {
-    if (!communityDetails?.code) {
-      Toast.show({ type: 'error', text1: 'Invite code unavailable', text2: 'Community code is not ready yet.' });
-      return;
-    }
-
+  const saveMyBlock = async () => {
     try {
-      await Share.share({
-        message: `Join my community on Society Service Hub!${communityDetails.name ? `\nCommunity: ${communityDetails.name}` : ''}\nCode: ${communityDetails.code}`,
-      });
-    } catch {
-      Toast.show({ type: 'error', text1: 'Share failed', text2: 'Could not open share options.' });
+      const { error } = await supabase.rpc('set_my_block', { p_block_id: nextBlockId });
+      if (error) throw error;
+      await refreshSession();
+      setBlockPickerVisible(false);
+      Toast.show({ type: 'success', text1: 'Block updated' });
+    } catch (error: any) {
+      Toast.show({ type: 'error', text1: 'Unable to update block', text2: error.message });
     }
   };
 
@@ -146,61 +142,6 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
-
-        <View style={[styles.section, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, { color: colors.textMuted }]}>NAME</Text>
-            <Text style={[styles.value, { color: colors.text }]}>{communityDetails?.name || '---'}</Text>
-          </View>
-
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, { color: colors.textMuted }]}>LOCATION</Text>
-            <Text style={[styles.value, { color: colors.text }]}>{communityDetails?.area || communityDetails?.city || '---'}</Text>
-          </View>
-
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, { color: colors.textMuted }]}>TYPE</Text>
-            <Text style={[styles.value, { color: colors.text, textTransform: 'capitalize' }]}>{communityDetails?.community_type || '---'}</Text>
-          </View>
-
-          {isCommunityLead && communityDetails?.code ? (
-            <>
-              <View style={[styles.divider, { backgroundColor: colors.border }]} />
-              <View style={styles.infoRow}>
-                <Text style={[styles.label, { color: colors.textMuted }]}>JOIN CODE</Text>
-                <View style={styles.codeRow}>
-                  <Text style={[styles.codeValue, { color: colors.primary }]}>{communityDetails.code}</Text>
-                  <TouchableOpacity
-                    onPress={handleInviteNeighbors}
-                    style={[styles.shareBtn, { backgroundColor: `${colors.primary}10` }]}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={[styles.shareBtnText, { color: colors.primary }]}>{APP_EMOJIS.share} Share</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </>
-          ) : null}
-        </View>
-
-        <TouchableOpacity
-          onPress={handleInviteNeighbors}
-          style={[styles.adminCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
-          activeOpacity={0.82}
-        >
-          <View style={[styles.adminIconWrap, { backgroundColor: `${colors.secondary}12` }]}>
-            <Text style={styles.adminIcon}>{APP_EMOJIS.share}</Text>
-          </View>
-          <View style={styles.adminContent}>
-            <Text style={[styles.adminTitle, { color: colors.text }]}>Invite neighbours</Text>
-            <Text style={[styles.adminCopy, { color: colors.textMuted }]}>Share your community code so others can join</Text>
-          </View>
-          <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
-        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.push('/services' as any)}
@@ -258,20 +199,20 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
-        <TouchableOpacity
-          onPress={() => router.push({ pathname: '/residents', params: { returnTo: 'profile' } } as any)}
-          style={[styles.adminCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
-          activeOpacity={0.82}
-        >
-          <View style={[styles.adminIconWrap, { backgroundColor: `${colors.secondary}12` }]}>
-            <Text style={styles.adminIcon}>{APP_EMOJIS.members}</Text>
+        {fundsEnabled && blocksEnabled && communityId ? (
+          <View style={[styles.section, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.adminIcon}>🏷️</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Your block</Text>
+            </View>
+            <View style={styles.blockRow}>
+              <Text style={[styles.blockValue, { color: colors.text }]}>Your block: {blockName}</Text>
+              <TouchableOpacity style={[styles.blockAction, { borderColor: colors.border }]} onPress={() => setBlockPickerVisible(true)}>
+                <Text style={[styles.blockActionText, { color: colors.primary }]}>{myBlockId ? 'Change' : 'Set'}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.adminContent}>
-            <Text style={[styles.adminTitle, { color: colors.text }]}>Community directory</Text>
-            <Text style={[styles.adminCopy, { color: colors.textMuted }]}>Browse residents in your community</Text>
-          </View>
-          <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
-        </TouchableOpacity>
+        ) : null}
 
         <TouchableOpacity
           style={[styles.signOutButton, { backgroundColor: colors.accent + '10' }]}
@@ -283,6 +224,23 @@ export default function ProfileScreen() {
 
         <Text style={[styles.version, { color: colors.textMuted }]}>Society Service Hub v1.0.0</Text>
       </ScrollView>
+
+      <Modal visible={blockPickerVisible} transparent animationType="slide" onRequestClose={() => setBlockPickerVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Set your block</Text>
+            {communityId ? <BlockPicker value={nextBlockId} onChange={setNextBlockId} communityId={communityId} /> : null}
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={[styles.modalSecondary, { borderColor: colors.border }]} onPress={() => setBlockPickerVisible(false)}>
+                <Text style={[styles.modalSecondaryText, { color: colors.text }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalPrimary, { backgroundColor: colors.primary }]} onPress={saveMyBlock}>
+                <Text style={styles.modalPrimaryText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -536,5 +494,66 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     fontSize: 12,
     fontWeight: '500',
+  },
+  blockRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  blockValue: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  blockAction: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  blockActionText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    padding: 20,
+    gap: 12,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  modalActions: {
+    marginTop: 6,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  modalSecondary: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 12,
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  modalSecondaryText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  modalPrimary: {
+    flex: 1,
+    borderRadius: 12,
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  modalPrimaryText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '800',
   },
 });
