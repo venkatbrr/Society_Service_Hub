@@ -13,6 +13,14 @@ export default function ProfileScreen() {
   const { user, signOut, communityId, appRole, isCommunityLead } = useAuth();
   const [communityDetails, setCommunityDetails] = useState<{ name: string; city: string | null; area: string | null; community_type: string | null; code: string | null } | null>(null);
   const [dueSoonCount, setDueSoonCount] = useState<number>(0);
+  const [recentServices, setRecentServices] = useState<Array<{
+    id: string;
+    service_id: string;
+    service_name: string;
+    serviced_on: string;
+    provider_name: string | null;
+    cost_paid: number | null;
+  }>>([]);
 
   const colors = Colors.light;
   const roleLabel = (appRole ?? 'resident').charAt(0).toUpperCase() + (appRole ?? 'resident').slice(1);
@@ -51,6 +59,28 @@ export default function ProfileScreen() {
       }
     }
     fetchDueSoon();
+  }, [user]);
+
+  useEffect(() => {
+    async function fetchRecentServices() {
+      if (!user) return;
+      try {
+        const { data, error } = await supabase.rpc('get_my_recent_service_history', { p_limit: 5 });
+        if (error) throw error;
+        setRecentServices((data ?? []) as Array<{
+          id: string;
+          service_id: string;
+          service_name: string;
+          serviced_on: string;
+          provider_name: string | null;
+          cost_paid: number | null;
+        }>);
+      } catch {
+        setRecentServices([]);
+      }
+    }
+
+    fetchRecentServices();
   }, [user]);
 
   const handleSignOut = async () => {
@@ -196,6 +226,37 @@ export default function ProfileScreen() {
             <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
           )}
         </TouchableOpacity>
+
+        {recentServices.length > 0 ? (
+          <View style={[styles.section, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.adminIcon}>🧾</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent home services</Text>
+            </View>
+
+            {recentServices.map((entry) => (
+              <TouchableOpacity
+                key={entry.id}
+                style={styles.recentRow}
+                onPress={() => router.push({ pathname: '/services/[id]', params: { id: entry.service_id } } as any)}
+                activeOpacity={0.82}
+              >
+                <View style={styles.recentRowMain}>
+                  <Text style={[styles.recentServiceName, { color: colors.text }]} numberOfLines={1}>{entry.service_name}</Text>
+                  <Text style={[styles.recentServiceMeta, { color: colors.textMuted }]} numberOfLines={1}>
+                    {new Date(entry.serviced_on).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    {entry.provider_name ? ` · ${entry.provider_name}` : ''}
+                  </Text>
+                </View>
+                {entry.cost_paid != null ? (
+                  <Text style={[styles.recentCost, { color: colors.text }]}>₹{Number(entry.cost_paid).toFixed(0)}</Text>
+                ) : (
+                  <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : null}
 
         <TouchableOpacity
           onPress={() => router.push({ pathname: '/residents', params: { returnTo: 'profile' } } as any)}
@@ -406,6 +467,30 @@ const styles = StyleSheet.create({
   chevronIcon: {
     fontSize: 18,
     lineHeight: 20,
+  },
+  recentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#DDEFE1',
+    gap: 8,
+  },
+  recentRowMain: {
+    flex: 1,
+  },
+  recentServiceName: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  recentServiceMeta: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  recentCost: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   spacer: {
     flex: 1,

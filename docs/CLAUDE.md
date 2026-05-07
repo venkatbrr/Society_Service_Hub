@@ -37,7 +37,7 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 
 Every user belongs to a community. **All data queries must filter by `communityId`** from `useAuth()`. Supabase RLS policies enforce community-level isolation.
 
-> **Exception — User-Scoped Data**: The `user_services` table (Personal Service Reminders feature) is **not** community-scoped. Its RLS uses `auth.uid() = user_id`. Queries do NOT pass `communityId`. This is the only table with this pattern.
+> **Exception — User-Scoped Data**: The `user_services`, `user_service_history`, `hire_feedback`, and `provider_public_rating_nudges` tables are **not** community-scoped. Their RLS uses `auth.uid() = user_id` with no same-community read policy and no platform-admin override. Queries do NOT pass `communityId` for these tables.
 
 ### Auth Flow
 

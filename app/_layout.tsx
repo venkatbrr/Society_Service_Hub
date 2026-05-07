@@ -1,11 +1,12 @@
+import * as Notifications from 'expo-notifications';
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import { useEffect, useRef } from 'react';
+import { LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import { configureGoogleSignIn } from '../lib/auth';
-import { LogBox } from 'react-native';
 
 LogBox.ignoreLogs([
   'AuthApiError: Invalid Refresh Token: Refresh Token Not Found',
@@ -94,6 +95,30 @@ function RootLayoutNav() {
       router.replace(redirectTo as any);
     }
   }, [session, communityId, activeCommunityRequest, isPlatformAdmin, isLoading, segments]);
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = (response.notification.request.content.data ?? {}) as {
+        kind?: string;
+        hire_id?: string;
+        provider_id?: string;
+      };
+
+      if (data.kind === 'hire_feedback' && data.hire_id) {
+        router.push({
+          pathname: '/hire-feedback/[hireId]',
+          params: {
+            hireId: String(data.hire_id),
+            provider_id: data.provider_id ? String(data.provider_id) : undefined,
+          },
+        } as any);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [router]);
 
   if (isLoading) {
     return null;

@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
+import * as Notifications from 'expo-notifications';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { RatingStars } from '../../components/RatingStars';
 import { Colors } from '../../constants/Colors';
@@ -29,10 +30,32 @@ export default function ProviderDetailScreen() {
   const [selectedRating, setSelectedRating] = useState<number>(0);
   const [reviewText, setReviewText] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [providerHistory, setProviderHistory] = useState<Array<{ hire_id: string; created_at: string; signal: string | null; note: string | null }>>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
 
   useEffect(() => {
     fetchProvider();
   }, [id, user]);
+
+  const fetchProviderHistory = async (providerId: string) => {
+    if (!user) {
+      setProviderHistory([]);
+      return;
+    }
+
+    setHistoryLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('get_my_provider_history', { p_provider_id: providerId });
+      if (error) throw error;
+      setProviderHistory((data ?? []) as Array<{ hire_id: string; created_at: string; signal: string | null; note: string | null }>);
+    } catch (err) {
+      console.error('Error loading provider history:', err);
+      setProviderHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   const fetchProvider = async () => {
     try {
@@ -75,10 +98,14 @@ export default function ProviderDetailScreen() {
           user_rating: ratsResult.data ? ratsResult.data.rating : null,
           hire_count: hireResult.count || 0
         });
+        setHistoryExpanded(false);
+        void fetchProviderHistory(String(id));
       } else {
         const { data: providerData, error: providerError } = await providerQuery;
         if (providerError) throw providerError;
         setProvider({ ...providerData, hire_count: 0 });
+        setProviderHistory([]);
+        setHistoryExpanded(false);
       }
     } catch (error: any) {
       console.error(error);
@@ -89,23 +116,59 @@ export default function ProviderDetailScreen() {
     }
   };
 
-  const logHire = async () => {
-    if (!provider || !user) return;
+  const logHire = async (): Promise<string | null> => {
+    if (!provider || !user) return null;
     try {
-      const { error } = await supabase.from('provider_hires').insert({
-        user_id: user.id,
-        provider_id: provider.id
-      });
+      const { data: insertedHire, error } = await supabase
+        .from('provider_hires')
+        .insert({
+          user_id: user.id,
+          provider_id: provider.id,
+        })
+        .select('id')
+        .maybeSingle();
 
       if (error) {
-        if (isMissingRelationError(error)) return;
+        if (isMissingRelationError(error)) return null;
         throw error;
       }
 
+      const insertedHireId = insertedHire?.id ?? null;
+
+      if (insertedHireId && Platform.OS !== 'web') {
+        try {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: `How was your visit with ${provider.name}?`,
+              body: 'Tap to leave a quick private note for yourself.',
+              data: { kind: 'hire_feedback', hire_id: insertedHireId, provider_id: provider.id },
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+              seconds: 24 * 60 * 60,
+              repeats: false,
+              channelId: 'default',
+            },
+          });
+        } catch (scheduleError) {
+          console.warn('Failed to schedule hire feedback notification:', scheduleError);
+        }
+      }
+
       setProvider((prev: ProviderWithInteraction | null) => prev ? { ...prev, hire_count: (prev.hire_count || 0) + 1 } : null);
+      void fetchProviderHistory(provider.id);
+      return insertedHireId;
     } catch (err) {
       console.error('Error logging hire:', err);
+      return null;
     }
+  };
+
+  const formatSignal = (signal: string | null) => {
+    if (signal === 'positive') return '👍';
+    if (signal === 'negative') return '👎';
+    if (signal === 'skipped') return '⏭';
+    return '•';
   };
 
   const handleCall = async () => {
@@ -298,6 +361,55 @@ export default function ProviderDetailScreen() {
             <Text style={[styles.trustStatValue, { color: colors.text }]}>{provider.rating_count || 0}</Text>
           <Text style={[styles.trustStatLabel, { color: colors.textMuted }]}>Reviews</Text>
          </View>
+      </View>
+
+      <View style={styles.detailsCard}>
+        <View style={styles.privateHistoryHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your history with this provider</Text>
+          {providerHistory.length > 0 ? (
+            <TouchableOpacity onPress={() => setHistoryExpanded((v) => !v)}>
+              <Text style={[styles.privateHistoryToggle, { color: colors.primary }]}>{historyExpanded ? 'Hide' : 'Show'}</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        {historyLoading ? (
+          <ActivityIndicator color={colors.primary} style={{ marginTop: 8 }} />
+        ) : providerHistory.length === 0 ? (
+          <Text style={[styles.detailText, { color: colors.textMuted, marginTop: 8 }]}>No private visit history yet.</Text>
+        ) : (
+          <>
+            <Text style={[styles.privateHistorySummary, { color: colors.text }]}> 
+              {providerHistory
+                .slice(0, 5)
+                .map((entry) => formatSignal(entry.signal))
+                .join(' ')}{' '}
+              - {providerHistory.length} visit{providerHistory.length === 1 ? '' : 's'}
+            </Text>
+
+            {historyExpanded ? (
+              <View style={styles.privateHistoryList}>
+                {providerHistory.map((entry) => (
+                  <View key={entry.hire_id} style={[styles.privateHistoryRow, { borderTopColor: colors.border }]}> 
+                    <Text style={styles.privateHistorySignal}>{formatSignal(entry.signal)}</Text>
+                    <View style={styles.privateHistoryBody}>
+                      <Text style={[styles.privateHistoryDate, { color: colors.text }]}>
+                        {new Date(entry.created_at).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </Text>
+                      {entry.note ? (
+                        <Text style={[styles.privateHistoryNote, { color: colors.textMuted }]}>{entry.note}</Text>
+                      ) : null}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </>
+        )}
       </View>
 
       <View style={styles.actionGrid}>
@@ -530,5 +642,46 @@ const styles = StyleSheet.create({
   detailMetaValue: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  privateHistoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  privateHistoryToggle: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  privateHistorySummary: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 10,
+  },
+  privateHistoryList: {
+    marginTop: 12,
+  },
+  privateHistoryRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    borderTopWidth: 1,
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
+  privateHistorySignal: {
+    fontSize: 18,
+    lineHeight: 20,
+  },
+  privateHistoryBody: {
+    flex: 1,
+    gap: 4,
+  },
+  privateHistoryDate: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  privateHistoryNote: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

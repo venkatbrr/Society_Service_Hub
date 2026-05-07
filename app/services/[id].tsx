@@ -7,6 +7,7 @@ import {
     ActivityIndicator,
     Alert,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -16,6 +17,8 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { ProviderSelector } from '../../components/ProviderSelector';
+import { ServiceHistoryList } from '../../components/ServiceHistoryList';
 import { UrgencyBadge } from '../../components/UrgencyBadge';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
@@ -55,7 +58,7 @@ type UserServiceRow = {
 type ProviderOption = {
   id: string;
   name: string;
-  category: string;
+  category?: string;
   phone: string | null;
 };
 
@@ -83,6 +86,13 @@ export default function ServiceDetailScreen() {
   const [providerPickerOpen, setProviderPickerOpen] = useState(false);
   const [providerSearch, setProviderSearch] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<ProviderOption | null>(null);
+
+  const [showMarkDoneSheet, setShowMarkDoneSheet] = useState(false);
+  const [markDoneProvider, setMarkDoneProvider] = useState<ProviderOption | null>(null);
+  const [markDoneCost, setMarkDoneCost] = useState('');
+  const [markDoneNote, setMarkDoneNote] = useState('');
+  const [markDoneSubmitting, setMarkDoneSubmitting] = useState(false);
+  const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
 
   const fetchService = useCallback(async () => {
     if (!id) return;
@@ -169,12 +179,14 @@ export default function ServiceDetailScreen() {
   useEffect(() => {
     if (!service?.provider_id) {
       setSelectedProvider(null);
+      setMarkDoneProvider(null);
       return;
     }
 
     const linkedProvider = providers.find((provider) => provider.id === service.provider_id) ?? null;
     if (linkedProvider) {
       setSelectedProvider(linkedProvider);
+      setMarkDoneProvider(linkedProvider);
     }
   }, [providers, service?.provider_id]);
 
@@ -193,45 +205,66 @@ export default function ServiceDetailScreen() {
   }, [providers, suggestedProviderCategory]);
 
   const handleMarkDone = () => {
-    Alert.alert(
-      'Mark as serviced today?',
-      "This will update the last service date to today and reset the reminder.",
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          onPress: async () => {
-            if (!service) return;
-            setMarking(true);
-            // Optimistic update
-            const today = new Date().toISOString().split('T')[0];
-            const prevService = service;
-            setService((s) =>
-              s
-                ? {
-                    ...s,
-                    last_serviced_on: today,
-                    days_until_due: s.frequency_months * 30, // rough optimistic value
-                  }
-                : s
-            );
-            try {
-              const { error } = await supabase.rpc('mark_service_done', {
-                p_service_id: service.id,
-              });
-              if (error) throw error;
-              Toast.show({ type: 'success', text1: 'Service marked as done!' });
-              fetchService(); // Refresh with real computed next_due_on
-            } catch (err: any) {
-              setService(prevService); // revert
-              Toast.show({ type: 'error', text1: 'Error', text2: err.message });
-            } finally {
-              setMarking(false);
-            }
-          },
-        },
-      ]
+    setShowMarkDoneSheet(true);
+  };
+
+  const submitMarkDone = async (skipDetails: boolean) => {
+    if (!service) return;
+
+    const noteValue = markDoneNote.trim();
+    const costValue = markDoneCost.trim();
+    const parsedCost = costValue.length ? Number(costValue) : null;
+
+    if (!skipDetails && costValue.length && (parsedCost === null || Number.isNaN(parsedCost) || parsedCost < 0)) {
+      Toast.show({ type: 'error', text1: 'Invalid cost', text2: 'Enter a valid non-negative amount.' });
+      return;
+    }
+
+    const prevService = service;
+    const today = new Date().toISOString().split('T')[0];
+
+    setMarking(true);
+    setMarkDoneSubmitting(true);
+
+    setService((s) =>
+      s
+        ? {
+            ...s,
+            last_serviced_on: today,
+            days_until_due: s.frequency_months * 30,
+          }
+        : s
     );
+
+    try {
+      if (skipDetails) {
+        const { error } = await supabase.rpc('mark_service_done', {
+          p_service_id: service.id,
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.rpc('mark_service_done', {
+          p_service_id: service.id,
+          p_provider_id: markDoneProvider?.id ?? null,
+          p_cost_paid: parsedCost,
+          p_note: noteValue.length ? noteValue.slice(0, 280) : null,
+        });
+        if (error) throw error;
+      }
+
+      setShowMarkDoneSheet(false);
+      setMarkDoneCost('');
+      setMarkDoneNote('');
+      setHistoryRefreshToken((v) => v + 1);
+      Toast.show({ type: 'success', text1: 'Service logged' });
+      fetchService();
+    } catch (err: any) {
+      setService(prevService);
+      Toast.show({ type: 'error', text1: 'Error', text2: err.message ?? 'Failed to mark service.' });
+    } finally {
+      setMarking(false);
+      setMarkDoneSubmitting(false);
+    }
   };
 
   const handleFindTech = () => {
@@ -401,6 +434,12 @@ export default function ServiceDetailScreen() {
         >
           <Text style={[styles.secondaryBtnText, { color: colors.primary }]}>🔍 Find technicians</Text>
         </TouchableOpacity>
+
+        <ServiceHistoryList
+          serviceId={service.id}
+          communityId={communityId}
+          refreshToken={historyRefreshToken}
+        />
 
         {/* Collapsible edit section */}
         <TouchableOpacity
@@ -645,6 +684,84 @@ export default function ServiceDetailScreen() {
           <Text style={[styles.deleteBtnText, { color: colors.accent }]}>🗑️ Delete this reminder</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal visible={showMarkDoneSheet} transparent animationType="slide" onRequestClose={() => setShowMarkDoneSheet(false)}>
+        <View style={styles.sheetOverlay}>
+          <View style={[styles.sheetCard, { backgroundColor: colors.background, borderColor: colors.border }]}> 
+            <View style={styles.sheetHeader}>
+              <Text style={[styles.sheetTitle, { color: colors.text }]}>Mark serviced - quick details (optional)</Text>
+              <TouchableOpacity onPress={() => setShowMarkDoneSheet(false)}>
+                <Text style={[styles.sheetClose, { color: colors.textMuted }]}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.sheetBody}>
+              <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>PROVIDER (OPTIONAL)</Text>
+              <ProviderSelector
+                communityId={communityId ?? ''}
+                mode="existing"
+                onModeChange={() => undefined}
+                selectedProviderId={markDoneProvider?.id}
+                onSelectProvider={(provider) =>
+                  setMarkDoneProvider({
+                    id: provider.id,
+                    name: provider.name,
+                    phone: provider.phone ?? null,
+                  })
+                }
+                manualProviderName=""
+                onManualNameChange={() => undefined}
+                manualProviderPhone=""
+                onManualPhoneChange={() => undefined}
+                manualProviderWhatsapp=""
+                onManualWhatsappChange={() => undefined}
+                allowNewProvider={false}
+              />
+
+              <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>COST PAID (OPTIONAL)</Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
+                value={markDoneCost}
+                onChangeText={(value) => setMarkDoneCost(value.replace(/[^0-9.]/g, ''))}
+                keyboardType="decimal-pad"
+                placeholder="₹"
+                placeholderTextColor={colors.textMuted}
+              />
+
+              <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>ONE-LINE NOTE (OPTIONAL)</Text>
+              <TextInput
+                style={[styles.input, styles.sheetNoteInput, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
+                value={markDoneNote}
+                onChangeText={(value) => setMarkDoneNote(value.slice(0, 280))}
+                placeholder="Anything worth noting?"
+                placeholderTextColor={colors.textMuted}
+                maxLength={280}
+                multiline
+              />
+
+              <TouchableOpacity
+                style={[styles.primaryBtn, markDoneSubmitting && { opacity: 0.7 }]}
+                onPress={() => submitMarkDone(false)}
+                disabled={markDoneSubmitting}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={[colors.secondary, '#059669']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.btnGradient}
+                >
+                  <Text style={styles.btnText}>{markDoneSubmitting ? 'Saving…' : 'Mark done'}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => submitMarkDone(true)} disabled={markDoneSubmitting} style={styles.skipDetailsWrap}>
+                <Text style={[styles.skipDetailsText, { color: colors.primary }]}>Skip details</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -852,4 +969,49 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   deleteBtnText: { fontSize: 14, fontWeight: '700' },
+  sheetOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.26)',
+  },
+  sheetCard: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderWidth: 1,
+    maxHeight: '84%',
+  },
+  sheetHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#D7DBE1',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sheetTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '800',
+    marginRight: 12,
+  },
+  sheetClose: {
+    fontSize: 18,
+  },
+  sheetBody: {
+    padding: 16,
+    paddingBottom: 28,
+  },
+  sheetNoteInput: {
+    minHeight: 76,
+    textAlignVertical: 'top',
+  },
+  skipDetailsWrap: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  skipDetailsText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
 });

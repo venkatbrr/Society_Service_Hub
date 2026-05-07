@@ -149,6 +149,8 @@ type AuthContextType = {
 | `favorites` | Saved providers | User |
 | `ratings` | Provider reviews | Community |
 | `provider_hires` | Contact and hire history | Community |
+| `hire_feedback` | Private per-hire resident sentiment log | User |
+| `provider_public_rating_nudges` | One-time public-rating nudge memory per resident-provider pair | User |
 | `events` | Community funds | Community |
 | `event_transactions` | Fund ledger entries | Community |
 | `fund_roles` | Treasurer and collector assignments per fund | Community |
@@ -183,7 +185,13 @@ The marketplace tables `resident_businesses`, `business_offerings`, and `busines
 | `get_fund_role(p_event_id, p_user_id)` | Database-side fund role resolution |
 | `get_my_upcoming_services()` | User-scoped reminders ordered by due date |
 | `get_my_due_soon_count()` | Count reminders due within 7 days |
-| `mark_service_done(p_service_id)` | Reset a reminder to serviced today |
+| `mark_service_done(p_service_id, p_provider_id?, p_cost_paid?, p_note?)` | Reset a reminder to serviced today and append optional private history details (backward compatible) |
+| `get_service_history(p_service_id)` | List private history rows for a single reminder |
+| `get_my_recent_service_history(p_limit)` | List latest private service history rows across reminders |
+| `record_hire_feedback(p_hire_id, p_signal, p_note?)` | Upsert private feedback signal for one hire |
+| `get_my_provider_history(p_provider_id)` | Return the caller's private hire/feedback timeline for one provider |
+| `should_show_public_rating_nudge(p_provider_id)` | Gate one-time positive-flow public-rating prompt per provider |
+| `mark_public_rating_nudge(p_provider_id, p_outcome)` | Persist one-time nudge outcome (`rated`, `dismissed`, `pending`) |
 | `notify_due_services()` | Create due-soon reminder notifications |
 | `normalize_indian_mobile(p_value)` | Canonicalize flexible phone input to a validated 10-digit Indian mobile |
 | `set_audit_actor(p_actor_id)` / `set_audit_context(...)` | Attach audit metadata to profile changes |
@@ -224,6 +232,8 @@ All active tables have RLS enabled.
 | `favorites` | User-owned only |
 | `ratings` | Same community for reads; owner-managed writes |
 | `provider_hires` | Community-scoped usage history |
+| `hire_feedback` | User-owned only (`auth.uid() = user_id`) |
+| `provider_public_rating_nudges` | User-owned only (`auth.uid() = user_id`) |
 | `events`, `event_transactions`, `fund_roles` | Community-scoped with role-gated writes |
 | `notifications` | User-owned read and mark-read updates |
 | `user_services` | User-owned only, independent of community filters |
@@ -259,6 +269,8 @@ Current active notification flows:
 - `removed_from_community`
 - `service_reminder`
 
+Hire feedback uses local `expo-notifications` scheduling with a 24-hour trigger after a successful `provider_hires` insert. No server-side fan-out is used for this flow.
+
 The notification screen still contains defensive handling for some legacy promotion-related payloads.
 
 ---
@@ -278,6 +290,7 @@ app/_layout.tsx
   -> /notifications
   -> /residents
   -> /provider/*
+  -> /hire-feedback/*
   -> /visits/*
   -> /funds/*
   -> /services/*
@@ -301,6 +314,7 @@ Tab icons are currently rendered with `APP_EMOJIS` inside `Text` elements.
 ### Dynamic Detail Routes
 
 - `/provider/[id]`
+- `/hire-feedback/[hireId]`
 - `/visits/[id]`
 - `/funds/[id]`
 - `/services/[id]`

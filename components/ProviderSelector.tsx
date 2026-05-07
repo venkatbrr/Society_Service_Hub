@@ -16,6 +16,7 @@ interface ProviderSelectorProps {
   onManualPhoneChange: (phone: string) => void;
   manualProviderWhatsapp: string;
   onManualWhatsappChange: (whatsapp: string) => void;
+  allowNewProvider?: boolean;
 }
 
 export const ProviderSelector = ({
@@ -30,6 +31,7 @@ export const ProviderSelector = ({
   onManualPhoneChange,
   manualProviderWhatsapp,
   onManualWhatsappChange,
+  allowNewProvider = true,
 }: ProviderSelectorProps) => {
   const colors = Colors.light;
   const [providers, setProviders] = useState<any[]>([]);
@@ -37,11 +39,19 @@ export const ProviderSelector = ({
   const [loading, setLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  const effectiveMode: 'existing' | 'new' = allowNewProvider ? mode : 'existing';
+
   useEffect(() => {
-    if (mode === 'existing') {
+    if (!allowNewProvider && mode !== 'existing') {
+      onModeChange('existing');
+    }
+  }, [allowNewProvider, mode, onModeChange]);
+
+  useEffect(() => {
+    if (effectiveMode === 'existing') {
       fetchProviders();
     }
-  }, [communityId, mode]);
+  }, [communityId, effectiveMode]);
 
   const fetchProviders = async () => {
     setLoading(true);
@@ -69,22 +79,24 @@ export const ProviderSelector = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.segmentContainer}>
-        <TouchableOpacity 
-          style={[styles.segment, mode === 'existing' ? { backgroundColor: colors.primary } : { borderBottomWidth: 0 }]} 
-          onPress={() => onModeChange('existing')}
-        >
-          <Text style={[styles.segmentText, mode === 'existing' ? { color: '#FFF' } : { color: colors.textMuted }]}>From my providers</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.segment, mode === 'new' ? { backgroundColor: colors.primary } : { borderBottomWidth: 0 }]} 
-          onPress={() => onModeChange('new')}
-        >
-          <Text style={[styles.segmentText, mode === 'new' ? { color: '#FFF' } : { color: colors.textMuted }]}>New provider</Text>
-        </TouchableOpacity>
-      </View>
+      {allowNewProvider ? (
+        <View style={styles.segmentContainer}>
+          <TouchableOpacity
+            style={[styles.segment, effectiveMode === 'existing' ? { backgroundColor: colors.primary } : { borderBottomWidth: 0 }]}
+            onPress={() => onModeChange('existing')}
+          >
+            <Text style={[styles.segmentText, effectiveMode === 'existing' ? { color: '#FFF' } : { color: colors.textMuted }]}>From my providers</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segment, effectiveMode === 'new' ? { backgroundColor: colors.primary } : { borderBottomWidth: 0 }]}
+            onPress={() => onModeChange('new')}
+          >
+            <Text style={[styles.segmentText, effectiveMode === 'new' ? { color: '#FFF' } : { color: colors.textMuted }]}>New provider</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
-      {mode === 'existing' ? (
+      {effectiveMode === 'existing' ? (
         <View style={styles.existingContainer}>
           <TouchableOpacity 
             style={[styles.selector, { borderColor: colors.border }]} 

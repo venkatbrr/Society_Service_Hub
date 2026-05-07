@@ -165,10 +165,20 @@ This document describes the current user-facing product surface, the screens inv
 | Aspect | Details |
 |--------|---------|
 | **Purpose** | Show provider profile, ratings, save state, contact actions, and creator-only deletion |
-| **Tables** | Reads: `service_providers`, `favorites`, `ratings`, `provider_hires`; writes: `favorites`, `ratings`, `provider_hires` |
-| **Business rules** | Ratings are 1-5 stars with one upserted rating per user. Users can submit or edit review text without re-tapping stars when an existing rating already exists. Contact actions increment provider hire history. Creator-only deletion remains enforced in the UI and database. |
+| **Tables** | Reads: `service_providers`, `favorites`, `ratings`, `provider_hires`; RPC: `get_my_provider_history`; writes: `favorites`, `ratings`, `provider_hires` |
+| **Business rules** | Ratings are 1-5 stars with one upserted rating per user. Users can submit or edit review text without re-tapping stars when an existing rating already exists. Contact actions increment provider hire history and schedule a local 24-hour feedback reminder. The detail screen includes a private, resident-only summary card for that resident's own provider history (`👍/👎/⏭`) and optional notes. Creator-only deletion remains enforced in the UI and database. |
 | **Navigation** | From the Help tab, Favorites, Visit Detail, and Service Reminder technician lookup |
 | **Integrations** | Phone, WhatsApp, native Share |
+
+### Hire Feedback (Private) (`app/hire-feedback/[hireId].tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Collect a resident's private post-visit signal after a logged hire |
+| **Tables / RPCs** | Reads: `provider_hires`, `service_providers`; reads/writes: `hire_feedback`; RPCs: `record_hire_feedback`, `should_show_public_rating_nudge`, `mark_public_rating_nudge` |
+| **Business rules** | A local notification (24 hours after hire) opens this flow. Resident can record `positive`, `negative`, or `skipped`, with an optional 280-char note for `positive`/`negative`. Feedback is strictly private and user-scoped. A `positive` signal can trigger a same-screen public-rating prompt exactly once per provider, gated by existing rating + nudge memory. `negative` and `skipped` never trigger the public-rating prompt. Public ratings are never auto-created; only explicit `Rate now` continues to provider rating UI. |
+| **Navigation** | Notification deep link route from `data.kind = 'hire_feedback'`; `Rate now` continues to `/provider/[id]` |
+| **Integrations** | `expo-notifications` local scheduling and response handling |
 
 ---
 
