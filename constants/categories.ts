@@ -21,6 +21,7 @@ export const CATEGORIES = [
   'Car Wash',
   'Milkman',
   'RO / Water Purifier',
+  'Grills & Mesh Work',
   'Tent House',
   'Water Cans',
   'Catering',
@@ -28,7 +29,9 @@ export const CATEGORIES = [
   'Decoration',
   'Boutique',
   'Movers & Packers',
-  'Tutor / Home Teacher',
+  'Teaching',
+  'RTO Agent',
+  'Aadhar Centre',
   'Other',
 ];
 
@@ -57,7 +60,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
   },
   {
     id: 'repairs',
-    label: 'Repairs',
+    label: 'Repairs & Maintenance',
     categories: [
       'Electrician',
       'Plumber',
@@ -69,22 +72,22 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       'Cycle Repair',
       'RO / Water Purifier',
       'Pest Control',
+      'Grills & Mesh Work',
     ],
   },
   {
     id: 'personal',
-    label: 'Personal',
+    label: 'Personal Care',
     categories: [
       'Tailor',
       'Salon / Beautician',
       'Door Rangoli',
       'Boutique',
-      'Tutor / Home Teacher',
     ],
   },
   {
     id: 'events',
-    label: 'Events',
+    label: 'Events & Occasions',
     categories: [
       'Tent House',
       'Catering',
@@ -92,6 +95,19 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       'Decoration',
       'Movers & Packers',
     ],
+  },
+  {
+    id: 'govt_docs',
+    label: 'Government & Docs',
+    categories: [
+      'RTO Agent',
+      'Aadhar Centre',
+    ],
+  },
+  {
+    id: 'education',
+    label: 'Education',
+    categories: ['Teaching'],
   },
   {
     id: 'other',
@@ -123,6 +139,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   'Car Wash': '#6366F1',
   Milkman: '#F5F5DC',
   'RO / Water Purifier': '#14B8A6',
+  'Grills & Mesh Work': '#0D9488',
   'Tent House': '#0F766E',
   'Water Cans': '#0284C7',
   Catering: '#EA580C',
@@ -130,6 +147,8 @@ export const CATEGORY_COLORS: Record<string, string> = {
   Decoration: '#F59E0B',
   Boutique: '#DB2777',
   'Movers & Packers': '#D97706',
-  'Tutor / Home Teacher': '#7C3AED',
+  Teaching: '#7C3AED',
+  'RTO Agent': '#0369A1',
+  'Aadhar Centre': '#0891B2',
   Other: '#A0AEC0',
 };

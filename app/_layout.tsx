@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
+import { Verandah } from '../constants/Colors';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import { configureGoogleSignIn } from '../lib/auth';
@@ -128,7 +129,7 @@ function RootLayoutNav() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#F0FDF4' },
+        contentStyle: { backgroundColor: Verandah.surface },
         animation: 'slide_from_right',
       }}
     />

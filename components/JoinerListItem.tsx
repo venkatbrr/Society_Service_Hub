@@ -1,6 +1,7 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { StyleSheet, Text, View } from 'react-native';
+import { Verandah } from '../constants/Colors';
+import { Avatar } from './Avatar';
 
 interface JoinerListItemProps {
   userName: string;
@@ -12,28 +13,18 @@ interface JoinerListItemProps {
 }
 
 export const JoinerListItem = React.memo(({ userName, flatNumber, avatarUrl, note, joinedAt, isHost }: JoinerListItemProps) => {
-  const colors = Colors.light;
-
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-  };
+  const colors = Verandah;
 
   return (
     <View style={styles.container}>
-      {avatarUrl ? (
-        <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-      ) : (
-        <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '35' }]}>
-          <Text style={[styles.initials, { color: colors.primary }]}>{getInitials(userName)}</Text>
-        </View>
-      )}
+      <Avatar name={userName} size={36} />
       
       <View style={styles.content}>
         <View style={styles.nameRow}>
-          <Text style={[styles.name, { color: colors.text }]}>{userName}</Text>
+          <Text style={[styles.name, { color: colors.textPrimary }]}>{userName}</Text>
           {isHost && (
-            <View style={[styles.hostBadge, { backgroundColor: '#10B98115' }]}>
-              <Text style={styles.hostBadgeText}>Hosting</Text>
+            <View style={[styles.hostBadge, { backgroundColor: colors.accentSoft }]}>
+              <Text style={[styles.hostBadgeText, { color: colors.accent }]}>Hosting</Text>
             </View>
           )}
         </View>
@@ -56,23 +47,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
   },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-  avatarPlaceholder: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  initials: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
   content: {
     flex: 1,
     marginLeft: 12,
@@ -84,7 +58,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   hostBadge: {
     paddingHorizontal: 8,
@@ -93,8 +67,7 @@ const styles = StyleSheet.create({
   },
   hostBadgeText: {
     fontSize: 10,
-    fontWeight: '800',
-    color: '#10B981',
+    fontWeight: '500',
     textTransform: 'uppercase',
   },
   flat: {

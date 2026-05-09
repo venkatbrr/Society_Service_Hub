@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { Tables } from '../lib/database.types';
+import { Rupees } from './Rupees';
 
 type TransactionItemProps = {
   transaction: Tables<'event_transactions'>;
@@ -10,7 +12,6 @@ type TransactionItemProps = {
 
 export const TransactionItem = ({ transaction }: TransactionItemProps) => {
   const isIncome = transaction.type === 'income';
-  const colors = Colors.light;
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) {
@@ -25,28 +26,26 @@ export const TransactionItem = ({ transaction }: TransactionItemProps) => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background, borderColor: colors.border }]}>
-      <View style={[styles.iconWrapper, { backgroundColor: isIncome ? colors.secondary + '18' : colors.accent + '18', borderColor: isIncome ? colors.secondary + '35' : colors.accent + '35' }]}>
+    <View style={styles.container}>
+      <View style={[styles.iconWrapper, { backgroundColor: isIncome ? Verandah.accentSoft : Verandah.cautionSoft }]}>
         <Ionicons 
-          name={isIncome ? 'chevron-down-circle' : 'chevron-up-circle'} 
-          size={24} 
-          color={isIncome ? colors.secondary : colors.accent} 
+          name={isIncome ? 'arrow-down' : 'arrow-up'} 
+          size={18} 
+          color={isIncome ? Verandah.accent : Verandah.caution} 
         />
       </View>
       
       <View style={styles.content}>
         <View style={styles.topRow}>
-          <Text style={[styles.category, { color: colors.text }]}>{transaction.category}</Text>
-          <Text style={[styles.amount, { color: isIncome ? colors.secondary : colors.accent }]}>
-            {isIncome ? '+' : '-'} ₹{transaction.amount.toLocaleString()}
-          </Text>
+          <Text style={styles.category} numberOfLines={1}>{transaction.category}</Text>
+          <Rupees amount={transaction.amount} size="sm" tone={isIncome ? 'in' : 'out'} />
         </View>
         
         <View style={styles.bottomRow}>
-          <Text style={[styles.description, { color: colors.textMuted }]} numberOfLines={1}>
+          <Text style={styles.description} numberOfLines={1}>
             {transaction.description || 'General entry'}
           </Text>
-          <Text style={[styles.date, { color: colors.textMuted }]}>{formatDate(transaction.created_at)}</Text>
+          <Text style={styles.date}>{formatDate(transaction.created_at)}</Text>
         </View>
       </View>
     </View>
@@ -57,19 +56,17 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 10,
+    paddingVertical: VerandahSpace.sm + 2,
+    borderBottomWidth: 0.5,
+    borderBottomColor: Verandah.border,
   },
   iconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: VerandahSpace.md,
   },
   content: {
     flex: 1,
@@ -81,12 +78,10 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   category: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  amount: {
-    fontSize: 15,
-    fontWeight: '800',
+    ...VerandahType.bodyBold,
+    color: Verandah.textPrimary,
+    flex: 1,
+    marginRight: VerandahSpace.sm,
   },
   bottomRow: {
     flexDirection: 'row',
@@ -94,12 +89,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   description: {
-    fontSize: 12,
+    ...VerandahType.caption,
+    color: Verandah.textTertiary,
     flex: 1,
-    marginRight: 8,
+    marginRight: VerandahSpace.sm,
   },
   date: {
-    fontSize: 11,
-    fontWeight: '600',
+    ...VerandahType.caption,
+    fontWeight: '500',
+    color: Verandah.textMuted,
   },
 });

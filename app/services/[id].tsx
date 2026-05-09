@@ -1,6 +1,5 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -20,7 +19,7 @@ import Toast from 'react-native-toast-message';
 import { ProviderSelector } from '../../components/ProviderSelector';
 import { ServiceHistoryList } from '../../components/ServiceHistoryList';
 import { UrgencyBadge } from '../../components/UrgencyBadge';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import {
     mapServiceCategoryToProviderCategory,
@@ -66,7 +65,19 @@ export default function ServiceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { communityId } = useAuth();
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    secondary: Verandah.accent,
+    accent: Verandah.danger,
+    border: Verandah.border,
+    glass: Verandah.card,
+    glassBorder: Verandah.border,
+    surface: Verandah.card,
+    surface2: Verandah.cardMuted,
+  };
 
   const [service, setService] = useState<ServiceDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -382,11 +393,6 @@ export default function ServiceDetailScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <LinearGradient
-        colors={[colors.gradientStart + '10', colors.gradientEnd + '06', 'transparent']}
-        style={styles.headerGradient}
-      />
-
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -417,14 +423,9 @@ export default function ServiceDetailScreen() {
           disabled={marking}
           activeOpacity={0.85}
         >
-          <LinearGradient
-            colors={[colors.secondary, '#059669']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.btnGradient}
-          >
-            <Text style={styles.btnText}>{marking ? 'Updating…' : '✅ Mark as serviced today'}</Text>
-          </LinearGradient>
+          <View style={[styles.btnGradient, { backgroundColor: colors.secondary }]}> 
+            <Text style={styles.btnText}>{marking ? 'Updating…' : 'Mark as serviced today'}</Text>
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -663,14 +664,9 @@ export default function ServiceDetailScreen() {
               disabled={saving}
               activeOpacity={0.85}
             >
-              <LinearGradient
-                colors={[colors.gradientStart, colors.gradientEnd]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.btnGradient}
-              >
+              <View style={[styles.btnGradient, { backgroundColor: colors.primary }]}> 
                 <Text style={styles.btnText}>{saving ? 'Saving…' : 'Save changes'}</Text>
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
           </View>
         )}
@@ -724,7 +720,7 @@ export default function ServiceDetailScreen() {
                 value={markDoneCost}
                 onChangeText={(value) => setMarkDoneCost(value.replace(/[^0-9.]/g, ''))}
                 keyboardType="decimal-pad"
-                placeholder="₹"
+                placeholder="Amount"
                 placeholderTextColor={colors.textMuted}
               />
 
@@ -745,14 +741,9 @@ export default function ServiceDetailScreen() {
                 disabled={markDoneSubmitting}
                 activeOpacity={0.85}
               >
-                <LinearGradient
-                  colors={[colors.secondary, '#059669']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.btnGradient}
-                >
+                <View style={[styles.btnGradient, { backgroundColor: colors.secondary }]}> 
                   <Text style={styles.btnText}>{markDoneSubmitting ? 'Saving…' : 'Mark done'}</Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => submitMarkDone(true)} disabled={markDoneSubmitting} style={styles.skipDetailsWrap}>
@@ -785,23 +776,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
   },
-  backIcon: { fontSize: 18, fontWeight: '600' },
+  backIcon: { fontSize: 18, fontWeight: '500' },
   headerEmoji: { fontSize: 22 },
-  headerTitle: { flex: 1, fontSize: 19, fontWeight: '800', letterSpacing: -0.3 },
+  headerTitle: { flex: 1, fontSize: 19, fontWeight: '500', letterSpacing: -0.3 },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 60, gap: 12 },
   dueCard: {
     borderRadius: 20,
     borderWidth: 1,
     padding: 20,
     gap: 8,
-    shadowColor: '#6C63FF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 0,
   },
-  dueLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1 },
-  dueDate: { fontSize: 22, fontWeight: '800' },
+  dueLabel: { fontSize: 10, fontWeight: '500', letterSpacing: 1 },
+  dueDate: { fontSize: 22, fontWeight: '500' },
   primaryBtn: { borderRadius: 16, overflow: 'hidden' },
   secondaryBtn: {
     borderRadius: 16,
@@ -810,8 +796,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   btnGradient: { paddingVertical: 15, alignItems: 'center', borderRadius: 16 },
-  btnText: { color: '#FFF', fontSize: 15, fontWeight: '800' },
-  secondaryBtnText: { fontSize: 15, fontWeight: '700' },
+  btnText: { color: Verandah.primaryFg, fontSize: 15, fontWeight: '500' },
+  secondaryBtnText: { fontSize: 15, fontWeight: '500' },
   editToggle: {
     paddingVertical: 14,
     alignItems: 'center',
@@ -819,21 +805,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     marginTop: 4,
   },
-  editToggleText: { fontSize: 14, fontWeight: '600' },
+  editToggleText: { fontSize: 14, fontWeight: '500' },
   editSection: {
     borderRadius: 20,
     borderWidth: 1,
     padding: 16,
     gap: 4,
-    shadowColor: '#6C63FF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 0,
   },
   fieldLabel: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1,
     marginTop: 12,
     marginBottom: 4,
@@ -849,7 +830,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '400',
   },
   dateRow: {
     flexDirection: 'row',
@@ -881,7 +862,7 @@ const styles = StyleSheet.create({
   },
   providerActionBtnText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   providerPickerWrap: {
     gap: 8,
@@ -900,14 +881,14 @@ const styles = StyleSheet.create({
   },
   providerSelectorText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   providerSelectorSubtext: {
     fontSize: 12,
   },
   selectorChevron: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   providerDropdown: {
     borderRadius: 12,
@@ -930,7 +911,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#00000014',
+    borderBottomColor: Verandah.border,
     gap: 12,
   },
   providerOptionBody: {
@@ -968,11 +949,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
   },
-  deleteBtnText: { fontSize: 14, fontWeight: '700' },
+  deleteBtnText: { fontSize: 14, fontWeight: '500' },
   sheetOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.26)',
+    backgroundColor: Verandah.borderStrong,
   },
   sheetCard: {
     borderTopLeftRadius: 20,
@@ -984,7 +965,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#D7DBE1',
+    borderBottomColor: Verandah.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -992,7 +973,7 @@ const styles = StyleSheet.create({
   sheetTitle: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '500',
     marginRight: 12,
   },
   sheetClose: {
@@ -1012,6 +993,6 @@ const styles = StyleSheet.create({
   },
   skipDetailsText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
   },
 });

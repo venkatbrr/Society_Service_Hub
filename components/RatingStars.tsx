@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
 import { APP_EMOJIS } from '../constants/emojis';
 
 type RatingStarsProps = {
@@ -8,7 +8,7 @@ type RatingStarsProps = {
   onRating?: (rating: number) => void;
   size?: number;
   readonly?: boolean;
-  isLightMode: boolean;
+  isLightMode?: boolean;
 };
 
 export const RatingStars = ({ 
@@ -18,8 +18,6 @@ export const RatingStars = ({
   readonly = false, 
   isLightMode 
 }: RatingStarsProps) => {
-  const colors = isLightMode ? Colors.light : Colors.dark;
-
   return (
     <View style={styles.container}>
       {[1, 2, 3, 4, 5].map((star) => (
@@ -36,10 +34,10 @@ export const RatingStars = ({
                 fontSize: size,
                 color:
                   star <= Math.floor(rating)
-                    ? colors.warning
+                    ? Verandah.caution
                     : star - rating <= 0.5 && star > rating
-                      ? colors.warning
-                      : colors.border,
+                      ? Verandah.caution
+                      : Verandah.textMuted,
               },
             ]}
           >

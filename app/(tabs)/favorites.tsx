@@ -1,13 +1,13 @@
 import { useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { EmptyState } from '../../components/EmptyState';
 import { ProviderCard } from '../../components/ProviderCard';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
+import { VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { ProviderWithInteraction } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
@@ -17,8 +17,6 @@ export default function FavoritesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
-
-  const colors = Colors.light;
 
   const fetchFavorites = useCallback(async () => {
     if (!user) return;
@@ -79,19 +77,15 @@ export default function FavoritesScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={[colors.background, colors.surface2, colors.background]}
-        locations={[0, 0.5, 1]}
-        style={styles.headerGradient}
-      >
+    <View style={styles.container}>
+      <View style={styles.headerWrapper}>
         <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Saved</Text>
-          <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>
+          <Text style={styles.headerTitle}>Saved</Text>
+          <Text style={styles.headerSubtitle}>
             Your favorite providers
           </Text>
         </View>
-      </LinearGradient>
+      </View>
       <FlatList
         data={providers}
         keyExtractor={(item) => item.id}
@@ -109,7 +103,7 @@ export default function FavoritesScreen() {
         windowSize={5}
         initialNumToRender={8}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
         }
         ListEmptyComponent={
           <EmptyState
@@ -127,9 +121,10 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Verandah.surface,
   },
-  headerGradient: {
-    paddingHorizontal: 0,
+  headerWrapper: {
+    backgroundColor: Verandah.surface,
   },
   header: {
     paddingHorizontal: 24,
@@ -137,14 +132,14 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.5,
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
   },
   headerSubtitle: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '400',
     marginTop: 4,
+    color: Verandah.textSecondary,
   },
   listContent: {
     padding: 16,

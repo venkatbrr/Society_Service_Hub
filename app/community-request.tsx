@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -14,7 +13,7 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -24,7 +23,6 @@ const APPROXIMATE_UNITS = ['<25', '25-100', '100-500', '500+'] as const;
 export default function CommunityRequestScreen() {
   const router = useRouter();
   const { refreshSession } = useAuth();
-  const colors = Colors.light;
 
   const [name, setName] = useState('');
   const [communityType, setCommunityType] = useState<(typeof COMMUNITY_TYPES)[number]>('apartment');
@@ -89,33 +87,31 @@ export default function CommunityRequestScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient colors={[`${colors.warning}22`, `${colors.gradientEnd}10`, 'transparent']} style={styles.gradientOverlay} />
-
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: Verandah.surface }]}>
       <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.75}>
-        <Ionicons name="chevron-back" size={18} color={colors.primary} />
-        <Text style={[styles.backButtonText, { color: colors.primary }]}>Back</Text>
+        <Ionicons name="chevron-back" size={18} color={Verandah.primary} />
+        <Text style={[styles.backButtonText, { color: Verandah.primary }]}>Back</Text>
       </TouchableOpacity>
 
-      <Text style={[styles.title, { color: colors.text }]}>Request a new community</Text>
-      <View style={[styles.banner, { backgroundColor: `${colors.warning}18`, borderColor: `${colors.warning}40` }]}>
-        <Ionicons name="time-outline" size={20} color={colors.warning} />
-        <Text style={[styles.bannerText, { color: colors.text }]}>
+      <Text style={[styles.title, { color: Verandah.textPrimary }]}>Request a new community</Text>
+      <View style={[styles.banner, { backgroundColor: Verandah.cautionSoft, borderColor: Verandah.caution + '40' }]}>
+        <Ionicons name="time-outline" size={20} color={Verandah.caution} />
+        <Text style={[styles.bannerText, { color: Verandah.textPrimary }]}>
           Requests are reviewed — we verify each community. You'll hear back in ~24 hours.
         </Text>
       </View>
 
-      <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-        <Text style={[styles.label, { color: colors.text }]}>COMMUNITY NAME *</Text>
+      <View style={[styles.card, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>COMMUNITY NAME *</Text>
         <TextInput
-          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          style={[styles.input, { color: Verandah.textPrimary, borderColor: Verandah.borderStrong, backgroundColor: Verandah.cardMuted }]}
           value={name}
           onChangeText={setName}
           placeholder="Maple Grove Residency"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={Verandah.textSecondary}
         />
 
-        <Text style={[styles.label, { color: colors.text }]}>TYPE</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>TYPE</Text>
         <View style={styles.chipRow}>
           {COMMUNITY_TYPES.map((option) => {
             const active = option === communityType;
@@ -126,80 +122,80 @@ export default function CommunityRequestScreen() {
                 style={[
                   styles.chip,
                   {
-                    borderColor: active ? colors.primary : colors.glassBorder,
-                    backgroundColor: active ? `${colors.primary}14` : colors.surface,
+                    borderColor: active ? Verandah.primary : Verandah.border,
+                    backgroundColor: active ? Verandah.primary + '14' : Verandah.card,
                   },
                 ]}
               >
-                <Text style={[styles.chipText, { color: active ? colors.primary : colors.text }]}>{option}</Text>
+                <Text style={[styles.chipText, { color: active ? Verandah.primary : Verandah.textPrimary }]}>{option}</Text>
               </Pressable>
             );
           })}
         </View>
 
-        <Text style={[styles.label, { color: colors.text }]}>FULL ADDRESS</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>FULL ADDRESS</Text>
         <TextInput
-          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          style={[styles.input, { color: Verandah.textPrimary, borderColor: Verandah.borderStrong, backgroundColor: Verandah.cardMuted }]}
           value={address}
           onChangeText={setAddress}
           placeholder="42, MG Road, Koramangala"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={Verandah.textSecondary}
         />
 
-        <Text style={[styles.label, { color: colors.text }]}>CITY *</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>CITY *</Text>
         <TouchableOpacity
-          style={[styles.input, { justifyContent: 'center', borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          style={[styles.input, { justifyContent: 'center', borderColor: Verandah.borderStrong, backgroundColor: Verandah.cardMuted }]}
           onPress={() => setShowCityPicker(true)}
           activeOpacity={0.7}
         >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ color: colors.text, fontSize: 16 }}>{city}</Text>
-            <Ionicons name="chevron-down" size={20} color={colors.textMuted} />
+            <Text style={{ color: Verandah.textPrimary, fontSize: 16 }}>{city}</Text>
+            <Ionicons name="chevron-down" size={20} color={Verandah.textSecondary} />
           </View>
         </TouchableOpacity>
 
         <Modal visible={showCityPicker} transparent animationType="fade">
           <Pressable style={styles.modalOverlay} onPress={() => setShowCityPicker(false)}>
-            <View style={[styles.modalContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Select City</Text>
+            <View style={[styles.modalContent, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>
+              <Text style={[styles.modalTitle, { color: Verandah.textPrimary }]}>Select City</Text>
               {CITIES.map((c) => (
                 <TouchableOpacity
                   key={c}
-                  style={[styles.modalOption, city === c && { backgroundColor: `${colors.primary}14` }]}
+                  style={[styles.modalOption, city === c && { backgroundColor: Verandah.primary + '14' }]}
                   onPress={() => {
                     setCity(c);
                     setShowCityPicker(false);
                   }}
                 >
-                  <Text style={[styles.modalOptionText, { color: city === c ? colors.primary : colors.text }]}>{c}</Text>
-                  {city === c && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                  <Text style={[styles.modalOptionText, { color: city === c ? Verandah.primary : Verandah.textPrimary }]}>{c}</Text>
+                  {city === c && <Ionicons name="checkmark" size={20} color={Verandah.primary} />}
                 </TouchableOpacity>
               ))}
             </View>
           </Pressable>
         </Modal>
 
-        <Text style={[styles.label, { color: colors.text }]}>PINCODE *</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>PINCODE *</Text>
         <TextInput
-          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          style={[styles.input, { color: Verandah.textPrimary, borderColor: Verandah.borderStrong, backgroundColor: Verandah.cardMuted }]}
           value={pincode}
           onChangeText={(value) => setPincode(value.replace(/\D/g, ''))}
           placeholder="560001"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={Verandah.textSecondary}
           maxLength={6}
           keyboardType="number-pad"
         />
 
-        <Text style={[styles.label, { color: colors.text }]}>AREA / NEIGHBOURHOOD</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>AREA / NEIGHBOURHOOD</Text>
         <TextInput
-          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          style={[styles.input, { color: Verandah.textPrimary, borderColor: Verandah.borderStrong, backgroundColor: Verandah.cardMuted }]}
           value={area}
           onChangeText={setArea}
           placeholder="Koramangala"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={Verandah.textSecondary}
         />
 
-        <Text style={[styles.label, { color: colors.text }]}>APPROXIMATE UNITS</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>APPROXIMATE UNITS</Text>
         <View style={styles.chipRow}>
           {APPROXIMATE_UNITS.map((option) => {
             const active = option === approximateUnits;
@@ -210,22 +206,22 @@ export default function CommunityRequestScreen() {
                 style={[
                   styles.chip,
                   {
-                    borderColor: active ? colors.primary : colors.glassBorder,
-                    backgroundColor: active ? `${colors.primary}14` : colors.surface,
+                    borderColor: active ? Verandah.primary : Verandah.border,
+                    backgroundColor: active ? Verandah.primary + '14' : Verandah.card,
                   },
                 ]}
               >
-                <Text style={[styles.chipText, { color: active ? colors.primary : colors.text }]}>{option}</Text>
+                <Text style={[styles.chipText, { color: active ? Verandah.primary : Verandah.textPrimary }]}>{option}</Text>
               </Pressable>
             );
           })}
         </View>
 
-        <Text style={[styles.label, { color: colors.text }]}>YOUR FLAT / HOUSE NUMBER *</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>YOUR FLAT / HOUSE NUMBER *</Text>
         <TextInput
-          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+          style={[styles.input, { color: Verandah.textPrimary, borderColor: Verandah.borderStrong, backgroundColor: Verandah.card }]}
           placeholder="e.g. A101"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={Verandah.textSecondary}
           value={requesterFlatNumber}
           onChangeText={setRequesterFlatNumber}
           onBlur={() => setRequesterFlatNumber(prev => prev.toUpperCase().replace(/[\s-]/g, ''))}
@@ -241,22 +237,25 @@ export default function CommunityRequestScreen() {
             style={[
               styles.checkbox,
               {
-                borderColor: confirmedAccuracy ? colors.primary : colors.border,
-                backgroundColor: confirmedAccuracy ? colors.primary : 'transparent',
+                borderColor: confirmedAccuracy ? Verandah.primary : Verandah.border,
+                backgroundColor: confirmedAccuracy ? Verandah.primary : 'transparent',
               },
             ]}
           >
-            {confirmedAccuracy ? <Ionicons name="checkmark" size={14} color="#FFF" /> : null}
+            {confirmedAccuracy ? <Ionicons name="checkmark" size={14} color={Verandah.primaryFg} /> : null}
           </View>
-          <Text style={[styles.checkboxText, { color: colors.text }]}>
+          <Text style={[styles.checkboxText, { color: Verandah.textPrimary }]}>
             I confirm the details provided are accurate to the best of my knowledge.
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={submitRequest} disabled={submitting} activeOpacity={0.8}>
-          <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={styles.primaryButton}>
-            {submitting ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryButtonText}>Submit Request</Text>}
-          </LinearGradient>
+        <TouchableOpacity
+          onPress={submitRequest}
+          disabled={submitting}
+          activeOpacity={0.8}
+          style={styles.primaryButton}
+        >
+          {submitting ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.primaryButtonText}>Submit Request</Text>}
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -270,13 +269,6 @@ const styles = StyleSheet.create({
     paddingTop: 68,
     paddingBottom: 40,
   },
-  gradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 280,
-  },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -285,11 +277,11 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   title: {
     fontSize: 30,
-    fontWeight: '800',
+    fontWeight: '500',
     letterSpacing: -0.6,
     marginBottom: 16,
   },
@@ -305,29 +297,25 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     lineHeight: 21,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   card: {
     borderRadius: 24,
     borderWidth: 1,
     padding: 22,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
     elevation: 0,
   },
   label: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 0.8,
     marginBottom: 8,
   },
   input: {
-    borderWidth: 1.5,
-    borderRadius: 18,
+    borderWidth: 0.5,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    height: 54,
+    height: 50,
     fontSize: 16,
     marginBottom: 18,
   },
@@ -345,7 +333,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
     textTransform: 'capitalize',
   },
   checkboxRow: {
@@ -366,23 +354,20 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   primaryButton: {
-    height: 54,
-    borderRadius: 22,
+    height: 50,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.24,
-    shadowRadius: 14,
+    backgroundColor: Verandah.primary,
     elevation: 0,
   },
   primaryButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '800',
+    color: Verandah.primaryFg,
+    fontSize: 14,
+    fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
@@ -394,15 +379,11 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 1,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
+    elevation: 0,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '500',
     marginBottom: 16,
   },
   modalOption: {
@@ -415,6 +396,6 @@ const styles = StyleSheet.create({
   },
   modalOptionText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });

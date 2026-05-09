@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
+import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
 import { VisitStatusBadge } from './VisitStatusBadge';
 
@@ -50,8 +51,6 @@ export const VisitCard = React.memo(({
   onUnjoin,
   onPress,
 }: VisitCardProps) => {
-  const colors = Colors.light;
-
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
@@ -67,88 +66,71 @@ export const VisitCard = React.memo(({
     return `${Math.floor(diffInHours / 24)}d ago`;
   };
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-  };
-
   const isFull = maxJoiners ? joinerCount >= maxJoiners : false;
 
   return (
-    <BaseCard padding={24} onPress={onPress}>
+    <BaseCard padding={16} onPress={onPress}>
       {/* Creator Row */}
       <View style={styles.creatorRow}>
-        {creatorAvatarUrl ? (
-          <Image source={{ uri: creatorAvatarUrl }} style={styles.creatorAvatar} />
-        ) : (
-          <View style={[styles.creatorAvatarPlaceholder, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '35' }]}>
-            <Text style={[styles.creatorInitials, { color: colors.primary }]}>{getInitials(creatorName)}</Text>
-          </View>
-        )}
+        <Avatar name={creatorName} size={36} />
         <View style={styles.creatorInfo}>
-          <Text style={[styles.creatorName, { color: colors.text }]}>{creatorName} {creatorFlat ? `· ${creatorFlat}` : ''}</Text>
-          <Text style={[styles.relativeTime, { color: colors.textMuted }]}>{getRelativeTime(createdAt)}</Text>
+          <Text style={styles.creatorName}>{creatorName} {creatorFlat ? `· ${creatorFlat}` : ''}</Text>
+          <Text style={styles.relativeTime}>{getRelativeTime(createdAt)}</Text>
         </View>
         <VisitStatusBadge status={status} />
       </View>
 
       {/* Main Info */}
       <View style={styles.mainInfo}>
-        <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+        <Text style={styles.title}>{title}</Text>
         <View style={styles.providerRow}>
-          <Text style={[styles.providerText, { color: colors.textMuted }]}>
-            Provider: <Text style={{ color: colors.text, fontWeight: '600' }}>{providerName}</Text>
+          <Text style={styles.providerText}>
+            Provider: <Text style={styles.providerName}>{providerName}</Text>
           </Text>
-          {hasProviderProfile && <Ionicons name="link" size={14} color={colors.primary} style={{ marginLeft: 4 }} />}
+          {hasProviderProfile && <Ionicons name="link" size={14} color={Verandah.accent} style={{ marginLeft: 4 }} />}
         </View>
 
         <View style={styles.detailsRow}>
           <View style={styles.detailItem}>
-            <Ionicons name="calendar-outline" size={16} color={colors.icon} />
-            <Text style={[styles.detailText, { color: colors.text }]}>{formatDate(visitDate)} · {visitTimeSlot}</Text>
+            <Ionicons name="calendar-outline" size={14} color={Verandah.textTertiary} />
+            <Text style={styles.detailText}>{formatDate(visitDate)} · {visitTimeSlot}</Text>
           </View>
         </View>
 
         <View style={styles.tagRow}>
-          <View style={[styles.categoryPill, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
-            <Text style={[styles.categoryText, { color: colors.textMuted }]}>{category}</Text>
+          <View style={styles.categoryPill}>
+            <Text style={styles.categoryText}>{category}</Text>
           </View>
           {estimatedCost && (
-            <Text style={[styles.costText, { color: colors.text }]}>~{estimatedCost}</Text>
+            <Text style={styles.costText}>~{estimatedCost}</Text>
           )}
         </View>
       </View>
 
       {/* Footer */}
-      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+      <View style={styles.footer}>
         <View style={styles.joinerCount}>
-          <Ionicons name="people-outline" size={18} color={colors.primary} />
-          <Text style={[styles.joinerText, { color: colors.text }]}>
+          <Ionicons name="people-outline" size={16} color={Verandah.accent} />
+          <Text style={styles.joinerText}>
             {joinerCount} {maxJoiners ? `/ ${maxJoiners}` : ''} {joinerCount === 1 ? 'neighbor' : 'neighbors'} joined
           </Text>
         </View>
 
         {isCreator ? (
-          <View style={[styles.hostLabel, { backgroundColor: '#10B98112' }]}>
+          <View style={styles.hostLabel}>
             <Text style={styles.hostLabelText}>You're hosting</Text>
           </View>
         ) : hasUserJoined ? (
-          <TouchableOpacity style={[styles.joinedBtn, { borderColor: colors.primary }]} onPress={onUnjoin}>
-            <Text style={[styles.joinedBtnText, { color: colors.primary }]}>Joined</Text>
+          <TouchableOpacity style={styles.joinedBtn} onPress={onUnjoin}>
+            <Text style={styles.joinedBtnText}>Joined</Text>
           </TouchableOpacity>
         ) : status === 'upcoming' && !isFull ? (
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.joinBtn}
-          >
-            <TouchableOpacity onPress={onJoin} activeOpacity={0.8}>
-              <Text style={styles.joinBtnText}>Join</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+          <TouchableOpacity style={styles.joinBtn} onPress={onJoin} activeOpacity={0.8}>
+            <Text style={styles.joinBtnText}>Join</Text>
+          </TouchableOpacity>
         ) : isFull ? (
-          <View style={[styles.fullBadge, { backgroundColor: colors.border }]}>
-            <Text style={[styles.fullText, { color: colors.textMuted }]}>Full</Text>
+          <View style={styles.fullBadge}>
+            <Text style={styles.fullText}>Full</Text>
           </View>
         ) : null}
       </View>
@@ -160,138 +142,134 @@ const styles = StyleSheet.create({
   creatorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-  },
-  creatorAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
-  creatorAvatarPlaceholder: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  creatorInitials: {
-    fontSize: 16,
-    fontWeight: '700',
+    gap: VerandahSpace.md,
+    marginBottom: VerandahSpace.md,
   },
   creatorInfo: {
     flex: 1,
-    marginLeft: 14,
   },
   creatorName: {
-    fontSize: 15,
-    fontWeight: '700',
+    ...VerandahType.bodyBold,
+    color: Verandah.textPrimary,
   },
   relativeTime: {
-    fontSize: 13,
+    ...VerandahType.caption,
+    color: Verandah.textMuted,
     marginTop: 2,
   },
   mainInfo: {
-    marginBottom: 20,
+    marginBottom: VerandahSpace.lg,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: 10,
-    letterSpacing: -0.5,
+    ...VerandahType.title,
+    color: Verandah.textPrimary,
+    marginBottom: VerandahSpace.sm,
   },
   providerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: VerandahSpace.sm,
   },
   providerText: {
-    fontSize: 14,
+    ...VerandahType.body,
+    color: Verandah.textSecondary,
+  },
+  providerName: {
+    ...VerandahType.bodyBold,
+    color: Verandah.textPrimary,
   },
   detailsRow: {
-    marginBottom: 12,
+    marginBottom: VerandahSpace.sm + 2,
   },
   detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: VerandahSpace.xs + 2,
   },
   detailText: {
-    fontSize: 14,
-    fontWeight: '500',
+    ...VerandahType.body,
+    color: Verandah.textPrimary,
   },
   tagRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: VerandahSpace.md,
   },
   categoryPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: VerandahSpace.sm + 2,
+    paddingVertical: VerandahSpace.xs,
+    borderRadius: VerandahRadius.sm,
+    backgroundColor: Verandah.cardMuted,
   },
   categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
+    ...VerandahType.caption,
+    fontWeight: '500',
+    color: Verandah.textSecondary,
   },
   costText: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...VerandahType.bodyBold,
+    color: Verandah.textPrimary,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 16,
-    borderTopWidth: 1,
+    paddingTop: VerandahSpace.md,
+    borderTopWidth: 0.5,
+    borderTopColor: Verandah.border,
   },
   joinerCount: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: VerandahSpace.xs + 2,
   },
   joinerText: {
-    fontSize: 13,
-    fontWeight: '600',
+    ...VerandahType.caption,
+    fontWeight: '500',
+    color: Verandah.textPrimary,
   },
   joinBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 14,
+    paddingHorizontal: VerandahSpace.xl,
+    paddingVertical: VerandahSpace.sm + 2,
+    borderRadius: VerandahRadius.md + 2,
+    backgroundColor: Verandah.primary,
   },
   joinBtnText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '700',
+    ...VerandahType.bodyBold,
+    color: Verandah.primaryFg,
     textAlign: 'center',
   },
   joinedBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 14,
-    borderWidth: 1.5,
+    paddingHorizontal: VerandahSpace.lg,
+    paddingVertical: VerandahSpace.sm,
+    borderRadius: VerandahRadius.md + 2,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderStrong,
   },
   joinedBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...VerandahType.bodyBold,
+    color: Verandah.primary,
   },
   hostLabel: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingHorizontal: VerandahSpace.md,
+    paddingVertical: VerandahSpace.xs + 2,
+    borderRadius: VerandahRadius.sm + 2,
+    backgroundColor: Verandah.accentSoft,
   },
   hostLabelText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#10B981',
+    ...VerandahType.caption,
+    fontWeight: '500',
+    color: Verandah.accent,
   },
   fullBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: VerandahSpace.md + 2,
+    paddingVertical: VerandahSpace.sm,
+    borderRadius: VerandahRadius.md,
+    backgroundColor: Verandah.cardMuted,
   },
   fullText: {
-    fontSize: 13,
-    fontWeight: '600',
+    ...VerandahType.caption,
+    fontWeight: '500',
+    color: Verandah.textMuted,
   },
 });

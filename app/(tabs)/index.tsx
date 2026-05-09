@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, RefreshControl, SectionList, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -12,9 +11,9 @@ import { ProviderCard } from '../../components/ProviderCard';
 import { SearchBar } from '../../components/SearchBar';
 import { UpcomingServicesCard } from '../../components/UpcomingServicesCard';
 import { VisitCard } from '../../components/VisitCard';
-import { CATEGORY_COLORS } from '../../constants/categories';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS, getServiceCategoryEmoji } from '../../constants/emojis';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
@@ -55,7 +54,6 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const { unreadCount } = useNotifications();
-  const colors = Colors.light;
 
   const fetchCommunityStats = useCallback(async () => {
     if (!communityId) return;
@@ -381,50 +379,41 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={[colors.background, colors.surface2, colors.background]}
-        locations={[0, 0.5, 1]}
-        style={styles.headerGradient}
-      >
+    <View style={styles.container}>
+      <View style={styles.headerWrapper}>
         <View style={styles.header}>
           <View>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>Service Hub</Text>
+            <Text style={styles.headerTitle}>Service Hub</Text>
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity
-              style={[styles.headerButtonWithText, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
+              style={styles.headerButtonWithText}
               onPress={handleInviteNeighbors}
               activeOpacity={0.8}
             >
-              <Ionicons name="person-add-outline" size={18} color={colors.primary} />
-              <Text style={[styles.headerButtonText, { color: colors.primary }]}>Invite neighbours</Text>
+              <Ionicons name="person-add-outline" size={18} color={Verandah.accent} />
+              <Text style={styles.headerButtonText}>Invite neighbours</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.headerButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}
+              style={styles.headerButton}
               onPress={() => router.push('/notifications')}
             >
               <Text style={styles.headerIcon}>{APP_EMOJIS.notifications}</Text>
               {unreadCount > 0 && (
-                <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+                <View style={styles.badge}>
                   <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
                 </View>
               )}
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
-      <View style={[styles.segmentedControl, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
+      <View style={styles.segmentedControl}>
         {activeSegment === 'providers' ? (
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.segmentBtn, styles.segmentBtnActive]}
-          >
-            <Text style={[styles.segmentText, { color: '#FFF' }]}>Providers</Text>
-          </LinearGradient>
+          <View style={[styles.segmentBtn, styles.segmentBtnActive]}>
+            <Text style={[styles.segmentText, { color: Verandah.primary }]}>Providers</Text>
+          </View>
         ) : (
           <TouchableOpacity
             style={styles.segmentBtn}
@@ -435,18 +424,13 @@ export default function HomeScreen() {
               setSearchQuery('');
             }}
           >
-            <Text style={[styles.segmentText, { color: colors.textMuted }]}>Providers</Text>
+            <Text style={[styles.segmentText, { color: Verandah.textMuted }]}>Providers</Text>
           </TouchableOpacity>
         )}
         {activeSegment === 'visits' ? (
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.segmentBtn, styles.segmentBtnActive]}
-          >
-            <Text style={[styles.segmentText, { color: '#FFF' }]}>Plan Service Visit</Text>
-          </LinearGradient>
+          <View style={[styles.segmentBtn, styles.segmentBtnActive]}>
+            <Text style={[styles.segmentText, { color: Verandah.primary }]}>Plan Service Visit</Text>
+          </View>
         ) : (
           <TouchableOpacity
             style={styles.segmentBtn}
@@ -458,7 +442,7 @@ export default function HomeScreen() {
               setVisitTab('upcoming');
             }}
           >
-            <Text style={[styles.segmentText, { color: colors.textMuted }]}>Plan Service Visit</Text>
+            <Text style={[styles.segmentText, { color: Verandah.textMuted }]}>Plan Service Visit</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -482,7 +466,7 @@ export default function HomeScreen() {
           windowSize={5}
           initialNumToRender={8}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
           }
           ListHeaderComponent={
             <>
@@ -567,15 +551,15 @@ export default function HomeScreen() {
           }}
           renderSectionHeader={({ section }) => (
             <View style={styles.categoryHeader}>
-              <View style={[styles.categoryHeaderAccent, { backgroundColor: CATEGORY_COLORS[section.title] || '#A0AEC0' }]} />
+              <View style={[styles.categoryHeaderAccent, { backgroundColor: Verandah.accent }]} />
               <Text style={styles.categoryHeaderEmoji}>
                 {getServiceCategoryEmoji(section.title)}
               </Text>
-              <Text style={[styles.categoryHeaderTitle, { color: colors.text }]}>
+                <Text style={[styles.categoryHeaderTitle, { color: Verandah.textPrimary }]}>
                 {section.title}
               </Text>
-              <View style={[styles.categoryCountBadge, { backgroundColor: (CATEGORY_COLORS[section.title] || '#A0AEC0') + '22' }]}>
-                <Text style={[styles.categoryCountText, { color: CATEGORY_COLORS[section.title] || '#A0AEC0' }]}>
+              <View style={[styles.categoryCountBadge, { backgroundColor: Verandah.accentSoft }]}>
+                <Text style={[styles.categoryCountText, { color: Verandah.accent }]}>
                   {section.data.length}
                 </Text>
               </View>
@@ -585,7 +569,7 @@ export default function HomeScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
           }
           ListHeaderComponent={
             <>
@@ -599,20 +583,19 @@ export default function HomeScreen() {
                 />
               )}
               <View style={styles.filterSection}>
-                <View style={[styles.subTabControl, { backgroundColor: colors.glass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
-                  <TouchableOpacity
-                    style={[styles.subTabBtn, visitTab === 'upcoming' && { backgroundColor: colors.primary + '15' }]}
+                <View style={styles.subTabControl}>
+                  <TouchableOpacity style={[styles.subTabBtn, visitTab === 'upcoming' && { backgroundColor: Verandah.accentSoft }]}
                     onPress={() => setVisitTab('upcoming')}
                   >
-                    <Text style={[styles.subTabText, visitTab === 'upcoming' ? { color: colors.primary, fontWeight: '700' } : { color: colors.textMuted }]}>
+                    <Text style={[styles.subTabText, visitTab === 'upcoming' ? { color: Verandah.accent, fontWeight: '500' } : { color: Verandah.textMuted }]}>
                       Upcoming ({visits.length})
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.subTabBtn, visitTab === 'past' && { backgroundColor: colors.primary + '15' }]}
+                    style={[styles.subTabBtn, visitTab === 'past' && { backgroundColor: Verandah.accentSoft }]}
                     onPress={() => setVisitTab('past')}
                   >
-                    <Text style={[styles.subTabText, visitTab === 'past' ? { color: colors.primary, fontWeight: '700' } : { color: colors.textMuted }]}>
+                    <Text style={[styles.subTabText, visitTab === 'past' ? { color: Verandah.accent, fontWeight: '500' } : { color: Verandah.textMuted }]}>
                       Past ({pastVisits.length})
                     </Text>
                   </TouchableOpacity>
@@ -651,14 +634,9 @@ export default function HomeScreen() {
         onPress={() => router.push(activeSegment === 'providers' ? '/provider/add' : '/visits/add')}
         activeOpacity={0.9}
       >
-        <LinearGradient
-          colors={[colors.gradientStart, colors.gradientEnd]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.fabGradient}
-        >
+        <View style={styles.fabInner}>
           <Text style={styles.fabIcon}>{APP_EMOJIS.add}</Text>
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -667,9 +645,10 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Verandah.surface,
   },
-  headerGradient: {
-    paddingHorizontal: 0,
+  headerWrapper: {
+    backgroundColor: Verandah.surface,
   },
   header: {
     flexDirection: 'row',
@@ -680,9 +659,8 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.5,
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
   },
   headerActions: {
     flexDirection: 'row',
@@ -692,6 +670,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
+    backgroundColor: Verandah.cardMuted,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -699,6 +678,7 @@ const styles = StyleSheet.create({
   headerButtonWithText: {
     height: 44,
     borderRadius: 22,
+    backgroundColor: Verandah.cardMuted,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
@@ -708,7 +688,8 @@ const styles = StyleSheet.create({
   },
   headerButtonText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
+    color: Verandah.accent,
   },
   headerIcon: {
     fontSize: 20,
@@ -721,37 +702,39 @@ const styles = StyleSheet.create({
     minWidth: 18,
     height: 18,
     borderRadius: 9,
+    backgroundColor: Verandah.accent,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: '#FFF',
+    borderColor: Verandah.surface,
   },
   badgeText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   segmentedControl: {
     flexDirection: 'row',
     marginHorizontal: 24,
-    borderRadius: 14,
+    borderRadius: VerandahRadius.md,
     padding: 4,
     marginBottom: 8,
+    backgroundColor: Verandah.cardMuted,
   },
   segmentBtn: {
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
-    borderRadius: 11,
+    borderRadius: VerandahRadius.sm,
   },
   segmentBtnActive: {
-    borderRadius: 11,
-    overflow: 'hidden',
+    borderRadius: VerandahRadius.sm,
+    backgroundColor: Verandah.card,
   },
   segmentText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   filterSection: {
     marginTop: 0,
@@ -759,9 +742,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '500',
     marginBottom: 16,
     letterSpacing: -0.3,
+    color: Verandah.textPrimary,
   },
   listContent: {
     paddingBottom: 100,
@@ -770,21 +754,21 @@ const styles = StyleSheet.create({
   },
   subTabControl: {
     flexDirection: 'row',
-    borderRadius: 14,
+    borderRadius: VerandahRadius.md,
     padding: 4,
     marginBottom: 16,
-    borderWidth: 1,
+    backgroundColor: Verandah.cardMuted,
   },
   subTabBtn: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: VerandahRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   subTabText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '400',
   },
   categoryHeader: {
     flexDirection: 'row',
@@ -806,7 +790,7 @@ const styles = StyleSheet.create({
   },
   categoryHeaderTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '500',
     flex: 1,
     letterSpacing: -0.2,
   },
@@ -817,7 +801,7 @@ const styles = StyleSheet.create({
   },
   categoryCountText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   fab: {
     position: 'absolute',
@@ -827,22 +811,19 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     elevation: 0,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
     zIndex: 10,
   },
-  fabGradient: {
+  fabInner: {
     width: 64,
     height: 64,
     borderRadius: 32,
+    backgroundColor: Verandah.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   fabIcon: {
     fontSize: 32,
     lineHeight: 34,
-    color: '#FFF',
+    color: Verandah.primaryFg,
   },
 });

@@ -1,5 +1,4 @@
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -14,8 +13,9 @@ import {
   View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
 import { APP_EMOJIS } from '../constants/emojis';
+import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, signInWithEmail, signUpWithEmail } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 
@@ -23,7 +23,6 @@ type AuthMode = 'signIn' | 'signUp';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const colors = Colors.light;
 
   const [mode, setMode] = useState<AuthMode>('signIn');
   const [loading, setLoading] = useState(false);
@@ -146,69 +145,49 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={styles.container}
     >
-      {/* Subtle gradient overlay at top */}
-      <LinearGradient
-        colors={[colors.gradientStart + '12', colors.gradientEnd + '08', 'transparent']}
-        style={styles.gradientOverlay}
-      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            style={styles.logoContainer}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
+          <View style={styles.logoContainer}>
             <Text style={styles.logoEmoji}>{APP_EMOJIS.community}</Text>
-          </LinearGradient>
-          <Text style={[styles.title, { color: colors.text }]}>Society Service Hub</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          </View>
+          <Text style={styles.title}>Society Service Hub</Text>
+          <Text style={styles.subtitle}>
             {mode === 'signIn' ? 'Welcome back! Sign in to continue.' : 'Join your community marketplace.'}
           </Text>
         </View>
 
         {/* Tab toggle */}
-        <View style={[styles.tabContainer, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+        <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[styles.tabButton]}
+            style={styles.tabButton}
             onPress={() => { setMode('signIn'); setPassword(''); setConfirmPassword(''); }}
             activeOpacity={0.7}
           >
             {mode === 'signIn' ? (
-              <LinearGradient
-                colors={[colors.gradientStart, colors.gradientEnd]}
-                style={styles.tabGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.tabActiveText}>Sign In</Text>
-              </LinearGradient>
+              <View style={styles.tabActive}>
+                <Text style={styles.tabActiveText}>Sign in</Text>
+              </View>
             ) : (
               <View style={styles.tabInactive}>
-                <Text style={[styles.tabInactiveText, { color: colors.textMuted }]}>Sign In</Text>
+                <Text style={[styles.tabInactiveText, { color: Verandah.textMuted }]}>Sign in</Text>
               </View>
             )}
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tabButton]}
+            style={styles.tabButton}
             onPress={() => { setMode('signUp'); setPassword(''); setConfirmPassword(''); }}
             activeOpacity={0.7}
           >
             {mode === 'signUp' ? (
-              <LinearGradient
-                colors={[colors.gradientStart, colors.gradientEnd]}
-                style={styles.tabGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.tabActiveText}>Sign Up</Text>
-              </LinearGradient>
+              <View style={styles.tabActive}>
+                <Text style={styles.tabActiveText}>Sign up</Text>
+              </View>
             ) : (
               <View style={styles.tabInactive}>
-                <Text style={[styles.tabInactiveText, { color: colors.textMuted }]}>Sign Up</Text>
+                <Text style={[styles.tabInactiveText, { color: Verandah.textMuted }]}>Sign up</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -218,13 +197,13 @@ export default function LoginScreen() {
           {mode === 'signUp' && (
             <>
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>FULL NAME</Text>
-                <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
+                <Text style={styles.label}>Full name</Text>
+                <View style={styles.inputContainer}>
                   <Text style={styles.inputEmoji}>{APP_EMOJIS.profile}</Text>
                   <TextInput
-                    style={[styles.input, { color: colors.text }]}
+                    style={styles.input}
                     placeholder="John Doe"
-                    placeholderTextColor={colors.textMuted}
+                    placeholderTextColor={Verandah.textTertiary}
                     value={fullName}
                     onChangeText={setFullName}
                   />
@@ -232,13 +211,13 @@ export default function LoginScreen() {
               </View>
               
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>FLAT NUMBER</Text>
-                <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
+                <Text style={styles.label}>Flat number</Text>
+                <View style={styles.inputContainer}>
                   <Text style={styles.inputEmoji}>🚪</Text>
                   <TextInput
-                    style={[styles.input, { color: colors.text }]}
+                    style={styles.input}
                     placeholder="e.g. A412"
-                    placeholderTextColor={colors.textMuted}
+                    placeholderTextColor={Verandah.textTertiary}
                     value={flatNumber}
                     onChangeText={setFlatNumber}
                     onBlur={() => setFlatNumber(prev => prev.toUpperCase().replace(/[\s-]/g, ''))}
@@ -250,13 +229,13 @@ export default function LoginScreen() {
           )}
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>EMAIL ADDRESS</Text>
-            <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
+            <Text style={styles.label}>Email address</Text>
+            <View style={styles.inputContainer}>
               <Text style={styles.inputEmoji}>{APP_EMOJIS.mail}</Text>
               <TextInput
-                style={[styles.input, { color: colors.text }]}
+                style={styles.input}
                 placeholder="your@email.com"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={Verandah.textTertiary}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -266,13 +245,13 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>PASSWORD</Text>
-            <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.inputContainer}>
               <Text style={styles.inputEmoji}>{APP_EMOJIS.lock}</Text>
               <TextInput
-                style={[styles.input, { color: colors.text }]}
+                style={styles.input}
                 placeholder="Password"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={Verandah.textTertiary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -285,13 +264,13 @@ export default function LoginScreen() {
 
           {mode === 'signUp' && (
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>CONFIRM PASSWORD</Text>
-              <View style={[styles.inputContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
+              <Text style={styles.label}>Confirm password</Text>
+              <View style={styles.inputContainer}>
                 <Text style={styles.inputEmoji}>{APP_EMOJIS.admin}</Text>
                 <TextInput
-                  style={[styles.input, { color: colors.text }]}
-                  placeholder="Confirm Password"
-                  placeholderTextColor={colors.textMuted}
+                  style={styles.input}
+                  placeholder="Confirm password"
+                  placeholderTextColor={Verandah.textTertiary}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!showPassword}
@@ -305,7 +284,7 @@ export default function LoginScreen() {
               onPress={() => router.push('/forgot-password')}
               style={styles.forgotPassword}
             >
-              <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>Forgot Password?</Text>
+              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
             </TouchableOpacity>
           )}
 
@@ -313,40 +292,33 @@ export default function LoginScreen() {
             onPress={handleEmailAuth}
             disabled={loading || googleLoading}
             activeOpacity={0.8}
-            style={styles.authButtonWrapper}
+            style={styles.authButton}
           >
-            <LinearGradient
-              colors={[colors.gradientStart, colors.gradientEnd]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.authButton}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <Text style={styles.authButtonText}>
-                  {mode === 'signIn' ? 'Sign In' : 'Create Account'}
-                </Text>
-              )}
-            </LinearGradient>
+            {loading ? (
+              <ActivityIndicator color={Verandah.primaryFg} />
+            ) : (
+              <Text style={styles.authButtonText}>
+                {mode === 'signIn' ? 'Sign in' : 'Create account'}
+              </Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.dividerContainer}>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Text style={[styles.dividerText, { color: colors.textMuted, backgroundColor: colors.background }]}>OR</Text>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>or</Text>
           </View>
 
           <TouchableOpacity
-            style={[styles.googleButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+            style={styles.googleButton}
             onPress={signInWithGoogle}
             disabled={loading || googleLoading}
           >
             {googleLoading ? (
-              <ActivityIndicator color={colors.primary} />
+              <ActivityIndicator color={Verandah.primary} />
             ) : (
               <>
                 <Text style={styles.googleEmoji}>{APP_EMOJIS.google}</Text>
-                <Text style={[styles.googleButtonText, { color: colors.text }]}>
+                <Text style={styles.googleButtonText}>
                   Continue with Google
                 </Text>
               </>
@@ -354,12 +326,12 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <View style={styles.toggleModeContainer}>
-            <Text style={[styles.toggleModeText, { color: colors.textMuted }]}>
+            <Text style={styles.toggleModeText}>
               {mode === 'signIn' ? "Don't have an account? " : "Already have an account? "}
             </Text>
             <TouchableOpacity onPress={toggleMode}>
-              <Text style={[styles.toggleModeLink, { color: colors.primary }]}>
-                {mode === 'signIn' ? 'Sign Up' : 'Sign In'}
+              <Text style={styles.toggleModeLink}>
+                {mode === 'signIn' ? 'Sign up' : 'Sign in'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -372,14 +344,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 300,
-    zIndex: 0,
+    backgroundColor: Verandah.surface,
   },
   scrollContent: {
     padding: 24,
@@ -393,61 +358,57 @@ const styles = StyleSheet.create({
   logoContainer: {
     width: 80,
     height: 80,
-    borderRadius: 24,
+    borderRadius: VerandahRadius.xl,
+    backgroundColor: Verandah.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 0,
   },
   logoEmoji: {
     fontSize: 36,
     lineHeight: 40,
-    color: '#FFF',
   },
   title: {
-    fontSize: 26,
-    fontWeight: '800',
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
-    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 15,
+    color: Verandah.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
   tabContainer: {
     flexDirection: 'row',
-    borderRadius: 20,
+    borderRadius: VerandahRadius.lg,
     padding: 4,
     marginBottom: 28,
-    borderWidth: 1,
+    backgroundColor: Verandah.cardMuted,
   },
   tabButton: {
     flex: 1,
   },
-  tabGradient: {
+  tabActive: {
     paddingVertical: 12,
-    borderRadius: 16,
+    borderRadius: VerandahRadius.md,
     alignItems: 'center',
+    backgroundColor: Verandah.card,
   },
   tabActiveText: {
-    color: '#FFF',
+    color: Verandah.primary,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   tabInactive: {
     paddingVertical: 12,
-    borderRadius: 16,
+    borderRadius: VerandahRadius.md,
     alignItems: 'center',
   },
   tabInactiveText: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '400',
   },
   form: {
     gap: 20,
@@ -456,16 +417,20 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.5,
+    fontSize: 12,
+    fontWeight: '500',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    color: Verandah.textTertiary,
     marginLeft: 4,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderRadius: 16,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderStrong,
+    borderRadius: VerandahRadius.md,
+    backgroundColor: Verandah.card,
     paddingHorizontal: 16,
     height: 54,
   },
@@ -477,6 +442,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
+    color: Verandah.textPrimary,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
@@ -484,26 +450,21 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 14,
-    fontWeight: '600',
-  },
-  authButtonWrapper: {
-    marginTop: 10,
+    fontWeight: '500',
+    color: Verandah.accent,
   },
   authButton: {
-    height: 56,
-    borderRadius: 28,
+    marginTop: 10,
+    height: 54,
+    borderRadius: VerandahRadius.lg,
+    backgroundColor: Verandah.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 0,
   },
   authButtonText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   dividerContainer: {
     alignItems: 'center',
@@ -513,35 +474,35 @@ const styles = StyleSheet.create({
   divider: {
     width: '100%',
     height: 1,
+    backgroundColor: Verandah.border,
   },
   dividerText: {
     position: 'absolute',
     paddingHorizontal: 16,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
+    color: Verandah.textMuted,
+    backgroundColor: Verandah.surface,
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     height: 54,
-    borderRadius: 27,
-    borderWidth: 1.5,
+    borderRadius: VerandahRadius.lg,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderStrong,
+    backgroundColor: 'transparent',
     gap: 12,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 0,
   },
   googleEmoji: {
     fontSize: 20,
     lineHeight: 24,
-    color: '#16A34A',
   },
   googleButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
+    color: Verandah.primary,
   },
   toggleModeContainer: {
     flexDirection: 'row',
@@ -550,9 +511,11 @@ const styles = StyleSheet.create({
   },
   toggleModeText: {
     fontSize: 15,
+    color: Verandah.textMuted,
   },
   toggleModeLink: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '500',
+    color: Verandah.accent,
   },
 });

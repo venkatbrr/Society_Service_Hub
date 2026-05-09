@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import * as Notifications from 'expo-notifications';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,7 +6,8 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { RatingStars } from '../../components/RatingStars';
-import { Colors } from '../../constants/Colors';
+import { Rupees } from '../../components/Rupees';
+import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS, getServiceCategoryEmoji } from '../../constants/emojis';
 import { getDetailFieldsForCategory } from '../../constants/providerDetails';
 import { useAuth } from '../../context/AuthContext';
@@ -23,7 +23,20 @@ export default function ProviderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    surface: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    textPrimary: Verandah.textPrimary,
+    textSecondary: Verandah.textSecondary,
+    primary: Verandah.primary,
+    primaryFg: Verandah.primaryFg,
+    secondary: Verandah.accent,
+    accent: Verandah.danger,
+    border: Verandah.border,
+    cardMuted: Verandah.cardMuted,
+  };
 
   const [provider, setProvider] = useState<ProviderWithInteraction | null>(null);
   const [loading, setLoading] = useState(true);
@@ -306,21 +319,18 @@ export default function ProviderDetailScreen() {
 
   if (loading || !provider) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+      <View style={[styles.centerContainer, { backgroundColor: colors.surface }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={[colors.gradientStart, colors.gradientEnd]}
-        style={styles.headerCard}
-      >
+    <ScrollView style={[styles.container, { backgroundColor: colors.surface }]}>
+      <View style={[styles.headerCard, { backgroundColor: colors.primary }]}> 
         <View style={styles.headerTop}>
            <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-             <Ionicons name="arrow-back" size={20} color="#FFF" />
+             <Ionicons name="arrow-back" size={20} color={colors.primaryFg} />
            </TouchableOpacity>
            <TouchableOpacity onPress={handleToggleFavorite} style={[styles.iconButton, styles.favoriteIconButton]}>
              <Text style={styles.favoriteHeaderIcon}>{provider.is_favorite ? APP_EMOJIS.favoritesFilled : APP_EMOJIS.favoritesEmpty}</Text>
@@ -349,7 +359,7 @@ export default function ProviderDetailScreen() {
             </View>
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       <View style={styles.trustBanner}>
          <View style={styles.trustStat}>
@@ -448,16 +458,22 @@ export default function ProviderDetailScreen() {
                 const value = providerDetails[field.key];
                 if (!value || (Array.isArray(value) && value.length === 0)) return null;
 
+                const isMoneyValue = field.type === 'number';
                 const displayValue = Array.isArray(value)
                   ? value.join(', ')
-                  : field.type === 'number'
-                    ? `₹${Number(value).toLocaleString('en-IN')}${field.suffix ? ` ${field.suffix}` : ''}`
-                    : String(value);
+                  : String(value);
 
                 return (
                   <View key={field.key} style={styles.detailMeta}>
                     <Text style={[styles.detailMetaLabel, { color: colors.textMuted }]}>{field.label}</Text>
-                    <Text style={[styles.detailMetaValue, { color: colors.text }]}>{displayValue}</Text>
+                    {isMoneyValue ? (
+                      <View style={styles.moneyMetaRow}>
+                        <Rupees amount={Number(value)} size="sm" />
+                        {field.suffix ? <Text style={[styles.detailMetaSuffix, { color: colors.textSecondary }]}>{field.suffix}</Text> : null}
+                      </View>
+                    ) : (
+                      <Text style={[styles.detailMetaValue, { color: colors.textPrimary }]}>{displayValue}</Text>
+                    )}
                   </View>
                 );
               })}
@@ -486,19 +502,15 @@ export default function ProviderDetailScreen() {
            onPress={handleSubmitReview}
            disabled={isSubmittingReview || (selectedRating === 0 && !provider.user_rating)}
            activeOpacity={0.85}
-           style={{ marginTop: 12 }}
+           style={[
+             styles.submitReviewBtn,
+             { marginTop: 12, backgroundColor: selectedRating > 0 ? colors.primary : colors.cardMuted },
+           ]}
          >
-           <LinearGradient
-             colors={selectedRating > 0 ? [colors.gradientStart, colors.gradientEnd] : ['#CCC', '#AAA']}
-             start={{ x: 0, y: 0 }}
-             end={{ x: 1, y: 0 }}
-             style={styles.submitReviewBtn}
-           >
-             {isSubmittingReview
-               ? <ActivityIndicator color="#FFF" />
-               : <Text style={styles.submitReviewText}>Submit Review</Text>
-             }
-           </LinearGradient>
+           {isSubmittingReview
+             ? <ActivityIndicator color={colors.primaryFg} />
+             : <Text style={styles.submitReviewText}>Submit review</Text>
+           }
          </TouchableOpacity>
          <Text style={[styles.reviewNote, { color: colors.textMuted }]}>Reviews are only visible to our community members.</Text>
       </View>
@@ -514,7 +526,7 @@ export default function ProviderDetailScreen() {
          <View style={styles.adminControls}>
             <TouchableOpacity style={[styles.dangerBtn, { borderColor: colors.accent }]} onPress={handleDelete}>
             <Text style={styles.dangerIcon}>{APP_EMOJIS.close}</Text>
-              <Text style={{ color: colors.accent, marginLeft: 8, fontWeight: '600' }}>Delete Provider</Text>
+              <Text style={{ color: colors.accent, marginLeft: 8, fontWeight: '500' }}>Delete provider</Text>
             </TouchableOpacity>
          </View>
       ) : null}
@@ -538,57 +550,47 @@ const styles = StyleSheet.create({
   headerEmoji: { fontSize: 38, lineHeight: 42 },
   headerInfo: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
-  name: { fontSize: 22, fontWeight: '800', color: '#FFF', letterSpacing: -0.3 },
-  verifiedBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, gap: 4 },
+  name: { fontSize: 22, fontWeight: '500', color: Verandah.primaryFg, letterSpacing: -0.3 },
+  verifiedBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: Verandah.accentSoft, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, gap: 4 },
   verifiedBadgeIcon: { fontSize: 16, lineHeight: 18 },
-  verifiedText: { color: '#FFF', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
-  categoryTextDisp: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginTop: 2 },
+  verifiedText: { color: Verandah.accent, fontSize: 10, fontWeight: '500', textTransform: 'uppercase' },
+  categoryTextDisp: { fontSize: 13, color: Verandah.primaryFg, fontWeight: '500', marginTop: 2 },
   ratingRowDisp: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
-  ratingIcon: { fontSize: 16, lineHeight: 18, color: '#FFB347' },
-  ratingValueDisp: { color: '#FFF', fontSize: 17, fontWeight: '700' },
-  ratingCountDisp: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
-  iconButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.18)', justifyContent: 'center', alignItems: 'center' },
+  ratingIcon: { fontSize: 16, lineHeight: 18, color: Verandah.caution },
+  ratingValueDisp: { color: Verandah.primaryFg, fontSize: 17, fontWeight: '500' },
+  ratingCountDisp: { color: Verandah.primaryFg, fontSize: 13 },
+  iconButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: Verandah.cardMuted, justifyContent: 'center', alignItems: 'center' },
   favoriteIconButton: { backgroundColor: 'transparent' },
   favoriteHeaderIcon: { fontSize: 28, lineHeight: 32 },
   trustBanner: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: Verandah.card,
     marginHorizontal: 20,
     marginTop: 12,
     borderRadius: 16,
     paddingHorizontal: 18,
     paddingVertical: 14,
-    elevation: 0,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: Verandah.border,
   },
   trustStat: { flex: 1, alignItems: 'center' },
-  trustStatValue: { fontSize: 18, fontWeight: '800' },
+  trustStatValue: { fontSize: 18, fontWeight: '500' },
   trustStatLabel: { fontSize: 11, fontWeight: '500', marginTop: 2 },
   trustDivider: { width: 1, height: '100%' },
   actionGrid: { flexDirection: 'row', padding: 20, gap: 15 },
   mainActionBtn: { flex: 1, flexDirection: 'row', height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', gap: 10, elevation: 0 },
   mainActionIcon: { fontSize: 24, lineHeight: 28 },
-  mainActionText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+  mainActionText: { color: Verandah.primaryFg, fontSize: 16, fontWeight: '500' },
   detailsCard: {
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: Verandah.card,
     marginHorizontal: 20,
     marginBottom: 20,
     padding: 24,
     borderRadius: 24,
-    elevation: 0,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: Verandah.border,
   },
-  sectionTitle: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
+  sectionTitle: { fontSize: 12, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 1 },
   detailText: { fontSize: 15, lineHeight: 22 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 20, paddingTop: 20, borderTopWidth: 1 },
   infoIcon: { fontSize: 20, lineHeight: 24 },
@@ -613,14 +615,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitReviewText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   actionRowAlt: { padding: 20, paddingBottom: 40, alignItems: 'center' },
   altBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   altIcon: { fontSize: 20, lineHeight: 24 },
-  altBtnText: { fontSize: 14, fontWeight: '600' },
+  altBtnText: { fontSize: 14, fontWeight: '500' },
   adminControls: { padding: 20, paddingBottom: 60 },
   dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 18, borderRadius: 16, borderWidth: 1 },
   dangerIcon: { fontSize: 20, lineHeight: 24 },
@@ -634,14 +636,23 @@ const styles = StyleSheet.create({
   },
   detailMetaLabel: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
   detailMetaValue: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '500',
+  },
+  moneyMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
+  detailMetaSuffix: {
+    fontSize: 12,
+    fontWeight: '400',
   },
   privateHistoryHeader: {
     flexDirection: 'row',
@@ -650,11 +661,11 @@ const styles = StyleSheet.create({
   },
   privateHistoryToggle: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   privateHistorySummary: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '500',
     marginTop: 10,
   },
   privateHistoryList: {
@@ -678,7 +689,7 @@ const styles = StyleSheet.create({
   },
   privateHistoryDate: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   privateHistoryNote: {
     fontSize: 13,

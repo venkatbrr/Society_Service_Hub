@@ -3,7 +3,8 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { supabase } from '../../lib/supabase';
 
 type FundsRequestRow = {
@@ -21,7 +22,6 @@ type FundsRequestRow = {
 
 export default function PlatformFundsRequestsScreen() {
   const router = useRouter();
-  const colors = Colors.light;
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [requests, setRequests] = useState<FundsRequestRow[]>([]);
@@ -53,15 +53,15 @@ export default function PlatformFundsRequestsScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}> 
-        <ActivityIndicator color={colors.primary} />
+      <View style={styles.center}> 
+        <ActivityIndicator color={Verandah.accent} />
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}> 
-      <Text style={[styles.title, { color: colors.text }]}>Funds access requests</Text>
+    <View style={styles.container}> 
+      <Text style={styles.title}>Funds access requests</Text>
       <FlatList
         data={requests}
         keyExtractor={(item) => item.id}
@@ -69,14 +69,14 @@ export default function PlatformFundsRequestsScreen() {
         contentContainerStyle={{ paddingBottom: 28 }}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={[styles.card, { borderColor: colors.border, backgroundColor: colors.glass }]}
+            style={styles.card}
             onPress={() => router.push({ pathname: '/platform/funds-access/[requestId]', params: { requestId: item.id } } as any)}
           >
-            <Text style={[styles.community, { color: colors.text }]}>{item.communities?.name ?? 'Community'}</Text>
-            <Text style={[styles.meta, { color: colors.textMuted }]}>Requester: {item.profiles?.full_name ?? 'Resident'}</Text>
-            <Text style={[styles.meta, { color: colors.textMuted }]}>Contact: {item.contact_name} - {item.contact_phone}</Text>
-            {item.purpose ? <Text style={[styles.meta, { color: colors.textMuted }]} numberOfLines={2}>{item.purpose}</Text> : null}
-            <Text style={[styles.status, { color: item.status === 'pending' ? '#B45309' : colors.textMuted }]}>{item.status}</Text>
+            <Text style={styles.community}>{item.communities?.name ?? 'Community'}</Text>
+            <Text style={styles.meta}>Requester: {item.profiles?.full_name ?? 'Resident'}</Text>
+            <Text style={styles.meta}>Contact: {item.contact_name} · {item.contact_phone}</Text>
+            {item.purpose ? <Text style={styles.meta} numberOfLines={2}>{item.purpose}</Text> : null}
+            <Text style={[styles.status, { color: item.status === 'pending' ? Verandah.caution : Verandah.textTertiary }]}>{item.status}</Text>
           </TouchableOpacity>
         )}
       />
@@ -85,11 +85,11 @@ export default function PlatformFundsRequestsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 58, paddingHorizontal: 20 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 26, fontWeight: '800', marginBottom: 12 },
-  card: { borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 10 },
-  community: { fontSize: 16, fontWeight: '800' },
-  meta: { marginTop: 3, fontSize: 13 },
-  status: { marginTop: 8, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+  container: { flex: 1, backgroundColor: Verandah.surface, paddingTop: 58, paddingHorizontal: 20 },
+  center: { flex: 1, backgroundColor: Verandah.surface, alignItems: 'center', justifyContent: 'center' },
+  title: { ...VerandahType.display, color: Verandah.textPrimary, marginBottom: 12 },
+  card: { borderWidth: 0.5, borderColor: Verandah.border, backgroundColor: Verandah.card, borderRadius: VerandahRadius.lg, padding: 14, marginBottom: 10 },
+  community: { ...VerandahType.bodyBold, color: Verandah.textPrimary },
+  meta: { marginTop: 3, ...VerandahType.caption, color: Verandah.textSecondary },
+  status: { marginTop: 8, ...VerandahType.captionBold, textTransform: 'uppercase', letterSpacing: 0.4 },
 });

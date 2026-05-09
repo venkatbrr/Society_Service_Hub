@@ -77,6 +77,7 @@ export const SERVICE_CATEGORY_DEFAULT_FREQUENCY: Record<ServiceCategory, number>
  * Maps a user_services category to the closest matching provider category
  * from constants/categories.ts (CATEGORIES list).
  * Used for the "Find technicians" deep-link filter.
+ * Note: 'Tutor / Home Teacher' was renamed to 'Teaching'.
  */
 export function mapServiceCategoryToProviderCategory(category: ServiceCategory): string {
   const mapping: Record<ServiceCategory, string> = {

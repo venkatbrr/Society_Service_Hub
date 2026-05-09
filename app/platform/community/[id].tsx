@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -212,7 +211,6 @@ export default function PlatformCommunityDetailScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient colors={[`${colors.primary}14`, `${colors.gradientEnd}10`, 'transparent']} style={styles.gradientOverlay} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
           <Ionicons name="arrow-back" size={20} color={colors.primary} />
@@ -394,34 +392,33 @@ export default function PlatformCommunityDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 56 },
-  gradientOverlay: { position: 'absolute', top: 0, left: 0, right: 0, height: 240 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
   backButton: { width: 40, height: 40, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 24, fontWeight: '800' },
+  title: { fontSize: 24, fontWeight: '500' },
   loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   communityCard: { borderWidth: 1, borderRadius: 22, padding: 16, marginBottom: 14 },
-  communityName: { fontSize: 18, fontWeight: '800' },
+  communityName: { fontSize: 18, fontWeight: '500' },
   meta: { fontSize: 13, marginTop: 4 },
   countRow: { marginTop: 12, flexDirection: 'row', gap: 14, flexWrap: 'wrap' },
-  count: { fontSize: 12, fontWeight: '700' },
+  count: { fontSize: 12, fontWeight: '500' },
   leadOption: { marginTop: 8, paddingVertical: 8 },
   blockRow: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   listContent: { paddingBottom: 32, gap: 10 },
   row: { borderWidth: 1, borderRadius: 18, padding: 14, flexDirection: 'row', gap: 8, alignItems: 'center' },
   rowRemoved: { opacity: 0.5 },
   rowText: { flex: 1 },
-  rowName: { fontSize: 15, fontWeight: '700' },
+  rowName: { fontSize: 15, fontWeight: '500' },
   rowMeta: { fontSize: 12, marginTop: 3 },
   badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
-  badgeText: { fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
+  badgeText: { fontSize: 11, fontWeight: '500', textTransform: 'capitalize' },
   emptyText: { textAlign: 'center', marginTop: 30, fontSize: 14 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' },
   modalCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 8 },
-  modalTitle: { fontSize: 18, fontWeight: '800' },
+  modalTitle: { fontSize: 18, fontWeight: '500' },
   modalMeta: { fontSize: 14 },
   modalActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
   modalSecondary: { flex: 1, borderWidth: 1, borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
-  modalSecondaryText: { fontSize: 14, fontWeight: '700' },
+  modalSecondaryText: { fontSize: 14, fontWeight: '500' },
   modalDanger: { flex: 1.4, borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
-  modalDangerText: { color: '#FFF', fontSize: 14, fontWeight: '800' },
+  modalDangerText: { color: '#FFF', fontSize: 14, fontWeight: '500' },
 });

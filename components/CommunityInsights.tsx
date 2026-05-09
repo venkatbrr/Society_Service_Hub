@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 
 type Insight = {
   title: string;
@@ -14,11 +15,9 @@ type CommunityInsightsProps = {
 };
 
 export const CommunityInsights = ({ insights }: CommunityInsightsProps) => {
-  const colors = Colors.light;
-
   return (
     <View style={styles.container}>
-      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Community Insights</Text>
+      <Text style={styles.sectionTitle}>Community insights</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -27,14 +26,14 @@ export const CommunityInsights = ({ insights }: CommunityInsightsProps) => {
         {insights.map((insight, index) => (
           <View
             key={index}
-            style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+            style={styles.card}
           >
-            <View style={[styles.iconContainer, { backgroundColor: insight.color }]}>
+            <View style={[styles.iconContainer, { backgroundColor: Verandah.cardMuted }]}>
               <Text style={styles.iconText}>{insight.icon}</Text>
             </View>
             <View>
-              <Text style={[styles.insightValue, { color: colors.text }]}>{insight.value}</Text>
-              <Text style={[styles.insightTitle, { color: colors.textMuted }]}>{insight.title}</Text>
+              <Text style={styles.insightValue}>{insight.value}</Text>
+              <Text style={styles.insightTitle}>{insight.title}</Text>
             </View>
           </View>
         ))}
@@ -45,33 +44,33 @@ export const CommunityInsights = ({ insights }: CommunityInsightsProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 12,
+    marginVertical: VerandahSpace.md,
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginLeft: 24,
-    marginBottom: 12,
+    ...VerandahType.sectionLabel,
+    color: Verandah.textTertiary,
+    marginLeft: VerandahSpace.xxl,
+    marginBottom: VerandahSpace.sm + 2,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    gap: 12,
+    paddingHorizontal: VerandahSpace.xl,
+    gap: VerandahSpace.md,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 20,
+    padding: VerandahSpace.lg,
+    borderRadius: VerandahRadius.lg,
     minWidth: 180,
-    gap: 12,
-    borderWidth: 1,
+    gap: VerandahSpace.md,
+    backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
   },
   iconContainer: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: VerandahRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -80,11 +79,11 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   insightValue: {
-    fontSize: 16,
-    fontWeight: '700',
+    ...VerandahType.bodyBold,
+    color: Verandah.textPrimary,
   },
   insightTitle: {
-    fontSize: 12,
-    fontWeight: '500',
+    ...VerandahType.caption,
+    color: Verandah.textTertiary,
   },
 });

@@ -3,7 +3,8 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
+import { VerandahSpace, VerandahType } from '../constants/Verandah';
 import { APP_EMOJIS } from '../constants/emojis';
 import { useAuth } from '../context/AuthContext';
 import { Tables } from '../lib/database.types';
@@ -31,7 +32,6 @@ export function FundsList() {
 
   const router = useRouter();
   const { user, communityId, appRole } = useAuth();
-  const colors = Colors.light;
   const canCreate = appRole === 'community_admin' || appRole === 'admin';
 
   const fetchFunds = useCallback(async () => {
@@ -127,7 +127,7 @@ export function FundsList() {
   if (loading) {
     return (
       <View style={styles.loaderWrap}>
-        <ActivityIndicator size="small" color={colors.primary} />
+        <ActivityIndicator size="small" color={Verandah.accent} />
       </View>
     );
   }
@@ -137,9 +137,9 @@ export function FundsList() {
       <BaseCard padding={16}>
         <View style={styles.emptyHeader}>
           <Text style={styles.emptyIcon}>{APP_EMOJIS.wallet}</Text>
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>No funds created</Text>
+          <Text style={styles.emptyTitle}>No funds created</Text>
         </View>
-        <Text style={[styles.emptyCopy, { color: colors.textMuted }]}>
+        <Text style={styles.emptyCopy}> 
           {canCreate
             ? 'Create your first fund and assign 1 or 2 treasurers to keep everything transparent.'
             : 'Once the admin creates a fund, you will be able to review every contribution and expense here.'}
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   emptyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: VerandahSpace.sm,
     marginBottom: 6,
   },
   emptyIcon: {
@@ -185,11 +185,11 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   emptyTitle: {
-    fontSize: 15,
-    fontWeight: '800',
+    ...VerandahType.bodyBold,
+    color: Verandah.textPrimary,
   },
   emptyCopy: {
-    fontSize: 13,
-    lineHeight: 18,
+    ...VerandahType.body,
+    color: Verandah.textSecondary,
   },
 });

@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -201,25 +200,19 @@ export default function AddProviderScreen() {
             <View style={styles.chipContainer}>
               {field.options?.map(option => {
                 const isSelected = details[field.key] === option;
-                return isSelected ? (
-                  <LinearGradient
-                    key={option}
-                    colors={[colors.gradientStart, colors.gradientEnd]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.chipGradient}
-                  >
-                    <TouchableOpacity onPress={() => updateDetail(field.key, option)}>
-                      <Text style={[styles.chipText, { color: '#FFF' }]}>{option}</Text>
-                    </TouchableOpacity>
-                  </LinearGradient>
-                ) : (
+                return (
                   <TouchableOpacity
                     key={option}
-                    style={[styles.chip, { backgroundColor: colors.glass, borderColor: colors.border }]}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: isSelected ? colors.primary : colors.glass,
+                        borderColor: isSelected ? colors.primary : colors.border,
+                      },
+                    ]}
                     onPress={() => updateDetail(field.key, option)}
                   >
-                    <Text style={[styles.chipText, { color: colors.text }]}>{option}</Text>
+                    <Text style={[styles.chipText, { color: isSelected ? '#FFF' : colors.text }]}>{option}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -235,25 +228,19 @@ export default function AddProviderScreen() {
               {field.options?.map(option => {
                 const selected: string[] = details[field.key] || [];
                 const isSelected = selected.includes(option);
-                return isSelected ? (
-                  <LinearGradient
-                    key={option}
-                    colors={[colors.gradientStart, colors.gradientEnd]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.chipGradient}
-                  >
-                    <TouchableOpacity onPress={() => toggleChip(field.key, option)}>
-                      <Text style={[styles.chipText, { color: '#FFF' }]}>{option}</Text>
-                    </TouchableOpacity>
-                  </LinearGradient>
-                ) : (
+                return (
                   <TouchableOpacity
                     key={option}
-                    style={[styles.chip, { backgroundColor: colors.glass, borderColor: colors.border }]}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: isSelected ? colors.primary : colors.glass,
+                        borderColor: isSelected ? colors.primary : colors.border,
+                      },
+                    ]}
                     onPress={() => toggleChip(field.key, option)}
                   >
-                    <Text style={[styles.chipText, { color: colors.text }]}>{option}</Text>
+                    <Text style={[styles.chipText, { color: isSelected ? '#FFF' : colors.text }]}>{option}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -265,7 +252,7 @@ export default function AddProviderScreen() {
         return (
           <View key={field.key} style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>
-              {field.label.toUpperCase()}{field.suffix ? ` (₹ ${field.suffix})` : ' (₹)'}
+              {field.label.toUpperCase()}{field.suffix ? ` (${field.suffix})` : ''}
             </Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
@@ -341,25 +328,19 @@ export default function AddProviderScreen() {
                 ...categoryGroups.map((group) => ({ id: group.id, label: group.label })),
               ].map((group) => {
                 const selected = selectedGroupId === group.id;
-                return selected ? (
-                  <LinearGradient
-                    key={group.id}
-                    colors={[colors.gradientStart, colors.gradientEnd]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.categoryChipGradient}
-                  >
-                    <TouchableOpacity onPress={() => handleGroupChange(group.id)}>
-                      <Text style={[styles.categoryText, { color: '#FFF' }]}>{group.label}</Text>
-                    </TouchableOpacity>
-                  </LinearGradient>
-                ) : (
+                return (
                   <TouchableOpacity
                     key={group.id}
-                    style={[styles.categoryChip, { backgroundColor: colors.glass, borderColor: colors.border }]}
+                    style={[
+                      styles.categoryChip,
+                      {
+                        backgroundColor: selected ? colors.primary : colors.glass,
+                        borderColor: selected ? colors.primary : colors.border,
+                      },
+                    ]}
                     onPress={() => handleGroupChange(group.id)}
                   >
-                    <Text style={[styles.categoryText, { color: colors.text }]}>{group.label}</Text>
+                    <Text style={[styles.categoryText, { color: selected ? '#FFF' : colors.text }]}>{group.label}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -367,27 +348,19 @@ export default function AddProviderScreen() {
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
               {visibleCategories.map(cat =>
-                category === cat ? (
-                  <LinearGradient
-                    key={cat}
-                    colors={[colors.gradientStart, colors.gradientEnd]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.categoryChipGradient}
-                  >
-                    <TouchableOpacity onPress={() => handleCategoryChange(cat)}>
-                      <Text style={[styles.categoryText, { color: '#FFF' }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
-                    </TouchableOpacity>
-                  </LinearGradient>
-                ) : (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[styles.categoryChip, { backgroundColor: colors.glass, borderColor: colors.border }]}
-                    onPress={() => handleCategoryChange(cat)}
-                  >
-                    <Text style={[styles.categoryText, { color: colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
-                  </TouchableOpacity>
-                )
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.categoryChip,
+                    {
+                      backgroundColor: category === cat ? colors.primary : colors.glass,
+                      borderColor: category === cat ? colors.primary : colors.border,
+                    },
+                  ]}
+                  onPress={() => handleCategoryChange(cat)}
+                >
+                  <Text style={[styles.categoryText, { color: category === cat ? '#FFF' : colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
+                </TouchableOpacity>
               )}
             </ScrollView>
           </View>
@@ -434,15 +407,9 @@ export default function AddProviderScreen() {
           onPress={handleSave}
           disabled={isLoading}
           activeOpacity={0.85}
+          style={[styles.saveButton, { backgroundColor: colors.primary }]}
         >
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.saveButton}
-          >
-            {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Add Provider</Text>}
-          </LinearGradient>
+          {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Add Provider</Text>}
         </TouchableOpacity>
       </View>
     </View>
@@ -465,14 +432,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: Colors.light.cardMuted,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
   title: {
     fontSize: 32,
-    fontWeight: '800',
+    fontWeight: '500',
     letterSpacing: -1,
   },
   subtitle: {
@@ -484,18 +451,13 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 0,
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1.5,
     marginBottom: 8,
     marginLeft: 4,
@@ -521,15 +483,9 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderWidth: 1,
   },
-  categoryChipGradient: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 14,
-    marginRight: 8,
-  },
   categoryText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   detailsSection: {
     borderTopWidth: 1,
@@ -539,7 +495,7 @@ const styles = StyleSheet.create({
   },
   detailsSectionLabel: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1.5,
     marginBottom: 16,
     marginLeft: 4,
@@ -555,14 +511,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
   },
-  chipGradient: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
   chipText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   textArea: {
     height: 120,
@@ -585,6 +536,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#FFF',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '500',
   },
 });

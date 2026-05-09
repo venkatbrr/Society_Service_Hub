@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -309,7 +308,7 @@ export default function AddTransactionScreen() {
             <TouchableOpacity
               style={[
                 styles.tab,
-                type === 'income' ? { backgroundColor: colors.glass, shadowColor: '#000', elevation: 0 } : {},
+                type === 'income' ? { backgroundColor: colors.surface } : {},
               ]}
               onPress={() => handleChangeType('income')}
             >
@@ -318,7 +317,7 @@ export default function AddTransactionScreen() {
             <TouchableOpacity
               style={[
                 styles.tab,
-                type === 'expense' ? { backgroundColor: colors.glass, shadowColor: '#000', elevation: 0 } : {},
+                type === 'expense' ? { backgroundColor: colors.surface } : {},
               ]}
               onPress={() => handleChangeType('expense')}
             >
@@ -340,7 +339,7 @@ export default function AddTransactionScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>AMOUNT (RS)</Text>
+            <Text style={[styles.label, { color: colors.text }]}>AMOUNT</Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
               placeholder="0.00"
@@ -384,7 +383,7 @@ export default function AddTransactionScreen() {
                       <Text style={[styles.memberMeta, { color: colors.textMuted }]}>{member.flat_no ? `Flat ${member.flat_no}` : 'Flat not set'}</Text>
                     </View>
                     <View style={styles.memberStatus}>
-                      <Text style={[styles.memberStatusText, { color: isPaid ? '#15803D' : '#B45309' }]}>
+                      <Text style={[styles.memberStatusText, { color: isPaid ? colors.secondary : colors.textMuted }]}>
                         {isPaid ? 'Paid' : isSelected ? 'Selected' : 'Pending'}
                       </Text>
                     </View>
@@ -426,19 +425,13 @@ export default function AddTransactionScreen() {
           onPress={handleSave}
           disabled={isLoading}
           activeOpacity={0.85}
+          style={[styles.saveButton, { backgroundColor: type === 'income' ? colors.primary : colors.accent }]}
         >
-          <LinearGradient
-            colors={type === 'income' ? [colors.gradientStart, colors.gradientEnd] : ['#FF6B6B', '#FF8E8E']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.saveButton}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <Text style={styles.saveButtonText}>{type === 'income' ? 'Save Contribution' : 'Save Expense'}</Text>
-            )}
-          </LinearGradient>
+          {isLoading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.saveButtonText}>{type === 'income' ? 'Save Contribution' : 'Save Expense'}</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -489,14 +482,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: Colors.light.surface2,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: -4,
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '500',
     letterSpacing: -1,
   },
   subtitle: {
@@ -508,11 +501,6 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 0,
   },
   notice: {
     flexDirection: 'row',
@@ -533,7 +521,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1.5,
     marginBottom: 10,
     marginLeft: 4,
@@ -557,7 +545,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   tabText: {
-    fontWeight: '800',
+    fontWeight: '500',
     fontSize: 14,
   },
   input: {
@@ -566,7 +554,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   textArea: {
     minHeight: 110,
@@ -590,7 +578,7 @@ const styles = StyleSheet.create({
   },
   memberName: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   memberMeta: {
     marginTop: 4,
@@ -602,7 +590,7 @@ const styles = StyleSheet.create({
   },
   memberStatusText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -621,7 +609,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#FFF',
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   backInactiveBtn: {
     marginTop: 14,
@@ -632,11 +620,11 @@ const styles = StyleSheet.create({
   },
   backInactiveText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     justifyContent: 'flex-end',
   },
   modalCard: {
@@ -647,7 +635,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   modalPrimary: {
     borderRadius: 12,
@@ -657,6 +645,6 @@ const styles = StyleSheet.create({
   modalPrimaryText: {
     color: '#FFF',
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '500',
   },
 });

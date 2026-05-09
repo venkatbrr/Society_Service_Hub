@@ -2,7 +2,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../../../constants/Colors';
+import { Verandah } from '../../../constants/Colors';
+import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { supabase } from '../../../lib/supabase';
 
 type DetailRow = {
@@ -23,7 +24,6 @@ type ResidentOption = { id: string; full_name: string | null };
 export default function PlatformFundsAccessRequestDetailScreen() {
   const { requestId } = useLocalSearchParams<{ requestId: string }>();
   const router = useRouter();
-  const colors = Colors.light;
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<DetailRow | null>(null);
@@ -121,71 +121,74 @@ export default function PlatformFundsAccessRequestDetailScreen() {
 
   if (loading || !detail) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}> 
-        <ActivityIndicator color={colors.primary} />
+      <View style={styles.center}> 
+        <ActivityIndicator color={Verandah.accent} />
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}> 
-      <Text style={[styles.title, { color: colors.text }]}>Funds request detail</Text>
-      <Text style={[styles.meta, { color: colors.textMuted }]}>Community: {detail.communities?.name ?? '-'}</Text>
-      <Text style={[styles.meta, { color: colors.textMuted }]}>Code: {detail.communities?.code ?? '-'}</Text>
-      <Text style={[styles.meta, { color: colors.textMuted }]}>Address: {detail.communities?.address ?? '-'}</Text>
-      <Text style={[styles.meta, { color: colors.textMuted }]}>Requester: {detail.profiles?.full_name ?? '-'}</Text>
-      <Text style={[styles.meta, { color: colors.textMuted }]}>Contact: {detail.contact_name} - {detail.contact_phone}</Text>
-      {detail.purpose ? <Text style={[styles.meta, { color: colors.textMuted }]}>Purpose: {detail.purpose}</Text> : null}
+    <ScrollView contentContainerStyle={styles.container}> 
+      <Text style={styles.title}>Funds request detail</Text>
+      <Text style={styles.meta}>Community: {detail.communities?.name ?? '-'}</Text>
+      <Text style={styles.meta}>Code: {detail.communities?.code ?? '-'}</Text>
+      <Text style={styles.meta}>Address: {detail.communities?.address ?? '-'}</Text>
+      <Text style={styles.meta}>Requester: {detail.profiles?.full_name ?? '-'}</Text>
+      <Text style={styles.meta}>Contact: {detail.contact_name} · {detail.contact_phone}</Text>
+      {detail.purpose ? <Text style={styles.meta}>Purpose: {detail.purpose}</Text> : null}
 
-      <Text style={[styles.label, { color: colors.text }]}>Designated community lead</Text>
-      <View style={[styles.picker, { borderColor: colors.border, backgroundColor: colors.surface2 }]}> 
-        <Text style={[styles.selectedLead, { color: colors.text }]}>{leadName}</Text>
+      <Text style={styles.label}>Designated community lead</Text>
+      <View style={styles.picker}> 
+        <Text style={styles.selectedLead}>{leadName}</Text>
       </View>
       <View style={styles.residentList}>
         {residents.map((resident) => (
           <TouchableOpacity
             key={resident.id}
-            style={[styles.residentRow, { borderColor: colors.border, backgroundColor: leadUserId === resident.id ? colors.primary + '14' : colors.glass }]}
+            style={[styles.residentRow, leadUserId === resident.id ? styles.residentRowSelected : styles.residentRowDefault]}
             onPress={() => setLeadUserId(resident.id)}
           >
-            <Text style={[styles.residentText, { color: leadUserId === resident.id ? colors.primary : colors.text }]}>{resident.full_name ?? 'Resident'}</Text>
+            <Text style={[styles.residentText, { color: leadUserId === resident.id ? Verandah.accent : Verandah.textPrimary }]}>{resident.full_name ?? 'Resident'}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.primary }]} onPress={approve} disabled={submitting}>
+      <TouchableOpacity style={styles.primaryBtn} onPress={approve} disabled={submitting}>
         <Text style={styles.primaryBtnText}>{submitting ? 'Saving...' : 'Approve'}</Text>
       </TouchableOpacity>
 
-      <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>Reject reason (max 280)</Text>
+      <Text style={[styles.label, { marginTop: 12 }]}>Reject reason (max 280)</Text>
       <TextInput
         value={rejectReason}
         onChangeText={(value) => setRejectReason(value.slice(0, 280))}
-        style={[styles.reasonInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface2 }]}
+        style={styles.reasonInput}
         multiline
         numberOfLines={4}
+        placeholderTextColor={Verandah.textTertiary}
       />
-      <TouchableOpacity style={[styles.secondaryBtn, { borderColor: colors.border }]} onPress={reject} disabled={submitting}>
-        <Text style={[styles.secondaryBtnText, { color: colors.accent }]}>Reject</Text>
+      <TouchableOpacity style={styles.secondaryBtn} onPress={reject} disabled={submitting}>
+        <Text style={styles.secondaryBtnText}>Reject</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, paddingTop: 64, paddingHorizontal: 20, paddingBottom: 26 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 24, fontWeight: '800', marginBottom: 10 },
-  meta: { fontSize: 13, marginBottom: 4 },
-  label: { fontSize: 12, fontWeight: '700', marginTop: 10, marginBottom: 7 },
-  picker: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
-  selectedLead: { fontSize: 14, fontWeight: '700' },
+  container: { flexGrow: 1, backgroundColor: Verandah.surface, paddingTop: 64, paddingHorizontal: 20, paddingBottom: 26 },
+  center: { flex: 1, backgroundColor: Verandah.surface, alignItems: 'center', justifyContent: 'center' },
+  title: { ...VerandahType.display, color: Verandah.textPrimary, marginBottom: 10 },
+  meta: { ...VerandahType.caption, color: Verandah.textSecondary, marginBottom: 4 },
+  label: { ...VerandahType.captionBold, color: Verandah.textTertiary, marginTop: 10, marginBottom: 7, textTransform: 'uppercase', letterSpacing: 0.4 },
+  picker: { borderWidth: 0.5, borderColor: Verandah.borderStrong, backgroundColor: Verandah.card, borderRadius: VerandahRadius.md, paddingHorizontal: 12, paddingVertical: 10 },
+  selectedLead: { ...VerandahType.bodyBold, color: Verandah.textPrimary },
   residentList: { gap: 8, marginTop: 10 },
-  residentRow: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 },
-  residentText: { fontSize: 13, fontWeight: '700' },
-  primaryBtn: { marginTop: 14, borderRadius: 12, alignItems: 'center', paddingVertical: 12 },
-  primaryBtnText: { color: '#FFF', fontSize: 14, fontWeight: '800' },
-  reasonInput: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, minHeight: 90 },
-  secondaryBtn: { marginTop: 10, borderWidth: 1, borderRadius: 12, alignItems: 'center', paddingVertical: 12 },
-  secondaryBtnText: { fontSize: 14, fontWeight: '800' },
+  residentRow: { borderWidth: 0.5, borderRadius: VerandahRadius.sm + 2, paddingHorizontal: 12, paddingVertical: 9 },
+  residentRowDefault: { borderColor: Verandah.border, backgroundColor: Verandah.card },
+  residentRowSelected: { borderColor: Verandah.accent, backgroundColor: Verandah.accentSoft },
+  residentText: { ...VerandahType.captionBold },
+  primaryBtn: { marginTop: 14, borderRadius: VerandahRadius.md, backgroundColor: Verandah.primary, alignItems: 'center', paddingVertical: 12 },
+  primaryBtnText: { color: Verandah.primaryFg, ...VerandahType.bodyBold },
+  reasonInput: { borderWidth: 0.5, borderColor: Verandah.borderStrong, color: Verandah.textPrimary, backgroundColor: Verandah.card, borderRadius: VerandahRadius.md, paddingHorizontal: 12, paddingVertical: 10, minHeight: 90, ...VerandahType.body },
+  secondaryBtn: { marginTop: 10, borderWidth: 0.5, borderColor: Verandah.danger, borderRadius: VerandahRadius.md, alignItems: 'center', paddingVertical: 12, backgroundColor: Verandah.dangerSoft },
+  secondaryBtnText: { color: Verandah.danger, ...VerandahType.bodyBold },
 });

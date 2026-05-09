@@ -1,11 +1,13 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../components/BaseCard';
 import { FundsList } from '../../components/FundsList';
-import { Colors } from '../../constants/Colors';
+import { Rupees } from '../../components/Rupees';
+import { Verandah } from '../../constants/Colors';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { formatRole } from '../../lib/fundRoles';
@@ -39,8 +41,6 @@ type PendingFundsRequest = {
   requester_name: string | null;
 };
 
-const formatMoney = (value: number | null | undefined) => `Rs ${Number(value ?? 0).toLocaleString('en-IN')}`;
-
 const formatRelativePulseTime = (timestamp: string) => {
   const now = new Date();
   const then = new Date(timestamp);
@@ -67,7 +67,6 @@ const formatRelativePulseTime = (timestamp: string) => {
 
 export default function CommunityScreen() {
   const router = useRouter();
-  const colors = Colors.light;
   const { user, communityId, appRole, isCommunityLead, fundsEnabled, myFundsAccessRequest, refreshSession } = useAuth();
 
   const [pulseItems, setPulseItems] = useState<PulseItem[]>([]);
@@ -180,70 +179,81 @@ export default function CommunityScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Community Funds</Text>
+            <Text style={styles.sectionTitle}>Community funds</Text>
             {canCreateFund ? (
               <TouchableOpacity
                 onPress={() => router.push('/funds/add')}
-                style={[styles.createButton, { borderColor: colors.primary }]}
+                style={styles.createButton}
                 activeOpacity={0.85}
               >
-                <Text style={[styles.createButtonText, { color: colors.primary }]}>Create fund</Text>
+                <Text style={styles.createButtonText}>Create fund</Text>
               </TouchableOpacity>
             ) : null}
           </View>
 
           {fundsEnabled && overview && overview.active_funds_count > 0 ? (
-            <ImageBackground 
-              source={require('../../assets/images/funds_bg.jpg')} 
-              style={[styles.fundsOverviewBg]}
-              imageStyle={{ borderRadius: 16 }}
-            >
-              <View style={[styles.fundsOverviewOverlay]}>
-                <Text style={[styles.summaryLine, { color: '#FFF' }]}>Collected {formatMoney(overview.total_collected)} - Spent {formatMoney(overview.total_spent)} - Available {formatMoney(overview.total_available)}</Text>
-                <Text style={[styles.summarySubline, { color: '#EAEAEA' }]}>{overview.active_funds_count} active funds</Text>
-                <Text style={[styles.summaryStatus, { color: '#FFF' }]}>{overview.funds_contributed_to > 0
-                  ? `You've contributed to ${overview.funds_contributed_to} of ${overview.active_funds_count} active funds - total ${formatMoney(overview.your_total_contributed)}`
-                  : "You haven't contributed to any active fund yet."}
-                </Text>
+            <BaseCard padding={16}>
+              <View style={styles.moneyRow}>
+                <Text style={styles.summaryLine}>Collected</Text>
+                <Rupees amount={overview.total_collected ?? 0} size="sm" tone="in" />
               </View>
-            </ImageBackground>
+              <View style={styles.moneyRow}>
+                <Text style={styles.summaryLine}>Spent</Text>
+                <Rupees amount={overview.total_spent ?? 0} size="sm" />
+              </View>
+              <View style={styles.moneyRow}>
+                <Text style={styles.summaryLine}>Available</Text>
+                <Rupees amount={overview.total_available ?? 0} size="sm" />
+              </View>
+              <Text style={styles.summarySubline}>{overview.active_funds_count} active funds</Text>
+              <Text style={styles.summaryStatus}>{overview.funds_contributed_to > 0
+                ? `You have contributed to ${overview.funds_contributed_to} of ${overview.active_funds_count} active funds.`
+                : 'You have not contributed to any active fund yet.'}
+              </Text>
+              {overview.funds_contributed_to > 0 ? (
+                <View style={styles.moneyRow}>
+                  <Text style={styles.summaryLine}>Your total contribution</Text>
+                  <Rupees amount={overview.your_total_contributed ?? 0} size="sm" tone="in" />
+                </View>
+              ) : null}
+            </BaseCard>
           ) : null}
 
           {fundsEnabled ? (
             <FundsList />
           ) : pendingFundsRequest ? (
             <BaseCard padding={16}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Funds support - pending review</Text>
-              <Text style={[styles.cardCopy, { color: colors.textMuted }]}>Submitted by {pendingFundsRequest.requester_name ?? 'Resident'} on {new Date(pendingFundsRequest.created_at).toLocaleDateString('en-IN')}.</Text>
-              <Text style={[styles.cardCopy, { color: colors.textMuted }]}>We'll be in touch on {pendingFundsRequest.contact_phone}.</Text>
+              <Text style={styles.cardTitle}>Funds support - pending review</Text>
+              <Text style={styles.cardCopy}>Submitted by {pendingFundsRequest.requester_name ?? 'Resident'} on {new Date(pendingFundsRequest.created_at).toLocaleDateString('en-IN')}.</Text>
+              <Text style={styles.cardCopy}>We'll be in touch on {pendingFundsRequest.contact_phone}.</Text>
               {pendingFundsRequest.requested_by === user?.id ? (
                 <TouchableOpacity onPress={handleWithdrawFundsRequest}>
-                  <Text style={[styles.inlineLink, { color: colors.primary }]}>Withdraw request</Text>
+                  <Text style={styles.inlineLink}>Withdraw request</Text>
                 </TouchableOpacity>
               ) : null}
             </BaseCard>
           ) : myFundsAccessRequest?.status === 'rejected' ? (
             <BaseCard padding={16}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Funds support</Text>
-              <Text style={[styles.cardCopy, { color: colors.textMuted }]}>Last request was rejected: {myFundsAccessRequest.rejection_reason ?? 'No reason provided'}.</Text>
-              <TouchableOpacity style={[styles.ctaButton, { backgroundColor: colors.primary }]} onPress={() => router.push('/funds-access/request')}>
+              <Text style={styles.cardTitle}>Funds support</Text>
+              <Text style={styles.cardCopy}>Last request was rejected: {myFundsAccessRequest.rejection_reason ?? 'No reason provided'}.</Text>
+              <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/funds-access/request')}>
                 <Text style={styles.ctaButtonText}>Request again</Text>
               </TouchableOpacity>
             </BaseCard>
           ) : (
             <BaseCard padding={16}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Funds support</Text>
-              <Text style={[styles.cardCopy, { color: colors.textMuted }]}>Your community can request funds support to start collecting and tracking community contributions.</Text>
+              <Text style={styles.cardTitle}>Funds support</Text>
+              <Text style={styles.cardCopy}>Your community can request funds support to start collecting and tracking community contributions.</Text>
               {hadHistoricalFunds ? (
-                <Text style={[styles.cardCopy, { color: colors.textMuted }]}>Funds were previously active in this community.</Text>
+                <Text style={styles.cardCopy}>Funds were previously active in this community.</Text>
               ) : null}
-              <TouchableOpacity style={[styles.ctaButton, { backgroundColor: colors.primary }]} onPress={() => router.push('/funds-access/request')}>
+              <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/funds-access/request')}>
                 <Text style={styles.ctaButtonText}>Request funds support</Text>
               </TouchableOpacity>
             </BaseCard>
@@ -252,7 +262,7 @@ export default function CommunityScreen() {
 
         {pulseItems.length > 0 ? (
           <View style={styles.section}>
-            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Going around the community</Text>
+            <Text style={styles.sectionLabel}>Going around the community</Text>
             <ScrollView 
               horizontal 
               showsHorizontalScrollIndicator={false}
@@ -271,9 +281,9 @@ export default function CommunityScreen() {
                     <View style={styles.flashCardIconWrap}>
                       <Text style={styles.flashCardIcon}>{icon}</Text>
                     </View>
-                    <Text style={[styles.flashCardSummary, { color: colors.text }]} numberOfLines={3}>{item.summary}</Text>
+                    <Text style={[styles.flashCardSummary, { color: Verandah.textPrimary }]} numberOfLines={3}>{item.summary}</Text>
                     <View style={{ flex: 1 }} />
-                    <Text style={[styles.flashCardTime, { color: colors.textMuted }]}>{formatRelativePulseTime(item.happened_at)}</Text>
+                    <Text style={[styles.flashCardTime, { color: Verandah.textMuted }]}>{formatRelativePulseTime(item.happened_at)}</Text>
                   </View>
                 );
               })}
@@ -285,8 +295,8 @@ export default function CommunityScreen() {
           <View style={styles.section}>
             <TouchableOpacity onPress={() => router.push('/community/blocks')} activeOpacity={0.85}>
               <BaseCard padding={16}>
-                <Text style={[styles.cardTitle, { color: colors.text }]}>Manage blocks</Text>
-                <Text style={[styles.cardCopy, { color: colors.textMuted }]}>Set up blocks and block in-charges for fund collection.</Text>
+                <Text style={styles.cardTitle}>Manage blocks</Text>
+                <Text style={styles.cardCopy}>Set up blocks and block in-charges for fund collection.</Text>
               </BaseCard>
             </TouchableOpacity>
           </View>
@@ -298,38 +308,38 @@ export default function CommunityScreen() {
             activeOpacity={0.85}
           >
             <BaseCard padding={16}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Residents directory</Text>
-              <Text style={[styles.cardCopy, { color: colors.textMuted }]}>See who lives in your community</Text>
+              <Text style={styles.cardTitle}>Residents directory</Text>
+              <Text style={styles.cardCopy}>See who lives in your community</Text>
             </BaseCard>
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
           <BaseCard padding={16}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Community info</Text>
+            <Text style={styles.cardTitle}>Community info</Text>
             <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Name</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>{communityDetails?.name ?? '---'}</Text>
+              <Text style={styles.infoLabel}>Name</Text>
+              <Text style={styles.infoValue}>{communityDetails?.name ?? '---'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Code</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>{communityDetails?.code ?? '---'}</Text>
+              <Text style={styles.infoLabel}>Code</Text>
+              <Text style={styles.infoValue}>{communityDetails?.code ?? '---'}</Text>
             </View>
             {communityDetails?.address ? (
               <View style={styles.infoRow}>
-                <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Address</Text>
-                <Text style={[styles.infoValue, { color: colors.text }]}>{communityDetails.address}</Text>
+                <Text style={styles.infoLabel}>Address</Text>
+                <Text style={styles.infoValue}>{communityDetails.address}</Text>
               </View>
             ) : null}
             <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Your role</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>{appRoleLabel}</Text>
+              <Text style={styles.infoLabel}>Your role</Text>
+              <Text style={styles.infoValue}>{appRoleLabel}</Text>
             </View>
             {fundRoles.length > 0 ? (
               <View style={styles.badgeWrap}>
                 {fundRoles.map((role) => (
-                  <View key={role} style={[styles.badge, { borderColor: colors.primary }]}> 
-                    <Text style={[styles.badgeText, { color: colors.primary }]}>{formatRole(role)}</Text>
+                  <View key={role} style={styles.badge}> 
+                    <Text style={styles.badgeText}>{formatRole(role)}</Text>
                   </View>
                 ))}
               </View>
@@ -344,6 +354,7 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Verandah.surface,
   },
   content: {
     paddingHorizontal: 20,
@@ -354,11 +365,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionLabel: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.7,
+    ...VerandahType.sectionLabel,
+    color: Verandah.textTertiary,
     marginBottom: 8,
-    textTransform: 'uppercase',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -368,37 +377,35 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '500',
+    color: Verandah.textPrimary,
   },
   createButton: {
     borderWidth: 1,
     borderRadius: 999,
+    borderColor: Verandah.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   createButtonText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
+    color: Verandah.primary,
   },
   flashCard: {
     width: 150,
     minHeight: 140,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: Verandah.card,
+    borderRadius: VerandahRadius.lg,
     padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.04)',
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
   },
   flashCardIconWrap: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(34, 197, 94, 0.12)',
+    backgroundColor: Verandah.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
@@ -408,37 +415,50 @@ const styles = StyleSheet.create({
   },
   flashCardSummary: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
     lineHeight: 18,
     marginBottom: 8,
+    color: Verandah.textPrimary,
   },
   flashCardTime: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '400',
+    color: Verandah.textMuted,
   },
   summaryLine: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
     lineHeight: 20,
+    color: Verandah.textPrimary,
   },
   summarySubline: {
     marginTop: 6,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '400',
+    color: Verandah.textSecondary,
   },
   summaryStatus: {
     marginTop: 10,
     fontSize: 13,
     lineHeight: 18,
+    color: Verandah.textSecondary,
+  },
+  moneyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '500',
     marginBottom: 4,
+    color: Verandah.textPrimary,
   },
   cardCopy: {
     fontSize: 13,
     marginTop: 2,
+    color: Verandah.textSecondary,
   },
   infoRow: {
     marginTop: 10,
@@ -446,12 +466,14 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 11,
     textTransform: 'uppercase',
-    fontWeight: '700',
+    fontWeight: '500',
     marginBottom: 2,
+    color: Verandah.textTertiary,
   },
   infoValue: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '400',
+    color: Verandah.textPrimary,
   },
   badgeWrap: {
     marginTop: 10,
@@ -462,42 +484,41 @@ const styles = StyleSheet.create({
   badge: {
     borderWidth: 1,
     borderRadius: 999,
+    borderColor: Verandah.primary,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
   badgeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
     textTransform: 'uppercase',
+    color: Verandah.primary,
   },
   ctaButton: {
     marginTop: 12,
-    borderRadius: 12,
+    borderRadius: VerandahRadius.md,
     paddingVertical: 11,
     alignItems: 'center',
+    backgroundColor: Verandah.primary,
   },
   ctaButtonText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   inlineLink: {
     marginTop: 10,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
+    color: Verandah.accent,
   },
   fundsOverviewBg: {
-    borderRadius: 16,
+    borderRadius: VerandahRadius.lg,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   fundsOverviewOverlay: {
     padding: 16,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: VerandahRadius.lg,
+    backgroundColor: Verandah.card,
   },
 });

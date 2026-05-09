@@ -38,6 +38,35 @@ Database RLS uses `get_user_community_id()` which resolves from `profiles.commun
 
 For personal reminders, the list view uses `get_my_upcoming_services()` while detail and edit flows read the target row directly from `user_services` by reminder ID.
 
+### UI Conventions (Verandah)
+
+Verandah is the only active UI language in the app. UI surfaces must follow these principles:
+
+- Calm, utility-first presentation for quick in-and-out tasks.
+- Light-mode-only canvas and card hierarchy.
+- No decorative gradients for cards, chrome, or CTA fills.
+- No elevation/shadow-based depth for cards.
+- Font weights capped to `400` and `500`.
+
+Token sources:
+
+- Colors: `constants/Colors.ts` -> `Verandah`
+- Typography and scales: `constants/Verandah.ts` -> `VerandahType`, `VerandahSpace`, `VerandahRadius`
+
+Hardcoded visual primitives are not allowed for product UI (hex values, ad-hoc spacing, custom radii, or one-off typography values) when an equivalent Verandah token exists.
+
+Shared component requirements:
+
+- `components/BaseCard.tsx`: base shell for card-like surfaces.
+- `components/Avatar.tsx`: deterministic initials avatar for people references.
+- `components/Rupees.tsx`: all rupee amounts should render through this component where feasible.
+- `components/EmptyState.tsx`: empty-list and empty-workflow surfaces.
+
+Out-of-register items:
+
+- Any temporary legacy visual pattern that cannot yet move to tokens must be documented in `docs/verandah.md` under the out-of-register appendix.
+- Out-of-register entries must include: screen/component path, reason, and migration follow-up.
+
 ### Debounced Search Pattern
 
 The Help tab (`app/(tabs)/index.tsx`) uses a debounced search to prevent a Supabase query on every keystroke. The pattern:

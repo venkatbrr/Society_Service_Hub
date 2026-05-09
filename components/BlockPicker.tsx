@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { Tables } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 
@@ -11,7 +12,6 @@ type BlockPickerProps = {
 };
 
 export function BlockPicker({ value, onChange, communityId }: BlockPickerProps) {
-  const colors = Colors.light;
   const [blocks, setBlocks] = useState<Tables<'community_blocks'>[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,27 +49,27 @@ export function BlockPicker({ value, onChange, communityId }: BlockPickerProps) 
   if (loading) {
     return (
       <View style={styles.loaderWrap}>
-        <ActivityIndicator color={colors.primary} />
+        <ActivityIndicator color={Verandah.accent} />
       </View>
     );
   }
 
   if (!blocks.length) {
     return (
-      <View style={[styles.emptyWrap, { borderColor: colors.border, backgroundColor: colors.surface2 }]}>
-        <Text style={[styles.emptyText, { color: colors.textMuted }]}>Your community lead hasn't set up blocks yet.</Text>
+      <View style={styles.emptyWrap}>
+        <Text style={styles.emptyText}>Your community lead has not set up blocks yet.</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.listWrap}>
-      <Text style={[styles.selectedLabel, { color: colors.textMuted }]}>Selected: {selectedBlockName}</Text>
+      <Text style={styles.selectedLabel}>Selected: {selectedBlockName}</Text>
       <TouchableOpacity
         onPress={() => onChange(null)}
-        style={[styles.option, { borderColor: colors.border, backgroundColor: !value ? colors.primary + '14' : colors.surface2 }]}
+        style={[styles.option, !value ? styles.optionSelected : styles.optionDefault]}
       >
-        <Text style={[styles.optionText, { color: !value ? colors.primary : colors.text }]}>All residents</Text>
+        <Text style={[styles.optionText, !value ? styles.optionTextSelected : styles.optionTextDefault]}>All residents</Text>
       </TouchableOpacity>
       {blocks.map((block) => {
         const selected = block.id === value;
@@ -77,9 +77,9 @@ export function BlockPicker({ value, onChange, communityId }: BlockPickerProps) 
           <TouchableOpacity
             key={block.id}
             onPress={() => onChange(block.id)}
-            style={[styles.option, { borderColor: colors.border, backgroundColor: selected ? colors.primary + '14' : colors.surface2 }]}
+            style={[styles.option, selected ? styles.optionSelected : styles.optionDefault]}
           >
-            <Text style={[styles.optionText, { color: selected ? colors.primary : colors.text }]}>{block.name}</Text>
+            <Text style={[styles.optionText, selected ? styles.optionTextSelected : styles.optionTextDefault]}>{block.name}</Text>
           </TouchableOpacity>
         );
       })}
@@ -93,29 +93,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyWrap: {
-    borderWidth: 1,
-    borderRadius: 16,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    backgroundColor: Verandah.cardMuted,
+    borderRadius: VerandahRadius.lg,
     padding: 14,
   },
   emptyText: {
-    fontSize: 13,
-    lineHeight: 18,
+    ...VerandahType.caption,
+    color: Verandah.textSecondary,
   },
   listWrap: {
     gap: 10,
   },
   selectedLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    ...VerandahType.caption,
+    color: Verandah.textTertiary,
   },
   option: {
-    borderWidth: 1,
-    borderRadius: 14,
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.md,
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
+  optionDefault: {
+    borderColor: Verandah.borderStrong,
+    backgroundColor: Verandah.card,
+  },
+  optionSelected: {
+    borderColor: Verandah.accent,
+    backgroundColor: Verandah.accentSoft,
+  },
   optionText: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...VerandahType.bodyBold,
+  },
+  optionTextDefault: {
+    color: Verandah.textPrimary,
+  },
+  optionTextSelected: {
+    color: Verandah.accent,
   },
 });

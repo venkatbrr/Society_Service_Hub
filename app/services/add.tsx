@@ -1,6 +1,5 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
@@ -172,10 +171,6 @@ export default function AddServiceScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <LinearGradient
-        colors={[colors.gradientStart + '10', colors.gradientEnd + '06', 'transparent']}
-        style={styles.headerGradient}
-      />
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -419,14 +414,9 @@ export default function AddServiceScreen() {
           disabled={loading}
           activeOpacity={0.85}
         >
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.submitGradient}
-          >
+          <View style={[styles.submitGradient, { backgroundColor: colors.primary }]}> 
             <Text style={styles.submitText}>{loading ? 'Saving…' : 'Add Reminder'}</Text>
-          </LinearGradient>
+          </View>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -434,7 +424,6 @@ export default function AddServiceScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 160 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -451,12 +440,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
   },
-  backIcon: { fontSize: 18, fontWeight: '600' },
-  headerTitle: { flex: 1, fontSize: 19, fontWeight: '800', letterSpacing: -0.3 },
+  backIcon: { fontSize: 18, fontWeight: '500' },
+  headerTitle: { flex: 1, fontSize: 19, fontWeight: '500', letterSpacing: -0.3 },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 60 },
   label: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1,
     marginBottom: 6,
     marginTop: 20,
@@ -499,7 +488,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   catEmoji: { fontSize: 16 },
-  catLabel: { fontSize: 12, fontWeight: '600', flexShrink: 1 },
+  catLabel: { fontSize: 12, fontWeight: '500', flexShrink: 1 },
   providerStateCard: {
     borderWidth: 1,
     borderRadius: 16,
@@ -528,7 +517,7 @@ const styles = StyleSheet.create({
   },
   providerActionBtnText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   providerPickerWrap: {
     marginTop: 8,
@@ -544,7 +533,7 @@ const styles = StyleSheet.create({
   },
   providerSelectorText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   providerSelectorSubtext: {
     fontSize: 12,
@@ -552,7 +541,7 @@ const styles = StyleSheet.create({
   },
   selectorChevron: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   providerDropdown: {
     marginTop: 8,
@@ -577,7 +566,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#DDEFE1',
+    borderBottomColor: Colors.light.border,
   },
   providerOptionBody: {
     flex: 1,
@@ -585,7 +574,7 @@ const styles = StyleSheet.create({
   },
   providerOptionName: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   providerOptionMeta: {
     fontSize: 12,
@@ -593,9 +582,9 @@ const styles = StyleSheet.create({
   },
   providerSuggestedTag: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   submitButton: { marginTop: 32, borderRadius: 16, overflow: 'hidden' },
   submitGradient: { paddingVertical: 16, alignItems: 'center', borderRadius: 16 },
-  submitText: { color: '#FFF', fontSize: 16, fontWeight: '800' },
+  submitText: { color: '#FFF', fontSize: 16, fontWeight: '500' },
 });

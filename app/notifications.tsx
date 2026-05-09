@@ -1,15 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
 import { useNotifications } from '../context/NotificationContext';
 
 export default function NotificationsScreen() {
   const router = useRouter();
   const { notifications, loading, markAsRead, markAllAsRead } = useNotifications();
-  const colors = Colors.light;
 
   useEffect(() => {
     // Optionally mark all as read when leaving the screen
@@ -101,8 +99,8 @@ export default function NotificationsScreen() {
       style={[
         styles.notificationItem,
         {
-          backgroundColor: item.is_read ? 'transparent' : colors.glass,
-          borderColor: item.is_read ? colors.border : colors.glassBorder,
+          backgroundColor: item.is_read ? 'transparent' : Verandah.card,
+          borderColor: item.is_read ? Verandah.border : Verandah.borderStrong,
         },
         !item.is_read && styles.notificationItemUnread,
       ]}
@@ -110,47 +108,27 @@ export default function NotificationsScreen() {
     >
       <View style={[
         styles.iconContainer,
-        { backgroundColor: item.is_read ? colors.surface2 : colors.primary + '18' }
+        { backgroundColor: item.is_read ? Verandah.cardMuted : Verandah.primary }
       ]}>
-        {!item.is_read ? (
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            style={styles.iconGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <Ionicons
-              name={getNotificationIcon(item.type) as any}
-              size={22}
-              color="#FFF"
-            />
-          </LinearGradient>
-        ) : (
-          <Ionicons
-            name={getNotificationIcon(item.type) as any}
-            size={22}
-            color={colors.textMuted}
-          />
-        )}
+        <Ionicons
+          name={getNotificationIcon(item.type) as any}
+          size={22}
+          color={item.is_read ? Verandah.textSecondary : Verandah.primaryFg}
+        />
       </View>
       <View style={styles.content}>
         <View style={styles.row}>
-          <Text style={[styles.notifTitle, { color: colors.text }, !item.is_read && { fontWeight: '700' }]}>
+          <Text style={[styles.notifTitle, { color: Verandah.textPrimary }, !item.is_read && { fontWeight: '500' }]}>
             {item.title}
           </Text>
           {!item.is_read && (
-            <LinearGradient
-              colors={[colors.gradientStart, colors.gradientEnd]}
-              style={styles.unreadDot}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
+            <View style={[styles.unreadDot, { backgroundColor: Verandah.accent }]} />
           )}
         </View>
-        <Text style={[styles.body, { color: colors.textMuted }]} numberOfLines={2}>
+        <Text style={[styles.body, { color: Verandah.textSecondary }]} numberOfLines={2}>
           {item.body}
         </Text>
-        <Text style={[styles.time, { color: colors.textMuted }]}>
+        <Text style={[styles.time, { color: Verandah.textSecondary }]}>
           {new Date(item.created_at).toLocaleDateString('en-IN', {
             day: 'numeric',
             month: 'short',
@@ -163,34 +141,28 @@ export default function NotificationsScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Gradient header tint */}
-      <LinearGradient
-        colors={[colors.gradientStart + '10', colors.gradientEnd + '06', 'transparent']}
-        style={styles.headerGradient}
-      />
-
+    <View style={[styles.container, { backgroundColor: Verandah.surface }]}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          style={[styles.backButton, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={Verandah.textPrimary} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Notifications</Text>
+        <Text style={[styles.headerTitle, { color: Verandah.textPrimary }]}>Notifications</Text>
         {notifications.length > 0 && (
           <TouchableOpacity
             onPress={markAllAsRead}
-            style={[styles.markAllButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+            style={[styles.markAllButton, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}
           >
-            <Text style={[styles.markAll, { color: colors.primary }]}>Mark all read</Text>
+            <Text style={[styles.markAll, { color: Verandah.primary }]}>Mark all read</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={Verandah.accent} />
         </View>
       ) : (
         <FlatList
@@ -200,11 +172,11 @@ export default function NotificationsScreen() {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <View style={[styles.emptyIconWrapper, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-                <Ionicons name="notifications-off-outline" size={48} color={colors.icon} />
+              <View style={[styles.emptyIconWrapper, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>
+                <Ionicons name="notifications-off-outline" size={48} color={Verandah.textSecondary} />
               </View>
-              <Text style={[styles.emptyText, { color: colors.text }]}>No notifications yet</Text>
-              <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>
+              <Text style={[styles.emptyText, { color: Verandah.textPrimary }]}>No notifications yet</Text>
+              <Text style={[styles.emptySubtext, { color: Verandah.textSecondary }]}>
                 We'll notify you when neighbors share new visits or community updates.
               </Text>
             </View>
@@ -247,7 +219,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   markAllButton: {
     paddingHorizontal: 14,
@@ -257,7 +229,7 @@ const styles = StyleSheet.create({
   },
   markAll: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   center: {
     flex: 1,
@@ -278,10 +250,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   notificationItemUnread: {
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
     elevation: 0,
   },
   iconContainer: {
@@ -291,13 +259,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-  },
-  iconGradient: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   content: {
     flex: 1,
@@ -312,7 +273,7 @@ const styles = StyleSheet.create({
   notifTitle: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   unreadDot: {
     width: 10,
@@ -342,15 +303,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
     borderWidth: 1,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
     elevation: 0,
   },
   emptyText: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '500',
     marginBottom: 8,
   },
   emptySubtext: {

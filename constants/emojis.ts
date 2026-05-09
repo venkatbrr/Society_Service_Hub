@@ -94,9 +94,33 @@ const SERVICE_CATEGORY_EMOJIS: Record<string, string> = {
   'movers & packers': '📦',
   movers: '📦',
   packers: '📦',
-  'tutor / home teacher': '📚',
+  // Grills & Mesh Work
+  'grills & mesh work': '🪟',
+  grills: '🪟',
+  mesh: '🪟',
+  // Tent House
+  'tent house': '⛺',
+  tent: '⛺',
+  // Water Cans
+  'water cans': '🫗',
+  // Catering
+  catering: '🍽️',
+  caterer: '🍽️',
+  // Boutique
+  boutique: '👗',
+  // Teaching (renamed from Tutor / Home Teacher)
+  teaching: '📚',
+  'tutor / home teacher': '📚', // backward compat
   tutor: '📚',
   teacher: '📚',
+  coaching: '📚',
+  // RTO Agent
+  'rto agent': '🚙',
+  rto: '🚙',
+  // Aadhar Centre
+  'aadhar centre': '🪪',
+  aadhar: '🪪',
+  aadhaar: '🪪',
 };
 
 export const getServiceCategoryEmoji = (category?: string | null) => {

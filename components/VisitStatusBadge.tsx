@@ -1,5 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 
 interface VisitStatusBadgeProps {
   status: 'upcoming' | 'in_progress' | 'completed' | 'cancelled';
@@ -9,15 +11,15 @@ export const VisitStatusBadge = ({ status }: VisitStatusBadgeProps) => {
   const getStatusStyles = () => {
     switch (status) {
       case 'upcoming':
-        return { bg: '#10B98112', text: '#10B981', label: 'Upcoming' };
+        return { bg: Verandah.accentSoft, text: Verandah.accent, label: 'Upcoming' };
       case 'in_progress':
-        return { bg: '#FFB34712', text: '#FFB347', label: 'In Progress' };
+        return { bg: Verandah.cautionSoft, text: Verandah.caution, label: 'In progress' };
       case 'completed':
-        return { bg: '#E8E5F5', text: '#8B87B0', label: 'Completed' };
+        return { bg: Verandah.cardMuted, text: Verandah.textSecondary, label: 'Completed' };
       case 'cancelled':
-        return { bg: '#FF6B6B12', text: '#FF6B6B', label: 'Cancelled' };
+        return { bg: Verandah.dangerSoft, text: Verandah.danger, label: 'Cancelled' };
       default:
-        return { bg: '#E8E5F5', text: '#8B87B0', label: status };
+        return { bg: Verandah.cardMuted, text: Verandah.textSecondary, label: status };
     }
   };
 
@@ -32,15 +34,13 @@ export const VisitStatusBadge = ({ status }: VisitStatusBadgeProps) => {
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: VerandahSpace.sm,
+    paddingVertical: 3,
+    borderRadius: VerandahRadius.pill,
     alignSelf: 'flex-start',
   },
   text: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    ...VerandahType.micro,
+    fontWeight: '500',
   },
 });

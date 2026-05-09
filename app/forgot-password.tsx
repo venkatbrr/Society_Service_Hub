@@ -1,15 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
 import { getAuthErrorMessage, resetPassword } from '../lib/auth';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const colors = Colors.light;
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,47 +43,35 @@ export default function ForgotPasswordScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[styles.container, { backgroundColor: Verandah.surface }]}
     >
-      {/* Subtle gradient overlay at top */}
-      <LinearGradient
-        colors={[colors.gradientStart + '12', colors.gradientEnd + '08', 'transparent']}
-        style={styles.gradientOverlay}
-      />
-
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity
-          style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          style={[styles.backButton, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={Verandah.textPrimary} />
         </TouchableOpacity>
 
         <View style={styles.header}>
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            style={styles.iconContainer}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <Ionicons name="key-outline" size={36} color="#FFF" />
-          </LinearGradient>
-          <Text style={[styles.title, { color: colors.text }]}>Forgot Password?</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          <View style={[styles.iconContainer, { backgroundColor: Verandah.primary }]}>
+            <Ionicons name="key-outline" size={36} color={Verandah.primaryFg} />
+          </View>
+          <Text style={[styles.title, { color: Verandah.textPrimary }]}>Forgot Password?</Text>
+          <Text style={[styles.subtitle, { color: Verandah.textSecondary }]}>
             Enter your email address and we'll send you instructions to reset your password.
           </Text>
         </View>
 
-        {/* Form card with glass effect */}
-        <View style={[styles.formCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+        <View style={[styles.formCard, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>EMAIL ADDRESS</Text>
-            <View style={[styles.inputContainer, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
-               <Ionicons name="mail-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
+            <Text style={[styles.label, { color: Verandah.textPrimary }]}>EMAIL ADDRESS</Text>
+            <View style={[styles.inputContainer, { backgroundColor: Verandah.cardMuted, borderColor: Verandah.borderStrong }]}>
+               <Ionicons name="mail-outline" size={20} color={Verandah.textSecondary} style={styles.inputIcon} />
                <TextInput
-                 style={[styles.input, { color: colors.text }]}
+                 style={[styles.input, { color: Verandah.textPrimary }]}
                  placeholder="your@email.com"
-                 placeholderTextColor={colors.textMuted}
+                 placeholderTextColor={Verandah.textSecondary}
                  value={email}
                  onChangeText={setEmail}
                  keyboardType="email-address"
@@ -98,19 +84,13 @@ export default function ForgotPasswordScreen() {
             onPress={handleReset}
             disabled={loading}
             activeOpacity={0.8}
+            style={styles.resetButton}
           >
-            <LinearGradient
-              colors={[colors.gradientStart, colors.gradientEnd]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.resetButton}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <Text style={styles.resetButtonText}>Send Reset Link</Text>
-              )}
-            </LinearGradient>
+            {loading ? (
+              <ActivityIndicator color={Verandah.primaryFg} />
+            ) : (
+              <Text style={styles.resetButtonText}>Send Reset Link</Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -118,7 +98,7 @@ export default function ForgotPasswordScreen() {
           onPress={() => router.back()}
           style={styles.backLink}
         >
-          <Text style={[styles.backLinkText, { color: colors.primary }]}>Back to Sign In</Text>
+          <Text style={[styles.backLinkText, { color: Verandah.primary }]}>Back to Sign In</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -128,14 +108,6 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 300,
-    zIndex: 0,
   },
   scrollContent: {
     padding: 32,
@@ -161,15 +133,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
     elevation: 0,
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '500',
     marginBottom: 12,
     textAlign: 'center',
     letterSpacing: -0.5,
@@ -183,10 +151,6 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 20,
     borderWidth: 1,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
     elevation: 0,
     gap: 24,
   },
@@ -195,17 +159,17 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1,
     marginLeft: 4,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderRadius: 16,
+    borderWidth: 0.5,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    height: 56,
+    height: 50,
   },
   inputIcon: {
     marginRight: 12,
@@ -215,21 +179,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   resetButton: {
-    height: 56,
-    borderRadius: 28,
+    height: 50,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
+    backgroundColor: Verandah.primary,
     elevation: 0,
   },
   resetButtonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '700',
+    color: Verandah.primaryFg,
+    fontSize: 14,
+    fontWeight: '500',
   },
   backLink: {
     alignItems: 'center',
@@ -237,6 +198,6 @@ const styles = StyleSheet.create({
   },
   backLinkText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });

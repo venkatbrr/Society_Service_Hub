@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, TouchableOpacityProps, View, ViewProps } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahSpace } from '../constants/Verandah';
 
 interface BaseCardProps extends ViewProps {
   onPress?: () => void;
@@ -8,17 +9,10 @@ interface BaseCardProps extends ViewProps {
   padding?: number;
 }
 
-export const BaseCard = React.memo(({ children, onPress, isLightMode = true, style, padding = 20, ...rest }: BaseCardProps) => {
-  const colors = isLightMode ? Colors.light : Colors.dark;
-
+export const BaseCard = React.memo(({ children, onPress, isLightMode = true, style, padding = 16, ...rest }: BaseCardProps) => {
   const cardStyle = [
     styles.card,
-    {
-      padding,
-      backgroundColor: colors.glass,
-      borderColor: colors.border,
-      shadowColor: colors.primary,
-    },
+    { padding },
     style
   ];
 
@@ -44,14 +38,11 @@ export const BaseCard = React.memo(({ children, onPress, isLightMode = true, sty
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
-    marginBottom: 10,
-    borderWidth: 1,
+    backgroundColor: Verandah.card,
+    borderRadius: VerandahRadius.lg,
+    marginBottom: VerandahSpace.sm + 2,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
     overflow: 'hidden',
-    // iOS-only soft shadow (Android elevation causes white rectangle artifacts)
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 0,
   },
 });

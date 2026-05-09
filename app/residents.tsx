@@ -4,7 +4,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../constants/Colors';
+import { Avatar } from '../components/Avatar';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius } from '../constants/Verandah';
 import { APP_EMOJIS } from '../constants/emojis';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -20,7 +22,7 @@ type DirectoryResident = {
 export default function ResidentsScreen() {
   const router = useRouter();
   const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
-  const colors = Colors.light;
+  const colors = Verandah;
   const { communityId, appRole, isPlatformAdmin, isCommunityLead } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -115,24 +117,24 @@ export default function ResidentsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={handleBack}
-          style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          style={[styles.backButton, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}
         >
           <Ionicons name="arrow-back" size={20} color={colors.primary} />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
-          <Text style={[styles.title, { color: colors.text }]}>Community directory</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>Active residents in your community</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Community directory</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Active residents in your community</Text>
         </View>
       </View>
 
-      <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+      <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
         <Text style={styles.searchIcon}>{APP_EMOJIS.search}</Text>
         <TextInput
-          style={[styles.searchInput, { color: colors.text }]}
+          style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder="Search by name or flat"
           placeholderTextColor={colors.textMuted}
           value={search}
@@ -151,28 +153,29 @@ export default function ResidentsScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadResidents(true)} />}
           contentContainerStyle={filteredResidents.length ? styles.listContent : styles.emptyContent}
           ListEmptyComponent={
-            <Text style={[styles.emptyText, { color: colors.textMuted }]}>No residents found.</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No residents found.</Text>
           }
           renderItem={({ item }) => (
-            <View style={[styles.row, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <View style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}> 
+              <Avatar name={item.full_name || 'Resident'} size={36} />
               <View style={styles.rowCopy}>
                 <View style={styles.rowTop}>
                   {canViewPhone ? (
                     <TouchableOpacity onPress={() => setSelectedResident(item)} activeOpacity={0.75}>
-                      <Text style={[styles.name, { color: colors.text }]}>{item.full_name || 'Resident'}</Text>
+                      <Text style={[styles.name, { color: colors.textPrimary }]}>{item.full_name || 'Resident'}</Text>
                     </TouchableOpacity>
                   ) : (
-                    <Text style={[styles.name, { color: colors.text }]}>{item.full_name || 'Resident'}</Text>
+                    <Text style={[styles.name, { color: colors.textPrimary }]}>{item.full_name || 'Resident'}</Text>
                   )}
                   {item.app_role === 'community_lead' ? (
-                    <View style={[styles.leadBadge, { backgroundColor: `${colors.primary}18` }]}>
-                      <Text style={[styles.leadBadgeText, { color: colors.primary }]}>Lead</Text>
+                    <View style={[styles.leadBadge, { backgroundColor: colors.accentSoft }]}>
+                      <Text style={[styles.leadBadgeText, { color: colors.accent }]}>Lead</Text>
                     </View>
                   ) : null}
                 </View>
-                <Text style={[styles.meta, { color: colors.textMuted }]}>Flat: {item.flat_number || 'N/A'}</Text>
+                <Text style={[styles.meta, { color: colors.textSecondary }]}>Flat: {item.flat_number || 'N/A'}</Text>
                 {canViewPhone ? (
-                  <Text style={[styles.meta, { color: colors.textMuted }]}>Phone: {item.phone_number || 'N/A'}</Text>
+                  <Text style={[styles.meta, { color: colors.textSecondary }]}>Phone: {item.phone_number || 'N/A'}</Text>
                 ) : null}
               </View>
             </View>
@@ -189,16 +192,16 @@ export default function ResidentsScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}> 
               {selectedResident?.full_name || 'Resident'}
             </Text>
-            <Text style={[styles.modalMeta, { color: colors.textMuted }]}>
+            <Text style={[styles.modalMeta, { color: colors.textSecondary }]}> 
               Flat: {selectedResident?.flat_number || 'N/A'}
             </Text>
-            <Text style={[styles.modalMeta, { color: colors.textMuted }]}>
+            <Text style={[styles.modalMeta, { color: colors.textSecondary }]}> 
               Phone: {selectedResident?.phone_number || 'N/A'}
             </Text>
-            <Text style={[styles.modalMeta, { color: colors.textMuted }]}>
+            <Text style={[styles.modalMeta, { color: colors.textSecondary }]}> 
               Role: {selectedResident?.app_role === 'community_lead' ? 'Community Lead' : 'Resident'}
             </Text>
 
@@ -207,7 +210,7 @@ export default function ResidentsScreen() {
                 style={[styles.modalCloseBtn, { borderColor: colors.border }]}
                 onPress={() => setSelectedResident(null)}
               >
-                <Text style={[styles.modalCloseText, { color: colors.text }]}>Close</Text>
+                <Text style={[styles.modalCloseText, { color: colors.textPrimary }]}>Close</Text>
               </TouchableOpacity>
               {isCommunityLead && selectedResident?.app_role !== 'community_lead' ? (
                 <TouchableOpacity
@@ -216,7 +219,7 @@ export default function ResidentsScreen() {
                   disabled={removing}
                 >
                   {removing ? (
-                    <ActivityIndicator color="#FFF" />
+                    <ActivityIndicator color={Verandah.primaryFg} />
                   ) : (
                     <Text style={styles.modalRemoveText}>Remove</Text>
                   )}
@@ -235,29 +238,29 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   backButton: { width: 40, height: 40, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   headerCopy: { flex: 1 },
-  title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.4 },
+  title: { fontSize: 24, fontWeight: '500', letterSpacing: -0.4 },
   subtitle: { fontSize: 13, marginTop: 2 },
-  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderRadius: 16, paddingHorizontal: 14, height: 48, marginBottom: 14 },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: VerandahRadius.lg, paddingHorizontal: 14, height: 48, marginBottom: 14 },
   searchIcon: { fontSize: 16, lineHeight: 18 },
   searchInput: { flex: 1, fontSize: 14 },
   loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingBottom: 30, gap: 10 },
   emptyContent: { flexGrow: 1, justifyContent: 'center' },
   emptyText: { textAlign: 'center', fontSize: 14 },
-  row: { borderWidth: 1, borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  row: { borderWidth: 1, borderRadius: VerandahRadius.lg, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
   rowCopy: { flex: 1 },
   rowTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontSize: 15, fontWeight: '700' },
+  name: { fontSize: 15, fontWeight: '500' },
   meta: { fontSize: 12, marginTop: 3 },
   leadBadge: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
-  leadBadgeText: { fontSize: 11, fontWeight: '700' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' },
+  leadBadgeText: { fontSize: 11, fontWeight: '500' },
+  modalOverlay: { flex: 1, backgroundColor: Verandah.borderStrong, justifyContent: 'flex-end' },
   modalCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 8 },
-  modalTitle: { fontSize: 18, fontWeight: '800' },
+  modalTitle: { fontSize: 18, fontWeight: '500' },
   modalMeta: { fontSize: 14 },
   modalActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  modalCloseBtn: { flex: 1, borderWidth: 1, borderRadius: 14, paddingVertical: 12, alignItems: 'center' },
-  modalCloseText: { fontSize: 14, fontWeight: '700' },
-  modalRemoveBtn: { flex: 1, borderRadius: 14, paddingVertical: 12, alignItems: 'center' },
-  modalRemoveText: { color: '#FFF', fontSize: 14, fontWeight: '800' },
+  modalCloseBtn: { flex: 1, borderWidth: 1, borderRadius: VerandahRadius.md, paddingVertical: 12, alignItems: 'center' },
+  modalCloseText: { fontSize: 14, fontWeight: '500' },
+  modalRemoveBtn: { flex: 1, borderRadius: VerandahRadius.md, paddingVertical: 12, alignItems: 'center' },
+  modalRemoveText: { color: Verandah.primaryFg, fontSize: 14, fontWeight: '500' },
 });

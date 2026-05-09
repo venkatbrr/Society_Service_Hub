@@ -2,13 +2,14 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
+import { VerandahRadius } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
 export default function FundsAccessRequestScreen() {
   const router = useRouter();
-  const colors = Colors.light;
+  const colors = Verandah;
   const { profile, user, refreshSession } = useAuth();
 
   const [contactName, setContactName] = useState(profile?.full_name ?? '');
@@ -43,41 +44,41 @@ export default function FundsAccessRequestScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}> 
-      <Text style={[styles.title, { color: colors.text }]}>Request funds support</Text>
-      <Text style={[styles.subtitle, { color: colors.textMuted }]}>Tell us who to contact to activate funds in your community.</Text>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.surface }]}> 
+      <Text style={[styles.title, { color: colors.textPrimary }]}>Request funds support</Text>
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Tell us who to contact to activate funds in your community.</Text>
 
-      <View style={[styles.formCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-        <Text style={[styles.label, { color: colors.text }]}>Contact name</Text>
+      <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.label, { color: colors.textPrimary }]}>Contact name</Text>
         <TextInput
           value={contactName}
           onChangeText={setContactName}
-          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          style={[styles.input, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.cardMuted }]}
           placeholder="Contact person"
           placeholderTextColor={colors.textMuted}
         />
 
-        <Text style={[styles.label, { color: colors.text }]}>Contact phone</Text>
+        <Text style={[styles.label, { color: colors.textPrimary }]}>Contact phone</Text>
         <TextInput
           value={contactPhone}
           onChangeText={setContactPhone}
-          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          style={[styles.input, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.cardMuted }]}
           placeholder="Phone number"
           placeholderTextColor={colors.textMuted}
         />
 
-        <Text style={[styles.label, { color: colors.text }]}>Purpose (optional)</Text>
+        <Text style={[styles.label, { color: colors.textPrimary }]}>Purpose (optional)</Text>
         <TextInput
           value={purpose}
           onChangeText={(text) => setPurpose(text.slice(0, 280))}
-          style={[styles.textArea, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface2 }]}
+          style={[styles.textArea, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.cardMuted }]}
           placeholder="Briefly tell us what you'd like to use funds for. Optional."
           placeholderTextColor={colors.textMuted}
           multiline
           numberOfLines={4}
           textAlignVertical="top"
         />
-        <Text style={[styles.helper, { color: colors.textMuted }]}>{purpose.length}/280</Text>
+        <Text style={[styles.helper, { color: colors.textSecondary }]}>{purpose.length}/280</Text>
 
         <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={submit} disabled={saving}>
           <Text style={styles.primaryButtonText}>{saving ? 'Submitting...' : 'Submit request'}</Text>
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   subtitle: {
     fontSize: 14,
@@ -109,26 +110,26 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   formCard: {
-    borderRadius: 22,
+    borderRadius: VerandahRadius.lg,
     borderWidth: 1,
     padding: 18,
   },
   label: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
     marginBottom: 7,
     marginTop: 8,
   },
   input: {
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: VerandahRadius.md,
     height: 48,
     paddingHorizontal: 12,
     fontSize: 14,
   },
   textArea: {
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: VerandahRadius.md,
     minHeight: 96,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -140,19 +141,19 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     marginTop: 16,
-    borderRadius: 14,
+    borderRadius: VerandahRadius.md,
     alignItems: 'center',
     paddingVertical: 13,
   },
   primaryButtonText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   cancelText: {
     textAlign: 'center',
     marginTop: 14,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });

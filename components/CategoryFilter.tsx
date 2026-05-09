@@ -1,15 +1,15 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../constants/categories';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { getServiceCategoryEmoji } from '../constants/emojis';
 
 type CategoryFilterProps = {
   selectedCategory: string | null;
   onSelectCategory: (category: string | null) => void;
   onSelectGroupCategories?: (categories: string[] | null) => void;
-  isLightMode: boolean;
+  isLightMode?: boolean;
   categories?: string[];
 };
 
@@ -20,7 +20,6 @@ export const CategoryFilter = ({
   isLightMode,
   categories = CATEGORIES
 }: CategoryFilterProps) => {
-  const colors = isLightMode ? Colors.light : Colors.dark;
   const displayCategories = categories.filter(c => c !== 'All');
 
   const groups = useMemo(() => {
@@ -75,31 +74,25 @@ export const CategoryFilter = ({
     const isServiceCategoryChip = label === 'All' || displayCategories.includes(label);
     const chipLabel = isServiceCategoryChip ? `${getServiceCategoryEmoji(label)} ${label}` : label;
 
-    if (isSelected) {
-      return (
-        <TouchableOpacity key={label} onPress={onPress}>
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.chip}
-          >
-            <Text style={[styles.chipText, { color: '#FFF' }]}>{chipLabel}</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      );
-    }
-
     return (
       <TouchableOpacity
         key={label}
         style={[
           styles.chip,
-          { backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border }
+          isSelected
+            ? styles.chipActive
+            : styles.chipInactive,
         ]}
         onPress={onPress}
       >
-        <Text style={[styles.chipText, { color: colors.text }]}>{chipLabel}</Text>
+        <Text
+          style={[
+            styles.chipText,
+            isSelected ? styles.chipTextActive : styles.chipTextInactive,
+          ]}
+        >
+          {chipLabel}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -111,7 +104,7 @@ export const CategoryFilter = ({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.groupScrollContent}
       >
-        {renderChip('All Services', selectedGroupId === 'all', () => {
+        {renderChip('All services', selectedGroupId === 'all', () => {
           setSelectedGroupId('all');
           onSelectCategory(null);
           onSelectGroupCategories?.(null);
@@ -142,27 +135,41 @@ export const CategoryFilter = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 6,
+    marginBottom: VerandahSpace.xs + 2,
     marginHorizontal: -24,
   },
   groupScrollContent: {
     paddingHorizontal: 24,
-    gap: 8,
-    paddingBottom: 6,
+    gap: VerandahSpace.sm,
+    paddingBottom: VerandahSpace.xs + 2,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    gap: 8,
+    gap: VerandahSpace.sm,
   },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: VerandahSpace.lg,
+    paddingVertical: VerandahSpace.sm,
+    borderRadius: VerandahRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  chipActive: {
+    backgroundColor: Verandah.primary,
+  },
+  chipInactive: {
+    backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+  },
   chipText: {
-    fontSize: 14,
+    ...VerandahType.body,
     fontWeight: '500',
+  },
+  chipTextActive: {
+    color: Verandah.primaryFg,
+  },
+  chipTextInactive: {
+    color: Verandah.textPrimary,
   },
 });

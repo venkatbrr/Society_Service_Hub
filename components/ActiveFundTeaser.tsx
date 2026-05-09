@@ -1,8 +1,8 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../constants/Colors';
-import { APP_EMOJIS } from '../constants/emojis';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
+import { Rupees } from './Rupees';
 
 type ActiveFundTeaserProps = {
   title: string;
@@ -12,7 +12,6 @@ type ActiveFundTeaserProps = {
 };
 
 export const ActiveFundTeaser = ({ title, collected, goal, onPress }: ActiveFundTeaserProps) => {
-  const colors = Colors.light;
   const progress = goal > 0 ? Math.min(collected / goal, 1) : 0;
 
   return (
@@ -21,31 +20,24 @@ export const ActiveFundTeaser = ({ title, collected, goal, onPress }: ActiveFund
       activeOpacity={0.9}
       style={styles.wrapper}
     >
-      <LinearGradient
-        colors={[colors.gradientStart, colors.gradientEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.container}
-      >
+      <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.titleArea}>
-            <Text style={styles.label}>Active Fund</Text>
+            <Text style={styles.label}>Active fund</Text>
             <Text style={styles.title}>{title}</Text>
-          </View>
-          <View style={styles.iconContainer}>
-            <Text style={styles.iconText}>{APP_EMOJIS.fundActive}</Text>
           </View>
         </View>
 
         <View style={styles.statsRow}>
-          <Text style={styles.amount}>{collected.toLocaleString()}</Text>
-          <Text style={styles.goal}>of {goal.toLocaleString()}</Text>
+          <Rupees amount={collected} size="md" tone="in" />
+          <Text style={styles.goal}>of </Text>
+          <Rupees amount={goal} size="sm" />
         </View>
 
         <View style={styles.progressBg}>
           <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
         </View>
-      </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -53,80 +45,53 @@ export const ActiveFundTeaser = ({ title, collected, goal, onPress }: ActiveFund
 const styles = StyleSheet.create({
   wrapper: {
     marginHorizontal: 20,
-    marginTop: 0,
-    marginBottom: 10,
-    borderRadius: 24,
-    elevation: 0,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
+    marginBottom: VerandahSpace.sm + 2,
   },
   container: {
-    padding: 20,
-    borderRadius: 24,
+    padding: VerandahSpace.lg,
+    borderRadius: VerandahRadius.lg,
+    backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: VerandahSpace.md,
   },
   titleArea: {
     flex: 1,
   },
   label: {
+    ...VerandahType.sectionLabel,
     fontSize: 10,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 4,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: Verandah.textTertiary,
+    marginBottom: VerandahSpace.xs,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.24)',
-  },
-  iconText: {
-    fontSize: 20,
-    lineHeight: 24,
+    ...VerandahType.bodyBold,
+    color: Verandah.textPrimary,
   },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 6,
-    marginBottom: 12,
-  },
-  amount: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#FFF',
+    gap: VerandahSpace.xs + 2,
+    marginBottom: VerandahSpace.md,
   },
   goal: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.7)',
+    ...VerandahType.caption,
+    color: Verandah.textTertiary,
   },
   progressBg: {
-    height: 8,
-    borderRadius: 4,
+    height: 4,
+    borderRadius: 2,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: Verandah.cardMuted,
   },
   progressFill: {
     height: '100%',
-    borderRadius: 4,
-    backgroundColor: '#FFF',
+    borderRadius: 2,
+    backgroundColor: Verandah.accent,
   },
 });

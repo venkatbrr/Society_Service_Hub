@@ -3,7 +3,8 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
@@ -15,7 +16,6 @@ type BlockWithCounts = Tables<'community_blocks'> & {
 
 export default function CommunityBlocksScreen() {
   const router = useRouter();
-  const colors = Colors.light;
   const { communityId, blocksEnabled } = useAuth();
 
   const [blocks, setBlocks] = useState<BlockWithCounts[]>([]);
@@ -148,18 +148,18 @@ export default function CommunityBlocksScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}> 
+    <View style={styles.container}> 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={[styles.backText, { color: colors.primary }]}>Back</Text>
+          <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.text }]}>Manage blocks</Text>
+        <Text style={styles.title}>Manage blocks</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={[styles.toggleCard, { borderColor: colors.border, backgroundColor: colors.glass }]}> 
+        <View style={styles.toggleCard}> 
           <View style={styles.toggleRow}>
-            <Text style={[styles.toggleLabel, { color: colors.text }]}>Use blocks for fund collection</Text>
+            <Text style={styles.toggleLabel}>Use blocks for fund collection</Text>
             <Switch value={blocksEnabled} onValueChange={toggleBlocks} disabled={loading} />
           </View>
         </View>
@@ -171,31 +171,31 @@ export default function CommunityBlocksScreen() {
                 value={newBlockName}
                 onChangeText={setNewBlockName}
                 placeholder="Add block"
-                placeholderTextColor={colors.textMuted}
-                style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface2 }]}
+                placeholderTextColor={Verandah.textTertiary}
+                style={styles.input}
               />
-              <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={addBlock}>
+              <TouchableOpacity style={styles.addBtn} onPress={addBlock}>
                 <Text style={styles.addBtnText}>Add block</Text>
               </TouchableOpacity>
             </View>
 
             {blocks.map((block) => (
-              <View key={block.id} style={[styles.blockCard, { borderColor: colors.border, backgroundColor: colors.glass }]}> 
-                <Text style={[styles.blockName, { color: colors.text }]}>{block.name}</Text>
-                <Text style={[styles.blockMeta, { color: colors.textMuted }]}>{block.residentCount} residents - {block.inChargeCount} in-charges</Text>
+              <View key={block.id} style={styles.blockCard}> 
+                <Text style={styles.blockName}>{block.name}</Text>
+                <Text style={styles.blockMeta}>{block.residentCount} residents · {block.inChargeCount} in-charges</Text>
                 <View style={styles.blockActions}>
-                  <TouchableOpacity style={[styles.actionBtn, { borderColor: colors.border }]} onPress={() => renameBlock(block)}>
-                    <Text style={[styles.actionText, { color: colors.text }]}>Rename</Text>
+                  <TouchableOpacity style={styles.actionBtn} onPress={() => renameBlock(block)}>
+                    <Text style={styles.actionText}>Rename</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.actionBtn, { borderColor: colors.border }]} onPress={() => archiveBlock(block)}>
-                    <Text style={[styles.actionText, { color: colors.accent }]}>Archive</Text>
+                  <TouchableOpacity style={styles.actionBtn} onPress={() => archiveBlock(block)}>
+                    <Text style={[styles.actionText, { color: Verandah.danger }]}>Archive</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             ))}
           </>
         ) : (
-          <Text style={[styles.disabledText, { color: colors.textMuted }]}>Turn on blocks to manage block-wise collection scopes.</Text>
+          <Text style={styles.disabledText}>Turn on blocks to manage block-wise collection scopes.</Text>
         )}
       </ScrollView>
     </View>
@@ -203,23 +203,23 @@ export default function CommunityBlocksScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 60, paddingHorizontal: 20 },
+  container: { flex: 1, backgroundColor: Verandah.surface, paddingTop: 60, paddingHorizontal: 20 },
   header: { marginBottom: 12 },
-  backText: { fontSize: 13, fontWeight: '700' },
-  title: { fontSize: 26, fontWeight: '800', marginTop: 6 },
+  backText: { ...VerandahType.captionBold, color: Verandah.accent },
+  title: { ...VerandahType.display, color: Verandah.textPrimary, marginTop: 6 },
   content: { paddingBottom: 24, gap: 12 },
-  toggleCard: { borderWidth: 1, borderRadius: 16, padding: 14 },
+  toggleCard: { borderWidth: 0.5, borderColor: Verandah.border, backgroundColor: Verandah.card, borderRadius: VerandahRadius.lg, padding: 14 },
   toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
-  toggleLabel: { flex: 1, fontSize: 15, fontWeight: '700' },
+  toggleLabel: { flex: 1, ...VerandahType.bodyBold, color: Verandah.textPrimary },
   addRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  input: { flex: 1, borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, height: 42, fontSize: 14 },
-  addBtn: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 11 },
-  addBtnText: { color: '#FFF', fontSize: 12, fontWeight: '800' },
-  blockCard: { borderWidth: 1, borderRadius: 16, padding: 14 },
-  blockName: { fontSize: 16, fontWeight: '800' },
-  blockMeta: { marginTop: 4, fontSize: 12 },
+  input: { flex: 1, borderWidth: 0.5, borderColor: Verandah.borderStrong, backgroundColor: Verandah.card, color: Verandah.textPrimary, borderRadius: VerandahRadius.md, paddingHorizontal: 12, height: 44, ...VerandahType.body },
+  addBtn: { borderRadius: VerandahRadius.md, backgroundColor: Verandah.primary, paddingHorizontal: 12, paddingVertical: 11 },
+  addBtnText: { color: Verandah.primaryFg, ...VerandahType.captionBold },
+  blockCard: { borderWidth: 0.5, borderColor: Verandah.border, backgroundColor: Verandah.card, borderRadius: VerandahRadius.lg, padding: 14 },
+  blockName: { ...VerandahType.bodyBold, color: Verandah.textPrimary },
+  blockMeta: { marginTop: 4, ...VerandahType.caption, color: Verandah.textSecondary },
   blockActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  actionBtn: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  actionText: { fontSize: 12, fontWeight: '700' },
-  disabledText: { marginTop: 6, fontSize: 13 },
+  actionBtn: { borderWidth: 0.5, borderColor: Verandah.borderStrong, borderRadius: VerandahRadius.sm + 2, paddingHorizontal: 12, paddingVertical: 8 },
+  actionText: { ...VerandahType.captionBold, color: Verandah.textPrimary },
+  disabledText: { marginTop: 6, ...VerandahType.body, color: Verandah.textSecondary },
 });

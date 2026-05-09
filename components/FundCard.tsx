@@ -1,10 +1,12 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { APP_EMOJIS } from '../constants/emojis';
 import { Tables } from '../lib/database.types';
 import { FundAccessRole, formatRole } from '../lib/fundRoles';
 import { BaseCard } from './BaseCard';
+import { Rupees } from './Rupees';
 
 type FundCardProps = {
   fund: Tables<'events'>;
@@ -20,7 +22,6 @@ type FundCardProps = {
 };
 
 export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorCount, onPress }: FundCardProps) => {
-  const colors = Colors.light;
   const createdLabel = new Date(fund.created_at ?? Date.now()).toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',
@@ -28,53 +29,38 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
   });
 
   return (
-    <BaseCard padding={24} onPress={onPress}>
+    <BaseCard padding={16} onPress={onPress}>
       <View style={styles.header}>
         <View style={styles.titleArea}>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+          <Text style={styles.title} numberOfLines={1}>
             {fund.title}
           </Text>
-          <View style={[styles.dateBadge, { backgroundColor: colors.primary + '12' }]}>
-            <Text style={[styles.date, { color: colors.primary }]}>Created {createdLabel}</Text>
-          </View>
+          <Text style={styles.date}>Created {createdLabel}</Text>
         </View>
-        <View style={[styles.rolePill, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-          <Text style={[styles.roleText, { color: colors.primary }]}>You: {formatRole(currentRole)}</Text>
-        </View>
-      </View>
-
-      <View style={[styles.metaCard, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '20' }]}>
-        <View style={styles.metaRow}>
-          <Text style={[styles.metaLabel, { color: colors.textMuted }]}>Treasurers</Text>
-          <Text style={[styles.metaValue, { color: colors.text }]} numberOfLines={1}>
-            {treasurerNames.length > 0 ? treasurerNames.join(', ') : 'Not assigned'}
-          </Text>
-        </View>
-        <View style={styles.metaRow}>
-          <Text style={[styles.metaLabel, { color: colors.textMuted }]}>Collectors</Text>
-          <Text style={[styles.metaValue, { color: colors.text }]}>{collectorCount}</Text>
+        <View style={styles.rolePill}>
+          <Text style={styles.roleText}>{formatRole(currentRole)}</Text>
         </View>
       </View>
 
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Collected</Text>
-          <Text style={[styles.statValue, { color: '#10B981' }]}>Rs {totals.income.toLocaleString()}</Text>
+          <Text style={styles.statLabel}>Collected</Text>
+          <Rupees amount={totals.income} size="sm" tone="in" />
         </View>
-        <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+        <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Spent</Text>
-          <Text style={[styles.statValue, { color: '#FF6B6B' }]}>Rs {totals.expense.toLocaleString()}</Text>
+          <Text style={styles.statLabel}>Spent</Text>
+          <Rupees amount={totals.expense} size="sm" tone="out" />
         </View>
-        <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+        <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Balance</Text>
-          <Text style={[styles.statValue, { color: '#16A34A' }]}>Rs {totals.balance.toLocaleString()}</Text>
+          <Text style={styles.statLabel}>Balance</Text>
+          <Rupees amount={totals.balance} size="sm" tone="in" />
         </View>
       </View>
 
       <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.textMuted }]}>Open fund details</Text>
+        <Text style={styles.footerText}>Open fund details</Text>
         <Text style={styles.footerIcon}>{APP_EMOJIS.chevronRight}</Text>
       </View>
     </BaseCard>
@@ -87,100 +73,67 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: VerandahSpace.lg,
   },
   titleArea: {
     flex: 1,
-    marginRight: 12,
+    marginRight: VerandahSpace.md,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  dateBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginTop: 6,
+    ...VerandahType.title,
+    color: Verandah.textPrimary,
   },
   date: {
-    fontSize: 12,
-    fontWeight: '600',
+    ...VerandahType.caption,
+    color: Verandah.textTertiary,
+    marginTop: VerandahSpace.xs,
   },
   rolePill: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: VerandahSpace.md,
+    paddingVertical: VerandahSpace.xs + 2,
+    backgroundColor: Verandah.cardMuted,
   },
   roleText: {
-    fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  metaCard: {
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 20,
-    gap: 10,
-    borderWidth: 1,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 16,
-  },
-  metaLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  metaValue: {
-    flex: 1,
-    textAlign: 'right',
-    fontSize: 14,
-    fontWeight: '700',
+    ...VerandahType.micro,
+    fontWeight: '500',
+    color: Verandah.textSecondary,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: 16,
+    gap: VerandahSpace.lg,
+    marginBottom: VerandahSpace.lg,
   },
   statItem: {
     flex: 1,
   },
   statLabel: {
+    ...VerandahType.sectionLabel,
     fontSize: 10,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '800',
+    color: Verandah.textTertiary,
+    marginBottom: VerandahSpace.xs,
   },
   statDivider: {
-    width: 1,
-    height: '70%',
-    alignSelf: 'center',
+    width: 0.5,
+    backgroundColor: Verandah.border,
+    alignSelf: 'stretch',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 18,
+    borderTopWidth: 0.5,
+    borderTopColor: Verandah.border,
+    paddingTop: VerandahSpace.md,
   },
   footerText: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...VerandahType.caption,
+    fontWeight: '500',
+    color: Verandah.textSecondary,
   },
   footerIcon: {
-    fontSize: 18,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 18,
+    color: Verandah.textTertiary,
   },
 });

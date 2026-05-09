@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -227,14 +226,9 @@ export default function AddFundScreen() {
                       <Text style={[styles.memberMeta, { color: colors.textMuted }]}>Resident</Text>
                     </View>
                     {isSelected ? (
-                      <LinearGradient
-                        colors={[colors.gradientStart, colors.gradientEnd]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.selector}
-                      >
+                      <View style={[styles.selector, { backgroundColor: colors.primary, borderColor: colors.primary }]}> 
                         <Text style={styles.selectorEmoji}>{APP_EMOJIS.success}</Text>
-                      </LinearGradient>
+                      </View>
                     ) : (
                       <View
                         style={[
@@ -263,15 +257,9 @@ export default function AddFundScreen() {
           onPress={handleSave}
           disabled={isLoading}
           activeOpacity={0.85}
+          style={[styles.saveButton, { backgroundColor: colors.primary }]}
         >
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.saveButton}
-          >
-            {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Create Fund</Text>}
-          </LinearGradient>
+          {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Create Fund</Text>}
         </TouchableOpacity>
       </View>
     </View>
@@ -291,7 +279,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: '800',
+    fontWeight: '500',
     letterSpacing: -1,
   },
   subtitle: {
@@ -303,18 +291,13 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 0,
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1.5,
     marginBottom: 8,
     marginLeft: 4,
@@ -341,7 +324,7 @@ const styles = StyleSheet.create({
   },
   counter: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   helperText: {
     fontSize: 13,
@@ -365,7 +348,7 @@ const styles = StyleSheet.create({
   },
   memberName: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   memberMeta: {
     marginTop: 4,
@@ -414,6 +397,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#FFF',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '500',
   },
 });

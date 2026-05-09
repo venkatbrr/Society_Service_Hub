@@ -75,6 +75,23 @@ Funds activation is gated by platform-admin approval. A community without `funds
 - **Android dev networking**: Keep `android.usesCleartextTraffic=true` so development builds can load Metro bundles over HTTP
 - **Bundled image assets**: Keep import extensions aligned with the real file type. The Community tab funds overview background is `assets/images/funds_bg.jpg`; importing it as `.png` breaks Android release resource compilation.
 
+### Verandah UI Rules
+
+- Use Verandah tokens only:
+  - `constants/Colors.ts` (`Verandah`)
+  - `constants/Verandah.ts` (`VerandahType`, `VerandahSpace`, `VerandahRadius`)
+- Do not hardcode visual values in feature UI:
+  - no raw color hex values
+  - no ad-hoc font sizes when a Verandah type token fits
+  - no card shadows/elevation
+- Reuse shared building blocks instead of local variants:
+  - `BaseCard` for card shells
+  - `Avatar` for people avatars
+  - `Rupees` for rupee amounts
+  - `EmptyState` for empty screens/lists
+- Keep typography weights in product UI at `400` or `500`.
+- Keep user-facing copy in sentence case.
+
 ## Database
 
 15 tables — key ones: `communities` (with `code` for join), `profiles`, `service_providers`, `service_visits`, `visit_joiners`, `events` (funds), `event_transactions`, `fund_roles`, `notifications`, `favorites`, `ratings`, `provider_hires`, `community_requests`, `profile_audit_log`, `user_services` (user-scoped, no community filter).

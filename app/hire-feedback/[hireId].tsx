@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -204,11 +203,6 @@ export default function HireFeedbackScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <LinearGradient
-        colors={[colors.gradientStart + '14', colors.gradientEnd + '08', 'transparent']}
-        style={styles.headerGradient}
-      />
-
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -320,7 +314,6 @@ export default function HireFeedbackScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  headerGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 180 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -337,8 +330,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
   },
-  backIcon: { fontSize: 18, fontWeight: '600' },
-  headerTitle: { fontSize: 20, fontWeight: '800', letterSpacing: -0.3 },
+  backIcon: { fontSize: 18, fontWeight: '500' },
+  headerTitle: { fontSize: 20, fontWeight: '500', letterSpacing: -0.3 },
   card: {
     marginTop: 8,
     marginHorizontal: 16,
@@ -347,7 +340,7 @@ const styles = StyleSheet.create({
     padding: 18,
     gap: 14,
   },
-  providerName: { fontSize: 22, fontWeight: '800' },
+  providerName: { fontSize: 22, fontWeight: '500' },
   hireDate: { fontSize: 13, fontWeight: '500' },
   signalGrid: {
     gap: 10,
@@ -362,10 +355,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   signalEmoji: { fontSize: 22, lineHeight: 24 },
-  signalLabel: { fontSize: 16, fontWeight: '700' },
+  signalLabel: { fontSize: 16, fontWeight: '500' },
   noteLabel: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1,
   },
   noteInput: {
@@ -385,7 +378,7 @@ const styles = StyleSheet.create({
   saveBtnText: {
     color: '#FFF',
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   promptCard: {
     borderWidth: 1,
@@ -395,7 +388,7 @@ const styles = StyleSheet.create({
   },
   promptTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
     lineHeight: 20,
   },
   promptActions: {
@@ -411,10 +404,10 @@ const styles = StyleSheet.create({
   promptPrimaryText: {
     color: '#FFF',
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   promptSecondaryText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
   },
 });

@@ -2,7 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import {
     SERVICE_CATEGORY_EMOJI,
@@ -24,7 +25,6 @@ interface UpcomingService {
 export function UpcomingServicesCard() {
   const router = useRouter();
   const { user } = useAuth();
-  const colors = Colors.light;
 
   const [state, setState] = useState<'loading' | 'zero' | 'all-on-track' | 'has-due'>('loading');
   const [urgentServices, setUrgentServices] = useState<UpcomingService[]>([]);
@@ -83,21 +83,21 @@ export function UpcomingServicesCard() {
   // State: zero services, not dismissed
   if (state === 'zero') {
     return (
-      <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+      <View style={styles.card}>
         <View style={styles.zeroRow}>
           <Text style={styles.zeroEmoji}>🔧</Text>
           <View style={styles.zeroContent}>
-            <Text style={[styles.zeroTitle, { color: colors.text }]}>Never miss maintenance</Text>
-            <Text style={[styles.zeroBody, { color: colors.textMuted }]}>
+            <Text style={styles.zeroTitle}>Never miss maintenance</Text>
+            <Text style={styles.zeroBody}>
               Track your AC, RO and other services
             </Text>
           </View>
           <TouchableOpacity onPress={handleDismiss} style={styles.dismissBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={{ color: colors.textMuted, fontSize: 16 }}>✕</Text>
+            <Text style={styles.dismissText}>✕</Text>
           </TouchableOpacity>
         </View>
         <TouchableOpacity
-          style={[styles.zeroCta, { backgroundColor: colors.primary }]}
+          style={styles.zeroCta}
           onPress={() => router.push('/services/add')}
           activeOpacity={0.85}
         >
@@ -110,11 +110,11 @@ export function UpcomingServicesCard() {
   // State: all-on-track
   if (state === 'all-on-track') {
     return (
-      <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+      <View style={styles.card}>
         <View style={styles.trackRow}>
-          <Text style={[styles.trackText, { color: colors.secondary }]}>✓ All services on track</Text>
+          <Text style={styles.trackText}>✓ All services on track</Text>
           <TouchableOpacity onPress={() => router.push('/services' as any)} activeOpacity={0.8}>
-            <Text style={[styles.viewAll, { color: colors.primary }]}>View all ({totalCount})</Text>
+            <Text style={styles.viewAll}>View all ({totalCount})</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -123,18 +123,18 @@ export function UpcomingServicesCard() {
 
   // State: has-due — show up to 2 urgent services
   return (
-    <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+    <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <Text style={[styles.cardTitle, { color: colors.text }]}>🔔 Upcoming Services</Text>
+        <Text style={styles.cardTitle}>Upcoming services</Text>
       </View>
 
       {urgentServices.map((s) => {
         const emoji = SERVICE_CATEGORY_EMOJI[s.category as ServiceCategory] ?? '🔧';
         return (
-          <View key={s.id} style={[styles.serviceRow, { borderColor: colors.border }]}>
+          <View key={s.id} style={styles.serviceRow}>
             <Text style={styles.rowEmoji}>{emoji}</Text>
             <View style={styles.rowContent}>
-              <Text style={[styles.rowName, { color: colors.text }]} numberOfLines={1}>
+              <Text style={styles.rowName} numberOfLines={1}>
                 {s.service_name}
               </Text>
               <UrgencyBadge daysUntilDue={s.days_until_due} />
@@ -143,7 +143,7 @@ export function UpcomingServicesCard() {
               onPress={() => router.push({ pathname: '/services/[id]', params: { id: s.id } })}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
             >
-              <Text style={[styles.findTech, { color: colors.primary }]}>Find tech</Text>
+              <Text style={styles.findTech}>Find tech</Text>
             </TouchableOpacity>
           </View>
         );
@@ -151,10 +151,10 @@ export function UpcomingServicesCard() {
 
       <View style={styles.cardFooter}>
         <TouchableOpacity onPress={() => router.push('/services/add')} activeOpacity={0.8}>
-          <Text style={[styles.footerLink, { color: colors.primary }]}>+ Add service</Text>
+          <Text style={styles.footerLink}>+ Add service</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/services' as any)} activeOpacity={0.8}>
-          <Text style={[styles.footerLink, { color: colors.textMuted }]}>View all ({totalCount})</Text>
+          <Text style={styles.footerLinkMuted}>View all ({totalCount})</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -163,50 +163,50 @@ export function UpcomingServicesCard() {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
-    borderWidth: 1,
-    marginBottom: 6,
-    padding: 16,
-    shadowColor: '#6C63FF',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 0,
+    borderRadius: VerandahRadius.lg,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    backgroundColor: Verandah.card,
+    marginBottom: VerandahSpace.sm + 2,
+    padding: VerandahSpace.lg,
   },
   // Zero state
-  zeroRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  zeroRow: { flexDirection: 'row', alignItems: 'center', gap: VerandahSpace.sm + 2, marginBottom: VerandahSpace.md },
   zeroEmoji: { fontSize: 28 },
   zeroContent: { flex: 1 },
-  zeroTitle: { fontSize: 14, fontWeight: '700' },
-  zeroBody: { fontSize: 12, marginTop: 2 },
+  zeroTitle: { ...VerandahType.bodyBold, color: Verandah.textPrimary },
+  zeroBody: { ...VerandahType.caption, color: Verandah.textSecondary, marginTop: 2 },
   dismissBtn: { padding: 2 },
-  zeroCta: { borderRadius: 12, paddingVertical: 10, alignItems: 'center' },
-  zeroCtaText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
+  dismissText: { color: Verandah.textMuted, fontSize: 16 },
+  zeroCta: { borderRadius: VerandahRadius.md + 2, paddingVertical: VerandahSpace.md, alignItems: 'center', backgroundColor: Verandah.primary },
+  zeroCtaText: { ...VerandahType.bodyBold, color: Verandah.primaryFg },
   // All on track
   trackRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  trackText: { fontSize: 14, fontWeight: '700' },
-  viewAll: { fontSize: 13, fontWeight: '600' },
+  trackText: { ...VerandahType.bodyBold, color: Verandah.accent },
+  viewAll: { ...VerandahType.caption, fontWeight: '500', color: Verandah.accent },
   // Has-due
-  cardHeader: { marginBottom: 10 },
-  cardTitle: { fontSize: 14, fontWeight: '800' },
+  cardHeader: { marginBottom: VerandahSpace.sm + 2 },
+  cardTitle: { ...VerandahType.bodyBold, color: Verandah.textPrimary },
   serviceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    gap: 8,
+    paddingVertical: VerandahSpace.sm,
+    borderTopWidth: 0.5,
+    borderTopColor: Verandah.border,
+    gap: VerandahSpace.sm,
   },
   rowEmoji: { fontSize: 20 },
-  rowContent: { flex: 1, gap: 4 },
-  rowName: { fontSize: 13, fontWeight: '700' },
-  findTech: { fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
+  rowContent: { flex: 1, gap: VerandahSpace.xs },
+  rowName: { ...VerandahType.bodyBold, color: Verandah.textPrimary },
+  findTech: { ...VerandahType.caption, fontWeight: '500', color: Verandah.accent },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderColor: 'rgba(108,99,255,0.1)',
+    marginTop: VerandahSpace.sm + 2,
+    paddingTop: VerandahSpace.sm + 2,
+    borderTopWidth: 0.5,
+    borderTopColor: Verandah.border,
   },
-  footerLink: { fontSize: 13, fontWeight: '600' },
+  footerLink: { ...VerandahType.caption, fontWeight: '500', color: Verandah.accent },
+  footerLinkMuted: { ...VerandahType.caption, fontWeight: '500', color: Verandah.textTertiary },
 });

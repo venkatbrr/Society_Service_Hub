@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { Avatar } from '../../components/Avatar';
 import { JoinerListItem } from '../../components/JoinerListItem';
+import { Rupees } from '../../components/Rupees';
 import { VisitStatusBadge } from '../../components/VisitStatusBadge';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import { VisitJoinerWithProfile, VisitWithJoinerData } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
@@ -15,7 +16,18 @@ export default function VisitDetailScreen() {
   const { id, returnTo, visitTab } = useLocalSearchParams<{ id: string; returnTo?: string; visitTab?: 'upcoming' | 'past' }>();
   const router = useRouter();
   const { user, profile } = useAuth();
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    secondary: Verandah.accent,
+    accent: Verandah.danger,
+    border: Verandah.border,
+    surface: Verandah.card,
+    surface2: Verandah.cardMuted,
+    icon: Verandah.textSecondary,
+  };
 
   const [visit, setVisit] = useState<VisitWithJoinerData | null>(null);
   const [joiners, setJoiners] = useState<VisitJoinerWithProfile[]>([]);
@@ -26,6 +38,8 @@ export default function VisitDetailScreen() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [flatNo, setFlatNo] = useState(profile?.flat_number || '');
   const [note, setNote] = useState('');
+
+  const parsedEstimatedCost = visit?.estimated_cost ? Number(String(visit.estimated_cost).replace(/[^0-9.]/g, '')) : NaN;
 
   const fetchVisitData = useCallback(async () => {
     if (!id || !user?.id) return;
@@ -230,21 +244,13 @@ export default function VisitDetailScreen() {
         {/* Creator Identity */}
         <View style={styles.creatorSection}>
           <View style={styles.avatarContainer}>
-            {visit.creator_avatar_url ? (
-               <Image source={{ uri: visit.creator_avatar_url }} style={styles.creatorAvatar} />
-            ) : (
-                <View style={[styles.creatorAvatarPlaceholder, { backgroundColor: colors.primary + '12' }]}>
-                    <Text style={[styles.creatorInitials, { color: colors.primary }]}>
-                        {visit.creator_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2)}
-                    </Text>
-                </View>
-            )}
+            <Avatar name={visit.creator_name || 'Neighbor'} size={56} />
           </View>
           <View style={styles.creatorInfo}>
             <View style={styles.nameRow}>
                 <Text style={[styles.creatorName, { color: colors.text }]}>{visit.creator_name}</Text>
                 {isCreator && (
-                    <View style={[styles.hostBadge, { backgroundColor: '#10B98112' }]}>
+                    <View style={[styles.hostBadge, { backgroundColor: Verandah.accentSoft }]}>
                         <Text style={[styles.hostBadgeText, { color: colors.secondary }]}>Your visit</Text>
                     </View>
                 )}
@@ -256,7 +262,7 @@ export default function VisitDetailScreen() {
         {/* Visit Details Card */}
         <View style={styles.detailCard}>
           <View style={styles.dateChipContainer}>
-             <View style={[styles.dateChip, { backgroundColor: colors.primary + '10' }]}>
+             <View style={[styles.dateChip, { backgroundColor: Verandah.cardMuted }]}>
                 <Text style={[styles.dateChipText, { color: colors.primary }]}>{formatDate(visit.visit_date)}</Text>
              </View>
              <VisitStatusBadge status={displayStatus} />
@@ -279,7 +285,11 @@ export default function VisitDetailScreen() {
             </View>
             <View style={styles.metaItem}>
                 <Text style={[styles.metaLabel, { color: colors.textMuted }]}>EST. COST</Text>
-                <Text style={[styles.metaValue, { color: colors.text }]}>{visit.estimated_cost || 'Not specified'}</Text>
+                {visit.estimated_cost && Number.isFinite(parsedEstimatedCost) && parsedEstimatedCost > 0 ? (
+                  <Rupees amount={parsedEstimatedCost} size="sm" />
+                ) : (
+                  <Text style={[styles.metaValue, { color: colors.text }]}>{visit.estimated_cost || 'Not specified'}</Text>
+                )}
             </View>
           </View>
         </View>
@@ -357,14 +367,9 @@ export default function VisitDetailScreen() {
             <View style={styles.creatorActions}>
                 {visit.status === 'upcoming' && (
                     <TouchableOpacity style={styles.primaryBtn} onPress={() => updateStatus('completed')}>
-                        <LinearGradient
-                          colors={[colors.gradientStart, colors.gradientEnd]}
-                          style={styles.primaryBtnGradient}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                        >
-                            <Text style={styles.primaryBtnText}>Mark as Completed</Text>
-                        </LinearGradient>
+                      <View style={[styles.primaryBtnGradient, { backgroundColor: colors.primary }]}> 
+                        <Text style={styles.primaryBtnText}>Mark as completed</Text>
+                      </View>
                     </TouchableOpacity>
                 )}
                 <TouchableOpacity style={styles.cancelBtn} onPress={() => updateStatus('cancelled')}>
@@ -378,14 +383,9 @@ export default function VisitDetailScreen() {
             </TouchableOpacity>
         ) : visit.status === 'upcoming' && !isFull ? (
             <TouchableOpacity style={styles.primaryBtn} onPress={() => setShowJoinModal(true)}>
-                <LinearGradient
-                  colors={[colors.gradientStart, colors.gradientEnd]}
-                  style={styles.primaryBtnGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                    <Text style={styles.primaryBtnText}>Join this visit</Text>
-                </LinearGradient>
+              <View style={[styles.primaryBtnGradient, { backgroundColor: colors.primary }]}> 
+                <Text style={styles.primaryBtnText}>Join this visit</Text>
+              </View>
             </TouchableOpacity>
         ) : isFull ? (
             <View style={[styles.disabledBtn, { backgroundColor: colors.border }]}>
@@ -441,14 +441,9 @@ export default function VisitDetailScreen() {
                         onPress={handleJoin}
                         disabled={joining}
                     >
-                        <LinearGradient
-                          colors={[colors.gradientStart, colors.gradientEnd]}
-                          style={styles.primaryBtnGradient}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                        >
-                            {joining ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryBtnText}>Confirm Join</Text>}
-                        </LinearGradient>
+                      <View style={[styles.primaryBtnGradient, { backgroundColor: colors.primary }]}> 
+                        {joining ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.primaryBtnText}>Confirm join</Text>}
+                      </View>
                     </TouchableOpacity>
                 </KeyboardAvoidingView>
             </View>
@@ -492,22 +487,6 @@ const styles = StyleSheet.create({
   avatarContainer: {
     marginRight: 16,
   },
-  creatorAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-  },
-  creatorAvatarPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  creatorInitials: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
   creatorInfo: {
     flex: 1,
   },
@@ -518,7 +497,7 @@ const styles = StyleSheet.create({
   },
   creatorName: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   hostBadge: {
     paddingHorizontal: 8,
@@ -527,7 +506,7 @@ const styles = StyleSheet.create({
   },
   hostBadgeText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '500',
     textTransform: 'uppercase',
   },
   creatorFlat: {
@@ -540,14 +519,9 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 24,
     marginBottom: 20,
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 0,
+    backgroundColor: Verandah.card,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: Verandah.border,
   },
   dateChipContainer: {
     flexDirection: 'row',
@@ -562,11 +536,11 @@ const styles = StyleSheet.create({
   },
   dateChipText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   visitTitle: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: '500',
     letterSpacing: -0.5,
     marginBottom: 12,
   },
@@ -578,7 +552,7 @@ const styles = StyleSheet.create({
   },
   timeSlot: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   description: {
     fontSize: 15,
@@ -595,31 +569,26 @@ const styles = StyleSheet.create({
   },
   metaLabel: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1,
     marginBottom: 4,
   },
   metaValue: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   infoCard: {
     marginHorizontal: 24,
     padding: 20,
     borderRadius: 24,
     marginBottom: 20,
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 0,
+    backgroundColor: Verandah.card,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: Verandah.border,
   },
   cardTitle: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1.5,
     marginBottom: 16,
     paddingHorizontal: 24,
@@ -634,7 +603,7 @@ const styles = StyleSheet.create({
   },
   providerName: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: '500',
     marginBottom: 8,
   },
   contactRow: {
@@ -650,7 +619,7 @@ const styles = StyleSheet.create({
   },
   link: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   joinersSection: {
     paddingHorizontal: 24,
@@ -659,14 +628,9 @@ const styles = StyleSheet.create({
   joinerList: {
     borderRadius: 24,
     padding: 16,
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 0,
+    backgroundColor: Verandah.card,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: Verandah.border,
   },
   emptyJoiners: {
     padding: 20,
@@ -692,9 +656,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   primaryBtnText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   leaveBtn: {
     flexDirection: 'row',
@@ -705,7 +669,7 @@ const styles = StyleSheet.create({
   },
   leaveBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   creatorActions: {
       gap: 12,
@@ -717,7 +681,7 @@ const styles = StyleSheet.create({
   },
   cancelBtnText: {
       fontSize: 14,
-      fontWeight: '700',
+    fontWeight: '500',
   },
   disabledBtn: {
       height: 58,
@@ -727,11 +691,11 @@ const styles = StyleSheet.create({
   },
   disabledBtnText: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: '500',
   },
   modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(45, 43, 85, 0.5)',
+      backgroundColor: Verandah.borderStrong,
       justifyContent: 'flex-end',
   },
   modalContent: {
@@ -748,7 +712,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
       fontSize: 20,
-      fontWeight: '800',
+      fontWeight: '500',
   },
   modalBody: {
       gap: 16,
@@ -758,7 +722,7 @@ const styles = StyleSheet.create({
   },
   label: {
       fontSize: 11,
-      fontWeight: '700',
+      fontWeight: '500',
       letterSpacing: 1,
       marginBottom: 8,
   },

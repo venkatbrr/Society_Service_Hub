@@ -14,33 +14,33 @@
 export type DetailFieldType = 'chips' | 'radio' | 'text' | 'number';
 
 export interface DetailField {
-  key: string;          // storage key inside the JSONB `details` column
-  label: string;        // UI label
+  key: string;
+  label: string;
   type: DetailFieldType;
-  placeholder?: string; // for text/number inputs
-  options?: string[];   // for chips/radio
-  suffix?: string;      // e.g. "/month", "/visit" shown after number
+  placeholder?: string;
+  options?: string[];
+  suffix?: string;
 }
 
 export const CATEGORY_DETAIL_FIELDS: Record<string, DetailField[]> = {
   Maid: [
     { key: 'cuisine', label: 'Cuisine Preference', type: 'radio', options: ['South Indian', 'North Indian', 'Both', 'Other'] },
-    { key: 'tasks', label: 'Tasks', type: 'chips', options: ['Cleaning', 'Cooking', 'Laundry', 'Utensils', 'Mopping', 'Dusting'] },
+    { key: 'tasks', label: 'Tasks', type: 'chips', options: ['Cleaning', 'Cooking', 'Laundry', 'Utensils', 'Mopping', 'Dusting', 'Childcare', 'Pet Care'] },
     { key: 'availability', label: 'Availability', type: 'radio', options: ['Full-time', 'Part-time', 'On-call'] },
     { key: 'salary', label: 'Salary', type: 'number', placeholder: 'e.g. 8000', suffix: '/month' },
   ],
   Cook: [
     { key: 'cuisine', label: 'Cuisine Specialty', type: 'chips', options: ['South Indian', 'North Indian', 'Chinese', 'Continental', 'Multi-cuisine'] },
     { key: 'mealType', label: 'Meal Type', type: 'chips', options: ['Breakfast', 'Lunch', 'Dinner', 'Tiffin / Snacks'] },
-    { key: 'dietType', label: 'Diet Type', type: 'radio', options: ['Veg Only', 'Non-veg', 'Both'] },
+    { key: 'dietType', label: 'Diet Type', type: 'radio', options: ['Veg Only', 'Non-veg', 'Jain', 'Both'] },
     { key: 'salary', label: 'Salary', type: 'number', placeholder: 'e.g. 10000', suffix: '/month' },
   ],
   Electrician: [
-    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Wiring', 'Appliance Repair', 'MCB / Panel', 'Inverter / UPS', 'Fan / Light'] },
+    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Wiring', 'Appliance Repair', 'MCB / Panel', 'Inverter / UPS', 'Fan / Light', 'CCTV / Intercom', 'Geyser'] },
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 300', suffix: '/visit' },
   ],
   Plumber: [
-    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Pipe Fitting', 'Drainage', 'Water Tank', 'Bathroom Fitting', 'Leakage'] },
+    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Pipe Fitting', 'Drainage', 'Water Tank', 'Bathroom Fitting', 'Leakage', 'RO / Purifier', 'Washing Machine Inlet/Outlet'] },
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 250', suffix: '/visit' },
   ],
   'AC Technician': [
@@ -49,22 +49,12 @@ export const CATEGORY_DETAIL_FIELDS: Record<string, DetailField[]> = {
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 500', suffix: '/visit' },
   ],
   Carpenter: [
-    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Furniture', 'Door / Window', 'Modular Kitchen', 'Cabinet', 'Bed / Wardrobe'] },
+    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Furniture', 'Door / Window', 'Modular Kitchen', 'Cabinet', 'Bed / Wardrobe', 'Repair / Polish'] },
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 800', suffix: '/day' },
   ],
   Painter: [
-    { key: 'paintType', label: 'Type', type: 'radio', options: ['Interior', 'Exterior', 'Both'] },
+    { key: 'paintType', label: 'Type', type: 'chips', options: ['Interior', 'Exterior', 'Waterproofing'] },
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 15', suffix: '/sqft' },
-  ],
-  Photography: [
-    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Events', 'Portrait', 'Family', 'Candid', 'Drone'] },
-    { key: 'equipment', label: 'Equipment', type: 'text', placeholder: 'e.g. DSLR, mirrorless, drone' },
-    { key: 'charges', label: 'Starting From', type: 'number', placeholder: 'e.g. 5000', suffix: '/event' },
-  ],
-  Decoration: [
-    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Birthday', 'Festival', 'Wedding', 'Theme Decor', 'Balloon Decor'] },
-    { key: 'materials', label: 'Materials Included', type: 'radio', options: ['Yes', 'No', 'Depends on package'] },
-    { key: 'charges', label: 'Starting From', type: 'number', placeholder: 'e.g. 3000', suffix: '/event' },
   ],
   Driver: [
     { key: 'vehicleType', label: 'Vehicle Type', type: 'radio', options: ['Car', 'Two-wheeler', 'Both'] },
@@ -88,7 +78,7 @@ export const CATEGORY_DETAIL_FIELDS: Record<string, DetailField[]> = {
     { key: 'availability', label: 'Availability', type: 'radio', options: ['Daily', 'Alternate Days', 'On-call'] },
   ],
   'Salon / Beautician': [
-    { key: 'services', label: 'Services', type: 'chips', options: ['Haircut', 'Facial', 'Waxing', 'Threading', 'Bridal', 'Mehendi', 'Massage'] },
+    { key: 'services', label: 'Services', type: 'chips', options: ['Haircut', 'Facial', 'Waxing', 'Threading', 'Bridal', 'Mehendi', 'Massage', 'Pedicure', 'Manicure'] },
     { key: 'gender', label: 'Gender', type: 'radio', options: ['Men', 'Women', 'Unisex'] },
     { key: 'charges', label: 'Starting From', type: 'number', placeholder: 'e.g. 200', suffix: 'onwards' },
   ],
@@ -111,6 +101,7 @@ export const CATEGORY_DETAIL_FIELDS: Record<string, DetailField[]> = {
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 50', suffix: '/visit' },
   ],
   'Washroom Cleaner': [
+    { key: 'services', label: 'Services', type: 'chips', options: ['Deep Cleaning', 'Regular Cleaning', 'Drain Cleaning', 'Tile Scrubbing'] },
     { key: 'frequency', label: 'Frequency', type: 'radio', options: ['Daily', 'Weekly', 'Monthly', 'On-call'] },
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 500', suffix: '/month' },
   ],
@@ -127,6 +118,7 @@ export const CATEGORY_DETAIL_FIELDS: Record<string, DetailField[]> = {
   'Car Wash': [
     { key: 'vehicleType', label: 'Vehicle Type', type: 'radio', options: ['Car', 'Bike', 'Both'] },
     { key: 'washType', label: 'Wash Type', type: 'chips', options: ['Exterior', 'Interior', 'Full Wash', 'Polish / Wax'] },
+    { key: 'frequency', label: 'Frequency', type: 'radio', options: ['Daily', 'Weekly', 'On-call'] },
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 300', suffix: '/wash' },
   ],
   Milkman: [
@@ -139,16 +131,65 @@ export const CATEGORY_DETAIL_FIELDS: Record<string, DetailField[]> = {
     { key: 'brands', label: 'Brands Handled', type: 'text', placeholder: 'e.g. Kent, Aquaguard, Pureit' },
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 400', suffix: '/visit' },
   ],
+  'Grills & Mesh Work': [
+    { key: 'services', label: 'Services', type: 'chips', options: ['Mosquito Mesh', 'Invisible Grill', 'MS Grill', 'SS Grill', 'Safety Net', 'Bird Net', 'Sliding Mesh Door', 'Balcony Grill', 'Window Grill', 'Repair'] },
+    { key: 'material', label: 'Material', type: 'radio', options: ['Mild Steel (MS)', 'Stainless Steel (SS)', 'Aluminium', 'Fiberglass', 'Nylon Net'] },
+    { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 250', suffix: '/sqft' },
+  ],
   'Movers & Packers': [
     { key: 'moveType', label: 'Type', type: 'radio', options: ['Local', 'Intercity', 'Both'] },
     { key: 'vehicle', label: 'Vehicle', type: 'radio', options: ['Tempo', 'Truck', 'Mini-van', 'Multiple'] },
     { key: 'charges', label: 'Starting From', type: 'number', placeholder: 'e.g. 3000', suffix: 'onwards' },
   ],
-  'Tutor / Home Teacher': [
+  'Tent House': [
+    { key: 'services', label: 'Services', type: 'chips', options: ['Tent Setup', 'Chair & Tables', 'Lighting', 'Stage / Mandap', 'Fans / Coolers', 'Generator'] },
+    { key: 'eventType', label: 'Event Type', type: 'chips', options: ['Wedding', 'Birthday', 'Puja / Havan', 'Meeting', 'Other'] },
+    { key: 'charges', label: 'Starting From', type: 'number', placeholder: 'e.g. 5000', suffix: '/event' },
+  ],
+  'Water Cans': [
+    { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. Bisleri, Kinley, Local' },
+    { key: 'canSize', label: 'Can Size', type: 'radio', options: ['20 Litre', '10 Litre', '5 Litre', '1 Litre Bottles'] },
+    { key: 'pricePerCan', label: 'Price Per Can', type: 'number', placeholder: 'e.g. 40', suffix: '/can' },
+    { key: 'delivery', label: 'Delivery', type: 'radio', options: ['Home Delivery', 'Pickup', 'Both'] },
+  ],
+  Catering: [
+    { key: 'cuisine', label: 'Cuisine', type: 'chips', options: ['South Indian', 'North Indian', 'Chinese', 'Multi-cuisine', 'Biryani', 'Chaat / Street Food'] },
+    { key: 'eventType', label: 'Event Type', type: 'chips', options: ['Birthday', 'Puja / Havan', 'Wedding', 'Get-together', 'Corporate'] },
+    { key: 'dietType', label: 'Diet Type', type: 'radio', options: ['Veg Only', 'Non-veg', 'Both'] },
+    { key: 'minPlates', label: 'Minimum Plates', type: 'number', placeholder: 'e.g. 25', suffix: 'plates' },
+    { key: 'charges', label: 'Starting From', type: 'number', placeholder: 'e.g. 200', suffix: '/plate' },
+  ],
+  Boutique: [
+    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Saree', 'Kurta / Kurti', 'Lehenga', 'Western Wear', 'Kids Wear', 'Accessories'] },
+    { key: 'gender', label: 'Gender', type: 'radio', options: ['Women', 'Men', 'Both'] },
+    { key: 'priceRange', label: 'Price Range', type: 'radio', options: ['Budget', 'Mid-range', 'Premium'] },
+  ],
+  Photography: [
+    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Events', 'Portrait', 'Family', 'Candid', 'Drone'] },
+    { key: 'equipment', label: 'Equipment', type: 'text', placeholder: 'e.g. DSLR, mirrorless, drone' },
+    { key: 'charges', label: 'Starting From', type: 'number', placeholder: 'e.g. 5000', suffix: '/event' },
+  ],
+  Decoration: [
+    { key: 'specialization', label: 'Specialization', type: 'chips', options: ['Birthday', 'Festival', 'Wedding', 'Theme Decor', 'Balloon Decor'] },
+    { key: 'materials', label: 'Materials Included', type: 'radio', options: ['Yes', 'No', 'Depends on package'] },
+    { key: 'charges', label: 'Starting From', type: 'number', placeholder: 'e.g. 3000', suffix: '/event' },
+  ],
+  Teaching: [
+    { key: 'type', label: 'Type', type: 'radio', options: ['Tutor (Home Visit)', 'Coaching', 'Online Tutor', 'Music / Art Teacher'] },
     { key: 'subjects', label: 'Subjects', type: 'text', placeholder: 'e.g. Maths, Science, English' },
-    { key: 'level', label: 'Level', type: 'chips', options: ['Pre-school', 'Primary', 'Secondary', 'Higher Secondary', 'College'] },
+    { key: 'level', label: 'Level', type: 'chips', options: ['Pre-school', 'Primary (1-5)', 'Secondary (6-10)', 'Higher Secondary (11-12)', 'College', 'Competitive Exams'] },
     { key: 'mode', label: 'Mode', type: 'radio', options: ['Home Visit', 'Online', 'Both'] },
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 3000', suffix: '/month' },
+  ],
+  'RTO Agent': [
+    { key: 'services', label: 'Services', type: 'chips', options: ['License (New)', 'License Renewal', 'RC Transfer', 'Vehicle Registration', 'Insurance', 'NOC', 'Challan / Fine', 'Fitness Certificate'] },
+    { key: 'vehicleType', label: 'Vehicle Type', type: 'radio', options: ['Two-wheeler', 'Four-wheeler', 'Commercial', 'All'] },
+    { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 1500', suffix: '/service' },
+  ],
+  'Aadhar Centre': [
+    { key: 'services', label: 'Services', type: 'chips', options: ['New Enrolment', 'Update Address', 'Update Mobile', 'Update Name', 'Biometric Update', 'PVC Card Print', 'mAadhaar Help'] },
+    { key: 'mode', label: 'Mode', type: 'radio', options: ['At Centre', 'Home Visit', 'Both'] },
+    { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 50', suffix: '/service' },
   ],
 };
 

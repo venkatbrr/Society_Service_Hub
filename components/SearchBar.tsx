@@ -1,31 +1,30 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../constants/Colors';
-import { APP_EMOJIS } from '../constants/emojis';
+import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahType } from '../constants/Verandah';
 
 type SearchBarProps = {
   value: string;
   onChangeText: (text: string) => void;
-  isLightMode: boolean;
+  isLightMode?: boolean;
   placeholder?: string;
 };
 
 export const SearchBar = ({ value, onChangeText, isLightMode, placeholder = "Search..." }: SearchBarProps) => {
-  const colors = isLightMode ? Colors.light : Colors.dark;
-
   return (
-    <View style={[styles.container, { backgroundColor: colors.glass, borderColor: colors.border, shadowColor: colors.primary }]}>
-      <Text style={[styles.icon, { fontSize: 20 }]}>{APP_EMOJIS.search}</Text>
+    <View style={styles.container}>
+      <Ionicons name="search-outline" size={18} color={Verandah.textTertiary} style={styles.icon} />
       <TextInput
-        style={[styles.input, { color: colors.text }]}
+        style={styles.input}
         placeholder={placeholder}
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={Verandah.textTertiary}
         value={value}
         onChangeText={onChangeText}
       />
       {value.length > 0 && (
         <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearButton}>
-          <Text style={styles.clearIcon}>{APP_EMOJIS.close}</Text>
+          <Ionicons name="close-circle" size={18} color={Verandah.textMuted} />
         </TouchableOpacity>
       )}
     </View>
@@ -37,28 +36,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
-    paddingHorizontal: 12,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 0,
+    paddingHorizontal: 14,
+    height: 44,
+    borderRadius: VerandahRadius.md,
+    backgroundColor: Verandah.cardMuted,
   },
   icon: {
     marginRight: 8,
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    ...VerandahType.body,
+    color: Verandah.textPrimary,
     height: '100%',
   },
   clearButton: {
     padding: 4,
-  },
-  clearIcon: {
-    fontSize: 18,
-    lineHeight: 20,
   },
 });

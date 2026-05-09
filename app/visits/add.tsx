@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -211,25 +210,19 @@ export default function AddVisitScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={categoryGridStyle.groupScroll}>
               {[{ id: 'all', label: 'All Services' }, ...visitCategoryGroups.map((g) => ({ id: g.id, label: g.label }))].map((group) => {
                 const selected = selectedGroupId === group.id;
-                return selected ? (
-                  <LinearGradient
-                    key={group.id}
-                    colors={[colors.gradientStart, colors.gradientEnd]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={categoryGridStyle.catChipGradient}
-                  >
-                    <TouchableOpacity onPress={() => handleGroupSelect(group.id)}>
-                      <Text style={[categoryGridStyle.catText, { color: '#FFF' }]}>{group.label}</Text>
-                    </TouchableOpacity>
-                  </LinearGradient>
-                ) : (
+                return (
                   <TouchableOpacity
                     key={group.id}
-                    style={[categoryGridStyle.catChip, { borderColor: colors.border, backgroundColor: colors.glass }]}
+                    style={[
+                      categoryGridStyle.catChip,
+                      {
+                        borderColor: selected ? colors.primary : colors.border,
+                        backgroundColor: selected ? colors.primary : colors.glass,
+                      },
+                    ]}
                     onPress={() => handleGroupSelect(group.id)}
                   >
-                    <Text style={[categoryGridStyle.catText, { color: colors.text }]}>{group.label}</Text>
+                    <Text style={[categoryGridStyle.catText, { color: selected ? '#FFF' : colors.text }]}>{group.label}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -237,27 +230,19 @@ export default function AddVisitScreen() {
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={categoryGridStyle.categoryScroll}>
               {visibleCategories.map(cat => (
-                category === cat ? (
-                  <LinearGradient
-                    key={cat}
-                    colors={[colors.gradientStart, colors.gradientEnd]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={categoryGridStyle.catChipGradient}
-                  >
-                    <TouchableOpacity onPress={() => handleCategorySelect(cat)}>
-                      <Text style={[categoryGridStyle.catText, { color: '#FFF' }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
-                    </TouchableOpacity>
-                  </LinearGradient>
-                ) : (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[categoryGridStyle.catChip, { borderColor: colors.border, backgroundColor: colors.glass }]}
-                    onPress={() => handleCategorySelect(cat)}
-                  >
-                    <Text style={[categoryGridStyle.catText, { color: colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
-                  </TouchableOpacity>
-                )
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    categoryGridStyle.catChip,
+                    {
+                      borderColor: category === cat ? colors.primary : colors.border,
+                      backgroundColor: category === cat ? colors.primary : colors.glass,
+                    },
+                  ]}
+                  onPress={() => handleCategorySelect(cat)}
+                >
+                  <Text style={[categoryGridStyle.catText, { color: category === cat ? '#FFF' : colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
+                </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
@@ -326,7 +311,7 @@ export default function AddVisitScreen() {
               <Text style={[styles.label, { color: colors.text }]}>EST. COST (OPTIONAL)</Text>
               <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                placeholder="e.g. ₹400 / unit"
+                placeholder="e.g. 400 / unit"
                 placeholderTextColor={colors.textMuted}
                 value={estimatedCost}
                 onChangeText={setEstimatedCost}
@@ -372,16 +357,9 @@ export default function AddVisitScreen() {
           onPress={handleSave}
           disabled={submitting}
           activeOpacity={0.85}
-          style={{ marginBottom: Math.max(insets.bottom, 40) }}
+          style={[styles.submitBtn, { marginBottom: Math.max(insets.bottom, 40), backgroundColor: colors.primary }]}
         >
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.submitBtn}
-          >
-            {submitting ? <ActivityIndicator color="#FFF" /> : <Text style={styles.submitBtnText}>Share Visit</Text>}
-          </LinearGradient>
+          {submitting ? <ActivityIndicator color="#FFF" /> : <Text style={styles.submitBtnText}>Share Visit</Text>}
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -402,14 +380,9 @@ const categoryGridStyle = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
   },
-  catChipGradient: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
   catText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });
 
@@ -440,7 +413,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '500',
     letterSpacing: -0.5,
   },
   subtitle: {
@@ -453,7 +426,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '500',
     letterSpacing: 1.5,
     marginBottom: 20,
   },
@@ -462,7 +435,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1.5,
     marginBottom: 8,
     marginLeft: 4,
@@ -498,7 +471,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     lineHeight: 18,
   },
   submitBtn: {
@@ -510,6 +483,6 @@ const styles = StyleSheet.create({
   submitBtnText: {
     color: '#FFF',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '500',
   },
 });

@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -15,7 +14,8 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BlockPicker } from '../../components/BlockPicker';
-import { Colors } from '../../constants/Colors';
+import { Rupees } from '../../components/Rupees';
+import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
@@ -51,7 +51,16 @@ export default function FundDetailScreen() {
   const [blockNames, setBlockNames] = useState<Map<string, string>>(new Map());
   const { user, appRole } = useAuth();
   const router = useRouter();
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    secondary: Verandah.accent,
+    accent: Verandah.danger,
+    border: Verandah.border,
+    surface2: Verandah.cardMuted,
+  };
 
   const fetchFundDetail = useCallback(async () => {
     try {
@@ -288,13 +297,10 @@ export default function FundDetailScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={[colors.gradientStart, colors.gradientEnd]}
-          style={styles.header}
-        >
+        <View style={[styles.header, { backgroundColor: colors.primary }]}>
           <View style={styles.headerTop}>
             <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-              <Ionicons name="arrow-back" size={24} color="#FFF" />
+              <Ionicons name="arrow-back" size={24} color={Verandah.primaryFg} />
             </TouchableOpacity>
             <Text style={styles.headerLabel}>Fund Transparency</Text>
             <View style={{ width: 40 }} />
@@ -312,20 +318,20 @@ export default function FundDetailScreen() {
           <View style={styles.summaryGrid}>
             <View style={styles.summaryItem}>
               <Text style={styles.sumLabel}>Collected</Text>
-              <Text style={styles.sumValue}>Rs {income.toLocaleString()}</Text>
+              <Rupees amount={income} size="sm" tone="in" />
             </View>
             <View style={styles.sumDivider} />
             <View style={styles.summaryItem}>
               <Text style={styles.sumLabel}>Spent</Text>
-              <Text style={styles.sumValue}>Rs {expense.toLocaleString()}</Text>
+              <Rupees amount={expense} size="sm" />
             </View>
             <View style={styles.sumDivider} />
             <View style={styles.summaryItem}>
               <Text style={styles.sumLabel}>Balance</Text>
-              <Text style={styles.sumValue}>Rs {balance.toLocaleString()}</Text>
+              <Rupees amount={balance} size="sm" tone={balance >= 0 ? 'in' : 'out'} />
             </View>
           </View>
-        </LinearGradient>
+        </View>
 
         <View style={styles.accessCard}>
           <View style={styles.accessHeader}>
@@ -408,9 +414,11 @@ export default function FundDetailScreen() {
                   <Text style={[styles.statusLabel, { color: isPaid ? '#15803D' : '#B45309' }]}>
                     {isPaid ? 'Paid' : 'Pending'}
                   </Text>
-                  <Text style={[styles.transAmount, { color: isPaid ? colors.secondary : colors.textMuted }]}>
-                    {isPaid && contribution ? `Rs ${Number(contribution.amount).toLocaleString()}` : '--'}
-                  </Text>
+                  {isPaid && contribution ? (
+                    <Rupees amount={Number(contribution.amount)} size="sm" tone="in" />
+                  ) : (
+                    <Text style={[styles.transAmount, { color: colors.textMuted }]}>--</Text>
+                  )}
                 </View>
               </View>
             );
@@ -573,9 +581,7 @@ export default function FundDetailScreen() {
                     : new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}
                 </Text>
               </View>
-              <Text style={[styles.transAmount, { color: colors.accent }]}>
-                Rs {Number(transaction.amount).toLocaleString()}
-              </Text>
+              <Rupees amount={Number(transaction.amount)} size="sm" />
             </View>
           ))}
           {expenseTransactions.length === 0 ? <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No expenses logged yet.</Text> : null}
@@ -639,53 +645,53 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: Verandah.cardMuted,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerIcon: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
   },
   headerLabel: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   fundTitle: {
     fontSize: 28,
-    fontWeight: '800',
-    color: '#FFF',
+    fontWeight: '500',
+    color: Verandah.primaryFg,
     marginBottom: 8,
     letterSpacing: -0.5,
   },
   fundDesc: {
     fontSize: 15,
-    color: 'rgba(255,255,255,0.8)',
+    color: Verandah.primaryFg,
     marginBottom: 20,
     lineHeight: 22,
   },
   roleSummaryCard: {
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: Verandah.cardMuted,
     borderRadius: 24,
     padding: 18,
     marginBottom: 20,
     gap: 6,
   },
   roleSummaryTitle: {
-    color: '#FFF',
+    color: Verandah.textPrimary,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   roleSummaryText: {
-    color: 'rgba(255,255,255,0.88)',
+    color: Verandah.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
   summaryGrid: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: Verandah.card,
     borderRadius: 24,
     padding: 18,
   },
@@ -694,17 +700,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sumLabel: {
-    color: 'rgba(255,255,255,0.7)',
+    color: Verandah.textSecondary,
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   sumValue: {
-    color: '#FFF',
+    color: Verandah.textPrimary,
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   sumDivider: {
     width: 1,
@@ -712,18 +718,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
   accessCard: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: Verandah.card,
     marginHorizontal: 24,
     marginTop: -30,
     padding: 24,
     borderRadius: 24,
-    elevation: 0,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: Verandah.border,
   },
   accessHeader: {
     flexDirection: 'row',
@@ -737,7 +738,7 @@ const styles = StyleSheet.create({
   },
   accessTitle: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   accessText: {
     fontSize: 13,
@@ -768,7 +769,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   section: {
     paddingHorizontal: 24,
@@ -782,12 +783,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '500',
     letterSpacing: -0.3,
   },
   sectionBadge: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
@@ -800,16 +801,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: Verandah.card,
     padding: 12,
     borderRadius: 20,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 0,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: Verandah.border,
   },
   avatar: {
     width: 40,
@@ -828,7 +824,7 @@ const styles = StyleSheet.create({
   },
   transName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   transDate: {
     fontSize: 12,
@@ -840,14 +836,14 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '500',
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },
   transAmount: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   emptyNote: {
     fontSize: 14,
@@ -857,24 +853,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: Verandah.card,
     padding: 14,
     borderRadius: 20,
     marginBottom: 12,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 0,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: Verandah.border,
   },
   roleInfo: {
     flex: 1,
   },
   roleName: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   roleMeta: {
     fontSize: 12,
@@ -891,15 +882,15 @@ const styles = StyleSheet.create({
   },
   roleActionText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: Verandah.borderStrong,
     justifyContent: 'flex-end',
   },
   modalCard: {
-    backgroundColor: '#FFF',
+    backgroundColor: Verandah.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -907,8 +898,8 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 16,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontWeight: '500',
+    color: Verandah.textPrimary,
   },
   modalActions: {
     flexDirection: 'row',

@@ -12,9 +12,10 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
 import { supabase } from '../lib/supabase';
 import { ProviderSelector } from './ProviderSelector';
+import { Rupees } from './Rupees';
 
 type HistoryRow = {
   id: string;
@@ -42,7 +43,17 @@ type Props = {
 };
 
 export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }: Props) {
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    primaryFg: Verandah.primaryFg,
+    accent: Verandah.danger,
+    border: Verandah.border,
+    card: Verandah.card,
+    cardMuted: Verandah.cardMuted,
+  };
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [providers, setProviders] = useState<ProviderOption[]>([]);
@@ -204,7 +215,7 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
   };
 
   return (
-    <View style={[styles.section, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}> 
+    <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}> 
       <Text style={[styles.sectionTitle, { color: colors.text }]}>History</Text>
 
       {loading ? (
@@ -212,7 +223,7 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : formattedRows.length === 0 ? (
-        <Text style={[styles.emptyText, { color: colors.textMuted }]}>No service history yet - your first 'Mark done' will start the log.</Text>
+        <Text style={[styles.emptyText, { color: colors.textMuted }]}>No service history yet. Your first mark done will start the log.</Text>
       ) : (
         <View style={styles.rowsWrap}>
           {formattedRows.map((row, index) => (
@@ -236,7 +247,7 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
                 {row.note ? <Text style={[styles.rowNote, { color: colors.textMuted }]}>{row.note}</Text> : null}
               </View>
               <View style={styles.rowRight}>
-                {row.cost_paid != null ? <Text style={[styles.rowCost, { color: colors.text }]}>₹{Number(row.cost_paid).toFixed(0)}</Text> : null}
+                {row.cost_paid != null ? <Rupees amount={Number(row.cost_paid)} size="sm" /> : null}
                 <Text style={[styles.chevron, { color: colors.textMuted }]}>›</Text>
               </View>
             </TouchableOpacity>
@@ -257,7 +268,7 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalBody}>
               <Text style={[styles.inputLabel, { color: colors.textMuted }]}>SERVICED ON</Text>
               <TouchableOpacity
-                style={[styles.input, styles.dateInput, { backgroundColor: colors.surface2, borderColor: colors.border }]}
+                style={[styles.input, styles.dateInput, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}
                 onPress={() => setShowDatePicker(true)}
                 activeOpacity={0.82}
               >
@@ -301,9 +312,9 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
                 value={editCost}
                 onChangeText={(value) => setEditCost(value.replace(/[^0-9.]/g, ''))}
                 keyboardType="decimal-pad"
-                placeholder="₹"
+                placeholder="Amount"
                 placeholderTextColor={colors.textMuted}
-                style={[styles.input, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
+                style={[styles.input, { backgroundColor: colors.cardMuted, borderColor: colors.border, color: colors.text }]}
               />
 
               <Text style={[styles.inputLabel, { color: colors.textMuted }]}>NOTE (OPTIONAL)</Text>
@@ -312,7 +323,7 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
                 onChangeText={(value) => setEditNote(value.slice(0, 280))}
                 placeholder="One-line note"
                 placeholderTextColor={colors.textMuted}
-                style={[styles.input, styles.noteInput, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
+                style={[styles.input, styles.noteInput, { backgroundColor: colors.cardMuted, borderColor: colors.border, color: colors.text }]}
                 multiline
                 maxLength={280}
               />
@@ -340,7 +351,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '500',
     marginBottom: 8,
   },
   loadingWrap: {
@@ -367,7 +378,7 @@ const styles = StyleSheet.create({
   },
   rowDate: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   rowProvider: {
     fontSize: 12,
@@ -380,17 +391,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: 4,
   },
-  rowCost: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
   chevron: {
     fontSize: 20,
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.28)',
+    backgroundColor: Verandah.borderStrong,
   },
   modalCard: {
     borderTopLeftRadius: 20,
@@ -405,11 +412,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#DADCE0',
+    borderBottomColor: Verandah.border,
   },
   modalTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   closeIcon: {
     fontSize: 18,
@@ -420,7 +427,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1,
     marginBottom: 6,
     marginTop: 12,
@@ -448,9 +455,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveBtnText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   deleteBtn: {
     marginTop: 10,
@@ -461,7 +468,7 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   disabledBtn: {
     opacity: 0.7,

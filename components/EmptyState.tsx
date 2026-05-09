@@ -1,30 +1,45 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 
 type EmptyStateProps = {
   icon: string;
-  title: string;
+  title?: string;
   message: string;
-  isLightMode: boolean;
+  isLightMode?: boolean;
+  /** Optional Ionicons name for the icon (preferred over emoji icon) */
+  ionicon?: React.ComponentProps<typeof Ionicons>['name'];
+  /** Optional secondary action */
+  actionLabel?: string;
+  onAction?: () => void;
 };
 
-export const EmptyState = ({ icon, title, message, isLightMode }: EmptyStateProps) => {
-  const colors = isLightMode ? Colors.light : Colors.dark;
-
+/**
+ * Verandah empty state pattern.
+ *
+ * No illustrations. A small Ionicons outline icon at textTertiary.
+ * One sentence in body textSecondary, sentence case, friendly but never cute.
+ * Optional secondary action button below.
+ */
+export const EmptyState = ({ icon, title, message, isLightMode, ionicon, actionLabel, onAction }: EmptyStateProps) => {
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[colors.gradientStart + '10', colors.gradientEnd + '10']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.iconContainer}
-      >
+      {ionicon ? (
+        <Ionicons name={ionicon} size={32} color={Verandah.textTertiary} style={styles.icon} />
+      ) : (
         <Text style={styles.iconText}>{icon}</Text>
-      </LinearGradient>
-      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-      <Text style={[styles.message, { color: colors.textMuted }]}>{message}</Text>
+      )}
+      {title ? (
+        <Text style={styles.title}>{title}</Text>
+      ) : null}
+      <Text style={styles.message}>{message}</Text>
+      {actionLabel && onAction ? (
+        <TouchableOpacity style={styles.actionBtn} onPress={onAction} activeOpacity={0.8}>
+          <Text style={styles.actionText}>{actionLabel}</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 };
@@ -34,30 +49,40 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
-    marginTop: 64,
+    padding: VerandahSpace.xxxl,
+    marginTop: 48,
   },
-  iconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
+  icon: {
+    marginBottom: VerandahSpace.lg,
   },
   iconText: {
-    fontSize: 48,
-    lineHeight: 56,
+    fontSize: 32,
+    lineHeight: 36,
+    marginBottom: VerandahSpace.lg,
+    color: Verandah.textTertiary,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 8,
+    ...VerandahType.bodyBold,
+    color: Verandah.textPrimary,
+    marginBottom: VerandahSpace.xs,
     textAlign: 'center',
   },
   message: {
-    fontSize: 16,
+    ...VerandahType.body,
+    color: Verandah.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 20,
+  },
+  actionBtn: {
+    marginTop: VerandahSpace.xl,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderStrong,
+    borderRadius: VerandahRadius.md + 2,
+    paddingVertical: VerandahSpace.md,
+    paddingHorizontal: VerandahSpace.xxl,
+  },
+  actionText: {
+    ...VerandahType.bodyBold,
+    color: Verandah.primary,
   },
 });

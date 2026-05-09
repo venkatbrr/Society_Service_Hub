@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -12,14 +11,15 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { ServiceCard, ServiceCardItem } from '../../components/ServiceCard';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
+import { VerandahRadius } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
 export default function ServicesListScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const colors = Colors.light;
+  const colors = Verandah;
   const [services, setServices] = useState<ServiceCardItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -48,20 +48,16 @@ export default function ServicesListScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={[colors.gradientStart + '10', colors.gradientEnd + '06', 'transparent']}
-        style={styles.headerGradient}
-      />
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          style={[styles.backButton, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}
           activeOpacity={0.75}
         >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>My Service Reminders</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>My service reminders</Text>
         <TouchableOpacity
           onPress={() => router.push('/services/add')}
           style={[styles.addButton, { backgroundColor: colors.primary }]}
@@ -93,8 +89,8 @@ export default function ServicesListScreen() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>🔧</Text>
-              <Text style={[styles.emptyTitle, { color: colors.text }]}>No service reminders yet</Text>
-              <Text style={[styles.emptyBody, { color: colors.textMuted }]}>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No service reminders yet</Text>
+              <Text style={[styles.emptyBody, { color: colors.textSecondary }]}>
                 Track your AC, RO, and other appliances so you never miss maintenance.
               </Text>
               <TouchableOpacity
@@ -114,7 +110,6 @@ export default function ServicesListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  headerGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 160 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -126,24 +121,24 @@ const styles = StyleSheet.create({
   backButton: {
     width: 38,
     height: 38,
-    borderRadius: 12,
+    borderRadius: VerandahRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
   },
-  backIcon: { fontSize: 18, fontWeight: '600' },
+  backIcon: { fontSize: 18, fontWeight: '500' },
   headerTitle: {
     flex: 1,
     fontSize: 19,
-    fontWeight: '800',
+    fontWeight: '500',
     letterSpacing: -0.3,
   },
   addButton: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: VerandahRadius.md,
   },
-  addButtonText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
+  addButtonText: { color: Verandah.primaryFg, fontSize: 13, fontWeight: '500' },
   listContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyContainer: {
@@ -153,13 +148,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyEmoji: { fontSize: 48 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  emptyTitle: { fontSize: 18, fontWeight: '500', textAlign: 'center' },
   emptyBody: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
   emptyButton: {
     marginTop: 8,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 14,
+    borderRadius: VerandahRadius.md,
   },
-  emptyButtonText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
+  emptyButtonText: { color: Verandah.primaryFg, fontSize: 15, fontWeight: '500' },
 });

@@ -1,5 +1,4 @@
 import { useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -120,7 +119,6 @@ export default function PlatformCommunitiesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient colors={[`${colors.warning}18`, `${colors.gradientEnd}10`, 'transparent']} style={styles.gradientOverlay} />
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Text style={[styles.title, { color: colors.text }]}>Communities</Text>
@@ -192,14 +190,13 @@ export default function PlatformCommunitiesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 56 },
-  gradientOverlay: { position: 'absolute', top: 0, left: 0, right: 0, height: 280 },
   header: { marginBottom: 14 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  title: { fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
+  title: { fontSize: 28, fontWeight: '500', letterSpacing: -0.5 },
   subtitle: { marginTop: 4, fontSize: 14, lineHeight: 20 },
   signOutBtn: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 6 },
   signOutIcon: { fontSize: 14, lineHeight: 16 },
-  signOutText: { fontSize: 12, fontWeight: '700' },
+  signOutText: { fontSize: 12, fontWeight: '500' },
   searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderRadius: 18, paddingHorizontal: 14, height: 50, marginBottom: 14 },
   searchIcon: { fontSize: 16, lineHeight: 18 },
   searchInput: { flex: 1, fontSize: 14 },
@@ -208,15 +205,15 @@ const styles = StyleSheet.create({
   emptyContent: { flexGrow: 1, justifyContent: 'center' },
   emptyState: { borderWidth: 1, borderRadius: 24, padding: 24, alignItems: 'center' },
   emptyIcon: { fontSize: 28, lineHeight: 32 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', marginTop: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: '500', marginTop: 12 },
   emptyCopy: { fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 6 },
   card: { borderWidth: 1, borderRadius: 22, padding: 16 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   cardHeaderText: { flex: 1 },
-  communityName: { fontSize: 17, fontWeight: '800' },
+  communityName: { fontSize: 17, fontWeight: '500' },
   communityMeta: { fontSize: 13, marginTop: 4 },
   leadBadge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, alignSelf: 'flex-start' },
-  leadBadgeText: { fontSize: 12, fontWeight: '700' },
+  leadBadgeText: { fontSize: 12, fontWeight: '500' },
   countRow: { marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 },
-  countText: { fontSize: 12, fontWeight: '600' },
+  countText: { fontSize: 12, fontWeight: '500' },
 });

@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -11,7 +10,7 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
 import { APP_EMOJIS } from '../constants/emojis';
 import { useAuth } from '../context/AuthContext';
 import { Tables } from '../lib/database.types';
@@ -25,7 +24,6 @@ type RequestDetail = Pick<
 export default function CommunityRequestSubmittedScreen() {
   const router = useRouter();
   const { user, signOut, refreshSession } = useAuth();
-  const colors = Colors.light;
 
   const [request, setRequest] = useState<RequestDetail | null>(null);
   const [communityCode, setCommunityCode] = useState<string | null>(null);
@@ -109,54 +107,53 @@ export default function CommunityRequestSubmittedScreen() {
   // ─── Approved state ────────────────────────────────────────────────────────
   if (!loading && request?.status === 'approved') {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <LinearGradient
-          colors={[`${colors.primary}18`, `${colors.gradientEnd}10`, 'transparent']}
-          style={styles.gradientOverlay}
-        />
-        <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-          <View style={[styles.iconWrap, { backgroundColor: `${colors.primary}14` }]}>
+      <View style={[styles.container, { backgroundColor: Verandah.surface }]}>
+        <View style={[styles.card, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>
+          <View style={[styles.iconWrap, { backgroundColor: Verandah.accentSoft }]}>
             <Text style={styles.iconEmoji}>{APP_EMOJIS.success}</Text>
           </View>
-          <Text style={[styles.title, { color: colors.text }]}>Community approved!</Text>
-          <Text style={[styles.copy, { color: colors.textMuted }]}>
-            <Text style={{ fontWeight: '800', color: colors.text }}>{request.name}</Text>
+          <Text style={[styles.title, { color: Verandah.textPrimary }]}>Community approved!</Text>
+          <Text style={[styles.copy, { color: Verandah.textSecondary }]}>
+            <Text style={{ fontWeight: '500', color: Verandah.textPrimary }}>{request.name}</Text>
             {' '}is live. Share the code below so your neighbors can join.
           </Text>
 
           {communityCode ? (
-            <View style={[styles.codeBox, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
-              <Text style={[styles.codeLabel, { color: colors.textMuted }]}>COMMUNITY CODE</Text>
-              <Text style={[styles.codeValue, { color: colors.primary }]}>{communityCode}</Text>
+            <View style={[styles.codeBox, { backgroundColor: Verandah.cardMuted, borderColor: Verandah.border }]}>
+              <Text style={[styles.codeLabel, { color: Verandah.textSecondary }]}>COMMUNITY CODE</Text>
+              <Text style={[styles.codeValue, { color: Verandah.primary }]}>{communityCode}</Text>
             </View>
           ) : null}
 
           <TouchableOpacity
             onPress={() => communityCode && handleShareCode(communityCode)}
-            style={[styles.secondaryButton, { borderColor: colors.border }]}
+            style={[styles.secondaryButton, { borderColor: Verandah.border }]}
             activeOpacity={0.8}
           >
             <Text style={styles.buttonIcon}>{APP_EMOJIS.share}</Text>
-            <Text style={[styles.secondaryButtonText, { color: colors.text }]}>Share code</Text>
+            <Text style={[styles.secondaryButtonText, { color: Verandah.textPrimary }]}>Share code</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => communityCode && handleShareWhatsApp(communityCode)}
-            style={[styles.secondaryButton, { borderColor: colors.border, marginTop: 10 }]}
+            style={[styles.secondaryButton, { borderColor: Verandah.border, marginTop: 10 }]}
             activeOpacity={0.8}
           >
             <Text style={styles.buttonIcon}>{APP_EMOJIS.whatsapp}</Text>
-            <Text style={[styles.secondaryButtonText, { color: colors.text }]}>Share via WhatsApp</Text>
+            <Text style={[styles.secondaryButtonText, { color: Verandah.textPrimary }]}>Share via WhatsApp</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleEnterCommunity} disabled={entering} activeOpacity={0.8}>
-            <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={[styles.primaryButton, { marginTop: 18 }]}>
-              {entering ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <Text style={styles.primaryButtonText}>Enter my community</Text>
-              )}
-            </LinearGradient>
+          <TouchableOpacity
+            onPress={handleEnterCommunity}
+            disabled={entering}
+            activeOpacity={0.8}
+            style={[styles.primaryButton, { marginTop: 18 }]}
+          >
+            {entering ? (
+              <ActivityIndicator color={Verandah.primaryFg} />
+            ) : (
+              <Text style={styles.primaryButtonText}>Enter my community</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -166,44 +163,39 @@ export default function CommunityRequestSubmittedScreen() {
   // ─── Rejected state ────────────────────────────────────────────────────────
   if (!loading && request?.status === 'rejected') {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <LinearGradient
-          colors={[`${colors.accent}18`, `${colors.gradientEnd}10`, 'transparent']}
-          style={styles.gradientOverlay}
-        />
-        <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-          <View style={[styles.iconWrap, { backgroundColor: `${colors.accent}12` }]}>
+      <View style={[styles.container, { backgroundColor: Verandah.surface }]}>
+        <View style={[styles.card, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>
+          <View style={[styles.iconWrap, { backgroundColor: Verandah.dangerSoft }]}>
             <Text style={styles.iconEmoji}>{APP_EMOJIS.error}</Text>
           </View>
-          <Text style={[styles.title, { color: colors.text }]}>Request not approved</Text>
-          <Text style={[styles.copy, { color: colors.textMuted }]}>
+          <Text style={[styles.title, { color: Verandah.textPrimary }]}>Request not approved</Text>
+          <Text style={[styles.copy, { color: Verandah.textSecondary }]}>
             Your request for{' '}
-            <Text style={{ fontWeight: '800', color: colors.text }}>{request.name}</Text>
+            <Text style={{ fontWeight: '500', color: Verandah.textPrimary }}>{request.name}</Text>
             {' '}was not approved.
           </Text>
 
           {request.rejection_reason ? (
-            <View style={[styles.reasonBox, { backgroundColor: `${colors.accent}0C`, borderColor: `${colors.accent}30` }]}>
-              <Text style={[styles.reasonLabel, { color: colors.accent }]}>REASON</Text>
-              <Text style={[styles.reasonText, { color: colors.text }]}>{request.rejection_reason}</Text>
+            <View style={[styles.reasonBox, { backgroundColor: Verandah.dangerSoft, borderColor: Verandah.danger + '30' }]}>
+              <Text style={[styles.reasonLabel, { color: Verandah.danger }]}>REASON</Text>
+              <Text style={[styles.reasonText, { color: Verandah.textPrimary }]}>{request.rejection_reason}</Text>
             </View>
           ) : null}
 
           <TouchableOpacity
             onPress={() => router.replace('/community-request')}
             activeOpacity={0.8}
+            style={[styles.primaryButton, { marginTop: 22 }]}
           >
-            <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} style={[styles.primaryButton, { marginTop: 22 }]}>
-              <Text style={styles.primaryButtonText}>Request again</Text>
-            </LinearGradient>
+            <Text style={styles.primaryButtonText}>Request again</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => router.replace('/community-select')}
-            style={[styles.secondaryButton, { borderColor: colors.border, marginTop: 12 }]}
+            style={[styles.secondaryButton, { borderColor: Verandah.border, marginTop: 12 }]}
             activeOpacity={0.8}
           >
-            <Text style={[styles.secondaryButtonText, { color: colors.text }]}>Join existing community</Text>
+            <Text style={[styles.secondaryButtonText, { color: Verandah.textPrimary }]}>Join existing community</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -211,7 +203,7 @@ export default function CommunityRequestSubmittedScreen() {
             style={styles.textButton}
             activeOpacity={0.75}
           >
-            <Text style={[styles.textButtonLabel, { color: colors.primary }]}>Sign out</Text>
+            <Text style={[styles.textButtonLabel, { color: Verandah.primary }]}>Sign out</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -220,25 +212,23 @@ export default function CommunityRequestSubmittedScreen() {
 
   // ─── Pending / loading state ───────────────────────────────────────────────
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient colors={[`${colors.secondary}18`, `${colors.gradientEnd}10`, 'transparent']} style={styles.gradientOverlay} />
-
-      <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-        <View style={[styles.iconWrap, { backgroundColor: `${colors.secondary}16` }]}>
+    <View style={[styles.container, { backgroundColor: Verandah.surface }]}>
+      <View style={[styles.card, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>
+        <View style={[styles.iconWrap, { backgroundColor: Verandah.accentSoft }]}>
           <Text style={styles.iconEmoji}>{APP_EMOJIS.mail}</Text>
         </View>
-        <Text style={[styles.title, { color: colors.text }]}>Request received</Text>
-        <Text style={[styles.copy, { color: colors.textMuted }]}>
+        <Text style={[styles.title, { color: Verandah.textPrimary }]}>Request received</Text>
+        <Text style={[styles.copy, { color: Verandah.textSecondary }]}>
           Your community request is under review. We will verify the details and follow up within about 24 hours.
         </Text>
 
-        {loading ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : null}
+        {loading ? <ActivityIndicator color={Verandah.accent} style={styles.loader} /> : null}
 
         {!loading && request ? (
-          <View style={[styles.summary, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-            <Text style={[styles.summaryTitle, { color: colors.text }]}>{request.name}</Text>
-            <Text style={[styles.summaryMeta, { color: colors.textMuted }]}>{request.city}</Text>
-            <Text style={[styles.summaryMeta, { color: colors.textMuted }]}>
+          <View style={[styles.summary, { borderColor: Verandah.border, backgroundColor: Verandah.card }]}>
+            <Text style={[styles.summaryTitle, { color: Verandah.textPrimary }]}>{request.name}</Text>
+            <Text style={[styles.summaryMeta, { color: Verandah.textSecondary }]}>{request.city}</Text>
+            <Text style={[styles.summaryMeta, { color: Verandah.textSecondary }]}>
               Submitted on {new Date(request.created_at).toLocaleDateString('en-IN')}
             </Text>
           </View>
@@ -246,10 +236,10 @@ export default function CommunityRequestSubmittedScreen() {
 
         <TouchableOpacity
           onPress={handleRefresh}
-          style={[styles.secondaryButton, { borderColor: colors.border }]}
+          style={[styles.secondaryButton, { borderColor: Verandah.border }]}
           activeOpacity={0.8}
         >
-          <Text style={[styles.secondaryButtonText, { color: colors.text }]}>Refresh status</Text>
+          <Text style={[styles.secondaryButtonText, { color: Verandah.textPrimary }]}>Refresh status</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -257,7 +247,7 @@ export default function CommunityRequestSubmittedScreen() {
           style={styles.textButton}
           activeOpacity={0.75}
         >
-          <Text style={[styles.textButtonLabel, { color: colors.primary }]}>Sign out</Text>
+          <Text style={[styles.textButtonLabel, { color: Verandah.primary }]}>Sign out</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -270,22 +260,11 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'center',
   },
-  gradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 300,
-  },
   card: {
     borderRadius: 24,
     borderWidth: 1,
     padding: 24,
     alignItems: 'center',
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
     elevation: 0,
   },
   iconWrap: {
@@ -302,7 +281,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '500',
     letterSpacing: -0.5,
     textAlign: 'center',
   },
@@ -324,7 +303,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   summaryMeta: {
     fontSize: 13,
@@ -333,20 +312,20 @@ const styles = StyleSheet.create({
   codeBox: {
     width: '100%',
     borderRadius: 20,
-    borderWidth: 1.5,
+    borderWidth: 1,
     padding: 20,
     marginTop: 22,
     alignItems: 'center',
   },
   codeLabel: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 1,
     marginBottom: 8,
   },
   codeValue: {
     fontSize: 36,
-    fontWeight: '900',
+    fontWeight: '500',
     letterSpacing: 6,
   },
   reasonBox: {
@@ -358,7 +337,7 @@ const styles = StyleSheet.create({
   },
   reasonLabel: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
     letterSpacing: 0.8,
     marginBottom: 6,
   },
@@ -369,20 +348,17 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     width: '100%',
-    height: 54,
-    borderRadius: 22,
+    height: 50,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#6C63FF',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.24,
-    shadowRadius: 14,
+    backgroundColor: Verandah.primary,
     elevation: 0,
   },
   primaryButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '800',
+    color: Verandah.primaryFg,
+    fontSize: 14,
+    fontWeight: '500',
   },
   secondaryButton: {
     width: '100%',
@@ -397,7 +373,7 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   buttonIcon: {
     fontSize: 16,
@@ -408,6 +384,6 @@ const styles = StyleSheet.create({
   },
   textButtonLabel: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
   },
 });

@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { supabase } from '../lib/supabase';
 
 interface ProviderSelectorProps {
@@ -33,7 +34,6 @@ export const ProviderSelector = ({
   onManualWhatsappChange,
   allowNewProvider = true,
 }: ProviderSelectorProps) => {
-  const colors = Colors.light;
   const [providers, setProviders] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -82,16 +82,16 @@ export const ProviderSelector = ({
       {allowNewProvider ? (
         <View style={styles.segmentContainer}>
           <TouchableOpacity
-            style={[styles.segment, effectiveMode === 'existing' ? { backgroundColor: colors.primary } : { borderBottomWidth: 0 }]}
+            style={[styles.segment, effectiveMode === 'existing' && styles.segmentActive]}
             onPress={() => onModeChange('existing')}
           >
-            <Text style={[styles.segmentText, effectiveMode === 'existing' ? { color: '#FFF' } : { color: colors.textMuted }]}>From my providers</Text>
+            <Text style={[styles.segmentText, effectiveMode === 'existing' ? styles.segmentTextActive : styles.segmentTextInactive]}>From my providers</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.segment, effectiveMode === 'new' ? { backgroundColor: colors.primary } : { borderBottomWidth: 0 }]}
+            style={[styles.segment, effectiveMode === 'new' && styles.segmentActive]}
             onPress={() => onModeChange('new')}
           >
-            <Text style={[styles.segmentText, effectiveMode === 'new' ? { color: '#FFF' } : { color: colors.textMuted }]}>New provider</Text>
+            <Text style={[styles.segmentText, effectiveMode === 'new' ? styles.segmentTextActive : styles.segmentTextInactive]}>New provider</Text>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -99,42 +99,43 @@ export const ProviderSelector = ({
       {effectiveMode === 'existing' ? (
         <View style={styles.existingContainer}>
           <TouchableOpacity 
-            style={[styles.selector, { borderColor: colors.border }]} 
+            style={styles.selector} 
             onPress={() => setDropdownOpen(!dropdownOpen)}
           >
-            <Text style={[styles.selectorText, { color: selectedProviderId ? colors.text : colors.textMuted }]}>
+            <Text style={[styles.selectorText, { color: selectedProviderId ? Verandah.textPrimary : Verandah.textTertiary }]}>
               {selectedProviderName}
             </Text>
-            <Ionicons name={dropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={colors.icon} />
+            <Ionicons name={dropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={Verandah.textTertiary} />
           </TouchableOpacity>
 
           {dropdownOpen && (
-            <View style={[styles.dropdown, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-              <View style={[styles.searchContainer, { borderBottomColor: colors.border }]}>
-                <Ionicons name="search" size={18} color={colors.icon} />
+            <View style={styles.dropdown}>
+              <View style={styles.searchContainer}>
+                <Ionicons name="search" size={18} color={Verandah.textTertiary} />
                 <TextInput 
                   style={styles.searchInput} 
                   placeholder="Search providers..." 
+                  placeholderTextColor={Verandah.textTertiary}
                   value={search}
                   onChangeText={setSearch}
                 />
               </View>
               <ScrollView style={styles.dropdownScroll} nestedScrollEnabled={true}>
                 {loading ? (
-                    <ActivityIndicator style={{ padding: 20 }} color={colors.primary} />
+                    <ActivityIndicator style={{ padding: 20 }} color={Verandah.accent} />
                 ) : filteredProviders.length > 0 ? (
                   filteredProviders.map(p => (
                     <TouchableOpacity 
                       key={p.id} 
-                      style={[styles.item, selectedProviderId === p.id && { backgroundColor: colors.surface2 }]} 
+                      style={[styles.item, selectedProviderId === p.id && styles.itemSelected]} 
                       onPress={() => {
                         onSelectProvider(p);
                         setDropdownOpen(false);
                         setSearch('');
                       }}
                     >
-                      <Text style={[styles.itemText, { color: colors.text }]}>{p.name}</Text>
-                      {selectedProviderId === p.id && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+                      <Text style={styles.itemText}>{p.name}</Text>
+                      {selectedProviderId === p.id && <Ionicons name="checkmark" size={18} color={Verandah.accent} />}
                     </TouchableOpacity>
                   ))
                 ) : (
@@ -147,20 +148,22 @@ export const ProviderSelector = ({
       ) : (
         <View style={styles.manualContainer}>
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>PROVIDER NAME *</Text>
+            <Text style={styles.label}>Provider name *</Text>
             <TextInput 
-              style={[styles.input, { borderColor: colors.border }]} 
+              style={styles.input} 
               placeholder="e.g. Rahul Plumber" 
+              placeholderTextColor={Verandah.textTertiary}
               value={manualProviderName}
               onChangeText={onManualNameChange}
             />
           </View>
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.label, { color: colors.text }]}>PHONE (OPTIONAL)</Text>
+              <Text style={styles.label}>Phone (optional)</Text>
               <TextInput 
-                style={[styles.input, { borderColor: colors.border }]} 
+                style={styles.input} 
                 placeholder="e.g. 98765..." 
+                placeholderTextColor={Verandah.textTertiary}
                 keyboardType="phone-pad"
                 value={manualProviderPhone}
                 onChangeText={onManualPhoneChange}
@@ -168,10 +171,11 @@ export const ProviderSelector = ({
             </View>
             <View style={{ width: 12 }} />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.label, { color: colors.text }]}>WHATSAPP (OPTIONAL)</Text>
+              <Text style={styles.label}>WhatsApp (optional)</Text>
               <TextInput 
-                style={[styles.input, { borderColor: colors.border }]} 
+                style={styles.input} 
                 placeholder="e.g. 98765..." 
+                placeholderTextColor={Verandah.textTertiary}
                 keyboardType="phone-pad"
                 value={manualProviderWhatsapp}
                 onChangeText={onManualWhatsappChange}
@@ -186,109 +190,124 @@ export const ProviderSelector = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 20,
+    marginBottom: VerandahSpace.xl,
   },
   segmentContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
+    backgroundColor: Verandah.cardMuted,
+    borderRadius: VerandahRadius.md,
+    padding: VerandahSpace.xs,
+    marginBottom: VerandahSpace.xl,
   },
   segment: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: VerandahSpace.sm + 2,
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: VerandahRadius.sm + 1,
+  },
+  segmentActive: {
+    backgroundColor: Verandah.card,
   },
   segmentText: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...VerandahType.bodyBold,
+  },
+  segmentTextActive: {
+    color: Verandah.textPrimary,
+  },
+  segmentTextInactive: {
+    color: Verandah.textTertiary,
   },
   existingContainer: {
     zIndex: 100,
   },
   selector: {
-    height: 56,
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 16,
+    height: 48,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderStrong,
+    borderRadius: VerandahRadius.md,
+    paddingHorizontal: VerandahSpace.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    backgroundColor: Verandah.card,
   },
   selectorText: {
-    fontSize: 16,
+    ...VerandahType.body,
   },
   dropdown: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderRadius: 16,
+    marginTop: VerandahSpace.sm,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderStrong,
+    borderRadius: VerandahRadius.md,
     maxHeight: 250,
     overflow: 'hidden',
     position: 'absolute',
-    top: 56,
+    top: 48,
     left: 0,
     right: 0,
     zIndex: 1000,
-    elevation: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    backgroundColor: Verandah.card,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    height: 48,
-    borderBottomWidth: 1,
+    paddingHorizontal: VerandahSpace.lg,
+    height: 44,
+    borderBottomWidth: 0.5,
+    borderBottomColor: Verandah.border,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
+    marginLeft: VerandahSpace.sm,
+    ...VerandahType.body,
+    color: Verandah.textPrimary,
   },
   dropdownScroll: {
-    padding: 8,
+    padding: VerandahSpace.sm,
   },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 4,
+    padding: VerandahSpace.md,
+    borderRadius: VerandahRadius.sm,
+    marginBottom: VerandahSpace.xs,
+  },
+  itemSelected: {
+    backgroundColor: Verandah.cardMuted,
   },
   itemText: {
-    fontSize: 15,
+    ...VerandahType.body,
     fontWeight: '500',
+    color: Verandah.textPrimary,
   },
   emptyText: {
-    padding: 20,
+    padding: VerandahSpace.xl,
     textAlign: 'center',
-    color: '#6B7280',
-    fontSize: 14,
+    ...VerandahType.body,
+    color: Verandah.textTertiary,
   },
   manualContainer: {
-    gap: 16,
+    gap: VerandahSpace.lg,
   },
   inputGroup: {
-    marginBottom: 4,
+    marginBottom: VerandahSpace.xs,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginBottom: 8,
-    marginLeft: 4,
+    ...VerandahType.captionBold,
+    color: Verandah.textTertiary,
+    marginBottom: VerandahSpace.sm,
+    marginLeft: VerandahSpace.xs,
   },
   input: {
-    height: 56,
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    fontSize: 16,
+    height: 48,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderStrong,
+    borderRadius: VerandahRadius.md,
+    paddingHorizontal: VerandahSpace.lg,
+    ...VerandahType.body,
+    color: Verandah.textPrimary,
+    backgroundColor: Verandah.card,
   },
   row: {
     flexDirection: 'row',
