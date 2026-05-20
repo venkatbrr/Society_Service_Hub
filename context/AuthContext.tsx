@@ -71,6 +71,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeCommunityRequest, setActiveCommunityRequest] = useState<ActiveCommunityRequest>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const resetAuthState = () => {
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setCommunityId(null);
+    setFundsEnabled(false);
+    setBlocksEnabled(false);
+    setMyBlockId(null);
+    setMyFundsAccessRequest(null);
+    setActiveCommunityRequest(null);
+  };
+
+  const clearLocalSession = async () => {
+    // Local scope clears persisted AsyncStorage tokens even when the refresh token
+    // is stale or already revoked on the server.
+    await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+    resetAuthState();
+  };
+
   const loadProfile = async (userId: string | null | undefined, currentSession?: Session | null) => {
     if (!userId) {
       setProfile(null);
@@ -186,16 +205,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Stale or invalid token (e.g. emulator wipe, server-side revocation).
         // Clear local state so the user lands on the login screen cleanly.
         console.warn('Session error — signing out:', error.message);
-        await supabase.auth.signOut();
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        setCommunityId(null);
-        setFundsEnabled(false);
-        setBlocksEnabled(false);
-        setMyBlockId(null);
-        setMyFundsAccessRequest(null);
-        setActiveCommunityRequest(null);
+        await clearLocalSession();
         return;
       }
       setSession(session);
@@ -204,13 +214,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error('Error fetching session:', error);
       // Treat any unexpected auth error as a sign-out to avoid a broken state.
-      await supabase.auth.signOut().catch(() => {});
-      setSession(null);
-      setUser(null);
-      setFundsEnabled(false);
-      setBlocksEnabled(false);
-      setMyBlockId(null);
-      setMyFundsAccessRequest(null);
+      await clearLocalSession();
     } finally {
       setIsLoading(false);
     }
@@ -236,15 +240,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data, error } = await supabase.auth.refreshSession();
     if (error) {
       console.warn('Token refresh failed — signing out:', error.message);
-      await supabase.auth.signOut().catch(() => {});
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      setCommunityId(null);
-      setFundsEnabled(false);
-      setBlocksEnabled(false);
-      setMyBlockId(null);
-      setMyFundsAccessRequest(null);
+      await clearLocalSession();
       return;
     }
     if (data.session) {

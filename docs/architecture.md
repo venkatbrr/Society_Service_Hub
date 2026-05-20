@@ -125,6 +125,8 @@ Authenticated with community -> /(tabs)
 
 `AuthContext` loads the session from Supabase Auth, fetches the `profiles` row, resolves `communityId`, and loads the latest active community request when the user is still unassigned.
 
+When `getSession()` or `refreshSession()` returns an auth error (for example, a revoked or stale refresh token after emulator/app-data resets), the provider performs a local-scope sign-out to clear persisted AsyncStorage tokens and force a clean login state.
+
 Community ID resolution order:
 
 1. `profile.community_id`

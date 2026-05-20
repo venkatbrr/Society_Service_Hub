@@ -107,8 +107,8 @@ The app surface is narrower than the backend schema by design. Cross-community f
 |--------|---------|
 | **Purpose** | Consolidated building-level view: pulse updates, funds section, residents shortcut, and community info in one tab |
 | **Tables / RPCs** | Reads: `communities`, `events`, `event_transactions`, `fund_roles`, `profiles`, `funds_access_requests`; RPCs: `get_community_pulse(p_limit)`, `get_my_community_funds_overview()`, `withdraw_funds_access_request(...)` |
-| **Business rules** | Section order is fixed: pulse, funds, residents tile, community info. Pulse is read-only aggregated activity with no comments, reactions, or feed drill-down, and the entire section is hidden when empty. Funds are now activation-gated: when `funds_enabled = false`, the section renders request/status cards (request CTA, pending, rejected retry, and previously-active note) instead of fund tiles. When `funds_enabled = true`, the existing funds summary + list is shown, with the overview banner using the bundled JPEG asset `assets/images/funds_bg.jpg`. Funds request CTA entry is only in this section. |
-| **Navigation** | To `/funds/[id]`, `/funds/add`, and `/residents?returnTo=community` |
+| **Business rules** | Section order is fixed: pulse, funds, residents tile, community info. Top hero now shows only the community name. Pulse is read-only aggregated activity with no comments, reactions, or feed drill-down, and the entire section is hidden when empty. Fund-created activity is excluded from pulse so fund events are surfaced only in the dedicated funds flow. Funds are activation-gated: when `funds_enabled = false`, the section renders request/status cards (request CTA, pending, rejected retry, and previously-active note) instead of fund tiles. When `funds_enabled = true`, the section renders one merged Community funds card that includes fund health summary and the "Open community funds" action to route to the dedicated funds page. Community info includes a dedicated community-code tile with an Invite neighbors share action (same copy pattern as Home tab invite). Funds request CTA entry is only in this section. |
+| **Navigation** | To `/funds`, `/funds/[id]`, `/funds/add`, and `/residents?returnTo=community` |
 | **Roles** | All residents can view; create-fund action remains role-gated exactly as before. |
 
 ## Funds - Activation
@@ -273,6 +273,16 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 
 ## Fund Management
 
+### Community Funds Home (`app/funds/index.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Dedicated entry point for the Community funds tile; central place to browse fund health and all community fund events |
+| **Tables / RPCs** | RPC reads: `get_my_community_funds_overview()`; list data via `events`, `event_transactions`, `fund_roles` through `FundsList` |
+| **Business rules** | Layout order is fixed: Fund health summary on top, then Events and funds list below. All community funds/events are shown from this page, and each card opens per-fund detail. Create-fund CTA remains role-gated. |
+| **Navigation** | From `/(tabs)/community` funds tile. To `/funds/[id]` and `/funds/add`. |
+| **Roles** | All residents can view; create remains community-lead/platform-admin gated. |
+
 ### Add Fund (`app/funds/add.tsx`)
 
 | Aspect | Details |
@@ -289,7 +299,7 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | Show ledger totals, transaction history, and role assignment controls |
 | **Tables** | Reads: `events`, `event_transactions`, `fund_roles`, `profiles`; writes: `fund_roles` |
-| **Business rules** | Treasurers can manage collectors and all transactions. Collectors can add contributions only. Residents stay view-only. Minimum treasurer count is one, max treasurers is two. Collector assignment now supports optional block-scoped assignment when blocks are enabled. If funds are inactive, stale links render a safe inactive state instead of loading ledger actions. |
+| **Business rules** | Treasurers can manage collectors and all transactions. Collectors can add contributions only. Residents stay view-only. Minimum treasurer count is one, max treasurers is two. Collector assignment now supports optional block-scoped assignment when blocks are enabled. Fund detail explicitly shows: contribution status by resident, collection list (income entries), and expense list. If funds are inactive, stale links render a safe inactive state instead of loading ledger actions. |
 | **Navigation** | To `/funds/add-transaction?event_id=...&type=income|expense` |
 
 ### Add Transaction (`app/funds/add-transaction.tsx`)

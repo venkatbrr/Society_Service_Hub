@@ -616,6 +616,32 @@ export default function FundDetailScreen() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Collection List</Text>
+            <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>{incomeTransactions.length} entries</Text>
+          </View>
+          {incomeTransactions.map((transaction) => (
+            <View key={transaction.id} style={styles.transactionRow}>
+              <View style={[styles.avatar, { backgroundColor: Verandah.accentSoft }]}>
+                <Text style={styles.statusEmoji}>{APP_EMOJIS.contribution}</Text>
+              </View>
+              <View style={styles.transMain}>
+                <Text style={[styles.transName, { color: colors.text }]}>
+                  {transaction.contributor_user_id
+                    ? profileNames.get(transaction.contributor_user_id) ?? 'Resident'
+                    : transaction.title || 'Contribution'}
+                </Text>
+                <Text style={[styles.transDate, { color: colors.textMuted }]}>
+                  {new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}
+                </Text>
+              </View>
+              <Rupees amount={Number(transaction.amount)} size="sm" tone="in" />
+            </View>
+          ))}
+          {incomeTransactions.length === 0 ? <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No collections logged yet.</Text> : null}
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Expense List</Text>
             <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>{expenseTransactions.length} entries</Text>
           </View>

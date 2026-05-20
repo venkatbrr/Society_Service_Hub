@@ -2,10 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../components/BaseCard';
-import { FundsList } from '../../components/FundsList';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../constants/Verandah';
@@ -109,6 +109,7 @@ const getPulseVisual = (kind: PulseItem['kind']): {
 
 export default function CommunityScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, communityId, appRole, isCommunityLead, fundsEnabled, myFundsAccessRequest, refreshSession } = useAuth();
 
   const [pulseItems, setPulseItems] = useState<PulseItem[]>([]);
@@ -168,7 +169,7 @@ export default function CommunityScreen() {
       if (pendingRequestResult.error) throw pendingRequestResult.error;
       if (fundsHistoryResult.error) throw fundsHistoryResult.error;
 
-      setPulseItems((pulseResult.data ?? []) as PulseItem[]);
+      setPulseItems(((pulseResult.data ?? []) as PulseItem[]).filter((item) => item.kind !== 'fund_created'));
       setOverview(((overviewResult.data ?? [null])[0] ?? null) as FundsOverview | null);
       setCommunityDetails(communityResult.data);
       setFundRoles(Array.from(new Set(((roleResult.data ?? []) as FundRoleRow[]).map((row) => row.role))));
@@ -220,22 +221,30 @@ export default function CommunityScreen() {
     }
   };
 
+  const handleInviteNeighbors = useCallback(async () => {
+    const code = communityDetails?.code ?? null;
+    if (!code) {
+      Toast.show({ type: 'error', text1: 'Invite code unavailable', text2: 'Community code is not ready yet.' });
+      return;
+    }
+
+    try {
+      await Share.share({
+        message: `Join my community on Society Service Hub!${communityDetails?.name ? `\nCommunity: ${communityDetails.name}` : ''}\nCode: ${code}`,
+      });
+    } catch {
+      Toast.show({ type: 'error', text1: 'Share failed', text2: 'Could not open share options.' });
+    }
+  }, [communityDetails?.code, communityDetails?.name]);
+
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: Math.max(28, insets.top + 12) }]}
+        showsVerticalScrollIndicator={false}
+      >
         <BaseCard padding={18} style={styles.heroCard}>
-          <Text style={styles.heroEyebrow}>Your community</Text>
           <Text style={styles.heroTitle}>{communityDetails?.name ?? 'Your community'}</Text>
-          <View style={styles.heroMetaRow}>
-            <View style={[styles.pill, styles.codePill]}>
-              <Ionicons name="qr-code-outline" size={14} color={Verandah.primary} />
-              <Text style={styles.codePillText}>Code {communityDetails?.code ?? '---'}</Text>
-            </View>
-            <View style={[styles.pill, styles.rolePill]}>
-              <Ionicons name="shield-checkmark-outline" size={14} color={Verandah.accent} />
-              <Text style={styles.rolePillText}>{appRoleLabel}</Text>
-            </View>
-          </View>
         </BaseCard>
 
 
@@ -254,42 +263,46 @@ export default function CommunityScreen() {
             ) : null}
           </View>
 
-          {fundsEnabled && overview && overview.active_funds_count > 0 ? (
-            <BaseCard padding={16} style={styles.fundsSummaryCard}>
-              <View style={styles.fundsSummaryTopRow}>
-                <View style={styles.fundsSummaryBadge}>
-                  <Ionicons name="stats-chart-outline" size={14} color={Verandah.accent} />
-                  <Text style={styles.fundsSummaryBadgeText}>Live summary</Text>
-                </View>
-                <Text style={styles.summarySubline}>{overview.active_funds_count} active funds</Text>
-              </View>
-              <View style={styles.moneyRow}>
-                <Text style={styles.summaryLine}>Collected</Text>
-                <Rupees amount={overview.total_collected ?? 0} size="sm" tone="in" />
-              </View>
-              <View style={styles.moneyRow}>
-                <Text style={styles.summaryLine}>Spent</Text>
-                <Rupees amount={overview.total_spent ?? 0} size="sm" />
-              </View>
-              <View style={styles.moneyRow}>
-                <Text style={styles.summaryLine}>Available</Text>
-                <Rupees amount={overview.total_available ?? 0} size="sm" />
-              </View>
-              <Text style={styles.summaryStatus}>{overview.funds_contributed_to > 0
-                ? `You have contributed to ${overview.funds_contributed_to} of ${overview.active_funds_count} active funds.`
-                : 'You have not contributed to any active fund yet.'}
-              </Text>
-              {overview.funds_contributed_to > 0 ? (
-                <View style={styles.moneyRow}>
-                  <Text style={styles.summaryLine}>Your total contribution</Text>
-                  <Rupees amount={overview.your_total_contributed ?? 0} size="sm" tone="in" />
-                </View>
-              ) : null}
-            </BaseCard>
-          ) : null}
-
           {fundsEnabled ? (
-            <FundsList />
+            <TouchableOpacity onPress={() => router.push('/funds' as any)} activeOpacity={0.85}>
+              <BaseCard padding={16} style={styles.fundsSummaryCard}>
+                <View style={styles.fundsSummaryTopRow}>
+                  <View style={styles.fundsSummaryBadge}>
+                    <Ionicons name="stats-chart-outline" size={14} color={Verandah.accent} />
+                    <Text style={styles.fundsSummaryBadgeText}>Live summary</Text>
+                  </View>
+                  <Text style={styles.summarySubline}>{overview?.active_funds_count ?? 0} active funds</Text>
+                </View>
+
+                <View style={styles.moneyRow}>
+                  <Text style={styles.summaryLine}>Collected</Text>
+                  <Rupees amount={overview?.total_collected ?? 0} size="sm" tone="in" />
+                </View>
+                <View style={styles.moneyRow}>
+                  <Text style={styles.summaryLine}>Spent</Text>
+                  <Rupees amount={overview?.total_spent ?? 0} size="sm" />
+                </View>
+                <View style={styles.moneyRow}>
+                  <Text style={styles.summaryLine}>Available</Text>
+                  <Rupees amount={overview?.total_available ?? 0} size="sm" />
+                </View>
+                <Text style={styles.summaryStatus}>{(overview?.funds_contributed_to ?? 0) > 0
+                  ? `You have contributed to ${overview?.funds_contributed_to ?? 0} of ${overview?.active_funds_count ?? 0} active funds.`
+                  : 'You have not contributed to any active fund yet.'}
+                </Text>
+
+                <View style={styles.fundsOpenRow}>
+                  <View style={styles.actionCardIconWrap}>
+                    <Ionicons name="wallet-outline" size={18} color={Verandah.primary} />
+                  </View>
+                  <View style={styles.actionCardTextWrap}>
+                    <Text style={styles.cardTitle}>Open community funds</Text>
+                    <Text style={styles.cardCopy}>View fund health and all fund events in one place.</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
+                </View>
+              </BaseCard>
+            </TouchableOpacity>
           ) : pendingFundsRequest ? (
             <BaseCard padding={16}>
               <Text style={styles.cardTitle}>Funds support - pending review</Text>
@@ -399,15 +412,15 @@ export default function CommunityScreen() {
               <Text style={styles.cardTitle}>Community info</Text>
               <Ionicons name="information-circle-outline" size={18} color={Verandah.textTertiary} />
             </View>
-            <View style={styles.infoGrid}>
-              <View style={styles.infoCell}>
-                <Text style={styles.infoLabel}>Name</Text>
-                <Text style={styles.infoValue}>{communityDetails?.name ?? '---'}</Text>
+            <View style={styles.codeTile}>
+              <View style={styles.codeTileLeft}>
+                <Text style={styles.infoLabel}>Community code</Text>
+                <Text style={styles.codeTileValue}>{communityDetails?.code ?? '---'}</Text>
               </View>
-              <View style={styles.infoCell}>
-                <Text style={styles.infoLabel}>Code</Text>
-                <Text style={styles.infoValue}>{communityDetails?.code ?? '---'}</Text>
-              </View>
+              <TouchableOpacity onPress={handleInviteNeighbors} style={styles.inviteButton} activeOpacity={0.85}>
+                <Ionicons name="share-social-outline" size={14} color={Verandah.primary} />
+                <Text style={styles.inviteButtonText}>Invite neighbors</Text>
+              </TouchableOpacity>
             </View>
             {communityDetails?.address ? (
               <View style={styles.infoRow}>
@@ -451,50 +464,9 @@ const styles = StyleSheet.create({
   heroCard: {
     marginBottom: 14,
   },
-  heroEyebrow: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: Verandah.textTertiary,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
   heroTitle: {
     ...VerandahType.display,
     color: Verandah.textPrimary,
-    marginBottom: 12,
-  },
-  heroMetaRow: {
-    flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  pill: {
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderWidth: 0.5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  codePill: {
-    borderColor: Verandah.borderStrong,
-    backgroundColor: Verandah.cardMuted,
-  },
-  codePillText: {
-    fontSize: 12,
-    color: Verandah.primary,
-    fontWeight: '500',
-  },
-  rolePill: {
-    borderColor: Verandah.accentSoft,
-    backgroundColor: Verandah.accentSoft,
-  },
-  rolePillText: {
-    fontSize: 12,
-    color: Verandah.accent,
-    fontWeight: '500',
-    textTransform: 'capitalize',
   },
   sectionLabel: {
     ...VerandahType.sectionLabel,
@@ -547,6 +519,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+  },
+  fundsOpenRow: {
+    marginTop: 10,
+    paddingTop: 12,
+    borderTopWidth: 0.5,
+    borderTopColor: Verandah.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   fundsSummaryBadge: {
     borderRadius: 999,
@@ -662,18 +643,42 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
-  infoGrid: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  infoCell: {
-    flex: 1,
+  codeTile: {
     borderWidth: 0.5,
     borderColor: Verandah.border,
     backgroundColor: Verandah.cardMuted,
     borderRadius: VerandahRadius.md,
     paddingHorizontal: 10,
-    paddingVertical: 9,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  codeTileLeft: {
+    flex: 1,
+  },
+  codeTileValue: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: Verandah.textPrimary,
+    letterSpacing: 0.8,
+  },
+  inviteButton: {
+    borderWidth: 1,
+    borderRadius: 999,
+    borderColor: Verandah.borderStrong,
+    backgroundColor: Verandah.card,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  inviteButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: Verandah.primary,
   },
   infoRow: {
     marginTop: 10,
