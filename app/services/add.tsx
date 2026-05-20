@@ -14,7 +14,7 @@ import {
     View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import {
     mapServiceCategoryToProviderCategory,
@@ -36,7 +36,16 @@ type ProviderOption = {
 export default function AddServiceScreen() {
   const router = useRouter();
   const { user, communityId } = useAuth();
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    border: Verandah.border,
+    glass: Verandah.card,
+    glassBorder: Verandah.border,
+    surface: Verandah.cardMuted,
+  };
 
   const [serviceName, setServiceName] = useState('');
   const [category, setCategory] = useState<ServiceCategory | null>(null);
@@ -566,7 +575,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.light.border,
+    borderBottomColor: Verandah.border,
   },
   providerOptionBody: {
     flex: 1,
@@ -586,5 +595,5 @@ const styles = StyleSheet.create({
   },
   submitButton: { marginTop: 32, borderRadius: 16, overflow: 'hidden' },
   submitGradient: { paddingVertical: 16, alignItems: 'center', borderRadius: 16 },
-  submitText: { color: '#FFF', fontSize: 16, fontWeight: '500' },
+  submitText: { color: Verandah.primaryFg, fontSize: 16, fontWeight: '500' },
 });

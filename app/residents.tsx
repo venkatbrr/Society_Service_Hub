@@ -16,6 +16,7 @@ type DirectoryResident = {
   full_name: string | null;
   flat_number: string | null;
   phone_number: string | null;
+  email: string | null;
   app_role: 'admin' | 'community_admin' | 'resident' | 'community_lead';
 };
 
@@ -156,7 +157,7 @@ export default function ResidentsScreen() {
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No residents found.</Text>
           }
           renderItem={({ item }) => (
-            <View style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}> 
+            <View style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Avatar name={item.full_name || 'Resident'} size={36} />
               <View style={styles.rowCopy}>
                 <View style={styles.rowTop}>
@@ -173,10 +174,13 @@ export default function ResidentsScreen() {
                     </View>
                   ) : null}
                 </View>
-                <Text style={[styles.meta, { color: colors.textSecondary }]}>Flat: {item.flat_number || 'N/A'}</Text>
-                {canViewPhone ? (
-                  <Text style={[styles.meta, { color: colors.textSecondary }]}>Phone: {item.phone_number || 'N/A'}</Text>
-                ) : null}
+                <Text style={[styles.meta, { color: colors.textSecondary }]}>{item.email || 'No email'}</Text>
+                <View style={styles.metaRow}>
+                  <Text style={[styles.metaCompact, { color: colors.textSecondary }]}>Flat: {item.flat_number || 'N/A'}</Text>
+                  {canViewPhone ? (
+                    <Text style={[styles.metaCompact, { color: colors.textSecondary }]}>Phone: {item.phone_number || 'N/A'}</Text>
+                  ) : null}
+                </View>
               </View>
             </View>
           )}
@@ -195,13 +199,16 @@ export default function ResidentsScreen() {
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}> 
               {selectedResident?.full_name || 'Resident'}
             </Text>
-            <Text style={[styles.modalMeta, { color: colors.textSecondary }]}> 
+            <Text style={[styles.modalMeta, { color: colors.textSecondary }]}>
+              Email: {selectedResident?.email || 'N/A'}
+            </Text>
+            <Text style={[styles.modalMeta, { color: colors.textSecondary }]}>
               Flat: {selectedResident?.flat_number || 'N/A'}
             </Text>
-            <Text style={[styles.modalMeta, { color: colors.textSecondary }]}> 
+            <Text style={[styles.modalMeta, { color: colors.textSecondary }]}>
               Phone: {selectedResident?.phone_number || 'N/A'}
             </Text>
-            <Text style={[styles.modalMeta, { color: colors.textSecondary }]}> 
+            <Text style={[styles.modalMeta, { color: colors.textSecondary }]}>
               Role: {selectedResident?.app_role === 'community_lead' ? 'Community Lead' : 'Resident'}
             </Text>
 
@@ -251,7 +258,9 @@ const styles = StyleSheet.create({
   rowCopy: { flex: 1 },
   rowTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   name: { fontSize: 15, fontWeight: '500' },
-  meta: { fontSize: 12, marginTop: 3 },
+  meta: { fontSize: 13, marginTop: 4, lineHeight: 18 },
+  metaRow: { flexDirection: 'row', gap: 12, marginTop: 3 },
+  metaCompact: { fontSize: 12 },
   leadBadge: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
   leadBadgeText: { fontSize: 11, fontWeight: '500' },
   modalOverlay: { flex: 1, backgroundColor: Verandah.borderStrong, justifyContent: 'flex-end' },

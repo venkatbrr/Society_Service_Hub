@@ -9,6 +9,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
@@ -38,7 +39,7 @@ type FundDetail = Tables<'events'> & {
   fund_roles: Tables<'fund_roles'>[];
 };
 
-type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role'>;
+type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role' | 'email' | 'flat_number'>;
 
 export default function FundDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -49,6 +50,8 @@ export default function FundDetailScreen() {
   const [pendingCollectorId, setPendingCollectorId] = useState<string | null>(null);
   const [selectedCollectorBlockId, setSelectedCollectorBlockId] = useState<string | null>(null);
   const [blockNames, setBlockNames] = useState<Map<string, string>>(new Map());
+  const [searchTreasurer, setSearchTreasurer] = useState('');
+  const [searchCollector, setSearchCollector] = useState('');
   const { user, appRole } = useAuth();
   const router = useRouter();
   const colors = {
@@ -76,7 +79,7 @@ export default function FundDetailScreen() {
       const [transactionsResult, rolesResult, profilesResult, blocksResult] = await Promise.all([
         supabase.from('event_transactions').select('*').eq('event_id', data.id),
         supabase.from('fund_roles').select('*').eq('event_id', data.id),
-        supabase.from('profiles').select('id, full_name, app_role').eq('community_id', data.community_id).order('full_name', { ascending: true }),
+        supabase.from('profiles').select('id, full_name, app_role, email, flat_number').eq('community_id', data.community_id).order('full_name', { ascending: true }),
         supabase.rpc('list_community_blocks', { p_community_id: data.community_id }),
       ]);
 
@@ -399,7 +402,7 @@ export default function FundDetailScreen() {
 
             return (
               <View key={member.id} style={styles.transactionRow}>
-                <View style={[styles.avatar, { backgroundColor: isPaid ? '#DCFCE7' : '#FEF3C7' }]}>
+                <View style={[styles.avatar, { backgroundColor: isPaid ? Verandah.accentSoft : Verandah.cautionSoft }]}>
                   <Text style={styles.statusEmoji}>{isPaid ? APP_EMOJIS.success : APP_EMOJIS.loading}</Text>
                 </View>
                 <View style={styles.transMain}>
@@ -411,7 +414,7 @@ export default function FundDetailScreen() {
                   </Text>
                 </View>
                 <View style={styles.statusBlock}>
-                  <Text style={[styles.statusLabel, { color: isPaid ? '#15803D' : '#B45309' }]}>
+                  <Text style={[styles.statusLabel, { color: isPaid ? Verandah.accent : Verandah.caution }]}>
                     {isPaid ? 'Paid' : 'Pending'}
                   </Text>
                   {isPaid && contribution ? (
@@ -444,7 +447,7 @@ export default function FundDetailScreen() {
                 <TouchableOpacity
                   style={[
                     styles.roleAction,
-                    { backgroundColor: treasurers.length <= MIN_TREASURERS ? colors.surface2 : '#FEE2E2' },
+                    { backgroundColor: treasurers.length <= MIN_TREASURERS ? colors.surface2 : Verandah.dangerSoft },
                   ]}
                   disabled={treasurers.length <= MIN_TREASURERS || savingRoleId === assignment.id}
                   onPress={() => handleRemoveRole(assignment)}
@@ -465,36 +468,58 @@ export default function FundDetailScreen() {
               </View>
             ))}
 
-            {availableTreasurers.map((member) => (
-              <View key={member.id} style={styles.roleRow}>
-                <View style={styles.roleInfo}>
-                  <Text style={[styles.roleName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
-                  <Text style={[styles.roleMeta, { color: colors.textMuted }]}>
-                    {collectors.some((assignment) => assignment.user_id === member.id)
-                      ? 'Collector today'
-                      : 'Resident'}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={[styles.roleAction, { backgroundColor: '#DCFCE7' }]}
-                  disabled={savingRoleId === member.id || treasurers.length >= MAX_TREASURERS}
-                  onPress={() => handleAssignRole(member.id, 'treasurer')}
-                >
-                  {savingRoleId === member.id ? (
-                    <ActivityIndicator size="small" color="#15803D" />
-                  ) : (
-                    <Text
-                      style={[
-                        styles.roleActionText,
-                        { color: treasurers.length >= MAX_TREASURERS ? colors.textMuted : '#15803D' },
-                      ]}
-                    >
-                      Add
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            ))}
+            {availableTreasurers.length > 0 ? (
+              <>
+                <TextInput
+                  style={[styles.searchInput, { borderColor: colors.border, backgroundColor: colors.secondary + '15' }]}
+                  placeholder="Search by name, email, or flat..."
+                  placeholderTextColor={colors.textMuted}
+                  value={searchTreasurer}
+                  onChangeText={setSearchTreasurer}
+                />
+                {availableTreasurers
+                  .filter(
+                    (member) =>
+                      !searchTreasurer.trim() ||
+                      (member.full_name || '').toLowerCase().includes(searchTreasurer.toLowerCase()) ||
+                      (member.email || '').toLowerCase().includes(searchTreasurer.toLowerCase()) ||
+                      (member.flat_number || '').toLowerCase().includes(searchTreasurer.toLowerCase())
+                  )
+                  .map((member) => (
+                    <View key={member.id} style={styles.roleRow}>
+                      <View style={styles.roleInfo}>
+                        <Text style={[styles.roleName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
+                        <View style={styles.roleMetaRow}>
+                          <Text style={[styles.roleMeta, { color: colors.textMuted }]}>
+                            {member.email || 'No email'}
+                          </Text>
+                          {member.flat_number ? (
+                            <Text style={[styles.roleMeta, { color: colors.textMuted }]}> • Flat: {member.flat_number}</Text>
+                          ) : null}
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={[styles.roleAction, { backgroundColor: Verandah.accentSoft }]}
+                        disabled={savingRoleId === member.id || treasurers.length >= MAX_TREASURERS}
+                        onPress={() => handleAssignRole(member.id, 'treasurer')}
+                      >
+                        {savingRoleId === member.id ? (
+                          <ActivityIndicator size="small" color={Verandah.accent} />
+                        ) : (
+                          <Text
+                            style={[
+                              styles.roleActionText,
+                              { color: treasurers.length >= MAX_TREASURERS ? colors.textMuted : Verandah.accent },
+                            ]}
+                          >
+                            Add
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+              </>
+            ) : null}
           </View>
         ) : null}
 
@@ -515,7 +540,7 @@ export default function FundDetailScreen() {
                   <Text style={[styles.roleMeta, { color: colors.textMuted }]}>{assignment.block_id ? `Block: ${blockNames.get(assignment.block_id) ?? 'Unknown'}` : 'All residents'}</Text>
                 </View>
                 <TouchableOpacity
-                  style={[styles.roleAction, { backgroundColor: '#FEE2E2' }]}
+                  style={[styles.roleAction, { backgroundColor: Verandah.dangerSoft }]}
                   disabled={savingRoleId === assignment.id}
                   onPress={() => handleRemoveRole(assignment)}
                 >
@@ -528,38 +553,64 @@ export default function FundDetailScreen() {
               </View>
             ))}
 
-            {availableCollectors.map((member) => (
-              <View key={member.id} style={styles.roleRow}>
-                <View style={styles.roleInfo}>
-                  <Text style={[styles.roleName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
-                  <Text style={[styles.roleMeta, { color: colors.textMuted }]}>Resident</Text>
-                </View>
-                <TouchableOpacity
-                  style={[styles.roleAction, { backgroundColor: '#DCFCE7' }]}
-                  disabled={savingRoleId === member.id || collectors.length >= MAX_COLLECTORS}
-                  onPress={() => {
-                    if (fund.community?.blocks_enabled) {
-                      setPendingCollectorId(member.id);
-                    } else {
-                      void handleAssignRole(member.id, 'collector');
-                    }
-                  }}
-                >
-                  {savingRoleId === member.id ? (
-                    <ActivityIndicator size="small" color="#15803D" />
-                  ) : (
-                    <Text
-                      style={[
-                        styles.roleActionText,
-                        { color: collectors.length >= MAX_COLLECTORS ? colors.textMuted : '#15803D' },
-                      ]}
-                    >
-                      Add
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            ))}
+            {availableCollectors.length > 0 ? (
+              <>
+                <TextInput
+                  style={[styles.searchInput, { borderColor: colors.border, backgroundColor: colors.secondary + '15' }]}
+                  placeholder="Search by name, email, or flat..."
+                  placeholderTextColor={colors.textMuted}
+                  value={searchCollector}
+                  onChangeText={setSearchCollector}
+                />
+                {availableCollectors
+                  .filter(
+                    (member) =>
+                      !searchCollector.trim() ||
+                      (member.full_name || '').toLowerCase().includes(searchCollector.toLowerCase()) ||
+                      (member.email || '').toLowerCase().includes(searchCollector.toLowerCase()) ||
+                      (member.flat_number || '').toLowerCase().includes(searchCollector.toLowerCase())
+                  )
+                  .map((member) => (
+                    <View key={member.id} style={styles.roleRow}>
+                      <View style={styles.roleInfo}>
+                        <Text style={[styles.roleName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
+                        <View style={styles.roleMetaRow}>
+                          <Text style={[styles.roleMeta, { color: colors.textMuted }]}>
+                            {member.email || 'No email'}
+                          </Text>
+                          {member.flat_number ? (
+                            <Text style={[styles.roleMeta, { color: colors.textMuted }]}> • Flat: {member.flat_number}</Text>
+                          ) : null}
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={[styles.roleAction, { backgroundColor: Verandah.accentSoft }]}
+                        disabled={savingRoleId === member.id || collectors.length >= MAX_COLLECTORS}
+                        onPress={() => {
+                          if (fund.community?.blocks_enabled) {
+                            setPendingCollectorId(member.id);
+                          } else {
+                            void handleAssignRole(member.id, 'collector');
+                          }
+                        }}
+                      >
+                        {savingRoleId === member.id ? (
+                          <ActivityIndicator size="small" color={Verandah.accent} />
+                        ) : (
+                          <Text
+                            style={[
+                              styles.roleActionText,
+                              { color: collectors.length >= MAX_COLLECTORS ? colors.textMuted : Verandah.accent },
+                            ]}
+                          >
+                            Add
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+              </>
+            ) : null}
           </View>
         ) : null}
 
@@ -570,7 +621,7 @@ export default function FundDetailScreen() {
           </View>
           {expenseTransactions.map((transaction) => (
             <View key={transaction.id} style={styles.transactionRow}>
-              <View style={[styles.avatar, { backgroundColor: '#FEE2E2' }]}>
+              <View style={[styles.avatar, { backgroundColor: Verandah.dangerSoft }]}>
                 <Text style={styles.statusEmoji}>{APP_EMOJIS.expense}</Text>
               </View>
               <View style={styles.transMain}>
@@ -598,18 +649,18 @@ export default function FundDetailScreen() {
               <BlockPicker value={selectedCollectorBlockId} onChange={setSelectedCollectorBlockId} communityId={fund.community_id} />
             ) : null}
             <View style={styles.modalActions}>
-              <TouchableOpacity style={[styles.roleAction, { backgroundColor: '#EEF2FF', flex: 1 }]} onPress={() => setPendingCollectorId(null)}>
+              <TouchableOpacity style={[styles.roleAction, { backgroundColor: Verandah.cardMuted, flex: 1 }]} onPress={() => setPendingCollectorId(null)}>
                 <Text style={[styles.roleActionText, { color: colors.primary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.roleAction, { backgroundColor: '#DCFCE7', flex: 1 }]}
+                style={[styles.roleAction, { backgroundColor: Verandah.accentSoft, flex: 1 }]}
                 onPress={() => {
                   if (pendingCollectorId) {
                     void handleAssignRole(pendingCollectorId, 'collector');
                   }
                 }}
               >
-                <Text style={[styles.roleActionText, { color: '#15803D' }]}>Assign</Text>
+                <Text style={[styles.roleActionText, { color: Verandah.accent }]}>Assign</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -870,6 +921,19 @@ const styles = StyleSheet.create({
   roleMeta: {
     fontSize: 12,
     marginTop: 4,
+  },
+  roleMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  searchInput: {
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    fontSize: 14,
   },
   roleAction: {
     minWidth: 84,

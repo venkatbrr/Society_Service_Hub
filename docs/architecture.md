@@ -119,6 +119,8 @@ Authenticated, no community, no request -> /community-select
 Authenticated with community -> /(tabs)
 ```
 
+`/community-join-block` is not part of the root redirect tree. It is a post-join handoff from `app/community-select.tsx` after `join_community_by_code(p_code)` succeeds and the target community has both `funds_enabled = true` and `blocks_enabled = true`.
+
 ### AuthContext (`context/AuthContext.tsx`)
 
 `AuthContext` loads the session from Supabase Auth, fetches the `profiles` row, resolves `communityId`, and loads the latest active community request when the user is still unassigned.
@@ -337,7 +339,7 @@ Current active notification flows:
 
 Hire feedback uses local `expo-notifications` scheduling with a 24-hour trigger after a successful `provider_hires` insert. No server-side fan-out is used for this flow.
 
-The notification screen still contains defensive handling for some legacy promotion-related payloads.
+The notification screen still contains defensive handling for legacy admin-promotion payloads (`new_community_request`, `new_promotion_request`, `promoted_to_admin`, `promotion_approved`, `promotion_rejected`) and routes them to platform approvals when encountered.
 
 ---
 

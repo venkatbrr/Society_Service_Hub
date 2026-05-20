@@ -1,10 +1,11 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../../constants/Colors';
-import { APP_EMOJIS } from '../../constants/emojis';
+import { Verandah } from '../../constants/Colors';
+import { VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -35,7 +36,16 @@ const relativeTime = (dateValue: string) => {
 };
 
 export default function PlatformApprovalsScreen() {
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    accent: Verandah.accent,
+    border: Verandah.border,
+    glass: Verandah.card,
+    glassBorder: Verandah.border,
+  };
   const router = useRouter();
   const { isPlatformAdmin, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -171,7 +181,7 @@ export default function PlatformApprovalsScreen() {
         <View style={styles.headerTop}>
           <Text style={[styles.title, { color: colors.text }]}>Community approvals</Text>
           <TouchableOpacity style={[styles.signOutBtn, { borderColor: colors.border }]} onPress={handleSignOut}>
-            <Text style={styles.signOutIcon}>{APP_EMOJIS.close}</Text>
+            <Ionicons name="log-out-outline" size={14} color={colors.text} />
             <Text style={[styles.signOutText, { color: colors.text }]}>Logout</Text>
           </TouchableOpacity>
         </View>
@@ -188,7 +198,7 @@ export default function PlatformApprovalsScreen() {
           contentContainerStyle={requests.length ? styles.listContent : styles.emptyContent}
           ListEmptyComponent={
             <View style={[styles.emptyState, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-              <Text style={styles.emptyIcon}>{APP_EMOJIS.success}</Text>
+              <Ionicons name="checkmark-circle-outline" size={28} color={Verandah.textTertiary} />
               <Text style={[styles.emptyTitle, { color: colors.text }]}>No pending requests</Text>
               <Text style={[styles.emptyCopy, { color: colors.textMuted }]}>New community requests will show up here.</Text>
             </View>
@@ -241,8 +251,8 @@ export default function PlatformApprovalsScreen() {
                       >
                         <Text style={[styles.secondaryActionText, { color: colors.text }]}>Cancel</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={[styles.primaryAction, { backgroundColor: colors.accent }]} onPress={() => handleReject(item.id)} disabled={busy}>
-                        {busy ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryActionText}>Confirm Reject</Text>}
+                      <TouchableOpacity style={[styles.primaryAction, { backgroundColor: Verandah.danger }]} onPress={() => handleReject(item.id)} disabled={busy}>
+                        {busy ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.primaryActionText}>Confirm reject</Text>}
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -252,7 +262,7 @@ export default function PlatformApprovalsScreen() {
                       <Text style={[styles.secondaryActionText, { color: colors.text }]}>Reject</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.primaryAction, { backgroundColor: colors.primary }]} onPress={() => handleApprove(item.id, currentName)} disabled={busy}>
-                      {busy ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryActionText}>Approve</Text>}
+                      {busy ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.primaryActionText}>Approve</Text>}
                     </TouchableOpacity>
                   </View>
                 )}
@@ -272,13 +282,11 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '500', letterSpacing: -0.5 },
   subtitle: { marginTop: 4, fontSize: 14, lineHeight: 20 },
   signOutBtn: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  signOutIcon: { fontSize: 14, lineHeight: 16 },
-  signOutText: { fontSize: 12, fontWeight: '500' },
+  signOutText: { ...VerandahType.captionBold },
   loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingBottom: 32, gap: 14 },
   emptyContent: { flexGrow: 1, justifyContent: 'center' },
   emptyState: { borderWidth: 1, borderRadius: 24, padding: 24, alignItems: 'center' },
-  emptyIcon: { fontSize: 28, lineHeight: 32 },
   emptyTitle: { fontSize: 18, fontWeight: '500', marginTop: 12 },
   emptyCopy: { fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 6 },
   card: { borderWidth: 1, borderRadius: 24, padding: 18 },
@@ -291,7 +299,7 @@ const styles = StyleSheet.create({
   secondaryAction: { flex: 1, borderWidth: 1, borderRadius: 18, paddingVertical: 14, alignItems: 'center' },
   secondaryActionText: { fontSize: 14, fontWeight: '500' },
   primaryAction: { flex: 1, borderRadius: 18, paddingVertical: 14, alignItems: 'center' },
-  primaryActionText: { color: '#FFF', fontSize: 14, fontWeight: '500' },
+  primaryActionText: { color: Verandah.primaryFg, fontSize: 14, fontWeight: '500' },
   rejectWrap: { borderTopWidth: 1, marginTop: 14, paddingTop: 12 },
   rejectInput: { minHeight: 78, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, marginBottom: 10 },
 });

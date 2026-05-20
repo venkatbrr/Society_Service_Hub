@@ -11,7 +11,7 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -21,7 +21,17 @@ export default function HireFeedbackScreen() {
   const { hireId, provider_id } = useLocalSearchParams<{ hireId: string; provider_id?: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    secondary: Verandah.accent,
+    accent: Verandah.danger,
+    glass: Verandah.card,
+    glassBorder: Verandah.border,
+    surface: Verandah.cardMuted,
+  };
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -376,7 +386,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   saveBtnText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 15,
     fontWeight: '500',
   },
@@ -402,7 +412,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   promptPrimaryText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 13,
     fontWeight: '500',
   },

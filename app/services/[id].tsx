@@ -486,7 +486,7 @@ export default function ServiceDetailScreen() {
                     activeOpacity={0.8}
                   >
                     <Text style={{ fontSize: 14 }}>{SERVICE_CATEGORY_EMOJI[cat]}</Text>
-                    <Text style={[{ fontSize: 11, fontWeight: '600', flexShrink: 1 }, { color: sel ? colors.primary : colors.textMuted }]} numberOfLines={2}>
+                    <Text style={[{ fontSize: 11, fontWeight: '500', flexShrink: 1 }, { color: sel ? colors.primary : colors.textMuted }]} numberOfLines={2}>
                       {SERVICE_CATEGORY_LABELS[cat]}
                     </Text>
                   </TouchableOpacity>
@@ -920,14 +920,14 @@ const styles = StyleSheet.create({
   },
   providerOptionName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   providerOptionMeta: {
     fontSize: 12,
   },
   providerSuggestedTag: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   categoryChip: {

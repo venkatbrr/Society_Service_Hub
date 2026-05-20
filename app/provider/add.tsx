@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/categories';
 import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { DetailField, getDetailFieldsForCategory } from '../../constants/providerDetails';
@@ -41,7 +41,16 @@ export default function AddProviderScreen() {
   const { user, communityId } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    border: Verandah.border,
+    glass: Verandah.card,
+    glassBorder: Verandah.border,
+    cardMuted: Verandah.cardMuted,
+  };
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -212,7 +221,7 @@ export default function AddProviderScreen() {
                     ]}
                     onPress={() => updateDetail(field.key, option)}
                   >
-                    <Text style={[styles.chipText, { color: isSelected ? '#FFF' : colors.text }]}>{option}</Text>
+                    <Text style={[styles.chipText, { color: isSelected ? Verandah.primaryFg : colors.text }]}>{option}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -240,7 +249,7 @@ export default function AddProviderScreen() {
                     ]}
                     onPress={() => toggleChip(field.key, option)}
                   >
-                    <Text style={[styles.chipText, { color: isSelected ? '#FFF' : colors.text }]}>{option}</Text>
+                    <Text style={[styles.chipText, { color: isSelected ? Verandah.primaryFg : colors.text }]}>{option}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -340,7 +349,7 @@ export default function AddProviderScreen() {
                     ]}
                     onPress={() => handleGroupChange(group.id)}
                   >
-                    <Text style={[styles.categoryText, { color: selected ? '#FFF' : colors.text }]}>{group.label}</Text>
+                    <Text style={[styles.categoryText, { color: selected ? Verandah.primaryFg : colors.text }]}>{group.label}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -359,7 +368,7 @@ export default function AddProviderScreen() {
                   ]}
                   onPress={() => handleCategoryChange(cat)}
                 >
-                  <Text style={[styles.categoryText, { color: category === cat ? '#FFF' : colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
+                  <Text style={[styles.categoryText, { color: category === cat ? Verandah.primaryFg : colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
                 </TouchableOpacity>
               )}
             </ScrollView>
@@ -409,7 +418,7 @@ export default function AddProviderScreen() {
           activeOpacity={0.85}
           style={[styles.saveButton, { backgroundColor: colors.primary }]}
         >
-          {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Add Provider</Text>}
+          {isLoading ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.saveButtonText}>Add provider</Text>}
         </TouchableOpacity>
       </View>
     </View>
@@ -432,7 +441,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.light.cardMuted,
+    backgroundColor: Verandah.cardMuted,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -534,7 +543,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveButtonText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 18,
     fontWeight: '500',
   },

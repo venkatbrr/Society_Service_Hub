@@ -36,7 +36,7 @@ This document tracks product behavior that is intentionally disabled, simplified
 ### 4. Cross-Community UI Surface
 
 - **Status**: Deferred (backend-only foundation is active)
-- **Details**: Cross-community federation objects are present in the database (`community_partnerships`, `community_groups`, sharing/audience tables, and related RPCs), but no current app screen exposes partnerships, cross-community provider discovery controls, cross-community visit audience pickers, shared funds UI, or announcements UI.
+- **Details**: Cross-community federation objects are present in the database (`community_partnerships`, `community_groups`, sharing/audience tables, and related RPCs), but no current app screen exposes partnerships, cross-community provider discovery controls, cross-community visit audience pickers, shared funds UI, community-group management, or announcements UI.
 - **Reason**: Delivery is phased; backend foundation was shipped first to keep future UI tasks smaller and safer.
 
 ---

@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BlockPicker } from '../../components/BlockPicker';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
@@ -40,7 +40,19 @@ export default function AddTransactionScreen() {
   const { event_id, type: initialType } = useLocalSearchParams();
   const { user, appRole, myBlockId, refreshSession } = useAuth();
   const router = useRouter();
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    secondary: Verandah.accent,
+    accent: Verandah.danger,
+    border: Verandah.border,
+    surface: Verandah.card,
+    surface2: Verandah.cardMuted,
+    glass: Verandah.card,
+    glassBorder: Verandah.border,
+  };
 
   const [type, setType] = useState<'income' | 'expense'>((initialType as 'income' | 'expense') || 'income');
   const [fund, setFund] = useState<FundContext | null>(null);
@@ -428,7 +440,7 @@ export default function AddTransactionScreen() {
           style={[styles.saveButton, { backgroundColor: type === 'income' ? colors.primary : colors.accent }]}
         >
           {isLoading ? (
-            <ActivityIndicator color="#FFF" />
+            <ActivityIndicator color={Verandah.primaryFg} />
           ) : (
             <Text style={styles.saveButtonText}>{type === 'income' ? 'Save Contribution' : 'Save Expense'}</Text>
           )}
@@ -482,7 +494,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.light.surface2,
+    backgroundColor: Verandah.cardMuted,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: -4,
@@ -607,7 +619,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   saveButtonText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 17,
     fontWeight: '500',
   },
@@ -643,7 +655,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   modalPrimaryText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 14,
     fontWeight: '500',
   },

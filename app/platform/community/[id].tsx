@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../../../constants/Colors';
+import { Verandah } from '../../../constants/Colors';
 import { useAuth } from '../../../context/AuthContext';
 import { Tables } from '../../../lib/database.types';
 import { supabase } from '../../../lib/supabase';
@@ -34,7 +34,18 @@ type Resident = {
 };
 
 export default function PlatformCommunityDetailScreen() {
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    accent: Verandah.danger,
+    border: Verandah.border,
+    glass: Verandah.card,
+    glassBorder: Verandah.border,
+    surface: Verandah.card,
+    surface2: Verandah.cardMuted,
+  };
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isPlatformAdmin } = useAuth();
@@ -380,7 +391,7 @@ export default function PlatformCommunityDetailScreen() {
                 onPress={removeResident}
                 disabled={processingRemove}
               >
-                {processingRemove ? <ActivityIndicator color="#FFF" /> : <Text style={styles.modalDangerText}>Remove from community</Text>}
+                {processingRemove ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.modalDangerText}>Remove from community</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -420,5 +431,5 @@ const styles = StyleSheet.create({
   modalSecondary: { flex: 1, borderWidth: 1, borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
   modalSecondaryText: { fontSize: 14, fontWeight: '500' },
   modalDanger: { flex: 1.4, borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
-  modalDangerText: { color: '#FFF', fontSize: 14, fontWeight: '500' },
+  modalDangerText: { color: Verandah.primaryFg, fontSize: 14, fontWeight: '500' },
 });

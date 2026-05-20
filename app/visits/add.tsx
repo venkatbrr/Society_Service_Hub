@@ -6,7 +6,7 @@ import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, T
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { ProviderSelector } from '../../components/ProviderSelector';
-import { Colors } from '../../constants/Colors';
+import { Verandah } from '../../constants/Colors';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/categories';
 import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
@@ -34,7 +34,15 @@ export default function AddVisitScreen() {
   const router = useRouter();
   const { user, communityId } = useAuth();
   const insets = useSafeAreaInsets();
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    border: Verandah.border,
+    glass: Verandah.card,
+    glassBorder: Verandah.border,
+  };
 
   const [providerMode, setProviderMode] = useState<'existing' | 'new'>('existing');
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
@@ -222,7 +230,7 @@ export default function AddVisitScreen() {
                     ]}
                     onPress={() => handleGroupSelect(group.id)}
                   >
-                    <Text style={[categoryGridStyle.catText, { color: selected ? '#FFF' : colors.text }]}>{group.label}</Text>
+                    <Text style={[categoryGridStyle.catText, { color: selected ? Verandah.primaryFg : colors.text }]}>{group.label}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -241,7 +249,7 @@ export default function AddVisitScreen() {
                   ]}
                   onPress={() => handleCategorySelect(cat)}
                 >
-                  <Text style={[categoryGridStyle.catText, { color: category === cat ? '#FFF' : colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
+                  <Text style={[categoryGridStyle.catText, { color: category === cat ? Verandah.primaryFg : colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -359,7 +367,7 @@ export default function AddVisitScreen() {
           activeOpacity={0.85}
           style={[styles.submitBtn, { marginBottom: Math.max(insets.bottom, 40), backgroundColor: colors.primary }]}
         >
-          {submitting ? <ActivityIndicator color="#FFF" /> : <Text style={styles.submitBtnText}>Share Visit</Text>}
+          {submitting ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.submitBtnText}>Share visit</Text>}
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -481,7 +489,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitBtnText: {
-    color: '#FFF',
+    color: Verandah.primaryFg,
     fontSize: 18,
     fontWeight: '500',
   },

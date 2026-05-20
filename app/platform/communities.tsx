@@ -1,10 +1,11 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Colors } from '../../constants/Colors';
-import { APP_EMOJIS } from '../../constants/emojis';
+import { Verandah } from '../../constants/Colors';
+import { VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -29,7 +30,16 @@ const relativeTime = (dateValue: string | null) => {
 };
 
 export default function PlatformCommunitiesScreen() {
-  const colors = Colors.light;
+  const colors = {
+    background: Verandah.surface,
+    text: Verandah.textPrimary,
+    textMuted: Verandah.textSecondary,
+    primary: Verandah.primary,
+    border: Verandah.border,
+    surface: Verandah.cardMuted,
+    glass: Verandah.card,
+    glassBorder: Verandah.border,
+  };
   const router = useRouter();
   const { isPlatformAdmin, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -123,7 +133,7 @@ export default function PlatformCommunitiesScreen() {
         <View style={styles.headerTop}>
           <Text style={[styles.title, { color: colors.text }]}>Communities</Text>
           <TouchableOpacity style={[styles.signOutBtn, { borderColor: colors.border }]} onPress={handleSignOut}>
-            <Text style={styles.signOutIcon}>{APP_EMOJIS.close}</Text>
+            <Ionicons name="log-out-outline" size={14} color={colors.text} />
             <Text style={[styles.signOutText, { color: colors.text }]}>Logout</Text>
           </TouchableOpacity>
         </View>
@@ -131,7 +141,7 @@ export default function PlatformCommunitiesScreen() {
       </View>
 
       <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-        <Text style={styles.searchIcon}>{APP_EMOJIS.search}</Text>
+        <Ionicons name="search-outline" size={16} color={Verandah.textTertiary} />
         <TextInput
           style={[styles.searchInput, { color: colors.text }]}
           placeholder="Search by community or city"
@@ -151,7 +161,7 @@ export default function PlatformCommunitiesScreen() {
           contentContainerStyle={filtered.length ? styles.listContent : styles.emptyContent}
           ListEmptyComponent={
             <View style={[styles.emptyState, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-              <Text style={styles.emptyIcon}>{APP_EMOJIS.community}</Text>
+              <Ionicons name="business-outline" size={28} color={Verandah.textTertiary} />
               <Text style={[styles.emptyTitle, { color: colors.text }]}>No communities found</Text>
               <Text style={[styles.emptyCopy, { color: colors.textMuted }]}>Try a different search term.</Text>
             </View>
@@ -195,16 +205,13 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '500', letterSpacing: -0.5 },
   subtitle: { marginTop: 4, fontSize: 14, lineHeight: 20 },
   signOutBtn: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  signOutIcon: { fontSize: 14, lineHeight: 16 },
-  signOutText: { fontSize: 12, fontWeight: '500' },
+  signOutText: { ...VerandahType.captionBold },
   searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderRadius: 18, paddingHorizontal: 14, height: 50, marginBottom: 14 },
-  searchIcon: { fontSize: 16, lineHeight: 18 },
   searchInput: { flex: 1, fontSize: 14 },
   loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingBottom: 32, gap: 12 },
   emptyContent: { flexGrow: 1, justifyContent: 'center' },
   emptyState: { borderWidth: 1, borderRadius: 24, padding: 24, alignItems: 'center' },
-  emptyIcon: { fontSize: 28, lineHeight: 32 },
   emptyTitle: { fontSize: 18, fontWeight: '500', marginTop: 12 },
   emptyCopy: { fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 6 },
   card: { borderWidth: 1, borderRadius: 22, padding: 16 },

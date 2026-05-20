@@ -14,6 +14,7 @@ npm run web            # Preview on web (best for layout testing)
 npm run android        # Build and run on Android (required for Google Sign-In)
 npm run ios            # Build and run on iOS
 npx tsc --noEmit       # Type-check (no test framework configured)
+npm run db:login       # Authenticate Supabase CLI locally
 npm run db:push        # Apply local migrations to Supabase
 npm run db:link        # Link to Supabase project
 ```
@@ -27,7 +28,7 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 
 ### Layers
 
-- **Screens** (`app/`): expo-router file-based routing. 4 bottom tabs in `app/(tabs)/` (Help, Saved, Community, Profile), feature screens under `app/visits/`, `app/funds/`, `app/provider/`.
+- **Screens** (`app/`): expo-router file-based routing. 4 bottom tabs in `app/(tabs)/` (Help, Saved, Community, Profile), onboarding and status routes such as `community-select`, `community-request`, and `community-join-block`, plus feature screens under `app/visits/`, `app/funds/`, `app/funds-access/`, `app/provider/`, `app/services/`, `app/community/`, and `app/platform/`.
 - **Components** (`components/`): Reusable UI — `ProviderCard`, `VisitCard`, `FundCard`, `EmptyState`, `SearchBar`, `CategoryFilter`, etc.
 - **State** (`context/`): Two React Context providers — `AuthContext` (session, profile, communityId, appRole, isCommunityLead, isPlatformAdmin) and `NotificationContext` (real-time via Supabase Realtime).
 - **Backend** (`lib/`): Supabase client (`supabase.ts`), auth helpers (`auth.ts`), auto-generated DB types (`database.types.ts`), fund role logic (`fundRoles.ts`), error utilities (`supabaseErrors.ts`).
@@ -44,8 +45,9 @@ Every user belongs to a community. **All data queries must filter by `communityI
 1. Root layout (`app/_layout.tsx`) initializes Google Sign-In and wraps app in `AuthProvider` + `NotificationProvider`
 2. `AuthContext` watches `supabase.auth.onAuthStateChange`, auto-fetches profile
 3. Redirect logic: no session → `/login`; platform admin → `/platform/approvals`; no community + active request → `/community-request-submitted`; no community + no request → `/community-select`; community present → `/(tabs)`
-4. Auth methods: Google OAuth (requires dev build, not Expo Go) and email/password; email sign-up requires a flat number and forwards it through auth metadata into `profiles.flat_number`
-5. Session persisted via AsyncStorage adapter (not SecureStore, due to Android 2KB limit)
+4. Successful `join_community_by_code()` calls in `app/community-select.tsx` can branch to `/community-join-block` before `/(tabs)` when the joined community has both `funds_enabled` and `blocks_enabled`
+5. Auth methods: Google OAuth (requires dev build, not Expo Go) and email/password; email sign-up requires a flat number and forwards it through auth metadata into `profiles.flat_number`
+6. Session persisted via AsyncStorage adapter (not SecureStore, due to Android 2KB limit)
 
 ### Role System
 
@@ -61,7 +63,7 @@ Funds activation is gated by platform-admin approval. A community without `funds
 
 ## Key Conventions
 
-- **Icons**: Use `APP_EMOJIS` for tab and decorative iconography. Use `Ionicons` from `@expo/vector-icons` for interactive controls where the existing code already does so.
+- **Icons**: Use `Ionicons` from `@expo/vector-icons` for bottom-tab and other interactive controls. Reserve `APP_EMOJIS` for decorative and non-interactive iconography only.
 - **Date/Time inputs**: Always use `@react-native-community/datetimepicker`, never raw TextInput
 - **Theme**: Enforced light mode. Colors in `constants/Colors.ts` — primary `#6C63FF` (soft indigo), secondary `#10B981` (emerald), accent `#FF6B6B` (coral). Glassmorphism style with `expo-linear-gradient` for gradient headers/buttons.
 - **Style**: Rounded corners (20-24px border-radius), glassmorphism cards (`glass`, `glassBorder` from Colors.ts), soft indigo shadows (`shadowColor: '#6C63FF'`), premium pastel look

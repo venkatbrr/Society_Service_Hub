@@ -4,6 +4,14 @@ This document is a compact implementation brief for the current Expo + Supabase 
 
 ---
 
+## App Summary
+
+Society Service Hub is a light-mode community operations app for gated residential societies. The shipped product currently focuses on trusted provider discovery, service-visit coordination, activation-gated community funds, and personal maintenance reminders. Residents use the main tabs for daily workflows, community leads manage local operations such as funds and optional block scoping, and platform admins handle community creation approvals plus funds-activation decisions.
+
+The active UI is intentionally narrower than the database foundation. Cross-community federation tables, sharing models, and audience RPCs are already present in Supabase, but the current app experience still keeps residents inside their home community and does not yet expose federation controls.
+
+---
+
 ## Technical Stack
 
 - **Frontend**: Expo SDK 54, React Native 0.81, TypeScript strict mode
@@ -33,16 +41,19 @@ This document is a compact implementation brief for the current Expo + Supabase 
 - `community-select.tsx`
 - `community-request.tsx`
 - `community-request-submitted.tsx`
+- `community-join-block.tsx`
 - `notifications.tsx`
 - `residents.tsx`
 
 ### Feature route groups
 
+- `/community/*`: block management
 - `/provider/*`: add and detail
 - `/visits/*`: add and detail
 - `/funds/*`: add, detail, transaction entry
+- `/funds-access/*`: resident funds activation request
 - `/services/*`: reminder list, add, detail or edit
-- `/platform/*`: platform approvals and community inspection
+- `/platform/*`: platform approvals, funds request review, and community inspection
 
 ### Removed surface
 
@@ -61,6 +72,8 @@ The resident marketplace is not part of the current product. `app/business/*` is
    - No community with active request -> `/community-request-submitted`
    - No community and no request -> `/community-select`
    - Community member -> `/(tabs)`
+
+Successful joins from `community-select.tsx` can send users through `/community-join-block` before `/(tabs)` when the joined community has both funds and blocks enabled.
 
 ---
 
@@ -144,6 +157,11 @@ Current notification flows include:
 - `community_rejected`
 - `removed_from_community`
 - `service_reminder`
+- `funds_access_requested`
+- `funds_access_approved`
+- `funds_access_rejected`
+- `community_lead_appointed`
+- `funds_access_revoked`
 
 Reserved cross-community notification types (not currently emitted by app UI):
 
@@ -157,7 +175,7 @@ The notification UI also contains legacy handling for some promotion-related pay
 ## UI and Implementation Conventions
 
 - **Theme**: Light mode visual system using `constants/Colors.ts`
-- **Icons**: Use `APP_EMOJIS` for tab and decorative iconography. Use `Ionicons` from `@expo/vector-icons` for interactive controls where the codebase already does so.
+- **Icons**: Use `Ionicons` from `@expo/vector-icons` for bottom-tab and other interactive controls. Reserve `APP_EMOJIS` for decorative and non-interactive iconography only.
 - **Toasts**: Use `react-native-toast-message` for user-visible feedback
 - **Single-row fetches**: Prefer `.maybeSingle()`
 - **Community filtering**: Filter community-scoped queries by `communityId`
@@ -176,6 +194,7 @@ The notification UI also contains legacy handling for some promotion-related pay
 - `npm run android`
 - `npm run ios`
 - `npx tsc --noEmit`
+- `npm run db:login`
 - `npm run db:push`
 - `npm run db:link`
 

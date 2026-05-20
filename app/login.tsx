@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -151,7 +152,7 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <Text style={styles.logoEmoji}>{APP_EMOJIS.community}</Text>
+            <Ionicons name="business" size={48} color={Verandah.primaryFg} />
           </View>
           <Text style={styles.title}>Society Service Hub</Text>
           <Text style={styles.subtitle}>
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    borderRadius: VerandahRadius.lg,
+    borderRadius: VerandahRadius.xl,
     padding: 4,
     marginBottom: 28,
     backgroundColor: Verandah.cardMuted,
@@ -392,7 +393,7 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     paddingVertical: 12,
-    borderRadius: VerandahRadius.md,
+    borderRadius: VerandahRadius.xl,
     alignItems: 'center',
     backgroundColor: Verandah.card,
   },
@@ -403,7 +404,7 @@ const styles = StyleSheet.create({
   },
   tabInactive: {
     paddingVertical: 12,
-    borderRadius: VerandahRadius.md,
+    borderRadius: VerandahRadius.xl,
     alignItems: 'center',
   },
   tabInactiveText: {
@@ -456,7 +457,7 @@ const styles = StyleSheet.create({
   authButton: {
     marginTop: 10,
     height: 54,
-    borderRadius: VerandahRadius.lg,
+    borderRadius: VerandahRadius.xl,
     backgroundColor: Verandah.primary,
     justifyContent: 'center',
     alignItems: 'center',

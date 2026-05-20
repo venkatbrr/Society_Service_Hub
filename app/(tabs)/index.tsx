@@ -398,7 +398,7 @@ export default function HomeScreen() {
               style={styles.headerButton}
               onPress={() => router.push('/notifications')}
             >
-              <Text style={styles.headerIcon}>{APP_EMOJIS.notifications}</Text>
+              <Ionicons name="notifications-outline" size={19} color={Verandah.caution} />
               {unreadCount > 0 && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
@@ -613,6 +613,7 @@ export default function HomeScreen() {
             visitTab === 'upcoming' ? (
               <EmptyState
                 icon={APP_EMOJIS.community}
+                ionicon="calendar-clear-outline"
                 title="No Upcoming Visits"
                 message={searchQuery ? 'No visits match your search' : 'Be the first to share when a provider is coming!'}
                 isLightMode={true}
@@ -620,6 +621,7 @@ export default function HomeScreen() {
             ) : (
               <EmptyState
                 icon={APP_EMOJIS.loading}
+                ionicon="time-outline"
                 title="No Past Visits"
                 message={searchQuery ? 'No visits match your search' : 'Completed and expired visits will appear here'}
                 isLightMode={true}
@@ -670,7 +672,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Verandah.cardMuted,
+    backgroundColor: Verandah.cautionSoft,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -690,10 +692,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: Verandah.accent,
-  },
-  headerIcon: {
-    fontSize: 20,
-    lineHeight: 24,
   },
   badge: {
     position: 'absolute',

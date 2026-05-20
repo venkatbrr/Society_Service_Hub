@@ -1,9 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Verandah } from '../../constants/Colors';
-import { APP_EMOJIS } from '../../constants/emojis';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -16,15 +15,18 @@ export default function TabLayout() {
           backgroundColor: Verandah.card,
           borderTopColor: Verandah.border,
           borderTopWidth: 0.5,
-          height: 56 + insets.bottom,
+          height: 58 + insets.bottom,
           paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
-          paddingTop: 10,
+          paddingTop: 8,
           elevation: 0,
         },
         tabBarActiveTintColor: Verandah.accent,
         tabBarInactiveTintColor: Verandah.textMuted,
+        tabBarIconStyle: {
+          marginBottom: -1,
+        },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: '500',
           letterSpacing: 0.1,
         },
@@ -34,28 +36,36 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Help',
-          tabBarIcon: ({ focused }) => <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{APP_EMOJIS.home}</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={20} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="favorites"
         options={{
           title: 'Saved',
-          tabBarIcon: ({ focused }) => <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{APP_EMOJIS.favoritesFilled}</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'bookmark' : 'bookmark-outline'} size={20} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="community"
         options={{
           title: 'Community',
-          tabBarIcon: ({ focused }) => <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{APP_EMOJIS.community}</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'business' : 'business-outline'} size={20} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ focused }) => <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{APP_EMOJIS.profile}</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={20} color={color} />
+          ),
         }}
       />
     </Tabs>

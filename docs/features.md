@@ -6,6 +6,14 @@ This document describes the current user-facing product surface, the screens inv
 
 ---
 
+## App Summary
+
+Society Service Hub currently ships four main experiences: trusted provider discovery, community service-visit coordination, activation-gated community funds, and personal service reminders. Residents use the main tabs for everyday workflows, community leads manage local operations such as funds and optional block scoping, and platform admins review community requests plus funds-access requests.
+
+The app surface is narrower than the backend schema by design. Cross-community federation tables and RPCs already exist, but the current UI remains centered on the resident's home community, with no exposed federation controls or cross-community browsing screens yet.
+
+---
+
 ## Authentication & Onboarding
 
 ### Login (`app/login.tsx`)
@@ -25,9 +33,19 @@ This document describes the current user-facing product surface, the screens inv
 |--------|---------|
 | **Purpose** | Join an existing community by code or start the request flow for a new one |
 | **Tables** | Writes: `profiles` via `join_community_by_code(p_code)` RPC |
-| **Business rules** | Join code is a 6-character uppercase alphanumeric code. Joining is immediate; there is no resident approval queue. Successful joins call `refreshSession()` so auth state and `communityId` update before redirecting. |
-| **Navigation** | From root redirect when authenticated users have no `community_id` and no active request. To `/(tabs)` after join, or `/community-request` for a new request. |
+| **Business rules** | Join code is a 6-character uppercase alphanumeric code. Joining is immediate; there is no resident approval queue. Successful joins call `refreshSession()` so auth state and `communityId` update before redirecting. If the joined community has both funds and blocks enabled, the screen sends the user to block selection before the main app. |
+| **Navigation** | From root redirect when authenticated users have no `community_id` and no active request. To `/community-join-block` after join when block onboarding applies, otherwise `/(tabs)`, or `/community-request` for a new request. |
 | **Roles** | Any authenticated user |
+
+### Community Join Block (`app/community-join-block.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Capture an optional first block assignment immediately after a resident joins a block-enabled community |
+| **Tables / RPCs** | Writes via RPC: `set_my_block(p_block_id)` |
+| **Business rules** | This handoff appears only after a successful join into a community where both `funds_enabled` and `blocks_enabled` are true. Picking a block is optional; users can skip and still enter the app. |
+| **Navigation** | From `/community-select` after successful join. To `/(tabs)` on save or skip. |
+| **Roles** | Any authenticated resident joining a block-enabled community |
 
 ### Community Request (`app/community-request.tsx`)
 
@@ -104,6 +122,16 @@ Residents in communities with `funds_enabled = false` can submit a funds-support
 
 Platform admin approval promotes one designated resident to `community_lead` and enables funds in the same transaction. Revocation disables funds and blocks while preserving ledger history.
 
+### Funds Access Request (`app/funds-access/request.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Submit the resident-side request that asks platform admins to activate funds for a community |
+| **Tables / RPCs** | Writes via RPC: `submit_funds_access_request(...)`; refreshes auth-backed status from `get_funds_access_status(...)` |
+| **Business rules** | Contact name and phone are required. Purpose is optional and capped at 280 characters. After a successful submit, the user is returned to the Community tab where the activation CTA is replaced by the pending-review state. |
+| **Navigation** | From the Community tab funds CTA. Returns to `/(tabs)/community` on success. |
+| **Roles** | Any resident in a community where funds are inactive |
+
 ## Blocks (Optional)
 
 Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_enabled = true`.
@@ -112,6 +140,16 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 - Profile override: Profile tab shows "Your block" row and block picker modal only when blocks are active.
 - Community lead setup: `/community/blocks` allows block toggling, create/rename/archive, and scoped management.
 - Contribution flow: contributor options are loaded through `list_eligible_contributors_for_collector(...)` so block in-charges only see eligible residents.
+
+### Community Blocks Management (`app/community/blocks.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Let a community lead enable or disable block scoping and manage the block roster |
+| **Tables / RPCs** | Reads: `profiles`, `fund_roles`; RPCs: `list_community_blocks`, `set_community_blocks_enabled`, `add_community_block`, `rename_community_block`, `archive_community_block` |
+| **Business rules** | Disabling blocks removes active block scoping for residents and block in-charges but preserves historical fund contributions. The screen surfaces resident counts and in-charge counts per block to support safe cleanup and archival decisions. |
+| **Navigation** | Linked from funds-enabled community-management flows. |
+| **Roles** | Community lead only |
 
 ### Tab 4: Profile - Personal Hub (`app/(tabs)/profile.tsx`)
 
@@ -241,7 +279,7 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | Create a fund and assign 1-2 treasurers |
 | **Tables** | Reads: `profiles`; writes: `events`, `fund_roles` |
-| **Business rules** | Fund title is required. At least one treasurer must be selected, with a max of two. The fund starts with `goal_amount = 0` and `event_date = now`. |
+| **Business rules** | Fund title is required. At least one treasurer must be selected, with a max of two. The fund starts with `goal_amount = 0` and `event_date = now`. The route blocks access when funds are inactive or the caller is not a community lead or platform admin. |
 | **Navigation** | From the Community tab funds action. Redirects to `/funds/[id]` after success. |
 | **Roles** | Intended for community leads or equivalent fund admins |
 
@@ -271,8 +309,8 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | Show a per-user notification feed with mark-as-read actions |
 | **Tables** | Reads and writes: `notifications` |
-| **Business rules** | Notification UI handles funds-activation types (`funds_access_requested`, `funds_access_approved`, `funds_access_rejected`, `community_lead_appointed`, `funds_access_revoked`) in addition to existing flows, and unknown types still fall through safely. Users can mark individual rows or the full list as read. |
-| **Navigation** | From the header bell on the Help tab. `new_visit` opens `/visits/[id]`; `service_reminder` opens `/services/[id]`; funds-requested opens platform approvals; funds approval/rejection/lead/revoked route to Community tab. |
+| **Business rules** | Notification UI handles funds-activation types (`funds_access_requested`, `funds_access_approved`, `funds_access_rejected`, `community_lead_appointed`, `funds_access_revoked`) in addition to existing flows, and unknown types still fall through safely. Legacy promotion and admin-review payloads are still recognized so older notification rows remain tappable. Users can mark individual rows or the full list as read. |
+| **Navigation** | From the header bell on the Help tab. `new_visit` opens `/visits/[id]`; `service_reminder` opens `/services/[id]`; community approval, rejection, and removal route to `/community-select`; funds-requested and legacy promotion or admin-review notifications open platform approvals; funds approval, rejection, lead, and revocation notifications route to the Community tab. |
 | **Roles** | Personal notifications only |
 | **Real-time** | Supabase Realtime subscribes to INSERT events on the signed-in user's notifications, updates local state, and triggers a local native alert on mobile. |
 
@@ -305,7 +343,7 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | View urgency, edit reminder details, mark work completed, find a technician, or delete the reminder |
 | **Tables** | Reads directly from `user_services` by reminder ID; writes directly to `user_services`; RPC: `mark_service_done(p_service_id)` |
-| **Business rules** | Mark-done uses optimistic UI then refreshes from the database source of truth. Editing reuses add validations and supports mapping or remapping to any saved community provider from the picker list, including search by provider name and phone number. Provider options refresh when the screen regains focus, so newly added providers are available immediately after returning. Delete requires confirmation. The technician shortcut routes users back to the Providers segment of the Help screen with a mapped category filter. |
+| **Business rules** | Mark-done uses optimistic UI then refreshes from the database source of truth. Editing reuses add validations and supports mapping or remapping to any saved community provider from the picker list, including search by provider name and phone number. Provider options refresh when the screen regains focus, so newly added providers are available immediately after returning. The completion flow supports optional provider, amount-paid, and note capture before the reminder is rolled forward. Delete requires confirmation. The technician shortcut routes users back to the Providers segment of the Help screen with a mapped category filter. |
 
 ### Home and Profile Surfaces
 
