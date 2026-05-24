@@ -25,6 +25,7 @@ type CommunityDetail = {
 type Resident = {
   id: string;
   full_name: string | null;
+  email: string | null;
   flat_number: string | null;
   phone_number: string | null;
   app_role: string;
@@ -47,7 +48,7 @@ export default function PlatformCommunityDetailScreen() {
   };
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { isPlatformAdmin } = useAuth();
+  const { isPlatformAdmin, user, profile } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -83,7 +84,7 @@ export default function PlatformCommunityDetailScreen() {
           .maybeSingle(),
         supabase
           .from('profiles')
-          .select('id, full_name, flat_number, phone_number, app_role, removed_at, created_at, community_id')
+          .select('id, full_name, email, flat_number, phone_number, app_role, removed_at, created_at, community_id')
           .eq('community_id', id)
           .order('created_at', { ascending: false }),
       ]);
@@ -232,6 +233,12 @@ export default function PlatformCommunityDetailScreen() {
         <View style={styles.loaderWrap}><ActivityIndicator color={colors.primary} /></View>
       ) : (
         <>
+          <View style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.communityName, { color: colors.text }]}>Admin</Text>
+            <Text style={[styles.meta, { color: colors.text }]}>{profile?.full_name || user?.user_metadata?.full_name || 'Platform Admin'}</Text>
+            <Text style={[styles.meta, { color: colors.textMuted }]}>{user?.email || 'No email'}</Text>
+          </View>
+
           {community ? (
             <View style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.communityName, { color: colors.text }]}>{community.name}</Text>
@@ -352,17 +359,22 @@ export default function PlatformCommunityDetailScreen() {
                 activeOpacity={item.removed_at ? 1 : 0.82}
               >
                 <View style={styles.rowText}>
-                  <Text style={[styles.rowName, { color: item.removed_at ? colors.textMuted : colors.text }]}>
-                    {item.full_name || 'Resident'}
-                    {item.removed_at ? ' (removed)' : ''}
-                  </Text>
+                  <View style={styles.nameRoleRow}>
+                    <Text style={[styles.rowName, { color: item.removed_at ? colors.textMuted : colors.text, flex: 1 }]}>
+                      {item.full_name || 'Resident'}
+                      {item.removed_at ? ' (removed)' : ''}
+                    </Text>
+                    <View style={[styles.badge, { backgroundColor: item.app_role === 'community_lead' ? `${colors.primary}18` : colors.surface2 }]}>
+                      <Text style={[styles.badgeText, { color: item.app_role === 'community_lead' ? colors.primary : colors.textMuted }]}>
+                        {item.app_role === 'community_lead' ? 'Lead' : item.app_role}
+                      </Text>
+                    </View>
+                  </View>
+                  {item.email ? (
+                    <Text style={[styles.rowMeta, { color: colors.textMuted }]}>{item.email}</Text>
+                  ) : null}
                   <Text style={[styles.rowMeta, { color: colors.textMuted }]}>
                     Flat: {item.flat_number || 'N/A'} • {item.phone_number || 'No phone'}
-                  </Text>
-                </View>
-                <View style={[styles.badge, { backgroundColor: item.app_role === 'community_lead' ? `${colors.primary}18` : colors.surface2 }]}>
-                  <Text style={[styles.badgeText, { color: item.app_role === 'community_lead' ? colors.primary : colors.textMuted }]}>
-                    {item.app_role === 'community_lead' ? 'Lead' : item.app_role}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -414,6 +426,7 @@ const styles = StyleSheet.create({
   leadOption: { marginTop: 8, paddingVertical: 8 },
   blockRow: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   listContent: { paddingBottom: 32, gap: 10 },
+  nameRoleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   row: { borderWidth: 1, borderRadius: 18, padding: 14, flexDirection: 'row', gap: 8, alignItems: 'center' },
   rowRemoved: { opacity: 0.5 },
   rowText: { flex: 1 },
