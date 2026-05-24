@@ -99,7 +99,20 @@ export default function LoginScreen() {
         if (error) throw error;
       }
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: 'Auth Error', text2: getAuthErrorMessage(error) });
+      const isAlreadyRegistered = mode === 'signUp' && error?.message === 'User already registered';
+
+      if (isAlreadyRegistered) {
+        setMode('signIn');
+        setConfirmPassword('');
+        Toast.show({
+          type: 'error',
+          text1: 'Email already registered',
+          text2: 'This email already has an account. Please sign in or use Forgot password.',
+          visibilityTime: 6000,
+        });
+      } else {
+        Toast.show({ type: 'error', text1: 'Auth Error', text2: getAuthErrorMessage(error) });
+      }
     } finally {
       setLoading(false);
     }

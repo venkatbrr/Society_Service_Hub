@@ -22,7 +22,7 @@ The app surface is narrower than the backend schema by design. Cross-community f
 |--------|---------|
 | **Purpose** | Sign up or sign in via email/password or Google OAuth |
 | **Tables** | Writes: `auth.users` through Supabase Auth. Trigger auto-creates `profiles` row. |
-| **Business rules** | Email must contain `@`. Sign-up requires full name, flat number, and matching password and confirm password. Flat numbers entered at sign-up are normalized to uppercase with spaces and hyphens removed before being sent as auth metadata, and `handle_new_user()` copies that value into `profiles.flat_number`. Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection (does not silently reuse the last Google account). |
+| **Business rules** | Email must contain `@`. Sign-up requires full name, flat number, and matching password and confirm password. Flat numbers entered at sign-up are normalized to uppercase with spaces and hyphens removed before being sent as auth metadata, and `handle_new_user()` copies that value into `profiles.flat_number`. If sign-up is attempted with an already-registered email, the form switches to sign-in mode and prompts the user to sign in or use Forgot password. Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection (does not silently reuse the last Google account). |
 | **Navigation** | Entry point for unauthenticated users. Links to `/forgot-password`. Post-auth routing is handled by the root layout. |
 | **Roles** | N/A (pre-auth) |
 | **Integrations** | Supabase Auth, Google Sign-In |
@@ -210,7 +210,7 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | Inspect communities, see membership counts, and remove residents if required |
 | **Tables** | Reads: `communities`, `profiles`; writes via RPC: `platform_soft_remove_resident` |
-| **Business rules** | Platform removals are soft deletes on the profile, reset the role to resident, and preserve last-lead protection. Counts exclude removed residents. Detail screen now also includes funds status, revoke action, lead set/remove controls, block list management, and block in-charge removals across funds. |
+| **Business rules** | Platform removals are soft deletes on the profile, reset the role to resident, and preserve last-lead protection. Counts exclude removed residents. Detail screen now also includes funds status, revoke action, lead set/remove controls, block list management, and block in-charge removals across funds. The top identity card shows all active community leads for that community (or Not assigned) rather than the logged-in platform admin identity. |
 
 ---
 

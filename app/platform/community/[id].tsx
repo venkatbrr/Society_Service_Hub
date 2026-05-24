@@ -48,7 +48,7 @@ export default function PlatformCommunityDetailScreen() {
   };
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { isPlatformAdmin, user, profile } = useAuth();
+  const { isPlatformAdmin } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -64,6 +64,11 @@ export default function PlatformCommunityDetailScreen() {
     const leads = residents.filter((row) => row.app_role === 'community_lead' && !row.removed_at).length;
     return { active, leads };
   }, [residents]);
+
+  const activeLeads = useMemo(
+    () => residents.filter((row) => row.app_role === 'community_lead' && !row.removed_at),
+    [residents]
+  );
 
   const loadData = useCallback(async (showRefreshing = false) => {
     if (!id || !isPlatformAdmin) {
@@ -234,9 +239,17 @@ export default function PlatformCommunityDetailScreen() {
       ) : (
         <>
           <View style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.communityName, { color: colors.text }]}>Admin</Text>
-            <Text style={[styles.meta, { color: colors.text }]}>{profile?.full_name || user?.user_metadata?.full_name || 'Platform Admin'}</Text>
-            <Text style={[styles.meta, { color: colors.textMuted }]}>{user?.email || 'No email'}</Text>
+            <Text style={[styles.communityName, { color: colors.text }]}>Community leads</Text>
+            {activeLeads.length > 0 ? (
+              activeLeads.map((lead) => (
+                <View key={lead.id} style={styles.leadIdentityRow}>
+                  <Text style={[styles.meta, { color: colors.text }]}>{lead.full_name || 'Community lead'}</Text>
+                  <Text style={[styles.meta, { color: colors.textMuted }]}>{lead.email || 'No email'}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={[styles.meta, { color: colors.text }]}>Not assigned</Text>
+            )}
           </View>
 
           {community ? (
@@ -424,6 +437,7 @@ const styles = StyleSheet.create({
   countRow: { marginTop: 12, flexDirection: 'row', gap: 14, flexWrap: 'wrap' },
   count: { fontSize: 12, fontWeight: '500' },
   leadOption: { marginTop: 8, paddingVertical: 8 },
+  leadIdentityRow: { marginTop: 8 },
   blockRow: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   listContent: { paddingBottom: 32, gap: 10 },
   nameRoleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
