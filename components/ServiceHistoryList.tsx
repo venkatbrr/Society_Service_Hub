@@ -266,7 +266,7 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
             </View>
 
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalBody}>
-              <Text style={[styles.inputLabel, { color: colors.textMuted }]}>SERVICED ON</Text>
+              <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Serviced on</Text>
               <TouchableOpacity
                 style={[styles.input, styles.dateInput, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}
                 onPress={() => setShowDatePicker(true)}
@@ -291,7 +291,7 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
                 />
               ) : null}
 
-              <Text style={[styles.inputLabel, { color: colors.textMuted }]}>PROVIDER (OPTIONAL)</Text>
+              <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Provider (optional)</Text>
               <ProviderSelector
                 communityId={communityId ?? ''}
                 mode="existing"
@@ -307,7 +307,7 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
                 allowNewProvider={false}
               />
 
-              <Text style={[styles.inputLabel, { color: colors.textMuted }]}>COST PAID (OPTIONAL)</Text>
+              <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Cost paid (optional)</Text>
               <TextInput
                 value={editCost}
                 onChangeText={(value) => setEditCost(value.replace(/[^0-9.]/g, ''))}
@@ -317,7 +317,7 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
                 style={[styles.input, { backgroundColor: colors.cardMuted, borderColor: colors.border, color: colors.text }]}
               />
 
-              <Text style={[styles.inputLabel, { color: colors.textMuted }]}>NOTE (OPTIONAL)</Text>
+              <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Note (optional)</Text>
               <TextInput
                 value={editNote}
                 onChangeText={(value) => setEditNote(value.slice(0, 280))}

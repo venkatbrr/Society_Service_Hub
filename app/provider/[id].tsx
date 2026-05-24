@@ -5,15 +5,32 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { Avatar } from '../../components/Avatar';
+import { BaseCard } from '../../components/BaseCard';
 import { RatingStars } from '../../components/RatingStars';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { APP_EMOJIS, getServiceCategoryEmoji } from '../../constants/emojis';
 import { getDetailFieldsForCategory } from '../../constants/providerDetails';
 import { useAuth } from '../../context/AuthContext';
 import { ProviderWithInteraction } from '../../lib/database.types';
 import { actionToFraudStatus, checkReviewFraud, getFraudActionMessage } from '../../lib/fraudCheck';
 import { supabase } from '../../lib/supabase';
+
+const getYearsOnPlatform = (createdAtStr: string | null) => {
+  if (!createdAtStr) return '1 year';
+  const createdDate = new Date(createdAtStr);
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffYears = diffDays / 365;
+  if (diffYears < 1) {
+    return '1 year';
+  }
+  const yearsRounded = Math.floor(diffYears);
+  return `${yearsRounded} year${yearsRounded === 1 ? '' : 's'}`;
+};
 
 const isMissingRelationError = (error: { code?: string; message?: string } | null) =>
   error?.code === 'PGRST205' ||
@@ -327,55 +344,65 @@ export default function ProviderDetailScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.surface }]}>
-      <View style={[styles.headerCard, { backgroundColor: colors.primary }]}> 
+      <View style={styles.headerCard}> 
         <View style={styles.headerTop}>
            <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-             <Ionicons name="arrow-back" size={20} color={colors.primaryFg} />
+             <Ionicons name="arrow-back" size={20} color={Verandah.textPrimary} />
            </TouchableOpacity>
-           <TouchableOpacity onPress={handleToggleFavorite} style={[styles.iconButton, styles.favoriteIconButton]}>
-             <Text style={styles.favoriteHeaderIcon}>{provider.is_favorite ? APP_EMOJIS.favoritesFilled : APP_EMOJIS.favoritesEmpty}</Text>
+           <TouchableOpacity onPress={handleToggleFavorite} style={styles.iconButton}>
+             <Ionicons 
+               name={provider.is_favorite ? 'bookmark' : 'bookmark-outline'} 
+               size={18} 
+               color={provider.is_favorite ? Verandah.accent : Verandah.textPrimary} 
+             />
            </TouchableOpacity>
         </View>
 
         <View style={styles.headerContent}>
-          <View style={styles.imagePlaceholderLarge}>
-            <Text style={styles.headerEmoji}>{getServiceCategoryEmoji(provider.category)}</Text>
-          </View>
+          <Avatar name={provider.name} size={64} shape="square" />
           <View style={styles.headerInfo}>
-            <View style={styles.nameRow}>
-              <Text style={styles.name}>{provider.name}</Text>
+            <Text style={styles.name}>{provider.name}</Text>
+            <Text style={styles.categoryTextDisp}>
+              {provider.category} · {getYearsOnPlatform(provider.created_at)} on platform
+            </Text>
+            <View style={styles.pillRow}>
               {provider.is_verified && (
-                <View style={styles.verifiedBadge}>
-                  <Text style={styles.verifiedBadgeIcon}>{APP_EMOJIS.verified}</Text>
-                  <Text style={styles.verifiedText}>Verified</Text>
+                <View style={[styles.pill, { backgroundColor: Verandah.accentSoft }]}>
+                  <Text style={[styles.pillText, { color: Verandah.accent }]}>Verified</Text>
                 </View>
               )}
-            </View>
-            <Text style={styles.categoryTextDisp}>{`${getServiceCategoryEmoji(provider.category)} ${provider.category}`}</Text>
-            <View style={styles.ratingRowDisp}>
-               <Text style={styles.ratingIcon}>{APP_EMOJIS.starFilled}</Text>
-               <Text style={styles.ratingValueDisp}>{Number(provider.avg_rating || 0).toFixed(1)}</Text>
-               <Text style={styles.ratingCountDisp}>({provider.rating_count || 0} reviews)</Text>
+              <View style={[styles.pill, { backgroundColor: Verandah.cautionSoft }]}>
+                <Text style={[styles.pillText, { color: Verandah.caution }]}>
+                  {provider.hire_count || 0} hire{provider.hire_count === 1 ? '' : 's'}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
       </View>
 
-      <View style={styles.trustBanner}>
-         <View style={styles.trustStat}>
-            <Text style={[styles.trustStatValue, { color: colors.text }]}>{provider.hire_count || 0}</Text>
-            <Text style={[styles.trustStatLabel, { color: colors.textMuted }]}>Homes used</Text>
-         </View>
-         <View style={[styles.trustDivider, { backgroundColor: colors.border }]} />
-         <View style={styles.trustStat}>
-            <Text style={[styles.trustStatValue, { color: colors.text }]}>{provider.rating_count || 0}</Text>
-          <Text style={[styles.trustStatLabel, { color: colors.textMuted }]}>Reviews</Text>
-         </View>
-      </View>
+      <BaseCard padding={16} style={styles.trustBanner}>
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Rating</Text>
+            <Text style={styles.statValue}>★ {Number(provider.avg_rating || 0).toFixed(1)}</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Homes used</Text>
+            <Text style={styles.statValue}>{provider.hire_count || 0}</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Reviews</Text>
+            <Text style={styles.statValue}>{provider.rating_count || 0}</Text>
+          </View>
+        </View>
+      </BaseCard>
 
       <View style={styles.detailsCard}>
         <View style={styles.privateHistoryHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your history with this provider</Text>
+          <Text style={styles.sectionTitleSentenceCase}>Your history with this provider</Text>
           {providerHistory.length > 0 ? (
             <TouchableOpacity onPress={() => setHistoryExpanded((v) => !v)}>
               <Text style={[styles.privateHistoryToggle, { color: colors.primary }]}>{historyExpanded ? 'Hide' : 'Show'}</Text>
@@ -541,42 +568,72 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 48,
     paddingBottom: 16,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    backgroundColor: Verandah.surface,
   },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  headerContent: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 2 },
-  imagePlaceholderLarge: { width: 68, height: 68, borderRadius: 34, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-  headerEmoji: { fontSize: 38, lineHeight: 42 },
-  headerInfo: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
-  name: { fontSize: 22, fontWeight: '500', color: Verandah.primaryFg, letterSpacing: -0.3 },
-  verifiedBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: Verandah.accentSoft, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, gap: 4 },
-  verifiedBadgeIcon: { fontSize: 16, lineHeight: 18 },
-  verifiedText: { color: Verandah.accent, fontSize: 10, fontWeight: '500', textTransform: 'uppercase' },
-  categoryTextDisp: { fontSize: 13, color: Verandah.primaryFg, fontWeight: '500', marginTop: 2 },
-  ratingRowDisp: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
-  ratingIcon: { fontSize: 16, lineHeight: 18, color: Verandah.caution },
-  ratingValueDisp: { color: Verandah.primaryFg, fontSize: 17, fontWeight: '500' },
-  ratingCountDisp: { color: Verandah.primaryFg, fontSize: 13 },
-  iconButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: Verandah.cardMuted, justifyContent: 'center', alignItems: 'center' },
-  favoriteIconButton: { backgroundColor: 'transparent' },
-  favoriteHeaderIcon: { fontSize: 28, lineHeight: 32 },
-  trustBanner: {
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  headerContent: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 2 },
+  headerInfo: { flex: 1, gap: 4 },
+  name: {
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
+  },
+  categoryTextDisp: {
+    ...VerandahType.body,
+    color: Verandah.textSecondary,
+  },
+  pillRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 2,
+  },
+  pill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: VerandahRadius.sm,
+  },
+  pillText: {
+    ...VerandahType.micro,
+    fontWeight: '500',
+  },
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  trustBanner: {
     marginHorizontal: 20,
     marginTop: 12,
-    borderRadius: 16,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: Verandah.border,
+    marginBottom: 20,
   },
-  trustStat: { flex: 1, alignItems: 'center' },
-  trustStatValue: { fontSize: 18, fontWeight: '500' },
-  trustStatLabel: { fontSize: 11, fontWeight: '500', marginTop: 2 },
-  trustDivider: { width: 1, height: '100%' },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statLabel: {
+    ...VerandahType.sectionLabel,
+    fontSize: 10,
+    color: Verandah.textTertiary,
+    marginBottom: 4,
+  },
+  statValue: {
+    ...VerandahType.title,
+    color: Verandah.textPrimary,
+  },
+  statDivider: {
+    width: 0.5,
+    backgroundColor: Verandah.border,
+    alignSelf: 'stretch',
+  },
   actionGrid: { flexDirection: 'row', padding: 20, gap: 15 },
   mainActionBtn: { flex: 1, flexDirection: 'row', height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', gap: 10, elevation: 0 },
   mainActionIcon: { fontSize: 24, lineHeight: 28 },
@@ -591,6 +648,10 @@ const styles = StyleSheet.create({
     borderColor: Verandah.border,
   },
   sectionTitle: { fontSize: 12, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 1 },
+  sectionTitleSentenceCase: {
+    ...VerandahType.bodyBold,
+    color: Verandah.textPrimary,
+  },
   detailText: { fontSize: 15, lineHeight: 22 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 20, paddingTop: 20, borderTopWidth: 1 },
   infoIcon: { fontSize: 20, lineHeight: 24 },

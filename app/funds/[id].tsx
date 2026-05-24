@@ -18,6 +18,7 @@ import { BlockPicker } from '../../components/BlockPicker';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import {
@@ -300,10 +301,10 @@ export default function FundDetailScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={[styles.header, { backgroundColor: colors.primary }]}>
+        <View style={[styles.header, { backgroundColor: colors.background }]}>
           <View style={styles.headerTop}>
             <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-              <Ionicons name="arrow-back" size={24} color={Verandah.primaryFg} />
+              <Ionicons name="arrow-back" size={24} color={Verandah.primary} />
             </TouchableOpacity>
             <Text style={styles.headerLabel}>Fund Transparency</Text>
             <View style={{ width: 40 }} />
@@ -392,40 +393,36 @@ export default function FundDetailScreen() {
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Contribution Status</Text>
             <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>
-              {incomeTransactions.length} paid / {visibleMembers.length} members
+              {visibleMembers.filter((m) => paidByMemberId.has(m.id)).length} contributed
             </Text>
           </View>
 
-          {visibleMembers.map((member) => {
-            const contribution = paidByMemberId.get(member.id);
-            const isPaid = Boolean(contribution);
+          {visibleMembers
+            .filter((member) => paidByMemberId.has(member.id))
+            .map((member) => {
+              const contribution = paidByMemberId.get(member.id)!;
 
-            return (
-              <View key={member.id} style={styles.transactionRow}>
-                <View style={[styles.avatar, { backgroundColor: isPaid ? Verandah.accentSoft : Verandah.cautionSoft }]}>
-                  <Text style={styles.statusEmoji}>{isPaid ? APP_EMOJIS.success : APP_EMOJIS.loading}</Text>
-                </View>
-                <View style={styles.transMain}>
-                  <Text style={[styles.transName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
-                  <Text style={[styles.transDate, { color: colors.textMuted }]}>
-                    {isPaid && contribution
-                      ? `Paid on ${new Date(contribution.created_at ?? Date.now()).toLocaleDateString()}`
-                      : 'Pending contribution'}
-                  </Text>
-                </View>
-                <View style={styles.statusBlock}>
-                  <Text style={[styles.statusLabel, { color: isPaid ? Verandah.accent : Verandah.caution }]}>
-                    {isPaid ? 'Paid' : 'Pending'}
-                  </Text>
-                  {isPaid && contribution ? (
+              return (
+                <View key={member.id} style={styles.transactionRow}>
+                  <View style={[styles.avatar, { backgroundColor: Verandah.accentSoft }]}>
+                    <Text style={styles.statusEmoji}>{APP_EMOJIS.success}</Text>
+                  </View>
+                  <View style={styles.transMain}>
+                    <Text style={[styles.transName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
+                    <Text style={[styles.transDate, { color: colors.textMuted }]}>
+                      Paid on {new Date(contribution.created_at ?? Date.now()).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <View style={styles.statusBlock}>
+                    <Text style={[styles.statusLabel, { color: Verandah.accent }]}>Paid</Text>
                     <Rupees amount={Number(contribution.amount)} size="sm" tone="in" />
-                  ) : (
-                    <Text style={[styles.transAmount, { color: colors.textMuted }]}>--</Text>
-                  )}
+                  </View>
                 </View>
-              </View>
-            );
-          })}
+              );
+            })}
+          {visibleMembers.filter((m) => paidByMemberId.has(m.id)).length === 0 ? (
+            <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No contributions yet.</Text>
+          ) : null}
         </View>
 
         {permissions.canManageTreasurers ? (
@@ -634,7 +631,7 @@ export default function FundDetailScreen() {
                   {new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}
                 </Text>
               </View>
-              <Rupees amount={Number(transaction.amount)} size="sm" tone="in" />
+              <Rupees amount={Number(transaction.amount)} size="sm" tone="in" showSign={true} />
             </View>
           ))}
           {incomeTransactions.length === 0 ? <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No collections logged yet.</Text> : null}
@@ -730,31 +727,31 @@ const styles = StyleSheet.create({
     color: Verandah.primaryFg,
   },
   headerLabel: {
-    color: Verandah.primaryFg,
+    color: Verandah.textSecondary,
     fontSize: 14,
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   fundTitle: {
-    fontSize: 28,
-    fontWeight: '500',
-    color: Verandah.primaryFg,
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
     marginBottom: 8,
-    letterSpacing: -0.5,
   },
   fundDesc: {
     fontSize: 15,
-    color: Verandah.primaryFg,
+    color: Verandah.textSecondary,
     marginBottom: 20,
     lineHeight: 22,
   },
   roleSummaryCard: {
-    backgroundColor: Verandah.cardMuted,
+    backgroundColor: Verandah.card,
     borderRadius: 24,
     padding: 18,
     marginBottom: 20,
     gap: 6,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
   },
   roleSummaryTitle: {
     color: Verandah.textPrimary,
@@ -771,6 +768,8 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.card,
     borderRadius: 24,
     padding: 18,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
   },
   summaryItem: {
     flex: 1,
@@ -792,7 +791,7 @@ const styles = StyleSheet.create({
   sumDivider: {
     width: 1,
     height: '100%',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: Verandah.border,
   },
   accessCard: {
     backgroundColor: Verandah.card,

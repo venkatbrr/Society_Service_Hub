@@ -66,46 +66,6 @@ const formatRelativePulseTime = (timestamp: string) => {
   return `${diffDays} days ago`;
 };
 
-const getPulseVisual = (kind: PulseItem['kind']): {
-  icon: React.ComponentProps<typeof Ionicons>['name'];
-  bgColor: string;
-  fgColor: string;
-  label: string;
-} => {
-  if (kind === 'visit_scheduled') {
-    return {
-      icon: 'calendar-outline',
-      bgColor: Verandah.accentSoft,
-      fgColor: Verandah.accent,
-      label: 'Visit scheduled',
-    };
-  }
-
-  if (kind === 'fund_created') {
-    return {
-      icon: 'wallet-outline',
-      bgColor: Verandah.accentSoft,
-      fgColor: Verandah.accent,
-      label: 'Fund created',
-    };
-  }
-
-  if (kind === 'provider_added') {
-    return {
-      icon: 'person-add-outline',
-      bgColor: Verandah.cautionSoft,
-      fgColor: Verandah.caution,
-      label: 'Provider added',
-    };
-  }
-
-  return {
-    icon: 'star-outline',
-    bgColor: Verandah.cautionSoft,
-    fgColor: Verandah.caution,
-    label: 'Recent hire',
-  };
-};
 
 export default function CommunityScreen() {
   const router = useRouter();
@@ -169,7 +129,7 @@ export default function CommunityScreen() {
       if (pendingRequestResult.error) throw pendingRequestResult.error;
       if (fundsHistoryResult.error) throw fundsHistoryResult.error;
 
-      setPulseItems(((pulseResult.data ?? []) as PulseItem[]).filter((item) => item.kind !== 'fund_created'));
+      setPulseItems((pulseResult.data ?? []) as PulseItem[]);
       setOverview(((overviewResult.data ?? [null])[0] ?? null) as FundsOverview | null);
       setCommunityDetails(communityResult.data);
       setFundRoles(Array.from(new Set(((roleResult.data ?? []) as FundRoleRow[]).map((row) => row.role))));
@@ -247,6 +207,29 @@ export default function CommunityScreen() {
           <Text style={styles.heroTitle}>{communityDetails?.name ?? 'Your community'}</Text>
         </BaseCard>
 
+        {pulseItems.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Going around the building.</Text>
+            <BaseCard padding={0}>
+              {pulseItems.map((item, idx) => (
+                <View
+                  key={`${item.kind}-${item.entity_id}-${item.happened_at}`}
+                  style={[
+                    styles.pulseRow,
+                    idx < pulseItems.length - 1 && styles.pulseDivider
+                  ]}
+                >
+                  <Text style={styles.pulseSummary} numberOfLines={1}>
+                    {item.summary}
+                  </Text>
+                  <Text style={styles.pulseTime}>
+                    {formatRelativePulseTime(item.happened_at)}
+                  </Text>
+                </View>
+              ))}
+            </BaseCard>
+          </View>
+        ) : null}
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -336,36 +319,6 @@ export default function CommunityScreen() {
           )}
         </View>
 
-        {pulseItems.length > 0 ? (
-          <View style={styles.section}>
-            <View style={styles.sectionHeaderCompact}>
-              <Text style={styles.sectionLabel}>Going around the community</Text>
-              <Text style={styles.sectionSubtle}>Latest updates</Text>
-            </View>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingVertical: 8, gap: 12, paddingHorizontal: 20 }}
-              style={{ marginHorizontal: -20 }}
-            >
-              {pulseItems.map((item) => {
-                const visual = getPulseVisual(item.kind);
-
-                return (
-                  <View key={`${item.kind}-${item.entity_id}-${item.happened_at}`} style={styles.flashCard}>
-                    <View style={[styles.flashCardIconWrap, { backgroundColor: visual.bgColor }]}>
-                      <Ionicons name={visual.icon} size={16} color={visual.fgColor} />
-                    </View>
-                    <Text style={[styles.flashCardKind, { color: Verandah.textTertiary }]}>{visual.label}</Text>
-                    <Text style={[styles.flashCardSummary, { color: Verandah.textPrimary }]} numberOfLines={3}>{item.summary}</Text>
-                    <View style={{ flex: 1 }} />
-                    <Text style={[styles.flashCardTime, { color: Verandah.textMuted }]}>{formatRelativePulseTime(item.happened_at)}</Text>
-                  </View>
-                );
-              })}
-            </ScrollView>
-          </View>
-        ) : null}
 
         {fundsEnabled && appRole === 'community_lead' ? (
           <View style={styles.section}>
@@ -543,42 +496,22 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: Verandah.accent,
   },
-  flashCard: {
-    width: 170,
-    minHeight: 152,
-    backgroundColor: Verandah.card,
-    borderRadius: VerandahRadius.lg,
-    padding: 12,
-    borderWidth: 0.5,
-    borderColor: Verandah.border,
+  pulseRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  flashCardIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Verandah.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
+  pulseDivider: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: Verandah.border,
   },
-  flashCardKind: {
-    fontSize: 11,
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.2,
-    marginBottom: 6,
+  pulseSummary: {
+    ...VerandahType.body,
+    color: Verandah.textSecondary,
   },
-  flashCardSummary: {
-    fontSize: 13,
-    fontWeight: '400',
-    lineHeight: 18,
-    marginBottom: 8,
-    color: Verandah.textPrimary,
-  },
-  flashCardTime: {
-    fontSize: 11,
-    fontWeight: '400',
-    color: Verandah.textMuted,
+  pulseTime: {
+    ...VerandahType.caption,
+    color: Verandah.textTertiary,
+    marginTop: 4,
   },
   summaryLine: {
     fontSize: 14,

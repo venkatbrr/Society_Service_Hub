@@ -12,6 +12,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { APP_EMOJIS } from '../constants/emojis';
+import { VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { Tables } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
@@ -112,7 +113,7 @@ export default function CommunityRequestSubmittedScreen() {
           <View style={[styles.iconWrap, { backgroundColor: Verandah.accentSoft }]}>
             <Text style={styles.iconEmoji}>{APP_EMOJIS.success}</Text>
           </View>
-          <Text style={[styles.title, { color: Verandah.textPrimary }]}>Community approved!</Text>
+          <Text style={styles.title}>Community approved!</Text>
           <Text style={[styles.copy, { color: Verandah.textSecondary }]}>
             <Text style={{ fontWeight: '500', color: Verandah.textPrimary }}>{request.name}</Text>
             {' '}is live. Share the code below so your neighbors can join.
@@ -120,7 +121,7 @@ export default function CommunityRequestSubmittedScreen() {
 
           {communityCode ? (
             <View style={[styles.codeBox, { backgroundColor: Verandah.cardMuted, borderColor: Verandah.border }]}>
-              <Text style={[styles.codeLabel, { color: Verandah.textSecondary }]}>COMMUNITY CODE</Text>
+              <Text style={[styles.codeLabel, { color: Verandah.textSecondary }]}>Community code</Text>
               <Text style={[styles.codeValue, { color: Verandah.primary }]}>{communityCode}</Text>
             </View>
           ) : null}
@@ -168,7 +169,7 @@ export default function CommunityRequestSubmittedScreen() {
           <View style={[styles.iconWrap, { backgroundColor: Verandah.dangerSoft }]}>
             <Text style={styles.iconEmoji}>{APP_EMOJIS.error}</Text>
           </View>
-          <Text style={[styles.title, { color: Verandah.textPrimary }]}>Request not approved</Text>
+          <Text style={styles.title}>Request not approved</Text>
           <Text style={[styles.copy, { color: Verandah.textSecondary }]}>
             Your request for{' '}
             <Text style={{ fontWeight: '500', color: Verandah.textPrimary }}>{request.name}</Text>
@@ -177,7 +178,7 @@ export default function CommunityRequestSubmittedScreen() {
 
           {request.rejection_reason ? (
             <View style={[styles.reasonBox, { backgroundColor: Verandah.dangerSoft, borderColor: Verandah.danger + '30' }]}>
-              <Text style={[styles.reasonLabel, { color: Verandah.danger }]}>REASON</Text>
+              <Text style={[styles.reasonLabel, { color: Verandah.danger }]}>Reason</Text>
               <Text style={[styles.reasonText, { color: Verandah.textPrimary }]}>{request.rejection_reason}</Text>
             </View>
           ) : null}
@@ -217,7 +218,7 @@ export default function CommunityRequestSubmittedScreen() {
         <View style={[styles.iconWrap, { backgroundColor: Verandah.accentSoft }]}>
           <Text style={styles.iconEmoji}>{APP_EMOJIS.mail}</Text>
         </View>
-        <Text style={[styles.title, { color: Verandah.textPrimary }]}>Request received</Text>
+        <Text style={styles.title}>Request received</Text>
         <Text style={[styles.copy, { color: Verandah.textSecondary }]}>
           Your community request is under review. We will verify the details and follow up within about 24 hours.
         </Text>
@@ -280,9 +281,8 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '500',
-    letterSpacing: -0.5,
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
     textAlign: 'center',
   },
   copy: {

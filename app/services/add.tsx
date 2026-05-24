@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import {
     mapServiceCategoryToProviderCategory,
@@ -42,8 +43,7 @@ export default function AddServiceScreen() {
     textMuted: Verandah.textSecondary,
     primary: Verandah.primary,
     border: Verandah.border,
-    glass: Verandah.card,
-    glassBorder: Verandah.border,
+    card: Verandah.card,
     surface: Verandah.cardMuted,
   };
 
@@ -183,12 +183,12 @@ export default function AddServiceScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.75}
         >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Add Service Reminder</Text>
+        <Text style={styles.headerTitle}>Add reminder</Text>
       </View>
 
       <ScrollView
@@ -197,9 +197,9 @@ export default function AddServiceScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Service Name */}
-        <Text style={[styles.label, { color: colors.textMuted }]}>SERVICE NAME *</Text>
+        <Text style={[styles.label, { color: colors.textMuted }]}>Service name *</Text>
         <TextInput
-          style={[styles.input, { backgroundColor: colors.glass, borderColor: colors.glassBorder, color: colors.text }]}
+          style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
           placeholder="e.g., Living Room AC"
           placeholderTextColor={colors.textMuted}
           value={serviceName}
@@ -209,7 +209,7 @@ export default function AddServiceScreen() {
         />
 
         {/* Category */}
-        <Text style={[styles.label, { color: colors.textMuted }]}>CATEGORY *</Text>
+        <Text style={[styles.label, { color: colors.textMuted }]}>Category *</Text>
         <View style={styles.categoryGrid}>
           {SERVICE_CATEGORIES.map((cat) => {
             const selected = category === cat;
@@ -219,8 +219,8 @@ export default function AddServiceScreen() {
                 style={[
                   styles.categoryChip,
                   {
-                    backgroundColor: selected ? colors.primary + '18' : colors.glass,
-                    borderColor: selected ? colors.primary : colors.glassBorder,
+                    backgroundColor: selected ? colors.primary + '18' : colors.card,
+                    borderColor: selected ? colors.primary : colors.border,
                   },
                 ]}
                 onPress={() => handleCategorySelect(cat)}
@@ -239,9 +239,9 @@ export default function AddServiceScreen() {
         </View>
 
         {/* Last Serviced On */}
-        <Text style={[styles.label, { color: colors.textMuted }]}>LAST SERVICED ON *</Text>
+        <Text style={[styles.label, { color: colors.textMuted }]}>Last serviced on *</Text>
         <TouchableOpacity
-          style={[styles.input, styles.dateInput, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          style={[styles.input, styles.dateInput, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={() => setShowDatePicker(true)}
           activeOpacity={0.8}
         >
@@ -263,9 +263,9 @@ export default function AddServiceScreen() {
         )}
 
         {/* Frequency */}
-        <Text style={[styles.label, { color: colors.textMuted }]}>FREQUENCY (MONTHS) *</Text>
+        <Text style={[styles.label, { color: colors.textMuted }]}>Frequency (months) *</Text>
         <TextInput
-          style={[styles.input, { backgroundColor: colors.glass, borderColor: colors.glassBorder, color: colors.text }]}
+          style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
           placeholder="e.g., 6"
           placeholderTextColor={colors.textMuted}
           value={frequencyMonths}
@@ -276,17 +276,17 @@ export default function AddServiceScreen() {
         />
 
         {/* Optional provider mapping */}
-        <Text style={[styles.label, { color: colors.textMuted }]}>LINK TO SERVICE PROVIDER (OPTIONAL)</Text>
+        <Text style={[styles.label, { color: colors.textMuted }]}>Link to service provider (optional)</Text>
         <Text style={[styles.helperText, { color: colors.textMuted }]}>Choose a saved provider now, or skip this and add the reminder without linking anyone.</Text>
 
         {providersLoading ? (
-          <View style={[styles.providerStateCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+          <View style={[styles.providerStateCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <ActivityIndicator color={colors.primary} />
             <Text style={[styles.providerStateText, { color: colors.textMuted }]}>Loading providers...</Text>
           </View>
         ) : providerOptions.length === 0 ? (
           <>
-            <View style={[styles.providerStateCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <View style={[styles.providerStateCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={styles.providerStateIcon}>👥</Text>
               <Text style={[styles.providerStateText, { color: colors.textMuted }]}>No saved providers yet. You can still create the reminder now and link a provider later.</Text>
             </View>
@@ -301,7 +301,7 @@ export default function AddServiceScreen() {
         ) : (
           <View style={styles.providerPickerWrap}>
             <TouchableOpacity
-              style={[styles.input, styles.providerSelector, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+              style={[styles.input, styles.providerSelector, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => {
                 const next = !providerPickerOpen;
                 if (next) setProviderSearch('');
@@ -327,9 +327,9 @@ export default function AddServiceScreen() {
             </TouchableOpacity>
 
             {providerPickerOpen ? (
-              <View style={[styles.providerDropdown, { backgroundColor: colors.surface, borderColor: colors.glassBorder }]}>
+              <View style={[styles.providerDropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <TextInput
-                  style={[styles.providerSearchInput, { color: colors.text, borderBottomColor: colors.glassBorder }]}
+                  style={[styles.providerSearchInput, { color: colors.text, borderBottomColor: colors.border }]}
                   placeholder="Search by name or phone number..."
                   placeholderTextColor={colors.textMuted}
                   value={providerSearch}
@@ -399,12 +399,12 @@ export default function AddServiceScreen() {
         )}
 
         {/* Notes */}
-        <Text style={[styles.label, { color: colors.textMuted }]}>NOTES (OPTIONAL)</Text>
+        <Text style={[styles.label, { color: colors.textMuted }]}>Notes (optional)</Text>
         <TextInput
           style={[
             styles.input,
             styles.notesInput,
-            { backgroundColor: colors.glass, borderColor: colors.glassBorder, color: colors.text },
+            { backgroundColor: colors.card, borderColor: colors.border, color: colors.text },
           ]}
           placeholder="Any extra details..."
           placeholderTextColor={colors.textMuted}
@@ -450,7 +450,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   backIcon: { fontSize: 18, fontWeight: '500' },
-  headerTitle: { flex: 1, fontSize: 19, fontWeight: '500', letterSpacing: -0.3 },
+  headerTitle: {
+    flex: 1,
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
+  },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 60 },
   label: {
     fontSize: 10,

@@ -36,9 +36,8 @@ export default function PlatformCommunitiesScreen() {
     textMuted: Verandah.textSecondary,
     primary: Verandah.primary,
     border: Verandah.border,
+    card: Verandah.card,
     surface: Verandah.cardMuted,
-    glass: Verandah.card,
-    glassBorder: Verandah.border,
   };
   const router = useRouter();
   const { isPlatformAdmin, signOut } = useAuth();
@@ -160,7 +159,7 @@ export default function PlatformCommunitiesScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadCommunities(true)} />}
           contentContainerStyle={filtered.length ? styles.listContent : styles.emptyContent}
           ListEmptyComponent={
-            <View style={[styles.emptyState, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Ionicons name="business-outline" size={28} color={Verandah.textTertiary} />
               <Text style={[styles.emptyTitle, { color: colors.text }]}>No communities found</Text>
               <Text style={[styles.emptyCopy, { color: colors.textMuted }]}>Try a different search term.</Text>
@@ -168,7 +167,7 @@ export default function PlatformCommunitiesScreen() {
           }
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => router.push(`/platform/community/${item.id}` as any)}
               activeOpacity={0.85}
             >

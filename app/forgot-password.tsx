@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
+import { VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, resetPassword } from '../lib/auth';
 
 export default function ForgotPasswordScreen() {
@@ -57,7 +58,7 @@ export default function ForgotPasswordScreen() {
           <View style={[styles.iconContainer, { backgroundColor: Verandah.primary }]}>
             <Ionicons name="key-outline" size={36} color={Verandah.primaryFg} />
           </View>
-          <Text style={[styles.title, { color: Verandah.textPrimary }]}>Forgot Password?</Text>
+          <Text style={styles.title}>Reset password</Text>
           <Text style={[styles.subtitle, { color: Verandah.textSecondary }]}>
             Enter your email address and we'll send you instructions to reset your password.
           </Text>
@@ -65,7 +66,7 @@ export default function ForgotPasswordScreen() {
 
         <View style={[styles.formCard, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: Verandah.textPrimary }]}>EMAIL ADDRESS</Text>
+            <Text style={[styles.label, { color: Verandah.textPrimary }]}>Email address</Text>
             <View style={[styles.inputContainer, { backgroundColor: Verandah.cardMuted, borderColor: Verandah.borderStrong }]}>
                <Ionicons name="mail-outline" size={20} color={Verandah.textSecondary} style={styles.inputIcon} />
                <TextInput
@@ -136,11 +137,10 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '500',
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
     marginBottom: 12,
     textAlign: 'center',
-    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,

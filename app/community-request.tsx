@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -93,7 +94,7 @@ export default function CommunityRequestScreen() {
         <Text style={[styles.backButtonText, { color: Verandah.primary }]}>Back</Text>
       </TouchableOpacity>
 
-      <Text style={[styles.title, { color: Verandah.textPrimary }]}>Request a new community</Text>
+      <Text style={styles.title}>Request a new community</Text>
       <View style={[styles.banner, { backgroundColor: Verandah.cautionSoft, borderColor: Verandah.caution + '40' }]}>
         <Ionicons name="time-outline" size={20} color={Verandah.caution} />
         <Text style={[styles.bannerText, { color: Verandah.textPrimary }]}>
@@ -102,7 +103,7 @@ export default function CommunityRequestScreen() {
       </View>
 
       <View style={[styles.card, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>
-        <Text style={[styles.label, { color: Verandah.textPrimary }]}>COMMUNITY NAME *</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>Community name *</Text>
         <TextInput
           style={[styles.input, { color: Verandah.textPrimary, borderColor: Verandah.borderStrong, backgroundColor: Verandah.cardMuted }]}
           value={name}
@@ -111,7 +112,7 @@ export default function CommunityRequestScreen() {
           placeholderTextColor={Verandah.textSecondary}
         />
 
-        <Text style={[styles.label, { color: Verandah.textPrimary }]}>TYPE</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>Type</Text>
         <View style={styles.chipRow}>
           {COMMUNITY_TYPES.map((option) => {
             const active = option === communityType;
@@ -133,7 +134,7 @@ export default function CommunityRequestScreen() {
           })}
         </View>
 
-        <Text style={[styles.label, { color: Verandah.textPrimary }]}>FULL ADDRESS</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>Full address</Text>
         <TextInput
           style={[styles.input, { color: Verandah.textPrimary, borderColor: Verandah.borderStrong, backgroundColor: Verandah.cardMuted }]}
           value={address}
@@ -142,7 +143,7 @@ export default function CommunityRequestScreen() {
           placeholderTextColor={Verandah.textSecondary}
         />
 
-        <Text style={[styles.label, { color: Verandah.textPrimary }]}>CITY *</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>City *</Text>
         <TouchableOpacity
           style={[styles.input, { justifyContent: 'center', borderColor: Verandah.borderStrong, backgroundColor: Verandah.cardMuted }]}
           onPress={() => setShowCityPicker(true)}
@@ -175,7 +176,7 @@ export default function CommunityRequestScreen() {
           </Pressable>
         </Modal>
 
-        <Text style={[styles.label, { color: Verandah.textPrimary }]}>PINCODE *</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>Pincode *</Text>
         <TextInput
           style={[styles.input, { color: Verandah.textPrimary, borderColor: Verandah.borderStrong, backgroundColor: Verandah.cardMuted }]}
           value={pincode}
@@ -186,7 +187,7 @@ export default function CommunityRequestScreen() {
           keyboardType="number-pad"
         />
 
-        <Text style={[styles.label, { color: Verandah.textPrimary }]}>AREA / NEIGHBOURHOOD</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>Area / neighbourhood</Text>
         <TextInput
           style={[styles.input, { color: Verandah.textPrimary, borderColor: Verandah.borderStrong, backgroundColor: Verandah.cardMuted }]}
           value={area}
@@ -195,7 +196,7 @@ export default function CommunityRequestScreen() {
           placeholderTextColor={Verandah.textSecondary}
         />
 
-        <Text style={[styles.label, { color: Verandah.textPrimary }]}>APPROXIMATE UNITS</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>Approximate units</Text>
         <View style={styles.chipRow}>
           {APPROXIMATE_UNITS.map((option) => {
             const active = option === approximateUnits;
@@ -217,7 +218,7 @@ export default function CommunityRequestScreen() {
           })}
         </View>
 
-        <Text style={[styles.label, { color: Verandah.textPrimary }]}>YOUR FLAT / HOUSE NUMBER *</Text>
+        <Text style={[styles.label, { color: Verandah.textPrimary }]}>Your flat / house number *</Text>
         <TextInput
           style={[styles.input, { color: Verandah.textPrimary, borderColor: Verandah.borderStrong, backgroundColor: Verandah.card }]}
           placeholder="e.g. A101"
@@ -280,9 +281,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   title: {
-    fontSize: 30,
-    fontWeight: '500',
-    letterSpacing: -0.6,
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
     marginBottom: 16,
   },
   banner: {

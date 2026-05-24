@@ -7,6 +7,7 @@ type Props = {
   amount: number;
   size?: 'sm' | 'md' | 'lg';
   tone?: 'in' | 'out' | 'neutral';
+  showSign?: boolean;
 };
 
 const SIZES = {
@@ -28,7 +29,7 @@ const SIZES = {
  *        'out' keeps it Verandah.textPrimary.
  *        'neutral' is the same as 'out'.
  */
-export const Rupees = React.memo(({ amount, size = 'md', tone = 'neutral' }: Props) => {
+export const Rupees = React.memo(({ amount, size = 'md', tone = 'neutral', showSign = false }: Props) => {
   const s = SIZES[size];
 
   const integerColor = tone === 'in' ? Verandah.accent : Verandah.textPrimary;
@@ -43,7 +44,7 @@ export const Rupees = React.memo(({ amount, size = 'md', tone = 'neutral' }: Pro
   const formattedInteger = integerPart.toLocaleString('en-IN');
 
   // Prefix for signed amounts
-  const prefix = tone === 'in' ? '+' : amount < 0 ? '−' : '';
+  const prefix = amount < 0 ? '−' : (showSign && amount > 0) ? '+' : '';
 
   return (
     <View style={styles.container}>

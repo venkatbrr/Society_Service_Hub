@@ -10,6 +10,7 @@ import { Verandah } from '../../constants/Colors';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/categories';
 import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
 
@@ -39,9 +40,8 @@ export default function AddVisitScreen() {
     text: Verandah.textPrimary,
     textMuted: Verandah.textSecondary,
     primary: Verandah.primary,
+    card: Verandah.card,
     border: Verandah.border,
-    glass: Verandah.card,
-    glassBorder: Verandah.border,
   };
 
   const [providerMode, setProviderMode] = useState<'existing' | 'new'>('existing');
@@ -172,11 +172,11 @@ export default function AddVisitScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+          <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <Text style={[styles.title, { color: colors.text }]}>Share a provider visit</Text>
+            <Text style={styles.title}>Plan a visit</Text>
             <Text style={[styles.subtitle, { color: colors.textMuted }]}>Let neighbors know a provider is coming</Text>
           </View>
         </View>
@@ -202,7 +202,7 @@ export default function AddVisitScreen() {
           <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>2. VISIT DETAILS</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>VISIT TITLE *</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Visit title *</Text>
             <TextInput
               style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
               placeholder="e.g. AC deep cleaning, pest control"
@@ -213,7 +213,7 @@ export default function AddVisitScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>CATEGORY *</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Category *</Text>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={categoryGridStyle.groupScroll}>
               {[{ id: 'all', label: 'All Services' }, ...visitCategoryGroups.map((g) => ({ id: g.id, label: g.label }))].map((group) => {
@@ -225,7 +225,7 @@ export default function AddVisitScreen() {
                       categoryGridStyle.catChip,
                       {
                         borderColor: selected ? colors.primary : colors.border,
-                        backgroundColor: selected ? colors.primary : colors.glass,
+                        backgroundColor: selected ? colors.primary : colors.card,
                       },
                     ]}
                     onPress={() => handleGroupSelect(group.id)}
@@ -244,7 +244,7 @@ export default function AddVisitScreen() {
                     categoryGridStyle.catChip,
                     {
                       borderColor: category === cat ? colors.primary : colors.border,
-                      backgroundColor: category === cat ? colors.primary : colors.glass,
+                      backgroundColor: category === cat ? colors.primary : colors.card,
                     },
                   ]}
                   onPress={() => handleCategorySelect(cat)}
@@ -256,9 +256,9 @@ export default function AddVisitScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>VISIT DATE *</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Visit date *</Text>
             <TouchableOpacity
-              style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.glass }]}
+              style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.card }]}
               onPress={() => setShowDatePicker(true)}
             >
               <Text style={{ fontSize: 16, color: colors.text }}>
@@ -278,9 +278,9 @@ export default function AddVisitScreen() {
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.label, { color: colors.text }]}>START TIME *</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Start time *</Text>
               <TouchableOpacity
-                style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.glass }]}
+                style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.card }]}
                 onPress={() => setShowStartTimePicker(true)}
               >
                 <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(startTime)}</Text>
@@ -296,9 +296,9 @@ export default function AddVisitScreen() {
             </View>
             <View style={{ width: 12 }} />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.label, { color: colors.text }]}>END TIME *</Text>
+              <Text style={[styles.label, { color: colors.text }]}>End time *</Text>
               <TouchableOpacity
-                style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.glass }]}
+                style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.card }]}
                 onPress={() => setShowEndTimePicker(true)}
               >
                 <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(endTime)}</Text>
@@ -316,7 +316,7 @@ export default function AddVisitScreen() {
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.label, { color: colors.text }]}>EST. COST (OPTIONAL)</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Est. cost (optional)</Text>
               <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                 placeholder="e.g. 400 / unit"
@@ -327,7 +327,7 @@ export default function AddVisitScreen() {
             </View>
             <View style={{ width: 12 }} />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.label, { color: colors.text }]}>MAX JOINERS</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Max joiners</Text>
               <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                 placeholder="Empty for unlimited"
@@ -340,7 +340,7 @@ export default function AddVisitScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>DESCRIPTION (OPTIONAL)</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Description (optional)</Text>
             <TextInput
               style={[styles.textArea, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
               placeholder="Any details neighbors should know..."
@@ -354,7 +354,7 @@ export default function AddVisitScreen() {
           </View>
         </View>
 
-        <View style={[styles.infoCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+        <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Ionicons name="bulb-outline" size={20} color={colors.primary} />
             <Text style={[styles.infoText, { color: colors.primary }]}>
                 Share visits to coordinate with neighbors. Providers often charge less for multiple jobs in one trip!
@@ -420,9 +420,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '500',
-    letterSpacing: -0.5,
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
   },
   subtitle: {
     fontSize: 15,

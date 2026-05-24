@@ -41,8 +41,7 @@ export default function PlatformCommunityDetailScreen() {
     primary: Verandah.primary,
     accent: Verandah.danger,
     border: Verandah.border,
-    glass: Verandah.card,
-    glassBorder: Verandah.border,
+    card: Verandah.card,
     surface: Verandah.card,
     surface2: Verandah.cardMuted,
   };
@@ -223,7 +222,7 @@ export default function PlatformCommunityDetailScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Ionicons name="arrow-back" size={20} color={colors.primary} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>Community detail</Text>
@@ -234,7 +233,7 @@ export default function PlatformCommunityDetailScreen() {
       ) : (
         <>
           {community ? (
-            <View style={[styles.communityCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <View style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.communityName, { color: colors.text }]}>{community.name}</Text>
               <Text style={[styles.meta, { color: colors.textMuted }]}>
                 {community.community_type || 'Type unavailable'} • {community.city || 'City unavailable'}
@@ -251,7 +250,7 @@ export default function PlatformCommunityDetailScreen() {
           ) : null}
 
           {community ? (
-            <View style={[styles.communityCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <View style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.communityName, { color: colors.text }]}>Funds activation</Text>
               <Text style={[styles.meta, { color: colors.textMuted }]}>Status: {community.funds_enabled ? 'Active' : 'Inactive'}</Text>
               {community.funds_enabled ? (
@@ -263,7 +262,7 @@ export default function PlatformCommunityDetailScreen() {
           ) : null}
 
           {community?.funds_enabled ? (
-            <View style={[styles.communityCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <View style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.communityName, { color: colors.text }]}>Community lead management</Text>
               {residents.filter((row) => !row.removed_at && row.app_role === 'resident').map((resident) => (
                 <TouchableOpacity key={resident.id} style={styles.leadOption} onPress={() => setLead(resident.id)}>
@@ -279,7 +278,7 @@ export default function PlatformCommunityDetailScreen() {
           ) : null}
 
           {community?.funds_enabled ? (
-            <View style={[styles.communityCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <View style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.communityName, { color: colors.text }]}>Blocks</Text>
               {communityBlocks.map((block) => (
                 <View key={block.id} style={styles.blockRow}>
@@ -313,7 +312,7 @@ export default function PlatformCommunityDetailScreen() {
           ) : null}
 
           {community?.funds_enabled ? (
-            <View style={[styles.communityCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <View style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.communityName, { color: colors.text }]}>Block in-charges across funds</Text>
               {fundCollectors.map((collector) => (
                 <View key={collector.id} style={styles.blockRow}>
@@ -346,7 +345,7 @@ export default function PlatformCommunityDetailScreen() {
               <TouchableOpacity
                 style={[
                   styles.row,
-                  { backgroundColor: colors.glass, borderColor: colors.glassBorder },
+                  { backgroundColor: colors.card, borderColor: colors.border },
                   item.removed_at ? styles.rowRemoved : null,
                 ]}
                 onPress={() => !item.removed_at && setSelectedResident(item)}

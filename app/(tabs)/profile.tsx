@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -138,10 +139,10 @@ export default function ProfileScreen() {
           activeOpacity={0.82}
         >
           <View style={styles.adminIconWrap}>
-            <Text style={styles.adminIcon}>🔧</Text>
+            <Ionicons name="build-outline" size={18} color={Verandah.textTertiary} />
           </View>
           <View style={styles.adminContent}>
-            <Text style={styles.adminTitle}>My Service Reminders</Text>
+            <Text style={styles.adminTitle}>Service reminders</Text>
             {dueSoonCount > 0 ? (
               <Text style={[styles.adminCopy, { color: Verandah.caution }]}>{dueSoonCount} due this week</Text>
             ) : (
@@ -153,14 +154,14 @@ export default function ProfileScreen() {
               <Text style={styles.pendingBadgeText}>{dueSoonCount}</Text>
             </View>
           ) : (
-            <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
+            <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
           )}
         </TouchableOpacity>
 
         {recentServices.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.adminIcon}>🧾</Text>
+              <Ionicons name="document-text-outline" size={18} color={Verandah.textTertiary} />
               <Text style={styles.sectionTitle}>Recent home services</Text>
             </View>
 
@@ -181,7 +182,7 @@ export default function ProfileScreen() {
                 {entry.cost_paid != null ? (
                   <Rupees amount={Number(entry.cost_paid)} size="sm" />
                 ) : (
-                  <Text style={styles.chevronIcon}>{APP_EMOJIS.chevronRight}</Text>
+                  <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
                 )}
               </TouchableOpacity>
             ))}
@@ -191,7 +192,7 @@ export default function ProfileScreen() {
         {fundsEnabled && blocksEnabled && communityId ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.adminIcon}>🏷️</Text>
+              <Ionicons name="cube-outline" size={18} color={Verandah.textTertiary} />
               <Text style={styles.sectionTitle}>Your block</Text>
             </View>
             <View style={styles.blockRow}>
@@ -207,7 +208,7 @@ export default function ProfileScreen() {
           style={styles.signOutButton}
           onPress={handleSignOut}
         >
-          <Text style={styles.signOutIcon}>{APP_EMOJIS.close}</Text>
+          <Ionicons name="log-out-outline" size={18} color={Verandah.danger} />
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
 

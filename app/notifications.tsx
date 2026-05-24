@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
+import { VerandahType } from '../constants/Verandah';
 import { useNotifications } from '../context/NotificationContext';
 
 export default function NotificationsScreen() {

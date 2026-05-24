@@ -43,8 +43,7 @@ export default function PlatformApprovalsScreen() {
     primary: Verandah.primary,
     accent: Verandah.accent,
     border: Verandah.border,
-    glass: Verandah.card,
-    glassBorder: Verandah.border,
+    card: Verandah.card,
   };
   const router = useRouter();
   const { isPlatformAdmin, signOut } = useAuth();
@@ -197,7 +196,7 @@ export default function PlatformApprovalsScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadRequests(true)} />}
           contentContainerStyle={requests.length ? styles.listContent : styles.emptyContent}
           ListEmptyComponent={
-            <View style={[styles.emptyState, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+            <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Ionicons name="checkmark-circle-outline" size={28} color={Verandah.textTertiary} />
               <Text style={[styles.emptyTitle, { color: colors.text }]}>No pending requests</Text>
               <Text style={[styles.emptyCopy, { color: colors.textMuted }]}>New community requests will show up here.</Text>
@@ -209,7 +208,7 @@ export default function PlatformApprovalsScreen() {
             const currentName = editingNames[item.id] !== undefined ? editingNames[item.id] : item.name;
 
             return (
-              <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+              <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <View style={styles.cardHeader}>
                   <TextInput
                     style={[styles.communityNameInput, { color: colors.text, borderBottomColor: colors.border }]}

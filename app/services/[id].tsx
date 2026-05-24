@@ -20,6 +20,7 @@ import { ProviderSelector } from '../../components/ProviderSelector';
 import { ServiceHistoryList } from '../../components/ServiceHistoryList';
 import { UrgencyBadge } from '../../components/UrgencyBadge';
 import { Verandah } from '../../constants/Colors';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import {
     mapServiceCategoryToProviderCategory,
@@ -73,8 +74,7 @@ export default function ServiceDetailScreen() {
     secondary: Verandah.accent,
     accent: Verandah.danger,
     border: Verandah.border,
-    glass: Verandah.card,
-    glassBorder: Verandah.border,
+    card: Verandah.card,
     surface: Verandah.card,
     surface2: Verandah.cardMuted,
   };
@@ -397,21 +397,21 @@ export default function ServiceDetailScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.75}
         >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerEmoji}>{emoji}</Text>
-        <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>
+        <Text style={styles.headerTitle} numberOfLines={1}>
           {service.service_name}
         </Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Due card */}
-        <View style={[styles.dueCard, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-          <Text style={[styles.dueLabel, { color: colors.textMuted }]}>NEXT SERVICE DUE</Text>
+        <View style={[styles.dueCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.dueLabel, { color: colors.textMuted }]}>Next service due</Text>
           <Text style={[styles.dueDate, { color: colors.text }]}>{dueDate}</Text>
           <UrgencyBadge daysUntilDue={service.days_until_due} />
         </View>
@@ -429,7 +429,7 @@ export default function ServiceDetailScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.secondaryBtn, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          style={[styles.secondaryBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={handleFindTech}
           activeOpacity={0.82}
         >
@@ -454,8 +454,8 @@ export default function ServiceDetailScreen() {
         </TouchableOpacity>
 
         {editOpen && (
-          <View style={[styles.editSection, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>SERVICE NAME</Text>
+          <View style={[styles.editSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Service name</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
               value={editName}
@@ -465,7 +465,7 @@ export default function ServiceDetailScreen() {
               placeholderTextColor={colors.textMuted}
             />
 
-            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>CATEGORY</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Category</Text>
             <View style={styles.categoryGrid}>
               {SERVICE_CATEGORIES.map((cat) => {
                 const sel = editCategory === cat;
@@ -494,7 +494,7 @@ export default function ServiceDetailScreen() {
               })}
             </View>
 
-            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>LAST SERVICED ON</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Last serviced on</Text>
             <TouchableOpacity
               style={[styles.input, styles.dateRow, { backgroundColor: colors.surface2, borderColor: colors.border }]}
               onPress={() => setShowDatePicker(true)}
@@ -515,7 +515,7 @@ export default function ServiceDetailScreen() {
               />
             )}
 
-            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>FREQUENCY (MONTHS)</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Frequency (months)</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
               value={editFrequency}
@@ -524,7 +524,7 @@ export default function ServiceDetailScreen() {
               maxLength={2}
             />
 
-            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>LINKED PROVIDER (OPTIONAL)</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Linked provider (optional)</Text>
             <Text style={[styles.providerHelperText, { color: colors.textMuted }]}>Map this reminder to any saved provider from your community.</Text>
 
             {providersLoading ? (
@@ -646,7 +646,7 @@ export default function ServiceDetailScreen() {
               </View>
             )}
 
-            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>NOTES (OPTIONAL)</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Notes (optional)</Text>
             <TextInput
               style={[styles.input, styles.notesInput, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
               value={editNotes}
@@ -692,7 +692,7 @@ export default function ServiceDetailScreen() {
             </View>
 
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.sheetBody}>
-              <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>PROVIDER (OPTIONAL)</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Provider (optional)</Text>
               <ProviderSelector
                 communityId={communityId ?? ''}
                 mode="existing"
@@ -714,7 +714,7 @@ export default function ServiceDetailScreen() {
                 allowNewProvider={false}
               />
 
-              <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>COST PAID (OPTIONAL)</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Cost paid (optional)</Text>
               <TextInput
                 style={[styles.input, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
                 value={markDoneCost}
@@ -724,7 +724,7 @@ export default function ServiceDetailScreen() {
                 placeholderTextColor={colors.textMuted}
               />
 
-              <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>ONE-LINE NOTE (OPTIONAL)</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>One-line note (optional)</Text>
               <TextInput
                 style={[styles.input, styles.sheetNoteInput, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
                 value={markDoneNote}
@@ -778,7 +778,11 @@ const styles = StyleSheet.create({
   },
   backIcon: { fontSize: 18, fontWeight: '500' },
   headerEmoji: { fontSize: 22 },
-  headerTitle: { flex: 1, fontSize: 19, fontWeight: '500', letterSpacing: -0.3 },
+  headerTitle: {
+    flex: 1,
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
+  },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 60, gap: 12 },
   dueCard: {
     borderRadius: 20,

@@ -17,6 +17,7 @@ import Toast from 'react-native-toast-message';
 import { BlockPicker } from '../../components/BlockPicker';
 import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { formatRole, getEffectiveFundRole, getFundPermissions } from '../../lib/fundRoles';
@@ -48,10 +49,9 @@ export default function AddTransactionScreen() {
     secondary: Verandah.accent,
     accent: Verandah.danger,
     border: Verandah.border,
+    card: Verandah.card,
     surface: Verandah.card,
     surface2: Verandah.cardMuted,
-    glass: Verandah.card,
-    glassBorder: Verandah.border,
   };
 
   const [type, setType] = useState<'income' | 'expense'>((initialType as 'income' | 'expense') || 'income');
@@ -309,14 +309,14 @@ export default function AddTransactionScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>{type === 'income' ? 'Add Contribution' : 'Add Expense'}</Text>
+          <Text style={styles.title}>{type === 'income' ? 'Record contribution' : 'Record expense'}</Text>
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>
             {fund.title} - You are a {formatRole(fundRole)}
           </Text>
         </View>
 
-        <View style={[styles.form, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
-          <View style={[styles.tabContainer, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+        <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.tabContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <TouchableOpacity
               style={[
                 styles.tab,
@@ -337,7 +337,7 @@ export default function AddTransactionScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.notice, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+          <View style={[styles.notice, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={styles.noticeIcon}>{APP_EMOJIS.info}</Text>
             <Text style={[styles.noticeText, { color: colors.textMuted }]}>
               {type === 'income'
@@ -351,7 +351,7 @@ export default function AddTransactionScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>AMOUNT</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Amount</Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
               placeholder="0.00"
@@ -364,7 +364,7 @@ export default function AddTransactionScreen() {
 
           {type === 'income' ? (
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>SELECT RESIDENT</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Select resident</Text>
               {members.map((member) => {
                 const isPaid = paidMemberIds.has(member.user_id);
                 const isSelected = selectedMemberId === member.user_id;
@@ -375,7 +375,7 @@ export default function AddTransactionScreen() {
                     style={[
                       styles.memberRow,
                       {
-                        backgroundColor: isSelected ? colors.primary + '08' : colors.glass,
+                        backgroundColor: isSelected ? colors.primary + '08' : colors.card,
                         borderColor: isSelected ? colors.primary : colors.border,
                         opacity: isPaid ? 0.55 : 1,
                       },
@@ -405,7 +405,7 @@ export default function AddTransactionScreen() {
             </View>
           ) : (
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>EXPENSE NAME</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Expense name</Text>
               <TextInput
                 style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
                 placeholder="e.g. Water tanker payment"
@@ -417,7 +417,7 @@ export default function AddTransactionScreen() {
           )}
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>NOTES (OPTIONAL)</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Notes (optional)</Text>
             <TextInput
               style={[styles.textArea, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
               placeholder={type === 'income' ? 'Receipt reference or collection note' : 'Vendor note or context'}
@@ -432,7 +432,7 @@ export default function AddTransactionScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.glass }]}>
+      <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.card }]}>
         <TouchableOpacity
           onPress={handleSave}
           disabled={isLoading}
@@ -500,9 +500,8 @@ const styles = StyleSheet.create({
     marginLeft: -4,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '500',
-    letterSpacing: -1,
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
   },
   subtitle: {
     fontSize: 15,

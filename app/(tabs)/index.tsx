@@ -4,7 +4,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, RefreshControl, SectionList, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { ActiveFundTeaser } from '../../components/ActiveFundTeaser';
 import { CategoryFilter } from '../../components/CategoryFilter';
 import { EmptyState } from '../../components/EmptyState';
 import { ProviderCard } from '../../components/ProviderCard';
@@ -76,7 +75,6 @@ export default function HomeScreen() {
           id: fundData.id,
           title: fundData.title,
           collected: collected,
-          goal: fundData.goal_amount || 0
         });
       }
     } catch (err) {
@@ -429,7 +427,7 @@ export default function HomeScreen() {
         )}
         {activeSegment === 'visits' ? (
           <View style={[styles.segmentBtn, styles.segmentBtnActive]}>
-            <Text style={[styles.segmentText, { color: Verandah.primary }]}>Plan Service Visit</Text>
+            <Text style={[styles.segmentText, { color: Verandah.primary }]}>Visits</Text>
           </View>
         ) : (
           <TouchableOpacity
@@ -442,7 +440,7 @@ export default function HomeScreen() {
               setVisitTab('upcoming');
             }}
           >
-            <Text style={[styles.segmentText, { color: Verandah.textMuted }]}>Plan Service Visit</Text>
+            <Text style={[styles.segmentText, { color: Verandah.textMuted }]}>Visits</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -471,14 +469,7 @@ export default function HomeScreen() {
           ListHeaderComponent={
             <>
               <UpcomingServicesCard />
-              {activeFund && activeFund.goal > 0 && (
-                <ActiveFundTeaser
-                  title={activeFund.title}
-                  collected={activeFund.collected}
-                  goal={activeFund.goal}
-                  onPress={() => router.push(`/funds/${activeFund.id}`)}
-                />
-              )}
+
 
               <View style={styles.filterSection}>
                 <SearchBar
@@ -574,14 +565,7 @@ export default function HomeScreen() {
           ListHeaderComponent={
             <>
               <UpcomingServicesCard />
-              {activeFund && activeFund.goal > 0 && (
-                <ActiveFundTeaser
-                  title={activeFund.title}
-                  collected={activeFund.collected}
-                  goal={activeFund.goal}
-                  onPress={() => router.push(`/funds/${activeFund.id}`)}
-                />
-              )}
+
               <View style={styles.filterSection}>
                 <View style={styles.subTabControl}>
                   <TouchableOpacity style={[styles.subTabBtn, visitTab === 'upcoming' && { backgroundColor: Verandah.accentSoft }]}

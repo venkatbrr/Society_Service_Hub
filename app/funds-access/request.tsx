@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius } from '../../constants/Verandah';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -45,7 +45,7 @@ export default function FundsAccessRequestScreen() {
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.surface }]}> 
-      <Text style={[styles.title, { color: colors.textPrimary }]}>Request funds support</Text>
+      <Text style={styles.title}>Request funds support</Text>
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Tell us who to contact to activate funds in your community.</Text>
 
       <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -100,8 +100,8 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '500',
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
   },
   subtitle: {
     fontSize: 14,

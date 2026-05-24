@@ -4,11 +4,11 @@ This document is the canonical reference for the Verandah UI system used in Soci
 
 ## Principles
 
-1. Calm utility first: prioritize task completion over decoration.
-2. Warm restraint: use soft neutrals with selective semantic color.
-3. Consistent hierarchy: surfaces, spacing, and type must feel predictable.
-4. Accessibility by default: readable contrast, large enough tap targets, clear labels.
-5. Deterministic identity: people are represented consistently through initials avatars.
+1. **Warm over cold**: Embrace soft, warm neutral surfaces (`#FAF8F4` / `surface`) over sterile white or harsh grays to create an inviting, human environment.
+2. **Restraint over decoration**: Prioritize calm utility and content structure. Eliminate unnecessary design fluff like drop shadows, complex gradients, or decorative emojis.
+3. **Numbers with respect**: Format currency (e.g., using `<Rupees>`), counts, dates, and times with meticulous attention. Never prepend signs like `+` unless explicitly representing transaction ledgers.
+4. **Serif moments sans body**: Reserve serif/display typography (Georgia/display) for the single largest, most prominent title anchor on the screen. All other titles, secondary headings, and body copy must remain sans-serif.
+5. **Sentence case everywhere**: Write all user-facing strings, actions, headers, and form labels in clean sentence case (e.g., "Email address" instead of "EMAIL ADDRESS" or "Email Address").
 
 ## Token Sources
 
@@ -127,6 +127,16 @@ Use `Rupees` for monetary presentation:
   - `neutral`: default neutral style
 
 Do not hand-build currency strings in UI when `Rupees` can be used.
+
+## Common Mistakes to Avoid
+
+To maintain strict conformance to the Verandah design language, be vigilant against these frequent design anti-patterns:
+
+- **Ad-hoc uppercase styling**: Do not define custom uppercase form labels (e.g., `<Text>NAME</Text>`) or use `textTransform: 'uppercase'` on regular body/title texts. Let the design system's `sectionLabel` token handle uppercase transformations under precise hierarchy.
+- **Shadow and elevation overrides**: Never manually configure `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`, or `elevation` on cards, panels, or buttons. All surfaces should leverage flat hairline outlines (`0.5px` border width with `Verandah.border`) or standard `BaseCard` components.
+- **Custom color mappings**: Avoid hardcoding hex color values (e.g., `#FAF8F4` or `#0F3732`) directly inside stylesheets. Always map colors through the local `colors` object bound to `Verandah` tokens, or read from `Verandah` directly to guarantee visual consistency and theme compliance.
+- **Legacy glassmorphism variables**: Do not declare or use legacy aliases like `colors.glass` or `colors.glassBorder` inside component local color maps. Replace all glassmorphism references with canonical tokens: use `colors.card` (`Verandah.card`) for background panels and `colors.border` (`Verandah.border`) for hairline frames.
+- **Decorative emojis in core UI chrome**: Do not use random emojis as decorative bullets in profile screens, list items, or navigation bars (e.g., "⚙️ Settings"). Rely on elegant outline icon packages (such as `Ionicons` 18px in `Verandah.textTertiary`) for consistent and restrained chrome illustration. Emojis are reserved only for dynamic category tags (like AC or Pest Control category icons).
 
 ## Out-of-Register Appendix
 

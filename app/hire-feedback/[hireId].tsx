@@ -28,8 +28,8 @@ export default function HireFeedbackScreen() {
     primary: Verandah.primary,
     secondary: Verandah.accent,
     accent: Verandah.danger,
-    glass: Verandah.card,
-    glassBorder: Verandah.border,
+    card: Verandah.card,
+    border: Verandah.border,
     surface: Verandah.cardMuted,
   };
 
@@ -216,7 +216,7 @@ export default function HireFeedbackScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
+          style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.75}
         >
           <Text style={styles.backIcon}>←</Text>
@@ -224,7 +224,7 @@ export default function HireFeedbackScreen() {
         <Text style={[styles.headerTitle, { color: colors.text }]}>Visit feedback</Text>
       </View>
 
-      <View style={[styles.card, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}> 
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}> 
         <Text style={[styles.providerName, { color: colors.text }]}>{providerName}</Text>
         {formattedHireDate ? (
           <Text style={[styles.hireDate, { color: colors.textMuted }]}>Visit logged on {formattedHireDate}</Text>
@@ -234,7 +234,7 @@ export default function HireFeedbackScreen() {
           <TouchableOpacity
             style={[
               styles.signalButton,
-              { borderColor: colors.glassBorder, backgroundColor: colors.surface },
+              { borderColor: colors.border, backgroundColor: colors.surface },
               selectedSignal === 'positive' && { borderColor: colors.secondary, backgroundColor: colors.secondary + '18' },
             ]}
             onPress={() => setSelectedSignal('positive')}
@@ -247,7 +247,7 @@ export default function HireFeedbackScreen() {
           <TouchableOpacity
             style={[
               styles.signalButton,
-              { borderColor: colors.glassBorder, backgroundColor: colors.surface },
+              { borderColor: colors.border, backgroundColor: colors.surface },
               selectedSignal === 'negative' && { borderColor: colors.accent, backgroundColor: colors.accent + '15' },
             ]}
             onPress={() => setSelectedSignal('negative')}
@@ -260,7 +260,7 @@ export default function HireFeedbackScreen() {
           <TouchableOpacity
             style={[
               styles.signalButton,
-              { borderColor: colors.glassBorder, backgroundColor: colors.surface },
+              { borderColor: colors.border, backgroundColor: colors.surface },
               selectedSignal === 'skipped' && { borderColor: colors.primary, backgroundColor: colors.primary + '14' },
             ]}
             onPress={() => {
@@ -276,9 +276,9 @@ export default function HireFeedbackScreen() {
 
         {showNoteInput ? (
           <>
-            <Text style={[styles.noteLabel, { color: colors.textMuted }]}>NOTE (OPTIONAL)</Text>
+            <Text style={[styles.noteLabel, { color: colors.textMuted }]}>Note (optional)</Text>
             <TextInput
-              style={[styles.noteInput, { borderColor: colors.glassBorder, color: colors.text, backgroundColor: colors.surface }]}
+              style={[styles.noteInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
               value={note}
               onChangeText={(value) => setNote(value.slice(0, 280))}
               maxLength={280}
@@ -290,7 +290,7 @@ export default function HireFeedbackScreen() {
         ) : null}
 
         {showPublicPrompt ? (
-          <View style={[styles.promptCard, { borderColor: colors.glassBorder, backgroundColor: colors.surface }]}> 
+          <View style={[styles.promptCard, { borderColor: colors.border, backgroundColor: colors.surface }]}> 
             <Text style={[styles.promptTitle, { color: colors.text }]}>Glad it went well - leave a public rating for other residents?</Text>
             <View style={styles.promptActions}>
               <TouchableOpacity

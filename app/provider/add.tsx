@@ -9,6 +9,7 @@ import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/cate
 import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { DetailField, getDetailFieldsForCategory } from '../../constants/providerDetails';
 import { useAuth } from '../../context/AuthContext';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { actionToFraudStatus, checkProviderFraud, getFraudActionMessage } from '../../lib/fraudCheck';
 import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
@@ -47,8 +48,7 @@ export default function AddProviderScreen() {
     textMuted: Verandah.textSecondary,
     primary: Verandah.primary,
     border: Verandah.border,
-    glass: Verandah.card,
-    glassBorder: Verandah.border,
+    card: Verandah.card,
     cardMuted: Verandah.cardMuted,
   };
 
@@ -205,7 +205,7 @@ export default function AddProviderScreen() {
       case 'radio':
         return (
           <View key={field.key} style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>{field.label.toUpperCase()}</Text>
+            <Text style={[styles.label, { color: colors.text }]}>{field.label}</Text>
             <View style={styles.chipContainer}>
               {field.options?.map(option => {
                 const isSelected = details[field.key] === option;
@@ -215,7 +215,7 @@ export default function AddProviderScreen() {
                     style={[
                       styles.chip,
                       {
-                        backgroundColor: isSelected ? colors.primary : colors.glass,
+                        backgroundColor: isSelected ? colors.primary : colors.card,
                         borderColor: isSelected ? colors.primary : colors.border,
                       },
                     ]}
@@ -232,7 +232,7 @@ export default function AddProviderScreen() {
       case 'chips':
         return (
           <View key={field.key} style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>{field.label.toUpperCase()}</Text>
+            <Text style={[styles.label, { color: colors.text }]}>{field.label}</Text>
             <View style={styles.chipContainer}>
               {field.options?.map(option => {
                 const selected: string[] = details[field.key] || [];
@@ -243,7 +243,7 @@ export default function AddProviderScreen() {
                     style={[
                       styles.chip,
                       {
-                        backgroundColor: isSelected ? colors.primary : colors.glass,
+                        backgroundColor: isSelected ? colors.primary : colors.card,
                         borderColor: isSelected ? colors.primary : colors.border,
                       },
                     ]}
@@ -261,7 +261,7 @@ export default function AddProviderScreen() {
         return (
           <View key={field.key} style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>
-              {field.label.toUpperCase()}{field.suffix ? ` (${field.suffix})` : ''}
+              {field.label}{field.suffix ? ` (${field.suffix})` : ''}
             </Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
@@ -277,7 +277,7 @@ export default function AddProviderScreen() {
       case 'text':
         return (
           <View key={field.key} style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>{field.label.toUpperCase()}</Text>
+            <Text style={[styles.label, { color: colors.text }]}>{field.label}</Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
               placeholder={field.placeholder}
@@ -300,13 +300,13 @@ export default function AddProviderScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>Share Contact</Text>
+          <Text style={styles.title}>Add provider</Text>
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>Help your neighbors find trusted local service providers</Text>
         </View>
 
-        <View style={[styles.form, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+        <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>NAME</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Name</Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
               placeholder="e.g. Ramesh - Electrician"
@@ -317,7 +317,7 @@ export default function AddProviderScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>PHONE NUMBER</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Phone number</Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
               placeholder="e.g. +91 98765 43210"
@@ -329,7 +329,7 @@ export default function AddProviderScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>CATEGORY</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Category</Text>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryGroupScroll}>
               {[
@@ -343,7 +343,7 @@ export default function AddProviderScreen() {
                     style={[
                       styles.categoryChip,
                       {
-                        backgroundColor: selected ? colors.primary : colors.glass,
+                        backgroundColor: selected ? colors.primary : colors.card,
                         borderColor: selected ? colors.primary : colors.border,
                       },
                     ]}
@@ -362,7 +362,7 @@ export default function AddProviderScreen() {
                   style={[
                     styles.categoryChip,
                     {
-                      backgroundColor: category === cat ? colors.primary : colors.glass,
+                      backgroundColor: category === cat ? colors.primary : colors.card,
                       borderColor: category === cat ? colors.primary : colors.border,
                     },
                   ]}
@@ -378,14 +378,14 @@ export default function AddProviderScreen() {
           {detailFields.length > 0 && (
             <View style={[styles.detailsSection, { borderTopColor: colors.border }]}>
               <Text style={[styles.detailsSectionLabel, { color: colors.textMuted }]}>
-                OPTIONAL DETAILS FOR {category.toUpperCase()}
+                Optional details for {category}
               </Text>
               {detailFields.map(renderDetailField)}
             </View>
           )}
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>FLAT / BLOCK (OPTIONAL)</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Flat / block (optional)</Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
               placeholder="e.g. Often works in Block A"
@@ -396,7 +396,7 @@ export default function AddProviderScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>DESCRIPTION</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Description</Text>
             <TextInput
               style={[styles.textArea, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
               placeholder="e.g. Very reliable, fair pricing..."
@@ -411,7 +411,7 @@ export default function AddProviderScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 24), backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+      <View style={[styles.footer, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 24), backgroundColor: colors.card, borderColor: colors.border }]}>
         <TouchableOpacity
           onPress={handleSave}
           disabled={isLoading}
@@ -447,9 +447,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '500',
-    letterSpacing: -1,
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
   },
   subtitle: {
     fontSize: 16,

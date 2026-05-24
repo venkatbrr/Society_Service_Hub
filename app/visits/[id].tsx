@@ -8,6 +8,7 @@ import { JoinerListItem } from '../../components/JoinerListItem';
 import { Rupees } from '../../components/Rupees';
 import { VisitStatusBadge } from '../../components/VisitStatusBadge';
 import { Verandah } from '../../constants/Colors';
+import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { VisitJoinerWithProfile, VisitWithJoinerData } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
@@ -268,7 +269,7 @@ export default function VisitDetailScreen() {
              <VisitStatusBadge status={displayStatus} />
           </View>
 
-          <Text style={[styles.visitTitle, { color: colors.text }]}>{visit.title}</Text>
+          <Text style={styles.visitTitle}>{visit.title}</Text>
           <View style={styles.timeSlotRow}>
             <Ionicons name="time-outline" size={18} color={colors.icon} />
             <Text style={[styles.timeSlot, { color: colors.text }]}>{visit.visit_time_slot}</Text>
@@ -280,11 +281,11 @@ export default function VisitDetailScreen() {
 
           <View style={styles.metaGrid}>
             <View style={styles.metaItem}>
-                <Text style={[styles.metaLabel, { color: colors.textMuted }]}>CATEGORY</Text>
+                <Text style={[styles.metaLabel, { color: colors.textMuted }]}>Category</Text>
                 <Text style={[styles.metaValue, { color: colors.text }]}>{visit.category}</Text>
             </View>
             <View style={styles.metaItem}>
-                <Text style={[styles.metaLabel, { color: colors.textMuted }]}>EST. COST</Text>
+                <Text style={[styles.metaLabel, { color: colors.textMuted }]}>Est. cost</Text>
                 {visit.estimated_cost && Number.isFinite(parsedEstimatedCost) && parsedEstimatedCost > 0 ? (
                   <Rupees amount={parsedEstimatedCost} size="sm" />
                 ) : (
@@ -296,7 +297,7 @@ export default function VisitDetailScreen() {
 
         {/* Provider Profile */}
         <View style={styles.infoCard}>
-           <Text style={[styles.cardTitle, { color: colors.textMuted }]}>PROVIDER INFO</Text>
+           <Text style={[styles.cardTitle, { color: colors.textMuted }]}>Provider info</Text>
            <View style={styles.providerHeader}>
               <View style={styles.providerMain}>
                 <Text style={[styles.providerName, { color: colors.text }]}>{visit.provider_name}</Text>
@@ -326,7 +327,7 @@ export default function VisitDetailScreen() {
         {/* Joiners List */}
         <View style={styles.joinersSection}>
            <Text style={[styles.cardTitle, { paddingHorizontal: 0, color: colors.textMuted }]}>
-             NEIGHBORS JOINING ({joiners.length} {visit.max_joiners ? `/ ${visit.max_joiners}` : ''})
+             Neighbors joining ({joiners.length} {visit.max_joiners ? `/ ${visit.max_joiners}` : ''})
            </Text>
 
            <View style={styles.joinerList}>
@@ -411,7 +412,7 @@ export default function VisitDetailScreen() {
                     style={styles.modalBody}
                 >
                     <View style={styles.inputGroup}>
-                        <Text style={[styles.label, { color: colors.text }]}>MY FLAT NUMBER</Text>
+                        <Text style={[styles.label, { color: colors.text }]}>My flat number</Text>
                         <TextInput
                             style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
                             placeholder="e.g. A412"
@@ -424,7 +425,7 @@ export default function VisitDetailScreen() {
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={[styles.label, { color: colors.text }]}>NOTE FOR PROVIDER (OPTIONAL)</Text>
+                        <Text style={[styles.label, { color: colors.text }]}>Note for provider (optional)</Text>
                         <TextInput
                             style={[styles.modalTextArea, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
                             placeholder="e.g. Need 2 ACs cleaned"
@@ -539,9 +540,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   visitTitle: {
-    fontSize: 24,
-    fontWeight: '500',
-    letterSpacing: -0.5,
+    ...VerandahType.display,
+    color: Verandah.textPrimary,
     marginBottom: 12,
   },
   timeSlotRow: {
