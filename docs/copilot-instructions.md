@@ -31,7 +31,7 @@ The active UI is intentionally narrower than the database foundation. Cross-comm
 
 - `index.tsx`: Help dashboard with Providers and Service Visits segments (debounced search, grouped category filter with two-level navigation: group row then category chip row; group selection applies an `IN` filter to the provider query)
 - `favorites.tsx`: Saved providers
-- `community.tsx`: Community pulse, funds overview, residents shortcut, and community info
+- `community.tsx`: Community funds overview, residents shortcut, and community info
 - `profile.tsx`: Personal hub for identity, reminders, recent service history, and sign-out
 
 ### Standalone routes
@@ -92,6 +92,7 @@ Successful joins from `community-select.tsx` can send users through `/community-
 - `favorites`
 - `ratings`
 - `provider_hires`
+- `provider_personal_notes`
 - `service_visits`
 - `visit_joiners`
 

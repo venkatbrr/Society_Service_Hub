@@ -38,7 +38,7 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 
 Every user belongs to a community. **All data queries must filter by `communityId`** from `useAuth()`. Supabase RLS policies enforce community-level isolation.
 
-> **Exception — User-Scoped Data**: The `user_services`, `user_service_history`, `hire_feedback`, and `provider_public_rating_nudges` tables are **not** community-scoped. Their RLS uses `auth.uid() = user_id` with no same-community read policy and no platform-admin override. Queries do NOT pass `communityId` for these tables.
+> **Exception — User-Scoped Data**: The `user_services`, `user_service_history`, `hire_feedback`, `provider_public_rating_nudges`, and `provider_personal_notes` tables are **not** community-scoped. Their RLS uses `auth.uid() = user_id` with no same-community read policy and no platform-admin override. Queries do NOT pass `communityId` for these tables.
 
 ### Auth Flow
 
@@ -96,7 +96,7 @@ Funds activation is gated by platform-admin approval. A community without `funds
 
 ## Database
 
-15 tables — key ones: `communities` (with `code` for join), `profiles`, `service_providers`, `service_visits`, `visit_joiners`, `events` (funds), `event_transactions`, `fund_roles`, `notifications`, `favorites`, `ratings`, `provider_hires`, `community_requests`, `profile_audit_log`, `user_services` (user-scoped, no community filter).
+Active tables include: `communities` (with `code` for join), `profiles`, `service_providers`, `service_visits`, `visit_joiners`, `events` (funds), `event_transactions`, `fund_roles`, `notifications`, `favorites`, `ratings`, `provider_hires`, `provider_personal_notes`, `community_requests`, `profile_audit_log`, `user_services` (user-scoped, no community filter), plus funds-activation and cross-community support tables documented in `docs/architecture.md`.
 
 Storage bucket: `community-uploads` (public).
 

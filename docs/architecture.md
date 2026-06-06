@@ -382,7 +382,7 @@ app/_layout.tsx
 
 Tab icons are currently rendered with `APP_EMOJIS` inside `Text` elements.
 
-The community tab consolidates the read-only pulse line, funds list and summary, residents-directory shortcut, and community information card. Fund detail and create/transaction flows remain in `/funds/*` top-level routes.
+The community tab consolidates the funds summary, residents-directory shortcut, and community information card. The earlier pulse line is intentionally removed from the tab UI. Fund detail and create/transaction flows remain in `/funds/*` top-level routes.
 
 ### Platform Tabs (`app/platform/_layout.tsx`)
 
