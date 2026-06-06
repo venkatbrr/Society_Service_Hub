@@ -35,6 +35,12 @@ function groupVisitsByCategory(visitList: VisitWithJoinerData[]) {
     .sort((a, b) => b.data.length - a.data.length);
 }
 
+const parseLocalDateOnly = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map((part) => Number(part));
+  if (!year || !month || !day) return new Date(dateStr);
+  return new Date(year, month - 1, day);
+};
+
 export default function HomeScreen() {
   const { segment, visitTab: visitTabParam } = useLocalSearchParams<{ segment?: string; visitTab?: 'upcoming' | 'past' }>();
   const [activeSegment, setActiveSegment] = useState<'providers' | 'visits'>('providers');
@@ -244,7 +250,7 @@ export default function HomeScreen() {
         const creator = profileMap[sv.created_by] || {};
         
         let adjustedStatus = sv.status;
-        const visitDate = new Date(sv.visit_date);
+        const visitDate = parseLocalDateOnly(sv.visit_date);
         visitDate.setHours(0, 0, 0, 0);
         if (visitDate < today && adjustedStatus === 'upcoming') {
           adjustedStatus = 'completed';
@@ -263,20 +269,20 @@ export default function HomeScreen() {
 
       // Split into upcoming (date >= today) and past (date < today)
       let upcomingData = allVisits.filter(v => {
-        const visitDate = new Date(v.visit_date);
+        const visitDate = parseLocalDateOnly(v.visit_date);
         visitDate.setHours(0, 0, 0, 0);
         return visitDate >= today && (v.status === 'upcoming' || v.status === 'cancelled');
       });
 
       let pastData = allVisits.filter(v => {
-        const visitDate = new Date(v.visit_date);
+        const visitDate = parseLocalDateOnly(v.visit_date);
         visitDate.setHours(0, 0, 0, 0);
         return visitDate < today;
       });
 
       // Sort: upcoming ASC, past DESC
-      upcomingData.sort((a, b) => new Date(a.visit_date).getTime() - new Date(b.visit_date).getTime());
-      pastData.sort((a, b) => new Date(b.visit_date).getTime() - new Date(a.visit_date).getTime());
+      upcomingData.sort((a, b) => parseLocalDateOnly(a.visit_date).getTime() - parseLocalDateOnly(b.visit_date).getTime());
+      pastData.sort((a, b) => parseLocalDateOnly(b.visit_date).getTime() - parseLocalDateOnly(a.visit_date).getTime());
 
       // Client-side filtering for search
       if (debouncedSearchQuery) {

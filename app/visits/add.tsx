@@ -7,10 +7,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { ProviderSelector } from '../../components/ProviderSelector';
 import { Verandah } from '../../constants/Colors';
+import { VerandahType } from '../../constants/Verandah';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/categories';
 import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
 
@@ -30,6 +30,13 @@ const buildVisitCategoryGroups = (sourceCategories: string[]): CategoryGroup[] =
 
 const findVisitGroupId = (groups: CategoryGroup[], cat: string) =>
   groups.find((g) => g.categories.includes(cat))?.id ?? 'all';
+
+const formatLocalDateForDb = (date: Date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export default function AddVisitScreen() {
   const router = useRouter();
@@ -149,7 +156,7 @@ export default function AddVisitScreen() {
         title: title.trim(),
         description: description.trim() || null,
         category,
-        visit_date: visitDate.toISOString().split('T')[0],
+        visit_date: formatLocalDateForDb(visitDate),
         visit_time_slot: timeSlot,
         estimated_cost: estimatedCost.trim() || null,
         max_joiners: maxJoiners ? parseInt(maxJoiners) : null,

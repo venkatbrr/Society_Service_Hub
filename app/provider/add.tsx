@@ -5,11 +5,11 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOp
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
+import { VerandahType } from '../../constants/Verandah';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/categories';
 import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { DetailField, getDetailFieldsForCategory } from '../../constants/providerDetails';
 import { useAuth } from '../../context/AuthContext';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { actionToFraudStatus, checkProviderFraud, getFraudActionMessage } from '../../lib/fraudCheck';
 import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
@@ -56,7 +56,7 @@ export default function AddProviderScreen() {
   const [phone, setPhone] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [description, setDescription] = useState('');
-  const [flatBlock, setFlatBlock] = useState('');
+  const [personalNote, setPersonalNote] = useState('');
   const [details, setDetails] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -73,7 +73,10 @@ export default function AddProviderScreen() {
     return categoryGroups.find((group) => group.id === selectedGroupId)?.categories ?? CATEGORIES;
   }, [categoryGroups, selectedGroupId]);
 
-  const detailFields = useMemo(() => getDetailFieldsForCategory(category), [category]);
+  const detailFields = useMemo(
+    () => getDetailFieldsForCategory(category).filter((field) => field.key !== 'salary'),
+    [category]
+  );
 
   const handleCategoryChange = (cat: string) => {
     setCategory(cat);
@@ -120,6 +123,32 @@ export default function AddProviderScreen() {
     return Object.keys(cleaned).length > 0 ? cleaned : null;
   };
 
+  const findExistingProviderByPhone = async (normalizedPhone: string) => {
+    const { data, error } = await supabase
+      .from('service_providers')
+      .select('id, name, category')
+      .eq('community_id', communityId as string)
+      .eq('phone', normalizedPhone)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  };
+
+  const openExistingProvider = (existingProvider: { id: string; name: string; category: string | null }) => {
+    Toast.show({
+      type: 'info',
+      text1: 'Provider already saved',
+      text2: `This phone number is already linked to ${existingProvider.name}${existingProvider.category ? ` (${existingProvider.category})` : ''}`,
+    });
+    router.replace(`/provider/${existingProvider.id}` as any);
+  };
+
   const handleSave = async () => {
     if (!name.trim() || !phone.trim() || !category) {
       Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Name, phone, and category are required' });
@@ -139,24 +168,9 @@ export default function AddProviderScreen() {
 
     setIsLoading(true);
     try {
-      const { data: existingProviders, error: duplicateCheckError } = await supabase
-        .from('service_providers')
-        .select('id, name, category')
-        .eq('community_id', communityId)
-        .eq('phone', normalizedPhone)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (duplicateCheckError) throw duplicateCheckError;
-
-      const existingProvider = existingProviders?.[0];
+      const existingProvider = await findExistingProviderByPhone(normalizedPhone);
       if (existingProvider) {
-        Toast.show({
-          type: 'info',
-          text1: 'Provider already saved',
-          text2: `Opening ${existingProvider.name}${existingProvider.category ? ` (${existingProvider.category})` : ''}`,
-        });
-        router.replace(`/provider/${existingProvider.id}` as any);
+        openExistingProvider(existingProvider);
         return;
       }
 
@@ -172,22 +186,58 @@ export default function AddProviderScreen() {
       const fraudStatus = actionToFraudStatus(verdict.action);
       const cleanedDetails = cleanDetails();
 
-      const { error } = await supabase.from('service_providers').insert({
-        community_id: communityId,
-        created_by: user.id,
-        name: name.trim(),
-        phone: normalizedPhone,
-        category,
-        description: description.trim() || null,
-        flat_block: flatBlock.trim() || null,
-        fraud_status: fraudStatus,
-        ...(cleanedDetails ? { details: cleanedDetails } : {}),
-      });
+      const { data: insertedProvider, error } = await supabase
+        .from('service_providers')
+        .insert({
+          community_id: communityId,
+          created_by: user.id,
+          name: name.trim(),
+          phone: normalizedPhone,
+          category,
+          description: description.trim() || null,
+          fraud_status: fraudStatus,
+          ...(cleanedDetails ? { details: cleanedDetails } : {}),
+        })
+        .select('id')
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        const isDuplicateError = error.message?.includes('A provider with this phone number already exists in your community');
+        if (isDuplicateError) {
+          const duplicateProvider = await findExistingProviderByPhone(normalizedPhone);
+          if (duplicateProvider) {
+            openExistingProvider(duplicateProvider);
+            return;
+          }
+        }
+
+        throw error;
+      }
+
+      const trimmedPersonalNote = personalNote.trim();
+      if (trimmedPersonalNote && insertedProvider?.id) {
+        const { error: personalNoteError } = await supabase
+          .from('provider_personal_notes')
+          .upsert(
+            {
+              user_id: user.id,
+              provider_id: insertedProvider.id,
+              note: trimmedPersonalNote,
+            },
+            { onConflict: 'user_id,provider_id' }
+          );
+
+        if (personalNoteError) {
+          throw personalNoteError;
+        }
+      }
 
       if (verdict.action === 'PASS') {
         Toast.show({ type: 'success', text1: 'Provider added successfully' });
+        if (insertedProvider?.id) {
+          router.replace(`/provider/${insertedProvider.id}` as any);
+          return;
+        }
       } else {
         const msg = getFraudActionMessage(verdict);
         Toast.show({ type: msg.type, text1: msg.title, text2: msg.message });
@@ -385,26 +435,29 @@ export default function AddProviderScreen() {
           )}
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Flat / block (optional)</Text>
-            <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-              placeholder="e.g. Often works in Block A"
-              placeholderTextColor={colors.textMuted}
-              value={flatBlock}
-              onChangeText={setFlatBlock}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Description</Text>
             <TextInput
               style={[styles.textArea, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-              placeholder="e.g. Very reliable, fair pricing..."
+              placeholder="e.g. Fan repair ₹300, switchboard fix ₹150, full home wiring ₹2500"
               placeholderTextColor={colors.textMuted}
               value={description}
               onChangeText={setDescription}
               multiline
               numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Personal note (private)</Text>
+            <TextInput
+              style={[styles.textArea, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+              placeholder="This note is visible only to you."
+              placeholderTextColor={colors.textMuted}
+              value={personalNote}
+              onChangeText={setPersonalNote}
+              multiline
+              numberOfLines={3}
               textAlignVertical="top"
             />
           </View>

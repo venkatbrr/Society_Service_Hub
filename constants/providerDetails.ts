@@ -24,8 +24,7 @@ export interface DetailField {
 
 export const CATEGORY_DETAIL_FIELDS: Record<string, DetailField[]> = {
   Maid: [
-    { key: 'cuisine', label: 'Cuisine Preference', type: 'radio', options: ['South Indian', 'North Indian', 'Both', 'Other'] },
-    { key: 'tasks', label: 'Tasks', type: 'chips', options: ['Cleaning', 'Cooking', 'Laundry', 'Utensils', 'Mopping', 'Dusting', 'Childcare', 'Pet Care'] },
+    { key: 'tasks', label: 'Tasks', type: 'chips', options: ['Cleaning', 'Laundry', 'Utensils', 'Mopping', 'Dusting', 'Childcare', 'Pet Care'] },
     { key: 'availability', label: 'Availability', type: 'radio', options: ['Full-time', 'Part-time', 'On-call'] },
     { key: 'salary', label: 'Salary', type: 'number', placeholder: 'e.g. 8000', suffix: '/month' },
   ],
@@ -99,6 +98,16 @@ export const CATEGORY_DETAIL_FIELDS: Record<string, DetailField[]> = {
   'Cycle Repair': [
     { key: 'services', label: 'Services', type: 'chips', options: ['Puncture', 'Chain / Gear', 'Brake', 'Tyre Change', 'General Service'] },
     { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 50', suffix: '/visit' },
+  ],
+  'Car Repair': [
+    { key: 'services', label: 'Services', type: 'chips', options: ['Engine Check', 'Brake Service', 'Battery', 'AC Service', 'General Service', 'Puncture'] },
+    { key: 'vehicleType', label: 'Vehicle Type', type: 'chips', options: ['Hatchback', 'Sedan', 'SUV', 'All'] },
+    { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 700', suffix: '/visit' },
+  ],
+  'Bike Repair': [
+    { key: 'services', label: 'Services', type: 'chips', options: ['Puncture', 'Chain', 'Brake', 'Engine Service', 'Oil Change', 'Electrical'] },
+    { key: 'vehicleType', label: 'Vehicle Type', type: 'chips', options: ['Scooter', 'Motorcycle', 'Both'] },
+    { key: 'charges', label: 'Charges', type: 'number', placeholder: 'e.g. 250', suffix: '/visit' },
   ],
   'Washroom Cleaner': [
     { key: 'services', label: 'Services', type: 'chips', options: ['Deep Cleaning', 'Regular Cleaning', 'Drain Cleaning', 'Tile Scrubbing'] },

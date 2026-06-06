@@ -1,6 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
@@ -16,11 +16,16 @@ type BlockWithCounts = Tables<'community_blocks'> & {
 
 export default function CommunityBlocksScreen() {
   const router = useRouter();
-  const { communityId, blocksEnabled } = useAuth();
+  const { communityId, blocksEnabled, refreshSession } = useAuth();
 
   const [blocks, setBlocks] = useState<BlockWithCounts[]>([]);
   const [newBlockName, setNewBlockName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isBlocksEnabled, setIsBlocksEnabled] = useState(blocksEnabled);
+
+  useEffect(() => {
+    setIsBlocksEnabled(blocksEnabled);
+  }, [blocksEnabled]);
 
   const load = useCallback(async () => {
     if (!communityId) return;
@@ -73,6 +78,8 @@ export default function CommunityBlocksScreen() {
       try {
         const { error } = await supabase.rpc('set_community_blocks_enabled', { p_enabled: enabled });
         if (error) throw error;
+        setIsBlocksEnabled(enabled);
+        await refreshSession();
         Toast.show({ type: 'success', text1: enabled ? 'Blocks enabled' : 'Blocks disabled' });
         await load();
       } catch (error: any) {
@@ -160,11 +167,11 @@ export default function CommunityBlocksScreen() {
         <View style={styles.toggleCard}> 
           <View style={styles.toggleRow}>
             <Text style={styles.toggleLabel}>Use blocks for fund collection</Text>
-            <Switch value={blocksEnabled} onValueChange={toggleBlocks} disabled={loading} />
+            <Switch value={isBlocksEnabled} onValueChange={toggleBlocks} disabled={loading} />
           </View>
         </View>
 
-        {blocksEnabled ? (
+        {isBlocksEnabled ? (
           <>
             <View style={styles.addRow}>
               <TextInput

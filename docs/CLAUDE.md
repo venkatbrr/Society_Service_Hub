@@ -46,7 +46,7 @@ Every user belongs to a community. **All data queries must filter by `communityI
 2. `AuthContext` watches `supabase.auth.onAuthStateChange`, auto-fetches profile
 3. Redirect logic: no session → `/login`; platform admin → `/platform/approvals`; no community + active request → `/community-request-submitted`; no community + no request → `/community-select`; community present → `/(tabs)`
 4. Successful `join_community_by_code()` calls in `app/community-select.tsx` can branch to `/community-join-block` before `/(tabs)` when the joined community has both `funds_enabled` and `blocks_enabled`
-5. Auth methods: Google OAuth (requires dev build, not Expo Go) and email/password; email sign-up requires a flat number and forwards it through auth metadata into `profiles.flat_number`
+5. Auth methods: Google OAuth (requires dev build, not Expo Go) and email/password; email sign-up collects full name and password on the first screen while `profiles.flat_number` remains optional
 6. Session persisted via AsyncStorage adapter (not SecureStore, due to Android 2KB limit)
 
 ### Role System

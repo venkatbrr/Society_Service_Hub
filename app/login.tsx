@@ -3,15 +3,15 @@ import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-si
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
@@ -34,7 +34,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [flatNumber, setFlatNumber] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleMode = () => {
@@ -42,7 +41,6 @@ export default function LoginScreen() {
     // Clear passwords on toggle
     setPassword('');
     setConfirmPassword('');
-    setFlatNumber('');
   };
 
   const validateForm = () => {
@@ -53,10 +51,6 @@ export default function LoginScreen() {
     if (mode === 'signUp') {
       if (!fullName.trim()) {
         Toast.show({ type: 'error', text1: 'Missing Name', text2: 'Please enter your full name.' });
-        return false;
-      }
-      if (!flatNumber.trim()) {
-        Toast.show({ type: 'error', text1: 'Missing Flat Number', text2: 'Please enter your flat number.' });
         return false;
       }
       if (password !== confirmPassword) {
@@ -73,8 +67,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       if (mode === 'signUp') {
-        const normalizedFlat = flatNumber.toUpperCase().replace(/[\s-]/g, '');
-        const { data, error } = await signUpWithEmail(email.trim(), password, fullName.trim(), normalizedFlat);
+        const { data, error } = await signUpWithEmail(email.trim(), password, fullName.trim());
         if (error) throw error;
 
         if (data.session) {
@@ -216,26 +209,10 @@ export default function LoginScreen() {
                   <Text style={styles.inputEmoji}>{APP_EMOJIS.profile}</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="John Doe"
+                    placeholder="Aarav Sharma"
                     placeholderTextColor={Verandah.textTertiary}
                     value={fullName}
                     onChangeText={setFullName}
-                  />
-                </View>
-              </View>
-              
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Flat number</Text>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.inputEmoji}>🚪</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="e.g. A412"
-                    placeholderTextColor={Verandah.textTertiary}
-                    value={flatNumber}
-                    onChangeText={setFlatNumber}
-                    onBlur={() => setFlatNumber(prev => prev.toUpperCase().replace(/[\s-]/g, ''))}
-                    autoCapitalize="characters"
                   />
                 </View>
               </View>

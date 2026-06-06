@@ -188,6 +188,7 @@ type AuthContextType = {
 | `provider_hires` | Contact and hire history | Community |
 | `hire_feedback` | Private per-hire resident sentiment log | User |
 | `provider_public_rating_nudges` | One-time public-rating nudge memory per resident-provider pair | User |
+| `provider_personal_notes` | Private per-resident notes for providers (one note per user-provider pair) | User |
 | `events` | Community funds | Community |
 | `event_transactions` | Fund ledger entries | Community |
 | `fund_roles` | Treasurer and collector assignments per fund, optionally block-scoped via `block_id` | Community |
@@ -265,6 +266,7 @@ The marketplace tables `resident_businesses`, `business_offerings`, and `busines
 |---------|-------|-------|--------|
 | `on_auth_user_created` | `auth.users` | INSERT | Create profile row |
 | `on_rating_change` | `ratings` | INSERT/UPDATE/DELETE | Recompute provider rating aggregates |
+| `provider_personal_notes_updated_at_trigger` | `provider_personal_notes` | BEFORE UPDATE | Refresh `updated_at` on note edits |
 | `user_services_compute_fields_trigger` | `user_services` | BEFORE INSERT/UPDATE | Recompute `next_due_on` and clear `notified_at` when relevant |
 | `fund_role_guard` | `fund_roles` | INSERT/UPDATE/DELETE | Enforce funds-enabled gate, treasurer cap, global collector cap, and per-block collector cap |
 | `event_transaction_guard` | `event_transactions` | INSERT/UPDATE | Enforce funds-enabled gate and block-scope checks for block in-charges |
@@ -289,6 +291,7 @@ All active tables have RLS enabled.
 | `provider_hires` | Community-scoped usage history |
 | `hire_feedback` | User-owned only (`auth.uid() = user_id`) |
 | `provider_public_rating_nudges` | User-owned only (`auth.uid() = user_id`) |
+| `provider_personal_notes` | User-owned only (`auth.uid() = user_id`) |
 | `events`, `event_transactions`, `fund_roles` | Community-scoped with role-gated writes |
 | `funds_access_requests` | Community-visible reads for status; writes are RPC-only |
 | `community_blocks` | Community-visible reads; writes are RPC-only |

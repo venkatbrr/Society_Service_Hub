@@ -207,30 +207,6 @@ export default function CommunityScreen() {
           <Text style={styles.heroTitle}>{communityDetails?.name ?? 'Your community'}</Text>
         </BaseCard>
 
-        {pulseItems.length > 0 ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Going around the building.</Text>
-            <BaseCard padding={0}>
-              {pulseItems.map((item, idx) => (
-                <View
-                  key={`${item.kind}-${item.entity_id}-${item.happened_at}`}
-                  style={[
-                    styles.pulseRow,
-                    idx < pulseItems.length - 1 && styles.pulseDivider
-                  ]}
-                >
-                  <Text style={styles.pulseSummary} numberOfLines={1}>
-                    {item.summary}
-                  </Text>
-                  <Text style={styles.pulseTime}>
-                    {formatRelativePulseTime(item.happened_at)}
-                  </Text>
-                </View>
-              ))}
-            </BaseCard>
-          </View>
-        ) : null}
-
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Community funds</Text>

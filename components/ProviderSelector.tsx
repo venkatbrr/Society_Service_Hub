@@ -85,7 +85,7 @@ export const ProviderSelector = ({
             style={[styles.segment, effectiveMode === 'existing' && styles.segmentActive]}
             onPress={() => onModeChange('existing')}
           >
-            <Text style={[styles.segmentText, effectiveMode === 'existing' ? styles.segmentTextActive : styles.segmentTextInactive]}>From my providers</Text>
+            <Text style={[styles.segmentText, effectiveMode === 'existing' ? styles.segmentTextActive : styles.segmentTextInactive]}>Select existing provider</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.segment, effectiveMode === 'new' && styles.segmentActive]}

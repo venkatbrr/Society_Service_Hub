@@ -239,15 +239,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const refreshSession = async () => {
     const { data, error } = await supabase.auth.refreshSession();
     if (error) {
-      console.warn('Token refresh failed — signing out:', error.message);
+      console.warn('Token refresh failed — falling back to current session:', error.message);
+    }
+
+    const refreshedSession = data.session ?? session;
+
+    if (refreshedSession?.user?.id) {
+      setSession(refreshedSession);
+      setUser(refreshedSession.user);
+      await loadProfile(refreshedSession.user.id, refreshedSession);
+      return;
+    }
+
+    const {
+      data: { session: currentSession },
+      error: getSessionError,
+    } = await supabase.auth.getSession();
+
+    if (getSessionError) {
+      console.warn('Session reload failed — signing out:', getSessionError.message);
       await clearLocalSession();
       return;
     }
-    if (data.session) {
-      setSession(data.session);
-      setUser(data.session.user);
-      await loadProfile(data.session.user.id, data.session);
-    }
+
+    setSession(currentSession);
+    setUser(currentSession?.user ?? null);
+    await loadProfile(currentSession?.user?.id, currentSession);
   };
 
   const signOut = async () => {

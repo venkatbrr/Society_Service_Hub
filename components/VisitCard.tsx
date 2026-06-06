@@ -52,7 +52,10 @@ export const VisitCard = React.memo(({
   onPress,
 }: VisitCardProps) => {
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    const [year, month, day] = dateStr.split('-').map((part) => Number(part));
+    const date = year && month && day
+      ? new Date(year, month - 1, day)
+      : new Date(dateStr);
     return date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
   };
 

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -8,10 +9,23 @@ import { JoinerListItem } from '../../components/JoinerListItem';
 import { Rupees } from '../../components/Rupees';
 import { VisitStatusBadge } from '../../components/VisitStatusBadge';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { VisitJoinerWithProfile, VisitWithJoinerData } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
+
+const parseLocalDateOnly = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map((part) => Number(part));
+  if (!year || !month || !day) return new Date(dateStr);
+  return new Date(year, month - 1, day);
+};
+
+const formatLocalDateForDb = (date: Date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export default function VisitDetailScreen() {
   const { id, returnTo, visitTab } = useLocalSearchParams<{ id: string; returnTo?: string; visitTab?: 'upcoming' | 'past' }>();
@@ -39,6 +53,84 @@ export default function VisitDetailScreen() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [flatNo, setFlatNo] = useState(profile?.flat_number || '');
   const [note, setNote] = useState('');
+
+  // Reschedule Modal state
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [newVisitDate, setNewVisitDate] = useState(new Date());
+  const [newStartTime, setNewStartTime] = useState(new Date());
+  const [newEndTime, setNewEndTime] = useState(new Date());
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [showRescheduleDatePicker, setShowRescheduleDatePicker] = useState(false);
+  const [showRescheduleStartTimePicker, setShowRescheduleStartTimePicker] = useState(false);
+  const [showRescheduleEndTimePicker, setShowRescheduleEndTimePicker] = useState(false);
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
+
+  const parseTimeSlot = (timeSlotStr: string, baseDate: Date) => {
+    const parts = timeSlotStr.split('-');
+    const start = new Date(baseDate);
+    const end = new Date(baseDate);
+    if (parts.length === 2) {
+      const parseTimeStr = (str: string, date: Date) => {
+        const match = str.trim().toLowerCase().match(/(\d+):(\d+)\s*(am|pm)/);
+        if (match) {
+          let hours = parseInt(match[1]);
+          const minutes = parseInt(match[2]);
+          const ampm = match[3];
+          if (ampm === 'pm' && hours < 12) hours += 12;
+          if (ampm === 'am' && hours === 12) hours = 0;
+          date.setHours(hours, minutes, 0, 0);
+        }
+      };
+      parseTimeStr(parts[0], start);
+      parseTimeStr(parts[1], end);
+    } else {
+      start.setHours(10, 0, 0, 0);
+      end.setHours(11, 0, 0, 0);
+    }
+    return { start, end };
+  };
+
+  const handleOpenReschedule = () => {
+    if (!visit) return;
+    const baseDate = parseLocalDateOnly(visit.visit_date);
+    setNewVisitDate(baseDate);
+    const parsed = parseTimeSlot(visit.visit_time_slot || '', baseDate);
+    setNewStartTime(parsed.start);
+    setNewEndTime(parsed.end);
+    setShowRescheduleModal(true);
+  };
+
+  const handleReschedule = async () => {
+    if (!id || !newVisitDate || !newStartTime || !newEndTime) return;
+    setIsRescheduling(true);
+    try {
+      const formattedDate = formatLocalDateForDb(newVisitDate);
+      const timeSlot = `${formatTime(newStartTime)} - ${formatTime(newEndTime)}`;
+
+      const { error } = await supabase
+        .from('service_visits')
+        .update({
+          visit_date: formattedDate,
+          visit_time_slot: timeSlot,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      Toast.show({ type: 'success', text1: 'Visit rescheduled!' });
+      setShowRescheduleModal(false);
+      void fetchVisitData();
+    } catch (e: any) {
+      console.error(e);
+      Toast.show({ type: 'error', text1: 'Error rescheduling', text2: e.message });
+    } finally {
+      setIsRescheduling(false);
+    }
+  };
 
   const parsedEstimatedCost = visit?.estimated_cost ? Number(String(visit.estimated_cost).replace(/[^0-9.]/g, '')) : NaN;
 
@@ -184,7 +276,7 @@ export default function VisitDetailScreen() {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-IN', {
+    return parseLocalDateOnly(dateStr).toLocaleDateString('en-IN', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -222,7 +314,7 @@ export default function VisitDetailScreen() {
 
   const isCreator = visit.created_by === user?.id;
   const isFull = visit.max_joiners ? visit.joiner_count! >= visit.max_joiners : false;
-  const visitDate = new Date(visit.visit_date);
+  const visitDate = parseLocalDateOnly(visit.visit_date);
   visitDate.setHours(0, 0, 0, 0);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -373,6 +465,11 @@ export default function VisitDetailScreen() {
                       </View>
                     </TouchableOpacity>
                 )}
+                {visit.status === 'upcoming' && (
+                    <TouchableOpacity style={[styles.rescheduleBtn, { borderColor: colors.primary }]} onPress={handleOpenReschedule}>
+                        <Text style={[styles.rescheduleBtnText, { color: colors.primary }]}>Reschedule Visit</Text>
+                    </TouchableOpacity>
+                )}
                 <TouchableOpacity style={styles.cancelBtn} onPress={() => updateStatus('cancelled')}>
                     <Text style={[styles.cancelBtnText, { color: colors.accent }]}>Cancel Visit</Text>
                 </TouchableOpacity>
@@ -444,6 +541,103 @@ export default function VisitDetailScreen() {
                     >
                       <View style={[styles.primaryBtnGradient, { backgroundColor: colors.primary }]}> 
                         {joining ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.primaryBtnText}>Confirm join</Text>}
+                      </View>
+                    </TouchableOpacity>
+                </KeyboardAvoidingView>
+            </View>
+        </View>
+      </Modal>
+
+      {/* Reschedule Modal */}
+      <Modal visible={showRescheduleModal} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+                <View style={styles.modalHeader}>
+                    <Text style={[styles.modalTitle, { color: colors.text }]}>Reschedule Visit</Text>
+                    <TouchableOpacity onPress={() => setShowRescheduleModal(false)}>
+                        <Ionicons name="close" size={24} color={colors.text} />
+                    </TouchableOpacity>
+                </View>
+
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.modalBody}
+                >
+                    <View style={styles.inputGroup}>
+                        <Text style={[styles.label, { color: colors.text }]}>New date *</Text>
+                        <TouchableOpacity
+                          style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.surface }]}
+                          onPress={() => setShowRescheduleDatePicker(true)}
+                        >
+                          <Text style={{ fontSize: 16, color: colors.text }}>
+                            {newVisitDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </Text>
+                        </TouchableOpacity>
+                        {showRescheduleDatePicker && (
+                          <DateTimePicker
+                            value={newVisitDate}
+                            mode="date"
+                            display="default"
+                            onChange={(event, selectedDate) => {
+                              setShowRescheduleDatePicker(Platform.OS === 'ios');
+                              if (selectedDate) setNewVisitDate(selectedDate);
+                            }}
+                            minimumDate={new Date()}
+                          />
+                        )}
+                    </View>
+
+                    <View style={styles.row}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.label, { color: colors.text }]}>Start time *</Text>
+                        <TouchableOpacity
+                          style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.surface }]}
+                          onPress={() => setShowRescheduleStartTimePicker(true)}
+                        >
+                          <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(newStartTime)}</Text>
+                        </TouchableOpacity>
+                        {showRescheduleStartTimePicker && (
+                          <DateTimePicker
+                            value={newStartTime}
+                            mode="time"
+                            display="default"
+                            onChange={(event, selectedTime) => {
+                              setShowRescheduleStartTimePicker(Platform.OS === 'ios');
+                              if (selectedTime) setNewStartTime(selectedTime);
+                            }}
+                          />
+                        )}
+                      </View>
+                      <View style={{ width: 12 }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.label, { color: colors.text }]}>End time *</Text>
+                        <TouchableOpacity
+                          style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.surface }]}
+                          onPress={() => setShowRescheduleEndTimePicker(true)}
+                        >
+                          <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(newEndTime)}</Text>
+                        </TouchableOpacity>
+                        {showRescheduleEndTimePicker && (
+                          <DateTimePicker
+                            value={newEndTime}
+                            mode="time"
+                            display="default"
+                            onChange={(event, selectedTime) => {
+                              setShowRescheduleEndTimePicker(Platform.OS === 'ios');
+                              if (selectedTime) setNewEndTime(selectedTime);
+                            }}
+                          />
+                        )}
+                      </View>
+                    </View>
+
+                    <TouchableOpacity
+                        style={[styles.primaryBtn, { marginTop: 12 }]}
+                        onPress={handleReschedule}
+                        disabled={isRescheduling}
+                    >
+                      <View style={[styles.primaryBtnGradient, { backgroundColor: colors.primary }]}> 
+                        {isRescheduling ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.primaryBtnText}>Confirm reschedule</Text>}
                       </View>
                     </TouchableOpacity>
                 </KeyboardAvoidingView>
@@ -740,5 +934,20 @@ const styles = StyleSheet.create({
       paddingHorizontal: 16,
       paddingTop: 16,
       fontSize: 16,
+  },
+  row: {
+      flexDirection: 'row',
+      marginBottom: 12,
+  },
+  rescheduleBtn: {
+      height: 58,
+      borderRadius: 18,
+      borderWidth: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+  },
+  rescheduleBtnText: {
+      fontSize: 16,
+      fontWeight: '500',
   },
 });
