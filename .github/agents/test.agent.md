@@ -1,4 +1,4 @@
-﻿---
+---
 name: test
 description: End-to-end tester for Society Service Hub. Use when you want to verify features, UI alignment, or regressions across all screens. Invoke by sending "test" or a specific area e.g. "test providers", "test visits". Automatically hands off all failures to the bug_fix agent after the run.
 argument-hint: Area to test (e.g. "providers", "visits", "funds", "reminders", "notifications") or "all" for a full regression run. Leave blank to test everything.
@@ -82,7 +82,7 @@ Run each section in order. For each check, record ✅ pass or ❌ fail with a br
 ---
 
 ### 5. Community Tab
-- [ ] Community tab shows pulse, funds list, residents shortcut, and community info
+- [ ] Community tab shows funds summary/status card, residents shortcut, and community info
 - [ ] Funds area shows income, expense, and balance totals when funds are active
 - [ ] Tapping a fund opens Fund Detail
   - [ ] Transaction history visible

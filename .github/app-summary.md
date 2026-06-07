@@ -58,18 +58,21 @@ The app targets iOS, Android, and Web from one Expo codebase.
 
 ### Main tabs (`app/(tabs)`)
 
-- `index.tsx`: Help dashboard with Providers and Visits segments
+- `index.tsx`: Help dashboard with Providers (two-level category group filters) and Visits (grouped by category in SectionList) segments
 - `favorites.tsx`: Saved providers
-- `community.tsx`: Community tab with pulse, fund list, residents shortcut, and community info
-- `profile.tsx`: Personal hub for identity, reminders, recent service history, and sign-out
+- `community.tsx`: Community tab with funds status (activation CTA, pending request, rejected, or active overview), blocks management shortcut (for leads), residents shortcut, and community info
+- `profile.tsx`: Personal hub for identity, reminders shortcut, recent service history, and sign-out
 
 ### Feature route groups
 
 - `/provider/[id]`, `/provider/add`
 - `/visits/[id]`, `/visits/add`
 - `/funds/[id]`, `/funds/add`, `/funds/add-transaction`
+- `/funds-access/request`
+- `/community-join-block`, `/community/blocks`
+- `/hire-feedback/[hireId]`
 - `/services`, `/services/add`, `/services/[id]`
-- `/platform/approvals`, `/platform/communities`, `/platform/community/[id]`
+- `/platform/approvals`, `/platform/communities`, `/platform/community/[id]`, `/platform/funds-requests`, `/platform/funds-access/[requestId]`
 
 ### Removed route area
 
@@ -104,15 +107,19 @@ Authenticated with community -> /(tabs)
 
 - Residents can add providers to the trusted provider list
 - Provider categories include Photography and Decoration (with category-specific detail fields) alongside the full list of community service types
+- The provider filter uses a two-level grouped navigation: a group row (All Services, Home Support, Repairs & Maintenance, Healthcare & Wellness, Personal Care, Transport & Vehicle Care, Events & Occasions, Education & Coaching, Government & Docs, Other) followed by a category chip row that shows only categories within the selected group
 - Residents can rate, save, call, message, and share provider contacts
 - Existing ratings can be reused when updating review text without re-tapping stars
 - Residents can create shared service visits and manage participation; visit categories also include Photography and Decoration
+- Only the creator can move a visit between status values and reschedule an upcoming visit; rescheduling updates the date/time and emits a `visit_rescheduled` community notification to other residents
 - Visit joiners can reuse their saved flat number in the join modal and edited flat numbers are formatted to uppercase without spaces or hyphens on blur
 - Past visits are shown without an `upcoming` status badge even when stale visit status values exist
 - The Help tab preserves segment and visit-subtab state through route params
 - Provider and visit search inputs are debounced (300 ms) to avoid query-per-keystroke on Supabase
 - Service Visits are displayed grouped by category (SectionList) instead of a horizontal filter strip; each section header shows the category emoji (via `getServiceCategoryEmoji`), name, and a visit count badge; sections are sorted by count (busiest first) and empty categories are hidden automatically
 - Category emojis are shared between the Providers `CategoryFilter` and the Service Visits section headers via the same `getServiceCategoryEmoji` helper
+- Residents can report service providers for predefined reasons (Wrong info, Spam, etc.) which notifications alert community leads; community leads and platform admins can delete providers
+- Residents can add private personal notes to provider profiles, which are visible only to the resident who wrote them
 
 ### Funds
 
@@ -129,6 +136,19 @@ Authenticated with community -> /(tabs)
 - Approvals create the community and assign the requester to that community as `resident`
 - Email sign-up requires a flat number; the value is normalized before signup and stored in `profiles.flat_number` via the auth trigger
 - Community-request flat or house numbers are formatted in uppercase and strip spaces and hyphens on blur for cleaner approval records
+- Platform admins can seed block/tower names and select the block label (Block or Tower) at community approval time, enabling block support
+
+### Blocks / Towers (Optional)
+
+- Blocks/towers are decoupled from funds activation and are configured per community via a `block_label` (e.g., Block or Tower)
+- When blocks are active, residents are required to select their block and enter their flat number during onboarding (`/community-join-block`) or via their profile
+- Community leads can enable/disable block scoping, manage active blocks, or archive blocks (with automatic restoration on re-adding archived names) via `/community/blocks`
+- Contribution logs and collector assignments can be block-scoped, restricting block in-charges to their assigned block residents
+
+### Hire Feedback & Public Nudges
+
+- Contacting a provider schedules a local 24-hour reminder to collect private hire feedback (`positive`, `negative`, or `skipped`)
+- Recording positive feedback can prompt a one-time rating nudge to encourage residents to submit public reviews on the provider's profile
 
 ### Personal Service Reminders
 
@@ -184,6 +204,12 @@ Authenticated with community -> /(tabs)
 - `fund_roles`
 - `notifications`
 - `user_services`
+- `community_blocks`
+- `funds_access_requests`
+- `funds_access_revocations`
+- `hire_feedback`
+- `provider_reports`
+- `provider_personal_notes`
 - `community_partnerships` (backend only)
 - `community_groups` (backend only)
 - `community_group_members` (backend only)
@@ -207,10 +233,16 @@ Notification state is managed by `NotificationContext` and backed by Supabase Re
 Live product notification types include:
 
 - `new_visit`
+- `visit_rescheduled` (sent when a visit is rescheduled)
 - `community_approved`
 - `community_rejected`
 - `removed_from_community`
 - `service_reminder`
+- `funds_access_requested`
+- `funds_access_approved`
+- `funds_access_rejected`
+- `community_lead_appointed`
+- `funds_access_revoked`
 
 Reserved for cross-community workflows (backend available, no current UI emission path):
 
