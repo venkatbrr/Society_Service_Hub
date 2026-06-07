@@ -34,6 +34,7 @@ export const CATEGORIES = [
   'Teaching',
   'RTO Agent',
   'Aadhar Centre',
+  'Notary',
   // New Categories
   'Pandit / Pujari',
   'Mosquito Net / Screens',
@@ -52,6 +53,7 @@ export const CATEGORIES = [
   'Diagnostics / Lab Tests',
   'Physiotherapy',
   'Home Nurse / Nanny',
+  'Babysitter',
   'Other',
 ];
 
@@ -112,6 +114,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       'Diagnostics / Lab Tests',
       'Physiotherapy',
       'Home Nurse / Nanny',
+      'Babysitter',
     ],
   },
   {
@@ -158,6 +161,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     categories: [
       'RTO Agent',
       'Aadhar Centre',
+      'Notary',
     ],
   },
   {
@@ -203,6 +207,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   Teaching: '#7C3AED',
   'RTO Agent': '#0369A1',
   'Aadhar Centre': '#0891B2',
+  Notary: '#0F766E',
   'Pandit / Pujari': '#EAB308',
   'Mosquito Net / Screens': '#10B981',
   'Balcony Safety Nets': '#3B82F6',
@@ -220,5 +225,6 @@ export const CATEGORY_COLORS: Record<string, string> = {
   'Diagnostics / Lab Tests': '#8B5CF6',
   'Physiotherapy': '#10B981',
   'Home Nurse / Nanny': '#3B82F6',
+  Babysitter: '#F472B6',
   Other: '#A0AEC0',
 };

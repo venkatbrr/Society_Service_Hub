@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -469,6 +469,7 @@ export type Database = {
           goal_amount: number | null
           group_id: string | null
           id: string
+          is_closed: boolean | null
           partnership_id: string | null
           title: string
         }
@@ -482,6 +483,7 @@ export type Database = {
           goal_amount?: number | null
           group_id?: string | null
           id?: string
+          is_closed?: boolean | null
           partnership_id?: string | null
           title: string
         }
@@ -495,6 +497,7 @@ export type Database = {
           goal_amount?: number | null
           group_id?: string | null
           id?: string
+          is_closed?: boolean | null
           partnership_id?: string | null
           title?: string
         }
@@ -1735,6 +1738,9 @@ export type Database = {
         Args: { p_include_phone?: boolean }
         Returns: {
           app_role: Database["public"]["Enums"]["app_role_type"]
+          block_id: string
+          block_name: string
+          email: string
           flat_number: string
           full_name: string
           id: string
@@ -2053,6 +2059,29 @@ export type Database = {
         Args: { p_enabled: boolean }
         Returns: undefined
       }
+      set_fund_closed: {
+        Args: { p_closed: boolean; p_event_id: string }
+        Returns: {
+          community_id: string
+          created_at: string | null
+          created_by: string
+          description: string | null
+          event_date: string
+          fund_scope: string
+          goal_amount: number | null
+          group_id: string | null
+          id: string
+          is_closed: boolean | null
+          partnership_id: string | null
+          title: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "events"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_my_block: {
         Args: { p_block_id: string }
         Returns: {
@@ -2288,25 +2317,3 @@ export const Constants = {
     },
   },
 } as const
-
-export type ProviderWithInteraction = Tables<'service_providers'> & {
-  is_favorite?: boolean
-  hire_count?: number
-  user_rating?: number | null
-}
-
-export type VisitWithJoinerData = Tables<'service_visits'> & {
-  creator_name?: string | null
-  creator_flat?: string | null
-  creator_avatar_url?: string | null
-  joiner_count?: number
-  has_user_joined?: boolean
-}
-
-export type VisitJoinerWithProfile = Tables<'visit_joiners'> & {
-  user_name?: string | null
-  full_name?: string | null
-  avatar_url?: string | null
-  flat_number?: string | null
-  joined_at?: string
-}

@@ -25,7 +25,7 @@ import { formatRole, getEffectiveFundRole, getFundPermissions } from '../../lib/
 import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
-type FundContext = Pick<Tables<'events'>, 'id' | 'community_id' | 'title'> & {
+type FundContext = Pick<Tables<'events'>, 'id' | 'community_id' | 'title' | 'is_closed'> & {
   community: Pick<Tables<'communities'>, 'funds_enabled' | 'blocks_enabled'> | null;
   fund_roles: Tables<'fund_roles'>[];
   event_transactions: Pick<Tables<'event_transactions'>, 'id' | 'contributor_user_id' | 'type'>[];
@@ -67,6 +67,7 @@ export default function AddTransactionScreen() {
   const [isFetchingContext, setIsFetchingContext] = useState(true);
   const [showBlockPrompt, setShowBlockPrompt] = useState(false);
   const [selectedMyBlock, setSelectedMyBlock] = useState<string | null>(myBlockId ?? null);
+  const [searchMember, setSearchMember] = useState('');
 
   useEffect(() => {
     const loadContext = async () => {
@@ -74,7 +75,7 @@ export default function AddTransactionScreen() {
         setIsFetchingContext(true);
         const { data, error } = await supabase
           .from('events')
-          .select('id, community_id, title, community:communities!inner(funds_enabled, blocks_enabled)')
+          .select('id, community_id, title, is_closed, community:communities!inner(funds_enabled, blocks_enabled)')
           .eq('id', event_id as string)
           .single();
 
@@ -364,6 +365,23 @@ export default function AddTransactionScreen() {
     );
   }
 
+  if (fund?.is_closed) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background, padding: 24 }]}>
+        <Ionicons name="lock-closed" size={48} color={Verandah.warning} style={{ marginBottom: 16 }} />
+        <Text style={{ color: colors.text, fontSize: 18, fontWeight: '600', marginBottom: 8, textAlign: 'center' }}>
+          Fund is Closed
+        </Text>
+        <Text style={{ color: colors.textMuted, fontSize: 15, textAlign: 'center', marginBottom: 24, lineHeight: 22 }}>
+          This fund has been closed by the community lead. No new transactions can be recorded or edited.
+        </Text>
+        <TouchableOpacity style={[styles.typeButton, { backgroundColor: colors.surface2 }]} onPress={() => router.back()}>
+          <Text style={[styles.typeButtonText, { color: colors.primary }]}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -438,68 +456,110 @@ export default function AddTransactionScreen() {
           {type === 'income' ? (
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: colors.text }]}>Select resident</Text>
-              {members.map((member) => {
-                const isPaid = paidMemberIds.has(member.user_id);
-                const isSelected = selectedMemberId === member.user_id;
-
-                return (
-                  <TouchableOpacity
-                    key={member.user_id}
-                    style={[
-                      styles.memberRow,
-                      {
-                        backgroundColor: isSelected ? colors.primary + '08' : colors.card,
-                        borderColor: isSelected ? colors.primary : colors.border,
-                        opacity: isPaid ? 0.55 : 1,
-                      },
-                    ]}
-                    onPress={() => {
-                      if (isPaid) {
-                        Toast.show({ type: 'error', text1: 'Already paid', text2: 'This resident is already marked as paid.' });
-                        return;
-                      }
-
-                      setSelectedMemberId(member.user_id);
-                    }}
-                    activeOpacity={0.85}
-                  >
-                    <View style={styles.memberInfo}>
-                      <Text style={[styles.memberName, { color: colors.text }]}>{member.full_name?.trim() || 'Resident'}</Text>
-                      <Text style={[styles.memberMeta, { color: colors.textMuted }]}>{member.flat_no ? `Flat ${member.flat_no}` : 'Flat not set'}</Text>
+              {transaction_id ? (
+                (() => {
+                  const member = members.find((m) => m.user_id === selectedMemberId);
+                  if (!member) {
+                    return <Text style={{ color: colors.textMuted }}>Resident data unavailable</Text>;
+                  }
+                  return (
+                    <View style={[styles.memberRow, { backgroundColor: colors.card, borderColor: colors.border, opacity: 0.8 }]}>
+                      <View style={styles.memberInfo}>
+                        <Text style={[styles.memberName, { color: colors.text }]}>{member.full_name?.trim() || 'Resident'}</Text>
+                        <Text style={[styles.memberMeta, { color: colors.textMuted }]}>{member.flat_no ? `Flat ${member.flat_no}` : 'Flat not set'}</Text>
+                      </View>
+                      <View style={[styles.memberStatus, styles.memberStatusPaid]}>
+                        <Text style={[styles.memberStatusText, styles.memberStatusTextPaid]}>PAID</Text>
+                      </View>
                     </View>
-                    <View
-                      style={[
-                        styles.memberStatus,
-                        isPaid
-                          ? styles.memberStatusPaid
-                          : isSelected
-                            ? styles.memberStatusSelected
-                            : styles.memberStatusPending,
-                      ]}
-                    >
-                      <Text
+                  );
+                })()
+              ) : (
+                <>
+                  <TextInput
+                    style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background, marginBottom: 12, height: 50, fontSize: 15 }]}
+                    placeholder="Search by name or flat..."
+                    placeholderTextColor={colors.textMuted}
+                    value={searchMember}
+                    onChangeText={setSearchMember}
+                  />
+                  {!searchMember.trim() && members.length > 3 && (
+                    <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: 12, marginLeft: 4 }}>
+                      Type to search all residents...
+                    </Text>
+                  )}
+                  {members
+                    .filter(
+                      (member) =>
+                        !searchMember.trim() ||
+                        (member.full_name || '').toLowerCase().includes(searchMember.toLowerCase()) ||
+                        (member.flat_no || '').toLowerCase().includes(searchMember.toLowerCase())
+                    )
+                    .slice(0, searchMember.trim() ? undefined : 3)
+                    .map((member) => {
+                    const isPaid = paidMemberIds.has(member.user_id);
+                    const isSelected = selectedMemberId === member.user_id;
+
+                    return (
+                      <TouchableOpacity
+                        key={member.user_id}
                         style={[
-                          styles.memberStatusText,
-                          isPaid
-                            ? styles.memberStatusTextPaid
-                            : isSelected
-                              ? styles.memberStatusTextSelected
-                              : styles.memberStatusTextPending,
+                          styles.memberRow,
+                          {
+                            backgroundColor: isSelected ? colors.primary + '08' : colors.card,
+                            borderColor: isSelected ? colors.primary : colors.border,
+                            opacity: isPaid ? 0.55 : 1,
+                          },
                         ]}
+                        onPress={() => {
+                          if (isPaid) {
+                            Toast.show({ type: 'error', text1: 'Already paid', text2: 'This resident is already marked as paid.' });
+                            return;
+                          }
+
+                          setSelectedMemberId(member.user_id);
+                        }}
+                        activeOpacity={0.85}
                       >
-                        {isPaid ? 'Paid' : isSelected ? 'Selected' : 'Pending'}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+                        <View style={styles.memberInfo}>
+                          <Text style={[styles.memberName, { color: colors.text }]}>{member.full_name?.trim() || 'Resident'}</Text>
+                          <Text style={[styles.memberMeta, { color: colors.textMuted }]}>{member.flat_no ? `Flat ${member.flat_no}` : 'Flat not set'}</Text>
+                        </View>
+                        <View
+                          style={[
+                            styles.memberStatus,
+                            isPaid
+                              ? styles.memberStatusPaid
+                              : isSelected
+                                ? styles.memberStatusSelected
+                                : styles.memberStatusPending,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.memberStatusText,
+                              isPaid
+                                ? styles.memberStatusTextPaid
+                                : isSelected
+                                  ? styles.memberStatusTextSelected
+                                  : styles.memberStatusTextPending,
+                            ]}
+                          >
+                            {isPaid ? 'Paid' : isSelected ? 'Selected' : 'Pending'}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </>
+              )}
             </View>
           ) : (
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: colors.text }]}>Expense name</Text>
               <TextInput
                 style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-                placeholder="e.g. Water tanker payment"
+                placeholder="e.g. Grocery, Decoration, Tent house, Catering..."
                 placeholderTextColor={colors.textMuted}
                 value={title}
                 onChangeText={setTitle}

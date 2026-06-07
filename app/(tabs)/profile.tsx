@@ -171,6 +171,9 @@ export default function ProfileScreen() {
                 </View>
               ) : null}
             </View>
+            <TouchableOpacity onPress={() => router.push('/profile/edit' as any)} style={{ padding: 8, alignSelf: 'flex-start' }}>
+              <Ionicons name="pencil" size={20} color={Verandah.textTertiary} />
+            </TouchableOpacity>
           </View>
         </View>
 

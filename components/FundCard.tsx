@@ -32,9 +32,16 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
     <BaseCard padding={16} onPress={onPress}>
       <View style={styles.header}>
         <View style={styles.titleArea}>
-          <Text style={styles.title} numberOfLines={1}>
-            {fund.title}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={styles.title} numberOfLines={1}>
+              {fund.title}
+            </Text>
+            {fund.is_closed && (
+              <View style={{ backgroundColor: Verandah.cardMuted, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ fontSize: 10, color: Verandah.textSecondary, fontWeight: 'bold', textTransform: 'uppercase' }}>Closed</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.date}>Created {createdLabel}</Text>
         </View>
         <View style={styles.rolePill}>

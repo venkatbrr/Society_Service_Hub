@@ -8,6 +8,7 @@ import {
     Modal,
     ScrollView,
     StyleSheet,
+    Switch,
     Text,
     TextInput,
     TouchableOpacity,
@@ -119,6 +120,18 @@ export default function FundDetailScreen() {
       setLoading(false);
     }
   }, [id, router]);
+
+  const handleToggleFundStatus = async (isOpen: boolean) => {
+    if (!fund) return;
+    try {
+      const { error } = await supabase.rpc('set_fund_closed', { p_event_id: fund.id, p_closed: !isOpen });
+      if (error) throw error;
+      setFund((prev) => (prev ? { ...prev, is_closed: !isOpen } : null));
+      Toast.show({ type: 'success', text1: isOpen ? 'Fund opened' : 'Fund closed' });
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'Error', text2: err.message });
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -318,6 +331,27 @@ export default function FundDetailScreen() {
           <Text style={styles.fundTitle}>{fund.title}</Text>
           <Text style={styles.fundDesc}>{fund.description || 'Transparent community fund tracking for every resident.'}</Text>
 
+          {appRole === 'community_lead' && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface2, padding: 12, borderRadius: 12, marginBottom: 12 }}>
+              <View>
+                <Text style={{ fontSize: 15, fontWeight: '500', color: colors.text }}>
+                  {fund.is_closed ? 'Fund closed' : 'Fund open'}
+                </Text>
+              </View>
+              <Switch
+                value={!fund.is_closed}
+                onValueChange={handleToggleFundStatus}
+                trackColor={{ false: Verandah.border, true: Verandah.primary }}
+              />
+            </View>
+          )}
+
+          {fund.is_closed && (
+            <View style={{ backgroundColor: Verandah.warning + '20', padding: 12, borderRadius: 12, marginBottom: 12 }}>
+              <Text style={{ color: Verandah.warning, fontSize: 14, fontWeight: '500' }}>This fund is closed. No new transactions can be recorded.</Text>
+            </View>
+          )}
+
           <View style={styles.roleSummaryCard}>
             <Text style={styles.roleSummaryTitle}>You are a {formatRoleForFundContext(fundRole)}</Text>
             <Text style={styles.roleSummaryText}>Treasurers: {roleSummary.treasurers || 'Not assigned yet'}</Text>
@@ -357,16 +391,16 @@ export default function FundDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                { backgroundColor: permissions.canAddContribution ? colors.secondary : colors.surface2 },
+                { backgroundColor: permissions.canAddContribution && !fund.is_closed ? colors.secondary : colors.surface2 },
               ]}
               onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=income`)}
-              disabled={!permissions.canAddContribution}
+              disabled={!permissions.canAddContribution || fund.is_closed}
             >
               <Text style={styles.actionIcon}>{APP_EMOJIS.contribution}</Text>
               <Text
                 style={[
                   styles.actionButtonText,
-                  { color: permissions.canAddContribution ? '#FFF' : colors.textMuted },
+                  { color: permissions.canAddContribution && !fund.is_closed ? '#FFF' : colors.textMuted },
                 ]}
               >
                 Add Contribution
@@ -376,16 +410,16 @@ export default function FundDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                { backgroundColor: permissions.canAddExpense ? colors.accent : colors.surface2 },
+                { backgroundColor: permissions.canAddExpense && !fund.is_closed ? colors.accent : colors.surface2 },
               ]}
               onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=expense`)}
-              disabled={!permissions.canAddExpense}
+              disabled={!permissions.canAddExpense || fund.is_closed}
             >
               <Text style={styles.actionIcon}>{APP_EMOJIS.expense}</Text>
               <Text
                 style={[
                   styles.actionButtonText,
-                  { color: permissions.canAddExpense ? '#FFF' : colors.textMuted },
+                  { color: permissions.canAddExpense && !fund.is_closed ? '#FFF' : colors.textMuted },
                 ]}
               >
                 Add Expense
@@ -443,6 +477,11 @@ export default function FundDetailScreen() {
                   value={searchTreasurer}
                   onChangeText={setSearchTreasurer}
                 />
+                {!searchTreasurer.trim() && availableTreasurers.length > 3 && (
+                  <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: 12, marginLeft: 4 }}>
+                    Type to search all residents...
+                  </Text>
+                )}
                 {availableTreasurers
                   .filter(
                     (member) =>
@@ -451,6 +490,7 @@ export default function FundDetailScreen() {
                       (member.email || '').toLowerCase().includes(searchTreasurer.toLowerCase()) ||
                       (member.flat_number || '').toLowerCase().includes(searchTreasurer.toLowerCase())
                   )
+                  .slice(0, searchTreasurer.trim() ? undefined : 3)
                   .map((member) => (
                     <View key={member.id} style={styles.roleRow}>
                       <View style={styles.roleInfo}>
@@ -528,6 +568,11 @@ export default function FundDetailScreen() {
                   value={searchCollector}
                   onChangeText={setSearchCollector}
                 />
+                {!searchCollector.trim() && availableCollectors.length > 3 && (
+                  <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: 12, marginLeft: 4 }}>
+                    Type to search all residents...
+                  </Text>
+                )}
                 {availableCollectors
                   .filter(
                     (member) =>
@@ -536,6 +581,7 @@ export default function FundDetailScreen() {
                       (member.email || '').toLowerCase().includes(searchCollector.toLowerCase()) ||
                       (member.flat_number || '').toLowerCase().includes(searchCollector.toLowerCase())
                   )
+                  .slice(0, searchCollector.trim() ? undefined : 3)
                   .map((member) => (
                     <View key={member.id} style={styles.roleRow}>
                       <View style={styles.roleInfo}>
@@ -585,32 +631,57 @@ export default function FundDetailScreen() {
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Contributions</Text>
             <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>{incomeTransactions.length} entries</Text>
           </View>
-          {incomeTransactions.map((transaction) => (
-            <View key={transaction.id} style={styles.transactionRow}>
-              <View style={[styles.avatar, { backgroundColor: Verandah.accentSoft }]}>
-                <Text style={styles.statusEmoji}>{APP_EMOJIS.contribution}</Text>
-              </View>
-              <View style={styles.transMain}>
-                <Text style={[styles.transName, { color: colors.text }]}>
-                  {transaction.contributor_user_id
-                    ? profileNames.get(transaction.contributor_user_id) ?? 'Resident'
-                    : transaction.title || 'Contribution'}
-                </Text>
-                <Text style={[styles.transDate, { color: colors.textMuted }]}>
-                  {(() => {
-                    if (!transaction.contributor_user_id) {
-                      return new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
-                    }
+          {incomeTransactions.map((transaction) => {
+            const RowContent = (
+              <>
+                <View style={[styles.avatar, { backgroundColor: Verandah.accentSoft }]}>
+                  <Text style={styles.statusEmoji}>{APP_EMOJIS.contribution}</Text>
+                </View>
+                <View style={styles.transMain}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={[styles.transName, { color: colors.text }]}>
+                      {transaction.contributor_user_id
+                        ? profileNames.get(transaction.contributor_user_id) ?? 'Resident'
+                        : transaction.title || 'Contribution'}
+                    </Text>
+                    {permissions.canAddContribution && (
+                      <Ionicons name="pencil" size={13} color={colors.textMuted} />
+                    )}
+                  </View>
+                  <Text style={[styles.transDate, { color: colors.textMuted }]}>
+                    {(() => {
+                      if (!transaction.contributor_user_id) {
+                        return new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
+                      }
 
-                    const flat = profileFlats.get(transaction.contributor_user_id);
-                    const dateText = new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
-                    return flat ? `Flat ${flat} · ${dateText}` : dateText;
-                  })()}
-                </Text>
+                      const flat = profileFlats.get(transaction.contributor_user_id);
+                      const dateText = new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
+                      return flat ? `Flat ${flat} · ${dateText}` : dateText;
+                    })()}
+                  </Text>
+                </View>
+                <Rupees amount={Number(transaction.amount)} size="sm" tone="in" showSign={true} />
+              </>
+            );
+
+            if (permissions.canAddContribution) {
+              return (
+                <TouchableOpacity
+                  key={transaction.id}
+                  style={styles.transactionRow}
+                  onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=income&transaction_id=${transaction.id}`)}
+                >
+                  {RowContent}
+                </TouchableOpacity>
+              );
+            }
+
+            return (
+              <View key={transaction.id} style={styles.transactionRow}>
+                {RowContent}
               </View>
-              <Rupees amount={Number(transaction.amount)} size="sm" tone="in" showSign={true} />
-            </View>
-          ))}
+            );
+          })}
           {incomeTransactions.length === 0 ? <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No collections logged yet.</Text> : null}
         </View>
 
@@ -725,7 +796,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 60,
-    paddingBottom: 70,
+    paddingBottom: 24,
     paddingHorizontal: 24,
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
@@ -762,15 +833,15 @@ const styles = StyleSheet.create({
   fundDesc: {
     fontSize: 15,
     color: Verandah.textSecondary,
-    marginBottom: 20,
+    marginBottom: 12,
     lineHeight: 22,
   },
   roleSummaryCard: {
     backgroundColor: Verandah.card,
-    borderRadius: 24,
-    padding: 18,
-    marginBottom: 20,
-    gap: 6,
+    borderRadius: 20,
+    padding: 14,
+    marginBottom: 12,
+    gap: 4,
     borderWidth: 0.5,
     borderColor: Verandah.border,
   },
@@ -787,8 +858,8 @@ const styles = StyleSheet.create({
   summaryGrid: {
     flexDirection: 'row',
     backgroundColor: Verandah.card,
-    borderRadius: 24,
-    padding: 18,
+    borderRadius: 20,
+    padding: 14,
     borderWidth: 0.5,
     borderColor: Verandah.border,
   },
@@ -817,9 +888,9 @@ const styles = StyleSheet.create({
   accessCard: {
     backgroundColor: Verandah.card,
     marginHorizontal: 24,
-    marginTop: -30,
-    padding: 24,
-    borderRadius: 24,
+    marginTop: -12,
+    padding: 16,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Verandah.border,
   },
@@ -844,7 +915,7 @@ const styles = StyleSheet.create({
   },
   actionsCard: {
     marginHorizontal: 24,
-    marginTop: 20,
+    marginTop: 8,
   },
   actionsRow: {
     flexDirection: 'row',
@@ -870,7 +941,7 @@ const styles = StyleSheet.create({
   },
   section: {
     paddingHorizontal: 24,
-    marginTop: 32,
+    marginTop: 16,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -897,23 +968,23 @@ const styles = StyleSheet.create({
   transactionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
     backgroundColor: Verandah.card,
-    padding: 12,
-    borderRadius: 20,
+    padding: 8,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Verandah.border,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   statusEmoji: {
-    fontSize: 16,
+    fontSize: 15,
     lineHeight: 18,
   },
   transMain: {
@@ -924,8 +995,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   transDate: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 11,
+    marginTop: 1,
   },
   statusBlock: {
     alignItems: 'flex-end',
@@ -951,9 +1022,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Verandah.card,
-    padding: 14,
-    borderRadius: 20,
-    marginBottom: 12,
+    padding: 12,
+    borderRadius: 16,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: Verandah.border,
   },

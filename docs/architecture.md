@@ -189,7 +189,7 @@ type AuthContextType = {
 | `hire_feedback` | Private per-hire resident sentiment log | User |
 | `provider_public_rating_nudges` | One-time public-rating nudge memory per resident-provider pair | User |
 | `provider_personal_notes` | Private per-resident notes for providers (one note per user-provider pair) | User |
-| `events` | Community funds | Community |
+| `events` | Community funds (includes `is_closed` flag) | Community |
 | `event_transactions` | Fund ledger entries | Community |
 | `fund_roles` | Treasurer and collector assignments per fund, optionally block-scoped via `block_id` | Community |
 | `funds_access_requests` | Resident requests to activate funds in a community | Community + platform |
@@ -220,7 +220,7 @@ The marketplace tables `resident_businesses`, `business_offerings`, and `busines
 | `platform_reject_community_request(p_request_id, p_rejection_reason)` | Reject pending community request |
 | `community_lead_remove_resident(p_target_profile_id)` | Remove a non-lead resident from the lead's community |
 | `platform_soft_remove_resident(p_target_profile_id, p_reason)` | Platform-admin soft removal |
-| `get_residents_directory(p_include_phone)` | Community resident list with conditional phone visibility |
+| `get_residents_directory(p_include_phone)` | Community resident list with conditional phone visibility (includes block scoping and email) |
 | `get_community_pulse(p_limit)` | Read-only community activity pulse aggregation for the caller's home community |
 | `get_my_community_funds_overview()` | Home-community funds totals plus caller contribution status |
 | `get_community_visits(...)` | Visit aggregation RPC |
@@ -259,6 +259,7 @@ The marketplace tables `resident_businesses`, `business_offerings`, and `busines
 | `platform_add_community_block(...)`, `platform_archive_community_block(...)` | Platform-admin block management |
 | `platform_assign_block_in_charge(...)` / `platform_remove_block_in_charge(...)` | Platform-admin block in-charge management |
 | `list_community_blocks(...)` / `list_eligible_contributors_for_collector(...)` / `get_funds_access_status(...)` | Funds-activation and block-scoped UI read APIs |
+| `set_fund_closed(p_event_id, p_is_closed)` | Community-lead RPC to close/open a fund |
 
 ### Triggers
 

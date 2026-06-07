@@ -44,12 +44,13 @@ const parseLocalDateOnly = (dateStr: string) => {
 const normalizeVisitStatus = (status: unknown) => String(status ?? '').trim().toLowerCase();
 
 export default function HomeScreen() {
-  const { segment, visitTab: visitTabParam } = useLocalSearchParams<{ segment?: string; visitTab?: 'upcoming' | 'past' }>();
+  const { segment, visitTab: visitTabParam } = useLocalSearchParams<{ segment?: string; visitTab?: 'upcoming' | 'past' | 'archived' }>();
   const [activeSegment, setActiveSegment] = useState<'providers' | 'visits'>('providers');
   const [providers, setProviders] = useState<ProviderWithInteraction[]>([]);
   const [visits, setVisits] = useState<VisitWithJoinerData[]>([]);
   const [pastVisits, setPastVisits] = useState<VisitWithJoinerData[]>([]);
-  const [visitTab, setVisitTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [archivedVisits, setArchivedVisits] = useState<VisitWithJoinerData[]>([]);
+  const [visitTab, setVisitTab] = useState<'upcoming' | 'past' | 'archived'>('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -216,6 +217,7 @@ export default function HomeScreen() {
       if (visits.length === 0) {
         setVisits([]);
         setPastVisits([]);
+        setArchivedVisits([]);
         return;
       }
 
@@ -278,16 +280,27 @@ export default function HomeScreen() {
         return visitDate >= today && status === 'upcoming';
       });
 
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
       let pastData = allVisits.filter(v => {
         const visitDate = parseLocalDateOnly(v.visit_date);
         visitDate.setHours(0, 0, 0, 0);
         const status = normalizeVisitStatus(v.status);
-        return visitDate < today || status === 'cancelled';
+        return (visitDate < today || status === 'cancelled') && visitDate >= thirtyDaysAgo;
       });
 
-      // Sort: upcoming ASC, past DESC
+      let archivedData = allVisits.filter(v => {
+        const visitDate = parseLocalDateOnly(v.visit_date);
+        visitDate.setHours(0, 0, 0, 0);
+        const status = normalizeVisitStatus(v.status);
+        return (visitDate < today || status === 'cancelled') && visitDate < thirtyDaysAgo;
+      });
+
+      // Sort: upcoming ASC, past DESC, archived DESC
       upcomingData.sort((a, b) => parseLocalDateOnly(a.visit_date).getTime() - parseLocalDateOnly(b.visit_date).getTime());
       pastData.sort((a, b) => parseLocalDateOnly(b.visit_date).getTime() - parseLocalDateOnly(a.visit_date).getTime());
+      archivedData.sort((a, b) => parseLocalDateOnly(b.visit_date).getTime() - parseLocalDateOnly(a.visit_date).getTime());
 
       // Client-side filtering for search
       if (debouncedSearchQuery) {
@@ -298,10 +311,12 @@ export default function HomeScreen() {
           v.category.toLowerCase().includes(query);
         upcomingData = upcomingData.filter(filterFn);
         pastData = pastData.filter(filterFn);
+        archivedData = archivedData.filter(filterFn);
       }
 
       setVisits(upcomingData);
       setPastVisits(pastData);
+      setArchivedVisits(archivedData);
     } catch (error: any) {
       console.error('fetchVisits error:', error);
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load visits' });
@@ -328,7 +343,7 @@ export default function HomeScreen() {
       setActiveSegment(segment);
     }
 
-    if (visitTabParam === 'upcoming' || visitTabParam === 'past') {
+    if (visitTabParam === 'upcoming' || visitTabParam === 'past' || visitTabParam === 'archived') {
       setVisitTab(visitTabParam);
     }
   }, [segment, visitTabParam]);
@@ -509,11 +524,11 @@ export default function HomeScreen() {
         />
       ) : (
         <SectionList
-          sections={groupVisitsByCategory(visitTab === 'upcoming' ? visits : pastVisits)}
+          sections={groupVisitsByCategory(visitTab === 'upcoming' ? visits : visitTab === 'past' ? pastVisits : archivedVisits)}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => {
             const displayStatus =
-              visitTab === 'past' && item.status === 'upcoming'
+              (visitTab === 'past' || visitTab === 'archived') && item.status === 'upcoming'
                 ? 'completed'
                 : (item.status as 'upcoming' | 'in_progress' | 'completed' | 'cancelled');
             return (
@@ -591,7 +606,15 @@ export default function HomeScreen() {
                     onPress={() => setVisitTab('past')}
                   >
                     <Text style={[styles.subTabText, visitTab === 'past' ? { color: Verandah.accent, fontWeight: '500' } : { color: Verandah.textMuted }]}>
-                      Past ({pastVisits.length})
+                      Recent ({pastVisits.length})
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.subTabBtn, visitTab === 'archived' && { backgroundColor: Verandah.accentSoft }]}
+                    onPress={() => setVisitTab('archived')}
+                  >
+                    <Text style={[styles.subTabText, visitTab === 'archived' ? { color: Verandah.accent, fontWeight: '500' } : { color: Verandah.textMuted }]}>
+                      Archived ({archivedVisits.length})
                     </Text>
                   </TouchableOpacity>
                 </View>

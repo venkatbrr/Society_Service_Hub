@@ -28,7 +28,7 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 
 ### Layers
 
-- **Screens** (`app/`): expo-router file-based routing. 4 bottom tabs in `app/(tabs)/` (Help, Saved, Community, Profile), onboarding and status routes such as `community-select`, `community-request`, and `community-join-block`, plus feature screens under `app/visits/`, `app/funds/`, `app/funds-access/`, `app/provider/`, `app/services/`, `app/community/`, and `app/platform/`.
+- **Screens** (`app/`): expo-router file-based routing. 4 bottom tabs in `app/(tabs)/` (Help, Saved, Community, Profile), onboarding and status routes such as `community-select`, `community-request`, and `community-join-block`, plus feature screens under `app/visits/`, `app/funds/`, `app/funds-access/`, `app/provider/`, `app/services/`, `app/community/`, `app/profile/`, and `app/platform/`.
 - **Components** (`components/`): Reusable UI — `ProviderCard`, `VisitCard`, `FundCard`, `EmptyState`, `SearchBar`, `CategoryFilter`, etc.
 - **State** (`context/`): Two React Context providers — `AuthContext` (session, profile, communityId, appRole, isCommunityLead, isPlatformAdmin) and `NotificationContext` (real-time via Supabase Realtime).
 - **Backend** (`lib/`): Supabase client (`supabase.ts`), auth helpers (`auth.ts`), auto-generated DB types (`database.types.ts`), fund role logic (`fundRoles.ts`), error utilities (`supabaseErrors.ts`).

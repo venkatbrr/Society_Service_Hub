@@ -58,7 +58,7 @@ The app targets iOS, Android, and Web from one Expo codebase.
 
 ### Main tabs (`app/(tabs)`)
 
-- `index.tsx`: Help dashboard with Providers (two-level category group filters) and Visits (grouped by category in SectionList) segments
+- `index.tsx`: Help dashboard with Providers (two-level category group filters) and Visits (grouped by category, split into Upcoming, Recent, and Archived) segments
 - `favorites.tsx`: Saved providers
 - `community.tsx`: Community tab with funds status (activation CTA, pending request, rejected, or active overview), blocks management shortcut (for leads), residents shortcut, and community info
 - `profile.tsx`: Personal hub for identity, reminders shortcut, recent service history, and sign-out
@@ -72,6 +72,7 @@ The app targets iOS, Android, and Web from one Expo codebase.
 - `/community-join-block`, `/community/blocks`
 - `/hire-feedback/[hireId]`
 - `/services`, `/services/add`, `/services/[id]`
+- `/profile/edit`
 - `/platform/approvals`, `/platform/communities`, `/platform/community/[id]`, `/platform/funds-requests`, `/platform/funds-access/[requestId]`
 
 ### Removed route area
@@ -113,7 +114,7 @@ Authenticated with community -> /(tabs)
 - Residents can create shared service visits and manage participation; visit categories also include Photography and Decoration
 - Only the creator can move a visit between status values and reschedule an upcoming visit; rescheduling updates the date/time and emits a `visit_rescheduled` community notification to other residents
 - Visit joiners can reuse their saved flat number in the join modal and edited flat numbers are formatted to uppercase without spaces or hyphens on blur
-- Past visits are shown without an `upcoming` status badge even when stale visit status values exist
+- Recent (Past) and Archived visits are shown without an `upcoming` status badge even when stale visit status values exist
 - The Help tab preserves segment and visit-subtab state through route params
 - Provider and visit search inputs are debounced (300 ms) to avoid query-per-keystroke on Supabase
 - Service Visits are displayed grouped by category (SectionList) instead of a horizontal filter strip; each section header shows the category emoji (via `getServiceCategoryEmoji`), name, and a visit count badge; sections are sorted by count (busiest first) and empty categories are hidden automatically
@@ -126,6 +127,8 @@ Authenticated with community -> /(tabs)
 - Community funds live in `events`
 - Treasurers and collectors are assigned through `fund_roles`
 - Ledger rows live in `event_transactions`
+- Existing contributions can be edited by collectors and treasurers
+- Community leads can mark funds as 'closed' to block further transactions and edits
 - The Community tab funds overview banner uses the bundled JPEG asset `assets/images/funds_bg.jpg`; mismatched static-image extensions can break Android release builds
 - The intended product rule is community-lead-administered funds, though some fund code still tolerates a legacy `community_admin` string internally
 
@@ -157,6 +160,11 @@ Authenticated with community -> /(tabs)
 - Reminders can be mapped or remapped to any provider shown in the saved provider picker list, with picker search by provider name or phone number
 - Home and Profile both surface due-soon reminders
 - Due reminders generate `service_reminder` notifications through the daily scheduler flow
+
+### Profile & Directory
+
+- Residents can edit their full name and email address. Email updates require verification.
+- The residents directory displays residents grouped by block when `blocks_enabled` is true, along with email addresses and conditionally visible phone numbers.
 
 ### Cross-Community Federation (Backend Active, UI Deferred)
 
