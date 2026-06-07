@@ -51,6 +51,7 @@ export type Database = {
           address: string | null
           approximate_units: string | null
           area: string | null
+          block_label: string
           blocks_enabled: boolean
           city: string | null
           code: string
@@ -65,6 +66,7 @@ export type Database = {
           address?: string | null
           approximate_units?: string | null
           area?: string | null
+          block_label?: string
           blocks_enabled?: boolean
           city?: string | null
           code: string
@@ -79,6 +81,7 @@ export type Database = {
           address?: string | null
           approximate_units?: string | null
           area?: string | null
+          block_label?: string
           blocks_enabled?: boolean
           city?: string | null
           code?: string
@@ -1925,10 +1928,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      platform_approve_community_request: {
-        Args: { p_request_id: string }
-        Returns: string
-      }
+      platform_approve_community_request:
+        | { Args: { p_request_id: string }; Returns: string }
+        | {
+            Args: {
+              p_block_label?: string
+              p_block_names?: string[]
+              p_request_id: string
+            }
+            Returns: string
+          }
       platform_approve_funds_access_request: {
         Args: { p_lead_user_id: string; p_request_id: string }
         Returns: undefined
@@ -1974,6 +1983,14 @@ export type Database = {
       }
       platform_revoke_funds_access: {
         Args: { p_community_id: string; p_revoke_reason: string }
+        Returns: undefined
+      }
+      platform_set_block_label: {
+        Args: { p_community_id: string; p_label: string }
+        Returns: undefined
+      }
+      platform_set_blocks_enabled: {
+        Args: { p_community_id: string; p_enabled: boolean }
         Returns: undefined
       }
       platform_set_community_lead: {

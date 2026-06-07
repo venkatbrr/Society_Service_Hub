@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 import { LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -101,8 +102,8 @@ function RootLayoutNav() {
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = (response.notification.request.content.data ?? {}) as {
         kind?: string;
-        hire_id?: string;
         provider_id?: string;
+        hire_id?: string;
       };
 
       if (data.kind === 'hire_feedback' && data.hire_id) {
@@ -143,6 +144,7 @@ export default function RootLayout() {
         <NotificationProvider>
           <RootLayoutNav />
           <Toast />
+          <StatusBar style="dark" />
         </NotificationProvider>
       </AuthProvider>
     </SafeAreaProvider>

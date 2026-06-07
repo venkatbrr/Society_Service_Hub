@@ -126,6 +126,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     let nextActiveRequest: ActiveCommunityRequest = null;
 
+    // Profile row was deleted from the database but the Auth session is still valid.
+    // Clear everything locally so the root layout redirects to /login.
+    if (!data) {
+      await clearLocalSession();
+      return;
+    }
+
     if (!data?.community_id) {
       const { data: requestData, error: requestError } = await supabase
         .from('community_requests')
@@ -217,6 +224,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await clearLocalSession();
         return;
       }
+
+      // getSession() only reads the locally cached JWT – it never contacts the
+      // server.  Validate that the user still exists server-side so that
+      // deleted / banned users are signed out immediately on app launch.
+      if (session) {
+        const { error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          console.warn('User no longer exists on server — signing out:', userError.message);
+          await clearLocalSession();
+          return;
+        }
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       await loadProfile(session?.user?.id, session);

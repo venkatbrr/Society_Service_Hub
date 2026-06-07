@@ -284,7 +284,7 @@ All active tables have RLS enabled.
 |-------|--------------|
 | `profiles` | Own profile or same community |
 | `community_requests` | Requester read access and platform review workflows |
-| `service_providers` | Same community; creator manages own rows |
+| `service_providers` | Same community via `get_user_community_id()`; inserts require `created_by = auth.uid()`, and creator/lead/admin policies control management |
 | `service_visits` | Same community; creator manages own rows |
 | `visit_joiners` | Same community; users manage their own joins |
 | `favorites` | User-owned only |

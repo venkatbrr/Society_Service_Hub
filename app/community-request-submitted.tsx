@@ -93,10 +93,33 @@ export default function CommunityRequestSubmittedScreen() {
     setEntering(true);
     try {
       await refreshSession();
+
+      // Check if the approved community has blocks enabled.
+      // If so, route to block/tower selection before entering the app —
+      // same as the join-via-code flow in community-select.tsx.
+      if (request?.resulting_community_id) {
+        const { data: community } = await supabase
+          .from('communities')
+          .select('blocks_enabled, block_label')
+          .eq('id', request.resulting_community_id)
+          .maybeSingle();
+
+        if (community?.blocks_enabled) {
+          const blockLabel = (community as any)?.block_label ?? 'Block';
+          router.replace({
+            pathname: '/community-join-block',
+            params: { communityId: request.resulting_community_id, blockLabel },
+          } as any);
+          return;
+        }
+      }
+
+      // No block selection needed — root layout will redirect to /(tabs)
+    } catch (error: any) {
+      Toast.show({ type: 'error', text1: 'Unable to enter community', text2: error.message });
     } finally {
       setEntering(false);
     }
-    // _layout.tsx will redirect to /(tabs) once communityId is set
   };
 
   const handleRefresh = () => {

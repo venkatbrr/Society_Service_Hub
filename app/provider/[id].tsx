@@ -73,6 +73,7 @@ export default function ProviderDetailScreen() {
   const [reviewText, setReviewText] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [personalNote, setPersonalNote] = useState('');
+  const [hasSavedPersonalNote, setHasSavedPersonalNote] = useState(false);
   const [personalNoteLoading, setPersonalNoteLoading] = useState(false);
   const [isSavingPersonalNote, setIsSavingPersonalNote] = useState(false);
   const [publicReviews, setPublicReviews] = useState<PublicReview[]>([]);
@@ -351,10 +352,13 @@ export default function ProviderDetailScreen() {
         .maybeSingle();
 
       if (error) throw error;
-      setPersonalNote(data?.note ?? '');
+      const loadedNote = data?.note ?? '';
+      setPersonalNote(loadedNote);
+      setHasSavedPersonalNote(loadedNote.trim().length > 0);
     } catch (err) {
       console.error('Error loading personal note:', err);
       setPersonalNote('');
+      setHasSavedPersonalNote(false);
     } finally {
       setPersonalNoteLoading(false);
     }
@@ -373,6 +377,7 @@ export default function ProviderDetailScreen() {
           .match({ provider_id: provider.id, user_id: user.id });
         if (deleteError) throw deleteError;
         setPersonalNote('');
+        setHasSavedPersonalNote(false);
         Toast.show({ type: 'success', text1: 'Personal note cleared' });
         return;
       }
@@ -390,6 +395,7 @@ export default function ProviderDetailScreen() {
 
       if (error) throw error;
       setPersonalNote(trimmedNote);
+      setHasSavedPersonalNote(true);
       Toast.show({ type: 'success', text1: 'Personal note saved' });
     } catch (err) {
       console.error('Error saving personal note:', err);
@@ -636,7 +642,9 @@ export default function ProviderDetailScreen() {
               {isSavingPersonalNote ? (
                 <ActivityIndicator color={colors.primaryFg} />
               ) : (
-                <Text style={[styles.submitReviewText, { color: colors.primaryFg }]}>Save personal note</Text>
+                <Text style={[styles.submitReviewText, { color: colors.primaryFg }]}>
+                  {hasSavedPersonalNote ? 'Update personal note' : 'Save personal note'}
+                </Text>
               )}
             </TouchableOpacity>
             <Text style={[styles.reviewNote, { color: colors.textMuted, fontWeight: '700' }]}>This note is visible only to you.</Text>
@@ -965,7 +973,7 @@ const styles = StyleSheet.create({
   headerCard: {
     paddingHorizontal: 20,
     paddingTop: 48,
-    paddingBottom: 16,
+    paddingBottom: 8,
     backgroundColor: Verandah.surface,
   },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
@@ -1006,7 +1014,7 @@ const styles = StyleSheet.create({
   },
   trustBanner: {
     marginHorizontal: 20,
-    marginTop: 12,
+    marginTop: 6,
     marginBottom: 12,
   },
   statsRow: {

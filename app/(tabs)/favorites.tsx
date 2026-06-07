@@ -122,6 +122,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Verandah.surface,
+    borderTopWidth: 3,
+    borderTopColor: Verandah.primary,
   },
   headerWrapper: {
     backgroundColor: Verandah.surface,
