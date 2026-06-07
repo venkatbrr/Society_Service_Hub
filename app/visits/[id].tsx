@@ -470,9 +470,11 @@ export default function VisitDetailScreen() {
                         <Text style={[styles.rescheduleBtnText, { color: colors.primary }]}>Reschedule Visit</Text>
                     </TouchableOpacity>
                 )}
-                <TouchableOpacity style={styles.cancelBtn} onPress={() => updateStatus('cancelled')}>
+                {visit.status === 'upcoming' && (
+                  <TouchableOpacity style={styles.cancelBtn} onPress={() => updateStatus('cancelled')}>
                     <Text style={[styles.cancelBtnText, { color: colors.accent }]}>Cancel Visit</Text>
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                )}
             </View>
         ) : visit.has_user_joined ? (
             <TouchableOpacity style={styles.leaveBtn} onPress={handleLeave}>
@@ -658,7 +660,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scrollContent: {
-    paddingBottom: 120,
+    paddingBottom: 88,
   },
   header: {
     paddingHorizontal: 24,
@@ -817,7 +819,7 @@ const styles = StyleSheet.create({
   },
   joinersSection: {
     paddingHorizontal: 24,
-    marginBottom: 40,
+    marginBottom: 12,
   },
   joinerList: {
     borderRadius: 24,

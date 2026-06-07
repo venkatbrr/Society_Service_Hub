@@ -23,7 +23,7 @@ export function getEffectiveFundRole(
   assignments: Tables<'fund_roles'>[],
   userId: string | null | undefined
 ): FundAccessRole {
-  if (appRole === 'admin' || appRole === 'community_admin') {
+  if (appRole === 'admin' || appRole === 'community_admin' || appRole === 'community_lead') {
     return 'admin';
   }
 
@@ -38,7 +38,7 @@ export function getFundPermissions(role: FundAccessRole) {
   return {
     canCreateFund: role === 'admin',
     canManageTreasurers: role === 'admin',
-    canManageCollectors: role === 'treasurer',
+    canManageCollectors: role === 'admin' || role === 'treasurer',
     canAddContribution: role === 'admin' || role === 'treasurer' || role === 'collector',
     canAddExpense: role === 'admin' || role === 'treasurer',
   };

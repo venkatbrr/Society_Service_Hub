@@ -188,7 +188,7 @@ export default function AddVisitScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View style={[styles.section, styles.providerSection]}>
           <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>1. WHICH PROVIDER IS VISITING?</Text>
           <ProviderSelector
             communityId={communityId as string}
@@ -205,7 +205,7 @@ export default function AddVisitScreen() {
           />
         </View>
 
-        <View style={styles.section}>
+        <View style={[styles.section, styles.detailsSection]}>
           <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>2. VISIT DETAILS</Text>
 
           <View style={styles.inputGroup}>
@@ -346,7 +346,7 @@ export default function AddVisitScreen() {
             </View>
           </View>
 
-          <View style={styles.inputGroup}>
+          <View style={[styles.inputGroup, styles.lastInputGroup]}>
             <Text style={[styles.label, { color: colors.text }]}>Description (optional)</Text>
             <TextInput
               style={[styles.textArea, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
@@ -438,6 +438,12 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 32,
   },
+  providerSection: {
+    marginBottom: 0,
+  },
+  detailsSection: {
+    marginBottom: 0,
+  },
   sectionTitle: {
     fontSize: 12,
     fontWeight: '500',
@@ -446,6 +452,9 @@ const styles = StyleSheet.create({
   },
   inputGroup: {
     marginBottom: 20,
+  },
+  lastInputGroup: {
+    marginBottom: 6,
   },
   label: {
     fontSize: 11,
@@ -478,7 +487,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     gap: 12,
-    marginBottom: 32,
+    marginBottom: 6,
     alignItems: 'center',
     borderWidth: 1,
   },

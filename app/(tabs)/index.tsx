@@ -41,6 +41,8 @@ const parseLocalDateOnly = (dateStr: string) => {
   return new Date(year, month - 1, day);
 };
 
+const normalizeVisitStatus = (status: unknown) => String(status ?? '').trim().toLowerCase();
+
 export default function HomeScreen() {
   const { segment, visitTab: visitTabParam } = useLocalSearchParams<{ segment?: string; visitTab?: 'upcoming' | 'past' }>();
   const [activeSegment, setActiveSegment] = useState<'providers' | 'visits'>('providers');
@@ -248,8 +250,8 @@ export default function HomeScreen() {
 
       const allVisits: VisitWithJoinerData[] = visits.map((sv: any) => {
         const creator = profileMap[sv.created_by] || {};
-        
-        let adjustedStatus = sv.status;
+
+        let adjustedStatus = normalizeVisitStatus(sv.status);
         const visitDate = parseLocalDateOnly(sv.visit_date);
         visitDate.setHours(0, 0, 0, 0);
         if (visitDate < today && adjustedStatus === 'upcoming') {
@@ -267,17 +269,20 @@ export default function HomeScreen() {
         };
       });
 
-      // Split into upcoming (date >= today) and past (date < today)
+      // Split into upcoming and past buckets.
+      // Cancelled visits move to past immediately, regardless of date.
       let upcomingData = allVisits.filter(v => {
         const visitDate = parseLocalDateOnly(v.visit_date);
         visitDate.setHours(0, 0, 0, 0);
-        return visitDate >= today && (v.status === 'upcoming' || v.status === 'cancelled');
+        const status = normalizeVisitStatus(v.status);
+        return visitDate >= today && status === 'upcoming';
       });
 
       let pastData = allVisits.filter(v => {
         const visitDate = parseLocalDateOnly(v.visit_date);
         visitDate.setHours(0, 0, 0, 0);
-        return visitDate < today;
+        const status = normalizeVisitStatus(v.status);
+        return visitDate < today || status === 'cancelled';
       });
 
       // Sort: upcoming ASC, past DESC

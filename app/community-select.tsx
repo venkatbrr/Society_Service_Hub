@@ -43,15 +43,17 @@ export default function CommunitySelectScreen() {
 
       const joinedCommunityId = (data as any)?.community_id as string | undefined;
       let shouldPickBlock = false;
+      let blockLabel = 'Block';
 
       if (joinedCommunityId) {
         const { data: joinedCommunity } = await supabase
           .from('communities')
-          .select('blocks_enabled, funds_enabled')
+          .select('blocks_enabled, funds_enabled, block_label')
           .eq('id', joinedCommunityId)
           .maybeSingle();
 
-        shouldPickBlock = Boolean(joinedCommunity?.funds_enabled && joinedCommunity?.blocks_enabled);
+        shouldPickBlock = Boolean(joinedCommunity?.blocks_enabled);
+        blockLabel = (joinedCommunity as any)?.block_label ?? 'Block';
       }
 
       await refreshSession();
@@ -61,7 +63,7 @@ export default function CommunitySelectScreen() {
         text2: `You joined ${(data as any)?.community_name ?? 'the community'}.`,
       });
       if (shouldPickBlock && joinedCommunityId) {
-        router.replace({ pathname: '/community-join-block', params: { communityId: joinedCommunityId } } as any);
+        router.replace({ pathname: '/community-join-block', params: { communityId: joinedCommunityId, blockLabel } } as any);
       } else {
         router.replace('/(tabs)');
       }

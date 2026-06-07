@@ -7,14 +7,14 @@ import { Avatar } from '../../components/Avatar';
 import { BlockPicker } from '../../components/BlockPicker';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
-import { APP_EMOJIS } from '../../constants/emojis';
 import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, signOut, appRole, communityId, fundsEnabled, blocksEnabled, myBlockId, refreshSession } = useAuth();
+  const { user, signOut, appRole, communityId, fundsEnabled, blocksEnabled, blockLabel, myBlockId, refreshSession } = useAuth();
+  const blockLabelLower = blockLabel.toLowerCase();
   const [dueSoonCount, setDueSoonCount] = useState<number>(0);
   const [recentServices, setRecentServices] = useState<Array<{
     id: string;
@@ -27,6 +27,7 @@ export default function ProfileScreen() {
   const [blockPickerVisible, setBlockPickerVisible] = useState(false);
   const [nextBlockId, setNextBlockId] = useState<string | null>(myBlockId);
   const [blockName, setBlockName] = useState<string>('not set');
+  const [fundRoleLabel, setFundRoleLabel] = useState<'Treasurer' | 'Collector' | null>(null);
 
   const colors = Verandah;
   const roleLabel = (appRole ?? 'resident').charAt(0).toUpperCase() + (appRole ?? 'resident').slice(1);
@@ -85,6 +86,37 @@ export default function ProfileScreen() {
     fetchRecentServices();
   }, [user]);
 
+  useEffect(() => {
+    const loadFundRole = async () => {
+      if (!user?.id || !communityId || !fundsEnabled) {
+        setFundRoleLabel(null);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('fund_roles')
+        .select('role, events!inner(community_id)')
+        .eq('user_id', user.id)
+        .eq('events.community_id', communityId);
+
+      if (error) {
+        setFundRoleLabel(null);
+        return;
+      }
+
+      const roles = new Set((data ?? []).map((row: any) => row.role));
+      if (roles.has('treasurer')) {
+        setFundRoleLabel('Treasurer');
+      } else if (roles.has('collector')) {
+        setFundRoleLabel('Collector');
+      } else {
+        setFundRoleLabel(null);
+      }
+    };
+
+    loadFundRole();
+  }, [communityId, fundsEnabled, user?.id]);
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -94,14 +126,18 @@ export default function ProfileScreen() {
   };
 
   const saveMyBlock = async () => {
+    if (!nextBlockId) {
+      Toast.show({ type: 'error', text1: `Please select a ${blockLabelLower}` });
+      return;
+    }
     try {
       const { error } = await supabase.rpc('set_my_block', { p_block_id: nextBlockId });
       if (error) throw error;
       await refreshSession();
       setBlockPickerVisible(false);
-      Toast.show({ type: 'success', text1: 'Block updated' });
+      Toast.show({ type: 'success', text1: `${blockLabel} updated` });
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: 'Unable to update block', text2: error.message });
+      Toast.show({ type: 'error', text1: `Unable to update ${blockLabelLower}`, text2: error.message });
     }
   };
 
@@ -129,6 +165,11 @@ export default function ProfileScreen() {
                   You are: {roleLabel}
                 </Text>
               </View>
+              {fundRoleLabel ? (
+                <View style={styles.roleBadge}>
+                  <Text style={styles.roleBadgeText}>Fund access: {fundRoleLabel}</Text>
+                </View>
+              ) : null}
             </View>
           </View>
         </View>
@@ -189,14 +230,14 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
-        {fundsEnabled && blocksEnabled && communityId ? (
+        {blocksEnabled && communityId ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="cube-outline" size={18} color={Verandah.textTertiary} />
-              <Text style={styles.sectionTitle}>Your block</Text>
+              <Text style={styles.sectionTitle}>Your {blockLabelLower}</Text>
             </View>
             <View style={styles.blockRow}>
-              <Text style={styles.blockValue}>Your block: {blockName}</Text>
+              <Text style={styles.blockValue}>Your {blockLabelLower}: {blockName}</Text>
               <TouchableOpacity style={styles.blockAction} onPress={() => setBlockPickerVisible(true)}>
                 <Text style={styles.blockActionText}>{myBlockId ? 'Change' : 'Set'}</Text>
               </TouchableOpacity>
@@ -218,8 +259,8 @@ export default function ProfileScreen() {
       <Modal visible={blockPickerVisible} transparent animationType="slide" onRequestClose={() => setBlockPickerVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: Verandah.card }]}>
-            <Text style={styles.modalTitle}>Set your block</Text>
-            {communityId ? <BlockPicker value={nextBlockId} onChange={setNextBlockId} communityId={communityId} /> : null}
+            <Text style={styles.modalTitle}>Set your {blockLabelLower}</Text>
+            {communityId ? <BlockPicker value={nextBlockId} onChange={setNextBlockId} communityId={communityId} label={blockLabel} hideAllResidents={true} /> : null}
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalSecondary} onPress={() => setBlockPickerVisible(false)}>
                 <Text style={styles.modalSecondaryText}>Cancel</Text>

@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -27,7 +28,7 @@ import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib
 type FundContext = Pick<Tables<'events'>, 'id' | 'community_id' | 'title'> & {
   community: Pick<Tables<'communities'>, 'funds_enabled' | 'blocks_enabled'> | null;
   fund_roles: Tables<'fund_roles'>[];
-  event_transactions: Pick<Tables<'event_transactions'>, 'contributor_user_id' | 'type'>[];
+  event_transactions: Pick<Tables<'event_transactions'>, 'id' | 'contributor_user_id' | 'type'>[];
 };
 
 type EligibleContributor = {
@@ -38,7 +39,7 @@ type EligibleContributor = {
 };
 
 export default function AddTransactionScreen() {
-  const { event_id, type: initialType } = useLocalSearchParams();
+  const { event_id, type: initialType, transaction_id } = useLocalSearchParams();
   const { user, appRole, myBlockId, refreshSession } = useAuth();
   const router = useRouter();
   const colors = {
@@ -62,6 +63,7 @@ export default function AddTransactionScreen() {
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isFetchingContext, setIsFetchingContext] = useState(true);
   const [showBlockPrompt, setShowBlockPrompt] = useState(false);
   const [selectedMyBlock, setSelectedMyBlock] = useState<string | null>(myBlockId ?? null);
@@ -78,10 +80,13 @@ export default function AddTransactionScreen() {
 
         if (error) throw error;
 
-        const [rolesResult, transactionsResult, contributorsResult] = await Promise.all([
+        const [rolesResult, transactionsResult, contributorsResult, existingTxResult] = await Promise.all([
           supabase.from('fund_roles').select('*').eq('event_id', data.id),
-          supabase.from('event_transactions').select('contributor_user_id, type').eq('event_id', data.id),
+          supabase.from('event_transactions').select('id, contributor_user_id, type').eq('event_id', data.id),
           supabase.rpc('list_eligible_contributors_for_collector', { p_event_id: data.id }),
+          transaction_id
+            ? supabase.from('event_transactions').select('*').eq('id', transaction_id as string).single()
+            : Promise.resolve({ data: null, error: null } as any),
         ]);
 
         if (rolesResult.error && !isMissingFundSchemaError(rolesResult.error)) {
@@ -93,13 +98,9 @@ export default function AddTransactionScreen() {
         }
 
         if (contributorsResult.error) throw contributorsResult.error;
+        if (existingTxResult.error) throw existingTxResult.error;
 
         const visibleMembers = (contributorsResult.data ?? []) as EligibleContributor[];
-        const paidMemberIds = new Set(
-          visibleMembers.filter((member) => member.has_contributed).map((member) => member.user_id)
-        );
-        const defaultMember = visibleMembers.find((member) => !paidMemberIds.has(member.user_id));
-
         setFund({
           ...data,
           community: (data as any).community ?? null,
@@ -107,7 +108,25 @@ export default function AddTransactionScreen() {
           event_transactions: transactionsResult.data ?? [],
         });
         setMembers(visibleMembers);
-        setSelectedMemberId(defaultMember?.user_id ?? null);
+
+        const existingTx = existingTxResult.data;
+        if (existingTx) {
+          setAmount(existingTx.amount.toString());
+          setType(existingTx.type as 'income' | 'expense');
+          if (existingTx.type === 'expense') {
+            setTitle(existingTx.title || '');
+          }
+          setNotes(existingTx.description || '');
+          if (existingTx.type === 'income') {
+            setSelectedMemberId(existingTx.contributor_user_id);
+          }
+        } else {
+          const paidMemberIdsSet = new Set(
+            visibleMembers.filter((member) => member.has_contributed).map((member) => member.user_id)
+          );
+          const defaultMember = visibleMembers.find((member) => !paidMemberIdsSet.has(member.user_id));
+          setSelectedMemberId(defaultMember?.user_id ?? null);
+        }
 
         if (rolesResult.error || transactionsResult.error) {
           Toast.show({ type: 'error', text1: 'Funds partially loaded', text2: getMissingFundSchemaMessage() });
@@ -127,7 +146,7 @@ export default function AddTransactionScreen() {
     };
 
     loadContext();
-  }, [event_id, router]);
+  }, [event_id, transaction_id, router]);
 
   useEffect(() => {
     setSelectedMyBlock(myBlockId ?? null);
@@ -146,10 +165,10 @@ export default function AddTransactionScreen() {
     () =>
       new Set(
         (fund?.event_transactions ?? [])
-          .filter((transaction) => transaction.type === 'income' && transaction.contributor_user_id)
+          .filter((transaction) => transaction.type === 'income' && transaction.contributor_user_id && transaction.id !== transaction_id)
           .map((transaction) => transaction.contributor_user_id as string)
       ),
-    [fund?.event_transactions]
+    [fund?.event_transactions, transaction_id]
   );
 
   const fundsInactive = Boolean(fund && !fund.community?.funds_enabled);
@@ -185,6 +204,8 @@ export default function AddTransactionScreen() {
   }, [fund?.community?.blocks_enabled, isFetchingContext, myBlockId, permissions.canAddContribution, type]);
 
   const handleChangeType = (nextType: 'income' | 'expense') => {
+    if (transaction_id) return;
+
     if (nextType === 'income' && !permissions.canAddContribution) {
       Toast.show({ type: 'error', text1: 'Access denied', text2: 'Only collectors or treasurers can add contributions' });
       return;
@@ -198,6 +219,48 @@ export default function AddTransactionScreen() {
     setType(nextType);
     setTitle('');
     setNotes('');
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      type === 'income' ? 'Delete contribution?' : 'Delete expense?',
+      type === 'income'
+        ? 'Are you sure you want to delete this contribution? The resident will be marked as unpaid.'
+        : 'Are you sure you want to delete this expense? This will permanently remove it from the fund ledger.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setIsDeleting(true);
+            try {
+              const { error } = await supabase
+                .from('event_transactions')
+                .delete()
+                .eq('id', transaction_id as string);
+
+              if (error) throw error;
+
+              Toast.show({
+                type: 'success',
+                text1: type === 'income' ? 'Contribution deleted' : 'Expense deleted',
+                text2: 'The fund ledger was updated successfully.',
+              });
+              router.back();
+            } catch (error: any) {
+              Toast.show({
+                type: 'error',
+                text1: 'Error deleting',
+                text2: error.message,
+              });
+            } finally {
+              setIsDeleting(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleSave = async () => {
@@ -236,11 +299,10 @@ export default function AddTransactionScreen() {
     setIsLoading(true);
     try {
       const memberName = members.find((member) => member.user_id === selectedMemberId)?.full_name?.trim() || 'Resident';
-      const payload =
+      const basePayload =
         type === 'income'
           ? {
               event_id: event_id as string,
-              created_by: user?.id as string,
               amount: Number(amount),
               type,
               title: memberName,
@@ -250,7 +312,6 @@ export default function AddTransactionScreen() {
             }
           : {
               event_id: event_id as string,
-              created_by: user?.id as string,
               amount: Number(amount),
               type,
               title: title.trim(),
@@ -259,14 +320,18 @@ export default function AddTransactionScreen() {
               contributor_user_id: null,
             };
 
-      const { error } = await supabase.from('event_transactions').insert(payload);
+      const { error } = transaction_id
+        ? await supabase.from('event_transactions').update(basePayload).eq('id', transaction_id as string)
+        : await supabase.from('event_transactions').insert({ ...basePayload, created_by: user?.id as string });
 
       if (error) throw error;
 
       Toast.show({
         type: 'success',
-        text1: type === 'income' ? 'Contribution added' : 'Expense added',
-        text2: type === 'income' ? `${memberName} is now marked as paid.` : 'The fund ledger was updated successfully.',
+        text1: transaction_id
+          ? type === 'income' ? 'Contribution updated' : 'Expense updated'
+          : type === 'income' ? 'Contribution added' : 'Expense added',
+        text2: type === 'income' ? `${memberName} status updated.` : 'The fund ledger was updated successfully.',
       });
       router.back();
     } catch (error: any) {
@@ -309,29 +374,35 @@ export default function AddTransactionScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.title}>{type === 'income' ? 'Record contribution' : 'Record expense'}</Text>
+          <Text style={styles.title}>
+            {transaction_id
+              ? type === 'income' ? 'Edit contribution' : 'Edit expense'
+              : type === 'income' ? 'Record contribution' : 'Record expense'}
+          </Text>
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>
             {fund.title} - You are a {formatRole(fundRole)}
           </Text>
         </View>
 
         <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.tabContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.tabContainer, { backgroundColor: colors.card, borderColor: colors.border, opacity: transaction_id ? 0.6 : 1 }]}>
             <TouchableOpacity
               style={[
                 styles.tab,
-                type === 'income' ? { backgroundColor: colors.surface } : {},
+                type === 'income' ? styles.tabActiveIncome : {},
               ]}
               onPress={() => handleChangeType('income')}
+              disabled={!!transaction_id}
             >
               <Text style={[styles.tabText, { color: type === 'income' ? colors.primary : colors.textMuted }]}>Contribution</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.tab,
-                type === 'expense' ? { backgroundColor: colors.surface } : {},
+                type === 'expense' ? styles.tabActiveExpense : {},
               ]}
               onPress={() => handleChangeType('expense')}
+              disabled={!!transaction_id}
             >
               <Text style={[styles.tabText, { color: type === 'expense' ? colors.accent : colors.textMuted }]}>Expense</Text>
             </TouchableOpacity>
@@ -340,13 +411,15 @@ export default function AddTransactionScreen() {
           <View style={[styles.notice, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={styles.noticeIcon}>{APP_EMOJIS.info}</Text>
             <Text style={[styles.noticeText, { color: colors.textMuted }]}>
-              {type === 'income'
-                ? permissions.canAddContribution
-                  ? 'Select a resident, add the received amount, and they will appear as paid in the fund.'
-                  : 'Only collectors or treasurers can add contributions.'
-                : permissions.canAddExpense
-                  ? 'Add the expense name, amount, and optional note for transparent bookkeeping.'
-                  : 'Only treasurers can add expenses.'}
+              {transaction_id
+                ? 'You are editing this transaction. You can modify the amount, title, and notes.'
+                : type === 'income'
+                  ? permissions.canAddContribution
+                    ? 'Select a resident, add the received amount, and they will appear as paid in the fund.'
+                    : 'Only collectors or treasurers can add contributions.'
+                  : permissions.canAddExpense
+                    ? 'Add the expense name, amount, and optional note for transparent bookkeeping.'
+                    : 'Only treasurers can add expenses.'}
             </Text>
           </View>
 
@@ -394,8 +467,26 @@ export default function AddTransactionScreen() {
                       <Text style={[styles.memberName, { color: colors.text }]}>{member.full_name?.trim() || 'Resident'}</Text>
                       <Text style={[styles.memberMeta, { color: colors.textMuted }]}>{member.flat_no ? `Flat ${member.flat_no}` : 'Flat not set'}</Text>
                     </View>
-                    <View style={styles.memberStatus}>
-                      <Text style={[styles.memberStatusText, { color: isPaid ? colors.secondary : colors.textMuted }]}>
+                    <View
+                      style={[
+                        styles.memberStatus,
+                        isPaid
+                          ? styles.memberStatusPaid
+                          : isSelected
+                            ? styles.memberStatusSelected
+                            : styles.memberStatusPending,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.memberStatusText,
+                          isPaid
+                            ? styles.memberStatusTextPaid
+                            : isSelected
+                              ? styles.memberStatusTextSelected
+                              : styles.memberStatusTextPending,
+                        ]}
+                      >
                         {isPaid ? 'Paid' : isSelected ? 'Selected' : 'Pending'}
                       </Text>
                     </View>
@@ -432,29 +523,70 @@ export default function AddTransactionScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.card }]}>
+      <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.card, gap: 12 }]}>
         <TouchableOpacity
           onPress={handleSave}
-          disabled={isLoading}
+          disabled={isLoading || isDeleting}
           activeOpacity={0.85}
           style={[styles.saveButton, { backgroundColor: type === 'income' ? colors.primary : colors.accent }]}
         >
           {isLoading ? (
             <ActivityIndicator color={Verandah.primaryFg} />
           ) : (
-            <Text style={styles.saveButtonText}>{type === 'income' ? 'Save Contribution' : 'Save Expense'}</Text>
+            <Text style={styles.saveButtonText}>
+              {transaction_id
+                ? type === 'income' ? 'Update Contribution' : 'Update Expense'
+                : type === 'income' ? 'Save Contribution' : 'Save Expense'}
+            </Text>
           )}
         </TouchableOpacity>
+
+        {transaction_id && (
+          <TouchableOpacity
+            onPress={handleDelete}
+            disabled={isLoading || isDeleting}
+            activeOpacity={0.85}
+            style={[styles.deleteButton, { borderColor: colors.accent, borderWidth: 1 }]}
+          >
+            {isDeleting ? (
+              <ActivityIndicator color={colors.accent} />
+            ) : (
+              <Text style={[styles.deleteButtonText, { color: colors.accent }]}>
+                {type === 'income' ? 'Delete Contribution' : 'Delete Expense'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
       <Modal visible={showBlockPrompt} transparent animationType="slide" onRequestClose={() => setShowBlockPrompt(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>Set your block to continue</Text>
-            {fund?.community_id ? <BlockPicker value={selectedMyBlock} onChange={setSelectedMyBlock} communityId={fund.community_id} /> : null}
+            {fund?.community_id ? (
+              <BlockPicker
+                value={selectedMyBlock}
+                onChange={setSelectedMyBlock}
+                communityId={fund.community_id}
+                hideAllResidents={true}
+              />
+            ) : null}
             <TouchableOpacity
-              style={[styles.modalPrimary, { backgroundColor: colors.primary }]}
+              style={[
+                styles.modalPrimary,
+                { backgroundColor: selectedMyBlock ? colors.primary : colors.surface2 },
+              ]}
+              disabled={!selectedMyBlock}
               onPress={async () => {
+                if (!selectedMyBlock) {
+                  Toast.show({
+                    type: 'error',
+                    text1: 'Select a block',
+                    text2: 'Choose your block to continue.',
+                  });
+                  return;
+                }
+
                 const { error } = await supabase.rpc('set_my_block', { p_block_id: selectedMyBlock });
                 if (error) {
                   Toast.show({ type: 'error', text1: 'Unable to set block', text2: error.message });
@@ -551,6 +683,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  tabActiveIncome: {
+    backgroundColor: Verandah.accentSoft,
+  },
+  tabActiveExpense: {
+    backgroundColor: Verandah.dangerSoft,
+  },
   noticeIcon: {
     fontSize: 18,
     lineHeight: 20,
@@ -598,12 +736,33 @@ const styles = StyleSheet.create({
   },
   memberStatus: {
     marginLeft: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: VerandahRadius.pill,
+  },
+  memberStatusPending: {
+    backgroundColor: Verandah.cardMuted,
+  },
+  memberStatusSelected: {
+    backgroundColor: Verandah.primary + '1A',
+  },
+  memberStatusPaid: {
+    backgroundColor: Verandah.accentSoft,
   },
   memberStatusText: {
     fontSize: 12,
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  memberStatusTextPending: {
+    color: Verandah.textSecondary,
+  },
+  memberStatusTextSelected: {
+    color: Verandah.primary,
+  },
+  memberStatusTextPaid: {
+    color: Verandah.accent,
   },
   footer: {
     padding: 24,
@@ -656,6 +815,17 @@ const styles = StyleSheet.create({
   modalPrimaryText: {
     color: Verandah.primaryFg,
     fontSize: 14,
+    fontWeight: '500',
+  },
+  deleteButton: {
+    height: 60,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  deleteButtonText: {
+    fontSize: 16,
     fontWeight: '500',
   },
 });

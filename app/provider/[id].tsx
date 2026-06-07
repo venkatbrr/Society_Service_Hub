@@ -1007,7 +1007,7 @@ const styles = StyleSheet.create({
   trustBanner: {
     marginHorizontal: 20,
     marginTop: 12,
-    marginBottom: 20,
+    marginBottom: 12,
   },
   statsRow: {
     flexDirection: 'row',
@@ -1032,21 +1032,21 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.border,
     alignSelf: 'stretch',
   },
-  actionGrid: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 6, paddingBottom: 8, gap: 12 },
+  actionGrid: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 0, paddingBottom: 0, marginBottom: 12, gap: 12 },
   mainActionBtn: { flex: 1, flexDirection: 'row', height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', gap: 10, elevation: 0 },
   mainActionIcon: { fontSize: 24, lineHeight: 28 },
   mainActionText: { color: Verandah.primaryFg, fontSize: 16, fontWeight: '500' },
   detailsCard: {
     backgroundColor: Verandah.card,
     marginHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 12,
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
     borderColor: Verandah.border,
   },
   historyCard: {
-    marginBottom: 10,
+    marginBottom: 12,
   },
   personalNoteCard: {
     paddingTop: 18,
@@ -1092,11 +1092,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  actionRowAlt: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8, alignItems: 'center' },
+  actionRowAlt: { paddingHorizontal: 20, paddingTop: 0, paddingBottom: 0, marginBottom: 12, alignItems: 'center' },
   altBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   altIcon: { fontSize: 20, lineHeight: 24 },
   altBtnText: { fontSize: 14, fontWeight: '500' },
-  adminControls: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 60 },
+  adminControls: { paddingHorizontal: 20, paddingTop: 0, paddingBottom: 60 },
   dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 18, borderRadius: 16, borderWidth: 1 },
   dangerIcon: { fontSize: 20, lineHeight: 24 },
   detailsMetaSection: {

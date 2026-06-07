@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -980,6 +980,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "provider_hires_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_personal_notes: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          provider_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          provider_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          provider_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_personal_notes_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "service_providers"

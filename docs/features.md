@@ -41,10 +41,10 @@ The app surface is narrower than the backend schema by design. Cross-community f
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Capture an optional first block assignment immediately after a resident joins a block-enabled community |
-| **Tables / RPCs** | Writes via RPC: `set_my_block(p_block_id)` |
-| **Business rules** | This handoff appears only after a successful join into a community where both `funds_enabled` and `blocks_enabled` are true. Picking a block is optional; users can skip and still enter the app. |
-| **Navigation** | From `/community-select` after successful join. To `/(tabs)` on save or skip. |
+| **Purpose** | Capture flat number and first block/tower assignment immediately after a resident joins a block-enabled community |
+| **Tables / RPCs** | Writes: `profiles` table updates (`flat_number`, `block_id`) |
+| **Business rules** | This handoff appears only after a successful join into a community where `blocks_enabled` is true. Entering a flat number and picking a block/tower is strictly mandatory; users cannot skip this screen. The flat number is normalized (uppercase, spaces/hyphens removed) on blur. The block/tower is selected via a dropdown. The screen title and subtitle use the community's `block_label` (Block or Tower) for dynamic labeling. |
+| **Navigation** | From `/community-select` after successful join. To `/(tabs)` on save. |
 | **Roles** | Any authenticated resident joining a block-enabled community |
 
 ### Community Request (`app/community-request.tsx`)
@@ -85,7 +85,7 @@ The app surface is narrower than the backend schema by design. Cross-community f
 |--------|---------|
 | **Purpose** | Main discovery hub with two switchable segments: Trusted Providers and Service Visits |
 | **Tables** | Reads: `service_providers`, `favorites`, `provider_hires`, `service_visits`, `visit_joiners`, `profiles`, `events`, `event_transactions` |
-| **Business rules** | Providers are sorted by `avg_rating` descending. The provider filter uses a two-level grouped navigation: a group row (All Services, Home Support, Transport & Vehicle Care, Repairs, Personal, Events, Other) followed by a category chip row that shows only categories within the selected group. Selecting a group without a specific category filters the provider query to all categories in that group using an `IN` clause, so Events + All returns only Photography, Decoration, Catering, etc. and never shows Maid. Selecting a specific category adds a single equality filter. Service Visits split into Upcoming and Past buckets based on date. Cancelled visits stay in Upcoming until their planned date passes. Past visits do not display an `upcoming` status badge even if a stale row still has `status = 'upcoming'`. The screen preserves the active segment and visit sub-tab in route params when users drill into details and return. Provider and visit data are refreshed whenever the screen regains focus so newly added records appear immediately after returning. The header includes an Invite Neighbors action beside notifications that opens the native share sheet with the current community join code. The home stack also shows `UpcomingServicesCard` and `ActiveFundTeaser` above the main list. Provider search and visit search are debounced (300 ms) to avoid firing Supabase queries on every keystroke. The `provider_hires` query is scoped to the current `communityId`. The `visit_joiners` query is scoped to the ID set of the current page of visits only. |
+| **Business rules** | Providers are sorted by `avg_rating` descending. The provider filter uses a two-level grouped navigation: a group row (All Services, Home Support, Transport & Vehicle Care, Repairs, Personal, Events, Other) followed by a category chip row that shows only categories within the selected group. Selecting a group without a specific category filters the provider query to all categories in that group using an `IN` clause, so Events + All returns only Photography, Decoration, Catering, etc. and never shows Maid. Selecting a specific category adds a single equality filter. Service Visits split into Upcoming and Past buckets based on date, with cancelled visits moving to Past immediately regardless of planned date. Past visits do not display an `upcoming` status badge even if a stale row still has `status = 'upcoming'`. The screen preserves the active segment and visit sub-tab in route params when users drill into details and return. Provider and visit data are refreshed whenever the screen regains focus so newly added records appear immediately after returning. The header includes an Invite Neighbors action beside notifications that opens the native share sheet with the current community join code. The home stack also shows `UpcomingServicesCard` and `ActiveFundTeaser` above the main list. Provider search and visit search are debounced (300 ms) to avoid firing Supabase queries on every keystroke. The `provider_hires` query is scoped to the current `communityId`. The `visit_joiners` query is scoped to the ID set of the current page of visits only. |
 | **Navigation** | To `/provider/[id]`, `/provider/add`, `/visits/[id]`, `/visits/add`, and `/notifications` |
 | **Roles** | All community members can browse and create providers or visits |
 | **Components** | `UpcomingServicesCard`, `ActiveFundTeaser`, `ProviderCard`, `VisitCard`, `SearchBar`, `CategoryFilter`, `EmptyState` |
@@ -132,23 +132,25 @@ Platform admin approval promotes one designated resident to `community_lead` and
 | **Navigation** | From the Community tab funds CTA. Returns to `/(tabs)/community` on success. |
 | **Roles** | Any resident in a community where funds are inactive |
 
-## Blocks (Optional)
+## Blocks / Towers (Optional)
 
-Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_enabled = true`.
+Blocks (or towers — the label is configurable per community) are visible when `blocks_enabled = true`. They are **decoupled from funds activation**: a platform admin can seed blocks at community creation time before any funds flow exists. Each community stores a `block_label` column (`Block` or `Tower`) that controls how the concept is named across all resident-facing UI.
 
-- Join flow: after `join_community_by_code`, users are routed to `/community-join-block` when blocks are enabled.
-- Profile override: Profile tab shows "Your block" row and block picker modal only when blocks are active.
-- Community lead setup: `/community/blocks` allows block toggling, create/rename/archive, and scoped management.
+- Admin seeding: during community approval, the platform admin can optionally add block/tower names and select the label. This sets `blocks_enabled = true` and inserts the block rows at creation time.
+- Join flow: after `join_community_by_code`, users are routed to `/community-join-block` when `blocks_enabled = true` (regardless of funds status) to mandatory enter their flat number and select their block/tower.
+- Profile override: Profile tab shows "Your block/tower" row and block picker modal only when blocks are active.
+- Community lead setup: `/community/blocks` allows block toggling, create/rename/archive, and scoped management. All text uses the community's configured label.
 - Contribution flow: contributor options are loaded through `list_eligible_contributors_for_collector(...)` so block in-charges only see eligible residents.
+- Label management: platform admins can change the block label from the community detail screen in the admin console.
 
 ### Community Blocks Management (`app/community/blocks.tsx`)
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Let a community lead enable or disable block scoping and manage the block roster |
+| **Purpose** | Let a community lead enable or disable block/tower scoping and manage the roster |
 | **Tables / RPCs** | Reads: `profiles`, `fund_roles`; RPCs: `list_community_blocks`, `set_community_blocks_enabled`, `add_community_block`, `rename_community_block`, `archive_community_block` |
-| **Business rules** | Disabling blocks removes active block scoping for residents and block in-charges but preserves historical fund contributions. The screen surfaces resident counts and in-charge counts per block to support safe cleanup and archival decisions. |
-| **Navigation** | Linked from funds-enabled community-management flows. |
+| **Business rules** | Disabling blocks removes active block scoping for residents and block in-charges but preserves historical fund contributions. The screen surfaces resident counts and in-charge counts per block to support safe cleanup and archival decisions. Re-adding a previously archived block name restores that archived block instead of failing with a duplicate-name error. All text labels use the community's `block_label` from AuthContext. |
+| **Navigation** | Linked from community-management flows. |
 | **Roles** | Community lead only |
 
 ### Tab 4: Profile - Personal Hub (`app/(tabs)/profile.tsx`)
@@ -157,7 +159,7 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | Account-level hub for user identity, personal service reminders, recent personal service history, and sign-out |
 | **Tables / RPCs** | RPCs: `get_my_due_soon_count()`, `get_my_recent_service_history(p_limit)` |
-| **Business rules** | Profile now avoids building-level sections. Community metadata and residents-directory access are rendered in the Community tab only. |
+| **Business rules** | Profile now avoids building-level sections. Community metadata and residents-directory access are rendered in the Community tab only. The settings card shows the user's community role and, when applicable, a separate fund access badge (Treasurer or Collector) so fund permissions are explicit. |
 | **Navigation** | To `/services` and `/login` after sign-out |
 | **Roles** | Personal profile only |
 
@@ -202,7 +204,7 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | Review and act on pending community creation requests |
 | **Tables** | Reads: `community_requests`, `profiles`; writes via RPC: `platform_approve_community_request`, `platform_reject_community_request`; audit RPC: `set_audit_actor` |
-| **Business rules** | Approval creates the community, generates its join code, and assigns the requester to that community as `resident`. Rejection accepts an optional rejection reason. Reviewer cards show requester name, phone, email, flat number, and submitted location details. |
+| **Business rules** | Approval creates the community, generates its join code, and assigns the requester to that community as `resident`. The admin can optionally seed blocks/towers at approval time by adding block names and selecting a label (Block or Tower); when blocks are provided, the community is created with `blocks_enabled = true` and the corresponding `block_label`. Rejection accepts an optional rejection reason. Reviewer cards show requester name, phone, email, flat number, and submitted location details. |
 
 ### Communities Directory and Detail (`app/platform/communities.tsx`, `app/platform/community/[id].tsx`)
 
@@ -210,7 +212,7 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | Inspect communities, see membership counts, and remove residents if required |
 | **Tables** | Reads: `communities`, `profiles`; writes via RPC: `platform_soft_remove_resident` |
-| **Business rules** | Platform removals are soft deletes on the profile, reset the role to resident, and preserve last-lead protection. Counts exclude removed residents. Detail screen now also includes funds status, revoke action, lead set/remove controls, block list management, and block in-charge removals across funds. The top identity card shows all active community leads for that community (or Not assigned) rather than the logged-in platform admin identity. |
+| **Business rules** | Platform removals are soft deletes on the profile, reset the role to resident, and preserve last-lead protection. Counts exclude removed residents. Detail screen now also includes funds status, revoke action, lead set/remove controls, block list management with dynamic block/tower label toggle (`platform_set_block_label`), and block in-charge removals across funds. The top identity card shows all active community leads for that community (or Not assigned) rather than the logged-in platform admin identity. |
 
 ---
 
@@ -266,7 +268,7 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | Show visit details, joiners, join and leave actions, and creator-side status controls |
 | **Tables** | Reads: `service_visits`, `visit_joiners`, `profiles`; RPC: `get_visit_joiners`; writes: `visit_joiners`, `service_visits.status` |
-| **Business rules** | Joiners can add optional flat number and note. The join modal seeds the flat number from `profile.flat_number` when available and formats edited flat numbers to uppercase without spaces or hyphens on blur. Only the creator can move the visit between `upcoming`, `in_progress`, `completed`, and `cancelled`, and can also reschedule an upcoming visit by updating date/start/end time from the detail screen. Date parsing for display and past/upcoming checks uses local date-only handling to keep status classification consistent across timezones. Back navigation preserves the prior Help tab state through route params. |
+| **Business rules** | Joiners can add optional flat number and note. The join modal seeds the flat number from `profile.flat_number` when available and formats edited flat numbers to uppercase without spaces or hyphens on blur. Only the creator can move the visit between `upcoming`, `in_progress`, `completed`, and `cancelled`, and can also reschedule an upcoming visit by updating date/start/end time from the detail screen. Rescheduling emits a community notification to other residents so they see the updated schedule. Creator action buttons for mark complete, reschedule, and cancel are shown only while the visit is still `upcoming`; once completed or cancelled, those actions are hidden. Date parsing for display and past/upcoming checks uses local date-only handling to keep status classification consistent across timezones. Back navigation preserves the prior Help tab state through route params. |
 | **Navigation** | From Help and Notifications. Can deep-link to `/provider/[id]` when the visit is linked to a provider. |
 
 ---
@@ -299,7 +301,7 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | Show ledger totals, transaction history, and role assignment controls |
 | **Tables** | Reads: `events`, `event_transactions`, `fund_roles`, `profiles`; writes: `fund_roles` |
-| **Business rules** | Treasurers can manage collectors and all transactions. Collectors can add contributions only. Residents stay view-only. Minimum treasurer count is one, max treasurers is two. Collector assignment now supports optional block-scoped assignment when blocks are enabled. Fund detail explicitly shows: contribution status by resident, collection list (income entries), and expense list. If funds are inactive, stale links render a safe inactive state instead of loading ledger actions. |
+| **Business rules** | Treasurers can manage collectors and all transactions. Collectors can add contributions only. Residents stay view-only. Community leads are treated as treasurer-level in this fund context. Minimum treasurer count is one, max treasurers is two. In block-enabled communities, collector assignment from fund detail requires choosing a specific block scope (no all-residents option in that flow). Fund detail explicitly shows a single Contributions list (income entries with contributor details) and an Expense list. If funds are inactive, stale links render a safe inactive state instead of loading ledger actions. |
 | **Navigation** | To `/funds/add-transaction?event_id=...&type=income|expense` |
 
 ### Add Transaction (`app/funds/add-transaction.tsx`)
@@ -308,8 +310,8 @@ Blocks are funds-gated and visible only when `funds_enabled = true` and `blocks_
 |--------|---------|
 | **Purpose** | Log either an income contribution or an expense against a fund |
 | **Tables** | Reads: `events`, `fund_roles`, `event_transactions`; RPC read: `list_eligible_contributors_for_collector`; writes: `event_transactions` |
-| **Business rules** | Contribution mode uses block-aware eligible contributor list and marks already-contributed residents as disabled. Expense mode requires title and amount and does not set `contributor_user_id`. If funds are inactive, screen shows a graceful error state. |
-| **Roles** | Contributions: collector or treasurer. Expenses: treasurer only. |
+| **Business rules** | Contribution mode uses block-aware eligible contributor list and marks already-contributed residents as disabled. In block-enabled communities, collectors and treasurers without a block assignment must pick a specific block before continuing to contribution mode (no all-residents option in that prompt). Expense mode requires title and amount and does not set `contributor_user_id`. If funds are inactive, screen shows a graceful error state. |
+| **Roles** | Contributions: collector, treasurer, or community lead. Expenses: treasurer or community lead. |
 
 ---
 

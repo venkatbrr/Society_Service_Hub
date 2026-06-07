@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../constants/Verandah';
@@ -16,12 +16,15 @@ type BlockWithCounts = Tables<'community_blocks'> & {
 
 export default function CommunityBlocksScreen() {
   const router = useRouter();
-  const { communityId, blocksEnabled, refreshSession } = useAuth();
+  const { communityId, blocksEnabled, blockLabel, refreshSession } = useAuth();
+  const labelLower = blockLabel.toLowerCase();
 
   const [blocks, setBlocks] = useState<BlockWithCounts[]>([]);
   const [newBlockName, setNewBlockName] = useState('');
   const [loading, setLoading] = useState(false);
   const [isBlocksEnabled, setIsBlocksEnabled] = useState(blocksEnabled);
+  const [renameBlockId, setRenameBlockId] = useState<string | null>(null);
+  const [renameBlockName, setRenameBlockName] = useState('');
 
   useEffect(() => {
     setIsBlocksEnabled(blocksEnabled);
@@ -80,7 +83,7 @@ export default function CommunityBlocksScreen() {
         if (error) throw error;
         setIsBlocksEnabled(enabled);
         await refreshSession();
-        Toast.show({ type: 'success', text1: enabled ? 'Blocks enabled' : 'Blocks disabled' });
+        Toast.show({ type: 'success', text1: enabled ? `${blockLabel}s enabled` : `${blockLabel}s disabled` });
         await load();
       } catch (error: any) {
         Toast.show({ type: 'error', text1: 'Unable to update', text2: error.message });
@@ -91,8 +94,8 @@ export default function CommunityBlocksScreen() {
 
     if (!enabled) {
       Alert.alert(
-        'Turn off blocks?',
-        'Turning blocks off will unscope all residents and block in-charges. Existing fund contributions are kept. Continue?',
+        `Turn off ${labelLower}s?`,
+        `Turning ${labelLower}s off will unscope all residents and ${labelLower} in-charges. Existing fund contributions are kept. Continue?`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Continue', style: 'destructive', onPress: perform },
@@ -113,31 +116,21 @@ export default function CommunityBlocksScreen() {
       if (error) throw error;
       setNewBlockName('');
       await load();
-      Toast.show({ type: 'success', text1: 'Block added' });
+      Toast.show({ type: 'success', text1: `${blockLabel} added` });
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: 'Unable to add block', text2: error.message });
+      Toast.show({ type: 'error', text1: `Unable to add ${labelLower}`, text2: error.message });
     } finally {
       setLoading(false);
     }
   };
 
-  const renameBlock = async (block: BlockWithCounts) => {
-    Alert.prompt('Rename block', 'Enter a new block name', async (value) => {
-      if (!value?.trim()) return;
-      const { error } = await supabase.rpc('rename_community_block', {
-        p_block_id: block.id,
-        p_new_name: value.trim(),
-      });
-      if (error) {
-        Toast.show({ type: 'error', text1: 'Unable to rename', text2: error.message });
-      } else {
-        await load();
-      }
-    });
+  const renameBlock = (block: BlockWithCounts) => {
+    setRenameBlockId(block.id);
+    setRenameBlockName(block.name);
   };
 
   const archiveBlock = async (block: BlockWithCounts) => {
-    Alert.alert('Archive block?', `Archive ${block.name}?`, [
+    Alert.alert(`Archive ${labelLower}?`, `Archive ${block.name}?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Archive',
@@ -160,13 +153,13 @@ export default function CommunityBlocksScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Manage blocks</Text>
+        <Text style={styles.title}>Manage {labelLower}s</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.toggleCard}> 
           <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>Use blocks for fund collection</Text>
+            <Text style={styles.toggleLabel}>Use {labelLower}s for fund collection</Text>
             <Switch value={isBlocksEnabled} onValueChange={toggleBlocks} disabled={loading} />
           </View>
         </View>
@@ -177,12 +170,12 @@ export default function CommunityBlocksScreen() {
               <TextInput
                 value={newBlockName}
                 onChangeText={setNewBlockName}
-                placeholder="Add block"
+                placeholder={`Add ${labelLower}`}
                 placeholderTextColor={Verandah.textTertiary}
                 style={styles.input}
               />
               <TouchableOpacity style={styles.addBtn} onPress={addBlock}>
-                <Text style={styles.addBtnText}>Add block</Text>
+                <Text style={styles.addBtnText}>Add {labelLower}</Text>
               </TouchableOpacity>
             </View>
 
@@ -202,9 +195,48 @@ export default function CommunityBlocksScreen() {
             ))}
           </>
         ) : (
-          <Text style={styles.disabledText}>Turn on blocks to manage block-wise collection scopes.</Text>
+          <Text style={styles.disabledText}>Turn on {labelLower}s to manage {labelLower}-wise collection scopes.</Text>
         )}
       </ScrollView>
+
+      <Modal visible={!!renameBlockId} transparent animationType="slide" onRequestClose={() => setRenameBlockId(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Rename {blockLabel}</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={renameBlockName}
+              onChangeText={setRenameBlockName}
+              placeholder={`Enter new ${labelLower} name`}
+              placeholderTextColor={Verandah.textTertiary}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalSecondaryBtn} onPress={() => { setRenameBlockId(null); setRenameBlockName(''); }}>
+                <Text style={styles.modalSecondaryText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalPrimaryBtn}
+                onPress={async () => {
+                  if (!renameBlockName.trim() || !renameBlockId) return;
+                  const { error } = await supabase.rpc('rename_community_block', {
+                    p_block_id: renameBlockId,
+                    p_new_name: renameBlockName.trim(),
+                  });
+                  setRenameBlockId(null);
+                  setRenameBlockName('');
+                  if (error) {
+                    Toast.show({ type: 'error', text1: 'Unable to rename', text2: error.message });
+                  } else {
+                    await load();
+                  }
+                }}
+              >
+                <Text style={styles.modalPrimaryText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -229,4 +261,13 @@ const styles = StyleSheet.create({
   actionBtn: { borderWidth: 0.5, borderColor: Verandah.borderStrong, borderRadius: VerandahRadius.sm + 2, paddingHorizontal: 12, paddingVertical: 8 },
   actionText: { ...VerandahType.captionBold, color: Verandah.textPrimary },
   disabledText: { marginTop: 6, ...VerandahType.body, color: Verandah.textSecondary },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' },
+  modalCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 12, backgroundColor: Verandah.card },
+  modalTitle: { ...VerandahType.bodyBold, color: Verandah.textPrimary, fontSize: 18 },
+  modalInput: { borderWidth: 0.5, borderColor: Verandah.borderStrong, borderRadius: VerandahRadius.md, paddingHorizontal: 12, height: 44, color: Verandah.textPrimary, backgroundColor: Verandah.surface, ...VerandahType.body, marginTop: 6 },
+  modalActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
+  modalSecondaryBtn: { flex: 1, borderWidth: 1, borderColor: Verandah.border, borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
+  modalSecondaryText: { ...VerandahType.bodyBold, color: Verandah.textPrimary },
+  modalPrimaryBtn: { flex: 1, borderRadius: 16, backgroundColor: Verandah.primary, paddingVertical: 14, alignItems: 'center' },
+  modalPrimaryText: { ...VerandahType.bodyBold, color: Verandah.primaryFg },
 });

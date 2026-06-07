@@ -274,6 +274,7 @@ The marketplace tables `resident_businesses`, `business_offerings`, and `busines
 | `fund_role_block_guard` | `fund_roles` | BEFORE INSERT/UPDATE | Ensure `fund_roles.block_id` belongs to the fund's community |
 | `service_provider_phone_guard_trigger` | `service_providers` | BEFORE INSERT/UPDATE | Normalize provider phones and reject duplicates within the same community |
 | `on_service_visit_created` | `service_visits` | INSERT | Insert visit notifications |
+| `on_service_visit_rescheduled` | `service_visits` | UPDATE (`visit_date`/`visit_time_slot`) | Insert visit reschedule notifications |
 
 ### RLS Summary
 

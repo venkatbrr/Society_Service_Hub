@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../../constants/Colors';
 import { useAuth } from '../../../context/AuthContext';
@@ -20,6 +20,7 @@ type CommunityDetail = {
   created_at: string | null;
   funds_enabled: boolean;
   blocks_enabled: boolean;
+  block_label: string;
 };
 
 type Resident = {
@@ -58,6 +59,9 @@ export default function PlatformCommunityDetailScreen() {
   const [processingRemove, setProcessingRemove] = useState(false);
   const [communityBlocks, setCommunityBlocks] = useState<Tables<'community_blocks'>[]>([]);
   const [fundCollectors, setFundCollectors] = useState<Array<{ id: string; event_id: string; user_id: string; block_id: string | null; fund_title: string | null }>>([]);
+  const [newBlockName, setNewBlockName] = useState('');
+  const [revokeModalVisible, setRevokeModalVisible] = useState(false);
+  const [revokeReason, setRevokeReason] = useState('');
 
   const counts = useMemo(() => {
     const active = residents.filter((row) => !row.removed_at).length;
@@ -84,7 +88,7 @@ export default function PlatformCommunityDetailScreen() {
       const [{ data: communityData, error: communityError }, { data: residentsData, error: residentsError }] = await Promise.all([
         supabase
           .from('communities')
-          .select('id, name, code, city, area, pincode, community_type, created_at, funds_enabled, blocks_enabled')
+          .select('id, name, code, city, area, pincode, community_type, created_at, funds_enabled, blocks_enabled, block_label')
           .eq('id', id)
           .maybeSingle(),
         supabase
@@ -100,17 +104,20 @@ export default function PlatformCommunityDetailScreen() {
       setCommunity(communityData);
       setResidents(residentsData ?? []);
 
-      if (communityData?.funds_enabled) {
-        const [{ data: blocksData }, { data: collectorsData }] = await Promise.all([
-          supabase.rpc('list_community_blocks', { p_community_id: id }),
-          supabase
-            .from('fund_roles')
-            .select('id, event_id, user_id, block_id, events!inner(title, community_id)')
-            .eq('role', 'collector')
-            .eq('events.community_id', id),
-        ]);
-
+      if (communityData?.blocks_enabled) {
+        const { data: blocksData } = await supabase.rpc('list_community_blocks', { p_community_id: id });
         setCommunityBlocks((blocksData ?? []) as Tables<'community_blocks'>[]);
+      } else {
+        setCommunityBlocks([]);
+      }
+
+      if (communityData?.funds_enabled) {
+        const { data: collectorsData } = await supabase
+          .from('fund_roles')
+          .select('id, event_id, user_id, block_id, events!inner(title, community_id)')
+          .eq('role', 'collector')
+          .eq('events.community_id', id);
+
         setFundCollectors(
           ((collectorsData ?? []) as any[]).map((collector) => ({
             id: collector.id,
@@ -121,7 +128,6 @@ export default function PlatformCommunityDetailScreen() {
           }))
         );
       } else {
-        setCommunityBlocks([]);
         setFundCollectors([]);
       }
     } catch (error: any) {
@@ -177,30 +183,7 @@ export default function PlatformCommunityDetailScreen() {
 
   const revokeFundsAccess = () => {
     if (!community?.id) return;
-
-    Alert.prompt('Revoke funds access', 'Enter a reason to revoke funds access for this community.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Revoke',
-        style: 'destructive',
-        onPress: async (reason?: string) => {
-          if (!reason?.trim()) {
-            Toast.show({ type: 'error', text1: 'Reason is required' });
-            return;
-          }
-          const { error } = await supabase.rpc('platform_revoke_funds_access', {
-            p_community_id: community.id,
-            p_revoke_reason: reason.trim(),
-          });
-          if (error) {
-            Toast.show({ type: 'error', text1: 'Unable to revoke', text2: error.message });
-          } else {
-            Toast.show({ type: 'success', text1: 'Funds access revoked' });
-            await loadData();
-          }
-        },
-      },
-    ]);
+    setRevokeModalVisible(true);
   };
 
   const setLead = async (residentId: string) => {
@@ -297,43 +280,99 @@ export default function PlatformCommunityDetailScreen() {
             </View>
           ) : null}
 
-          {community?.funds_enabled ? (
+          {community ? (
             <View style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Text style={[styles.communityName, { color: colors.text }]}>Blocks</Text>
-              {communityBlocks.map((block) => (
-                <View key={block.id} style={styles.blockRow}>
-                  <Text style={[styles.meta, { color: colors.text }]}>{block.name}</Text>
-                  <TouchableOpacity
-                    style={[styles.modalSecondary, { borderColor: colors.border }]}
-                    onPress={async () => {
-                      const { error } = await supabase.rpc('platform_archive_community_block', { p_block_id: block.id });
-                      if (error) Toast.show({ type: 'error', text1: 'Unable to archive block', text2: error.message });
-                      else await loadData();
-                    }}
-                  >
-                    <Text style={[styles.modalSecondaryText, { color: colors.text }]}>Archive</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-              <TouchableOpacity
-                style={[styles.modalSecondary, { borderColor: colors.border, marginTop: 10 }]}
-                onPress={() => {
-                  Alert.prompt('Add block', 'Enter block name', async (value) => {
-                    if (!value?.trim()) return;
-                    const { error } = await supabase.rpc('platform_add_community_block', { p_community_id: community.id, p_name: value.trim() });
-                    if (error) Toast.show({ type: 'error', text1: 'Unable to add block', text2: error.message });
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={[styles.communityName, { color: colors.text }]}>{community.block_label === 'Tower' ? 'Towers' : 'Blocks'}</Text>
+                <Switch
+                  value={community.blocks_enabled}
+                  onValueChange={async (value) => {
+                    const { error } = await supabase.rpc('platform_set_blocks_enabled', {
+                      p_community_id: community.id,
+                      p_enabled: value,
+                    });
+                    if (error) Toast.show({ type: 'error', text1: 'Unable to update', text2: error.message });
                     else await loadData();
-                  });
-                }}
-              >
-                <Text style={[styles.modalSecondaryText, { color: colors.primary }]}>Add block</Text>
-              </TouchableOpacity>
+                  }}
+                />
+              </View>
+
+              {community.blocks_enabled ? (
+                <>
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 8 }}>
+                    {(['Block', 'Tower'] as const).map((option) => {
+                      const active = (community.block_label ?? 'Block') === option;
+                      return (
+                        <TouchableOpacity
+                          key={option}
+                          onPress={async () => {
+                            if (active) return;
+                            const { error } = await supabase.rpc('platform_set_block_label', {
+                              p_community_id: community.id,
+                              p_label: option,
+                            });
+                            if (error) Toast.show({ type: 'error', text1: 'Unable to update label', text2: error.message });
+                            else await loadData();
+                          }}
+                          style={{ borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, borderColor: active ? colors.primary : colors.border, backgroundColor: active ? colors.primary + '14' : colors.card }}
+                        >
+                          <Text style={{ fontSize: 13, fontWeight: '500', color: active ? colors.primary : colors.text }}>{option}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  {communityBlocks.map((block) => (
+                    <View key={block.id} style={styles.blockRow}>
+                      <Text style={[styles.meta, { color: colors.text }]}>{block.name}</Text>
+                      <TouchableOpacity
+                        style={[styles.modalSecondary, { borderColor: colors.border }]}
+                        onPress={async () => {
+                          const { error } = await supabase.rpc('platform_archive_community_block', { p_block_id: block.id });
+                          if (error) Toast.show({ type: 'error', text1: 'Unable to archive block', text2: error.message });
+                          else await loadData();
+                        }}
+                      >
+                        <Text style={[styles.modalSecondaryText, { color: colors.text }]}>Archive</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                  <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 10 }}>
+                    <TextInput
+                      value={newBlockName}
+                      onChangeText={setNewBlockName}
+                      placeholder={`Add ${(community.block_label ?? 'Block').toLowerCase()}`}
+                      placeholderTextColor={colors.textMuted}
+                      style={{ flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 16, paddingHorizontal: 16, height: 48, color: colors.text, backgroundColor: colors.card }}
+                    />
+                    <TouchableOpacity
+                      onPress={async () => {
+                        if (!newBlockName.trim()) return;
+                        const { error } = await supabase.rpc('platform_add_community_block', { p_community_id: community.id, p_name: newBlockName.trim() });
+                        if (error) {
+                          Toast.show({ type: 'error', text1: `Unable to add ${(community.block_label ?? 'Block').toLowerCase()}`, text2: error.message });
+                        } else {
+                          setNewBlockName('');
+                          await loadData();
+                          Toast.show({ type: 'success', text1: `${community.block_label} added` });
+                        }
+                      }}
+                      style={{ borderRadius: 16, backgroundColor: colors.primary, paddingHorizontal: 16, height: 48, justifyContent: 'center' }}
+                    >
+                      <Text style={{ color: colors.background, fontWeight: 'bold', fontSize: 14 }}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <Text style={{ color: colors.textMuted, fontSize: 13, marginTop: 6 }}>
+                  Turn on {(community.block_label ?? 'Block').toLowerCase()}s to manage building-wise collection scopes.
+                </Text>
+              )}
             </View>
           ) : null}
 
           {community?.funds_enabled ? (
             <View style={[styles.communityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Text style={[styles.communityName, { color: colors.text }]}>Block in-charges across funds</Text>
+              <Text style={[styles.communityName, { color: colors.text }]}>{community.block_label === 'Tower' ? 'Tower' : 'Block'} in-charges across funds</Text>
               {fundCollectors.map((collector) => (
                 <View key={collector.id} style={styles.blockRow}>
                   <Text style={[styles.meta, { color: colors.text }]}>Fund: {collector.fund_title ?? 'Fund'} - {residents.find((row) => row.id === collector.user_id)?.full_name ?? 'Resident'}</Text>
@@ -416,6 +455,52 @@ export default function PlatformCommunityDetailScreen() {
                 disabled={processingRemove}
               >
                 {processingRemove ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.modalDangerText}>Remove from community</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={revokeModalVisible} transparent animationType="slide" onRequestClose={() => setRevokeModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Revoke funds access</Text>
+            <Text style={[styles.modalMeta, { color: colors.textMuted }]}>Enter a reason to revoke funds access for this community.</Text>
+            <TextInput
+              style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 12, height: 80, color: colors.text, backgroundColor: colors.card, textAlignVertical: 'top', marginTop: 8 }}
+              placeholder="Reason (required)"
+              placeholderTextColor={colors.textMuted}
+              multiline
+              value={revokeReason}
+              onChangeText={setRevokeReason}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={[styles.modalSecondary, { borderColor: colors.border }]} onPress={() => { setRevokeModalVisible(false); setRevokeReason(''); }}>
+                <Text style={[styles.modalSecondaryText, { color: colors.text }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalDanger, { backgroundColor: colors.accent }]}
+                onPress={async () => {
+                  if (!community?.id) return;
+                  if (!revokeReason.trim()) {
+                    Toast.show({ type: 'error', text1: 'Reason is required' });
+                    return;
+                  }
+                  setRevokeModalVisible(false);
+                  const { error } = await supabase.rpc('platform_revoke_funds_access', {
+                    p_community_id: community.id,
+                    p_revoke_reason: revokeReason.trim(),
+                  });
+                  setRevokeReason('');
+                  if (error) {
+                    Toast.show({ type: 'error', text1: 'Unable to revoke', text2: error.message });
+                  } else {
+                    Toast.show({ type: 'success', text1: 'Funds access revoked' });
+                    await loadData();
+                  }
+                }}
+              >
+                <Text style={styles.modalDangerText}>Revoke</Text>
               </TouchableOpacity>
             </View>
           </View>

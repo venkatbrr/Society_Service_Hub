@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   header: {
-    marginBottom: 32,
+    marginBottom: 24,
     gap: 6,
   },
   backButton: {

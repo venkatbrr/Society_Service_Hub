@@ -18,7 +18,7 @@ import { BlockPicker } from '../../components/BlockPicker';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import {
@@ -130,6 +130,10 @@ export default function FundDetailScreen() {
     () => new Map(members.map((member) => [member.id, member.full_name?.trim() || 'Resident'])),
     [members]
   );
+  const profileFlats = useMemo(
+    () => new Map(members.map((member) => [member.id, member.flat_number?.trim() || ''])),
+    [members]
+  );
 
   if (loading || !fund) {
     return (
@@ -213,24 +217,27 @@ export default function FundDetailScreen() {
       return;
     }
 
+    if (role === 'collector' && fund.community?.blocks_enabled && !selectedCollectorBlockId) {
+      Toast.show({
+        type: 'error',
+        text1: 'Select a block',
+        text2: 'Choose a block scope before assigning a collector.',
+      });
+      return;
+    }
+
     try {
       setSavingRoleId(targetUserId);
-      const { error } = role === 'collector' && fund.community?.blocks_enabled && selectedCollectorBlockId
-        ? await supabase.rpc('assign_block_in_charge', {
-            p_event_id: fund.id,
-            p_user_id: targetUserId,
-            p_block_id: selectedCollectorBlockId,
-          })
-        : await supabase.from('fund_roles').upsert(
-            {
-              event_id: fund.id,
-              user_id: targetUserId,
-              role,
-              assigned_by: user.id,
-              block_id: role === 'collector' ? null : null,
-            },
-            { onConflict: 'event_id,user_id' }
-          );
+      const { error } = await supabase.from('fund_roles').upsert(
+        {
+          event_id: fund.id,
+          user_id: targetUserId,
+          role,
+          assigned_by: user.id,
+          block_id: role === 'collector' ? (selectedCollectorBlockId ?? null) : null,
+        },
+        { onConflict: 'event_id,user_id' }
+      );
 
       if (error) throw error;
 
@@ -262,9 +269,7 @@ export default function FundDetailScreen() {
     const removeNow = async () => {
       try {
         setSavingRoleId(assignment.id);
-        const { error } = assignment.role === 'collector' && assignment.block_id
-          ? await supabase.rpc('remove_block_in_charge', { p_event_id: assignment.event_id, p_user_id: assignment.user_id })
-          : await supabase.from('fund_roles').delete().eq('id', assignment.id);
+        const { error } = await supabase.from('fund_roles').delete().eq('id', assignment.id);
 
         if (error) throw error;
 
@@ -387,42 +392,6 @@ export default function FundDetailScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Contribution Status</Text>
-            <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>
-              {visibleMembers.filter((m) => paidByMemberId.has(m.id)).length} contributed
-            </Text>
-          </View>
-
-          {visibleMembers
-            .filter((member) => paidByMemberId.has(member.id))
-            .map((member) => {
-              const contribution = paidByMemberId.get(member.id)!;
-
-              return (
-                <View key={member.id} style={styles.transactionRow}>
-                  <View style={[styles.avatar, { backgroundColor: Verandah.accentSoft }]}>
-                    <Text style={styles.statusEmoji}>{APP_EMOJIS.success}</Text>
-                  </View>
-                  <View style={styles.transMain}>
-                    <Text style={[styles.transName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
-                    <Text style={[styles.transDate, { color: colors.textMuted }]}>
-                      Paid on {new Date(contribution.created_at ?? Date.now()).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  <View style={styles.statusBlock}>
-                    <Text style={[styles.statusLabel, { color: Verandah.accent }]}>Paid</Text>
-                    <Rupees amount={Number(contribution.amount)} size="sm" tone="in" />
-                  </View>
-                </View>
-              );
-            })}
-          {visibleMembers.filter((m) => paidByMemberId.has(m.id)).length === 0 ? (
-            <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No contributions yet.</Text>
-          ) : null}
         </View>
 
         {permissions.canManageTreasurers ? (
@@ -613,7 +582,7 @@ export default function FundDetailScreen() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Collection List</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Contributions</Text>
             <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>{incomeTransactions.length} entries</Text>
           </View>
           {incomeTransactions.map((transaction) => (
@@ -628,7 +597,15 @@ export default function FundDetailScreen() {
                     : transaction.title || 'Contribution'}
                 </Text>
                 <Text style={[styles.transDate, { color: colors.textMuted }]}>
-                  {new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}
+                  {(() => {
+                    if (!transaction.contributor_user_id) {
+                      return new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
+                    }
+
+                    const flat = profileFlats.get(transaction.contributor_user_id);
+                    const dateText = new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
+                    return flat ? `Flat ${flat} · ${dateText}` : dateText;
+                  })()}
                 </Text>
               </View>
               <Rupees amount={Number(transaction.amount)} size="sm" tone="in" showSign={true} />
@@ -642,22 +619,47 @@ export default function FundDetailScreen() {
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Expense List</Text>
             <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>{expenseTransactions.length} entries</Text>
           </View>
-          {expenseTransactions.map((transaction) => (
-            <View key={transaction.id} style={styles.transactionRow}>
-              <View style={[styles.avatar, { backgroundColor: Verandah.dangerSoft }]}>
-                <Text style={styles.statusEmoji}>{APP_EMOJIS.expense}</Text>
+          {expenseTransactions.map((transaction) => {
+            const RowContent = (
+              <>
+                <View style={[styles.avatar, { backgroundColor: Verandah.dangerSoft }]}>
+                  <Text style={styles.statusEmoji}>{APP_EMOJIS.expense}</Text>
+                </View>
+                <View style={styles.transMain}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={[styles.transName, { color: colors.text }]}>{transaction.title || 'Expense'}</Text>
+                    {permissions.canAddExpense && (
+                      <Ionicons name="pencil" size={13} color={colors.textMuted} />
+                    )}
+                  </View>
+                  <Text style={[styles.transDate, { color: colors.textMuted }]}>
+                    {transaction.description?.trim()
+                      ? `${transaction.description.trim()} - ${new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}`
+                      : new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}
+                  </Text>
+                </View>
+                <Rupees amount={Number(transaction.amount)} size="sm" />
+              </>
+            );
+
+            if (permissions.canAddExpense) {
+              return (
+                <TouchableOpacity
+                  key={transaction.id}
+                  style={styles.transactionRow}
+                  onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=expense&transaction_id=${transaction.id}`)}
+                >
+                  {RowContent}
+                </TouchableOpacity>
+              );
+            }
+
+            return (
+              <View key={transaction.id} style={styles.transactionRow}>
+                {RowContent}
               </View>
-              <View style={styles.transMain}>
-                <Text style={[styles.transName, { color: colors.text }]}>{transaction.title || 'Expense'}</Text>
-                <Text style={[styles.transDate, { color: colors.textMuted }]}>
-                  {transaction.description?.trim()
-                    ? `${transaction.description.trim()} - ${new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}`
-                    : new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}
-                </Text>
-              </View>
-              <Rupees amount={Number(transaction.amount)} size="sm" />
-            </View>
-          ))}
+            );
+          })}
           {expenseTransactions.length === 0 ? <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No expenses logged yet.</Text> : null}
         </View>
 
@@ -669,21 +671,40 @@ export default function FundDetailScreen() {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Assign collector scope</Text>
             {fund.community_id ? (
-              <BlockPicker value={selectedCollectorBlockId} onChange={setSelectedCollectorBlockId} communityId={fund.community_id} />
+              <BlockPicker
+                value={selectedCollectorBlockId}
+                onChange={setSelectedCollectorBlockId}
+                communityId={fund.community_id}
+                hideAllResidents={true}
+              />
             ) : null}
             <View style={styles.modalActions}>
               <TouchableOpacity style={[styles.roleAction, { backgroundColor: Verandah.cardMuted, flex: 1 }]} onPress={() => setPendingCollectorId(null)}>
                 <Text style={[styles.roleActionText, { color: colors.primary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.roleAction, { backgroundColor: Verandah.accentSoft, flex: 1 }]}
+                style={[
+                  styles.roleAction,
+                  {
+                    backgroundColor: selectedCollectorBlockId ? Verandah.accentSoft : colors.surface2,
+                    flex: 1,
+                  },
+                ]}
+                disabled={!selectedCollectorBlockId}
                 onPress={() => {
                   if (pendingCollectorId) {
                     void handleAssignRole(pendingCollectorId, 'collector');
                   }
                 }}
               >
-                <Text style={[styles.roleActionText, { color: Verandah.accent }]}>Assign</Text>
+                <Text
+                  style={[
+                    styles.roleActionText,
+                    { color: selectedCollectorBlockId ? Verandah.accent : colors.textMuted },
+                  ]}
+                >
+                  Assign
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

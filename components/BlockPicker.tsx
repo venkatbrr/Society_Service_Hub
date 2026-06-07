@@ -9,11 +9,14 @@ type BlockPickerProps = {
   value: string | null;
   onChange: (blockId: string | null) => void;
   communityId: string;
+  label?: string;
+  hideAllResidents?: boolean;
 };
 
-export function BlockPicker({ value, onChange, communityId }: BlockPickerProps) {
+export function BlockPicker({ value, onChange, communityId, label = 'Block', hideAllResidents = false }: BlockPickerProps) {
   const [blocks, setBlocks] = useState<Tables<'community_blocks'>[]>([]);
   const [loading, setLoading] = useState(true);
+  const labelLower = label.toLowerCase();
 
   useEffect(() => {
     let cancelled = false;
@@ -42,9 +45,9 @@ export function BlockPicker({ value, onChange, communityId }: BlockPickerProps) 
   }, [communityId]);
 
   const selectedBlockName = useMemo(() => {
-    if (!value) return 'All residents';
-    return blocks.find((block) => block.id === value)?.name ?? 'Select block';
-  }, [blocks, value]);
+    if (!value) return hideAllResidents ? `Select ${labelLower}` : 'All residents';
+    return blocks.find((block) => block.id === value)?.name ?? `Select ${labelLower}`;
+  }, [blocks, value, labelLower, hideAllResidents]);
 
   if (loading) {
     return (
@@ -57,7 +60,7 @@ export function BlockPicker({ value, onChange, communityId }: BlockPickerProps) 
   if (!blocks.length) {
     return (
       <View style={styles.emptyWrap}>
-        <Text style={styles.emptyText}>Your community lead has not set up blocks yet.</Text>
+        <Text style={styles.emptyText}>Your community lead has not set up {labelLower}s yet.</Text>
       </View>
     );
   }
@@ -65,12 +68,14 @@ export function BlockPicker({ value, onChange, communityId }: BlockPickerProps) 
   return (
     <View style={styles.listWrap}>
       <Text style={styles.selectedLabel}>Selected: {selectedBlockName}</Text>
-      <TouchableOpacity
-        onPress={() => onChange(null)}
-        style={[styles.option, !value ? styles.optionSelected : styles.optionDefault]}
-      >
-        <Text style={[styles.optionText, !value ? styles.optionTextSelected : styles.optionTextDefault]}>All residents</Text>
-      </TouchableOpacity>
+      {!hideAllResidents && (
+        <TouchableOpacity
+          onPress={() => onChange(null)}
+          style={[styles.option, !value ? styles.optionSelected : styles.optionDefault]}
+        >
+          <Text style={[styles.optionText, !value ? styles.optionTextSelected : styles.optionTextDefault]}>All residents</Text>
+        </TouchableOpacity>
+      )}
       {blocks.map((block) => {
         const selected = block.id === value;
         return (

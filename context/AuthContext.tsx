@@ -31,6 +31,7 @@ type AuthContextType = {
   isCommunityLead: boolean;
   fundsEnabled: boolean;
   blocksEnabled: boolean;
+  blockLabel: string;
   myBlockId: string | null;
   myFundsAccessRequest: FundsAccessStatus;
   activeCommunityRequest: ActiveCommunityRequest;
@@ -49,6 +50,7 @@ const AuthContext = createContext<AuthContextType>({
   isCommunityLead: false,
   fundsEnabled: false,
   blocksEnabled: false,
+  blockLabel: 'Block',
   myBlockId: null,
   myFundsAccessRequest: null,
   activeCommunityRequest: null,
@@ -66,6 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [communityId, setCommunityId] = useState<string | null>(null);
   const [fundsEnabled, setFundsEnabled] = useState(false);
   const [blocksEnabled, setBlocksEnabled] = useState(false);
+  const [blockLabel, setBlockLabel] = useState('Block');
   const [myBlockId, setMyBlockId] = useState<string | null>(null);
   const [myFundsAccessRequest, setMyFundsAccessRequest] = useState<FundsAccessStatus>(null);
   const [activeCommunityRequest, setActiveCommunityRequest] = useState<ActiveCommunityRequest>(null);
@@ -78,6 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setCommunityId(null);
     setFundsEnabled(false);
     setBlocksEnabled(false);
+    setBlockLabel('Block');
     setMyBlockId(null);
     setMyFundsAccessRequest(null);
     setActiveCommunityRequest(null);
@@ -96,6 +100,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setCommunityId(null);
       setFundsEnabled(false);
       setBlocksEnabled(false);
+      setBlockLabel('Block');
       setMyBlockId(null);
       setMyFundsAccessRequest(null);
       setActiveCommunityRequest(null);
@@ -113,6 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(null);
       setFundsEnabled(false);
       setBlocksEnabled(false);
+      setBlockLabel('Block');
       setMyBlockId(null);
       setMyFundsAccessRequest(null);
       return;
@@ -157,6 +163,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!resolvedCommunityId || profileRole === 'admin') {
       setFundsEnabled(false);
       setBlocksEnabled(false);
+      setBlockLabel('Block');
       setMyFundsAccessRequest(null);
       return;
     }
@@ -164,7 +171,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [{ data: communityData, error: communityError }, { data: fundsRequestStatus, error: fundsStatusError }] = await Promise.all([
       supabase
         .from('communities')
-        .select('funds_enabled, blocks_enabled')
+        .select('funds_enabled, blocks_enabled, block_label')
         .eq('id', resolvedCommunityId)
         .maybeSingle(),
       supabase.rpc('get_funds_access_status', { p_community_id: resolvedCommunityId }),
@@ -174,10 +181,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Error loading community activation status:', communityError);
       setFundsEnabled(false);
       setBlocksEnabled(false);
+      setBlockLabel('Block');
     } else {
       const enabledFunds = Boolean(communityData?.funds_enabled);
       setFundsEnabled(enabledFunds);
-      setBlocksEnabled(enabledFunds && Boolean(communityData?.blocks_enabled));
+      setBlocksEnabled(Boolean(communityData?.blocks_enabled));
+      setBlockLabel((communityData as any)?.block_label ?? 'Block');
     }
 
     if (fundsStatusError) {
@@ -291,6 +300,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isCommunityLead,
         fundsEnabled,
         blocksEnabled,
+        blockLabel,
         myBlockId,
         myFundsAccessRequest,
         activeCommunityRequest,

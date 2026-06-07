@@ -54,6 +54,9 @@ export default function PlatformApprovalsScreen() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [editingNames, setEditingNames] = useState<Record<string, string>>({});
   const [requests, setRequests] = useState<PendingRequest[]>([]);
+  const [blockLabels, setBlockLabels] = useState<Record<string, 'Block' | 'Tower'>>({});
+  const [blockNames, setBlockNames] = useState<Record<string, string[]>>({});
+  const [newBlockInputs, setNewBlockInputs] = useState<Record<string, string>>({});
 
   const loadRequests = useCallback(async (showRefreshing = false) => {
     if (!isPlatformAdmin) {
@@ -114,7 +117,11 @@ export default function PlatformApprovalsScreen() {
   );
 
   const handleApprove = async (requestId: string, newName: string) => {
-    Alert.alert('Approve community request?', `This will create the community "${newName}" and set the requester as community lead.`, [
+    const label = blockLabels[requestId] ?? 'Block';
+    const names = blockNames[requestId] ?? [];
+    const hasBlocks = names.length > 0;
+    const blockDesc = hasBlocks ? ` with ${names.length} ${label.toLowerCase()}(s)` : '';
+    Alert.alert('Approve community request?', `This will create the community "${newName}"${blockDesc} and set the requester as community lead.`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Approve',
@@ -129,7 +136,11 @@ export default function PlatformApprovalsScreen() {
               .eq('id', requestId);
             if (updateError) throw updateError;
 
-            const { error } = await supabase.rpc('platform_approve_community_request', { p_request_id: requestId });
+            const { error } = await supabase.rpc('platform_approve_community_request', {
+              p_request_id: requestId,
+              p_block_names: hasBlocks ? names : null,
+              p_block_label: label,
+            });
             if (error) throw error;
 
             Toast.show({ type: 'success', text1: 'Community approved' });
@@ -233,6 +244,70 @@ export default function PlatformApprovalsScreen() {
                 {item.requester_phone ? <Text style={[styles.meta, { color: colors.textMuted }]}>Phone: {item.requester_phone}</Text> : null}
                 {item.requester_email ? <Text style={[styles.meta, { color: colors.textMuted }]}>Email: {item.requester_email}</Text> : null}
 
+                {/* Block / Tower seeding section */}
+                <View style={[styles.blockSection, { borderColor: colors.border }]}>
+                  <Text style={[styles.blockSectionTitle, { color: colors.text }]}>Blocks / Towers</Text>
+                  <Text style={[styles.meta, { color: colors.textMuted, marginBottom: 8 }]}>Optionally add blocks or towers for this community.</Text>
+                  <View style={styles.chipRow}>
+                    {(['Block', 'Tower'] as const).map((option) => {
+                      const active = (blockLabels[item.id] ?? 'Block') === option;
+                      return (
+                        <TouchableOpacity
+                          key={option}
+                          onPress={() => setBlockLabels(prev => ({ ...prev, [item.id]: option }))}
+                          style={[styles.labelChip, { borderColor: active ? colors.primary : colors.border, backgroundColor: active ? colors.primary + '14' : colors.card }]}
+                        >
+                          <Text style={[styles.labelChipText, { color: active ? colors.primary : colors.text }]}>{option}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  <View style={styles.blockAddRow}>
+                    <TextInput
+                      style={[styles.blockInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.card }]}
+                      value={newBlockInputs[item.id] ?? ''}
+                      onChangeText={(val) => setNewBlockInputs(prev => ({ ...prev, [item.id]: val }))}
+                      placeholder={`Add ${(blockLabels[item.id] ?? 'Block').toLowerCase()} name`}
+                      placeholderTextColor={colors.textMuted}
+                    />
+                    <TouchableOpacity
+                      style={[styles.blockAddBtn, { backgroundColor: colors.primary }]}
+                      onPress={() => {
+                        const input = (newBlockInputs[item.id] ?? '').trim();
+                        if (!input) return;
+                        const current = blockNames[item.id] ?? [];
+                        if (current.includes(input)) {
+                          Toast.show({ type: 'error', text1: 'Already added' });
+                          return;
+                        }
+                        setBlockNames(prev => ({ ...prev, [item.id]: [...current, input] }));
+                        setNewBlockInputs(prev => ({ ...prev, [item.id]: '' }));
+                      }}
+                    >
+                      <Text style={styles.blockAddBtnText}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {(blockNames[item.id] ?? []).length > 0 ? (
+                    <View style={styles.blockChipWrap}>
+                      {(blockNames[item.id] ?? []).map((name, idx) => (
+                        <View key={idx} style={[styles.blockChip, { backgroundColor: colors.primary + '14', borderColor: colors.primary + '30' }]}>
+                          <Text style={[styles.blockChipText, { color: colors.primary }]}>{name}</Text>
+                          <TouchableOpacity
+                            onPress={() => {
+                              setBlockNames(prev => ({
+                                ...prev,
+                                [item.id]: (prev[item.id] ?? []).filter((_, i) => i !== idx),
+                              }));
+                            }}
+                          >
+                            <Ionicons name="close-circle" size={16} color={colors.primary} />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
+                </View>
+
                 {rejecting ? (
                   <View style={[styles.rejectWrap, { borderColor: colors.border }]}>
                     <TextInput
@@ -301,4 +376,16 @@ const styles = StyleSheet.create({
   primaryActionText: { color: Verandah.primaryFg, fontSize: 14, fontWeight: '500' },
   rejectWrap: { borderTopWidth: 1, marginTop: 14, paddingTop: 12 },
   rejectInput: { minHeight: 78, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, marginBottom: 10 },
+  blockSection: { borderTopWidth: 1, marginTop: 14, paddingTop: 12 },
+  blockSectionTitle: { fontSize: 14, fontWeight: '500', marginBottom: 4 },
+  chipRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+  labelChip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
+  labelChipText: { fontSize: 13, fontWeight: '500' },
+  blockAddRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 8 },
+  blockInput: { flex: 1, borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, height: 40, fontSize: 14 },
+  blockAddBtn: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
+  blockAddBtnText: { color: Verandah.primaryFg, fontSize: 13, fontWeight: '500' },
+  blockChipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  blockChip: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
+  blockChipText: { fontSize: 12, fontWeight: '500' },
 });
