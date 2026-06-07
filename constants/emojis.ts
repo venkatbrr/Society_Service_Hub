@@ -124,6 +124,24 @@ const SERVICE_CATEGORY_EMOJIS: Record<string, string> = {
   'aadhar centre': '🪪',
   aadhar: '🪪',
   aadhaar: '🪪',
+  // New Categories
+  'pandit / pujari': '🙏',
+  'mosquito net / screens': '🦟',
+  'balcony safety nets': '🕸️',
+  'blinds & curtains': '🪟',
+  'core cutting': '🕳️',
+  'false ceiling / pop': '🏠',
+  'marble & granite work': '🪨',
+  'balcony cloth hangers': '👕',
+  'internet provider / tech': '🌐',
+  'washing machine repair': '🧺',
+  'tv repair & install': '📺',
+  'swimming / fitness coach': '🏊',
+  'doctor / clinic': '🩺',
+  'pharmacy delivery': '💊',
+  'diagnostics / lab tests': '🧪',
+  'physiotherapy': '🦽',
+  'home nurse / nanny': '🧑‍⚕️',
 };
 
 export const getServiceCategoryEmoji = (category?: string | null) => {

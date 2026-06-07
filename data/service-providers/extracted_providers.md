@@ -7,25 +7,38 @@ This document contains **170** service providers extracted from the WhatsApp cha
 | Category | Count | Providers |
 | --- | --- | --- |
 | **AC Technician** | 18 | Renuka @ Cook, Pandit Prakash Shukla, Core Cutting IRA, Achyut. Pujari, Battery  Recharge Contact (+13 more) |
+| **Balcony Cloth Hangers** | 3 | Ashok Cloth Hanger, Devasri Cloth Hanger, Hanger Owner |
+| **Balcony Safety Nets** | 1 | KRC SAFETY NETS  Chandu |
 | **Bike Repair** | 1 | Bike Service Kollur Enfield Bike Service Kollur |
 | **Carpenter** | 5 | A2zinterior, Jameer Carpenter Raza, Mukesh Carpenter, Pradeep Carpenter IRA, Wasim Carpenter Ira |
 | **Catering** | 2 | Vengala Catering, Veerendra Sri Lakshmi Caterers |
+| **Core Cutting** | 4 | Core Cutting, Core Cutting Kadhar Tellapur, Core Cutting, Raju-CoreCutting |
 | **Decoration** | 2 | Magic Balloons, Sonu Decoration Dargha |
+| **Doctor / Clinic** | 7 | Anshu's Skin Clinic -Dr. Srikanth, Dr. Vinay Kumar, Dr.Harshitha Nandamudi, Ravi Kollur Medicals, Mahendra Medical Blood Test Lab Kollur (+2 more) |
 | **Door Rangoli** | 1 | Gadapa Muggu Ira |
 | **Driver** | 10 | Car Cleaner, Car Cleaning Ozo Sravan, Car Cleaning, Car Mechanic, Driver. Naveengoud (+5 more) |
 | **Electrician** | 9 | Arjun Sing Electrician Shop Kollur, Balaji Electrician, Deepak Ira Electrician, Electrican Ira Pochaiah, Electrician Ravi KOLLUR DBL Bedroom (+4 more) |
+| **False Ceiling / POP** | 3 | Imran Fall Ceiling, Sajid Khan Fall Ceiling, Wahid Fall Ceiling |
 | **Gardener** | 1 | Nursery maintenance kiran |
 | **Gas Agency** | 6 | Bharath GAS, Riaz Gas Guy, Guru  Shankar HP Gas, Indane Delivery Vishnu, Padama Gas Agency Hp (+1 more) |
-| **Grills & Mesh Work** | 6 | Grills best Kondapur, Grill.Lakshman, Mesh door- Unix services, Mesh Grills, Nadheem Grills (+1 more) |
+| **Grills & Mesh Work** | 3 | Grills best Kondapur, Grill.Lakshman, Nadheem Grills |
+| **Home Nurse / Nanny** | 1 | Nanny |
+| **Internet Provider / Tech** | 7 | Airtel Connection, Ira Airtel Technician, IRA Prashanth, Prabhakar Pioneer Online, Prabhakar.Pioneer (+2 more) |
 | **Ironing / Press** | 2 | Iron Nagaraju, Prabhakar Iron China |
 | **Maid** | 5 | Maid Prabha, Maid Srilatha, Nagamani Maid, Rani Maid IRA Hyd Kollur, Sabitha Maid |
+| **Marble & Granite Work** | 2 | Granite Work, Raju Granite Kollur |
 | **Milkman** | 7 | Arudra Milk Kollur, Milk Man Ira, Mallikarjun Milk, Manikyam -Milk Supply Kollur, Manikyam Milk (+2 more) |
-| **Other** | 71 | Ajay Lg Ac Kollur u Ira, Airtel Connection, Anshu's Skin Clinic -Dr. Srikanth, Ao Water Krishna, Apollo Diagnostics Kollur (+66 more) |
+| **Mosquito Net / Screens** | 3 | Mesh door- Unix services, Mesh Grills, Sunrise Glass And Upvc And Aluminum Windows Mosquito Net Slider |
+| **Other** | 33 | Ajay Lg Ac Kollur u Ira, Ao Water Krishna, Apollo Diagnostics Kollur, Apollo Tellap, Asif Freedom Screens And Blinds (+28 more) |
 | **Painter** | 2 | Abhishek Painter, IRA Painter Sandeep |
+| **Pandit / Pujari** | 5 | Hrushikesh Chilukamukku Pandit, Kalyan Panthulu/Poojari@Elite Villas, Pandit Shkula Ji, Ram Ira Panthulu Garu, Venugopala Swamy Temple Pujari |
 | **Pest Control** | 2 | Kumara Swamy Pest Control, Pest Control Ira |
+| **Physiotherapy** | 2 | Nandini Physiotherapy Srikara, Ravi Physiotherapist IRA Homeservice |
 | **Plumber** | 3 | Bikas Ira Plumber, Ira plumber Dilip, Sujit Plumber IRA Aspiration Kollur Hyd |
 | **RO / Water Purifier** | 4 | Kent Installation Guy, Ramu Aquagaurd, Sreedhar Water Filter, Water Filter, Service |
 | **RTO Agent** | 1 | Bhanu Mudiraj RTO |
+| **Swimming / Fitness Coach** | 1 | Swimming Coach |
+| **TV Repair & Install** | 2 | sony TV installation- Laxman, SURABHI Chandanagar TV Repair |
 | **Teaching** | 1 | Kavita CGR School |
 | **Tent House** | 4 | Chairs kollur Vital tent House, kirankumarnirvana Sai Balaji Tent House, Kollur Tent House, Srinu Kolluru Tent house IRA Aspiration |
 | **Washroom Cleaner** | 6 | Deep Cleaning Ira, Babu Lal Ira Cleaner, Dashrath Deep Cleaning Tellapur Washrooms, kethavathsanthosh4444 Cleaning, Praveen Cleaning) (+1 more) |
@@ -579,6 +592,145 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Washing Machine repiar Direct', '+
 
 ---
 
+### Category: Balcony Cloth Hangers
+
+#### Ashok Cloth Hanger
+- **Phone**: `+919010349093`
+- **Source File**: `Ashok Cloth Hanger IRA.vcf`
+- **WhatsApp Mentions & Context**:
+  > 23/09/25, 2:02 pm - +91 79812 88969: 2500 for hanger
+  > 1000 installation charge
+  > 23/09/25, 2:08 pm - +91 98470 58566: Ashok Cloth Hanger.vcf (file attached)
+  > 23/09/25, 2:08 pm - +91 98470 58566: 6 ft 2500
+  > 8 ft 3000
+
+  > 08/10/25, 8:15 am - +91 97405 79792: Thank you!
+  > 08/10/25, 9:13 am - +91 88979 42149: location: https://maps.google.com/?q=17.429468154907227,78.3407974243164
+  > 08/10/25, 9:48 am - +91 98470 58566: Ashok Cloth Hanger.vcf (file attached)
+  > 08/10/25, 12:08 pm - +91 96527 02736: <Media omitted>
+  > 08/10/25, 12:09 pm - +91 96527 02736: Artistic Cotton cloth bags...
+
+  > D block resident lift 4 not functioning since 2 days...
+  > Please check.
+  > 19/01/26, 3:49 pm - +91 96429 04943: Ashok Cloth Hanger IRA.vcf (file attached)
+  > 19/01/26, 3:49 pm - +91 96429 04943: You can contact him
+  > 19/01/26, 4:03 pm - +91 93978 11190: Thanks
+
+  > 24/02/26, 9:33 am - +91 80741 17394: Hi all,
+  > can anyone recommend a good vendor for mosquito doors for the main door and windows.Thanks!"
+  > 24/02/26, 9:46 am - +91 96429 04943: Ashok Cloth Hanger IRA.vcf (file attached)
+  > 24/02/26, 9:46 am - +91 96429 04943: He does mesh doors too
+  > 24/02/26, 10:11 am - +91 97035 43114: <Media omitted>
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ashok Cloth Hanger', '+919010349093', 'Balcony Cloth Hangers', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Devasri Cloth Hanger
+- **Phone**: `+917023704109`
+- **Source File**: `Devasri Cloth Hanger.vcf`
+- **WhatsApp Mentions & Context**:
+  > https://mygate.com/dl/lib/?route=detail&content_id=DIS-5151827&content_type=DIS
+  > 28/10/25, 9:51 pm - +91 99995 01298: Does anyone have a balcony hanger installation person contact, please share <This message was edited>
+  > 28/10/25, 9:52 pm - Sravan A617 IRA Aspiration: Devasri Cloth Hanger.vcf (file attached)
+  > 28/10/25, 9:55 pm - +91 86868 80522: Grill.Lakshman.vcf (file attached)
+  > 28/10/25, 9:56 pm - +91 86868 80522: He has installed Balcony Hangers, Safety Grill and Mosquito Mesh sliding door in my flat.
+
+  > 29/04/26, 9:55 am - +91 70937 01477: For urgency, please call FM
+  > 29/04/26, 10:03 am - +91 73848 81574: Hi can anyone share the number of a person for installing a cloth hanger in balcony if anyone has got it recently. We are unable to get a hold of someone to do it.
+  > 29/04/26, 10:05 am - Sravan A617 IRA Aspiration: Devasri Cloth Hanger.vcf (file attached)
+  > 29/04/26, 10:18 am - +91 96402 76118: He is available yesterday he visited my home
+  > 29/04/26, 10:19 am - +91 99855 89646: Oh .. I’ve spoke to FM , they are sending some one to fix the issue ..
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Devasri Cloth Hanger', '+917023704109', 'Balcony Cloth Hangers', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Hanger Owner
+- **Phone**: `+918885568811`
+- **Source File**: `Hanger Owner.vcf`
+- **WhatsApp Mentions & Context**:
+  > 28/01/25, 9:23 am - +91 99083 88117 was added
+  > 28/01/25, 9:18 am - Rajasekhar kalisetty IRA Aspiration added +91 99083 88117
+  > 28/01/25, 9:23 am - +91 99083 88117: Hello all . Good morning. Any contact who can install cloth hanger in the balcony, please Unicode me . Thanks in advance
+  > 28/01/25, 9:27 am - +91 98487 85236: Nadheem Grills.vcf (file attached)
+  > 28/01/25, 9:28 am - +91 98487 85236: Cloth hanger no
+
+  > Wish you happy birthday 🎂
+  > Rajashekar garu.
+  > 30/05/25, 9:44 am - +91 99372 49070: Any carpenter or interior guy working in the building? I need 5-10 mins of work for drilling the hanger
+  > 30/05/25, 9:53 am - Rajasekhar kalisetty IRA Aspiration: Thank you sir
+  > 30/05/25, 9:54 am - +91 90373 23232: Many many happy returns of the day @⁨Rajasekhar kalisetty IRA Aspiration⁩ ..!!
+
+  > 23/09/25, 1:27 pm - +91 98485 44918: Thank you suresh garu, vasishtha garu.
+  > 23/09/25, 1:52 pm - +91 98485 44918: Best balcony cloth hanging service provider number please.
+  > 23/09/25, 1:53 pm - +91 79812 88969: Hanger Owner.vcf (file attached)
+  > 23/09/25, 1:53 pm - +91 79812 88969: Name is Ramu. He did a good job at my home
+  > 23/09/25, 1:54 pm - +91 98485 44918: Thanks andi.
+
+  > 23/09/25, 1:59 pm - +91 98485 44918: This message was deleted
+  > 23/09/25, 2:00 pm - +91 98485 44918: How much he charges please for 6
+  > 23/09/25, 2:02 pm - +91 79812 88969: 2500 for hanger
+  > 1000 installation charge
+  > 23/09/25, 2:08 pm - +91 98470 58566: Ashok Cloth Hanger.vcf (file attached)
+
+  > 08/10/25, 8:15 am - +91 97405 79792: Thank you!
+  > 08/10/25, 9:13 am - +91 88979 42149: location: https://maps.google.com/?q=17.429468154907227,78.3407974243164
+  > 08/10/25, 9:48 am - +91 98470 58566: Ashok Cloth Hanger.vcf (file attached)
+  > 08/10/25, 12:08 pm - +91 96527 02736: <Media omitted>
+  > 08/10/25, 12:09 pm - +91 96527 02736: Artistic Cotton cloth bags...
+
+  > 28/10/25, 8:27 pm - +91 91602 35962: Shared some of my recent work pics in Mygate post. You can check it out here :
+  > https://mygate.com/dl/lib/?route=detail&content_id=DIS-5151827&content_type=DIS
+  > 28/10/25, 9:51 pm - +91 99995 01298: Does anyone have a balcony hanger installation person contact, please share <This message was edited>
+  > 28/10/25, 9:52 pm - Sravan A617 IRA Aspiration: Devasri Cloth Hanger.vcf (file attached)
+  > 28/10/25, 9:55 pm - +91 86868 80522: Grill.Lakshman.vcf (file attached)
+
+  > 28/10/25, 9:52 pm - Sravan A617 IRA Aspiration: Devasri Cloth Hanger.vcf (file attached)
+  > 28/10/25, 9:55 pm - +91 86868 80522: Grill.Lakshman.vcf (file attached)
+  > 28/10/25, 9:56 pm - +91 86868 80522: He has installed Balcony Hangers, Safety Grill and Mosquito Mesh sliding door in my flat.
+  > 28/10/25, 10:10 pm - +91 80561 86514: This message was deleted
+  > 28/10/25, 10:10 pm - +91 80561 86514: Try "Home Triangle"
+
+  > no grills on slope exit of each block
+  > No grill on swimming pool
+  > No hangers in changing room
+  > Even no slope in D block basement 1  for wheel chair
+  > 04/11/25, 12:06 pm - ira facilities: <Media omitted>
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Hanger Owner', '+918885568811', 'Balcony Cloth Hangers', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+### Category: Balcony Safety Nets
+
+#### KRC SAFETY NETS  Chandu
+- **Phone**: `+917207953205`
+- **Source File**: `KRC SAFETY NETS  Chandu.vcf`
+- **Bio/Description**: *BALCONY SAFETY NETS. INVISIBLE GRILLS. CLOTH HANGER. MOSQUITO MAESS DOOR. CRICKET SPORT NETS..*
+- **WhatsApp Mentions & Context**:
+  > 17/04/26, 10:34 pm - +91 73848 81574: Yes please we would like you to look into this @⁨~IRA-FM⁩ cos the prepaid meter suggests we are consuming Exorbitant amount whereas it is not as much. You did mention earlier you would look into it and I guess a quite number of residents have voiced. We urge you to look into it.
+  > 17/04/26, 11:07 pm - +91 75692 87144: You can see the work done in C506 and 504.  Vendor is KRC Safety Net, Mr Chandu.  The rate is 110 per sft for 3mm ss wire. <This message was edited>
+  > 17/04/26, 11:07 pm - +91 75692 87144: KRC SAFETY NETS  Chandu.vcf (file attached)
+  > 17/04/26, 11:22 pm - +91 90529 06655: I dont think reqching out to Facility team will help us in anyway
+  > 17/04/26, 11:22 pm - +91 90529 06655: Its about builder
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'KRC SAFETY NETS  Chandu', '+917207953205', 'Balcony Safety Nets', 'BALCONY SAFETY NETS. INVISIBLE GRILLS. CLOTH HANGER. MOSQUITO MAESS DOOR. CRICKET SPORT NETS..', 'PASS', 'COMMUNITY');
+```
+
+---
+
 ### Category: Bike Repair
 
 #### Bike Service Kollur Enfield Bike Service Kollur
@@ -752,6 +904,160 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Vengala Catering', '+919949986777'
 
 ---
 
+### Category: Core Cutting
+
+#### Core Cutting
+- **Phone**: `+919000304427`
+- **Source File**: `Core Cutting .vcf`
+- **WhatsApp Mentions & Context**:
+  > 09/06/25, 8:58 am - +91 80561 86514 was added
+  > 09/06/25, 8:57 am - Rajasekhar kalisetty IRA Aspiration added +91 80561 86514
+  > 09/06/25, 9:07 am - +91 90367 12145: 98406 62463 Srinivas core cutting
+  > 09/06/25, 9:16 am - +91 88979 42149: No power in flat @⁨Rajasekhar kalisetty IRA Aspiration⁩
+  > 09/06/25, 9:21 am - +91 90529 06655: Check balance
+
+  > 31/10/25, 10:15 pm - +91 788 821 5290: 😒 will miss the fun
+  > 31/10/25, 10:16 pm - +91 80999 11702: Still not finalized
+  > 01/11/25, 9:42 am - +91 98470 58566: Any core cutting guy contact available? To shift chimney hole
+  > 01/11/25, 9:45 am - +91 84476 52009: Vegetable vendor will come today or not ??
+  > 01/11/25, 10:08 am - Sumit A912: 3 contacts.vcf (file attached)
+
+  > 01/11/25, 9:45 am - +91 84476 52009: Vegetable vendor will come today or not ??
+  > 01/11/25, 10:08 am - Sumit A912: 3 contacts.vcf (file attached)
+  > 01/11/25, 10:08 am - Sumit A912: Try these 3 for core Cutting.
+  > 01/11/25, 10:12 am - +91 79897 33429: C Block lift 1 not working please check @⁨~IRA-FM⁩
+  > 01/11/25, 10:13 am - +91 98470 58566: Thanks. Will try
+
+  > 26/01/26, 3:56 pm - +91 95817 70090: <Media omitted>
+  > 26/01/26, 4:01 pm - +91 70755 42571: <Media omitted>
+  > 26/01/26, 4:12 pm - +91 89032 21132: can anyone share chimney core cutting person contact?
+  > 26/01/26, 4:14 pm - +91 96422 97422: For Chimney Core Cutting was already provided Right?
+  > 26/01/26, 4:16 pm - +91 89884 48555: Core Cutting Kadhar Tellapur .vcf (file attached)
+
+  > 26/01/26, 4:14 pm - +91 96422 97422: For Chimney Core Cutting was already provided Right?
+  > 26/01/26, 4:16 pm - +91 89884 48555: Core Cutting Kadhar Tellapur .vcf (file attached)
+  > 26/01/26, 4:31 pm - +91 94938 85649: Chimney core cutting is already done by builder to the utlity area in all flats.
+  > Check with builder if its not done.
+  > 26/01/26, 4:38 pm - +91 89032 21132: sure
+
+  > 05/03/26, 10:47 am - +91 97013 85462: Rejected proposal for cctv camera in corridor
+  > 05/03/26, 10:48 am - +91 97013 85462: CCTV camera and club house charges are the imp issue
+  > 05/03/26, 10:55 am - +91 95731 59281: Hi can I get any core cutting persons contact number for ac
+  > 05/03/26, 11:00 am - +91 77995 99956: @⁨~IRA-FM⁩ Request you to procure / install a wall clock at the club house reception area. (Ground floor) Thanks in advance. <This message was edited>
+  > 05/03/26, 11:01 am - +91 79936 40077: ok sir
+
+  > 05/03/26, 9:10 pm - +91 70755 42571: Excellent view on our ORR ..
+  > It looks like trees played 💛*yellow holi* recently <This message was edited>
+  > 06/03/26, 8:34 am - +91 95026 32179: Hi any one can share ac core cutting person contact. The existing hole is not suitable for ac installation.
+  > 06/03/26, 8:45 am - +91 77991 42007: Core Cutting.vcf (file attached)
+  > 06/03/26, 8:48 am - +91 95026 32179: @⁨~Hari⁩ how much he charged?
+
+  > Hopefully, the crisis will get over now. Plus India had a word with Iran and 3 phone calls have made the deal. They will now allow only Indian ships to cross SoH.
+  > 14/03/26, 12:29 pm - Venkata Ramana Reddy: He is in our community now. Whoever filled the form, shared details with him. Whoever needs service, can contact on below number.
+  > 14/03/26, 12:29 pm - Venkata Ramana Reddy: Durga Prasad Core Cutting Home.vcf (file attached)
+  > 14/03/26, 12:58 pm - +91 92462 93967: <Media omitted>
+  > 14/03/26, 1:44 pm - +91 99510 09098: Any 2 bhk available for rent … need for my cousin brother
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Core Cutting', '+919000304427', 'Core Cutting', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Core Cutting
+- **Phone**: `+917327037576`
+- **Source File**: `Core Cutting.vcf`
+- **WhatsApp Mentions & Context**:
+  > 09/06/25, 8:58 am - +91 80561 86514 was added
+  > 09/06/25, 8:57 am - Rajasekhar kalisetty IRA Aspiration added +91 80561 86514
+  > 09/06/25, 9:07 am - +91 90367 12145: 98406 62463 Srinivas core cutting
+  > 09/06/25, 9:16 am - +91 88979 42149: No power in flat @⁨Rajasekhar kalisetty IRA Aspiration⁩
+  > 09/06/25, 9:21 am - +91 90529 06655: Check balance
+
+  > 31/10/25, 10:15 pm - +91 788 821 5290: 😒 will miss the fun
+  > 31/10/25, 10:16 pm - +91 80999 11702: Still not finalized
+  > 01/11/25, 9:42 am - +91 98470 58566: Any core cutting guy contact available? To shift chimney hole
+  > 01/11/25, 9:45 am - +91 84476 52009: Vegetable vendor will come today or not ??
+  > 01/11/25, 10:08 am - Sumit A912: 3 contacts.vcf (file attached)
+
+  > 01/11/25, 9:45 am - +91 84476 52009: Vegetable vendor will come today or not ??
+  > 01/11/25, 10:08 am - Sumit A912: 3 contacts.vcf (file attached)
+  > 01/11/25, 10:08 am - Sumit A912: Try these 3 for core Cutting.
+  > 01/11/25, 10:12 am - +91 79897 33429: C Block lift 1 not working please check @⁨~IRA-FM⁩
+  > 01/11/25, 10:13 am - +91 98470 58566: Thanks. Will try
+
+  > 26/01/26, 3:56 pm - +91 95817 70090: <Media omitted>
+  > 26/01/26, 4:01 pm - +91 70755 42571: <Media omitted>
+  > 26/01/26, 4:12 pm - +91 89032 21132: can anyone share chimney core cutting person contact?
+  > 26/01/26, 4:14 pm - +91 96422 97422: For Chimney Core Cutting was already provided Right?
+  > 26/01/26, 4:16 pm - +91 89884 48555: Core Cutting Kadhar Tellapur .vcf (file attached)
+
+  > 26/01/26, 4:14 pm - +91 96422 97422: For Chimney Core Cutting was already provided Right?
+  > 26/01/26, 4:16 pm - +91 89884 48555: Core Cutting Kadhar Tellapur .vcf (file attached)
+  > 26/01/26, 4:31 pm - +91 94938 85649: Chimney core cutting is already done by builder to the utlity area in all flats.
+  > Check with builder if its not done.
+  > 26/01/26, 4:38 pm - +91 89032 21132: sure
+
+  > 05/03/26, 10:47 am - +91 97013 85462: Rejected proposal for cctv camera in corridor
+  > 05/03/26, 10:48 am - +91 97013 85462: CCTV camera and club house charges are the imp issue
+  > 05/03/26, 10:55 am - +91 95731 59281: Hi can I get any core cutting persons contact number for ac
+  > 05/03/26, 11:00 am - +91 77995 99956: @⁨~IRA-FM⁩ Request you to procure / install a wall clock at the club house reception area. (Ground floor) Thanks in advance. <This message was edited>
+  > 05/03/26, 11:01 am - +91 79936 40077: ok sir
+
+  > 05/03/26, 9:10 pm - +91 70755 42571: Excellent view on our ORR ..
+  > It looks like trees played 💛*yellow holi* recently <This message was edited>
+  > 06/03/26, 8:34 am - +91 95026 32179: Hi any one can share ac core cutting person contact. The existing hole is not suitable for ac installation.
+  > 06/03/26, 8:45 am - +91 77991 42007: Core Cutting.vcf (file attached)
+  > 06/03/26, 8:48 am - +91 95026 32179: @⁨~Hari⁩ how much he charged?
+
+  > Hopefully, the crisis will get over now. Plus India had a word with Iran and 3 phone calls have made the deal. They will now allow only Indian ships to cross SoH.
+  > 14/03/26, 12:29 pm - Venkata Ramana Reddy: He is in our community now. Whoever filled the form, shared details with him. Whoever needs service, can contact on below number.
+  > 14/03/26, 12:29 pm - Venkata Ramana Reddy: Durga Prasad Core Cutting Home.vcf (file attached)
+  > 14/03/26, 12:58 pm - +91 92462 93967: <Media omitted>
+  > 14/03/26, 1:44 pm - +91 99510 09098: Any 2 bhk available for rent … need for my cousin brother
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Core Cutting', '+917327037576', 'Core Cutting', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Core Cutting Kadhar Tellapur
+- **Phone**: `+919666560103`
+- **Source File**: `Core Cutting Kadhar Tellapur .vcf`
+- **WhatsApp Mentions & Context**:
+  > 26/01/26, 4:12 pm - +91 89032 21132: can anyone share chimney core cutting person contact?
+  > 26/01/26, 4:14 pm - +91 96422 97422: For Chimney Core Cutting was already provided Right?
+  > 26/01/26, 4:16 pm - +91 89884 48555: Core Cutting Kadhar Tellapur .vcf (file attached)
+  > 26/01/26, 4:31 pm - +91 94938 85649: Chimney core cutting is already done by builder to the utlity area in all flats.
+  > Check with builder if its not done.
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Core Cutting Kadhar Tellapur', '+919666560103', 'Core Cutting', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Raju-CoreCutting
+- **Phone**: `+917013627905`
+- **Source File**: `Raju-CoreCutting.vcf`
+- **WhatsApp Mentions & Context**:
+  > Any contact who can make hole for A/C fitting
+  > 23/04/26, 12:20 pm - Sumit A912: Core Cutting IRA.vcf (file attached)
+  > 23/04/26, 12:20 pm - Sumit A912: Raju-CoreCutting.vcf (file attached)
+  > 23/04/26, 12:21 pm - Sumit A912: Please inform CRM before proceeding.
+  > 23/04/26, 2:01 pm - +91 98900 86816: <Media omitted>
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Raju-CoreCutting', '+917013627905', 'Core Cutting', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
 ### Category: Decoration
 
 #### Magic Balloons
@@ -785,6 +1091,159 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Magic Balloons', '+919441122123', 
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Sonu Decoration Dargha', '+917013369527', 'Decoration', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+### Category: Doctor / Clinic
+
+#### Anshu's Skin Clinic -Dr. Srikanth
+- **Phone**: `+919182288455`
+- **Source File**: `Anshu's Skin Clinic -Dr. Srikanth.vcf`
+- **WhatsApp Mentions & Context**:
+  > 25/05/26, 11:38 am - +91 91107 61778: Hi everyone, could anyone please share a good dermatologist reference nearby?
+  > 25/05/26, 11:39 am - +91 81280 32116: Is any drilling work happening in the community today? Need a small favor - drilling at two places. Please DM me
+  > 25/05/26, 12:33 pm - +91 70327 70352: Anshu's Skin Clinic -Dr. Srikanth.vcf (file attached)
+  > 25/05/26, 2:59 pm - +91 94403 01972: Does anyone know of a nearby car pollution check center?
+  > 25/05/26, 3:04 pm - +91 95334 44455: You can find the Vehicle near to Myhome Tridasa
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Anshu''s Skin Clinic -Dr. Srikanth', '+919182288455', 'Doctor / Clinic', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Dr. Vinay Kumar
+- **Phone**: `+916913139999`
+- **Source File**: `Dr. Vinay Kumar.vcf`
+- **Bio/Description**: *Bone & features..its related health , treatment ,surgery etc*
+- **WhatsApp Mentions & Context**:
+  > 11/11/25, 9:51 pm - +91 93978 11190: Satish Reddy
+  > 11/11/25, 9:54 pm - +91 81280 32116: @⁨ira facilities⁩ - what’s the update here? Also please do share cadence for pest control in community.
+  > 11/11/25, 10:13 pm - +91 77995 99956: Dr. Vinay Kumar.vcf (file attached)
+  > 11/11/25, 10:13 pm - +91 79812 88969: Where is his clinic?
+  > 11/11/25, 10:15 pm - +91 77995 99956: Srikara Hospitals, across branches.
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Dr. Vinay Kumar', '+916913139999', 'Doctor / Clinic', 'Bone & features..its related health , treatment ,surgery etc', 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Dr.Harshitha Nandamudi
+- **Phone**: `+919666434114`
+- **Source File**: `Dr.Harshitha Nandamudi .vcf`
+- **Bio/Description**: *Dr.Harshitha Nandamudi*
+- **WhatsApp Mentions & Context**:
+  > 01/05/26, 8:55 pm - +91 95151 13389: Hi all, my father is unwell. Suffering from severe stomach pain and vomit. Is any doctor available in the community please
+  > 01/05/26, 9:21 pm - Sourabh A207 IRA Aspiration: I guess we don't have any Dr in our community!
+  > 01/05/26, 9:41 pm - +91 95810 50050: Dr.Harshitha Nandamudi .vcf (file attached)
+  > 01/05/26, 9:41 pm - +91 95810 50050: Please check with Dr Harshitha. She is from D211
+  > 01/05/26, 10:00 pm - +91 88767 95904: Please let me know if u need any help with going to the doctor. I can drive u to the nearest hospital <This message was edited>
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Dr.Harshitha Nandamudi', '+919666434114', 'Doctor / Clinic', 'Dr.Harshitha Nandamudi', 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Mahendra Medical Blood Test Lab Kollur
+- **Phone**: `+919666661366`
+- **Source File**: `Mahendra Medical Blood Test Lab Kollur.vcf`
+- **WhatsApp Mentions & Context**:
+  > 08/05/26, 11:30 am - +91 81064 33517: Thyrocare MIG.vcf (file attached)
+  > 08/05/26, 11:31 am - +91 81064 33517: you can try asking them
+  > 08/05/26, 11:32 am - Sumit A912: Mahendra Medical Blood Test Lab Kollur.vcf (file attached)
+  > 08/05/26, 2:02 pm - +91 99490 27492: Do we have any inhouse tent contact person who can supply some chairs
+  > 08/05/26, 2:04 pm - Sumit A912: Praveen Kollur Tent House.vcf (file attached)
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Mahendra Medical Blood Test Lab Kollur', '+919666661366', 'Doctor / Clinic', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Pocket Pils Medical Stores Signature
+- **Phone**: `+916300507310`
+- **Source File**: `Pocket Pils Medical Stores Signature.vcf`
+- **WhatsApp Mentions & Context**:
+  > Contact numbers
+  > 7842310028
+  > 6300507310
+  > 14/02/26, 9:10 pm - +91 99661 20136: Any idea on their occupancy?? We too should have one pharmacy inside our society
+  > 14/02/26, 9:10 pm - +91 80080 49094: This message was deleted
+
+  > Contact numbers
+  > 7842310028
+  > 6300507310
+  > 03/03/26, 11:08 am - +91 99510 09098: <Media omitted>
+  > 03/03/26, 11:15 am - Naresh Anna IRA Aspiration B205: Hi All,
+
+  > 21/04/26, 12:32 pm - Ashish A414 IRA Aspiration: Is he coming these days for car cleaning, because he did not clean my car since three days.
+  > 21/04/26, 2:57 pm - +91 82980 93327: Anybody having number of medical store in signature altius?
+  > 21/04/26, 2:59 pm - Venkata Ramana Reddy: +91 63005 07310
+  > 21/04/26, 2:59 pm - +91 82980 93327: or any other contact number who can deliver  medicine now?
+  > 21/04/26, 3:00 pm - +91 88952 73780: Hey everyone , can you guys share maid contact for house cleaning and dishes ! ??
+
+  > Freedom Mesh - quite reasonable and quick.
+  > 21/04/26, 7:55 pm - +91 98663 18123: Pocket Pils Medical Stores Signature.vcf (file attached)
+  > 21/04/26, 7:55 pm - +91 98663 18123: Check out the below from Signature Altius . He delivered medicines couple of times to me at no additional cost
+  > 21/04/26, 9:48 pm - +91 70937 01477: And it begins again….
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Pocket Pils Medical Stores Signature', '+916300507310', 'Doctor / Clinic', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Ravi Kollur Medicals
+- **Phone**: `+917569677011`
+- **Source File**: `IRA Ravi (Sri Sai Medicals).vcf`
+- **Bio/Description**: *Sri Sai medical and general store*
+- **WhatsApp Mentions & Context**:
+  > check with security.
+  > 14/10/25, 8:13 pm - +91 97035 43114: If anyone has a kollur  medical store number please share
+  > 14/10/25, 8:15 pm - Anil B214 IRA Aspiration: Ravi Kollur Medicals.vcf (file attached)
+  > 14/10/25, 8:32 pm - +91 97035 43114: Thank you
+  > 14/10/25, 8:48 pm - +91 80084 36464: Not working for me <This message was edited>
+
+  > 11/11/25, 5:46 pm - ira facilities: We will send an electrician to check
+  > 11/11/25, 8:57 pm - +91 90333 86708: I use Apollo and it gets delivered, but takes few days
+  > 11/11/25, 9:04 pm - +91 77995 99956: IRA Ravi (Sri Sai Medicals).vcf (file attached)
+  > 11/11/25, 9:05 pm - +91 77995 99956: This message was deleted
+  > 11/11/25, 9:39 pm - +91 79812 88969: Hello
+
+  > 21/04/26, 2:59 pm - +91 82980 93327: or any other contact number who can deliver  medicine now?
+  > 21/04/26, 3:00 pm - +91 88952 73780: Hey everyone , can you guys share maid contact for house cleaning and dishes ! ??
+  > 21/04/26, 3:08 pm - +91 81216 97707: Medicalshop Kollur Door Delvery: 75696 77011
+  > 21/04/26, 5:57 pm - +91 96546 97443: <Media omitted>
+  > 21/04/26, 6:00 pm - +91 97013 85462: 🚩🚩PARVIDA SRINIVAS🎼🎶 Aparna Pharmacy Kollur.vcf (file attached)
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ravi Kollur Medicals', '+917569677011', 'Doctor / Clinic', 'Sri Sai medical and general store', 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Sujatha Medical Nurse
+- **Phone**: `+917995900442`
+- **Source File**: `Sujatha Medical Nurse.vcf`
+- **WhatsApp Mentions & Context**:
+  > Any references of nearby clinics or physicians who can change Catheter and Urine bag?
+  > 24/06/25, 4:37 pm - +91 96422 97422: I am not Pointing anyone here...My intention here is if we bring them till main gate..it's easy for them to enter into Society...Anyway Thanks mate..
+  > 24/06/25, 4:57 pm - +91 97109 88898: Sujatha Medical Nurse.vcf (file attached)
+  > 24/06/25, 4:57 pm - +91 97109 88898: She comes to IRA for medical needs.
+  > 24/06/25, 11:35 pm - +91 80561 86514: For those who are coming late, near Kollur village post office the road to our community is blocked.  You need to detour and get into small streets and come and join before the IRA sales office.
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Sujatha Medical Nurse', '+917995900442', 'Doctor / Clinic', NULL, 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -1280,6 +1739,60 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Suresh Electrician', '+91798980509
 
 ---
 
+### Category: False Ceiling / POP
+
+#### Imran Fall Ceiling
+- **Phone**: `+919603094911`
+- **Source File**: `Imran Fall Ceiling.vcf`
+- **WhatsApp Mentions & Context**:
+  > 16/11/25, 12:41 pm - Sumit A912: Sajid Khan Fall Ceiling.vcf (file attached)
+  > 16/11/25, 12:41 pm - Sumit A912: Wahid Fall Ceiling.vcf (file attached)
+  > 16/11/25, 12:41 pm - Sumit A912: Imran Fall Ceiling.vcf (file attached)
+  > 16/11/25, 12:42 pm - Sumit A912: Try these @⁨~Mayank⁩
+  > 16/11/25, 12:42 pm - +91 81211 07007: Which one is better bhai?
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Imran Fall Ceiling', '+919603094911', 'False Ceiling / POP', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Sajid Khan Fall Ceiling
+- **Phone**: `+919517372141`
+- **Source File**: `Sajid Khan Fall Ceiling.vcf`
+- **Bio/Description**: *Sajid Khan Fall Ceiling*
+- **WhatsApp Mentions & Context**:
+  > 16/11/25, 12:40 pm - +91 81211 07007: Any false ceiling repair contact ?
+  > 16/11/25, 12:40 pm - +91 81211 07007: This message was deleted
+  > 16/11/25, 12:41 pm - Sumit A912: Sajid Khan Fall Ceiling.vcf (file attached)
+  > 16/11/25, 12:41 pm - Sumit A912: Wahid Fall Ceiling.vcf (file attached)
+  > 16/11/25, 12:41 pm - Sumit A912: Imran Fall Ceiling.vcf (file attached)
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Sajid Khan Fall Ceiling', '+919517372141', 'False Ceiling / POP', 'Sajid Khan Fall Ceiling', 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Wahid Fall Ceiling
+- **Phone**: `+919985268088`
+- **Source File**: `Wahid Fall Ceiling.vcf`
+- **WhatsApp Mentions & Context**:
+  > 16/11/25, 12:40 pm - +91 81211 07007: This message was deleted
+  > 16/11/25, 12:41 pm - Sumit A912: Sajid Khan Fall Ceiling.vcf (file attached)
+  > 16/11/25, 12:41 pm - Sumit A912: Wahid Fall Ceiling.vcf (file attached)
+  > 16/11/25, 12:41 pm - Sumit A912: Imran Fall Ceiling.vcf (file attached)
+  > 16/11/25, 12:42 pm - Sumit A912: Try these @⁨~Mayank⁩
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Wahid Fall Ceiling', '+919985268088', 'False Ceiling / POP', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
 ### Category: Gardener
 
 #### Nursery maintenance kiran
@@ -1528,77 +2041,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Grills best Kondapur', '+918171373
 
 ---
 
-#### Mesh door- Unix services
-- **Phone**: `+919985922218`
-- **Source File**: `Mesh door- Unix services.vcf`
-- **Bio/Description**: *Call or Whatsapp 9985922218*
-- **WhatsApp Mentions & Context**:
-  > 04/10/25, 2:58 pm - +91 79812 88969: <Media omitted>
-  > 04/10/25, 2:58 pm - +91 99995 01298: Yes plz, you can share
-  > 04/10/25, 2:59 pm - +91 81064 33517: Mesh door- Unix services.vcf (file attached)
-  > 04/10/25, 3:36 pm - +91 98485 44918: Cost please
-  > 04/10/25, 3:36 pm - +91 79812 88969: 750/sqft.
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Mesh door- Unix services', '+919985922218', 'Grills & Mesh Work', 'Call or Whatsapp 9985922218', 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Mesh Grills
-- **Phone**: `+919966851213`
-- **Source File**: `Mesh Grills.vcf`
-- **WhatsApp Mentions & Context**:
-  > 02/09/25, 9:23 am - Mahesh B 615 IRA Aspiration: Try both numbers..
-  > 02/09/25, 9:24 am - +91 86868 80522: Thank you Mahesh 🤝
-  > 02/09/25, 9:34 am - +91 81793 22379: Mesh Grills.vcf (file attached)
-  > 02/09/25, 9:49 am - +91 97013 85462 joined from the community
-  > 02/09/25, 12:14 pm - +91 93944 14444: <Media omitted>
-
-  > 07/10/25, 9:43 pm - +91 81064 33517: IRA Helpdesk.vcf (file attached)
-  > 07/10/25, 9:48 pm - +91 79812 88969: Airtel wifi isn't working. Anyone else facing the issue?
-  > 07/10/25, 10:00 pm - +91 99008 99799: Hi All, We would like to install grills and mesh doors for our windows/Balconies. Request you to share some point of contacts with good service record in reasonable price. Thanks
-  > 07/10/25, 10:02 pm - +91 81064 33517: ‎2 contacts.vcf (file attached)
-  > 07/10/25, 10:16 pm - Venkata Ramana Reddy: We understand that we depend on the vendor for lift related issues and aware that all lifts are brand new. Electronic devices may occasionally encounter problems but frequent issues are unexpected from a reputed company unless there were errors in the lifts manufacturing or installation.
-
-  > 12/01/26, 4:23 pm - +91 97013 85462: vinod.singh728227@gmail.com
-  > 12/01/26, 7:10 pm - +91 79936 40077: <Media omitted>
-  > 12/01/26, 7:45 pm - Rajinikanth Reddy IRA Aspiration D410: Can any one please share the vendor contact details who deals with upvc mesh doors and iron grills
-  > 12/01/26, 7:47 pm - +91 81064 33517: ‎2 contacts.vcf (file attached)
-  > 12/01/26, 7:47 pm - +91 81064 33517: you can check with these vendors
-
-  > 04/04/26, 7:00 pm - +91 90324 07332: So as of now we have E205, C103, C403, A 504, A 104 and counting
-  > 04/04/26, 7:09 pm - +91 90324 07332: I have shared the society location and flat list with the vendor. He will visit by 11 am Monday morning for measurements <This message was edited>
-  > 04/04/26, 7:10 pm - +91 85228 96008: I am interested as well. In addition to the main door, I would like to have grills and mesh doors for windows as well. I will check with them regarding those separately.
-  > 04/04/26, 7:10 pm - +91 85228 96008: A-815
-  > 04/04/26, 7:11 pm - +91 90324 07332: Yes they have a huge catalog of work that can be accomplished
-
-  > 10/04/26, 5:06 pm - +91 70440 80050: Hi, did this guy Rajmouli worked in any flat for window grill and mosquito mesh work?
-  > 10/04/26, 5:47 pm - +91 95501 83450: Yes, for mesh door n windows
-  > 10/04/26, 5:54 pm - +91 70440 80050: How much he charged for grills /mesh/ and utility box?
-  > 10/04/26, 5:59 pm - +91 95501 83450: Oh 1.5yrs back, dint remember, but he will drag the things, many follow ups we need to do <This message was edited>
-  > 10/04/26, 6:14 pm - +91 98333 24060: Can anyone suggest a hindi speaking maid for my flat and who is willing to work at 9AM slot
-
-  > 10/04/26, 7:00 pm - +91 96763 31166: Thank you so much
-  > 10/04/26, 7:53 pm - +91 90324 07332: Hi All,
-  > May I know how many of you have ordered the grills/sliding mesh doors and windows?
-  > For me he said mostly by tomorrow or a day later he would be delivering.
-  > 10/04/26, 8:16 pm - +91 90324 07332: Got confirmation from the vendor that out of 12 flats only 4 confirmed and have paid advanced.
-
-  > 19/05/26, 11:47 am - +91 99356 23896: <Media omitted>
-  > 19/05/26, 1:31 pm - +91 93978 11190: <Media omitted>
-  > 19/05/26, 5:17 pm - Bhanu D213: If anyone needs Invisible grills / blinds / mesh doors, you can contact Asif (Freedom Blinds & Screens)
-  > They did a very good job.
-  > Contact: 9177237634
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Mesh Grills', '+919966851213', 'Grills & Mesh Work', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
 #### Nadheem Grills
 - **Phone**: `+919032433819`
 - **Source File**: `Nadheem Grills.vcf`
@@ -1616,20 +2058,262 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Nadheem Grills', '+919032433819', 
 
 ---
 
-#### Sunrise Glass And Upvc And Aluminum Windows Mosquito Net Slider
-- **Phone**: `+917351238088`
-- **Source File**: `Sunrise Glass And Upvc And Aluminum Windows Mosquito Net Slider.vcf`
-- **Bio/Description**: *We Provide A Good Quality All Types Of Glass Works.All Types Of UPVC Windows Works.Profile Doors, Aristo Sliding, Diomonds shape Mirrors, LED Mirrors, Bathroom Shawers, Pooja Doors etc.All Types Of Aluminium Works .SS Railing, MS Railing And All Types Iron And Steel Works.Very Reasonable Price Give Me a Chance  To Serve All Works Available.Contact _ 8977158088Contact _ 7351238088Whatsapp - +91 73512 38088*
+### Category: Home Nurse / Nanny
+
+#### Nanny
+- **Phone**: `+919666691480`
+- **Source File**: `Nanny .vcf`
 - **WhatsApp Mentions & Context**:
-  > 04/04/26, 8:07 pm - +91 90324 07332: The quotation only includes what has been shared in the quote, extra work will be charged extra by the vendor for sure
-  > 04/04/26, 8:08 pm - +91 85228 96008: Can you please share the catalogue if you have it.
-  > 04/04/26, 8:22 pm - +91 90324 07332: Sunrise Glass And Upvc And Aluminum Windows Mosquito Net Slider.vcf (file attached)
-  > 04/04/26, 8:22 pm - +91 90324 07332: Check in his section of whatsapp
-  > 04/04/26, 8:24 pm - +91 96642 85827: <Media omitted>
+  > 20/02/26, 7:04 am - +91 93978 11190: @⁨Rajasekhar kalisetty IRA Aspiration⁩  wanted to ask there is no ac remote at the gym  can you plz arrange it . There is no security person to ask .
+  > 20/02/26, 7:05 am - ira facilities: Dear Resident We will update
+  > 20/02/26, 10:02 am - +91 95848 10193: Hi Everyone, I am looking for newborn baby massage, does anyone have any contact of Dai or nanny or Maid, who does massage of 6+ month baby.
+  > Thanks in Advance.
+  > 20/02/26, 10:46 am - ira facilities: <Media omitted>
+
+  > 15/03/26, 4:36 pm - +91 95535 00082: Hi any contact for mason civil work please
+  > 15/03/26, 5:22 pm - Ramakrishna D904: We had a whatsApp group of all skating related discussions, if anyone interested you can join using the link https://chat.whatsapp.com/H6p0hpnagUgLG8mLDPIgTX?mode=ac_t
+  > 15/03/26, 8:00 pm - +1 (913) 215-6601: Hi All, Our tenant who is moving into D-102 on 1st April is looking for a maid for household chores and a nanny to look after their child. If anyone has contacts, please share with him on +91 99591 49217
+  > 15/03/26, 8:47 pm - +91 70440 80050: Hi, any 2 bhk available for rent?
+  > 15/03/26, 9:59 pm - +91 97013 85462: @⁨~IRA-FM⁩ please arrange mosquito repellent spray at mosquito prone areas. Mosquitoes are spreading and multiplying at rapid rate.
+
+  > 31/03/26, 8:05 pm - +91 96763 31166: Do we have any DPS girls in our apartments who are studying 6th and above, I need a clarification. Please respond <This message was edited>
+  > 31/03/26, 10:56 pm - +91 96402 76118: <Media omitted>
+  > 01/04/26, 9:53 am - +91 70440 80050: Hello All, Nanny Chansamma who has been working at our house is available starting tomorrow .. she is very good in handelling infants and also helps in daily chores .. she can be available for 8 hours(8 to 4).. please ping me if you need Nanny/househelp.
+  > 01/04/26, 11:30 am - +91 86861 30098: Anyone having indane gas delivery person no,Please DM
+  > 01/04/26, 11:37 am - +91 89717 77008: Vishnu Cylinder Indane Ira.vcf (file attached)
+
+  > 01/04/26, 11:40 am - +91 80996 65806: Vishnuvardhanreddy Reddy.vcf (file attached)
+  > 01/04/26, 1:22 pm - +91 96033 99977: Can you share her number
+  > 01/04/26, 1:22 pm - +91 70440 80050: Nanny .vcf (file attached)
+  > 01/04/26, 2:11 pm - +91 90148 46025: <Media omitted>
+  > 01/04/26, 2:14 pm - +91 96033 99977: Thank you
+
+  > For 4 wheeler and Bike Riders Plz Don't the Speed Limit 10 in Parking Area...I have Observed some Rash Driving In the Parking as well... <This message was edited>
+  > 26/05/26, 6:27 pm - +91 99356 23896: <Media omitted>
+  > 26/05/26, 6:55 pm - +91 97046 31867: Anyone know reference of nanny/babysitter available to take care of baby in Ira Aspiration?
+  > 26/05/26, 8:59 pm - +91 90324 07332: I did try this raising greviance in MyCure app 5 to 6 times and visiting office and submitting written application and complaint but everytime they are closing it without updating the correct plinth area and tax stating it has been fixed at the time if registration as per your cost if flat and cannot be changed etc.
+  > Somehow Tellapur CMC doesn't know how to work while a similar issue was resolved by GHMC office Kondapur within 1 week for me last year with online grievances raised on the app.
 
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Sunrise Glass And Upvc And Aluminum Windows Mosquito Net Slider', '+917351238088', 'Grills & Mesh Work', 'We Provide A Good Quality All Types Of Glass Works.All Types Of UPVC Windows Works.Profile Doors, Aristo Sliding, Diomonds shape Mirrors, LED Mirrors, Bathroom Shawers, Pooja Doors etc.All Types Of Aluminium Works .SS Railing, MS Railing And All Types Iron And Steel Works.Very Reasonable Price Give Me a Chance  To Serve All Works Available.Contact _ 8977158088Contact _ 7351238088Whatsapp - +91 73512 38088', 'PASS', 'COMMUNITY');
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Nanny', '+919666691480', 'Home Nurse / Nanny', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+### Category: Internet Provider / Tech
+
+#### Airtel Connection
+- **Phone**: `+919392641259`
+- **Source File**: `Airtel Connection.vcf`
+- **WhatsApp Mentions & Context**:
+  > 04/04/25, 12:39 pm - +91 97035 43114: Please inform us of a date . We are waiting from long
+  > 04/04/25, 1:27 pm - +91 94411 01955: Please airtel wifi installation phone number share me <This message was edited>
+  > 04/04/25, 1:37 pm - Venkata Ramana Reddy: +91 93926 41259
+  > 04/04/25, 2:01 pm - +91 94411 01955: Tq sir
+  > 05/04/25, 8:49 am - Sarat Chandra IRA Aspiration: <Media omitted>
+
+  > 28/05/25, 9:39 am - Bhanu D213: Lift is still not working
+  > 28/05/25, 1:44 pm - +91 89194 38274: Hi all, I want an airtel net . can any one of you share contact
+  > 28/05/25, 1:44 pm - +91 85888 47738: Airtel Connection.vcf (file attached)
+  > 28/05/25, 1:44 pm - +91 89194 38274: And how is performance
+  > 28/05/25, 1:44 pm - +91 99510 09098: IRA Prashanth.vcf (file attached)
+
+  > 10/06/25, 11:07 am - +91 78424 92036: Thanks All☺️ for quick response
+  > 10/06/25, 11:09 am - +91 90333 86708: IRA Airtel Prashanth.vcf (file attached)
+  > 10/06/25, 11:10 am - +91 89194 38274: +91 93926 41259
+  > 10/06/25, 11:11 am - Rajasekhar kalisetty IRA Aspiration added +91 98606 04099
+  > 10/06/25, 11:11 am - Rajasekhar kalisetty IRA Aspiration added +91 74003 79795
+
+  > 22/06/25, 1:09 pm - Sumit A912: Hello vaibhav and Mahendra, we will be planning a meeting with the residents as each one's well being and perspective is important.
+  > 22/06/25, 1:11 pm - +91 90102 89002: Lets meet and decide
+  > 22/06/25, 1:19 pm - +91 88767 95904: I would also like to raise the issue of network connectivity. Be it Airtel or Jio, or Vodafone, the connection is very poor and call drops frequently. Any way we can rectify this?
+  > 22/06/25, 1:23 pm - +91 93901 46080: Only work around within Apartment we have been following is switching on WiFi calling option
+  > 22/06/25, 1:28 pm - +91 81064 33517: it was way bad in the initial months
+
+  > 06/09/25, 10:07 pm - +91 96422 97422: Already there are some Dengue cases bro...Next time please react little fast...Remaining all are ok but...Please Don't neglect health related calls...
+  > 06/09/25, 10:11 pm - Rajasekhar kalisetty IRA Aspiration: Sure sir
+  > 07/09/25, 7:07 am - +91 91691 21121: Can any one have Airtel broadband connection person contact details
+  > 07/09/25, 7:19 am - +91 78937 42337: Pradeep Airtel Intenet.vcf (file attached)
+  > 07/09/25, 9:35 am - ramesh D812 Aspiration: Rahul deep and bathroom cleaning person is coming to the community
+
+  > 19/02/26, 5:56 pm - +91 97013 85462: Few boys and girls are destroying plants in children Park. Parents please educate them.
+  > 19/02/26, 5:58 pm - Sourabh A207 IRA Aspiration: In B2 A block Side ...no network for Jio ...Maybe they are checking
+  > 19/02/26, 5:58 pm - +91 88869 12328: My mobile connection with AIRTEL <This message was edited>
+  > 19/02/26, 6:15 pm - +91 99855 89646: <Media omitted>
+  > 19/02/26, 6:17 pm - +91 99855 89646: Finally he helped me to send technician and got issue fixed . Looks the issue was in communication shaft duct , where someone has disconnected the line from router, got it fixed finally !
+
+  > 08/05/26, 4:39 pm - +91 97013 85462: @Security Manager, many times I use to see 3 guards at entrance gate. Deployment is like that or  one additional guard join there to chit chat. Once 3 guards are there, monitoring is very poor. They chit chat among themselves. Sometimes we need to blow horn to open the barrier.
+  > 08/05/26, 5:52 pm - Raju A104 IRA Aspiration: I'm also facing issues with him and the quality of his chairs. Avoid this rent house
+  > 08/05/26, 5:55 pm - Raju A104 IRA Aspiration: I paid the advance for an Airtel Wi-Fi connection a week ago, but the installation hasn't happened yet. I have tried contacting the assigned representative multiple times, but they are not responding. Could anyone provide an alternative contact number or assist me in escalating this issue?
+  > 08/05/26, 6:08 pm - +91 90523 06254: Same with me …. He isn’t responding to calls as well. I have opted for pioneer after that. Even he isn’t responding for my cancellation requests
+  > 08/05/26, 6:08 pm - +91 90523 06254: I have already reported to FM team.
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Airtel Connection', '+919392641259', 'Internet Provider / Tech', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Ira Airtel Technician
+- **Phone**: `+918340080145`
+- **Source File**: `Govind Airtel Technician.vcf`
+- **WhatsApp Mentions & Context**:
+  > 04/10/25, 9:08 am - Sourabh A207 IRA Aspiration: 2 contacts.vcf (file attached)
+  > 04/10/25, 9:09 am - ramesh D812 Aspiration: Vegetables and fruits vendors will come in 15 min near E2 gate
+  > 04/10/25, 9:24 am - +91 99858 12521: Govind Airtel Technician.vcf (file attached)
+  > 04/10/25, 9:24 am - ramesh D812 Aspiration: <Media omitted>
+  > 04/10/25, 9:47 am - +91 99599 25246: Vegetables vendor will come in 30 Mins
+
+  > 06/10/25, 3:46 pm - +91 99995 01298: Thanks for the info, any contact number?
+  > 06/10/25, 3:47 pm - +91 88767 95904: Prabhakar Pioneer Online.vcf (file attached)
+  > 06/10/25, 3:47 pm - +91 79812 88969: Ira Airtel Technician.vcf (file attached)
+  > 06/10/25, 5:06 pm - ira facilities: <Media omitted>
+  > 06/10/25, 6:28 pm - +91 95818 99355: <Media omitted>
+
+  > 09/04/26, 8:25 am - +91 95848 10193: Hello, does anyone have extra Indane Gas Cylinder, I have done the booking but it seems it will take 1 week. I return the cylinder once I receive it.
+  > Thanks in Advance.
+  > 09/04/26, 8:58 am - +91 70937 01477: Hi everyone, does anyone have a contact with the Airtel wifi staff/ any technician?
+  > 09/04/26, 8:58 am - +91 70937 01477: They haven’t configured my set top box since two weeks and customer services is useless
+  > 09/04/26, 9:00 am - Ramakrishna D904: Ravinder Airtel.vcf (file attached)
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ira Airtel Technician', '+918340080145', 'Internet Provider / Tech', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### IRA Prashanth
+- **Phone**: `+919948226403`
+- **Source File**: `IRA Airtel Prashanth.vcf`
+- **WhatsApp Mentions & Context**:
+  > Contact
+  > Dapur prashanth
+  > **Dedicated Executive**
+  > 9948226403
+
+  > 23/05/25, 1:13 pm - +91 99510 09098: Hi everyone this is Naveen Goud from c 109 newly checking in from June 1
+  > 23/05/25, 1:15 pm - +91 99510 09098: Can i get airtel internet vendor contact , can anyone sugggest  which is best Airtel Internet  or pioneer
+  > 23/05/25, 1:30 pm - +91 90333 86708: IRA Airtel Prashanth.vcf (file attached)
+  > 23/05/25, 5:05 pm - +91 99510 09098: Thank u Srikanth garu
+  > 23/05/25, 7:50 pm - +91 81280 32116: Would you please share what you found from CCTV footage?
+
+  > 28/05/25, 1:44 pm - +91 85888 47738: Airtel Connection.vcf (file attached)
+  > 28/05/25, 1:44 pm - +91 89194 38274: And how is performance
+  > 28/05/25, 1:44 pm - +91 99510 09098: IRA Prashanth.vcf (file attached)
+  > 28/05/25, 1:44 pm - +91 89194 38274: Thank you
+  > 28/05/25, 1:45 pm - +91 99510 09098: Airtel
+
+  > 28/05/25, 1:45 pm - +91 85888 47738: It's good
+  > 28/05/25, 1:45 pm - +91 99510 09098: It’s perfect me also using from 2 days back
+  > 28/05/25, 1:46 pm - +91 76740 88877: I went for airtel black end up using only wifi with almost same price with no response from customer support and prashanth
+  > 28/05/25, 1:47 pm - +91 76740 88877: And bcz we have to pay in advance 2500.. you are stuck with them
+  > 28/05/25, 1:48 pm - +91 85888 47738: I was facing same issues then I called to customer care and resolution. Now it's working fine
+
+  > 10/06/25, 11:06 am - Sujit A312 IRA Aspiration: Any contact for Airtel DTH.
+  > 10/06/25, 11:07 am - +91 78424 92036: Thanks All☺️ for quick response
+  > 10/06/25, 11:09 am - +91 90333 86708: IRA Airtel Prashanth.vcf (file attached)
+  > 10/06/25, 11:10 am - +91 89194 38274: +91 93926 41259
+  > 10/06/25, 11:11 am - Rajasekhar kalisetty IRA Aspiration added +91 98606 04099
+
+  > 08/08/25, 7:06 pm - +91 95535 00082: <Media omitted>
+  > 08/08/25, 7:06 pm - +91 95535 00082: Please  come for tambulam 🙏🙏🙏
+  > 08/08/25, 7:39 pm - Ira Kishore Reddy: Thank you for your message Prashanthi garu. Though I must say the tone and language used are unfortunate, considering we are all part of the same community trying to move toward shared solutions.
+  > 08/08/25, 7:39 pm - Ira Kishore Reddy: We have never claimed that IRA decides the right option.
+  > 08/08/25, 7:41 pm - Ira Kishore Reddy: In fact, my very message clearly stated that any changes or rules will be shared transparently and implemented only after consensus from all stakeholders/residents
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'IRA Prashanth', '+919948226403', 'Internet Provider / Tech', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Prabhakar Pioneer Online
+- **Phone**: `+919666235952`
+- **Source File**: `Prabhakar Pioneer Internet.vcf`
+- **WhatsApp Mentions & Context**:
+  > 06/10/25, 3:46 pm - +91 88767 95904: U can talk to the Pioneer guy.
+  > 06/10/25, 3:46 pm - +91 99995 01298: Thanks for the info, any contact number?
+  > 06/10/25, 3:47 pm - +91 88767 95904: Prabhakar Pioneer Online.vcf (file attached)
+  > 06/10/25, 3:47 pm - +91 79812 88969: Ira Airtel Technician.vcf (file attached)
+  > 06/10/25, 5:06 pm - ira facilities: <Media omitted>
+
+  > 07/06/26, 11:58 am - +91 63099 04603: Thank you in advance
+  > 07/06/26, 12:01 pm - +91 96402 76118: Ravinder Rathod Airtel xtream fiber.vcf (file attached)
+  > 07/06/26, 12:18 pm - +91 90009 78824: Prabhakar Pioneer Internet.vcf (file attached)
+  > 07/06/26, 12:18 pm - +91 63099 04603: Thank you so muchhh
+  > 07/06/26, 5:07 pm - +91 788 821 5290: This issue has been pending for far too long, and the complete lack of urgency from the management team is extremely disappointing.
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Prabhakar Pioneer Online', '+919666235952', 'Internet Provider / Tech', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Prabhakar.Pioneer
+- **Phone**: `+918712015572`
+- **Source File**: `Prabhakar.Pioneer.vcf`
+- **Bio/Description**: *Prabhakar*
+- **WhatsApp Mentions & Context**:
+  > 02/06/26, 8:08 pm - +91 96422 97422: Piped gas Not yet Started...we are using our Own Gas Connection
+  > 02/06/26, 8:08 pm - +91 96422 97422: Airtel and Pioneer are good In IRA Aspiration
+  > 02/06/26, 8:09 pm - +91 96422 97422: Prabhakar.Pioneer.vcf (file attached)
+  > 02/06/26, 8:09 pm - +91 96422 97422: This guy for Pioneer
+  > 02/06/26, 8:27 pm - +91 91689 44370: Ok thank you
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Prabhakar.Pioneer', '+918712015572', 'Internet Provider / Tech', 'Prabhakar', 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Pradeep Airtel Intenet
+- **Phone**: `+917428658104`
+- **Source File**: `Pradeep Airtel Intenet.vcf`
+- **WhatsApp Mentions & Context**:
+  > 06/09/25, 10:11 pm - Rajasekhar kalisetty IRA Aspiration: Sure sir
+  > 07/09/25, 7:07 am - +91 91691 21121: Can any one have Airtel broadband connection person contact details
+  > 07/09/25, 7:19 am - +91 78937 42337: Pradeep Airtel Intenet.vcf (file attached)
+  > 07/09/25, 9:35 am - ramesh D812 Aspiration: Rahul deep and bathroom cleaning person is coming to the community
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Pradeep Airtel Intenet', '+917428658104', 'Internet Provider / Tech', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Ravinder Airtel
+- **Phone**: `+918712651349`
+- **Source File**: `Ravinder Airtel.vcf`
+- **Bio/Description**: *Airtel broadband &DTH (Airtel Xtreme fiber)Wifi provider all over TS&AP)*
+- **WhatsApp Mentions & Context**:
+  > 09/04/26, 8:58 am - +91 70937 01477: Hi everyone, does anyone have a contact with the Airtel wifi staff/ any technician?
+  > 09/04/26, 8:58 am - +91 70937 01477: They haven’t configured my set top box since two weeks and customer services is useless
+  > 09/04/26, 9:00 am - Ramakrishna D904: Ravinder Airtel.vcf (file attached)
+  > 09/04/26, 9:05 am - +91 70937 01477: Thank you 🙏
+  > 09/04/26, 9:49 am - +91 95026 32179: Hi
+
+  > 08/05/26, 6:08 pm - +91 90523 06254: Same with me …. He isn’t responding to calls as well. I have opted for pioneer after that. Even he isn’t responding for my cancellation requests
+  > 08/05/26, 6:08 pm - +91 90523 06254: I have already reported to FM team.
+  > 08/05/26, 6:11 pm - Ramakrishna D904: Ravinder Airtel.vcf (file attached)
+  > 08/05/26, 6:11 pm - Ramakrishna D904: Try to reach him 👆
+  > 08/05/26, 6:11 pm - +91 96402 76118: Malikarjun?
+
+  > I need a wifi connection to our flat so if you have any leads related to wifi network please let me know..
+  > 07/06/26, 11:58 am - +91 63099 04603: Thank you in advance
+  > 07/06/26, 12:01 pm - +91 96402 76118: Ravinder Rathod Airtel xtream fiber.vcf (file attached)
+  > 07/06/26, 12:18 pm - +91 90009 78824: Prabhakar Pioneer Internet.vcf (file attached)
+  > 07/06/26, 12:18 pm - +91 63099 04603: Thank you so muchhh
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ravinder Airtel', '+918712651349', 'Internet Provider / Tech', 'Airtel broadband &DTH (Airtel Xtreme fiber)Wifi provider all over TS&AP)', 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -1792,6 +2476,71 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Rani Maid IRA Hyd Kollur', '+91765
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Sabitha Maid', '+919959344953', 'Maid', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+### Category: Marble & Granite Work
+
+#### Granite Work
+- **Phone**: `+917032148961`
+- **Source File**: `Granite Work.vcf`
+- **WhatsApp Mentions & Context**:
+  > 14/02/25, 12:32 pm - +91 86995 27475: No
+  > 14/02/25, 12:38 pm - +91 88979 42149: Is management planing to setup boosters for signal strength ? <This message was edited>
+  > 14/02/25, 12:57 pm - +91 95384 00579: Hi all, any granite work going on or can provide any good granite person number
+  > 14/02/25, 1:34 pm - +91 62815 73524: Granite Work.vcf (file attached)
+  > 14/02/25, 1:40 pm - +91 78428 26463: Hi, can anyone share a good iron grill worker details.
+
+  > Thanks IRA facility team and management for taking note of residents concerns and acting on the same. Thank you for your support and cooperation. @⁨~IRA-FM⁩ @⁨Kishore Reddy IRA⁩ @⁨Rajasekhar kalisetty IRA Aspiration⁩
+  > 19/11/25, 3:04 pm - +91 97046 31867: Dust issue really needs to be taken care of. There is kids playground right where dust is coming. There could be serious health implications for kids.
+  > 19/11/25, 3:19 pm - +91 99662 46911: Any granite work person available??? Kindly let me know have a small work in my flat
+  > 19/11/25, 3:39 pm - +91 86868 80522: <Media omitted>
+  > 19/11/25, 3:39 pm - +91 86868 80522: <Media omitted>
+
+  > 21/12/25, 6:57 pm - +91 81211 07007: Anybody interested in playing TT ??
+  > 21/12/25, 7:18 pm - +91 70424 17504: This message was deleted
+  > 21/12/25, 7:53 pm - +91 97046 31867: Anyone know someone who can do granite work in Ira Aspiration or Kollur?
+  > 21/12/25, 8:17 pm - +91 88979 42149: Raju Granite Kollur .vcf (file attached)
+  > 21/12/25, 8:21 pm - +91 97046 31867: Thank you
+
+  > @⁨Kishore Reddy IRA⁩
+  > @⁨Rajasekhar kalisetty IRA Aspiration⁩
+  > There is lot of dust piling up in the B1 basement .. due to granite work ..
+  > While the stone cutting is in progress .. *_The stone cutter workman and their assistants .. are misusing the Parked vehicles .. they are sitting on .. aspirants' two 2-wheelers  .. and .. tampering the parked vehicles.. while dropping .. used ghutka wrapper packets_*..
+
+  > 27/12/25, 11:14 am - Ramakrishna D904: Hi residents, kone lift service person is available in the society for live demo . Whoever are available please assemble near the club house.As we are facing many lift related issues in the society let's discuss this with the Kone team
+  > 27/12/25, 12:44 pm - +91 98663 18123: We are randomly checking lifts with Kone team, please feel free to join or highlight which lifts to check
+  > 28/12/25, 10:07 am - +91 79899 66448: Hi Everyone! I’m looking for good tile and granite worker with reasonable price. Kindly share if you have any contact.
+  > Thanks in advance.
+  > 28/12/25, 10:13 am - Rajasekhar kalisetty IRA Aspiration added +91 94902 27511
+
+  > 29/12/25, 12:33 pm - Ramakrishna D904: I saw him in the community today.
+  > 29/12/25, 1:06 pm - +91 97035 43114: 2 contacts.vcf (file attached)
+  > 29/12/25, 1:06 pm - +91 97035 43114: If you are looking for marble or granite work please contact the above guys
+  > 29/12/25, 1:14 pm - +91 77995 99956: Lack of UPS supply is not at all a safe practice. Being proactive and installing UPS systems for treadmills can avoid mishaps.
+  > 29/12/25, 1:32 pm - +91 97013 85462: Same type of issue with wifi. Whenever power switches Eb to DG or vice versa, WiFi get disconnected for few minutes. I installed a small UPS to get wifi uninterrupted.
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Granite Work', '+917032148961', 'Marble & Granite Work', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Raju Granite Kollur
+- **Phone**: `+919346241181`
+- **Source File**: `Raju Granite Kollur .vcf`
+- **WhatsApp Mentions & Context**:
+  > 21/12/25, 7:18 pm - +91 70424 17504: This message was deleted
+  > 21/12/25, 7:53 pm - +91 97046 31867: Anyone know someone who can do granite work in Ira Aspiration or Kollur?
+  > 21/12/25, 8:17 pm - +91 88979 42149: Raju Granite Kollur .vcf (file attached)
+  > 21/12/25, 8:21 pm - +91 97046 31867: Thank you
+  > 21/12/25, 9:35 pm - +91 99667 01007: Yes there giving in AP
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Raju Granite Kollur', '+919346241181', 'Marble & Granite Work', NULL, 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -2030,60 +2779,98 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ravi Milk Kollur', '+916304309753'
 
 ---
 
-### Category: Other
+### Category: Mosquito Net / Screens
 
-#### Airtel Connection
-- **Phone**: `+919392641259`
-- **Source File**: `Airtel Connection.vcf`
+#### Mesh door- Unix services
+- **Phone**: `+919985922218`
+- **Source File**: `Mesh door- Unix services.vcf`
+- **Bio/Description**: *Call or Whatsapp 9985922218*
 - **WhatsApp Mentions & Context**:
-  > 04/04/25, 12:39 pm - +91 97035 43114: Please inform us of a date . We are waiting from long
-  > 04/04/25, 1:27 pm - +91 94411 01955: Please airtel wifi installation phone number share me <This message was edited>
-  > 04/04/25, 1:37 pm - Venkata Ramana Reddy: +91 93926 41259
-  > 04/04/25, 2:01 pm - +91 94411 01955: Tq sir
-  > 05/04/25, 8:49 am - Sarat Chandra IRA Aspiration: <Media omitted>
-
-  > 28/05/25, 9:39 am - Bhanu D213: Lift is still not working
-  > 28/05/25, 1:44 pm - +91 89194 38274: Hi all, I want an airtel net . can any one of you share contact
-  > 28/05/25, 1:44 pm - +91 85888 47738: Airtel Connection.vcf (file attached)
-  > 28/05/25, 1:44 pm - +91 89194 38274: And how is performance
-  > 28/05/25, 1:44 pm - +91 99510 09098: IRA Prashanth.vcf (file attached)
-
-  > 10/06/25, 11:07 am - +91 78424 92036: Thanks All☺️ for quick response
-  > 10/06/25, 11:09 am - +91 90333 86708: IRA Airtel Prashanth.vcf (file attached)
-  > 10/06/25, 11:10 am - +91 89194 38274: +91 93926 41259
-  > 10/06/25, 11:11 am - Rajasekhar kalisetty IRA Aspiration added +91 98606 04099
-  > 10/06/25, 11:11 am - Rajasekhar kalisetty IRA Aspiration added +91 74003 79795
-
-  > 22/06/25, 1:09 pm - Sumit A912: Hello vaibhav and Mahendra, we will be planning a meeting with the residents as each one's well being and perspective is important.
-  > 22/06/25, 1:11 pm - +91 90102 89002: Lets meet and decide
-  > 22/06/25, 1:19 pm - +91 88767 95904: I would also like to raise the issue of network connectivity. Be it Airtel or Jio, or Vodafone, the connection is very poor and call drops frequently. Any way we can rectify this?
-  > 22/06/25, 1:23 pm - +91 93901 46080: Only work around within Apartment we have been following is switching on WiFi calling option
-  > 22/06/25, 1:28 pm - +91 81064 33517: it was way bad in the initial months
-
-  > 06/09/25, 10:07 pm - +91 96422 97422: Already there are some Dengue cases bro...Next time please react little fast...Remaining all are ok but...Please Don't neglect health related calls...
-  > 06/09/25, 10:11 pm - Rajasekhar kalisetty IRA Aspiration: Sure sir
-  > 07/09/25, 7:07 am - +91 91691 21121: Can any one have Airtel broadband connection person contact details
-  > 07/09/25, 7:19 am - +91 78937 42337: Pradeep Airtel Intenet.vcf (file attached)
-  > 07/09/25, 9:35 am - ramesh D812 Aspiration: Rahul deep and bathroom cleaning person is coming to the community
-
-  > 19/02/26, 5:56 pm - +91 97013 85462: Few boys and girls are destroying plants in children Park. Parents please educate them.
-  > 19/02/26, 5:58 pm - Sourabh A207 IRA Aspiration: In B2 A block Side ...no network for Jio ...Maybe they are checking
-  > 19/02/26, 5:58 pm - +91 88869 12328: My mobile connection with AIRTEL <This message was edited>
-  > 19/02/26, 6:15 pm - +91 99855 89646: <Media omitted>
-  > 19/02/26, 6:17 pm - +91 99855 89646: Finally he helped me to send technician and got issue fixed . Looks the issue was in communication shaft duct , where someone has disconnected the line from router, got it fixed finally !
-
-  > 08/05/26, 4:39 pm - +91 97013 85462: @Security Manager, many times I use to see 3 guards at entrance gate. Deployment is like that or  one additional guard join there to chit chat. Once 3 guards are there, monitoring is very poor. They chit chat among themselves. Sometimes we need to blow horn to open the barrier.
-  > 08/05/26, 5:52 pm - Raju A104 IRA Aspiration: I'm also facing issues with him and the quality of his chairs. Avoid this rent house
-  > 08/05/26, 5:55 pm - Raju A104 IRA Aspiration: I paid the advance for an Airtel Wi-Fi connection a week ago, but the installation hasn't happened yet. I have tried contacting the assigned representative multiple times, but they are not responding. Could anyone provide an alternative contact number or assist me in escalating this issue?
-  > 08/05/26, 6:08 pm - +91 90523 06254: Same with me …. He isn’t responding to calls as well. I have opted for pioneer after that. Even he isn’t responding for my cancellation requests
-  > 08/05/26, 6:08 pm - +91 90523 06254: I have already reported to FM team.
+  > 04/10/25, 2:58 pm - +91 79812 88969: <Media omitted>
+  > 04/10/25, 2:58 pm - +91 99995 01298: Yes plz, you can share
+  > 04/10/25, 2:59 pm - +91 81064 33517: Mesh door- Unix services.vcf (file attached)
+  > 04/10/25, 3:36 pm - +91 98485 44918: Cost please
+  > 04/10/25, 3:36 pm - +91 79812 88969: 750/sqft.
 
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Airtel Connection', '+919392641259', 'Other', NULL, 'PASS', 'COMMUNITY');
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Mesh door- Unix services', '+919985922218', 'Mosquito Net / Screens', 'Call or Whatsapp 9985922218', 'PASS', 'COMMUNITY');
 ```
 
 ---
+
+#### Mesh Grills
+- **Phone**: `+919966851213`
+- **Source File**: `Mesh Grills.vcf`
+- **WhatsApp Mentions & Context**:
+  > 02/09/25, 9:23 am - Mahesh B 615 IRA Aspiration: Try both numbers..
+  > 02/09/25, 9:24 am - +91 86868 80522: Thank you Mahesh 🤝
+  > 02/09/25, 9:34 am - +91 81793 22379: Mesh Grills.vcf (file attached)
+  > 02/09/25, 9:49 am - +91 97013 85462 joined from the community
+  > 02/09/25, 12:14 pm - +91 93944 14444: <Media omitted>
+
+  > 07/10/25, 9:43 pm - +91 81064 33517: IRA Helpdesk.vcf (file attached)
+  > 07/10/25, 9:48 pm - +91 79812 88969: Airtel wifi isn't working. Anyone else facing the issue?
+  > 07/10/25, 10:00 pm - +91 99008 99799: Hi All, We would like to install grills and mesh doors for our windows/Balconies. Request you to share some point of contacts with good service record in reasonable price. Thanks
+  > 07/10/25, 10:02 pm - +91 81064 33517: ‎2 contacts.vcf (file attached)
+  > 07/10/25, 10:16 pm - Venkata Ramana Reddy: We understand that we depend on the vendor for lift related issues and aware that all lifts are brand new. Electronic devices may occasionally encounter problems but frequent issues are unexpected from a reputed company unless there were errors in the lifts manufacturing or installation.
+
+  > 12/01/26, 4:23 pm - +91 97013 85462: vinod.singh728227@gmail.com
+  > 12/01/26, 7:10 pm - +91 79936 40077: <Media omitted>
+  > 12/01/26, 7:45 pm - Rajinikanth Reddy IRA Aspiration D410: Can any one please share the vendor contact details who deals with upvc mesh doors and iron grills
+  > 12/01/26, 7:47 pm - +91 81064 33517: ‎2 contacts.vcf (file attached)
+  > 12/01/26, 7:47 pm - +91 81064 33517: you can check with these vendors
+
+  > 04/04/26, 7:00 pm - +91 90324 07332: So as of now we have E205, C103, C403, A 504, A 104 and counting
+  > 04/04/26, 7:09 pm - +91 90324 07332: I have shared the society location and flat list with the vendor. He will visit by 11 am Monday morning for measurements <This message was edited>
+  > 04/04/26, 7:10 pm - +91 85228 96008: I am interested as well. In addition to the main door, I would like to have grills and mesh doors for windows as well. I will check with them regarding those separately.
+  > 04/04/26, 7:10 pm - +91 85228 96008: A-815
+  > 04/04/26, 7:11 pm - +91 90324 07332: Yes they have a huge catalog of work that can be accomplished
+
+  > 10/04/26, 5:06 pm - +91 70440 80050: Hi, did this guy Rajmouli worked in any flat for window grill and mosquito mesh work?
+  > 10/04/26, 5:47 pm - +91 95501 83450: Yes, for mesh door n windows
+  > 10/04/26, 5:54 pm - +91 70440 80050: How much he charged for grills /mesh/ and utility box?
+  > 10/04/26, 5:59 pm - +91 95501 83450: Oh 1.5yrs back, dint remember, but he will drag the things, many follow ups we need to do <This message was edited>
+  > 10/04/26, 6:14 pm - +91 98333 24060: Can anyone suggest a hindi speaking maid for my flat and who is willing to work at 9AM slot
+
+  > 10/04/26, 7:00 pm - +91 96763 31166: Thank you so much
+  > 10/04/26, 7:53 pm - +91 90324 07332: Hi All,
+  > May I know how many of you have ordered the grills/sliding mesh doors and windows?
+  > For me he said mostly by tomorrow or a day later he would be delivering.
+  > 10/04/26, 8:16 pm - +91 90324 07332: Got confirmation from the vendor that out of 12 flats only 4 confirmed and have paid advanced.
+
+  > 19/05/26, 11:47 am - +91 99356 23896: <Media omitted>
+  > 19/05/26, 1:31 pm - +91 93978 11190: <Media omitted>
+  > 19/05/26, 5:17 pm - Bhanu D213: If anyone needs Invisible grills / blinds / mesh doors, you can contact Asif (Freedom Blinds & Screens)
+  > They did a very good job.
+  > Contact: 9177237634
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Mesh Grills', '+919966851213', 'Mosquito Net / Screens', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Sunrise Glass And Upvc And Aluminum Windows Mosquito Net Slider
+- **Phone**: `+917351238088`
+- **Source File**: `Sunrise Glass And Upvc And Aluminum Windows Mosquito Net Slider.vcf`
+- **Bio/Description**: *We Provide A Good Quality All Types Of Glass Works.All Types Of UPVC Windows Works.Profile Doors, Aristo Sliding, Diomonds shape Mirrors, LED Mirrors, Bathroom Shawers, Pooja Doors etc.All Types Of Aluminium Works .SS Railing, MS Railing And All Types Iron And Steel Works.Very Reasonable Price Give Me a Chance  To Serve All Works Available.Contact _ 8977158088Contact _ 7351238088Whatsapp - +91 73512 38088*
+- **WhatsApp Mentions & Context**:
+  > 04/04/26, 8:07 pm - +91 90324 07332: The quotation only includes what has been shared in the quote, extra work will be charged extra by the vendor for sure
+  > 04/04/26, 8:08 pm - +91 85228 96008: Can you please share the catalogue if you have it.
+  > 04/04/26, 8:22 pm - +91 90324 07332: Sunrise Glass And Upvc And Aluminum Windows Mosquito Net Slider.vcf (file attached)
+  > 04/04/26, 8:22 pm - +91 90324 07332: Check in his section of whatsapp
+  > 04/04/26, 8:24 pm - +91 96642 85827: <Media omitted>
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Sunrise Glass And Upvc And Aluminum Windows Mosquito Net Slider', '+917351238088', 'Mosquito Net / Screens', 'We Provide A Good Quality All Types Of Glass Works.All Types Of UPVC Windows Works.Profile Doors, Aristo Sliding, Diomonds shape Mirrors, LED Mirrors, Bathroom Shawers, Pooja Doors etc.All Types Of Aluminium Works .SS Railing, MS Railing And All Types Iron And Steel Works.Very Reasonable Price Give Me a Chance  To Serve All Works Available.Contact _ 8977158088Contact _ 7351238088Whatsapp - +91 73512 38088', 'PASS', 'COMMUNITY');
+```
+
+---
+
+### Category: Other
 
 #### Ajay Lg Ac Kollur u Ira
 - **Phone**: `+919010278230`
@@ -2104,23 +2891,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Airtel Connection', '+919392641259
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ajay Lg Ac Kollur u Ira', '+919010278230', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Anshu's Skin Clinic -Dr. Srikanth
-- **Phone**: `+919182288455`
-- **Source File**: `Anshu's Skin Clinic -Dr. Srikanth.vcf`
-- **WhatsApp Mentions & Context**:
-  > 25/05/26, 11:38 am - +91 91107 61778: Hi everyone, could anyone please share a good dermatologist reference nearby?
-  > 25/05/26, 11:39 am - +91 81280 32116: Is any drilling work happening in the community today? Need a small favor - drilling at two places. Please DM me
-  > 25/05/26, 12:33 pm - +91 70327 70352: Anshu's Skin Clinic -Dr. Srikanth.vcf (file attached)
-  > 25/05/26, 2:59 pm - +91 94403 01972: Does anyone know of a nearby car pollution check center?
-  > 25/05/26, 3:04 pm - +91 95334 44455: You can find the Vehicle near to Myhome Tridasa
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Anshu''s Skin Clinic -Dr. Srikanth', '+919182288455', 'Other', NULL, 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -2206,41 +2976,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Apollo Diagnostics Kollur', '+9163
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Apollo Tellap', '+917095279952', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Ashok Cloth Hanger
-- **Phone**: `+919010349093`
-- **Source File**: `Ashok Cloth Hanger IRA.vcf`
-- **WhatsApp Mentions & Context**:
-  > 23/09/25, 2:02 pm - +91 79812 88969: 2500 for hanger
-  > 1000 installation charge
-  > 23/09/25, 2:08 pm - +91 98470 58566: Ashok Cloth Hanger.vcf (file attached)
-  > 23/09/25, 2:08 pm - +91 98470 58566: 6 ft 2500
-  > 8 ft 3000
-
-  > 08/10/25, 8:15 am - +91 97405 79792: Thank you!
-  > 08/10/25, 9:13 am - +91 88979 42149: location: https://maps.google.com/?q=17.429468154907227,78.3407974243164
-  > 08/10/25, 9:48 am - +91 98470 58566: Ashok Cloth Hanger.vcf (file attached)
-  > 08/10/25, 12:08 pm - +91 96527 02736: <Media omitted>
-  > 08/10/25, 12:09 pm - +91 96527 02736: Artistic Cotton cloth bags...
-
-  > D block resident lift 4 not functioning since 2 days...
-  > Please check.
-  > 19/01/26, 3:49 pm - +91 96429 04943: Ashok Cloth Hanger IRA.vcf (file attached)
-  > 19/01/26, 3:49 pm - +91 96429 04943: You can contact him
-  > 19/01/26, 4:03 pm - +91 93978 11190: Thanks
-
-  > 24/02/26, 9:33 am - +91 80741 17394: Hi all,
-  > can anyone recommend a good vendor for mosquito doors for the main door and windows.Thanks!"
-  > 24/02/26, 9:46 am - +91 96429 04943: Ashok Cloth Hanger IRA.vcf (file attached)
-  > 24/02/26, 9:46 am - +91 96429 04943: He does mesh doors too
-  > 24/02/26, 10:11 am - +91 97035 43114: <Media omitted>
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ashok Cloth Hanger', '+919010349093', 'Other', NULL, 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -2373,368 +3108,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Cool Zone Shiva Karthik', '+917997
 
 ---
 
-#### Core Cutting
-- **Phone**: `+919000304427`
-- **Source File**: `Core Cutting .vcf`
-- **WhatsApp Mentions & Context**:
-  > 09/06/25, 8:58 am - +91 80561 86514 was added
-  > 09/06/25, 8:57 am - Rajasekhar kalisetty IRA Aspiration added +91 80561 86514
-  > 09/06/25, 9:07 am - +91 90367 12145: 98406 62463 Srinivas core cutting
-  > 09/06/25, 9:16 am - +91 88979 42149: No power in flat @⁨Rajasekhar kalisetty IRA Aspiration⁩
-  > 09/06/25, 9:21 am - +91 90529 06655: Check balance
-
-  > 31/10/25, 10:15 pm - +91 788 821 5290: 😒 will miss the fun
-  > 31/10/25, 10:16 pm - +91 80999 11702: Still not finalized
-  > 01/11/25, 9:42 am - +91 98470 58566: Any core cutting guy contact available? To shift chimney hole
-  > 01/11/25, 9:45 am - +91 84476 52009: Vegetable vendor will come today or not ??
-  > 01/11/25, 10:08 am - Sumit A912: 3 contacts.vcf (file attached)
-
-  > 01/11/25, 9:45 am - +91 84476 52009: Vegetable vendor will come today or not ??
-  > 01/11/25, 10:08 am - Sumit A912: 3 contacts.vcf (file attached)
-  > 01/11/25, 10:08 am - Sumit A912: Try these 3 for core Cutting.
-  > 01/11/25, 10:12 am - +91 79897 33429: C Block lift 1 not working please check @⁨~IRA-FM⁩
-  > 01/11/25, 10:13 am - +91 98470 58566: Thanks. Will try
-
-  > 26/01/26, 3:56 pm - +91 95817 70090: <Media omitted>
-  > 26/01/26, 4:01 pm - +91 70755 42571: <Media omitted>
-  > 26/01/26, 4:12 pm - +91 89032 21132: can anyone share chimney core cutting person contact?
-  > 26/01/26, 4:14 pm - +91 96422 97422: For Chimney Core Cutting was already provided Right?
-  > 26/01/26, 4:16 pm - +91 89884 48555: Core Cutting Kadhar Tellapur .vcf (file attached)
-
-  > 26/01/26, 4:14 pm - +91 96422 97422: For Chimney Core Cutting was already provided Right?
-  > 26/01/26, 4:16 pm - +91 89884 48555: Core Cutting Kadhar Tellapur .vcf (file attached)
-  > 26/01/26, 4:31 pm - +91 94938 85649: Chimney core cutting is already done by builder to the utlity area in all flats.
-  > Check with builder if its not done.
-  > 26/01/26, 4:38 pm - +91 89032 21132: sure
-
-  > 05/03/26, 10:47 am - +91 97013 85462: Rejected proposal for cctv camera in corridor
-  > 05/03/26, 10:48 am - +91 97013 85462: CCTV camera and club house charges are the imp issue
-  > 05/03/26, 10:55 am - +91 95731 59281: Hi can I get any core cutting persons contact number for ac
-  > 05/03/26, 11:00 am - +91 77995 99956: @⁨~IRA-FM⁩ Request you to procure / install a wall clock at the club house reception area. (Ground floor) Thanks in advance. <This message was edited>
-  > 05/03/26, 11:01 am - +91 79936 40077: ok sir
-
-  > 05/03/26, 9:10 pm - +91 70755 42571: Excellent view on our ORR ..
-  > It looks like trees played 💛*yellow holi* recently <This message was edited>
-  > 06/03/26, 8:34 am - +91 95026 32179: Hi any one can share ac core cutting person contact. The existing hole is not suitable for ac installation.
-  > 06/03/26, 8:45 am - +91 77991 42007: Core Cutting.vcf (file attached)
-  > 06/03/26, 8:48 am - +91 95026 32179: @⁨~Hari⁩ how much he charged?
-
-  > Hopefully, the crisis will get over now. Plus India had a word with Iran and 3 phone calls have made the deal. They will now allow only Indian ships to cross SoH.
-  > 14/03/26, 12:29 pm - Venkata Ramana Reddy: He is in our community now. Whoever filled the form, shared details with him. Whoever needs service, can contact on below number.
-  > 14/03/26, 12:29 pm - Venkata Ramana Reddy: Durga Prasad Core Cutting Home.vcf (file attached)
-  > 14/03/26, 12:58 pm - +91 92462 93967: <Media omitted>
-  > 14/03/26, 1:44 pm - +91 99510 09098: Any 2 bhk available for rent … need for my cousin brother
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Core Cutting', '+919000304427', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Core Cutting
-- **Phone**: `+917327037576`
-- **Source File**: `Core Cutting.vcf`
-- **WhatsApp Mentions & Context**:
-  > 09/06/25, 8:58 am - +91 80561 86514 was added
-  > 09/06/25, 8:57 am - Rajasekhar kalisetty IRA Aspiration added +91 80561 86514
-  > 09/06/25, 9:07 am - +91 90367 12145: 98406 62463 Srinivas core cutting
-  > 09/06/25, 9:16 am - +91 88979 42149: No power in flat @⁨Rajasekhar kalisetty IRA Aspiration⁩
-  > 09/06/25, 9:21 am - +91 90529 06655: Check balance
-
-  > 31/10/25, 10:15 pm - +91 788 821 5290: 😒 will miss the fun
-  > 31/10/25, 10:16 pm - +91 80999 11702: Still not finalized
-  > 01/11/25, 9:42 am - +91 98470 58566: Any core cutting guy contact available? To shift chimney hole
-  > 01/11/25, 9:45 am - +91 84476 52009: Vegetable vendor will come today or not ??
-  > 01/11/25, 10:08 am - Sumit A912: 3 contacts.vcf (file attached)
-
-  > 01/11/25, 9:45 am - +91 84476 52009: Vegetable vendor will come today or not ??
-  > 01/11/25, 10:08 am - Sumit A912: 3 contacts.vcf (file attached)
-  > 01/11/25, 10:08 am - Sumit A912: Try these 3 for core Cutting.
-  > 01/11/25, 10:12 am - +91 79897 33429: C Block lift 1 not working please check @⁨~IRA-FM⁩
-  > 01/11/25, 10:13 am - +91 98470 58566: Thanks. Will try
-
-  > 26/01/26, 3:56 pm - +91 95817 70090: <Media omitted>
-  > 26/01/26, 4:01 pm - +91 70755 42571: <Media omitted>
-  > 26/01/26, 4:12 pm - +91 89032 21132: can anyone share chimney core cutting person contact?
-  > 26/01/26, 4:14 pm - +91 96422 97422: For Chimney Core Cutting was already provided Right?
-  > 26/01/26, 4:16 pm - +91 89884 48555: Core Cutting Kadhar Tellapur .vcf (file attached)
-
-  > 26/01/26, 4:14 pm - +91 96422 97422: For Chimney Core Cutting was already provided Right?
-  > 26/01/26, 4:16 pm - +91 89884 48555: Core Cutting Kadhar Tellapur .vcf (file attached)
-  > 26/01/26, 4:31 pm - +91 94938 85649: Chimney core cutting is already done by builder to the utlity area in all flats.
-  > Check with builder if its not done.
-  > 26/01/26, 4:38 pm - +91 89032 21132: sure
-
-  > 05/03/26, 10:47 am - +91 97013 85462: Rejected proposal for cctv camera in corridor
-  > 05/03/26, 10:48 am - +91 97013 85462: CCTV camera and club house charges are the imp issue
-  > 05/03/26, 10:55 am - +91 95731 59281: Hi can I get any core cutting persons contact number for ac
-  > 05/03/26, 11:00 am - +91 77995 99956: @⁨~IRA-FM⁩ Request you to procure / install a wall clock at the club house reception area. (Ground floor) Thanks in advance. <This message was edited>
-  > 05/03/26, 11:01 am - +91 79936 40077: ok sir
-
-  > 05/03/26, 9:10 pm - +91 70755 42571: Excellent view on our ORR ..
-  > It looks like trees played 💛*yellow holi* recently <This message was edited>
-  > 06/03/26, 8:34 am - +91 95026 32179: Hi any one can share ac core cutting person contact. The existing hole is not suitable for ac installation.
-  > 06/03/26, 8:45 am - +91 77991 42007: Core Cutting.vcf (file attached)
-  > 06/03/26, 8:48 am - +91 95026 32179: @⁨~Hari⁩ how much he charged?
-
-  > Hopefully, the crisis will get over now. Plus India had a word with Iran and 3 phone calls have made the deal. They will now allow only Indian ships to cross SoH.
-  > 14/03/26, 12:29 pm - Venkata Ramana Reddy: He is in our community now. Whoever filled the form, shared details with him. Whoever needs service, can contact on below number.
-  > 14/03/26, 12:29 pm - Venkata Ramana Reddy: Durga Prasad Core Cutting Home.vcf (file attached)
-  > 14/03/26, 12:58 pm - +91 92462 93967: <Media omitted>
-  > 14/03/26, 1:44 pm - +91 99510 09098: Any 2 bhk available for rent … need for my cousin brother
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Core Cutting', '+917327037576', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Core Cutting Kadhar Tellapur
-- **Phone**: `+919666560103`
-- **Source File**: `Core Cutting Kadhar Tellapur .vcf`
-- **WhatsApp Mentions & Context**:
-  > 26/01/26, 4:12 pm - +91 89032 21132: can anyone share chimney core cutting person contact?
-  > 26/01/26, 4:14 pm - +91 96422 97422: For Chimney Core Cutting was already provided Right?
-  > 26/01/26, 4:16 pm - +91 89884 48555: Core Cutting Kadhar Tellapur .vcf (file attached)
-  > 26/01/26, 4:31 pm - +91 94938 85649: Chimney core cutting is already done by builder to the utlity area in all flats.
-  > Check with builder if its not done.
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Core Cutting Kadhar Tellapur', '+919666560103', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Devasri Cloth Hanger
-- **Phone**: `+917023704109`
-- **Source File**: `Devasri Cloth Hanger.vcf`
-- **WhatsApp Mentions & Context**:
-  > https://mygate.com/dl/lib/?route=detail&content_id=DIS-5151827&content_type=DIS
-  > 28/10/25, 9:51 pm - +91 99995 01298: Does anyone have a balcony hanger installation person contact, please share <This message was edited>
-  > 28/10/25, 9:52 pm - Sravan A617 IRA Aspiration: Devasri Cloth Hanger.vcf (file attached)
-  > 28/10/25, 9:55 pm - +91 86868 80522: Grill.Lakshman.vcf (file attached)
-  > 28/10/25, 9:56 pm - +91 86868 80522: He has installed Balcony Hangers, Safety Grill and Mosquito Mesh sliding door in my flat.
-
-  > 29/04/26, 9:55 am - +91 70937 01477: For urgency, please call FM
-  > 29/04/26, 10:03 am - +91 73848 81574: Hi can anyone share the number of a person for installing a cloth hanger in balcony if anyone has got it recently. We are unable to get a hold of someone to do it.
-  > 29/04/26, 10:05 am - Sravan A617 IRA Aspiration: Devasri Cloth Hanger.vcf (file attached)
-  > 29/04/26, 10:18 am - +91 96402 76118: He is available yesterday he visited my home
-  > 29/04/26, 10:19 am - +91 99855 89646: Oh .. I’ve spoke to FM , they are sending some one to fix the issue ..
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Devasri Cloth Hanger', '+917023704109', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Dr. Vinay Kumar
-- **Phone**: `+916913139999`
-- **Source File**: `Dr. Vinay Kumar.vcf`
-- **Bio/Description**: *Bone & features..its related health , treatment ,surgery etc*
-- **WhatsApp Mentions & Context**:
-  > 11/11/25, 9:51 pm - +91 93978 11190: Satish Reddy
-  > 11/11/25, 9:54 pm - +91 81280 32116: @⁨ira facilities⁩ - what’s the update here? Also please do share cadence for pest control in community.
-  > 11/11/25, 10:13 pm - +91 77995 99956: Dr. Vinay Kumar.vcf (file attached)
-  > 11/11/25, 10:13 pm - +91 79812 88969: Where is his clinic?
-  > 11/11/25, 10:15 pm - +91 77995 99956: Srikara Hospitals, across branches.
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Dr. Vinay Kumar', '+916913139999', 'Other', 'Bone & features..its related health , treatment ,surgery etc', 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Dr.Harshitha Nandamudi
-- **Phone**: `+919666434114`
-- **Source File**: `Dr.Harshitha Nandamudi .vcf`
-- **Bio/Description**: *Dr.Harshitha Nandamudi*
-- **WhatsApp Mentions & Context**:
-  > 01/05/26, 8:55 pm - +91 95151 13389: Hi all, my father is unwell. Suffering from severe stomach pain and vomit. Is any doctor available in the community please
-  > 01/05/26, 9:21 pm - Sourabh A207 IRA Aspiration: I guess we don't have any Dr in our community!
-  > 01/05/26, 9:41 pm - +91 95810 50050: Dr.Harshitha Nandamudi .vcf (file attached)
-  > 01/05/26, 9:41 pm - +91 95810 50050: Please check with Dr Harshitha. She is from D211
-  > 01/05/26, 10:00 pm - +91 88767 95904: Please let me know if u need any help with going to the doctor. I can drive u to the nearest hospital <This message was edited>
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Dr.Harshitha Nandamudi', '+919666434114', 'Other', 'Dr.Harshitha Nandamudi', 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Granite Work
-- **Phone**: `+917032148961`
-- **Source File**: `Granite Work.vcf`
-- **WhatsApp Mentions & Context**:
-  > 14/02/25, 12:32 pm - +91 86995 27475: No
-  > 14/02/25, 12:38 pm - +91 88979 42149: Is management planing to setup boosters for signal strength ? <This message was edited>
-  > 14/02/25, 12:57 pm - +91 95384 00579: Hi all, any granite work going on or can provide any good granite person number
-  > 14/02/25, 1:34 pm - +91 62815 73524: Granite Work.vcf (file attached)
-  > 14/02/25, 1:40 pm - +91 78428 26463: Hi, can anyone share a good iron grill worker details.
-
-  > Thanks IRA facility team and management for taking note of residents concerns and acting on the same. Thank you for your support and cooperation. @⁨~IRA-FM⁩ @⁨Kishore Reddy IRA⁩ @⁨Rajasekhar kalisetty IRA Aspiration⁩
-  > 19/11/25, 3:04 pm - +91 97046 31867: Dust issue really needs to be taken care of. There is kids playground right where dust is coming. There could be serious health implications for kids.
-  > 19/11/25, 3:19 pm - +91 99662 46911: Any granite work person available??? Kindly let me know have a small work in my flat
-  > 19/11/25, 3:39 pm - +91 86868 80522: <Media omitted>
-  > 19/11/25, 3:39 pm - +91 86868 80522: <Media omitted>
-
-  > 21/12/25, 6:57 pm - +91 81211 07007: Anybody interested in playing TT ??
-  > 21/12/25, 7:18 pm - +91 70424 17504: This message was deleted
-  > 21/12/25, 7:53 pm - +91 97046 31867: Anyone know someone who can do granite work in Ira Aspiration or Kollur?
-  > 21/12/25, 8:17 pm - +91 88979 42149: Raju Granite Kollur .vcf (file attached)
-  > 21/12/25, 8:21 pm - +91 97046 31867: Thank you
-
-  > @⁨Kishore Reddy IRA⁩
-  > @⁨Rajasekhar kalisetty IRA Aspiration⁩
-  > There is lot of dust piling up in the B1 basement .. due to granite work ..
-  > While the stone cutting is in progress .. *_The stone cutter workman and their assistants .. are misusing the Parked vehicles .. they are sitting on .. aspirants' two 2-wheelers  .. and .. tampering the parked vehicles.. while dropping .. used ghutka wrapper packets_*..
-
-  > 27/12/25, 11:14 am - Ramakrishna D904: Hi residents, kone lift service person is available in the society for live demo . Whoever are available please assemble near the club house.As we are facing many lift related issues in the society let's discuss this with the Kone team
-  > 27/12/25, 12:44 pm - +91 98663 18123: We are randomly checking lifts with Kone team, please feel free to join or highlight which lifts to check
-  > 28/12/25, 10:07 am - +91 79899 66448: Hi Everyone! I’m looking for good tile and granite worker with reasonable price. Kindly share if you have any contact.
-  > Thanks in advance.
-  > 28/12/25, 10:13 am - Rajasekhar kalisetty IRA Aspiration added +91 94902 27511
-
-  > 29/12/25, 12:33 pm - Ramakrishna D904: I saw him in the community today.
-  > 29/12/25, 1:06 pm - +91 97035 43114: 2 contacts.vcf (file attached)
-  > 29/12/25, 1:06 pm - +91 97035 43114: If you are looking for marble or granite work please contact the above guys
-  > 29/12/25, 1:14 pm - +91 77995 99956: Lack of UPS supply is not at all a safe practice. Being proactive and installing UPS systems for treadmills can avoid mishaps.
-  > 29/12/25, 1:32 pm - +91 97013 85462: Same type of issue with wifi. Whenever power switches Eb to DG or vice versa, WiFi get disconnected for few minutes. I installed a small UPS to get wifi uninterrupted.
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Granite Work', '+917032148961', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Hanger Owner
-- **Phone**: `+918885568811`
-- **Source File**: `Hanger Owner.vcf`
-- **WhatsApp Mentions & Context**:
-  > 28/01/25, 9:23 am - +91 99083 88117 was added
-  > 28/01/25, 9:18 am - Rajasekhar kalisetty IRA Aspiration added +91 99083 88117
-  > 28/01/25, 9:23 am - +91 99083 88117: Hello all . Good morning. Any contact who can install cloth hanger in the balcony, please Unicode me . Thanks in advance
-  > 28/01/25, 9:27 am - +91 98487 85236: Nadheem Grills.vcf (file attached)
-  > 28/01/25, 9:28 am - +91 98487 85236: Cloth hanger no
-
-  > Wish you happy birthday 🎂
-  > Rajashekar garu.
-  > 30/05/25, 9:44 am - +91 99372 49070: Any carpenter or interior guy working in the building? I need 5-10 mins of work for drilling the hanger
-  > 30/05/25, 9:53 am - Rajasekhar kalisetty IRA Aspiration: Thank you sir
-  > 30/05/25, 9:54 am - +91 90373 23232: Many many happy returns of the day @⁨Rajasekhar kalisetty IRA Aspiration⁩ ..!!
-
-  > 23/09/25, 1:27 pm - +91 98485 44918: Thank you suresh garu, vasishtha garu.
-  > 23/09/25, 1:52 pm - +91 98485 44918: Best balcony cloth hanging service provider number please.
-  > 23/09/25, 1:53 pm - +91 79812 88969: Hanger Owner.vcf (file attached)
-  > 23/09/25, 1:53 pm - +91 79812 88969: Name is Ramu. He did a good job at my home
-  > 23/09/25, 1:54 pm - +91 98485 44918: Thanks andi.
-
-  > 23/09/25, 1:59 pm - +91 98485 44918: This message was deleted
-  > 23/09/25, 2:00 pm - +91 98485 44918: How much he charges please for 6
-  > 23/09/25, 2:02 pm - +91 79812 88969: 2500 for hanger
-  > 1000 installation charge
-  > 23/09/25, 2:08 pm - +91 98470 58566: Ashok Cloth Hanger.vcf (file attached)
-
-  > 08/10/25, 8:15 am - +91 97405 79792: Thank you!
-  > 08/10/25, 9:13 am - +91 88979 42149: location: https://maps.google.com/?q=17.429468154907227,78.3407974243164
-  > 08/10/25, 9:48 am - +91 98470 58566: Ashok Cloth Hanger.vcf (file attached)
-  > 08/10/25, 12:08 pm - +91 96527 02736: <Media omitted>
-  > 08/10/25, 12:09 pm - +91 96527 02736: Artistic Cotton cloth bags...
-
-  > 28/10/25, 8:27 pm - +91 91602 35962: Shared some of my recent work pics in Mygate post. You can check it out here :
-  > https://mygate.com/dl/lib/?route=detail&content_id=DIS-5151827&content_type=DIS
-  > 28/10/25, 9:51 pm - +91 99995 01298: Does anyone have a balcony hanger installation person contact, please share <This message was edited>
-  > 28/10/25, 9:52 pm - Sravan A617 IRA Aspiration: Devasri Cloth Hanger.vcf (file attached)
-  > 28/10/25, 9:55 pm - +91 86868 80522: Grill.Lakshman.vcf (file attached)
-
-  > 28/10/25, 9:52 pm - Sravan A617 IRA Aspiration: Devasri Cloth Hanger.vcf (file attached)
-  > 28/10/25, 9:55 pm - +91 86868 80522: Grill.Lakshman.vcf (file attached)
-  > 28/10/25, 9:56 pm - +91 86868 80522: He has installed Balcony Hangers, Safety Grill and Mosquito Mesh sliding door in my flat.
-  > 28/10/25, 10:10 pm - +91 80561 86514: This message was deleted
-  > 28/10/25, 10:10 pm - +91 80561 86514: Try "Home Triangle"
-
-  > no grills on slope exit of each block
-  > No grill on swimming pool
-  > No hangers in changing room
-  > Even no slope in D block basement 1  for wheel chair
-  > 04/11/25, 12:06 pm - ira facilities: <Media omitted>
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Hanger Owner', '+918885568811', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Hrushikesh Chilukamukku Pandit
-- **Phone**: `+919440048706`
-- **Source File**: `Hrushikesh Chilukamukku Pandit.vcf`
-- **WhatsApp Mentions & Context**:
-  > Suggest me priest for vastu Pooja.
-  > 23/09/25, 1:10 pm - +91 78937 42337: Ram Ira Panthulu Garu.vcf (file attached)
-  > 23/09/25, 1:10 pm - +91 97035 43114: Hrushikesh Chilukamukku Pandit.vcf (file attached)
-  > 23/09/25, 1:10 pm - +91 95818 99355: Guys ...Does anyone having Car bed with you ....if you have one can I borrow for 4 days .....
-  > 23/09/25, 1:27 pm - +91 98485 44918: Thank you suresh garu, vasishtha garu.
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Hrushikesh Chilukamukku Pandit', '+919440048706', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Imran Fall Ceiling
-- **Phone**: `+919603094911`
-- **Source File**: `Imran Fall Ceiling.vcf`
-- **WhatsApp Mentions & Context**:
-  > 16/11/25, 12:41 pm - Sumit A912: Sajid Khan Fall Ceiling.vcf (file attached)
-  > 16/11/25, 12:41 pm - Sumit A912: Wahid Fall Ceiling.vcf (file attached)
-  > 16/11/25, 12:41 pm - Sumit A912: Imran Fall Ceiling.vcf (file attached)
-  > 16/11/25, 12:42 pm - Sumit A912: Try these @⁨~Mayank⁩
-  > 16/11/25, 12:42 pm - +91 81211 07007: Which one is better bhai?
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Imran Fall Ceiling', '+919603094911', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Ira Airtel Technician
-- **Phone**: `+918340080145`
-- **Source File**: `Govind Airtel Technician.vcf`
-- **WhatsApp Mentions & Context**:
-  > 04/10/25, 9:08 am - Sourabh A207 IRA Aspiration: 2 contacts.vcf (file attached)
-  > 04/10/25, 9:09 am - ramesh D812 Aspiration: Vegetables and fruits vendors will come in 15 min near E2 gate
-  > 04/10/25, 9:24 am - +91 99858 12521: Govind Airtel Technician.vcf (file attached)
-  > 04/10/25, 9:24 am - ramesh D812 Aspiration: <Media omitted>
-  > 04/10/25, 9:47 am - +91 99599 25246: Vegetables vendor will come in 30 Mins
-
-  > 06/10/25, 3:46 pm - +91 99995 01298: Thanks for the info, any contact number?
-  > 06/10/25, 3:47 pm - +91 88767 95904: Prabhakar Pioneer Online.vcf (file attached)
-  > 06/10/25, 3:47 pm - +91 79812 88969: Ira Airtel Technician.vcf (file attached)
-  > 06/10/25, 5:06 pm - ira facilities: <Media omitted>
-  > 06/10/25, 6:28 pm - +91 95818 99355: <Media omitted>
-
-  > 09/04/26, 8:25 am - +91 95848 10193: Hello, does anyone have extra Indane Gas Cylinder, I have done the booking but it seems it will take 1 week. I return the cylinder once I receive it.
-  > Thanks in Advance.
-  > 09/04/26, 8:58 am - +91 70937 01477: Hi everyone, does anyone have a contact with the Airtel wifi staff/ any technician?
-  > 09/04/26, 8:58 am - +91 70937 01477: They haven’t configured my set top box since two weeks and customer services is useless
-  > 09/04/26, 9:00 am - Ramakrishna D904: Ravinder Airtel.vcf (file attached)
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ira Airtel Technician', '+918340080145', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
 #### IRA Helpdesk
 - **Phone**: `+917993630077`
 - **Source File**: `Help Desk IRA.vcf`
@@ -2786,52 +3159,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'IRA Helpdesk', '+917993630077', 'O
 
 ---
 
-#### IRA Prashanth
-- **Phone**: `+919948226403`
-- **Source File**: `IRA Airtel Prashanth.vcf`
-- **WhatsApp Mentions & Context**:
-  > Contact
-  > Dapur prashanth
-  > **Dedicated Executive**
-  > 9948226403
-
-  > 23/05/25, 1:13 pm - +91 99510 09098: Hi everyone this is Naveen Goud from c 109 newly checking in from June 1
-  > 23/05/25, 1:15 pm - +91 99510 09098: Can i get airtel internet vendor contact , can anyone sugggest  which is best Airtel Internet  or pioneer
-  > 23/05/25, 1:30 pm - +91 90333 86708: IRA Airtel Prashanth.vcf (file attached)
-  > 23/05/25, 5:05 pm - +91 99510 09098: Thank u Srikanth garu
-  > 23/05/25, 7:50 pm - +91 81280 32116: Would you please share what you found from CCTV footage?
-
-  > 28/05/25, 1:44 pm - +91 85888 47738: Airtel Connection.vcf (file attached)
-  > 28/05/25, 1:44 pm - +91 89194 38274: And how is performance
-  > 28/05/25, 1:44 pm - +91 99510 09098: IRA Prashanth.vcf (file attached)
-  > 28/05/25, 1:44 pm - +91 89194 38274: Thank you
-  > 28/05/25, 1:45 pm - +91 99510 09098: Airtel
-
-  > 28/05/25, 1:45 pm - +91 85888 47738: It's good
-  > 28/05/25, 1:45 pm - +91 99510 09098: It’s perfect me also using from 2 days back
-  > 28/05/25, 1:46 pm - +91 76740 88877: I went for airtel black end up using only wifi with almost same price with no response from customer support and prashanth
-  > 28/05/25, 1:47 pm - +91 76740 88877: And bcz we have to pay in advance 2500.. you are stuck with them
-  > 28/05/25, 1:48 pm - +91 85888 47738: I was facing same issues then I called to customer care and resolution. Now it's working fine
-
-  > 10/06/25, 11:06 am - Sujit A312 IRA Aspiration: Any contact for Airtel DTH.
-  > 10/06/25, 11:07 am - +91 78424 92036: Thanks All☺️ for quick response
-  > 10/06/25, 11:09 am - +91 90333 86708: IRA Airtel Prashanth.vcf (file attached)
-  > 10/06/25, 11:10 am - +91 89194 38274: +91 93926 41259
-  > 10/06/25, 11:11 am - Rajasekhar kalisetty IRA Aspiration added +91 98606 04099
-
-  > 08/08/25, 7:06 pm - +91 95535 00082: <Media omitted>
-  > 08/08/25, 7:06 pm - +91 95535 00082: Please  come for tambulam 🙏🙏🙏
-  > 08/08/25, 7:39 pm - Ira Kishore Reddy: Thank you for your message Prashanthi garu. Though I must say the tone and language used are unfortunate, considering we are all part of the same community trying to move toward shared solutions.
-  > 08/08/25, 7:39 pm - Ira Kishore Reddy: We have never claimed that IRA decides the right option.
-  > 08/08/25, 7:41 pm - Ira Kishore Reddy: In fact, my very message clearly stated that any changes or rules will be shared transparently and implemented only after consensus from all stakeholders/residents
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'IRA Prashanth', '+919948226403', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
 #### Jaswant Boda
 - **Phone**: `+919515760828`
 - **Source File**: `Jaswant Boda.vcf`
@@ -2862,23 +3189,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Jaswant Boda', '+919515760828', 'O
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Jyothi Arvapalli Caterars Sandeep', '+919296659876', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Kalyan Panthulu/Poojari@Elite Villas
-- **Phone**: `+919032658299`
-- **Source File**: `Kalyan PanthuluPoojari@Elite Villas.vcf`
-- **WhatsApp Mentions & Context**:
-  > 29/11/25, 4:35 pm - +91 78937 42337: Hi All, Anyone going today’s Ira office or  q city . Please let me know . I need a drop . I need to quick my car from service center
-  > 29/11/25, 6:06 pm - ira facilities: <Media omitted>
-  > 29/11/25, 6:28 pm - Swami Reddy IRA Aspiration: Kalyan PanthuluPoojari@Elite Villas.vcf (file attached)
-  > 29/11/25, 6:28 pm - Swami Reddy IRA Aspiration: Hi Everyone, Kalyan Poojari/Panthulu is available in Elite Villas, Please reach out if you need.
-  > 29/11/25, 9:02 pm - Anil B214 IRA Aspiration: @⁨~IRA-FM⁩ , @⁨Rajasekhar kalisetty IRA Aspiration⁩ , there is no watchman behind A,D,C blocks. please check.
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Kalyan Panthulu/Poojari@Elite Villas', '+919032658299', 'Other', NULL, 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -3023,24 +3333,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Kollur. Line Men Sathaiah Mudhiraj
 
 ---
 
-#### KRC SAFETY NETS  Chandu
-- **Phone**: `+917207953205`
-- **Source File**: `KRC SAFETY NETS  Chandu.vcf`
-- **Bio/Description**: *BALCONY SAFETY NETS. INVISIBLE GRILLS. CLOTH HANGER. MOSQUITO MAESS DOOR. CRICKET SPORT NETS..*
-- **WhatsApp Mentions & Context**:
-  > 17/04/26, 10:34 pm - +91 73848 81574: Yes please we would like you to look into this @⁨~IRA-FM⁩ cos the prepaid meter suggests we are consuming Exorbitant amount whereas it is not as much. You did mention earlier you would look into it and I guess a quite number of residents have voiced. We urge you to look into it.
-  > 17/04/26, 11:07 pm - +91 75692 87144: You can see the work done in C506 and 504.  Vendor is KRC Safety Net, Mr Chandu.  The rate is 110 per sft for 3mm ss wire. <This message was edited>
-  > 17/04/26, 11:07 pm - +91 75692 87144: KRC SAFETY NETS  Chandu.vcf (file attached)
-  > 17/04/26, 11:22 pm - +91 90529 06655: I dont think reqching out to Facility team will help us in anyway
-  > 17/04/26, 11:22 pm - +91 90529 06655: Its about builder
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'KRC SAFETY NETS  Chandu', '+917207953205', 'Other', 'BALCONY SAFETY NETS. INVISIBLE GRILLS. CLOTH HANGER. MOSQUITO MAESS DOOR. CRICKET SPORT NETS..', 'PASS', 'COMMUNITY');
-```
-
----
-
 #### LG India
 - **Phone**: `+919711709999`
 - **Source File**: `LG India.vcf`
@@ -3094,23 +3386,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'KRC SAFETY NETS  Chandu', '+917207
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'LG India', '+919711709999', 'Other', 'LG India', 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Mahendra Medical Blood Test Lab Kollur
-- **Phone**: `+919666661366`
-- **Source File**: `Mahendra Medical Blood Test Lab Kollur.vcf`
-- **WhatsApp Mentions & Context**:
-  > 08/05/26, 11:30 am - +91 81064 33517: Thyrocare MIG.vcf (file attached)
-  > 08/05/26, 11:31 am - +91 81064 33517: you can try asking them
-  > 08/05/26, 11:32 am - Sumit A912: Mahendra Medical Blood Test Lab Kollur.vcf (file attached)
-  > 08/05/26, 2:02 pm - +91 99490 27492: Do we have any inhouse tent contact person who can supply some chairs
-  > 08/05/26, 2:04 pm - Sumit A912: Praveen Kollur Tent House.vcf (file attached)
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Mahendra Medical Blood Test Lab Kollur', '+919666661366', 'Other', NULL, 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -3195,28 +3470,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Mutton Irshad Ram Reddy Chicken Ko
 
 ---
 
-#### Nandini Physiotherapy Srikara
-- **Phone**: `+916301340623`
-- **Source File**: `Nandini Physiotherapy Srikara.vcf`
-- **WhatsApp Mentions & Context**:
-  > 13/08/25, 5:48 pm - +91 98485 44918: <Media omitted>
-  > 13/08/25, 5:51 pm - +91 79897 33429: Appreciate the thought 👍🏻
-  > 13/08/25, 6:00 pm - +91 90333 86708: Nandini Physiotherapy Srikara.vcf (file attached)
-  > 13/08/25, 6:00 pm - +91 90333 86708: A female physiotherapist from Srikara Hospital, Miyapur has been visiting C306 since yesterday at 5.30 PM and will continue for a few more days.
-
-  > 05/10/25, 10:01 pm - +91 77026 99956: The below contact was shared  in the women”s grp, thought it might be helpful to you as well.
-  > 05/10/25, 10:01 pm - +91 77026 99956: Ravi Physiotherapist IRA Homeservice.vcf (file attached)
-  > 06/10/25, 12:40 am - +91 90333 86708: Nandini Physiotherapy Srikara.vcf (file attached)
-  > 06/10/25, 12:40 am - +91 90333 86708: @⁨~Archana Padhi⁩ , @⁨~Vishwanath Mahadevan⁩
-  > 06/10/25, 12:43 am - +91 90333 86708: I will be travelling to Charlapalli Station around 7.30 PM - 8.00 PM today.
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Nandini Physiotherapy Srikara', '+916301340623', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
 #### Nani
 - **Phone**: `+919949386340`
 - **Source File**: `Nani .vcf`
@@ -3257,268 +3510,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Nani', '+919949386340', 'Other', '
 
 ---
 
-#### Nanny
-- **Phone**: `+919666691480`
-- **Source File**: `Nanny .vcf`
-- **WhatsApp Mentions & Context**:
-  > 20/02/26, 7:04 am - +91 93978 11190: @⁨Rajasekhar kalisetty IRA Aspiration⁩  wanted to ask there is no ac remote at the gym  can you plz arrange it . There is no security person to ask .
-  > 20/02/26, 7:05 am - ira facilities: Dear Resident We will update
-  > 20/02/26, 10:02 am - +91 95848 10193: Hi Everyone, I am looking for newborn baby massage, does anyone have any contact of Dai or nanny or Maid, who does massage of 6+ month baby.
-  > Thanks in Advance.
-  > 20/02/26, 10:46 am - ira facilities: <Media omitted>
-
-  > 15/03/26, 4:36 pm - +91 95535 00082: Hi any contact for mason civil work please
-  > 15/03/26, 5:22 pm - Ramakrishna D904: We had a whatsApp group of all skating related discussions, if anyone interested you can join using the link https://chat.whatsapp.com/H6p0hpnagUgLG8mLDPIgTX?mode=ac_t
-  > 15/03/26, 8:00 pm - +1 (913) 215-6601: Hi All, Our tenant who is moving into D-102 on 1st April is looking for a maid for household chores and a nanny to look after their child. If anyone has contacts, please share with him on +91 99591 49217
-  > 15/03/26, 8:47 pm - +91 70440 80050: Hi, any 2 bhk available for rent?
-  > 15/03/26, 9:59 pm - +91 97013 85462: @⁨~IRA-FM⁩ please arrange mosquito repellent spray at mosquito prone areas. Mosquitoes are spreading and multiplying at rapid rate.
-
-  > 31/03/26, 8:05 pm - +91 96763 31166: Do we have any DPS girls in our apartments who are studying 6th and above, I need a clarification. Please respond <This message was edited>
-  > 31/03/26, 10:56 pm - +91 96402 76118: <Media omitted>
-  > 01/04/26, 9:53 am - +91 70440 80050: Hello All, Nanny Chansamma who has been working at our house is available starting tomorrow .. she is very good in handelling infants and also helps in daily chores .. she can be available for 8 hours(8 to 4).. please ping me if you need Nanny/househelp.
-  > 01/04/26, 11:30 am - +91 86861 30098: Anyone having indane gas delivery person no,Please DM
-  > 01/04/26, 11:37 am - +91 89717 77008: Vishnu Cylinder Indane Ira.vcf (file attached)
-
-  > 01/04/26, 11:40 am - +91 80996 65806: Vishnuvardhanreddy Reddy.vcf (file attached)
-  > 01/04/26, 1:22 pm - +91 96033 99977: Can you share her number
-  > 01/04/26, 1:22 pm - +91 70440 80050: Nanny .vcf (file attached)
-  > 01/04/26, 2:11 pm - +91 90148 46025: <Media omitted>
-  > 01/04/26, 2:14 pm - +91 96033 99977: Thank you
-
-  > For 4 wheeler and Bike Riders Plz Don't the Speed Limit 10 in Parking Area...I have Observed some Rash Driving In the Parking as well... <This message was edited>
-  > 26/05/26, 6:27 pm - +91 99356 23896: <Media omitted>
-  > 26/05/26, 6:55 pm - +91 97046 31867: Anyone know reference of nanny/babysitter available to take care of baby in Ira Aspiration?
-  > 26/05/26, 8:59 pm - +91 90324 07332: I did try this raising greviance in MyCure app 5 to 6 times and visiting office and submitting written application and complaint but everytime they are closing it without updating the correct plinth area and tax stating it has been fixed at the time if registration as per your cost if flat and cannot be changed etc.
-  > Somehow Tellapur CMC doesn't know how to work while a similar issue was resolved by GHMC office Kondapur within 1 week for me last year with online grievances raised on the app.
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Nanny', '+919666691480', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Pandit Shkula Ji
-- **Phone**: `+917013257075`
-- **Source File**: `Pandit Shkula Ji.vcf`
-- **Bio/Description**: *Pandit Shkula Ji*
-- **WhatsApp Mentions & Context**:
-  > Requesting IRA representatives to please take this up with the facilities team and explore possible solutions. We should implement effective measures to discourage pigeon nesting in our building. @⁨~IRA-FM⁩
-  > 30/01/26, 12:06 pm - +91 95539 15388: could you please help me with the contact number of a pandit for the house ceremony
-  > 30/01/26, 12:51 pm - +91 93978 11190: Pandit Shkula Ji.vcf (file attached)
-  > 30/01/26, 12:52 pm - +91 93978 11190: Above details
-  > 30/01/26, 12:54 pm - +91 92463 08029: Venugopala Swamy Temple Pujari.vcf (file attached)
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Pandit Shkula Ji', '+917013257075', 'Other', 'Pandit Shkula Ji', 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Pocket Pils Medical Stores Signature
-- **Phone**: `+916300507310`
-- **Source File**: `Pocket Pils Medical Stores Signature.vcf`
-- **WhatsApp Mentions & Context**:
-  > Contact numbers
-  > 7842310028
-  > 6300507310
-  > 14/02/26, 9:10 pm - +91 99661 20136: Any idea on their occupancy?? We too should have one pharmacy inside our society
-  > 14/02/26, 9:10 pm - +91 80080 49094: This message was deleted
-
-  > Contact numbers
-  > 7842310028
-  > 6300507310
-  > 03/03/26, 11:08 am - +91 99510 09098: <Media omitted>
-  > 03/03/26, 11:15 am - Naresh Anna IRA Aspiration B205: Hi All,
-
-  > 21/04/26, 12:32 pm - Ashish A414 IRA Aspiration: Is he coming these days for car cleaning, because he did not clean my car since three days.
-  > 21/04/26, 2:57 pm - +91 82980 93327: Anybody having number of medical store in signature altius?
-  > 21/04/26, 2:59 pm - Venkata Ramana Reddy: +91 63005 07310
-  > 21/04/26, 2:59 pm - +91 82980 93327: or any other contact number who can deliver  medicine now?
-  > 21/04/26, 3:00 pm - +91 88952 73780: Hey everyone , can you guys share maid contact for house cleaning and dishes ! ??
-
-  > Freedom Mesh - quite reasonable and quick.
-  > 21/04/26, 7:55 pm - +91 98663 18123: Pocket Pils Medical Stores Signature.vcf (file attached)
-  > 21/04/26, 7:55 pm - +91 98663 18123: Check out the below from Signature Altius . He delivered medicines couple of times to me at no additional cost
-  > 21/04/26, 9:48 pm - +91 70937 01477: And it begins again….
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Pocket Pils Medical Stores Signature', '+916300507310', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Prabhakar Pioneer Online
-- **Phone**: `+919666235952`
-- **Source File**: `Prabhakar Pioneer Internet.vcf`
-- **WhatsApp Mentions & Context**:
-  > 06/10/25, 3:46 pm - +91 88767 95904: U can talk to the Pioneer guy.
-  > 06/10/25, 3:46 pm - +91 99995 01298: Thanks for the info, any contact number?
-  > 06/10/25, 3:47 pm - +91 88767 95904: Prabhakar Pioneer Online.vcf (file attached)
-  > 06/10/25, 3:47 pm - +91 79812 88969: Ira Airtel Technician.vcf (file attached)
-  > 06/10/25, 5:06 pm - ira facilities: <Media omitted>
-
-  > 07/06/26, 11:58 am - +91 63099 04603: Thank you in advance
-  > 07/06/26, 12:01 pm - +91 96402 76118: Ravinder Rathod Airtel xtream fiber.vcf (file attached)
-  > 07/06/26, 12:18 pm - +91 90009 78824: Prabhakar Pioneer Internet.vcf (file attached)
-  > 07/06/26, 12:18 pm - +91 63099 04603: Thank you so muchhh
-  > 07/06/26, 5:07 pm - +91 788 821 5290: This issue has been pending for far too long, and the complete lack of urgency from the management team is extremely disappointing.
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Prabhakar Pioneer Online', '+919666235952', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Prabhakar.Pioneer
-- **Phone**: `+918712015572`
-- **Source File**: `Prabhakar.Pioneer.vcf`
-- **Bio/Description**: *Prabhakar*
-- **WhatsApp Mentions & Context**:
-  > 02/06/26, 8:08 pm - +91 96422 97422: Piped gas Not yet Started...we are using our Own Gas Connection
-  > 02/06/26, 8:08 pm - +91 96422 97422: Airtel and Pioneer are good In IRA Aspiration
-  > 02/06/26, 8:09 pm - +91 96422 97422: Prabhakar.Pioneer.vcf (file attached)
-  > 02/06/26, 8:09 pm - +91 96422 97422: This guy for Pioneer
-  > 02/06/26, 8:27 pm - +91 91689 44370: Ok thank you
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Prabhakar.Pioneer', '+918712015572', 'Other', 'Prabhakar', 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Pradeep Airtel Intenet
-- **Phone**: `+917428658104`
-- **Source File**: `Pradeep Airtel Intenet.vcf`
-- **WhatsApp Mentions & Context**:
-  > 06/09/25, 10:11 pm - Rajasekhar kalisetty IRA Aspiration: Sure sir
-  > 07/09/25, 7:07 am - +91 91691 21121: Can any one have Airtel broadband connection person contact details
-  > 07/09/25, 7:19 am - +91 78937 42337: Pradeep Airtel Intenet.vcf (file attached)
-  > 07/09/25, 9:35 am - ramesh D812 Aspiration: Rahul deep and bathroom cleaning person is coming to the community
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Pradeep Airtel Intenet', '+917428658104', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Raju Granite Kollur
-- **Phone**: `+919346241181`
-- **Source File**: `Raju Granite Kollur .vcf`
-- **WhatsApp Mentions & Context**:
-  > 21/12/25, 7:18 pm - +91 70424 17504: This message was deleted
-  > 21/12/25, 7:53 pm - +91 97046 31867: Anyone know someone who can do granite work in Ira Aspiration or Kollur?
-  > 21/12/25, 8:17 pm - +91 88979 42149: Raju Granite Kollur .vcf (file attached)
-  > 21/12/25, 8:21 pm - +91 97046 31867: Thank you
-  > 21/12/25, 9:35 pm - +91 99667 01007: Yes there giving in AP
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Raju Granite Kollur', '+919346241181', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Raju-CoreCutting
-- **Phone**: `+917013627905`
-- **Source File**: `Raju-CoreCutting.vcf`
-- **WhatsApp Mentions & Context**:
-  > Any contact who can make hole for A/C fitting
-  > 23/04/26, 12:20 pm - Sumit A912: Core Cutting IRA.vcf (file attached)
-  > 23/04/26, 12:20 pm - Sumit A912: Raju-CoreCutting.vcf (file attached)
-  > 23/04/26, 12:21 pm - Sumit A912: Please inform CRM before proceeding.
-  > 23/04/26, 2:01 pm - +91 98900 86816: <Media omitted>
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Raju-CoreCutting', '+917013627905', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Ram Ira Panthulu Garu
-- **Phone**: `+917386662005`
-- **Source File**: `Ram Ira Panthulu Garu.vcf`
-- **Bio/Description**: *Ram*
-- **WhatsApp Mentions & Context**:
-  > 23/09/25, 1:08 pm - +91 98485 44918: Hi all,
-  > Suggest me priest for vastu Pooja.
-  > 23/09/25, 1:10 pm - +91 78937 42337: Ram Ira Panthulu Garu.vcf (file attached)
-  > 23/09/25, 1:10 pm - +91 97035 43114: Hrushikesh Chilukamukku Pandit.vcf (file attached)
-  > 23/09/25, 1:10 pm - +91 95818 99355: Guys ...Does anyone having Car bed with you ....if you have one can I borrow for 4 days .....
-
-  > 30/01/26, 2:21 pm - +91 97035 43114: 3 contacts.vcf (file attached)
-  > 30/01/26, 2:23 pm - +91 95539 15388: Thank you for sharing pandit details 🙏🙂
-  > 30/01/26, 2:57 pm - +91 78937 42337: Ram Ira Panthulu Garu.vcf (file attached)
-  > 30/01/26, 3:22 pm - +91 79899 66448: Hi Everyone, does anyone have good contact for veneer polishing?
-  > Thanks in advance.
-
-  > 19/02/26, 12:02 pm - +91 97035 43114: Pandit Prakash Shukla.vcf (file attached)
-  > 19/02/26, 12:03 pm - +91 97035 43114: 2 contacts.vcf (file attached)
-  > 19/02/26, 12:08 pm - +91 78937 42337: Ram Ira Panthulu Garu.vcf (file attached)
-  > 19/02/26, 2:26 pm - +91 85888 47738: <Media omitted>
-  > 19/02/26, 2:32 pm - +91 97046 31867: This message was deleted
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ram Ira Panthulu Garu', '+917386662005', 'Other', 'Ram', 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Ravi Kollur Medicals
-- **Phone**: `+917569677011`
-- **Source File**: `IRA Ravi (Sri Sai Medicals).vcf`
-- **Bio/Description**: *Sri Sai medical and general store*
-- **WhatsApp Mentions & Context**:
-  > check with security.
-  > 14/10/25, 8:13 pm - +91 97035 43114: If anyone has a kollur  medical store number please share
-  > 14/10/25, 8:15 pm - Anil B214 IRA Aspiration: Ravi Kollur Medicals.vcf (file attached)
-  > 14/10/25, 8:32 pm - +91 97035 43114: Thank you
-  > 14/10/25, 8:48 pm - +91 80084 36464: Not working for me <This message was edited>
-
-  > 11/11/25, 5:46 pm - ira facilities: We will send an electrician to check
-  > 11/11/25, 8:57 pm - +91 90333 86708: I use Apollo and it gets delivered, but takes few days
-  > 11/11/25, 9:04 pm - +91 77995 99956: IRA Ravi (Sri Sai Medicals).vcf (file attached)
-  > 11/11/25, 9:05 pm - +91 77995 99956: This message was deleted
-  > 11/11/25, 9:39 pm - +91 79812 88969: Hello
-
-  > 21/04/26, 2:59 pm - +91 82980 93327: or any other contact number who can deliver  medicine now?
-  > 21/04/26, 3:00 pm - +91 88952 73780: Hey everyone , can you guys share maid contact for house cleaning and dishes ! ??
-  > 21/04/26, 3:08 pm - +91 81216 97707: Medicalshop Kollur Door Delvery: 75696 77011
-  > 21/04/26, 5:57 pm - +91 96546 97443: <Media omitted>
-  > 21/04/26, 6:00 pm - +91 97013 85462: 🚩🚩PARVIDA SRINIVAS🎼🎶 Aparna Pharmacy Kollur.vcf (file attached)
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ravi Kollur Medicals', '+917569677011', 'Other', 'Sri Sai medical and general store', 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Ravi Physiotherapist IRA Homeservice
-- **Phone**: `+917416134095`
-- **Source File**: `Ravi Physiotherapist IRA Homeservice.vcf`
-- **Bio/Description**: *Dr Ravi Chandra*
-- **WhatsApp Mentions & Context**:
-  > 05/10/25, 8:59 pm - +91 97109 88898: I need a physio too for my mother
-  > 05/10/25, 10:01 pm - +91 77026 99956: The below contact was shared  in the women”s grp, thought it might be helpful to you as well.
-  > 05/10/25, 10:01 pm - +91 77026 99956: Ravi Physiotherapist IRA Homeservice.vcf (file attached)
-  > 06/10/25, 12:40 am - +91 90333 86708: Nandini Physiotherapy Srikara.vcf (file attached)
-  > 06/10/25, 12:40 am - +91 90333 86708: @⁨~Archana Padhi⁩ , @⁨~Vishwanath Mahadevan⁩
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ravi Physiotherapist IRA Homeservice', '+917416134095', 'Other', 'Dr Ravi Chandra', 'PASS', 'COMMUNITY');
-```
-
----
-
 #### Ravi Teja
 - **Phone**: `+919542474927`
 - **Source File**: `Ravi Teja .vcf`
@@ -3532,36 +3523,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ravi Physiotherapist IRA Homeservi
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ravi Teja', '+919542474927', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Ravinder Airtel
-- **Phone**: `+918712651349`
-- **Source File**: `Ravinder Airtel.vcf`
-- **Bio/Description**: *Airtel broadband &DTH (Airtel Xtreme fiber)Wifi provider all over TS&AP)*
-- **WhatsApp Mentions & Context**:
-  > 09/04/26, 8:58 am - +91 70937 01477: Hi everyone, does anyone have a contact with the Airtel wifi staff/ any technician?
-  > 09/04/26, 8:58 am - +91 70937 01477: They haven’t configured my set top box since two weeks and customer services is useless
-  > 09/04/26, 9:00 am - Ramakrishna D904: Ravinder Airtel.vcf (file attached)
-  > 09/04/26, 9:05 am - +91 70937 01477: Thank you 🙏
-  > 09/04/26, 9:49 am - +91 95026 32179: Hi
-
-  > 08/05/26, 6:08 pm - +91 90523 06254: Same with me …. He isn’t responding to calls as well. I have opted for pioneer after that. Even he isn’t responding for my cancellation requests
-  > 08/05/26, 6:08 pm - +91 90523 06254: I have already reported to FM team.
-  > 08/05/26, 6:11 pm - Ramakrishna D904: Ravinder Airtel.vcf (file attached)
-  > 08/05/26, 6:11 pm - Ramakrishna D904: Try to reach him 👆
-  > 08/05/26, 6:11 pm - +91 96402 76118: Malikarjun?
-
-  > I need a wifi connection to our flat so if you have any leads related to wifi network please let me know..
-  > 07/06/26, 11:58 am - +91 63099 04603: Thank you in advance
-  > 07/06/26, 12:01 pm - +91 96402 76118: Ravinder Rathod Airtel xtream fiber.vcf (file attached)
-  > 07/06/26, 12:18 pm - +91 90009 78824: Prabhakar Pioneer Internet.vcf (file attached)
-  > 07/06/26, 12:18 pm - +91 63099 04603: Thank you so muchhh
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ravinder Airtel', '+918712651349', 'Other', 'Airtel broadband &DTH (Airtel Xtreme fiber)Wifi provider all over TS&AP)', 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -3613,24 +3574,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Riju Deep Clean Knockman', '+91863
 
 ---
 
-#### Sajid Khan Fall Ceiling
-- **Phone**: `+919517372141`
-- **Source File**: `Sajid Khan Fall Ceiling.vcf`
-- **Bio/Description**: *Sajid Khan Fall Ceiling*
-- **WhatsApp Mentions & Context**:
-  > 16/11/25, 12:40 pm - +91 81211 07007: Any false ceiling repair contact ?
-  > 16/11/25, 12:40 pm - +91 81211 07007: This message was deleted
-  > 16/11/25, 12:41 pm - Sumit A912: Sajid Khan Fall Ceiling.vcf (file attached)
-  > 16/11/25, 12:41 pm - Sumit A912: Wahid Fall Ceiling.vcf (file attached)
-  > 16/11/25, 12:41 pm - Sumit A912: Imran Fall Ceiling.vcf (file attached)
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Sajid Khan Fall Ceiling', '+919517372141', 'Other', 'Sajid Khan Fall Ceiling', 'PASS', 'COMMUNITY');
-```
-
----
-
 #### Savidada Laxmi
 - **Phone**: `+917893391014`
 - **Source File**: `Savidada Laxmi.vcf`
@@ -3644,23 +3587,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Sajid Khan Fall Ceiling', '+919517
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Savidada Laxmi', '+917893391014', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### sony TV installation- Laxman
-- **Phone**: `+919177071029`
-- **Source File**: `sony TV installation- Laxman .vcf`
-- **Bio/Description**: *Technician*
-- **WhatsApp Mentions & Context**:
-  > 03/03/26, 5:07 pm - ira facilities: This message was deleted
-  > 03/03/26, 5:10 pm - ira facilities: <Media omitted>
-  > 03/03/26, 5:19 pm - +91 81064 33517: sony TV installation- Laxman .vcf (file attached)
-  > 03/03/26, 5:20 pm - +91 81064 33517: you can try this guy
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'sony TV installation- Laxman', '+919177071029', 'Other', 'Technician', 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -3721,23 +3647,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Sri', '+919581880568', 'Other', NU
 
 ---
 
-#### Sujatha Medical Nurse
-- **Phone**: `+917995900442`
-- **Source File**: `Sujatha Medical Nurse.vcf`
-- **WhatsApp Mentions & Context**:
-  > Any references of nearby clinics or physicians who can change Catheter and Urine bag?
-  > 24/06/25, 4:37 pm - +91 96422 97422: I am not Pointing anyone here...My intention here is if we bring them till main gate..it's easy for them to enter into Society...Anyway Thanks mate..
-  > 24/06/25, 4:57 pm - +91 97109 88898: Sujatha Medical Nurse.vcf (file attached)
-  > 24/06/25, 4:57 pm - +91 97109 88898: She comes to IRA for medical needs.
-  > 24/06/25, 11:35 pm - +91 80561 86514: For those who are coming late, near Kollur village post office the road to our community is blocked.  You need to detour and get into small streets and come and join before the IRA sales office.
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Sujatha Medical Nurse', '+917995900442', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
 #### Suneel C403
 - **Phone**: `+919008515666`
 - **Source File**: `Suneel C403.vcf`
@@ -3751,22 +3660,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Sujatha Medical Nurse', '+91799590
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Suneel C403', '+919008515666', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
-#### SURABHI Chandanagar TV Repair
-- **Phone**: `+919908114123`
-- **Source File**: `SURABHI Chandanagar TV Repair.vcf`
-- **WhatsApp Mentions & Context**:
-  > It's same like Urban Company
-  > 25/08/25, 3:59 pm - Sumit A912: SURABHI Chandanagar TV Repair.vcf (file attached)
-  > 25/08/25, 5:33 pm - +91 76740 88877:
-  > 25/08/25, 5:33 pm - +91 76740 88877: <Media omitted>
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'SURABHI Chandanagar TV Repair', '+919908114123', 'Other', NULL, 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -3828,62 +3721,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Surya Naik', '+919121098783', 'Oth
 
 ---
 
-#### Swimming Coach
-- **Phone**: `+919052539224`
-- **Source File**: `Poorna Chandra Swimming Trainer.vcf`
-- **Bio/Description**: *CPR , BASIC FIRST AID , LIFE SAVER , POOL LIFE GUARD , BEACH LIFE GUARD , SWIMMING , FLOOD RESCUE , FREE DIVING , SUBA DIVING , ROPE RESCUE. 💪🏽*
-- **WhatsApp Mentions & Context**:
-  > 11/03/26, 6:53 pm - Mahesh B 615 IRA Aspiration: 5+
-  > 11/03/26, 6:53 pm - Mahesh B 615 IRA Aspiration: <Media omitted>
-  > 11/03/26, 6:53 pm - Mahesh B 615 IRA Aspiration: Poorna Chandra Swimming Trainer.vcf (file attached)
-  > 11/03/26, 6:54 pm - +91 88767 95904: Is 3k final or we can negotiate?
-  > 11/03/26, 6:54 pm - Mahesh B 615 IRA Aspiration: We can negotiate
-
-  > 11/03/26, 8:19 pm - +91 95810 50050: Agreed 3k seems very high..
-  > 11/03/26, 8:22 pm - +91 91821 59210: <Media omitted>
-  > 11/03/26, 8:23 pm - +91 99372 49070: We need  to check with the facilities. They have shared that no coaching for swimming. Lets get alligned with them and we can take the next step
-  > 11/03/26, 8:29 pm - +91 90529 06655: How many days a week for swimming
-  > 12/03/26, 7:40 am - +91 95818 99355: <Media omitted>
-
-  > 12/03/26, 9:54 am - +91 99123 89998 changed to +91 96966 36966
-  > 12/03/26, 10:37 am - +91 95818 99355: Thank you so much for the response andi ....I will collect in the evening
-  > 12/03/26, 10:45 am - +91 99356 23896: Yes, in my previous community's swimming coach charged 1500 per month.
-  > 12/03/26, 10:59 am - Bharath Reddy A Block: @⁨Rajasekhar kalisetty IRA Aspiration⁩ please add my wife into this group 9347733820
-  > 12/03/26, 11:34 am - Sumit A912: <Media omitted>
-
-  > Greetings.
-  > We are planning to start *Professional Swimming Coaching Sessions* for children and adults in our community swimming pool.
-  > Coach: *B. Poorna Chander Rao*
-
-  > Coach: *B. Poorna Chander Rao*
-  > (NSNIS – Netaji Subhas National Institute of Sports Trained Swimming Coach)
-  > Training Details:
-
-  > Regards,
-  > B. Poorna Chander Rao
-  > Swimming Coach
-  > Mobile:  9052539224
-  > 16/03/26, 12:57 pm - Ramakrishna D904: Fee too high..
-
-  > 16/03/26, 4:14 pm - +91 80999 11702: Everyone 😄
-  > 16/03/26, 4:29 pm - +91 89032 21132: is the coach present in this group ?
-  > 16/03/26, 4:30 pm - +91 95027 39678: Swimming Coach.vcf (file attached)
-  > 16/03/26, 4:30 pm - +91 95027 39678: Yes
-  > 16/03/26, 4:30 pm - +91 89032 21132: I feel like 3k is expensive for 12 days , should we enquire or check with  other societies as well?
-
-  > 16/03/26, 4:30 pm - +91 95027 39678: Yes
-  > 16/03/26, 4:30 pm - +91 89032 21132: I feel like 3k is expensive for 12 days , should we enquire or check with  other societies as well?
-  > 16/03/26, 4:33 pm - +91 95027 39678: I think this coach is from our neighborhood Villa Community,  May be we can ask this price in the Swimming group itself
-  > 16/03/26, 4:34 pm - +91 89032 21132: I met him last week when he was in society and asked him to share details like how many persons/batch and discounts if there are multiple entries
-  > 16/03/26, 4:35 pm - +91 95810 50050: I heard this coach is swimming teacher in DPS and Samashti school .
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Swimming Coach', '+919052539224', 'Other', 'CPR , BASIC FIRST AID , LIFE SAVER , POOL LIFE GUARD , BEACH LIFE GUARD , SWIMMING , FLOOD RESCUE , FREE DIVING , SUBA DIVING , ROPE RESCUE. 💪🏽', 'PASS', 'COMMUNITY');
-```
-
----
-
 #### Veni's
 - **Phone**: `+919908955578`
 - **Source File**: `Veni's.vcf`
@@ -3936,23 +3773,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Venky', '+918978182772', 'Other', 
 
 ---
 
-#### Venugopala Swamy Temple Pujari
-- **Phone**: `+919290921187`
-- **Source File**: `Venugopala Swamy Temple Pujari.vcf`
-- **WhatsApp Mentions & Context**:
-  > 30/01/26, 12:51 pm - +91 93978 11190: Pandit Shkula Ji.vcf (file attached)
-  > 30/01/26, 12:52 pm - +91 93978 11190: Above details
-  > 30/01/26, 12:54 pm - +91 92463 08029: Venugopala Swamy Temple Pujari.vcf (file attached)
-  > 30/01/26, 2:21 pm - +91 97035 43114: 3 contacts.vcf (file attached)
-  > 30/01/26, 2:23 pm - +91 95539 15388: Thank you for sharing pandit details 🙏🙂
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Venugopala Swamy Temple Pujari', '+919290921187', 'Other', NULL, 'PASS', 'COMMUNITY');
-```
-
----
-
 #### VIJAY HOME SERVICES
 - **Phone**: `+918073077921`
 - **Source File**: `VIJAY HOME SERVICES.vcf`
@@ -3967,23 +3787,6 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Venugopala Swamy Temple Pujari', '
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'VIJAY HOME SERVICES', '+918073077921', 'Other', 'VIJAY HOME SERVICES', 'PASS', 'COMMUNITY');
-```
-
----
-
-#### Wahid Fall Ceiling
-- **Phone**: `+919985268088`
-- **Source File**: `Wahid Fall Ceiling.vcf`
-- **WhatsApp Mentions & Context**:
-  > 16/11/25, 12:40 pm - +91 81211 07007: This message was deleted
-  > 16/11/25, 12:41 pm - Sumit A912: Sajid Khan Fall Ceiling.vcf (file attached)
-  > 16/11/25, 12:41 pm - Sumit A912: Wahid Fall Ceiling.vcf (file attached)
-  > 16/11/25, 12:41 pm - Sumit A912: Imran Fall Ceiling.vcf (file attached)
-  > 16/11/25, 12:42 pm - Sumit A912: Try these @⁨~Mayank⁩
-
-```sql
-INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Wahid Fall Ceiling', '+919985268088', 'Other', NULL, 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -4021,6 +3824,107 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Abhishek Painter', '+917880502780'
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'IRA Painter Sandeep', '+919652565978', 'Painter', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+### Category: Pandit / Pujari
+
+#### Hrushikesh Chilukamukku Pandit
+- **Phone**: `+919440048706`
+- **Source File**: `Hrushikesh Chilukamukku Pandit.vcf`
+- **WhatsApp Mentions & Context**:
+  > Suggest me priest for vastu Pooja.
+  > 23/09/25, 1:10 pm - +91 78937 42337: Ram Ira Panthulu Garu.vcf (file attached)
+  > 23/09/25, 1:10 pm - +91 97035 43114: Hrushikesh Chilukamukku Pandit.vcf (file attached)
+  > 23/09/25, 1:10 pm - +91 95818 99355: Guys ...Does anyone having Car bed with you ....if you have one can I borrow for 4 days .....
+  > 23/09/25, 1:27 pm - +91 98485 44918: Thank you suresh garu, vasishtha garu.
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Hrushikesh Chilukamukku Pandit', '+919440048706', 'Pandit / Pujari', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Kalyan Panthulu/Poojari@Elite Villas
+- **Phone**: `+919032658299`
+- **Source File**: `Kalyan PanthuluPoojari@Elite Villas.vcf`
+- **WhatsApp Mentions & Context**:
+  > 29/11/25, 4:35 pm - +91 78937 42337: Hi All, Anyone going today’s Ira office or  q city . Please let me know . I need a drop . I need to quick my car from service center
+  > 29/11/25, 6:06 pm - ira facilities: <Media omitted>
+  > 29/11/25, 6:28 pm - Swami Reddy IRA Aspiration: Kalyan PanthuluPoojari@Elite Villas.vcf (file attached)
+  > 29/11/25, 6:28 pm - Swami Reddy IRA Aspiration: Hi Everyone, Kalyan Poojari/Panthulu is available in Elite Villas, Please reach out if you need.
+  > 29/11/25, 9:02 pm - Anil B214 IRA Aspiration: @⁨~IRA-FM⁩ , @⁨Rajasekhar kalisetty IRA Aspiration⁩ , there is no watchman behind A,D,C blocks. please check.
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Kalyan Panthulu/Poojari@Elite Villas', '+919032658299', 'Pandit / Pujari', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Pandit Shkula Ji
+- **Phone**: `+917013257075`
+- **Source File**: `Pandit Shkula Ji.vcf`
+- **Bio/Description**: *Pandit Shkula Ji*
+- **WhatsApp Mentions & Context**:
+  > Requesting IRA representatives to please take this up with the facilities team and explore possible solutions. We should implement effective measures to discourage pigeon nesting in our building. @⁨~IRA-FM⁩
+  > 30/01/26, 12:06 pm - +91 95539 15388: could you please help me with the contact number of a pandit for the house ceremony
+  > 30/01/26, 12:51 pm - +91 93978 11190: Pandit Shkula Ji.vcf (file attached)
+  > 30/01/26, 12:52 pm - +91 93978 11190: Above details
+  > 30/01/26, 12:54 pm - +91 92463 08029: Venugopala Swamy Temple Pujari.vcf (file attached)
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Pandit Shkula Ji', '+917013257075', 'Pandit / Pujari', 'Pandit Shkula Ji', 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Ram Ira Panthulu Garu
+- **Phone**: `+917386662005`
+- **Source File**: `Ram Ira Panthulu Garu.vcf`
+- **Bio/Description**: *Ram*
+- **WhatsApp Mentions & Context**:
+  > 23/09/25, 1:08 pm - +91 98485 44918: Hi all,
+  > Suggest me priest for vastu Pooja.
+  > 23/09/25, 1:10 pm - +91 78937 42337: Ram Ira Panthulu Garu.vcf (file attached)
+  > 23/09/25, 1:10 pm - +91 97035 43114: Hrushikesh Chilukamukku Pandit.vcf (file attached)
+  > 23/09/25, 1:10 pm - +91 95818 99355: Guys ...Does anyone having Car bed with you ....if you have one can I borrow for 4 days .....
+
+  > 30/01/26, 2:21 pm - +91 97035 43114: 3 contacts.vcf (file attached)
+  > 30/01/26, 2:23 pm - +91 95539 15388: Thank you for sharing pandit details 🙏🙂
+  > 30/01/26, 2:57 pm - +91 78937 42337: Ram Ira Panthulu Garu.vcf (file attached)
+  > 30/01/26, 3:22 pm - +91 79899 66448: Hi Everyone, does anyone have good contact for veneer polishing?
+  > Thanks in advance.
+
+  > 19/02/26, 12:02 pm - +91 97035 43114: Pandit Prakash Shukla.vcf (file attached)
+  > 19/02/26, 12:03 pm - +91 97035 43114: 2 contacts.vcf (file attached)
+  > 19/02/26, 12:08 pm - +91 78937 42337: Ram Ira Panthulu Garu.vcf (file attached)
+  > 19/02/26, 2:26 pm - +91 85888 47738: <Media omitted>
+  > 19/02/26, 2:32 pm - +91 97046 31867: This message was deleted
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ram Ira Panthulu Garu', '+917386662005', 'Pandit / Pujari', 'Ram', 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Venugopala Swamy Temple Pujari
+- **Phone**: `+919290921187`
+- **Source File**: `Venugopala Swamy Temple Pujari.vcf`
+- **WhatsApp Mentions & Context**:
+  > 30/01/26, 12:51 pm - +91 93978 11190: Pandit Shkula Ji.vcf (file attached)
+  > 30/01/26, 12:52 pm - +91 93978 11190: Above details
+  > 30/01/26, 12:54 pm - +91 92463 08029: Venugopala Swamy Temple Pujari.vcf (file attached)
+  > 30/01/26, 2:21 pm - +91 97035 43114: 3 contacts.vcf (file attached)
+  > 30/01/26, 2:23 pm - +91 95539 15388: Thank you for sharing pandit details 🙏🙂
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Venugopala Swamy Temple Pujari', '+919290921187', 'Pandit / Pujari', NULL, 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -4098,6 +4002,48 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Kumara Swamy Pest Control', '+9197
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Pest Control Ira', '+916305518336', 'Pest Control', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+### Category: Physiotherapy
+
+#### Nandini Physiotherapy Srikara
+- **Phone**: `+916301340623`
+- **Source File**: `Nandini Physiotherapy Srikara.vcf`
+- **WhatsApp Mentions & Context**:
+  > 13/08/25, 5:48 pm - +91 98485 44918: <Media omitted>
+  > 13/08/25, 5:51 pm - +91 79897 33429: Appreciate the thought 👍🏻
+  > 13/08/25, 6:00 pm - +91 90333 86708: Nandini Physiotherapy Srikara.vcf (file attached)
+  > 13/08/25, 6:00 pm - +91 90333 86708: A female physiotherapist from Srikara Hospital, Miyapur has been visiting C306 since yesterday at 5.30 PM and will continue for a few more days.
+
+  > 05/10/25, 10:01 pm - +91 77026 99956: The below contact was shared  in the women”s grp, thought it might be helpful to you as well.
+  > 05/10/25, 10:01 pm - +91 77026 99956: Ravi Physiotherapist IRA Homeservice.vcf (file attached)
+  > 06/10/25, 12:40 am - +91 90333 86708: Nandini Physiotherapy Srikara.vcf (file attached)
+  > 06/10/25, 12:40 am - +91 90333 86708: @⁨~Archana Padhi⁩ , @⁨~Vishwanath Mahadevan⁩
+  > 06/10/25, 12:43 am - +91 90333 86708: I will be travelling to Charlapalli Station around 7.30 PM - 8.00 PM today.
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Nandini Physiotherapy Srikara', '+916301340623', 'Physiotherapy', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### Ravi Physiotherapist IRA Homeservice
+- **Phone**: `+917416134095`
+- **Source File**: `Ravi Physiotherapist IRA Homeservice.vcf`
+- **Bio/Description**: *Dr Ravi Chandra*
+- **WhatsApp Mentions & Context**:
+  > 05/10/25, 8:59 pm - +91 97109 88898: I need a physio too for my mother
+  > 05/10/25, 10:01 pm - +91 77026 99956: The below contact was shared  in the women”s grp, thought it might be helpful to you as well.
+  > 05/10/25, 10:01 pm - +91 77026 99956: Ravi Physiotherapist IRA Homeservice.vcf (file attached)
+  > 06/10/25, 12:40 am - +91 90333 86708: Nandini Physiotherapy Srikara.vcf (file attached)
+  > 06/10/25, 12:40 am - +91 90333 86708: @⁨~Archana Padhi⁩ , @⁨~Vishwanath Mahadevan⁩
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Ravi Physiotherapist IRA Homeservice', '+917416134095', 'Physiotherapy', 'Dr Ravi Chandra', 'PASS', 'COMMUNITY');
 ```
 
 ---
@@ -4257,6 +4203,99 @@ VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Water Filter, Service', '+91630199
 ```sql
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
 VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Bhanu Mudiraj RTO', '+918801236806', 'RTO Agent', NULL, 'PASS', 'COMMUNITY');
+```
+
+---
+
+### Category: Swimming / Fitness Coach
+
+#### Swimming Coach
+- **Phone**: `+919052539224`
+- **Source File**: `Poorna Chandra Swimming Trainer.vcf`
+- **Bio/Description**: *CPR , BASIC FIRST AID , LIFE SAVER , POOL LIFE GUARD , BEACH LIFE GUARD , SWIMMING , FLOOD RESCUE , FREE DIVING , SUBA DIVING , ROPE RESCUE. 💪🏽*
+- **WhatsApp Mentions & Context**:
+  > 11/03/26, 6:53 pm - Mahesh B 615 IRA Aspiration: 5+
+  > 11/03/26, 6:53 pm - Mahesh B 615 IRA Aspiration: <Media omitted>
+  > 11/03/26, 6:53 pm - Mahesh B 615 IRA Aspiration: Poorna Chandra Swimming Trainer.vcf (file attached)
+  > 11/03/26, 6:54 pm - +91 88767 95904: Is 3k final or we can negotiate?
+  > 11/03/26, 6:54 pm - Mahesh B 615 IRA Aspiration: We can negotiate
+
+  > 11/03/26, 8:19 pm - +91 95810 50050: Agreed 3k seems very high..
+  > 11/03/26, 8:22 pm - +91 91821 59210: <Media omitted>
+  > 11/03/26, 8:23 pm - +91 99372 49070: We need  to check with the facilities. They have shared that no coaching for swimming. Lets get alligned with them and we can take the next step
+  > 11/03/26, 8:29 pm - +91 90529 06655: How many days a week for swimming
+  > 12/03/26, 7:40 am - +91 95818 99355: <Media omitted>
+
+  > 12/03/26, 9:54 am - +91 99123 89998 changed to +91 96966 36966
+  > 12/03/26, 10:37 am - +91 95818 99355: Thank you so much for the response andi ....I will collect in the evening
+  > 12/03/26, 10:45 am - +91 99356 23896: Yes, in my previous community's swimming coach charged 1500 per month.
+  > 12/03/26, 10:59 am - Bharath Reddy A Block: @⁨Rajasekhar kalisetty IRA Aspiration⁩ please add my wife into this group 9347733820
+  > 12/03/26, 11:34 am - Sumit A912: <Media omitted>
+
+  > Greetings.
+  > We are planning to start *Professional Swimming Coaching Sessions* for children and adults in our community swimming pool.
+  > Coach: *B. Poorna Chander Rao*
+
+  > Coach: *B. Poorna Chander Rao*
+  > (NSNIS – Netaji Subhas National Institute of Sports Trained Swimming Coach)
+  > Training Details:
+
+  > Regards,
+  > B. Poorna Chander Rao
+  > Swimming Coach
+  > Mobile:  9052539224
+  > 16/03/26, 12:57 pm - Ramakrishna D904: Fee too high..
+
+  > 16/03/26, 4:14 pm - +91 80999 11702: Everyone 😄
+  > 16/03/26, 4:29 pm - +91 89032 21132: is the coach present in this group ?
+  > 16/03/26, 4:30 pm - +91 95027 39678: Swimming Coach.vcf (file attached)
+  > 16/03/26, 4:30 pm - +91 95027 39678: Yes
+  > 16/03/26, 4:30 pm - +91 89032 21132: I feel like 3k is expensive for 12 days , should we enquire or check with  other societies as well?
+
+  > 16/03/26, 4:30 pm - +91 95027 39678: Yes
+  > 16/03/26, 4:30 pm - +91 89032 21132: I feel like 3k is expensive for 12 days , should we enquire or check with  other societies as well?
+  > 16/03/26, 4:33 pm - +91 95027 39678: I think this coach is from our neighborhood Villa Community,  May be we can ask this price in the Swimming group itself
+  > 16/03/26, 4:34 pm - +91 89032 21132: I met him last week when he was in society and asked him to share details like how many persons/batch and discounts if there are multiple entries
+  > 16/03/26, 4:35 pm - +91 95810 50050: I heard this coach is swimming teacher in DPS and Samashti school .
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Swimming Coach', '+919052539224', 'Swimming / Fitness Coach', 'CPR , BASIC FIRST AID , LIFE SAVER , POOL LIFE GUARD , BEACH LIFE GUARD , SWIMMING , FLOOD RESCUE , FREE DIVING , SUBA DIVING , ROPE RESCUE. 💪🏽', 'PASS', 'COMMUNITY');
+```
+
+---
+
+### Category: TV Repair & Install
+
+#### sony TV installation- Laxman
+- **Phone**: `+919177071029`
+- **Source File**: `sony TV installation- Laxman .vcf`
+- **Bio/Description**: *Technician*
+- **WhatsApp Mentions & Context**:
+  > 03/03/26, 5:07 pm - ira facilities: This message was deleted
+  > 03/03/26, 5:10 pm - ira facilities: <Media omitted>
+  > 03/03/26, 5:19 pm - +91 81064 33517: sony TV installation- Laxman .vcf (file attached)
+  > 03/03/26, 5:20 pm - +91 81064 33517: you can try this guy
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'sony TV installation- Laxman', '+919177071029', 'TV Repair & Install', 'Technician', 'PASS', 'COMMUNITY');
+```
+
+---
+
+#### SURABHI Chandanagar TV Repair
+- **Phone**: `+919908114123`
+- **Source File**: `SURABHI Chandanagar TV Repair.vcf`
+- **WhatsApp Mentions & Context**:
+  > It's same like Urban Company
+  > 25/08/25, 3:59 pm - Sumit A912: SURABHI Chandanagar TV Repair.vcf (file attached)
+  > 25/08/25, 5:33 pm - +91 76740 88877:
+  > 25/08/25, 5:33 pm - +91 76740 88877: <Media omitted>
+
+```sql
+INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
+VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'SURABHI Chandanagar TV Repair', '+919908114123', 'TV Repair & Install', NULL, 'PASS', 'COMMUNITY');
 ```
 
 ---
