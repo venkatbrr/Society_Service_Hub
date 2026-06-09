@@ -381,6 +381,89 @@ Cross-community backend foundations are live in the database: partnerships, grou
 
 ---
 
+## My Community Network (MCN)
+
+### Network Hub (`app/(tabs)/network.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | A lightweight social tool for residents to share local businesses or offer items to borrow/free. |
+| **Tables** | Reads: `mcn_posts`, `profiles`; writes: `mcn_posts` |
+| **Business rules** | Two segments: `business` and `borrow`. Posts are strictly community-scoped. Search is debounced by 300ms. Owners and Community Leads can delete posts. Owners can mark their posts as unavailable. |
+| **Navigation** | To `app/network/add.tsx` |
+| **Roles** | All residents can view and add posts. Community leads can moderate (delete) any post. |
+
+### Add Post (`app/network/add.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Create a new business or borrow post. |
+| **Tables** | Writes: `mcn_posts` |
+| **Business rules** | Title is required (max 80 chars). Description is optional (max 280 chars). Contact hint is optional, and if a 10 digit number is extracted, it is normalized. |
+| **Navigation** | From `app/(tabs)/network.tsx`. Routes back on success. |
+| **Roles** | All residents can create posts. |
+
+### My Posts (`app/network/my-posts.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Management screen for a user's own active and closed MCN posts. |
+| **Tables** | Reads/Writes: `mcn_posts` |
+| **Business rules** | Users can view all their posts grouped by Active and Closed. They can close active posts or hard-delete any post. |
+| **Navigation** | From `app/(tabs)/profile.tsx`. |
+
+### Add Listing (`app/network/listing-add.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Create a new local business listing. |
+| **Tables** | Writes: `mcn_listings` |
+| **Business rules** | Business name is required (max 80 chars). Description is optional (max 280 chars). Contact phone is optional and is normalized to 10 digits. |
+| **Navigation** | From `app/(tabs)/network.tsx` (business segment FAB). Navigates to manage screen on success. |
+| **Roles** | All residents can create listings. |
+
+### Listing Detail & Order (`app/network/listing/[id].tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | View listing products, contact details, and place or update orders. |
+| **Tables** | Reads: `mcn_listings`, `mcn_products`, `mcn_orders`, `mcn_order_items`, `profiles` |
+| **Business rules** | Quantity increments are: `0.5` for kg/litre; `1` for piece/dozen/box/pack. Min quantity is 0. Cart displays line items and subtotals. Note is optional. Action button places a new order or updates an existing pending order (removes old items and inserts new). Direct Call and WhatsApp communication links. |
+| **Navigation** | From listing card click. |
+| **Roles** | Any resident (except listing owner) can place orders. |
+
+### Manage Listing (`app/network/listing/manage/[id].tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Owner panel to toggle listing visibility, edit listing details, and manage products. |
+| **Tables** | Reads/Writes: `mcn_listings`, `mcn_products`, `mcn_orders` |
+| **Business rules** | Owner can toggle listing active/paused. Products can be edited, toggled available/paused, or deleted. Deletion is restricted if the product has existing order items. Includes inline modal forms for business details and product creation/editing. |
+| **Navigation** | From owner listing card "Manage" link. |
+| **Roles** | Only the listing owner. |
+
+### Orders Received (`app/network/listing/orders/[id].tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | View and update orders placed against the business listing. |
+| **Tables** | Reads/Writes: `mcn_orders`, `mcn_order_items`, `profiles`, `mcn_products` |
+| **Business rules** | Orders grouped by status: Pending, Fulfilled, Cancelled. WhatsApp button includes pre-filled message with order items and total. Pending orders can be marked fulfilled or cancelled (requires confirmation popup). |
+| **Navigation** | From Manage Listing screen. |
+| **Roles** | Only the listing owner. |
+
+### My Orders (`app/network/my-orders.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | View and manage orders placed by the current resident. |
+| **Tables** | Reads/Writes: `mcn_orders`, `mcn_order_items`, `mcn_listings`, `profiles`, `mcn_products` |
+| **Business rules** | Orders grouped by status: Pending, Fulfilled, Cancelled. Displays seller contact details (Call/WhatsApp links). Resident can cancel own pending orders (hard deletes order and cascading items). |
+| **Navigation** | From `app/(tabs)/profile.tsx` ("My orders" row). |
+| **Roles** | All residents can view and cancel their own orders. |
+
+---
+
 ## Removed Product Surface
 
 ### Resident Marketplace
@@ -407,6 +490,21 @@ The resident marketplace is not part of the current app. The business screens we
 | Add contribution | No | Yes | Yes | Yes |
 | Add expense | No | Yes | Yes | No |
 | View personal service reminders | Yes | Yes | Yes | Yes |
+| View/Search MCN posts | Yes | Yes | - | - |
+| Add MCN post | Yes | Yes | - | - |
+| Edit/Close own MCN post | Yes | Yes | - | - |
+| Delete own MCN post | Yes | Yes | - | - |
+| Delete any MCN post | No | Yes | - | - |
+| View/Search business listings | Yes | Yes | - | - |
+| Create business listing | Yes | Yes | - | - |
+| Edit/Toggle own listing active | Yes (own only) | Yes (own only) | - | - |
+| Add/Edit/Delete listing products | Yes (own only) | Yes (own only) | - | - |
+| View orders received | Yes (own only) | Yes (own only) | - | - |
+| Update order status (fulfill/cancel) | Yes (own only) | Yes (own only) | - | - |
+| Place/Update order | Yes (not own) | Yes (not own) | - | - |
+| Remove any listing | No | Yes | - | - |
+| View own placed orders | Yes | Yes | - | - |
+| Cancel own pending order | Yes | Yes | - | - |
 
 ---
 

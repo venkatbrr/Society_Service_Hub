@@ -176,6 +176,7 @@ type AuthContextType = {
 
 | Table | Purpose | Scope |
 |-------|---------|-------|
+| `mcn_posts` | Lightweight social posts for local businesses and borrowing/free items within a community. Includes `kind`, `title`, `description`, `contact_hint`, and `is_available` status. | Community |
 | `communities` | Community metadata, join code, and funds/block activation flags (`funds_enabled`, `blocks_enabled`) | Community |
 | `profiles` | User profile extension of `auth.users`, including `flat_number` from signup metadata and optional `block_id` when blocks are enabled | Community or self |
 | `community_requests` | Reviewed community creation requests | Requester or platform |
@@ -300,6 +301,10 @@ All active tables have RLS enabled.
 | `funds_access_revocations` | Platform-admin reads only; writes are RPC-only |
 | `notifications` | User-owned read and mark-read updates |
 | `user_services` | User-owned only, independent of community filters |
+| `mcn_listings` | Community-scoped reads; owner or lead writes |
+| `mcn_products` | Community-scoped reads; owner manages writes |
+| `mcn_orders` | Buyer or owner reads; buyer inserts/cancels; owner updates status |
+| `mcn_order_items` | Buyer or owner reads; buyer inserts |
 
 Pending or rejected users are blocked from normal community content even if a stale `community_id` exists.
 

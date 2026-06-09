@@ -813,6 +813,318 @@ export type Database = {
           },
         ]
       }
+      mcn_listings: {
+        Row: {
+          community_id: string
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_listings_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_listings_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcn_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          product_id: string
+          quantity: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcn_orders: {
+        Row: {
+          buyer_id: string
+          buyer_note: string | null
+          buyer_phone: string | null
+          community_id: string
+          created_at: string
+          id: string
+          listing_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          buyer_note?: string | null
+          buyer_phone?: string | null
+          community_id: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          buyer_note?: string | null
+          buyer_phone?: string | null
+          community_id?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_orders_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_orders_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_orders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcn_posts: {
+        Row: {
+          community_id: string
+          contact_hint: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_available: boolean
+          kind: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          contact_hint?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          kind: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          contact_hint?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          kind?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_posts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcn_products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_available: boolean
+          listing_id: string
+          name: string
+          price: number
+          sort_order: number
+          unit: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          listing_id: string
+          name: string
+          price: number
+          sort_order?: number
+          unit: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          listing_id?: string
+          name?: string
+          price?: number
+          sort_order?: number
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_products_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          community_id: string
+          created_by: string
+          created_at: string
+          description: string | null
+          distance: number
+          facilities: string[]
+          fee_range: string
+          id: string
+          level: 'pre_school' | 'primary' | 'high_school' | 'all_in_one'
+          name: string
+          contact_phone: string | null
+          website: string | null
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          created_by: string
+          created_at?: string
+          description?: string | null
+          distance: number
+          facilities?: string[]
+          fee_range: string
+          id?: string
+          level: 'pre_school' | 'primary' | 'high_school' | 'all_in_one'
+          name: string
+          contact_phone?: string | null
+          website?: string | null
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          created_by?: string
+          created_at?: string
+          description?: string | null
+          distance?: number
+          facilities?: string[]
+          fee_range?: string
+          id?: string
+          level?: 'pre_school' | 'primary' | 'high_school' | 'all_in_one'
+          name?: string
+          contact_phone?: string | null
+          website?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schools_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schools_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       notifications: {
         Row: {
           body: string
@@ -2317,3 +2629,25 @@ export const Constants = {
     },
   },
 } as const
+
+export type ProviderWithInteraction = Tables<'service_providers'> & {
+  is_favorite?: boolean
+  hire_count?: number
+  user_rating?: number | null
+}
+
+export type VisitWithJoinerData = Tables<'service_visits'> & {
+  creator_name?: string | null
+  creator_flat?: string | null
+  creator_avatar_url?: string | null
+  joiner_count?: number
+  has_user_joined?: boolean
+}
+
+export type VisitJoinerWithProfile = Tables<'visit_joiners'> & {
+  user_name?: string | null
+  full_name?: string | null
+  avatar_url?: string | null
+  flat_number?: string | null
+  joined_at?: string
+}

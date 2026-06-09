@@ -367,16 +367,16 @@ export default function AddTransactionScreen() {
 
   if (fund?.is_closed) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background, padding: 24 }]}>
-        <Ionicons name="lock-closed" size={48} color={Verandah.warning} style={{ marginBottom: 16 }} />
+      <View style={[styles.loadingState, { backgroundColor: colors.background, padding: 24 }]}>
+        <Ionicons name="lock-closed" size={48} color={Verandah.caution} style={{ marginBottom: 16 }} />
         <Text style={{ color: colors.text, fontSize: 18, fontWeight: '600', marginBottom: 8, textAlign: 'center' }}>
-          Fund is Closed
+          Fund is closed
         </Text>
         <Text style={{ color: colors.textMuted, fontSize: 15, textAlign: 'center', marginBottom: 24, lineHeight: 22 }}>
           This fund has been closed by the community lead. No new transactions can be recorded or edited.
         </Text>
-        <TouchableOpacity style={[styles.typeButton, { backgroundColor: colors.surface2 }]} onPress={() => router.back()}>
-          <Text style={[styles.typeButtonText, { color: colors.primary }]}>Go Back</Text>
+        <TouchableOpacity style={[styles.backInactiveBtn, { borderColor: colors.border }]} onPress={() => router.back()}>
+          <Text style={[styles.backInactiveText, { color: colors.primary }]}>Go back</Text>
         </TouchableOpacity>
       </View>
     );

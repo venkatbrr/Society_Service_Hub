@@ -347,8 +347,8 @@ export default function FundDetailScreen() {
           )}
 
           {fund.is_closed && (
-            <View style={{ backgroundColor: Verandah.warning + '20', padding: 12, borderRadius: 12, marginBottom: 12 }}>
-              <Text style={{ color: Verandah.warning, fontSize: 14, fontWeight: '500' }}>This fund is closed. No new transactions can be recorded.</Text>
+            <View style={{ backgroundColor: Verandah.cautionSoft, padding: 12, borderRadius: 12, marginBottom: 12 }}>
+              <Text style={{ color: Verandah.caution, fontSize: 14, fontWeight: '500' }}>This fund is closed. No new transactions can be recorded.</Text>
             </View>
           )}
 
@@ -394,7 +394,7 @@ export default function FundDetailScreen() {
                 { backgroundColor: permissions.canAddContribution && !fund.is_closed ? colors.secondary : colors.surface2 },
               ]}
               onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=income`)}
-              disabled={!permissions.canAddContribution || fund.is_closed}
+              disabled={!permissions.canAddContribution || !!fund.is_closed}
             >
               <Text style={styles.actionIcon}>{APP_EMOJIS.contribution}</Text>
               <Text
@@ -413,7 +413,7 @@ export default function FundDetailScreen() {
                 { backgroundColor: permissions.canAddExpense && !fund.is_closed ? colors.accent : colors.surface2 },
               ]}
               onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=expense`)}
-              disabled={!permissions.canAddExpense || fund.is_closed}
+              disabled={!permissions.canAddExpense || !!fund.is_closed}
             >
               <Text style={styles.actionIcon}>{APP_EMOJIS.expense}</Text>
               <Text

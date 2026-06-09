@@ -233,6 +233,36 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
+        <TouchableOpacity
+          onPress={() => router.push('/network/my-posts' as any)}
+          style={styles.adminCard}
+          activeOpacity={0.82}
+        >
+          <View style={styles.adminIconWrap}>
+            <Ionicons name="storefront-outline" size={18} color={Verandah.textTertiary} />
+          </View>
+          <View style={styles.adminContent}>
+            <Text style={styles.adminTitle}>My community posts</Text>
+            <Text style={styles.adminCopy}>Manage your business and borrow listings</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => router.push('/network/my-orders' as any)}
+          style={styles.adminCard}
+          activeOpacity={0.82}
+        >
+          <View style={styles.adminIconWrap}>
+            <Ionicons name="receipt-outline" size={18} color={Verandah.textTertiary} />
+          </View>
+          <View style={styles.adminContent}>
+            <Text style={styles.adminTitle}>My orders</Text>
+            <Text style={styles.adminCopy}>View and manage orders you've placed</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
+        </TouchableOpacity>
+
         {blocksEnabled && communityId ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>

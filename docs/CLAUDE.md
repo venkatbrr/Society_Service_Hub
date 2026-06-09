@@ -96,7 +96,7 @@ Funds activation is gated by platform-admin approval. A community without `funds
 
 ## Database
 
-Active tables include: `communities` (with `code` for join), `profiles`, `service_providers`, `service_visits`, `visit_joiners`, `events` (funds), `event_transactions`, `fund_roles`, `notifications`, `favorites`, `ratings`, `provider_hires`, `provider_personal_notes`, `community_requests`, `profile_audit_log`, `user_services` (user-scoped, no community filter), plus funds-activation and cross-community support tables documented in `docs/architecture.md`.
+Active tables include: `communities` (with `code` for join), `profiles`, `service_providers`, `service_visits`, `visit_joiners`, `events` (funds), `event_transactions`, `fund_roles`, `notifications`, `favorites`, `ratings`, `provider_hires`, `provider_personal_notes`, `mcn_posts`, `mcn_listings`, `mcn_products`, `mcn_orders`, `mcn_order_items`, `community_requests`, `profile_audit_log`, `user_services` (user-scoped, no community filter), plus funds-activation and cross-community support tables documented in `docs/architecture.md`.
 
 Storage bucket: `community-uploads` (public).
 

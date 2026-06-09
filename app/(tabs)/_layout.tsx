@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Verandah } from '../../constants/Colors';
 
@@ -47,6 +48,15 @@ export default function TabLayout() {
           title: 'Saved',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'bookmark' : 'bookmark-outline'} size={20} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="network"
+        options={{
+          title: 'MCN',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'people' : 'people-outline'} size={20} color={color} />
           ),
         }}
       />
