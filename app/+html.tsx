@@ -50,6 +50,10 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
 const responsiveBackground = `
 /* Base: warm off-white matching Verandah.surface */
+html, body {
+  height: 100%;
+}
+
 body {
   background-color: #FAF8F4;
   margin: 0;
@@ -59,7 +63,14 @@ body {
 }
 
 #root {
-  min-height: 100vh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Remove default browser focus outline on web inputs */
+input:focus, textarea:focus, select:focus {
+  outline: none;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -71,7 +82,7 @@ body {
 
 const serviceWorkerRegistration = `
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
+  const register = () => {
     navigator.serviceWorker.register('/service-worker.js')
       .then(function(registration) {
         console.log('[PWA] Service Worker registered with scope:', registration.scope);
@@ -79,6 +90,11 @@ if ('serviceWorker' in navigator) {
       .catch(function(error) {
         console.warn('[PWA] Service Worker registration failed:', error);
       });
-  });
+  };
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    register();
+  } else {
+    window.addEventListener('load', register);
+  }
 }
 `;

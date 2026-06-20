@@ -17,6 +17,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
+import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
+
 
 const isMissingRelationError = (error: { code?: string; message?: string } | null) =>
   error?.code === 'PGRST205' ||
@@ -368,6 +370,8 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
+  const pullToRefresh = useWebPullToRefresh(onRefresh);
+
   const handleToggleFavorite = async (providerId: string, isCurrentlyFavorite: boolean) => {
     setProviders(current =>
       current.map(p => p.id === providerId ? { ...p, is_favorite: !isCurrentlyFavorite } : p)
@@ -489,6 +493,10 @@ export default function HomeScreen() {
           maxToRenderPerBatch={10}
           windowSize={5}
           initialNumToRender={8}
+          onScroll={pullToRefresh.onScroll}
+          onTouchStart={pullToRefresh.onTouchStart}
+          onTouchMove={pullToRefresh.onTouchMove}
+          scrollEventThrottle={pullToRefresh.scrollEventThrottle}
           refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
           }
@@ -585,6 +593,10 @@ export default function HomeScreen() {
           stickySectionHeadersEnabled={false}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          onScroll={pullToRefresh.onScroll}
+          onTouchStart={pullToRefresh.onTouchStart}
+          onTouchMove={pullToRefresh.onTouchMove}
+          scrollEventThrottle={pullToRefresh.scrollEventThrottle}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
           }

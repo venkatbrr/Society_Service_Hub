@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Verandah } from '../../constants/Colors';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const bottomInset = Platform.OS === 'web' ? 0 : (insets.bottom || 0);
 
   return (
     <Tabs
@@ -16,8 +17,8 @@ export default function TabLayout() {
           backgroundColor: Verandah.card,
           borderTopColor: Verandah.border,
           borderTopWidth: 0.5,
-          height: 58 + insets.bottom,
-          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+          height: 58 + bottomInset,
+          paddingBottom: bottomInset > 0 ? bottomInset : 8,
           paddingTop: 8,
           elevation: 0,
         },
