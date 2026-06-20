@@ -12,7 +12,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { ServiceCard, ServiceCardItem } from '../../components/ServiceCard';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius } from '../../constants/Verandah';
+import { VerandahRadius , VerandahLayout } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 56,
+    paddingTop: VerandahLayout.screenPaddingTop,
     paddingBottom: 14,
     gap: 10,
   },
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyContainer: {
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: VerandahLayout.screenPaddingTop,
     paddingHorizontal: 24,
     gap: 12,
   },

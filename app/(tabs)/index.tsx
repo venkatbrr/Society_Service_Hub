@@ -12,7 +12,7 @@ import { UpcomingServicesCard } from '../../components/UpcomingServicesCard';
 import { VisitCard } from '../../components/VisitCard';
 import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS, getServiceCategoryEmoji } from '../../constants/emojis';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahRadius, VerandahType , VerandahLayout } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: VerandahLayout.screenPaddingTop,
     paddingBottom: 20,
   },
   headerTitle: {

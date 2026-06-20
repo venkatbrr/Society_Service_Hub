@@ -1,19 +1,24 @@
 import Constants from 'expo-constants';
-import * as Notifications from 'expo-notifications';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// expo-notifications is native-only (Android/iOS).
+// On web, we import nothing and all push-notification code is a no-op.
+let Notifications: typeof import('expo-notifications') | null = null;
+if (Platform.OS !== 'web') {
+  Notifications = require('expo-notifications');
+  Notifications!.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+}
 
 interface Notification {
   id: string;
@@ -49,9 +54,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     try {
       if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
+        await Notifications!.setNotificationChannelAsync('default', {
           name: 'Default',
-          importance: Notifications.AndroidImportance.HIGH,
+          importance: Notifications!.AndroidImportance.HIGH,
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#6C63FF',
         });
@@ -64,11 +69,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         return;
       }
 
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      const { status: existingStatus } = await Notifications!.getPermissionsAsync();
       let finalStatus = existingStatus;
 
       if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
+        const { status } = await Notifications!.requestPermissionsAsync();
         finalStatus = status;
       }
 
@@ -86,7 +91,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         return;
       }
 
-      const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
+      const { data: token } = await Notifications!.getExpoPushTokenAsync({ projectId });
 
       const { error } = await supabase
         .from('profiles')
@@ -197,7 +202,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           setUnreadCount(prev => prev + 1);
 
           // Optional: Local in-app notification trigger
-          if (Platform.OS !== 'web') {
+          if (Platform.OS !== 'web' && Notifications) {
             void Notifications.scheduleNotificationAsync(
               Platform.OS === 'android'
                 ? {

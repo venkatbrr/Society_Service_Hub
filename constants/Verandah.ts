@@ -52,3 +52,12 @@ export const VerandahRadius = {
   pill: 999,
   frame: 32,
 };
+
+/**
+ * Layout tokens that differ between native and web.
+ * On native, screens need top padding for the status bar.
+ * On web, there is no status bar.
+ */
+export const VerandahLayout = {
+  screenPaddingTop: Platform.select({ web: 16, default: 60 }) as number,
+};

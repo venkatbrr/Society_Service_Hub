@@ -4,7 +4,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOp
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../components/Avatar';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
+import { VerandahRadius, VerandahSpace, VerandahType , VerandahLayout } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { MAX_TREASURERS } from '../../lib/fundRoles';
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: VerandahSpace.xl,
-    paddingTop: 60,
+    paddingTop: VerandahLayout.screenPaddingTop,
     paddingBottom: 120,
   },
   header: {

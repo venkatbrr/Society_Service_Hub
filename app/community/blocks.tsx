@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahRadius, VerandahType , VerandahLayout } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
@@ -242,7 +242,7 @@ export default function CommunityBlocksScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Verandah.surface, paddingTop: 60, paddingHorizontal: 20 },
+  container: { flex: 1, backgroundColor: Verandah.surface, paddingTop: VerandahLayout.screenPaddingTop, paddingHorizontal: 20 },
   header: { marginBottom: 12 },
   backText: { ...VerandahType.captionBold, color: Verandah.accent },
   title: { ...VerandahType.display, color: Verandah.textPrimary, marginTop: 6 },

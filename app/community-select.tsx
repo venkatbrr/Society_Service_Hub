@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: VerandahSpace.xl,
-    paddingTop: 76,
+    paddingTop: Platform.select({ web: 24, default: 76 }),
     paddingBottom: 40,
   },
   title: {

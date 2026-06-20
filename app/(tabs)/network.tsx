@@ -9,7 +9,7 @@ import { EmptyState } from '../../components/EmptyState';
 import { McnPostCard, McnPostWithProfile } from '../../components/McnPostCard';
 import { McnListingCard, McnListingItem } from '../../components/McnListingCard';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -402,7 +402,7 @@ export default function NetworkScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 56,
+    paddingTop: VerandahLayout.screenPaddingTop,
   },
   header: {
     paddingHorizontal: 24,

@@ -19,7 +19,7 @@ import { BlockPicker } from '../../components/BlockPicker';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
-import { VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import {
@@ -795,7 +795,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    paddingTop: 60,
+    paddingTop: VerandahLayout.screenPaddingTop,
     paddingBottom: 24,
     paddingHorizontal: 24,
     borderBottomLeftRadius: 32,

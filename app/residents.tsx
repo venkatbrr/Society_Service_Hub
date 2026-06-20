@@ -6,7 +6,7 @@ import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, SectionList,
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../components/Avatar';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius } from '../constants/Verandah';
+import { VerandahLayout, VerandahRadius } from '../constants/Verandah';
 import { APP_EMOJIS } from '../constants/emojis';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -305,7 +305,7 @@ export default function ResidentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 20, paddingTop: 56 },
+  container: { flex: 1, paddingHorizontal: 20, paddingTop: VerandahLayout.screenPaddingTop },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   backButton: { width: 40, height: 40, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   headerCopy: { flex: 1 },

@@ -1,8 +1,16 @@
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { Platform } from 'react-native';
 import { supabase } from './supabase';
 import { AuthError } from '@supabase/supabase-js';
 
+// Google Sign-In native module — only available on Android/iOS.
+// On web, we use Supabase OAuth redirect flow instead.
+let GoogleSignin: any = null;
+if (Platform.OS !== 'web') {
+  GoogleSignin = require('@react-native-google-signin/google-signin').GoogleSignin;
+}
+
 export function configureGoogleSignIn() {
+  if (Platform.OS === 'web' || !GoogleSignin) return; // no-op on web
   GoogleSignin.configure({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || 'dummy-web-client-id',
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || 'dummy-ios-client-id',

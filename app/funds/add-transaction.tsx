@@ -18,7 +18,7 @@ import Toast from 'react-native-toast-message';
 import { BlockPicker } from '../../components/BlockPicker';
 import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahRadius, VerandahType , VerandahLayout } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { formatRole, getEffectiveFundRole, getFundPermissions } from '../../lib/fundRoles';
@@ -676,7 +676,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 24,
-    paddingTop: 60,
+    paddingTop: VerandahLayout.screenPaddingTop,
   },
   header: {
     marginBottom: 32,

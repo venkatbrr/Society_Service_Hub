@@ -972,7 +972,7 @@ const styles = StyleSheet.create({
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   headerCard: {
     paddingHorizontal: 20,
-    paddingTop: 48,
+    paddingTop: Platform.select({ web: 16, default: 48 }),
     paddingBottom: 8,
     backgroundColor: Verandah.surface,
   },

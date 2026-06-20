@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
-import { VerandahType } from '../constants/Verandah';
+import { VerandahType , VerandahLayout } from '../constants/Verandah';
 import { getAuthErrorMessage, resetPassword } from '../lib/auth';
 
 export default function ForgotPasswordScreen() {
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 32,
-    paddingTop: 60,
+    paddingTop: VerandahLayout.screenPaddingTop,
   },
   backButton: {
     width: 44,

@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { ProviderSelector } from '../../components/ProviderSelector';
 import { Verandah } from '../../constants/Colors';
-import { VerandahType } from '../../constants/Verandah';
+import { VerandahType , VerandahLayout } from '../../constants/Verandah';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/categories';
 import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 24,
-    paddingTop: 60,
+    paddingTop: VerandahLayout.screenPaddingTop,
   },
   header: {
     flexDirection: 'row',

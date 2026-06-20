@@ -9,7 +9,7 @@ import { JoinerListItem } from '../../components/JoinerListItem';
 import { Rupees } from '../../components/Rupees';
 import { VisitStatusBadge } from '../../components/VisitStatusBadge';
 import { Verandah } from '../../constants/Colors';
-import { VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { VisitJoinerWithProfile, VisitWithJoinerData } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: VerandahLayout.screenPaddingTop,
     paddingBottom: 10,
   },
   backButton: {

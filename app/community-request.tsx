@@ -5,6 +5,7 @@ import {
     ActivityIndicator,
     Modal,
     Pressable,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -267,7 +268,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 24,
-    paddingTop: 68,
+    paddingTop: Platform.select({ web: 24, default: 68 }),
     paddingBottom: 40,
   },
   backButton: {

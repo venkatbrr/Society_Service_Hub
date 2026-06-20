@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -16,9 +15,18 @@ import {
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { APP_EMOJIS } from '../constants/emojis';
-import { VerandahRadius, VerandahType } from '../constants/Verandah';
+import { VerandahRadius, VerandahType , VerandahLayout } from '../constants/Verandah';
 import { getAuthErrorMessage, signInWithEmail, signUpWithEmail } from '../lib/auth';
 import { supabase } from '../lib/supabase';
+
+// Google Sign-In native module — only available on Android/iOS.
+let GoogleSignin: any = null;
+let statusCodes: any = {};
+if (Platform.OS !== 'web') {
+  const gsi = require('@react-native-google-signin/google-signin');
+  GoogleSignin = gsi.GoogleSignin;
+  statusCodes = gsi.statusCodes;
+}
 
 type AuthMode = 'signIn' | 'signUp';
 
@@ -114,6 +122,20 @@ export default function LoginScreen() {
   const signInWithGoogle = async () => {
     setGoogleLoading(true);
     try {
+      if (Platform.OS === 'web') {
+        // Web: use Supabase OAuth redirect flow
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+          },
+        });
+        if (error) throw error;
+        // The browser will redirect — no further code runs here.
+        return;
+      }
+
+      // Native: use Google Sign-In native module + ID token
       await GoogleSignin.hasPlayServices();
 
       // Force account picker instead of silently reusing the last Google account.
@@ -339,7 +361,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 24,
-    paddingTop: 60,
+    paddingTop: VerandahLayout.screenPaddingTop,
     paddingBottom: 40,
   },
   header: {

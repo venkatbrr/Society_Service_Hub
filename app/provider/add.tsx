@@ -5,7 +5,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOp
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
-import { VerandahType } from '../../constants/Verandah';
+import { VerandahType , VerandahLayout } from '../../constants/Verandah';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/categories';
 import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { DetailField, getDetailFieldsForCategory } from '../../constants/providerDetails';
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 24,
-    paddingTop: 60,
+    paddingTop: VerandahLayout.screenPaddingTop,
   },
   header: {
     marginBottom: 24,

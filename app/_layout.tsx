@@ -1,9 +1,15 @@
-import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 import { LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+// Notifications module — native only (Android/iOS).
+let Notifications: typeof import('expo-notifications') | null = null;
+if (Platform.OS !== 'web') {
+  Notifications = require('expo-notifications');
+}
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { AuthProvider, useAuth } from '../context/AuthContext';
@@ -99,6 +105,8 @@ function RootLayoutNav() {
   }, [session, communityId, activeCommunityRequest, isPlatformAdmin, isLoading, segments]);
 
   useEffect(() => {
+    if (Platform.OS === 'web' || !Notifications) return;
+
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = (response.notification.request.content.data ?? {}) as {
         kind?: string;
