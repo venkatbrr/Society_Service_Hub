@@ -32,7 +32,7 @@ export function FundsList() {
 
   const router = useRouter();
   const { user, communityId, appRole } = useAuth();
-  const canCreate = appRole === 'community_admin' || appRole === 'admin';
+  const canCreate = appRole === 'president' || appRole === 'vice_president' || appRole === 'admin';
 
   const fetchFunds = useCallback(async () => {
     if (!communityId) {

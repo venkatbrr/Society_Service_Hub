@@ -113,7 +113,7 @@ The `CategoryFilter` component in `components/CategoryFilter.tsx` derives groups
 
 ```text
 No session -> /login
-Platform admin session -> /platform/approvals
+Platform admin session -> /admin-redirect
 Authenticated, no community, active request -> /community-request-submitted
 Authenticated, no community, no request -> /community-select
 Authenticated with community -> /(tabs)
@@ -357,7 +357,7 @@ The notification screen still contains defensive handling for legacy admin-promo
 
 ## Navigation Architecture
 
-### Route Hierarchy
+### Route Hierarchy (Mobile App)
 
 ```text
 app/_layout.tsx
@@ -377,7 +377,7 @@ app/_layout.tsx
   -> /funds/*
   -> /funds-access/request
   -> /services/*
-  -> /platform/*
+  -> /admin-redirect
 ```
 
 ### Main Tabs (`app/(tabs)/_layout.tsx`)
@@ -391,20 +391,21 @@ Tab icons are currently rendered with `APP_EMOJIS` inside `Text` elements.
 
 The community tab consolidates the funds summary, residents-directory shortcut, and community information card. The earlier pulse line is intentionally removed from the tab UI. Fund detail and create/transaction flows remain in `/funds/*` top-level routes.
 
-### Platform Tabs (`app/platform/_layout.tsx`)
+### Platform Admin Console (Web App Routing)
 
-- Approvals
-- Communities
-- Funds requests
+The platform admin console is a Single Page Application using hash-based routing:
+- `#dashboard`: Metrics cards, community selector, provider charts and category top lists
+- `#approvals`: Onboarding community requests and block seeding
+- `#communities`: Community directory, block management, leads configuration
+- `#funds-requests`: Review of funds activation and designated lead selectors
 
-### Dynamic Detail Routes
+### Dynamic Detail Routes (Mobile App)
 
 - `/provider/[id]`
 - `/hire-feedback/[hireId]`
 - `/visits/[id]`
 - `/funds/[id]`
 - `/services/[id]`
-- `/platform/community/[id]`
 
 ### Route Parameter Patterns
 

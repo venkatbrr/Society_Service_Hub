@@ -331,7 +331,7 @@ export default function FundDetailScreen() {
           <Text style={styles.fundTitle}>{fund.title}</Text>
           <Text style={styles.fundDesc}>{fund.description || 'Transparent community fund tracking for every resident.'}</Text>
 
-          {appRole === 'community_lead' && (
+          {(appRole === 'president' || appRole === 'vice_president') && (
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface2, padding: 12, borderRadius: 12, marginBottom: 12 }}>
               <View>
                 <Text style={{ fontSize: 15, fontWeight: '500', color: colors.text }}>

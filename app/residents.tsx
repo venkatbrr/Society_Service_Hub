@@ -17,7 +17,7 @@ type DirectoryResident = {
   flat_number: string | null;
   phone_number: string | null;
   email: string | null;
-  app_role: 'admin' | 'community_admin' | 'resident' | 'community_lead';
+  app_role: 'admin' | 'resident' | 'president' | 'vice_president';
   block_id: string | null;
   block_name: string | null;
 };
@@ -230,9 +230,11 @@ export default function ResidentsScreen() {
                   ) : (
                     <Text style={[styles.name, { color: colors.textPrimary }]}>{item.full_name || 'Resident'}</Text>
                   )}
-                  {item.app_role === 'community_lead' ? (
+                  {item.app_role === 'president' || item.app_role === 'vice_president' ? (
                     <View style={[styles.leadBadge, { backgroundColor: colors.accentSoft }]}>
-                      <Text style={[styles.leadBadgeText, { color: colors.accent }]}>Lead</Text>
+                      <Text style={[styles.leadBadgeText, { color: colors.accent }]}>
+                        {item.app_role === 'president' ? 'President' : 'Vice President'}
+                      </Text>
                     </View>
                   ) : null}
                 </View>
@@ -271,7 +273,7 @@ export default function ResidentsScreen() {
               Phone: {selectedResident?.phone_number || 'N/A'}
             </Text>
             <Text style={[styles.modalMeta, { color: colors.textSecondary }]}>
-              Role: {selectedResident?.app_role === 'community_lead' ? 'Community Lead' : 'Resident'}
+              Role: {selectedResident?.app_role === 'president' ? 'President' : selectedResident?.app_role === 'vice_president' ? 'Vice President' : 'Resident'}
             </Text>
 
             <View style={styles.modalActions}>
@@ -281,7 +283,7 @@ export default function ResidentsScreen() {
               >
                 <Text style={[styles.modalCloseText, { color: colors.textPrimary }]}>Close</Text>
               </TouchableOpacity>
-              {isCommunityLead && selectedResident?.app_role !== 'community_lead' ? (
+              {isCommunityLead && selectedResident?.app_role !== 'president' && selectedResident?.app_role !== 'vice_president' ? (
                 <TouchableOpacity
                   style={[styles.modalRemoveBtn, { backgroundColor: colors.accent }]}
                   onPress={handleRemoveResident}

@@ -54,13 +54,16 @@ Cross-community RPCs and tables now exist in the database, but platform routes c
 
 ## UI Routes
 
-Platform admin console:
+Platform admin console (Separate Web Application):
 
-- `/platform/approvals`
-- `/platform/communities`
-- `/platform/community/[id]`
+- Local URL: Run a web server serving `admin-dashboard/` (e.g. `npx serve admin-dashboard` which typically serves on `http://localhost:3000` or `http://localhost:5173`)
+- Pages:
+  - `#dashboard` (Community stats, metric cards, provider charts/lists)
+  - `#approvals` (Pending community approvals, block seeding)
+  - `#communities` (Community list, inspection, blocks, lead & resident management)
+  - `#funds-requests` (Funds access reviews, Designated lead assignments)
 
-Root routing redirects platform admins into `/platform/approvals`.
+The mobile app's root routing redirects platform admins to `/admin-redirect` pointing them to the web console.
 
 ## Verification Checklist
 
@@ -68,15 +71,15 @@ Root routing redirects platform admins into `/platform/approvals`.
    - `profiles.app_role = 'admin'`
    - `profiles.community_id IS NULL`
 2. Verify approval flow:
-   - approving a pending `community_requests` row creates a `communities` row
+   - approving a pending request on `#approvals` page creates a `communities` row
    - the requester is assigned to the new community with `app_role = 'resident'`
    - the created community receives a join code
 3. Verify rejection flow:
    - rejecting a request updates status and stores the optional rejection reason
-4. Verify community inspection:
-   - `/platform/communities` loads communities and member counts
-   - `/platform/community/[id]` loads residents for the selected community
-5. Verify resident removal:
+4. Verify community inspection on the web app:
+   - `#communities` loads communities list and member/lead counts
+   - clicking a community loads detailed resident directory, block settings, active leads
+5. Verify resident removal on the web app:
    - platform removal sets `removed_at` and `removed_by`
    - the user's role is reset as expected by the database workflow
 6. Verify audit support:

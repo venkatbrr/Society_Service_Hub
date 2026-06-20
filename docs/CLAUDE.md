@@ -28,7 +28,7 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 
 ### Layers
 
-- **Screens** (`app/`): expo-router file-based routing. 4 bottom tabs in `app/(tabs)/` (Help, Saved, Community, Profile), onboarding and status routes such as `community-select`, `community-request`, and `community-join-block`, plus feature screens under `app/visits/`, `app/funds/`, `app/funds-access/`, `app/provider/`, `app/services/`, `app/community/`, `app/profile/`, and `app/platform/`.
+- **Screens** (`app/`): expo-router file-based routing. 4 bottom tabs in `app/(tabs)/` (Help, Saved, Community, Profile), onboarding and status routes such as `community-select`, `community-request`, and `community-join-block`, plus feature screens under `app/visits/`, `app/funds/`, `app/funds-access/`, `app/provider/`, `app/services/`, `app/community/`, `app/profile/`, and `app/admin-redirect.tsx`.
 - **Components** (`components/`): Reusable UI — `ProviderCard`, `VisitCard`, `FundCard`, `EmptyState`, `SearchBar`, `CategoryFilter`, etc.
 - **State** (`context/`): Two React Context providers — `AuthContext` (session, profile, communityId, appRole, isCommunityLead, isPlatformAdmin) and `NotificationContext` (real-time via Supabase Realtime).
 - **Backend** (`lib/`): Supabase client (`supabase.ts`), auth helpers (`auth.ts`), auto-generated DB types (`database.types.ts`), fund role logic (`fundRoles.ts`), error utilities (`supabaseErrors.ts`).
@@ -44,7 +44,7 @@ Every user belongs to a community. **All data queries must filter by `communityI
 
 1. Root layout (`app/_layout.tsx`) initializes Google Sign-In and wraps app in `AuthProvider` + `NotificationProvider`
 2. `AuthContext` watches `supabase.auth.onAuthStateChange`, auto-fetches profile
-3. Redirect logic: no session → `/login`; platform admin → `/platform/approvals`; no community + active request → `/community-request-submitted`; no community + no request → `/community-select`; community present → `/(tabs)`
+3. Redirect logic: no session → `/login`; platform admin → `/admin-redirect`; no community + active request → `/community-request-submitted`; no community + no request → `/community-select`; community present → `/(tabs)`
 4. Successful `join_community_by_code()` calls in `app/community-select.tsx` can branch to `/community-join-block` before `/(tabs)` when the joined community has both `funds_enabled` and `blocks_enabled`
 5. Auth methods: Google OAuth (requires dev build, not Expo Go) and email/password; email sign-up collects full name and password on the first screen while `profiles.flat_number` remains optional
 6. Session persisted via AsyncStorage adapter (not SecureStore, due to Android 2KB limit)

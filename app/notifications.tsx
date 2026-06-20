@@ -72,7 +72,7 @@ export default function NotificationsScreen() {
       notification.type === 'new_promotion_request' ||
       notification.type === 'funds_access_requested'
     ) {
-      router.push('/platform/approvals' as any);
+      router.push('/admin-redirect' as any);
       return;
     }
 

@@ -306,7 +306,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const rawRole = normalizeAppRole(profile?.app_role, isKnownPlatformAdminEmail);
   // Platform admins must remain in the platform console even if the profile has stale/legacy community linkage.
   const isPlatformAdmin = rawRole === 'admin' || isKnownPlatformAdminEmail;
-  const isCommunityLead = rawRole === 'community_lead' && !!communityId;
+  const isCommunityLead = (rawRole === 'president' || rawRole === 'vice_president') && !!communityId;
 
   return (
     <AuthContext.Provider

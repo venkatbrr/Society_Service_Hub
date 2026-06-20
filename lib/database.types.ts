@@ -1062,69 +1062,6 @@ export type Database = {
           },
         ]
       }
-      schools: {
-        Row: {
-          community_id: string
-          created_by: string
-          created_at: string
-          description: string | null
-          distance: number
-          facilities: string[]
-          fee_range: string
-          id: string
-          level: 'pre_school' | 'primary' | 'high_school' | 'all_in_one'
-          name: string
-          contact_phone: string | null
-          website: string | null
-          updated_at: string
-        }
-        Insert: {
-          community_id: string
-          created_by: string
-          created_at?: string
-          description?: string | null
-          distance: number
-          facilities?: string[]
-          fee_range: string
-          id?: string
-          level: 'pre_school' | 'primary' | 'high_school' | 'all_in_one'
-          name: string
-          contact_phone?: string | null
-          website?: string | null
-          updated_at?: string
-        }
-        Update: {
-          community_id?: string
-          created_by?: string
-          created_at?: string
-          description?: string | null
-          distance?: number
-          facilities?: string[]
-          fee_range?: string
-          id?: string
-          level?: 'pre_school' | 'primary' | 'high_school' | 'all_in_one'
-          name?: string
-          contact_phone?: string | null
-          website?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "schools_community_id_fkey"
-            columns: ["community_id"]
-            isOneToOne: false
-            referencedRelation: "communities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "schools_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       notifications: {
         Row: {
           body: string
@@ -1499,6 +1436,72 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          community_id: string
+          contact_phone: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          distance: number
+          facilities: string[]
+          fee_range: string
+          id: string
+          level: string
+          name: string
+          syllabus: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          community_id: string
+          contact_phone?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          distance: number
+          facilities?: string[]
+          fee_range: string
+          id?: string
+          level: string
+          name: string
+          syllabus: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          community_id?: string
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          distance?: number
+          facilities?: string[]
+          fee_range?: string
+          id?: string
+          level?: string
+          name?: string
+          syllabus?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schools_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schools_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1917,10 +1920,6 @@ export type Database = {
         Args: { p_reason?: string; p_target_profile_id: string }
         Returns: undefined
       }
-      create_community_admin_request: {
-        Args: { p_target_user_id: string }
-        Returns: string
-      }
       generate_community_code: { Args: never; Returns: string }
       get_all_communities: {
         Args: { p_search?: string }
@@ -2283,6 +2282,35 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      platform_get_community_dashboard: {
+        Args: { p_community_id: string }
+        Returns: {
+          hires_past_30d: number
+          orders_fulfilled: number
+          orders_pending: number
+          total_collected: number
+          total_funds: number
+          total_hires: number
+          total_listings: number
+          total_mcn_orders: number
+          total_mcn_posts: number
+          total_providers: number
+          total_residents: number
+          total_spent: number
+          visits_cancelled: number
+          visits_completed: number
+          visits_past_30d: number
+          visits_planned: number
+        }[]
+      }
+      platform_get_providers_by_category: {
+        Args: { p_community_id: string }
+        Returns: {
+          category: string
+          provider_count: number
+          top_providers: Json
+        }[]
+      }
       platform_reject_community_request: {
         Args: { p_rejection_reason?: string; p_request_id: string }
         Returns: undefined
@@ -2312,7 +2340,11 @@ export type Database = {
         Returns: undefined
       }
       platform_set_community_lead: {
-        Args: { p_community_id: string; p_target_user_id: string }
+        Args: {
+          p_community_id: string
+          p_role: string
+          p_target_user_id: string
+        }
         Returns: undefined
       }
       platform_soft_remove_resident: {
@@ -2484,7 +2516,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role_type: "admin" | "community_admin" | "resident" | "community_lead"
+      app_role_type:
+        | "admin"
+        | "community_admin"
+        | "resident"
+        | "community_lead"
+        | "president"
+        | "vice_president"
       approval_status_type: "pending" | "approved" | "rejected"
       community_request_status_type:
         | "pending"
@@ -2618,7 +2656,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role_type: ["admin", "community_admin", "resident", "community_lead"],
+      app_role_type: [
+        "admin",
+        "community_admin",
+        "resident",
+        "community_lead",
+        "president",
+        "vice_president",
+      ],
       approval_status_type: ["pending", "approved", "rejected"],
       community_request_status_type: [
         "pending",

@@ -26,8 +26,8 @@ type EmptyStateProps = {
 export const EmptyState = ({ icon, title, message, isLightMode, ionicon, actionLabel, onAction }: EmptyStateProps) => {
   return (
     <View style={styles.container}>
-      {ionicon ? (
-        <Ionicons name={ionicon} size={32} color={Verandah.textTertiary} style={styles.icon} />
+      {ionicon || (icon && icon.includes('-outline')) ? (
+        <Ionicons name={(ionicon || icon) as any} size={32} color={Verandah.textTertiary} style={styles.icon} />
       ) : (
         <Text style={styles.iconText}>{icon}</Text>
       )}

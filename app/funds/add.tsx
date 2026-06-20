@@ -24,7 +24,7 @@ export default function AddFundScreen() {
   const [selectedTreasurers, setSelectedTreasurers] = useState<string[]>([]);
   const [isFetchingMembers, setIsFetchingMembers] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const isAdmin = appRole === 'community_lead' || appRole === 'admin';
+  const isAdmin = appRole === 'president' || appRole === 'vice_president' || appRole === 'admin';
 
   useEffect(() => {
     if (!fundsEnabled) {

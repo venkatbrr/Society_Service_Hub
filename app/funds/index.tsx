@@ -28,7 +28,7 @@ export default function FundsHomeScreen() {
   const { communityId, appRole, fundsEnabled } = useAuth();
   const [overview, setOverview] = useState<FundsOverview | null>(null);
 
-  const canCreateFund = appRole === 'community_lead' || appRole === 'admin';
+  const canCreateFund = appRole === 'president' || appRole === 'vice_president' || appRole === 'admin';
 
   const loadOverview = useCallback(async () => {
     if (!communityId || !fundsEnabled) {

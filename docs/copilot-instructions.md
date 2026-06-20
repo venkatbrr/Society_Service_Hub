@@ -53,7 +53,7 @@ The active UI is intentionally narrower than the database foundation. Cross-comm
 - `/funds/*`: add, detail, transaction entry
 - `/funds-access/*`: resident funds activation request
 - `/services/*`: reminder list, add, detail or edit
-- `/platform/*`: platform approvals, funds request review, and community inspection
+- `/admin-redirect`: redirect informing platform admins to use the web console
 
 ### Removed surface
 
@@ -68,7 +68,7 @@ The resident marketplace is not part of the current product. `app/business/*` is
 3. `NotificationProvider` becomes active for signed-in users
 4. Root redirects are:
    - No session -> `/login`
-   - Platform admin -> `/platform/approvals`
+   - Platform admin -> `/admin-redirect`
    - No community with active request -> `/community-request-submitted`
    - No community and no request -> `/community-select`
    - Community member -> `/(tabs)`

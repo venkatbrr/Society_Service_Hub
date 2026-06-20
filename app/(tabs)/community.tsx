@@ -79,7 +79,7 @@ export default function CommunityScreen() {
   const [pendingFundsRequest, setPendingFundsRequest] = useState<PendingFundsRequest | null>(null);
   const [hadHistoricalFunds, setHadHistoricalFunds] = useState(false);
 
-  const canCreateFund = fundsEnabled && (appRole === 'community_lead' || appRole === 'admin');
+  const canCreateFund = fundsEnabled && (appRole === 'president' || appRole === 'vice_president' || appRole === 'admin');
 
   const loadCommunityData = useCallback(async () => {
     if (!communityId) {
@@ -161,9 +161,9 @@ export default function CommunityScreen() {
   );
 
   const appRoleLabel = useMemo(() => {
-    if (isCommunityLead || appRole === 'community_lead') {
-      return 'Community lead';
-    }
+    if (appRole === 'president') return 'President';
+    if (appRole === 'vice_president') return 'Vice President';
+    if (isCommunityLead) return 'Lead';
     return 'Resident';
   }, [appRole, isCommunityLead]);
 
@@ -296,7 +296,7 @@ export default function CommunityScreen() {
         </View>
 
 
-        {fundsEnabled && appRole === 'community_lead' ? (
+        {fundsEnabled && (appRole === 'president' || appRole === 'vice_president') ? (
           <View style={styles.section}>
             <TouchableOpacity onPress={() => router.push('/community/blocks')} activeOpacity={0.85}>
               <BaseCard padding={16} style={styles.actionCard}>

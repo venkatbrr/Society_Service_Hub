@@ -37,7 +37,7 @@ function RootLayoutNav() {
     const inAuthGroup = segments[0] === 'login';
     const currentRoute = String(segments[0] ?? '');
     const isOnTabsRoute = currentRoute === '(tabs)';
-    const isOnPlatformRoute = currentRoute === 'platform';
+    const isOnAdminRedirect = currentRoute === 'admin-redirect';
     const isOnCommunityRequest = currentRoute === 'community-request';
     const isOnCommunityRequestSubmitted = currentRoute === 'community-request-submitted';
     const isOnCommunitySelect = currentRoute === 'community-select';
@@ -50,12 +50,12 @@ function RootLayoutNav() {
         redirectTo = '/login';
       }
     } else if (isPlatformAdmin) {
-      // Platform admin → platform console
-      if (!isOnPlatformRoute) {
-        redirectTo = '/platform/approvals';
+      // Platform admin → redirect screen
+      if (!isOnAdminRedirect) {
+        redirectTo = '/admin-redirect';
       }
-    } else if (isOnPlatformRoute) {
-      // Non-admin landed on platform route → redirect appropriately
+    } else if (isOnAdminRedirect) {
+      // Non-admin landed on admin-redirect route → redirect appropriately
       if (communityId) {
         redirectTo = '/(tabs)';
       } else if (activeCommunityRequest) {
@@ -89,8 +89,8 @@ function RootLayoutNav() {
 
     const alreadyOnTarget =
       (redirectTo === '/(tabs)' && isOnTabsRoute) ||
-      (redirectTo === '/platform/approvals' && pathname?.startsWith('/platform')) ||
-      (redirectTo !== '/(tabs)' && redirectTo !== '/platform/approvals' && pathname === redirectTo);
+      (redirectTo === '/admin-redirect' && isOnAdminRedirect) ||
+      (redirectTo !== '/(tabs)' && redirectTo !== '/admin-redirect' && pathname === redirectTo);
 
     if (!alreadyOnTarget) {
       lastRedirectRef.current = redirectTo;

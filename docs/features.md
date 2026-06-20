@@ -187,26 +187,29 @@ Blocks (or towers — the label is configurable per community) are visible when 
 
 ---
 
-## Platform Admin Console (`app/platform/*`)
+## Platform Admin Console (Web Application)
 
-### Platform Tab Shell (`app/platform/_layout.tsx`)
+The Platform Admin Console is a standalone single-page web application (`admin-dashboard/`) built using vanilla HTML/CSS/JS with Supabase JS and Chart.js CDNs. It allows platform admins to manage community-level structures, onboarding, and fund approvals.
+
+In the mobile app, platform admins are automatically redirected to the `/admin-redirect` screen which informs them that the portal has moved and directs them to the web URL.
+
+### Dashboard (`#dashboard`)
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Dedicated platform-admin-only tab shell |
-| **Business rules** | Root routing redirects platform admins into this area and blocks non-admins from entering it. Each screen exposes a logout action in the header. |
-| **Navigation** | `/platform/approvals`, `/platform/communities`, `/platform/funds-requests`, `/platform/funds-access/[requestId]` |
-| **Roles** | Platform admin only |
+| **Purpose** | High-level metrics visualization and provider category breakdowns per community |
+| **Tables / RPCs** | Calls RPC: `platform_get_community_dashboard`, `platform_get_providers_by_category` |
+| **Business rules** | Admins select a community from a dropdown. It displays 8 metric cards: Residents, Service Providers, Scheduled Visits (Upcoming), Completed Visits, Past Visits (last 30 days), Hires/Contacts (total and monthly), Orders Placed (marketplace orders with pending/fulfilled breakdown), and Funds Health (collected vs spent). A horizontal bar chart visualizes service providers by category, and collapsible cards list the top 3 rated providers for each category. |
 
-### Funds Requests (`app/platform/funds-requests.tsx`, `app/platform/funds-access/[requestId].tsx`)
+### Funds Requests (`#funds-requests`)
 
 | Aspect | Details |
 |--------|---------|
 | **Purpose** | Review pending/decided funds-access requests, designate lead on approval, or reject with reason |
 | **Tables / RPCs** | Reads: `funds_access_requests`, `communities`, `profiles`; writes via RPC: `platform_approve_funds_access_request`, `platform_reject_funds_access_request` |
-| **Business rules** | Approval requires selecting a resident lead (default requester when possible). Rejection supports a 280-char reason. Both actions route back to list and emit notifications. |
+| **Business rules** | Approval requires selecting an active resident to designate as the community lead (defaults to requester). Rejection supports a 280-char reason. Re-evaluates local lists and updates status inline. |
 
-### Community Approvals (`app/platform/approvals.tsx`)
+### Community Approvals (`#approvals`)
 
 | Aspect | Details |
 |--------|---------|
@@ -214,13 +217,13 @@ Blocks (or towers — the label is configurable per community) are visible when 
 | **Tables** | Reads: `community_requests`, `profiles`; writes via RPC: `platform_approve_community_request`, `platform_reject_community_request`; audit RPC: `set_audit_actor` |
 | **Business rules** | Approval creates the community, generates its join code, and assigns the requester to that community as `resident`. The admin can optionally seed blocks/towers at approval time by adding block names and selecting a label (Block or Tower); when blocks are provided, the community is created with `blocks_enabled = true` and the corresponding `block_label`. Rejection accepts an optional rejection reason. Reviewer cards show requester name, phone, email, flat number, and submitted location details. |
 
-### Communities Directory and Detail (`app/platform/communities.tsx`, `app/platform/community/[id].tsx`)
+### Communities Directory and Detail (`#communities`)
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Inspect communities, see membership counts, and remove residents if required |
-| **Tables** | Reads: `communities`, `profiles`; writes via RPC: `platform_soft_remove_resident` |
-| **Business rules** | Platform removals are soft deletes on the profile, reset the role to resident, and preserve last-lead protection. Counts exclude removed residents. Detail screen now also includes funds status, revoke action, lead set/remove controls, block list management with dynamic block/tower label toggle (`platform_set_block_label`), and block in-charge removals across funds. The top identity card shows all active community leads for that community (or Not assigned) rather than the logged-in platform admin identity. |
+| **Purpose** | Inspect communities, see membership counts, and manage local community leads, blocks/towers, and residents |
+| **Tables** | Reads: `communities`, `profiles`; writes via RPC: `platform_soft_remove_resident`, `platform_set_community_lead`, `platform_remove_community_lead`, `platform_set_blocks_enabled`, `platform_set_block_label`, `platform_add_community_block`, `platform_archive_community_block`, `platform_remove_block_in_charge`, `platform_revoke_funds_access` |
+| **Business rules** | Platform removals are soft deletes on the profile, reset the role to resident, and preserve last-lead protection. Detail screen includes funds status, revoke action, lead set/remove controls, block list management with block/tower label toggle, and block in-charge removals across funds. The top identity card shows active community leads. |
 
 ---
 
