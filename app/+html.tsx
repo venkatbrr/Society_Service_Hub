@@ -52,6 +52,7 @@ const responsiveBackground = `
 /* Base: warm off-white matching Verandah.surface */
 html, body {
   height: 100%;
+  height: -webkit-fill-available;
 }
 
 body {
@@ -64,6 +65,7 @@ body {
 
 #root {
   height: 100%;
+  height: -webkit-fill-available;
   display: flex;
   flex-direction: column;
 }

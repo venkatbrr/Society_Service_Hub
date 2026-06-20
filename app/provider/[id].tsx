@@ -236,6 +236,10 @@ export default function ProviderDetailScreen() {
     try {
       await Share.share({ message });
     } catch (error) {
+      const err = error as any;
+      if (err && (err.name === 'AbortError' || err.message?.includes('abort') || err.message?.includes('cancel'))) {
+        return;
+      }
       Toast.show({ type: 'error', text1: 'Error sharing contact' });
     }
   };

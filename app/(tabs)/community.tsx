@@ -192,7 +192,11 @@ export default function CommunityScreen() {
       await Share.share({
         message: `Join my community on Society Service Hub!${communityDetails?.name ? `\nCommunity: ${communityDetails.name}` : ''}\nCode: ${code}`,
       });
-    } catch {
+    } catch (error) {
+      const err = error as any;
+      if (err && (err.name === 'AbortError' || err.message?.includes('abort') || err.message?.includes('cancel'))) {
+        return;
+      }
       Toast.show({ type: 'error', text1: 'Share failed', text2: 'Could not open share options.' });
     }
   }, [communityDetails?.code, communityDetails?.name]);

@@ -130,6 +130,10 @@ export default function HomeScreen() {
         message: `Join my community on Society Service Hub!${communityInvite.name ? `\nCommunity: ${communityInvite.name}` : ''}\nCode: ${communityInvite.code}`,
       });
     } catch (error) {
+      const err = error as any;
+      if (err && (err.name === 'AbortError' || err.message?.includes('abort') || err.message?.includes('cancel'))) {
+        return;
+      }
       Toast.show({ type: 'error', text1: 'Share failed', text2: 'Could not open share options.' });
     }
   }, [communityInvite]);
