@@ -76,6 +76,10 @@ Funds activation is gated by platform-admin approval. A community without `funds
 - **TypeScript**: Strict mode enabled. Path alias `@/*` maps to project root
 - **Android dev networking**: Keep `android.usesCleartextTraffic=true` so development builds can load Metro bundles over HTTP
 - **Bundled image assets**: Keep import extensions aligned with the real file type. The Community tab funds overview background is `assets/images/funds_bg.jpg`; importing it as `.png` breaks Android release resource compilation.
+- **Web & PWA Viewport Height**: In the web target, always set `html`, `body`, and `#root` elements to `height: 100%` and `#root` to `display: flex` in the HTML/CSS template (`app/+html.tsx`). This locks the layout to the browser viewport and prevents the navigation tab bar from being pushed off-screen.
+- **Web Input Outlines**: Reset default browser focus outlines on text inputs for the web target by declaring `input:focus, textarea:focus, select:focus { outline: none; }` in `app/+html.tsx`.
+- **Web Pull-to-Refresh**: Since native `RefreshControl` is a no-op on web and fixed body heights prevent native browser page refreshes, use the custom `useWebPullToRefresh` gesture hook in scrollable lists (`FlatList`/`SectionList`) to capture drag gestures at scroll position 0 and trigger dynamic data reloading.
+- **Service Worker Registration**: In single-page webapps, check if `document.readyState` is `complete` or `interactive` to register the PWA service worker immediately, preventing registration failure if the page load event has already occurred.
 
 ### Verandah UI Rules
 

@@ -67,6 +67,15 @@ Out-of-register items:
 - Any temporary legacy visual pattern that cannot yet move to tokens must be documented in `docs/verandah.md` under the out-of-register appendix.
 - Out-of-register entries must include: screen/component path, reason, and migration follow-up.
 
+### Web & PWA Architectures
+
+To ensure consistent performance and layout on mobile web and standard browsers, the app implements the following web-specific adaptations:
+1. **Viewport Heights**: Standard browser viewport heights (`100vh`) are subject to dynamic resizing from browser bars. We enforce `height: 100%` on `html`, `body`, and `#root` elements in `app/+html.tsx`. This constraints scrolling to the individual screen components (like lists) and guarantees the navigation tab bar stays locked to the bottom of the screen.
+2. **Focus Outlines**: Browser user agent defaults for focused `<input>` elements (which represent text inputs) display a thick dark rectangle on web. This is globally disabled by adding `input:focus, textarea:focus, select:focus { outline: none; }` to `app/+html.tsx`.
+3. **Web Safe Insets**: On web, `react-native-safe-area-context`'s `insets.bottom` is set to `0` using React Native's `Platform.OS` check in the TabLayout (`app/(tabs)/_layout.tsx`) to prevent navigation elements from shifting off-screen.
+4. **Pull-to-Refresh Gesture**: Because React Native's `RefreshControl` is native-only and fixed viewport heights prevent document-level browser pull-to-refresh, we use `components/useWebPullToRefresh.ts`. This hook tracks touch and scroll events on web to trigger list updates without reloading the entire page.
+5. **SPA Service Worker Loading**: PWA service worker registration in `app/+html.tsx` is configured to run immediately if `document.readyState` is `complete` or `interactive`. This avoids failing when the JS bundle is loaded asynchronously after the document load event has passed.
+
 ### Debounced Search Pattern
 
 The Help tab (`app/(tabs)/index.tsx`) uses a debounced search to prevent a Supabase query on every keystroke. The pattern:
