@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 20,
+    paddingBottom: 8,
   },
   headerTitle: {
     ...VerandahType.display,
