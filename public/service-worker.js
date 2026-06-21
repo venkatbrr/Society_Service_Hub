@@ -5,8 +5,8 @@ const CACHE_NAME = 'ssh-pwa-v1';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/assets/images/icon.png',
-  '/assets/images/favicon.png',
+  '/images/icon.png',
+  '/images/favicon.png',
 ];
 
 // Install: pre-cache critical static assets

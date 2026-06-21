@@ -24,10 +24,10 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Society Hub" />
-        <link rel="apple-touch-icon" href="/assets/images/icon.png" />
+        <link rel="apple-touch-icon" href="/images/icon.png" />
 
         {/* Favicon */}
-        <link rel="icon" type="image/png" href="/assets/images/favicon.png" />
+        <link rel="icon" type="image/png" href="/images/favicon.png" />
 
         {/* 
           Disable body scrolling on web. This makes ScrollView components work closer to how they do on native. 

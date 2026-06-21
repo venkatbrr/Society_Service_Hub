@@ -7,7 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "build": "expo export --platform web && mkdir -p dist/admin && cp -r admin-dashboard/* dist/admin/",
+    "build": "expo export --platform web && node build-admin.js",
+    "preview": "npx serve dist",
     "db:login": "npx supabase login",
     "db:link": "npx supabase link --project-ref mbzvcaoulawdugfearmj",
     "db:push": "npx supabase db push"

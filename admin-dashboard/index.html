@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <!-- Google Identity Services (GSI) Client -->
-  <script src="https://accounts.google.com/gsi/client" onload="initGoogleSignIn()" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" onload="window.initGoogleSignIn && window.initGoogleSignIn()" async defer></script>
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="/admin/css/styles.css">
   <!-- Helper styling for toggling elements -->
   <style>
     .hidden { display: none !important; }
@@ -489,15 +489,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- App Custom Logic -->
-  <script src="js/supabase-config.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/router.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/dashboard.js"></script>
-  <script src="js/approvals.js"></script>
-  <script src="js/communities.js"></script>
-  <script src="js/funds-requests.js"></script>
-  <script src="js/providers.js"></script>
+  <script src="/admin/js/supabase-config.js"></script>
+  <script src="/admin/js/auth.js"></script>
+  <script src="/admin/js/router.js"></script>
+  <script src="/admin/js/charts.js"></script>
+  <script src="/admin/js/dashboard.js"></script>
+  <script src="/admin/js/approvals.js"></script>
+  <script src="/admin/js/communities.js"></script>
+  <script src="/admin/js/funds-requests.js"></script>
+  <script src="/admin/js/providers.js"></script>
 
   <!-- Bootstrap App -->
   <script>
