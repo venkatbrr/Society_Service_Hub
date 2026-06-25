@@ -6,6 +6,8 @@ import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
 import { Avatar } from '../../../components/Avatar';
 import { Rupees } from '../../../components/Rupees';
+import { RatingStars } from '../../../components/RatingStars';
+import { BaseCard } from '../../../components/BaseCard';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
@@ -52,6 +54,57 @@ export default function ListingDetailScreen() {
   const [buyerPhone, setBuyerPhone] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  // Review & Rating state
+  const [publicReviews, setPublicReviews] = useState<any[]>([]);
+  const [userRating, setUserRating] = useState<number | null>(null);
+  const [selectedRating, setSelectedRating] = useState<number>(0);
+  const [reviewText, setReviewText] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+
+  const fetchPublicReviews = useCallback(async () => {
+    if (!listingId) return;
+    setReviewsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('ratings')
+        .select('id, rating, review_text, created_at, user_id')
+        .eq('listing_id', listingId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const userIds = data.map((r: any) => r.user_id);
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, flat_number')
+          .in('id', userIds);
+        if (profilesError) throw profilesError;
+
+        const formatted = data.map((r: any) => {
+          const p = profiles?.find((prof: any) => prof.id === r.user_id);
+          return {
+            id: r.id,
+            reviewer_name: p?.full_name || 'Resident',
+            reviewer_flat: p?.flat_number || null,
+            rating: r.rating,
+            review_text: r.review_text,
+            created_at: r.created_at,
+          };
+        });
+        setPublicReviews(formatted);
+      } else {
+        setPublicReviews([]);
+      }
+    } catch (e) {
+      console.error('Error fetching public reviews:', e);
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, [listingId]);
 
   const fetchListingData = useCallback(async () => {
     if (!listingId || !user?.id) return;
@@ -103,60 +156,38 @@ export default function ListingDetailScreen() {
       } else {
         setBuyerPhone(profile?.phone_number || '');
       }
+
+      // 4. Fetch user's rating for this listing
+      const { data: myRatingData, error: myRatingError } = await supabase
+        .from('ratings')
+        .select('rating, review_text')
+        .eq('listing_id', listingId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!myRatingError && myRatingData) {
+        setUserRating(myRatingData.rating);
+        setSelectedRating(myRatingData.rating);
+        setReviewText(myRatingData.review_text || '');
+      } else {
+        setUserRating(null);
+        setSelectedRating(0);
+        setReviewText('');
+      }
+
+      // 5. Fetch public reviews
+      await fetchPublicReviews();
     } catch (error) {
       console.error(error);
       Toast.show({ type: 'error', text1: 'Error loading business details' });
     } finally {
       setLoading(false);
     }
-  }, [listingId, user?.id, profile?.phone_number]);
+  }, [listingId, user?.id, profile?.phone_number, fetchPublicReviews]);
 
   useEffect(() => {
     fetchListingData();
   }, [fetchListingData]);
-
-  useEffect(() => {
-    if (!existingOrder && profile?.phone_number && !buyerPhone) {
-      setBuyerPhone(profile.phone_number);
-    }
-  }, [profile?.phone_number, existingOrder]);
-
-  const handleIncrement = (productId: string, unit: string) => {
-    const step = (unit === 'kg' || unit === 'litre') ? 0.5 : 1;
-    setQuantities(prev => ({
-      ...prev,
-      [productId]: Math.min(999, (prev[productId] || 0) + step),
-    }));
-  };
-
-  const handleDecrement = (productId: string, unit: string) => {
-    const step = (unit === 'kg' || unit === 'litre') ? 0.5 : 1;
-    setQuantities(prev => {
-      const current = prev[productId] || 0;
-      const next = current - step;
-      if (next <= 0) {
-        const nextQuantities = { ...prev };
-        delete nextQuantities[productId];
-        return nextQuantities;
-      }
-      return {
-        ...prev,
-        [productId]: next,
-      };
-    });
-  };
-
-  const selectedItems: CartItem[] = products
-    .filter(p => p.is_available && (quantities[p.id] || 0) > 0)
-    .map(p => ({
-      productId: p.id,
-      name: p.name,
-      price: Number(p.price),
-      unit: p.unit,
-      quantity: quantities[p.id],
-    }));
-
-  const totalAmount = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const contactPhone = listing?.contact_phone || listing?.profiles?.phone_number;
 
@@ -167,115 +198,57 @@ export default function ListingDetailScreen() {
 
   const handleWhatsApp = () => {
     if (!contactPhone) return;
-    const itemsText = selectedItems
-      .map(item => `- ${item.name} x ${item.quantity} ${item.unit} (₹${(item.price * item.quantity).toFixed(0)})`)
-      .join('\n');
-    const noteText = buyerNote.trim() ? `\nNote: "${buyerNote.trim()}"` : '';
     const text = encodeURIComponent(
-      `Hi ${listing?.profiles?.full_name || 'there'}, I'm interested in placing an order for:\n${itemsText}\nTotal: ₹${totalAmount.toFixed(0)}${noteText}`
+      `Hi ${listing?.profiles?.full_name || 'there'}, I found your business "${listing?.name}" on Society Hub and wanted to enquire about your services.`
     );
     Linking.openURL(`whatsapp://send?phone=91${contactPhone}&text=${text}`);
   };
 
-  const handleSubmit = async () => {
-    if (selectedItems.length === 0) {
-      Toast.show({ type: 'error', text1: 'Select at least one product' });
+  const handleRating = (rating: number) => {
+    setSelectedRating(rating);
+  };
+
+  const handleSubmitReview = async () => {
+    const effectiveRating = selectedRating || userRating || 0;
+    const hadExistingReview = userRating != null;
+
+    if (!listingId || !user || effectiveRating === 0) {
+      Toast.show({ type: 'error', text1: 'Rating required', text2: 'Please tap a star to rate this business' });
       return;
     }
 
-    if (!listingId || !communityId || !user) return;
-
-    const trimmedPhone = buyerPhone.trim().replace(/\D/g, '');
-    if (!trimmedPhone || trimmedPhone.length !== 10) {
-      Toast.show({ type: 'error', text1: '10-digit contact phone number is required' });
-      return;
-    }
-
-    setSubmitting(true);
+    setIsSubmittingReview(true);
     try {
-      if (existingOrder) {
-        // 1. Delete old order items
-        const { error: deleteError } = await supabase
-          .from('mcn_order_items')
-          .delete()
-          .eq('order_id', existingOrder.id);
-        if (deleteError) throw deleteError;
-
-        // 2. Insert new order items
-        const { error: insertItemsError } = await supabase
-          .from('mcn_order_items')
-          .insert(
-            selectedItems.map(item => ({
-              order_id: existingOrder.id,
-              product_id: item.productId,
-              quantity: item.quantity,
-              unit_price: item.price,
-            }))
-          );
-        if (insertItemsError) throw insertItemsError;
-
-        // 3. Update order notes and phone number
-        const { error: updateOrderError } = await supabase
-          .from('mcn_orders')
-          .update({
-            buyer_note: buyerNote.trim() || null,
-            buyer_phone: trimmedPhone,
-          })
-          .eq('id', existingOrder.id);
-        if (updateOrderError) throw updateOrderError;
-
-        Toast.show({ type: 'success', text1: 'Order updated!' });
-      } else {
-        // 1. Insert new order
-        const { data: order, error: insertOrderError } = await supabase
-          .from('mcn_orders')
-          .insert({
+      const { error } = await supabase
+        .from('ratings')
+        .upsert(
+          {
+            user_id: user.id,
             listing_id: listingId,
-            community_id: communityId,
-            buyer_id: user.id,
-            status: 'pending',
-            buyer_note: buyerNote.trim() || null,
-            buyer_phone: trimmedPhone,
-          })
-          .select()
-          .single();
+            rating: effectiveRating,
+            review_text: reviewText.trim() || null,
+            fraud_status: 'pass',
+            fraud_rules_triggered: [],
+          },
+          { onConflict: 'user_id,listing_id' }
+        );
 
-        if (insertOrderError) throw insertOrderError;
+      if (error) throw error;
 
-        // 2. Insert order items
-        const { error: insertItemsError } = await supabase
-          .from('mcn_order_items')
-          .insert(
-            selectedItems.map(item => ({
-              order_id: order.id,
-              product_id: item.productId,
-              quantity: item.quantity,
-              unit_price: item.price,
-            }))
-          );
-        if (insertItemsError) throw insertItemsError;
+      Toast.show({ type: 'success', text1: hadExistingReview ? 'Review updated' : 'Review submitted' });
 
-        Toast.show({ type: 'success', text1: 'Order placed!' });
-      }
-
-      // Sync profile phone number if it changed/was empty
-      if (profile && profile.phone_number !== trimmedPhone) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ phone_number: trimmedPhone })
-          .eq('id', user.id);
-        if (!profileError) {
-          await refreshSession();
-        }
-      }
-
-      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-      fetchListingData();
+      // Update local rating
+      setUserRating(effectiveRating);
+      setSelectedRating(effectiveRating);
+      setReviewText(reviewText.trim());
+      await fetchPublicReviews();
+      scrollViewRef.current?.scrollToEnd({ animated: true });
     } catch (error) {
-      console.error(error);
-      Toast.show({ type: 'error', text1: 'Failed to place order' });
+      console.error('Error saving review:', error);
+      const message = error instanceof Error ? error.message : String(error);
+      Toast.show({ type: 'error', text1: 'Error saving review', text2: message });
     } finally {
-      setSubmitting(false);
+      setIsSubmittingReview(false);
     }
   };
 
@@ -295,6 +268,12 @@ export default function ListingDetailScreen() {
     );
   }
 
+  const ratingCount = publicReviews.length;
+  const avgRating = ratingCount > 0 ? publicReviews.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
+  const isReviewSubmitDisabled = isSubmittingReview || (selectedRating === 0 && !userRating);
+  const hasExistingReview = userRating != null;
+  const visibleReviews = showAllReviews ? publicReviews : publicReviews.slice(0, 3);
+
   return (
     <ScrollView
       ref={scrollViewRef}
@@ -310,9 +289,22 @@ export default function ListingDetailScreen() {
           <Text style={[styles.ownerName, { color: colors.textPrimary }]}>
             {listing.profiles?.full_name || 'Resident'}
           </Text>
-          <Text style={[styles.ownerFlat, { color: colors.textTertiary }]}>
-            {listing.profiles?.flat_number ? `Flat ${listing.profiles.flat_number}` : 'Resident'}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+            <Text style={[styles.ownerFlat, { color: colors.textTertiary, marginRight: 8 }]}>
+              {listing.profiles?.flat_number ? `Flat ${listing.profiles.flat_number}` : 'Resident'}
+            </Text>
+            {ratingCount > 0 && (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="star" size={14} color="#F59E0B" />
+                <Text style={{ fontSize: 13, color: colors.textPrimary, marginLeft: 2, fontWeight: '500' }}>
+                  {avgRating.toFixed(1)}
+                </Text>
+                <Text style={{ fontSize: 13, color: colors.textTertiary, marginLeft: 1 }}>
+                  ({ratingCount})
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {contactPhone ? (
@@ -337,16 +329,15 @@ export default function ListingDetailScreen() {
 
       <View style={styles.divider} />
 
-      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Products</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Services</Text>
 
       <View style={styles.productsList}>
         {products.length === 0 ? (
           <Text style={[styles.emptyProducts, { color: colors.textMuted }]}>
-            No products added by the seller yet.
+            No services listed by the seller yet.
           </Text>
         ) : (
           products.map(product => {
-            const qty = quantities[product.id] || 0;
             return (
               <View
                 key={product.id}
@@ -367,25 +358,7 @@ export default function ListingDetailScreen() {
                   </View>
                 </View>
 
-                {product.is_available ? (
-                  <View style={styles.qtyControls}>
-                    <TouchableOpacity
-                      onPress={() => handleDecrement(product.id, product.unit)}
-                      style={[styles.qtyBtn, { borderColor: colors.border }]}
-                    >
-                      <Ionicons name="remove" size={18} color={colors.textSecondary} />
-                    </TouchableOpacity>
-                    <Text style={[styles.qtyDisplay, { color: colors.textPrimary }]}>
-                      {qty > 0 ? `${qty} ${product.unit}` : '0'}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => handleIncrement(product.id, product.unit)}
-                      style={[styles.qtyBtn, { borderColor: colors.border }]}
-                    >
-                      <Ionicons name="add" size={18} color={colors.textSecondary} />
-                    </TouchableOpacity>
-                  </View>
-                ) : (
+                {!product.is_available && (
                   <View style={styles.unavailableBadge}>
                     <Text style={[styles.unavailableText, { color: colors.textMuted }]}>Not available</Text>
                   </View>
@@ -396,72 +369,101 @@ export default function ListingDetailScreen() {
         )}
       </View>
 
-      {selectedItems.length > 0 ? (
-        <View style={styles.orderSummarySection}>
-          <View style={styles.divider} />
+      <View style={styles.divider} />
 
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Add note for seller</Text>
-          <TextInput
-            style={[styles.noteInput, { borderColor: colors.border, color: colors.textPrimary }]}
-            placeholder="Add delivery instruction, preferences, etc."
-            placeholderTextColor={colors.textMuted}
-            value={buyerNote}
-            onChangeText={setBuyerNote}
-            maxLength={140}
-          />
-
-          <View style={styles.divider} />
-
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-            Contact phone number <Text style={{ color: colors.danger }}>*</Text>
-          </Text>
-          <TextInput
-            style={[styles.noteInput, { borderColor: colors.border, color: colors.textPrimary }]}
-            placeholder="10-digit mobile number for calls or WhatsApp"
-            placeholderTextColor={colors.textMuted}
-            value={buyerPhone}
-            onChangeText={setBuyerPhone}
-            keyboardType="phone-pad"
-            maxLength={15}
-          />
-
-          <View style={styles.divider} />
-
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Order summary</Text>
-          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            {selectedItems.map(item => (
-              <View key={item.productId} style={styles.summaryRow}>
-                <Text style={[styles.summaryItemName, { color: colors.textSecondary }]}>
-                  {item.name} <Text style={{ color: colors.textTertiary }}>× {item.quantity} {item.unit}</Text>
-                </Text>
-                <Rupees amount={item.price * item.quantity} size="sm" />
+      {/* Community Reviews List */}
+      <View style={styles.detailsCard}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 12 }]}>Community Reviews</Text>
+        {reviewsLoading ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : publicReviews.length === 0 ? (
+          <Text style={[styles.emptyProducts, { color: colors.textMuted, marginTop: 8 }]}>No community reviews yet.</Text>
+        ) : (
+          <View style={styles.publicReviewList}>
+            {visibleReviews.map((review, index) => (
+              <View
+                key={review.id}
+                style={[
+                  styles.publicReviewItem,
+                  index > 0 && { borderTopColor: colors.border, borderTopWidth: 0.5 },
+                ]}
+              >
+                <View style={styles.publicReviewHeader}>
+                  <View style={styles.publicReviewIdentity}>
+                    <Text style={[styles.publicReviewName, { color: colors.textPrimary }]}>
+                      {review.reviewer_name}
+                      {review.reviewer_flat ? ` · ${review.reviewer_flat}` : ''}
+                    </Text>
+                    <Text style={[styles.publicReviewDate, { color: colors.textTertiary }]}>
+                      {new Date(review.created_at).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </Text>
+                  </View>
+                  <Text style={styles.publicReviewStars}>
+                    {'★'.repeat(review.rating)}{'☆'.repeat(Math.max(0, 5 - review.rating))}
+                  </Text>
+                </View>
+                {review.review_text ? (
+                  <Text style={[styles.publicReviewText, { color: colors.textSecondary, marginTop: 8 }]}>{review.review_text}</Text>
+                ) : null}
               </View>
             ))}
-
-            <View style={[styles.summaryDivider, { backgroundColor: colors.border }]} />
-
-            <View style={styles.totalRow}>
-              <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total amount</Text>
-              <Rupees amount={totalAmount} size="md" tone="in" />
-            </View>
+            {publicReviews.length > 3 ? (
+              <TouchableOpacity
+                onPress={() => setShowAllReviews((prev) => !prev)}
+                style={[styles.loadMoreReviewsBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.loadMoreReviewsText, { color: colors.accent }]}>
+                  {showAllReviews ? 'Show less' : `Load more (${publicReviews.length - 3})`}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
+        )}
+      </View>
 
-          <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
-            onPress={handleSubmit}
-            disabled={submitting}
-            activeOpacity={0.8}
-          >
-            {submitting ? (
-              <ActivityIndicator color={colors.primaryFg} />
-            ) : (
-              <Text style={[styles.primaryBtnText, { color: colors.primaryFg }]}>
-                {existingOrder ? 'Update order' : 'Place order'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      ) : null}
+      {/* Rate Business Card */}
+      <View style={styles.detailsCard}>
+         <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 16 }]}>Rate this Business</Text>
+         <RatingStars rating={selectedRating || userRating || 0} onRating={handleRating} size={36} isLightMode={true} />
+         {selectedRating === 0 && !userRating && (
+           <Text style={[styles.tapHint, { color: colors.accent, marginTop: 8 }]}>⬆ Tap a star above to rate (required)</Text>
+         )}
+         <TextInput
+           style={[styles.reviewInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surface }]}
+           placeholder="Share your experience... (optional)"
+           placeholderTextColor={colors.textMuted}
+           value={reviewText}
+           onChangeText={setReviewText}
+           multiline
+           numberOfLines={3}
+           textAlignVertical="top"
+         />
+         <TouchableOpacity
+           onPress={handleSubmitReview}
+           disabled={isReviewSubmitDisabled}
+           activeOpacity={0.85}
+           style={[
+             styles.submitReviewBtn,
+             { marginTop: 12, backgroundColor: isReviewSubmitDisabled ? colors.cardMuted : colors.primary },
+             isReviewSubmitDisabled && [styles.submitReviewBtnDisabled, { borderColor: colors.border }],
+           ]}
+         >
+           {isSubmittingReview
+             ? <ActivityIndicator color={colors.primaryFg} />
+             : (
+               <Text style={[styles.submitReviewText, { color: isReviewSubmitDisabled ? colors.textMuted : colors.primaryFg }]}>
+                 {hasExistingReview ? 'Update review' : 'Submit review'}
+               </Text>
+             )
+           }
+         </TouchableOpacity>
+         <Text style={[styles.reviewNote, { color: colors.textSecondary }]}>Reviews are only visible to our community members.</Text>
+      </View>
     </ScrollView>
   );
 }
@@ -585,52 +587,86 @@ const styles = StyleSheet.create({
   unavailableText: {
     ...VerandahType.caption,
   },
-  orderSummarySection: {
-    marginTop: 10,
+  detailsCard: {
+    padding: 16,
+    borderRadius: VerandahRadius.lg,
+    backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    marginBottom: 16,
   },
-  noteInput: {
+  publicReviewList: {
+    gap: 12,
+    marginTop: 8,
+  },
+  publicReviewItem: {
+    paddingVertical: 12,
+  },
+  publicReviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  publicReviewIdentity: {
+    flex: 1,
+    marginRight: 8,
+  },
+  publicReviewName: {
+    ...VerandahType.bodyBold,
+  },
+  publicReviewDate: {
+    ...VerandahType.caption,
+    marginTop: 2,
+  },
+  publicReviewStars: {
+    fontSize: 14,
+    color: '#F59E0B',
+  },
+  publicReviewText: {
+    ...VerandahType.body,
+    lineHeight: 18,
+  },
+  loadMoreReviewsBtn: {
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.pill,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  loadMoreReviewsText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  tapHint: {
+    ...VerandahType.caption,
+    marginBottom: 12,
+  },
+  reviewInput: {
     borderWidth: 1,
     borderRadius: VerandahRadius.md,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
+    minHeight: 80,
+    marginTop: 12,
   },
-  summaryCard: {
-    borderWidth: 0.5,
-    borderRadius: VerandahRadius.lg,
-    padding: 16,
-    marginBottom: 24,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  summaryItemName: {
-    ...VerandahType.body,
-    flex: 1,
-  },
-  summaryDivider: {
-    height: 0.5,
-    marginVertical: 12,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  totalLabel: {
-    ...VerandahType.bodyBold,
-  },
-  primaryBtn: {
-    height: 52,
+  submitReviewBtn: {
+    height: 48,
     borderRadius: VerandahRadius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primaryBtnText: {
-    fontSize: 15,
+  submitReviewBtnDisabled: {
+    opacity: 0.5,
+  },
+  submitReviewText: {
+    fontSize: 14,
     fontWeight: '600',
+  },
+  reviewNote: {
+    ...VerandahType.caption,
+    textAlign: 'center',
+    marginTop: 8,
   },
 });

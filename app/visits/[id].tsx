@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../components/Avatar';
 import { JoinerListItem } from '../../components/JoinerListItem';
@@ -25,6 +25,20 @@ const formatLocalDateForDb = (date: Date) => {
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const day = `${date.getDate()}`.padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+const formatTimeForWeb = (date: Date) => {
+  const hours = `${date.getHours()}`.padStart(2, '0');
+  const minutes = `${date.getMinutes()}`.padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
+
+const parseTimeFromWeb = (timeString: string, baseDate: Date) => {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  const newDate = new Date(baseDate);
+  newDate.setHours(hours);
+  newDate.setMinutes(minutes);
+  return newDate;
 };
 
 export default function VisitDetailScreen() {
@@ -296,6 +310,27 @@ export default function VisitDetailScreen() {
     router.back();
   };
 
+  const handleShare = async () => {
+    if (!visit) return;
+    try {
+      const message = `Join my service visit on Society Hub!\n\n` +
+        `• Title: ${visit.title}\n` +
+        `• Provider: ${visit.provider_name}\n` +
+        `• Date: ${formatDate(visit.visit_date)}\n` +
+        `• Time: ${visit.visit_time_slot}\n` +
+        (visit.description ? `• Details: ${visit.description}\n` : '') +
+        `• Estimated Cost: ${visit.estimated_cost || 'Not specified'}\n\n` +
+        `Let's coordinate to split costs!`;
+
+      await Share.share({
+        message,
+        title: visit.title,
+      });
+    } catch (error: any) {
+      console.error('Error sharing:', error);
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
@@ -358,7 +393,12 @@ export default function VisitDetailScreen() {
              <View style={[styles.dateChip, { backgroundColor: Verandah.cardMuted }]}>
                 <Text style={[styles.dateChipText, { color: colors.primary }]}>{formatDate(visit.visit_date)}</Text>
              </View>
-             <VisitStatusBadge status={displayStatus} />
+             <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                <VisitStatusBadge status={displayStatus} />
+                <TouchableOpacity onPress={handleShare} style={{ padding: 4 }} activeOpacity={0.7}>
+                   <Ionicons name="share-social-outline" size={20} color={colors.primary} />
+                </TouchableOpacity>
+             </View>
           </View>
 
           <Text style={styles.visitTitle}>{visit.title}</Text>
@@ -466,19 +506,14 @@ export default function VisitDetailScreen() {
                     </TouchableOpacity>
                 )}
                 {visit.status === 'upcoming' && (
-                    <TouchableOpacity style={[styles.rescheduleBtn, { borderColor: colors.primary }]} onPress={handleOpenReschedule}>
-                        <Text style={[styles.rescheduleBtnText, { color: colors.primary }]}>Reschedule Visit</Text>
-                    </TouchableOpacity>
-                )}
-                {visit.status === 'upcoming' && (
                   <TouchableOpacity style={styles.cancelBtn} onPress={() => updateStatus('cancelled')}>
-                    <Text style={[styles.cancelBtnText, { color: colors.accent }]}>Cancel Visit</Text>
+                    <Text style={styles.cancelBtnText}>Cancel Visit</Text>
                   </TouchableOpacity>
                 )}
             </View>
         ) : visit.has_user_joined ? (
-            <TouchableOpacity style={styles.leaveBtn} onPress={handleLeave}>
-                <Ionicons name="exit-outline" size={20} color={colors.accent} />
+            <TouchableOpacity style={[styles.leaveBtn, { borderColor: colors.accent, borderWidth: 1, borderRadius: 14 }]} onPress={handleLeave}>
+                <Ionicons name="exit-outline" size={18} color={colors.accent} />
                 <Text style={[styles.leaveBtnText, { color: colors.accent }]}>Leave this visit</Text>
             </TouchableOpacity>
         ) : visit.status === 'upcoming' && !isFull ? (
@@ -567,71 +602,164 @@ export default function VisitDetailScreen() {
                 >
                     <View style={styles.inputGroup}>
                         <Text style={[styles.label, { color: colors.text }]}>New date *</Text>
-                        <TouchableOpacity
-                          style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.surface }]}
-                          onPress={() => setShowRescheduleDatePicker(true)}
-                        >
-                          <Text style={{ fontSize: 16, color: colors.text }}>
-                            {newVisitDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </Text>
-                        </TouchableOpacity>
-                        {showRescheduleDatePicker && (
-                          <DateTimePicker
-                            value={newVisitDate}
-                            mode="date"
-                            display="default"
-                            onChange={(event, selectedDate) => {
-                              setShowRescheduleDatePicker(Platform.OS === 'ios');
-                              if (selectedDate) setNewVisitDate(selectedDate);
+                        {Platform.OS === 'web' ? (
+                          <input
+                            type="date"
+                            value={formatLocalDateForDb(newVisitDate)}
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                setNewVisitDate(new Date(e.target.value));
+                              }
                             }}
-                            minimumDate={new Date()}
+                            min={formatLocalDateForDb(new Date())}
+                            style={{
+                              height: 56,
+                              borderWidth: 1,
+                              borderStyle: 'solid',
+                              borderColor: colors.border,
+                              borderRadius: 16,
+                              paddingLeft: 16,
+                              paddingRight: 16,
+                              fontSize: 16,
+                              color: colors.text,
+                              backgroundColor: colors.surface,
+                              fontFamily: 'inherit',
+                              outline: 'none',
+                              width: '100%',
+                              boxSizing: 'border-box',
+                            }}
                           />
+                        ) : (
+                          <>
+                            <TouchableOpacity
+                              style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.surface }]}
+                              onPress={() => setShowRescheduleDatePicker(true)}
+                            >
+                              <Text style={{ fontSize: 16, color: colors.text }}>
+                                {newVisitDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </Text>
+                            </TouchableOpacity>
+                            {showRescheduleDatePicker && (
+                              <DateTimePicker
+                                value={newVisitDate}
+                                mode="date"
+                                display="default"
+                                onChange={(event, selectedDate) => {
+                                  setShowRescheduleDatePicker(Platform.OS === 'ios');
+                                  if (selectedDate) setNewVisitDate(selectedDate);
+                                }}
+                                minimumDate={new Date()}
+                              />
+                            )}
+                          </>
                         )}
                     </View>
 
-                    <View style={styles.row}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.label, { color: colors.text }]}>Start time *</Text>
-                        <TouchableOpacity
-                          style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.surface }]}
-                          onPress={() => setShowRescheduleStartTimePicker(true)}
-                        >
-                          <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(newStartTime)}</Text>
-                        </TouchableOpacity>
-                        {showRescheduleStartTimePicker && (
-                          <DateTimePicker
-                            value={newStartTime}
-                            mode="time"
-                            display="default"
-                            onChange={(event, selectedTime) => {
-                              setShowRescheduleStartTimePicker(Platform.OS === 'ios');
-                              if (selectedTime) setNewStartTime(selectedTime);
+                    {Platform.OS === 'web' ? (
+                      <View style={styles.row}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.label, { color: colors.text }]}>Start time *</Text>
+                          <input
+                            type="time"
+                            value={formatTimeForWeb(newStartTime)}
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                setNewStartTime(parseTimeFromWeb(e.target.value, newStartTime));
+                              }
+                            }}
+                            style={{
+                              height: 56,
+                              borderWidth: 1,
+                              borderStyle: 'solid',
+                              borderColor: colors.border,
+                              borderRadius: 16,
+                              paddingLeft: 16,
+                              paddingRight: 16,
+                              fontSize: 16,
+                              color: colors.text,
+                              backgroundColor: colors.surface,
+                              fontFamily: 'inherit',
+                              outline: 'none',
+                              width: '100%',
+                              boxSizing: 'border-box',
                             }}
                           />
-                        )}
-                      </View>
-                      <View style={{ width: 12 }} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.label, { color: colors.text }]}>End time *</Text>
-                        <TouchableOpacity
-                          style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.surface }]}
-                          onPress={() => setShowRescheduleEndTimePicker(true)}
-                        >
-                          <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(newEndTime)}</Text>
-                        </TouchableOpacity>
-                        {showRescheduleEndTimePicker && (
-                          <DateTimePicker
-                            value={newEndTime}
-                            mode="time"
-                            display="default"
-                            onChange={(event, selectedTime) => {
-                              setShowRescheduleEndTimePicker(Platform.OS === 'ios');
-                              if (selectedTime) setNewEndTime(selectedTime);
+                        </View>
+                        <View style={{ width: 12 }} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.label, { color: colors.text }]}>End time *</Text>
+                          <input
+                            type="time"
+                            value={formatTimeForWeb(newEndTime)}
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                setNewEndTime(parseTimeFromWeb(e.target.value, newEndTime));
+                              }
+                            }}
+                            style={{
+                              height: 56,
+                              borderWidth: 1,
+                              borderStyle: 'solid',
+                              borderColor: colors.border,
+                              borderRadius: 16,
+                              paddingLeft: 16,
+                              paddingRight: 16,
+                              fontSize: 16,
+                              color: colors.text,
+                              backgroundColor: colors.surface,
+                              fontFamily: 'inherit',
+                              outline: 'none',
+                              width: '100%',
+                              boxSizing: 'border-box',
                             }}
                           />
-                        )}
+                        </View>
                       </View>
-                    </View>
+                    ) : (
+                      <View style={styles.row}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.label, { color: colors.text }]}>Start time *</Text>
+                          <TouchableOpacity
+                            style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.surface }]}
+                            onPress={() => setShowRescheduleStartTimePicker(true)}
+                          >
+                            <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(newStartTime)}</Text>
+                          </TouchableOpacity>
+                          {showRescheduleStartTimePicker && (
+                            <DateTimePicker
+                              value={newStartTime}
+                              mode="time"
+                              display="default"
+                              onChange={(event, selectedTime) => {
+                                setShowRescheduleStartTimePicker(Platform.OS === 'ios');
+                                if (selectedTime) setNewStartTime(selectedTime);
+                              }}
+                            />
+                          )}
+                        </View>
+                        <View style={{ width: 12 }} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.label, { color: colors.text }]}>End time *</Text>
+                          <TouchableOpacity
+                            style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.surface }]}
+                            onPress={() => setShowRescheduleEndTimePicker(true)}
+                          >
+                            <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(newEndTime)}</Text>
+                          </TouchableOpacity>
+                          {showRescheduleEndTimePicker && (
+                            <DateTimePicker
+                              value={newEndTime}
+                              mode="time"
+                              display="default"
+                              onChange={(event, selectedTime) => {
+                                setShowRescheduleEndTimePicker(Platform.OS === 'ios');
+                                if (selectedTime) setNewEndTime(selectedTime);
+                              }}
+                            />
+                          )}
+                        </View>
+                      </View>
+                    )}
 
                     <TouchableOpacity
                         style={[styles.primaryBtn, { marginTop: 12 }]}
@@ -660,7 +788,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scrollContent: {
-    paddingBottom: 88,
+    paddingBottom: 24,
   },
   header: {
     paddingHorizontal: 24,
@@ -678,8 +806,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 24,
-    marginBottom: 24,
-    marginTop: 10,
+    marginBottom: 16,
+    marginTop: 6,
   },
   avatarContainer: {
     marginRight: 16,
@@ -714,8 +842,8 @@ const styles = StyleSheet.create({
   detailCard: {
     marginHorizontal: 24,
     borderRadius: 24,
-    padding: 24,
-    marginBottom: 20,
+    padding: 18,
+    marginBottom: 16,
     backgroundColor: Verandah.card,
     borderWidth: 1,
     borderColor: Verandah.border,
@@ -775,9 +903,9 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     marginHorizontal: 24,
-    padding: 20,
+    padding: 16,
     borderRadius: 24,
-    marginBottom: 20,
+    marginBottom: 16,
     backgroundColor: Verandah.card,
     borderWidth: 1,
     borderColor: Verandah.border,
@@ -833,61 +961,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     padding: 24,
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
     borderTopWidth: 1,
   },
+  shareButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   primaryBtn: {
-    borderRadius: 18,
+    borderRadius: 14,
     overflow: 'hidden',
   },
   primaryBtnGradient: {
-    height: 58,
-    borderRadius: 18,
+    height: 44,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
   primaryBtnText: {
     color: Verandah.primaryFg,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
   },
   leaveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    height: 58,
+    height: 44,
   },
   leaveBtnText: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
   },
   creatorActions: {
       gap: 12,
   },
   cancelBtn: {
-      height: 50,
+      height: 44,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: Verandah.danger,
       justifyContent: 'center',
       alignItems: 'center',
   },
   cancelBtnText: {
       fontSize: 14,
-    fontWeight: '500',
+      fontWeight: '600',
+      color: Verandah.danger,
   },
   disabledBtn: {
-      height: 58,
-      borderRadius: 18,
+      height: 44,
+      borderRadius: 14,
       justifyContent: 'center',
       alignItems: 'center',
   },
   disabledBtnText: {
-      fontSize: 16,
-      fontWeight: '500',
+      fontSize: 14,
+      fontWeight: '600',
   },
   modalOverlay: {
       flex: 1,

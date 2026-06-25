@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { Avatar } from './Avatar';
@@ -69,6 +69,27 @@ export const VisitCard = React.memo(({
     return `${Math.floor(diffInHours / 24)}d ago`;
   };
 
+  const handleShare = (e: any) => {
+    e.stopPropagation();
+    try {
+      const formattedDate = formatDate(visitDate);
+      const message = `Join my service visit on Society Hub!\n\n` +
+        `• Title: ${title}\n` +
+        `• Provider: ${providerName}\n` +
+        `• Date: ${formattedDate}\n` +
+        `• Time: ${visitTimeSlot}\n` +
+        (estimatedCost ? `• Estimated Cost: ${estimatedCost}\n\n` : '\n') +
+        `Let's coordinate to split costs!`;
+
+      Share.share({
+        message,
+        title,
+      });
+    } catch (error: any) {
+      console.error('Error sharing:', error);
+    }
+  };
+
   const isFull = maxJoiners ? joinerCount >= maxJoiners : false;
 
   return (
@@ -112,11 +133,16 @@ export const VisitCard = React.memo(({
 
       {/* Footer */}
       <View style={styles.footer}>
-        <View style={styles.joinerCount}>
-          <Ionicons name="people-outline" size={16} color={Verandah.accent} />
-          <Text style={styles.joinerText}>
-            {joinerCount} {maxJoiners ? `/ ${maxJoiners}` : ''} {joinerCount === 1 ? 'neighbor' : 'neighbors'} joined
-          </Text>
+        <View style={styles.footerLeft}>
+          <View style={styles.joinerCount}>
+            <Ionicons name="people-outline" size={16} color={Verandah.accent} />
+            <Text style={styles.joinerText}>
+              {joinerCount} {maxJoiners ? `/ ${maxJoiners}` : ''} {joinerCount === 1 ? 'neighbor' : 'neighbors'} joined
+            </Text>
+          </View>
+          <TouchableOpacity onPress={handleShare} style={styles.shareBtn}>
+            <Ionicons name="share-social-outline" size={16} color={Verandah.textSecondary} />
+          </TouchableOpacity>
         </View>
 
         {isCreator ? (
@@ -146,7 +172,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: VerandahSpace.md,
-    marginBottom: VerandahSpace.md,
+    marginBottom: VerandahSpace.sm,
   },
   creatorInfo: {
     flex: 1,
@@ -161,17 +187,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   mainInfo: {
-    marginBottom: VerandahSpace.lg,
+    marginBottom: VerandahSpace.sm + 2,
   },
   title: {
     ...VerandahType.title,
     color: Verandah.textPrimary,
-    marginBottom: VerandahSpace.sm,
+    marginBottom: VerandahSpace.xs,
   },
   providerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: VerandahSpace.sm,
+    marginBottom: VerandahSpace.xs,
   },
   providerText: {
     ...VerandahType.body,
@@ -182,7 +208,7 @@ const styles = StyleSheet.create({
     color: Verandah.textPrimary,
   },
   detailsRow: {
-    marginBottom: VerandahSpace.sm + 2,
+    marginBottom: VerandahSpace.xs,
   },
   detailItem: {
     flexDirection: 'row',
@@ -217,9 +243,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: VerandahSpace.md,
+    paddingTop: VerandahSpace.sm + 2,
     borderTopWidth: 0.5,
     borderTopColor: Verandah.border,
+  },
+  footerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: VerandahSpace.md,
+  },
+  shareBtn: {
+    padding: VerandahSpace.xs,
+    borderRadius: VerandahRadius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   joinerCount: {
     flexDirection: 'row',

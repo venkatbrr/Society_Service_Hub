@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { supabase } from '../lib/supabase';
@@ -109,7 +109,7 @@ export const ProviderSelector = ({
           </TouchableOpacity>
 
           {dropdownOpen && (
-            <View style={styles.dropdown}>
+            <View style={[styles.dropdown, Platform.OS === 'web' && styles.dropdownWeb]}>
               <View style={styles.searchContainer}>
                 <Ionicons name="search" size={18} color={Verandah.textTertiary} />
                 <TextInput 
@@ -247,6 +247,11 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 1000,
     backgroundColor: Verandah.card,
+  },
+  dropdownWeb: {
+    position: 'relative',
+    top: 0,
+    marginTop: VerandahSpace.sm,
   },
   searchContainer: {
     flexDirection: 'row',

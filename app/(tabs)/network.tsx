@@ -13,6 +13,7 @@ import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Ve
 import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 
 type Kind = 'business' | 'borrow' | 'schools';
 
@@ -29,7 +30,7 @@ export default function NetworkScreen() {
   const { communityId, user, isCommunityLead } = useAuth();
   const colors = Verandah;
 
-  const [activeSegment, setActiveSegment] = useState<Kind>('business');
+  const activeSegment: Kind = 'business';
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [posts, setPosts] = useState<McnPostWithProfile[]>([]);
@@ -38,6 +39,8 @@ export default function NetworkScreen() {
   const [selectedSchoolIds, setSelectedSchoolIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const webPullProps = useWebPullToRefresh(() => fetchPosts(true));
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -58,7 +61,8 @@ export default function NetworkScreen() {
           .select(`
             id, name, description, contact_phone, is_active, owner_id, created_at,
             profiles!owner_id(full_name, flat_number),
-            mcn_products(id, name, unit, price, is_available)
+            mcn_products(id, name, unit, price, is_available),
+            ratings(rating)
           `)
           .eq('community_id', communityId)
           .eq('is_active', true);
@@ -234,47 +238,11 @@ export default function NetworkScreen() {
         <Text style={[styles.title, { color: colors.textPrimary }]}>My Community Network</Text>
       </View>
 
-      <View style={styles.segmentContainer}>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeSegment === 'business' && styles.segmentActive]}
-          onPress={() => { setActiveSegment('business'); setSearch(''); setSelectedSchoolIds([]); }}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.segmentText, activeSegment === 'business' && styles.segmentTextActive]}>
-            Local businesses
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeSegment === 'borrow' && styles.segmentActive]}
-          onPress={() => { setActiveSegment('borrow'); setSearch(''); setSelectedSchoolIds([]); }}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.segmentText, activeSegment === 'borrow' && styles.segmentTextActive]}>
-            Borrow & free
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeSegment === 'schools' && styles.segmentActive]}
-          onPress={() => { setActiveSegment('schools'); setSearch(''); }}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.segmentText, activeSegment === 'schools' && styles.segmentTextActive]}>
-            Schools
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
         <Text style={styles.searchIcon}>{APP_EMOJIS.search}</Text>
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
-          placeholder={
-            activeSegment === 'business'
-              ? 'Search businesses...'
-              : activeSegment === 'borrow'
-              ? 'Search posts...'
-              : 'Search schools...'
-          }
+          placeholder="Search businesses..."
           placeholderTextColor={colors.textMuted}
           value={search}
           onChangeText={setSearch}
@@ -287,6 +255,7 @@ export default function NetworkScreen() {
         </View>
       ) : (
         <FlatList
+          {...webPullProps}
           data={
             activeSegment === 'business'
               ? listings
@@ -384,13 +353,7 @@ export default function NetworkScreen() {
         style={[styles.fab, { backgroundColor: colors.primary }]}
         activeOpacity={0.8}
         onPress={() => {
-          if (activeSegment === 'business') {
-            router.push('/network/listing-add');
-          } else if (activeSegment === 'schools') {
-            router.push('/network/schools/add' as any);
-          } else {
-            router.push(`/network/add?kind=${activeSegment}`);
-          }
+          router.push('/network/listing-add');
         }}
       >
         <Ionicons name="add" size={28} color={colors.primaryFg} />

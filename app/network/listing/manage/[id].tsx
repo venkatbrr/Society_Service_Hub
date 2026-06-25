@@ -146,11 +146,11 @@ export default function ManageListingScreen() {
       );
       Toast.show({
         type: 'success',
-        text1: value ? 'Product marked available' : 'Product marked unavailable',
+        text1: value ? 'Service marked available' : 'Service marked unavailable',
       });
     } catch (error) {
       console.error(error);
-      Toast.show({ type: 'error', text1: 'Failed to update product status' });
+      Toast.show({ type: 'error', text1: 'Failed to update service status' });
     }
   };
 
@@ -165,7 +165,12 @@ export default function ManageListingScreen() {
     setSavingListing(true);
     try {
       let finalPhone = editListingPhone.trim().replace(/\D/g, '');
-      if (finalPhone && finalPhone.length !== 10) {
+      if (!finalPhone) {
+        Toast.show({ type: 'error', text1: 'WhatsApp / phone number is required' });
+        setSavingListing(false);
+        return;
+      }
+      if (finalPhone.length !== 10) {
         Toast.show({ type: 'error', text1: 'Phone number must be 10 digits' });
         setSavingListing(false);
         return;
@@ -176,7 +181,7 @@ export default function ManageListingScreen() {
         .update({
           name: trimmedName,
           description: editListingDesc.trim() || null,
-          contact_phone: finalPhone || null,
+          contact_phone: finalPhone,
         })
         .eq('id', listing.id);
 
@@ -214,7 +219,7 @@ export default function ManageListingScreen() {
     const priceNum = parseFloat(prodPrice);
 
     if (!trimmedName) {
-      Toast.show({ type: 'error', text1: 'Product name is required' });
+      Toast.show({ type: 'error', text1: 'Service name is required' });
       return;
     }
     if (isNaN(priceNum) || priceNum < 0) {
@@ -225,7 +230,7 @@ export default function ManageListingScreen() {
     setSavingProduct(true);
     try {
       if (editingProduct) {
-        // Edit product
+        // Edit service
         const { error } = await supabase
           .from('mcn_products')
           .update({
@@ -237,9 +242,9 @@ export default function ManageListingScreen() {
           .eq('id', editingProduct.id);
 
         if (error) throw error;
-        Toast.show({ type: 'success', text1: 'Product updated' });
+        Toast.show({ type: 'success', text1: 'Service updated' });
       } else {
-        // Add product
+        // Add service
         const nextSortOrder = products.length > 0 ? Math.max(...products.map(p => p.sort_order)) + 1 : 0;
         const { error } = await supabase
           .from('mcn_products')
@@ -254,14 +259,14 @@ export default function ManageListingScreen() {
           });
 
         if (error) throw error;
-        Toast.show({ type: 'success', text1: 'Product added' });
+        Toast.show({ type: 'success', text1: 'Service added' });
       }
 
       setShowProductModal(false);
       fetchData();
     } catch (error) {
       console.error(error);
-      Toast.show({ type: 'error', text1: 'Failed to save product' });
+      Toast.show({ type: 'error', text1: 'Failed to save service' });
     } finally {
       setSavingProduct(false);
     }
@@ -269,8 +274,8 @@ export default function ManageListingScreen() {
 
   const handleDeleteProduct = (productId: string) => {
     Alert.alert(
-      'Delete product',
-      'Are you sure you want to delete this product?',
+      'Delete service',
+      'Are you sure you want to delete this service?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -288,19 +293,19 @@ export default function ManageListingScreen() {
                 if (error.code === '23503') {
                   Toast.show({
                     type: 'error',
-                    text1: 'Cannot delete product',
-                    text2: 'This product has existing orders and cannot be deleted.',
+                    text1: 'Cannot delete service',
+                    text2: 'This service has existing references and cannot be deleted.',
                   });
                 } else {
                   throw error;
                 }
               } else {
-                Toast.show({ type: 'success', text1: 'Product deleted' });
+                Toast.show({ type: 'success', text1: 'Service deleted' });
                 fetchData();
               }
             } catch (error: any) {
               console.error(error);
-              Toast.show({ type: 'error', text1: 'Failed to delete product' });
+              Toast.show({ type: 'error', text1: 'Failed to delete service' });
             }
           },
         },
@@ -370,35 +375,15 @@ export default function ManageListingScreen() {
           />
         </View>
 
-        {/* Orders link */}
-        <TouchableOpacity
-          style={[styles.ordersLinkRow, { borderColor: colors.border, backgroundColor: colors.card }]}
-          onPress={() => router.push(`/network/listing/orders/${listing.id}` as any)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.ordersLinkLeft}>
-            <View style={[styles.ordersIconWrap, { backgroundColor: colors.accentSoft }]}>
-              <Ionicons name="receipt-outline" size={20} color={colors.accent} />
-            </View>
-            <View>
-              <Text style={[styles.ordersTitle, { color: colors.textPrimary }]}>View orders received</Text>
-              <Text style={[styles.ordersDesc, { color: colors.textSecondary }]}>
-                {pendingOrdersCount > 0 ? `${pendingOrdersCount} pending order(s)` : 'No pending orders'}
-              </Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
-        </TouchableOpacity>
-
-        {/* Products Section */}
+        {/* Services Section */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Products</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Services</Text>
           <TouchableOpacity
             style={[styles.addProductBtn, { borderColor: colors.border }]}
             onPress={() => handleOpenProductModal(null)}
           >
             <Ionicons name="add" size={16} color={colors.primary} />
-            <Text style={[styles.addProductText, { color: colors.primary }]}>Add product</Text>
+            <Text style={[styles.addProductText, { color: colors.primary }]}>Add service</Text>
           </TouchableOpacity>
         </View>
 
@@ -406,7 +391,7 @@ export default function ManageListingScreen() {
           {products.length === 0 ? (
             <View style={styles.emptyProducts}>
               <Text style={[styles.emptyProductsText, { color: colors.textMuted }]}>
-                No products added yet. Add items you sell so neighbors can order.
+                No services added yet. Add services you offer with their prices.
               </Text>
             </View>
           ) : (
@@ -490,7 +475,9 @@ export default function ManageListingScreen() {
             </View>
 
             <View style={styles.field}>
-              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>WhatsApp / phone number</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>
+                WhatsApp / phone number <Text style={{ color: colors.danger }}>*</Text>
+              </Text>
               <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
                 value={editListingPhone}
@@ -532,11 +519,11 @@ export default function ManageListingScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-              {editingProduct ? 'Edit product' : 'Add product'}
+              {editingProduct ? 'Edit service' : 'Add service'}
             </Text>
 
             <View style={styles.field}>
-              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Product name</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Service name</Text>
               <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
                 placeholder="e.g. Banginapalli, Chocolate cake, Mango pickle"

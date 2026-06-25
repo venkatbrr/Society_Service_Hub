@@ -2,20 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { APP_EMOJIS } from '../constants/emojis';
-import { VerandahRadius, VerandahType , VerandahLayout } from '../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, signInWithEmail, signUpWithEmail } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 
@@ -43,6 +44,7 @@ export default function LoginScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [agreeTc, setAgreeTc] = useState(false);
 
   const toggleMode = () => {
     setMode(mode === 'signIn' ? 'signUp' : 'signIn');
@@ -63,6 +65,14 @@ export default function LoginScreen() {
       }
       if (password !== confirmPassword) {
         Toast.show({ type: 'error', text1: 'Mismatch', text2: 'Passwords do not match.' });
+        return false;
+      }
+      if (!agreeTc) {
+        Toast.show({
+          type: 'error',
+          text1: 'Terms & Conditions',
+          text2: 'You must agree to the Terms & Conditions to sign up.',
+        });
         return false;
       }
     }
@@ -276,20 +286,46 @@ export default function LoginScreen() {
           </View>
 
           {mode === 'signUp' && (
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Confirm password</Text>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputEmoji}>{APP_EMOJIS.admin}</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirm password"
-                  placeholderTextColor={Verandah.textTertiary}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry={!showPassword}
-                />
+            <>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Confirm password</Text>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputEmoji}>{APP_EMOJIS.admin}</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Confirm password"
+                    placeholderTextColor={Verandah.textTertiary}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showPassword}
+                  />
+                </View>
               </View>
-            </View>
+
+              <TouchableOpacity
+                onPress={() => setAgreeTc(!agreeTc)}
+                style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, marginBottom: 16 }}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name={agreeTc ? 'checkbox' : 'square-outline'}
+                  size={20}
+                  color={agreeTc ? Verandah.accent : Verandah.textMuted}
+                />
+                <Text style={{ marginLeft: 8, fontSize: 13, color: Verandah.textSecondary }}>
+                  I agree to the{' '}
+                  <Text
+                    style={{ color: Verandah.accent, textDecorationLine: 'underline' }}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      Alert.alert('Terms & Conditions', 'Terms & Conditions placeholder. Link will be provided later.');
+                    }}
+                  >
+                    Terms & Conditions
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+            </>
           )}
 
           {mode === 'signIn' && (

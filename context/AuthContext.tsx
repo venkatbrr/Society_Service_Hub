@@ -1,5 +1,6 @@
 import { Session, User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { Enums, Tables } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 
@@ -55,8 +56,8 @@ const AuthContext = createContext<AuthContextType>({
   myFundsAccessRequest: null,
   activeCommunityRequest: null,
   isLoading: true,
-  refreshSession: async () => {},
-  signOut: async () => {},
+  refreshSession: async () => { },
+  signOut: async () => { },
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -90,7 +91,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const clearLocalSession = async () => {
     // Local scope clears persisted AsyncStorage tokens even when the refresh token
     // is stale or already revoked on the server.
-    await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+    await supabase.auth.signOut({ scope: 'local' }).catch(() => { });
     resetAuthState();
   };
 
@@ -124,16 +125,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    let profileData = data;
+
+    if (!profileData) {
+      const effectiveSession = currentSession ?? session;
+      if (effectiveSession?.user) {
+        console.warn('Profile row missing for authenticated user. Attempting self-healing recreation...');
+        const email = effectiveSession.user.email || '';
+        const nameFallback = email ? email.split('@')[0] : 'Resident';
+        const fullName = effectiveSession.user.user_metadata?.full_name ||
+          effectiveSession.user.user_metadata?.name ||
+          nameFallback;
+        const avatarUrl = effectiveSession.user.user_metadata?.avatar_url ||
+          effectiveSession.user.user_metadata?.picture ||
+          null;
+        const appRole = email.trim().toLowerCase() === PLATFORM_ADMIN_EMAIL ? 'admin' : 'resident';
+
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            email: email,
+            app_role: appRole
+          })
+          .select('*')
+          .maybeSingle();
+
+        if (insertError) {
+          console.error('Failed to self-heal/recreate missing profile:', insertError);
+          await clearLocalSession();
+          return;
+        }
+
+        profileData = newProfile;
+      }
+    }
+
     let nextActiveRequest: ActiveCommunityRequest = null;
 
     // Profile row was deleted from the database but the Auth session is still valid.
     // Clear everything locally so the root layout redirects to /login.
-    if (!data) {
+    if (!profileData) {
       await clearLocalSession();
       return;
     }
 
-    if (!data?.community_id) {
+    if (!profileData?.community_id) {
       const { data: requestData, error: requestError } = await supabase
         .from('community_requests')
         .select('id, status, created_at, name')
@@ -153,18 +192,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const effectiveSession = currentSession ?? session;
     const isKnownPlatformAdminEmail =
       (effectiveSession?.user?.email ?? '').trim().toLowerCase() === PLATFORM_ADMIN_EMAIL;
-    const profileRole = normalizeAppRole(data?.app_role, isKnownPlatformAdminEmail);
+    const profileRole = normalizeAppRole(profileData?.app_role, isKnownPlatformAdminEmail);
     const resolvedCommunityId =
       profileRole === 'admin' || isKnownPlatformAdminEmail
         ? null
-        : data?.community_id ??
-          effectiveSession?.user?.user_metadata?.community_id ??
-          effectiveSession?.user?.app_metadata?.community_id ??
-          null;
+        : profileData?.community_id ??
+        effectiveSession?.user?.user_metadata?.community_id ??
+        effectiveSession?.user?.app_metadata?.community_id ??
+        null;
 
-    setProfile(data ?? null);
+    setProfile(profileData ?? null);
     setCommunityId(resolvedCommunityId);
-    setMyBlockId(data?.block_id ?? null);
+    setMyBlockId(profileData?.block_id ?? null);
     setActiveCommunityRequest(nextActiveRequest);
 
     if (!resolvedCommunityId || profileRole === 'admin') {
@@ -204,11 +243,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setMyFundsAccessRequest(
         latest
           ? {
-              id: latest.request_id,
-              status: latest.status,
-              rejection_reason: latest.rejection_reason,
-              decided_at: latest.decided_at,
-            }
+            id: latest.request_id,
+            status: latest.status,
+            rejection_reason: latest.rejection_reason,
+            decided_at: latest.decided_at,
+          }
           : null
       );
     }
@@ -298,7 +337,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setProfile(null);
+    resetAuthState();
+    if (Platform.OS === 'web') {
+      window.location.replace('/');
+    }
   };
 
   const isKnownPlatformAdminEmail =

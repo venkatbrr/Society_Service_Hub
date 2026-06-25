@@ -16,7 +16,7 @@ export function useWebPullToRefresh(onRefresh: () => void) {
   }
 
   const handleScroll = (e: any) => {
-    const offset = e.nativeEvent?.contentOffset?.y ?? 0;
+    const offset = e.currentTarget?.scrollTop ?? e.nativeEvent?.contentOffset?.y ?? 0;
     scrollOffsetRef.current = offset;
   };
 
@@ -24,8 +24,9 @@ export function useWebPullToRefresh(onRefresh: () => void) {
     const touch = e.touches?.[0] || e.nativeEvent?.touches?.[0];
     if (touch) {
       setTouchStart(touch.clientY);
-      // Allow pull-to-refresh only if scroll is at the very top (with 5px threshold for subpixels)
-      setIsPullAllowed(scrollOffsetRef.current <= 5);
+      const offset = e.currentTarget?.scrollTop ?? scrollOffsetRef.current ?? 0;
+      // Allow pull-to-refresh only if scroll is at the very top
+      setIsPullAllowed(offset <= 5);
     }
   };
 

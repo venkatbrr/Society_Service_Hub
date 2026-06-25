@@ -23,6 +23,7 @@ export interface McnListingItem {
     price: number;
     is_available: boolean;
   }>;
+  ratings?: Array<{ rating: number }>;
 }
 
 interface McnListingCardProps {
@@ -45,6 +46,9 @@ export const McnListingCard = React.memo(({
   const [showMenu, setShowMenu] = useState(false);
   const isOwner = listing.owner_id === currentUserId;
   const availableProducts = (listing.mcn_products || []).filter(p => p.is_available);
+  const ratings = listing.ratings || [];
+  const ratingCount = ratings.length;
+  const avgRating = ratingCount > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
 
   return (
     <BaseCard style={styles.card} padding={16} onPress={() => onPress(listing.id)}>
@@ -52,10 +56,23 @@ export const McnListingCard = React.memo(({
         <Avatar name={listing.profiles?.full_name || 'Resident'} size={40} />
         <View style={styles.headerText}>
           <Text style={[styles.name, { color: Verandah.textPrimary }]}>{listing.name}</Text>
-          <Text style={[styles.ownerMeta, { color: Verandah.textTertiary }]}>
-            {listing.profiles?.full_name || 'Resident'}
-            {listing.profiles?.flat_number ? ` · ${listing.profiles.flat_number}` : ''}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Text style={[styles.ownerMeta, { color: Verandah.textTertiary }]}>
+              {listing.profiles?.full_name || 'Resident'}
+              {listing.profiles?.flat_number ? ` · ${listing.profiles.flat_number}` : ''}
+            </Text>
+            {ratingCount > 0 && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+                <Ionicons name="star" size={12} color="#F59E0B" />
+                <Text style={{ fontSize: 12, color: Verandah.textPrimary, marginLeft: 2, fontWeight: '500' }}>
+                  {avgRating.toFixed(1)}
+                </Text>
+                <Text style={{ fontSize: 12, color: Verandah.textTertiary, marginLeft: 1 }}>
+                  ({ratingCount})
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
         {isCommunityLead && (
           <TouchableOpacity onPress={(e) => { e.stopPropagation(); setShowMenu(true); }} style={styles.menuBtn}>
@@ -105,7 +122,7 @@ export const McnListingCard = React.memo(({
             onPress={() => onPress(listing.id)}
             style={styles.actionBtn}
           >
-            <Text style={[styles.actionBtnText, { color: Verandah.accent }]}>View & order →</Text>
+            <Text style={[styles.actionBtnText, { color: Verandah.accent }]}>View details →</Text>
           </TouchableOpacity>
         )}
       </View>

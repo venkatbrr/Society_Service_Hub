@@ -32,7 +32,12 @@ export default function AddListingScreen() {
     setIsSubmitting(true);
     try {
       let finalPhone = contactPhone.trim().replace(/\D/g, '');
-      if (finalPhone && finalPhone.length !== 10) {
+      if (!finalPhone) {
+        Toast.show({ type: 'error', text1: 'WhatsApp / phone number is required' });
+        setIsSubmitting(false);
+        return;
+      }
+      if (finalPhone.length !== 10) {
         Toast.show({ type: 'error', text1: 'Phone number must be 10 digits' });
         setIsSubmitting(false);
         return;
@@ -45,7 +50,7 @@ export default function AddListingScreen() {
           owner_id: user.id,
           name: trimmedName,
           description: description.trim() || null,
-          contact_phone: finalPhone || null,
+          contact_phone: finalPhone,
           is_active: true,
         })
         .select()
@@ -102,7 +107,9 @@ export default function AddListingScreen() {
         </View>
 
         <View style={styles.field}>
-          <Text style={[styles.label, { color: colors.textPrimary }]}>WhatsApp / phone number</Text>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>
+            WhatsApp / phone number <Text style={{ color: colors.danger }}>*</Text>
+          </Text>
           <TextInput
             style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
             placeholder="10-digit number. Customers will use this to contact you."

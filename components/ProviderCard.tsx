@@ -19,7 +19,7 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
   return (
     <BaseCard
       onPress={onPress}
-      padding={14}
+      padding={10}
       style={styles.card}
     >
       <View style={styles.content}>
@@ -77,13 +77,13 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: VerandahSpace.sm + 2,
+    marginBottom: VerandahSpace.sm,
   },
   content: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: VerandahSpace.md,
-    marginBottom: VerandahSpace.md,
+    gap: VerandahSpace.sm + 4,
+    marginBottom: 8,
   },
   mainInfo: {
     flex: 1,
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   footer: {
     borderTopWidth: 0.5,
     borderTopColor: Verandah.border,
-    paddingTop: VerandahSpace.sm + 2,
+    paddingTop: 6,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

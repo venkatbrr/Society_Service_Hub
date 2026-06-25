@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -38,10 +38,25 @@ const formatLocalDateForDb = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
+const formatTimeForWeb = (date: Date) => {
+  const hours = `${date.getHours()}`.padStart(2, '0');
+  const minutes = `${date.getMinutes()}`.padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
+
+const parseTimeFromWeb = (timeString: string, baseDate: Date) => {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  const newDate = new Date(baseDate);
+  newDate.setHours(hours);
+  newDate.setMinutes(minutes);
+  return newDate;
+};
+
 export default function AddVisitScreen() {
   const router = useRouter();
   const { user, communityId } = useAuth();
   const insets = useSafeAreaInsets();
+  const isSubmittingRef = useRef(false);
   const colors = {
     background: Verandah.surface,
     text: Verandah.textPrimary,
@@ -83,9 +98,21 @@ export default function AddVisitScreen() {
   const [category, setCategory] = useState('');
 
   // Date and Time state
-  const [visitDate, setVisitDate] = useState(new Date());
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date(new Date().setHours(new Date().getHours() + 1)));
+  const [visitDate, setVisitDate] = useState(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 1);
+    return d;
+  });
+  const [startTime, setStartTime] = useState(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 1);
+    return d;
+  });
+  const [endTime, setEndTime] = useState(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 2);
+    return d;
+  });
 
   const [estimatedCost, setEstimatedCost] = useState('');
   const [maxJoiners, setMaxJoiners] = useState('');
@@ -115,6 +142,7 @@ export default function AddVisitScreen() {
   };
 
   const handleSave = async () => {
+    if (isSubmittingRef.current) return;
     if (!title.trim()) return Toast.show({ type: 'error', text1: 'Missing Title' });
     if (!category) return Toast.show({ type: 'error', text1: 'Select a Category' });
 
@@ -144,6 +172,7 @@ export default function AddVisitScreen() {
 
     const timeSlot = `${formatTime(startTime)} - ${formatTime(endTime)}`;
 
+    isSubmittingRef.current = true;
     setSubmitting(true);
     try {
       const { error } = await supabase.from('service_visits').insert({
@@ -172,6 +201,7 @@ export default function AddVisitScreen() {
       Toast.show({ type: 'error', text1: 'Error', text2: e.message });
     } finally {
       setSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -264,62 +294,155 @@ export default function AddVisitScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Visit date *</Text>
-            <TouchableOpacity
-              style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.card }]}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={{ fontSize: 16, color: colors.text }}>
-                {visitDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </Text>
-            </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={visitDate}
-                mode="date"
-                display="default"
-                onChange={onDateChange}
-                minimumDate={new Date()}
+            {Platform.OS === 'web' ? (
+              <input
+                type="date"
+                value={formatLocalDateForDb(visitDate)}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setVisitDate(new Date(e.target.value));
+                  }
+                }}
+                min={formatLocalDateForDb(new Date())}
+                style={{
+                  height: 56,
+                  borderWidth: 1,
+                  borderStyle: 'solid',
+                  borderColor: colors.border,
+                  borderRadius: 16,
+                  paddingLeft: 16,
+                  paddingRight: 16,
+                  fontSize: 16,
+                  color: colors.text,
+                  backgroundColor: colors.card,
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  width: '100%',
+                }}
               />
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.card }]}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={{ fontSize: 16, color: colors.text }}>
+                    {visitDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={visitDate}
+                    mode="date"
+                    display="default"
+                    onChange={onDateChange}
+                    minimumDate={new Date()}
+                  />
+                )}
+              </>
             )}
           </View>
 
-          <View style={styles.row}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.label, { color: colors.text }]}>Start time *</Text>
-              <TouchableOpacity
-                style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.card }]}
-                onPress={() => setShowStartTimePicker(true)}
-              >
-                <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(startTime)}</Text>
-              </TouchableOpacity>
-              {showStartTimePicker && (
-                <DateTimePicker
-                  value={startTime}
-                  mode="time"
-                  display="default"
-                  onChange={onStartTimeChange}
+          {Platform.OS === 'web' ? (
+            <View style={styles.row}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.label, { color: colors.text }]}>Start time *</Text>
+                <input
+                  type="time"
+                  value={formatTimeForWeb(startTime)}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setStartTime(parseTimeFromWeb(e.target.value, startTime));
+                    }
+                  }}
+                  style={{
+                    height: 56,
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: colors.border,
+                    borderRadius: 16,
+                    paddingLeft: 16,
+                    paddingRight: 16,
+                    fontSize: 16,
+                    color: colors.text,
+                    backgroundColor: colors.card,
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                  }}
                 />
-              )}
-            </View>
-            <View style={{ width: 12 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.label, { color: colors.text }]}>End time *</Text>
-              <TouchableOpacity
-                style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.card }]}
-                onPress={() => setShowEndTimePicker(true)}
-              >
-                <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(endTime)}</Text>
-              </TouchableOpacity>
-              {showEndTimePicker && (
-                <DateTimePicker
-                  value={endTime}
-                  mode="time"
-                  display="default"
-                  onChange={onEndTimeChange}
+              </View>
+              <View style={{ width: 12 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.label, { color: colors.text }]}>End time *</Text>
+                <input
+                  type="time"
+                  value={formatTimeForWeb(endTime)}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setEndTime(parseTimeFromWeb(e.target.value, endTime));
+                    }
+                  }}
+                  style={{
+                    height: 56,
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: colors.border,
+                    borderRadius: 16,
+                    paddingLeft: 16,
+                    paddingRight: 16,
+                    fontSize: 16,
+                    color: colors.text,
+                    backgroundColor: colors.card,
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                  }}
                 />
-              )}
+              </View>
             </View>
-          </View>
+          ) : (
+            <View style={styles.row}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.label, { color: colors.text }]}>Start time *</Text>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.card }]}
+                  onPress={() => setShowStartTimePicker(true)}
+                >
+                  <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(startTime)}</Text>
+                </TouchableOpacity>
+                {showStartTimePicker && (
+                  <DateTimePicker
+                    value={startTime}
+                    mode="time"
+                    display="default"
+                    onChange={onStartTimeChange}
+                  />
+                )}
+              </View>
+              <View style={{ width: 12 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.label, { color: colors.text }]}>End time *</Text>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.card }]}
+                  onPress={() => setShowEndTimePicker(true)}
+                >
+                  <Text style={{ fontSize: 16, color: colors.text }}>{formatTime(endTime)}</Text>
+                </TouchableOpacity>
+                {showEndTimePicker && (
+                  <DateTimePicker
+                    value={endTime}
+                    mode="time"
+                    display="default"
+                    onChange={onEndTimeChange}
+                  />
+                )}
+              </View>
+            </View>
+          )}
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
@@ -372,6 +495,7 @@ export default function AddVisitScreen() {
           onPress={handleSave}
           disabled={submitting}
           activeOpacity={0.85}
+          pointerEvents={submitting ? 'none' : 'auto'}
           style={[styles.submitBtn, { marginBottom: Math.max(insets.bottom, 40), backgroundColor: colors.primary }]}
         >
           {submitting ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.submitBtnText}>Share visit</Text>}
@@ -440,6 +564,7 @@ const styles = StyleSheet.create({
   },
   providerSection: {
     marginBottom: 0,
+    ...(Platform.OS === 'web' ? { zIndex: 100, overflow: 'visible' } : {}),
   },
   detailsSection: {
     marginBottom: 0,
