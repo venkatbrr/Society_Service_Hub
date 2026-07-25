@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Verandah.card,
     borderRadius: VerandahRadius.lg,
-    marginBottom: VerandahSpace.sm + 2,
+    marginBottom: 8,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     overflow: 'hidden',

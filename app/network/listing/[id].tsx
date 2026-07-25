@@ -1,15 +1,15 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import * as Linking from 'expo-linking';
-import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import * as Linking from 'expo-linking';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../components/Avatar';
-import { Rupees } from '../../../components/Rupees';
 import { RatingStars } from '../../../components/RatingStars';
-import { BaseCard } from '../../../components/BaseCard';
+import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
+import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
 
@@ -18,7 +18,9 @@ interface Product {
   name: string;
   description: string | null;
   unit: 'kg' | 'piece' | 'litre' | 'dozen' | 'box' | 'pack';
-  price: number;
+  price: number | null;
+  item_type: 'product' | 'service';
+  image_url: string | null;
   is_available: boolean;
 }
 
@@ -28,6 +30,8 @@ interface Listing {
   description: string | null;
   contact_phone: string | null;
   owner_id: string;
+  image_url: string | null;
+  category: { name: string; emoji: string } | null;
   profiles: { full_name: string; flat_number: string | null; phone_number: string | null } | null;
 }
 
@@ -63,6 +67,14 @@ export default function ListingDetailScreen() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
+
+  const handleGoBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(tabs)/network' as any);
+  };
 
   const fetchPublicReviews = useCallback(async () => {
     if (!listingId) return;
@@ -113,14 +125,19 @@ export default function ListingDetailScreen() {
       const { data: listingData, error: listingError } = await supabase
         .from('mcn_listings')
         .select(`
-          *,
+          id, name, description, contact_phone, owner_id, image_url,
+          category:mcn_business_categories(name, emoji),
           profiles!owner_id(full_name, flat_number, phone_number)
         `)
         .eq('id', listingId)
-        .single();
+        .maybeSingle();
 
       if (listingError) throw listingError;
-      setListing(listingData as unknown as Listing);
+      if (!listingData) throw new Error('Listing not found');
+      const categoryRel = Array.isArray((listingData as any).category)
+        ? (listingData as any).category[0] || null
+        : (listingData as any).category || null;
+      setListing({ ...(listingData as any), category: categoryRel } as Listing);
 
       // 2. Fetch products for this listing
       const { data: productsData, error: productsError } = await supabase
@@ -273,6 +290,8 @@ export default function ListingDetailScreen() {
   const isReviewSubmitDisabled = isSubmittingReview || (selectedRating === 0 && !userRating);
   const hasExistingReview = userRating != null;
   const visibleReviews = showAllReviews ? publicReviews : publicReviews.slice(0, 3);
+  const productItems = products.filter((item) => item.item_type !== 'service');
+  const serviceItems = products.filter((item) => item.item_type === 'service');
 
   return (
     <ScrollView
@@ -281,7 +300,26 @@ export default function ListingDetailScreen() {
       contentContainerStyle={styles.contentContainer}
       keyboardShouldPersistTaps="handled"
     >
-      <Stack.Screen options={{ title: listing.name }} />
+      <Stack.Screen
+        options={{
+          title: listing.name,
+          headerBackVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity onPress={handleGoBack} style={styles.headerBackBtn} hitSlop={8}>
+              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+
+      {listing.image_url ? (
+        <Image
+          source={{ uri: listing.image_url }}
+          style={styles.heroImage}
+          contentFit="cover"
+          transition={300}
+        />
+      ) : null}
 
       <View style={styles.ownerCard}>
         <Avatar name={listing.profiles?.full_name || 'Resident'} size={48} />
@@ -305,6 +343,13 @@ export default function ListingDetailScreen() {
               </View>
             )}
           </View>
+          {listing.category ? (
+            <View style={styles.categoryBadge}>
+              <Text style={[styles.categoryBadgeText, { color: colors.textSecondary }]}>
+                {listing.category.emoji} {listing.category.name}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {contactPhone ? (
@@ -329,45 +374,111 @@ export default function ListingDetailScreen() {
 
       <View style={styles.divider} />
 
-      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Services</Text>
+      {products.length === 0 ? (
+        <Text style={[styles.emptyProducts, { color: colors.textMuted }]}>
+          No offerings listed by this business yet.
+        </Text>
+      ) : (
+        <>
+          {productItems.length > 0 ? (
+            <View style={styles.offeringsSection}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Products</Text>
+              <View style={styles.productsList}>
+                {productItems.map((product) => (
+                  <View
+                    key={product.id}
+                    style={[
+                      styles.productRow,
+                      { borderColor: colors.border },
+                      !product.is_available && styles.productUnavailable,
+                    ]}
+                  >
+                    {(product as any).image_url ? (
+                      <Image
+                        source={{ uri: (product as any).image_url }}
+                        style={styles.productThumb}
+                        contentFit="cover"
+                        transition={200}
+                      />
+                    ) : null}
+                    <View style={styles.productLeft}>
+                      <Text style={[styles.productName, { color: colors.textPrimary }]}>{product.name}</Text>
+                      {product.description ? (
+                        <Text style={[styles.productDesc, { color: colors.textSecondary }]}>{product.description}</Text>
+                      ) : null}
+                      <View style={styles.priceContainer}>
+                        {product.price == null ? (
+                          <Text style={[styles.priceOnRequestText, { color: colors.textTertiary }]}>Price on request</Text>
+                        ) : (
+                          <>
+                            <Rupees amount={Number(product.price)} size="sm" />
+                            <Text style={[styles.unitText, { color: colors.textTertiary }]}> / {product.unit}</Text>
+                          </>
+                        )}
+                      </View>
+                    </View>
 
-      <View style={styles.productsList}>
-        {products.length === 0 ? (
-          <Text style={[styles.emptyProducts, { color: colors.textMuted }]}>
-            No services listed by the seller yet.
-          </Text>
-        ) : (
-          products.map(product => {
-            return (
-              <View
-                key={product.id}
-                style={[
-                  styles.productRow,
-                  { borderColor: colors.border },
-                  !product.is_available && styles.productUnavailable
-                ]}
-              >
-                <View style={styles.productLeft}>
-                  <Text style={[styles.productName, { color: colors.textPrimary }]}>{product.name}</Text>
-                  {product.description ? (
-                    <Text style={[styles.productDesc, { color: colors.textSecondary }]}>{product.description}</Text>
-                  ) : null}
-                  <View style={styles.priceContainer}>
-                    <Rupees amount={Number(product.price)} size="sm" />
-                    <Text style={[styles.unitText, { color: colors.textTertiary }]}> / {product.unit}</Text>
+                    {!product.is_available && (
+                      <View style={styles.unavailableBadge}>
+                        <Text style={[styles.unavailableText, { color: colors.textMuted }]}>Not available</Text>
+                      </View>
+                    )}
                   </View>
-                </View>
-
-                {!product.is_available && (
-                  <View style={styles.unavailableBadge}>
-                    <Text style={[styles.unavailableText, { color: colors.textMuted }]}>Not available</Text>
-                  </View>
-                )}
+                ))}
               </View>
-            );
-          })
-        )}
-      </View>
+            </View>
+          ) : null}
+
+          {serviceItems.length > 0 ? (
+            <View style={styles.offeringsSection}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Services</Text>
+              <View style={styles.productsList}>
+                {serviceItems.map((product) => (
+                  <View
+                    key={product.id}
+                    style={[
+                      styles.productRow,
+                      { borderColor: colors.border },
+                      !product.is_available && styles.productUnavailable,
+                    ]}
+                  >
+                    {(product as any).image_url ? (
+                      <Image
+                        source={{ uri: (product as any).image_url }}
+                        style={styles.productThumb}
+                        contentFit="cover"
+                        transition={200}
+                      />
+                    ) : null}
+                    <View style={styles.productLeft}>
+                      <Text style={[styles.productName, { color: colors.textPrimary }]}>{product.name}</Text>
+                      {product.description ? (
+                        <Text style={[styles.productDesc, { color: colors.textSecondary }]}>{product.description}</Text>
+                      ) : null}
+                      <View style={styles.priceContainer}>
+                        {product.price == null ? (
+                          <Text style={[styles.priceOnRequestText, { color: colors.textTertiary }]}>Price on request</Text>
+                        ) : (
+                          <>
+                            <Rupees amount={Number(product.price)} size="sm" />
+                            <Text style={[styles.unitText, { color: colors.textTertiary }]}> / {product.unit}</Text>
+                          </>
+                        )}
+                      </View>
+                    </View>
+
+                    {!product.is_available && (
+                      <View style={styles.unavailableBadge}>
+                        <Text style={[styles.unavailableText, { color: colors.textMuted }]}>Not available</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : null}
+        </>
+      )}
 
       <View style={styles.divider} />
 
@@ -481,6 +592,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  heroImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: VerandahRadius.lg,
+    marginBottom: 16,
+  },
+  productThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: VerandahRadius.md,
+    marginRight: 10,
+  },
   ownerCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -496,6 +619,17 @@ const styles = StyleSheet.create({
   ownerFlat: {
     ...VerandahType.caption,
     marginTop: 2,
+  },
+  categoryBadge: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: Verandah.cardMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  categoryBadgeText: {
+    ...VerandahType.caption,
   },
   contactActions: {
     flexDirection: 'row',
@@ -525,6 +659,9 @@ const styles = StyleSheet.create({
     ...VerandahType.title,
     fontSize: 16,
     marginBottom: 16,
+  },
+  offeringsSection: {
+    marginBottom: 18,
   },
   productsList: {
     gap: 12,
@@ -558,6 +695,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 6,
+  },
+  priceOnRequestText: {
+    ...VerandahType.caption,
+    fontStyle: 'italic',
   },
   unitText: {
     ...VerandahType.caption,
@@ -668,5 +809,9 @@ const styles = StyleSheet.create({
     ...VerandahType.caption,
     textAlign: 'center',
     marginTop: 8,
+  },
+  headerBackBtn: {
+    marginLeft: 2,
+    padding: 6,
   },
 });

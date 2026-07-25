@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { ProviderSelector } from '../../components/ProviderSelector';
 import { Verandah } from '../../constants/Colors';
-import { VerandahType , VerandahLayout } from '../../constants/Verandah';
+import { VerandahLayout, VerandahType } from '../../constants/Verandah';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/categories';
 import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
@@ -495,7 +495,6 @@ export default function AddVisitScreen() {
           onPress={handleSave}
           disabled={submitting}
           activeOpacity={0.85}
-          pointerEvents={submitting ? 'none' : 'auto'}
           style={[styles.submitBtn, { marginBottom: Math.max(insets.bottom, 40), backgroundColor: colors.primary }]}
         >
           {submitting ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.submitBtnText}>Share visit</Text>}

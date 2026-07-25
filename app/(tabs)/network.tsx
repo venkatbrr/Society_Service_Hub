@@ -2,20 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { EmptyState } from '../../components/EmptyState';
-import { McnPostCard, McnPostWithProfile } from '../../components/McnPostCard';
 import { McnListingCard, McnListingItem } from '../../components/McnListingCard';
+import { McnPostCard, McnPostWithProfile } from '../../components/McnPostCard';
+import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 
 type Kind = 'business' | 'borrow' | 'schools';
+type McnCategory = { id: string; name: string; emoji: string; sort_order: number };
 
 const LEVEL_MAP = {
   pre_school: 'Pre-school',
@@ -30,11 +31,13 @@ export default function NetworkScreen() {
   const { communityId, user, isCommunityLead } = useAuth();
   const colors = Verandah;
 
-  const activeSegment: Kind = 'business';
+  const [activeSegment] = useState<Kind>('business');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [posts, setPosts] = useState<McnPostWithProfile[]>([]);
   const [listings, setListings] = useState<McnListingItem[]>([]);
+  const [categories, setCategories] = useState<McnCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [schools, setSchools] = useState<any[]>([]);
   const [selectedSchoolIds, setSelectedSchoolIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +52,23 @@ export default function NetworkScreen() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  const fetchCategories = useCallback(async () => {
+    if (!communityId) return;
+    try {
+      const { data, error } = await supabase
+        .from('mcn_business_categories')
+        .select('id, name, emoji, sort_order')
+        .order('sort_order', { ascending: true })
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setCategories((data || []) as McnCategory[]);
+    } catch (error) {
+      console.error('Error fetching MCN categories:', error);
+      Toast.show({ type: 'error', text1: 'Failed to load business categories' });
+    }
+  }, [communityId]);
+
   const fetchPosts = useCallback(async (isRefresh = false) => {
     if (!communityId) return;
     if (isRefresh) setRefreshing(true);
@@ -59,13 +79,18 @@ export default function NetworkScreen() {
         let query = supabase
           .from('mcn_listings')
           .select(`
-            id, name, description, contact_phone, is_active, owner_id, created_at,
+            id, name, description, contact_phone, image_url, is_active, owner_id, created_at,
+            category:mcn_business_categories(name, emoji),
             profiles!owner_id(full_name, flat_number),
-            mcn_products(id, name, unit, price, is_available),
+            mcn_products(id, name, unit, price, is_available, item_type),
             ratings(rating)
           `)
           .eq('community_id', communityId)
           .eq('is_active', true);
+
+        if (selectedCategoryId) {
+          query = query.eq('category_id', selectedCategoryId);
+        }
 
         if (debouncedSearch.trim()) {
           query = query.ilike('name', `%${debouncedSearch.trim()}%`);
@@ -73,7 +98,11 @@ export default function NetworkScreen() {
 
         const { data, error } = await query.order('created_at', { ascending: false });
         if (error) throw error;
-        setListings(data as unknown as McnListingItem[]);
+        const normalizedListings = (data || []).map((item: any) => ({
+          ...item,
+          category: Array.isArray(item.category) ? item.category[0] || null : item.category || null,
+        }));
+        setListings(normalizedListings as McnListingItem[]);
       } else if (activeSegment === 'borrow') {
         let query = supabase
           .from('mcn_posts')
@@ -110,13 +139,18 @@ export default function NetworkScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [communityId, activeSegment, debouncedSearch]);
+  }, [communityId, activeSegment, debouncedSearch, selectedCategoryId]);
 
   useFocusEffect(
     useCallback(() => {
       fetchPosts();
-    }, [fetchPosts])
+      fetchCategories();
+    }, [fetchPosts, fetchCategories])
   );
+
+  const handleToggleCategory = (categoryId: string | null) => {
+    setSelectedCategoryId((prev) => (prev === categoryId ? null : categoryId));
+  };
 
   const handleMarkUnavailable = async (id: string) => {
     try {
@@ -151,7 +185,7 @@ export default function NetworkScreen() {
   const handleRemoveListing = async (id: string) => {
     Alert.alert(
       'Remove listing',
-      'Are you sure you want to remove this business listing?',
+      'Are you sure you want to remove this business listing from the feed?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -161,10 +195,11 @@ export default function NetworkScreen() {
             try {
               const { error } = await supabase
                 .from('mcn_listings')
-                .delete()
-                .eq('id', id);
+                .update({ is_active: false })
+                .eq('id', id)
+                .eq('community_id', communityId || '');
               if (error) throw error;
-              Toast.show({ type: 'success', text1: 'Listing removed' });
+              Toast.show({ type: 'success', text1: 'Listing removed from feed' });
               fetchPosts();
             } catch (error) {
               console.error(error);
@@ -248,6 +283,61 @@ export default function NetworkScreen() {
           onChangeText={setSearch}
         />
       </View>
+
+      {activeSegment === 'business' ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryChipsWrap}
+          contentContainerStyle={styles.categoryChipsScroll}
+        >
+          <TouchableOpacity
+            style={[
+              styles.categoryChip,
+              { borderColor: colors.border, backgroundColor: colors.card },
+              selectedCategoryId === null && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+            ]}
+            onPress={() => handleToggleCategory(null)}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.categoryChipText,
+                { color: colors.textSecondary },
+                selectedCategoryId === null && { color: colors.accent },
+              ]}
+            >
+              🏪 All
+            </Text>
+          </TouchableOpacity>
+
+          {categories.map((category) => {
+            const isActive = selectedCategoryId === category.id;
+            return (
+              <TouchableOpacity
+                key={category.id}
+                style={[
+                  styles.categoryChip,
+                  { borderColor: colors.border, backgroundColor: colors.card },
+                  isActive && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+                ]}
+                onPress={() => handleToggleCategory(category.id)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.categoryChipText,
+                    { color: colors.textSecondary },
+                    isActive && { color: colors.accent },
+                  ]}
+                >
+                  {category.emoji} {category.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      ) : null}
 
       {loading ? (
         <View style={styles.loaderWrap}>
@@ -421,6 +511,30 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
+  },
+  categoryChipsWrap: {
+    marginBottom: 14,
+    maxHeight: 44,
+  },
+  categoryChipsScroll: {
+    paddingHorizontal: 24,
+    paddingRight: 24,
+    alignItems: 'center',
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 14,
+    height: 34,
+    marginRight: 8,
+  },
+  categoryChipText: {
+    ...VerandahType.caption,
+    fontSize: 12,
+    lineHeight: 16,
   },
   listContent: {
     paddingHorizontal: 24,

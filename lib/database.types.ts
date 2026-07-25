@@ -46,6 +46,50 @@ export type Database = {
           },
         ]
       }
+      blood_donors: {
+        Row: {
+          blood_group: string
+          community_id: string
+          contact_phone: string
+          created_at: string
+          id: string
+          is_available: boolean
+          note: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blood_group: string
+          community_id: string
+          contact_phone: string
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          note?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blood_group?: string
+          community_id?: string
+          contact_phone?: string
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          note?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blood_donors_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communities: {
         Row: {
           address: string | null
@@ -400,6 +444,56 @@ export type Database = {
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_contacts: {
+        Row: {
+          category: string
+          community_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          phone: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          community_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          phone: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          community_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contacts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
             referencedColumns: ["id"]
           },
         ]
@@ -813,41 +907,78 @@ export type Database = {
           },
         ]
       }
+      mcn_business_categories: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       mcn_listings: {
         Row: {
+          category_id: string | null
           community_id: string
           contact_phone: string | null
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           is_active: boolean
           name: string
           owner_id: string
           updated_at: string
         }
         Insert: {
+          category_id?: string | null
           community_id: string
           contact_phone?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name: string
           owner_id: string
           updated_at?: string
         }
         Update: {
+          category_id?: string | null
           community_id?: string
           contact_phone?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name?: string
           owner_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "mcn_listings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_business_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "mcn_listings_community_id_fkey"
             columns: ["community_id"]
@@ -1023,10 +1154,12 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           is_available: boolean
+          item_type: string
           listing_id: string
           name: string
-          price: number
+          price: number | null
           sort_order: number
           unit: string
         }
@@ -1034,10 +1167,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_available?: boolean
+          item_type?: string
           listing_id: string
           name: string
-          price: number
+          price?: number | null
           sort_order?: number
           unit: string
         }
@@ -1045,10 +1180,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_available?: boolean
+          item_type?: string
           listing_id?: string
           name?: string
-          price?: number
+          price?: number | null
           sort_order?: number
           unit?: string
         }
@@ -1405,7 +1542,8 @@ export type Database = {
           fraud_rules_triggered: Json | null
           fraud_status: string | null
           id: string
-          provider_id: string
+          listing_id: string | null
+          provider_id: string | null
           rating: number
           review_text: string | null
           user_id: string
@@ -1415,7 +1553,8 @@ export type Database = {
           fraud_rules_triggered?: Json | null
           fraud_status?: string | null
           id?: string
-          provider_id: string
+          listing_id?: string | null
+          provider_id?: string | null
           rating: number
           review_text?: string | null
           user_id: string
@@ -1425,12 +1564,20 @@ export type Database = {
           fraud_rules_triggered?: Json | null
           fraud_status?: string | null
           id?: string
-          provider_id?: string
+          listing_id?: string | null
+          provider_id?: string | null
           rating?: number
           review_text?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ratings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_listings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ratings_provider_id_fkey"
             columns: ["provider_id"]
@@ -2282,6 +2429,23 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      platform_delete_service_provider: {
+        Args: { p_provider_id: string }
+        Returns: boolean
+      }
+      platform_get_all_providers: {
+        Args: { p_community_id?: string; p_search?: string }
+        Returns: {
+          avg_rating: number
+          category: string
+          community_id: string
+          community_name: string
+          id: string
+          name: string
+          phone: string
+          rating_count: number
+        }[]
+      }
       platform_get_community_dashboard: {
         Args: { p_community_id: string }
         Returns: {
@@ -2303,6 +2467,26 @@ export type Database = {
           visits_planned: number
         }[]
       }
+      platform_get_community_funds: {
+        Args: { p_community_id: string }
+        Returns: {
+          balance: number
+          collectors: Json
+          contributions: Json
+          created_at: string
+          description: string
+          expense: number
+          id: string
+          income: number
+          is_closed: boolean
+          title: string
+          treasurers: Json
+        }[]
+      }
+      platform_get_provider_details: {
+        Args: { p_provider_id: string }
+        Returns: Json
+      }
       platform_get_providers_by_category: {
         Args: { p_community_id: string }
         Returns: {
@@ -2310,6 +2494,10 @@ export type Database = {
           provider_count: number
           top_providers: Json
         }[]
+      }
+      platform_get_resident_details: {
+        Args: { p_profile_id: string }
+        Returns: Json
       }
       platform_reject_community_request: {
         Args: { p_rejection_reason?: string; p_request_id: string }

@@ -1,11 +1,15 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+
+type McnCategory = { id: string; name: string; emoji: string; sort_order: number };
 
 export default function AddListingScreen() {
   const router = useRouter();
@@ -15,12 +19,48 @@ export default function AddListingScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [categories, setCategories] = useState<McnCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleGoBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(tabs)/network' as any);
+  };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('mcn_business_categories')
+          .select('id, name, emoji, sort_order')
+          .order('sort_order', { ascending: true })
+          .order('name', { ascending: true });
+
+        if (error) throw error;
+        setCategories((data || []) as McnCategory[]);
+      } catch (error) {
+        console.error(error);
+        Toast.show({ type: 'error', text1: 'Failed to load business categories' });
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleSubmit = async () => {
     const trimmedName = name.trim();
     if (!trimmedName) {
       Toast.show({ type: 'error', text1: 'Business name required' });
+      return;
+    }
+
+    if (!selectedCategoryId) {
+      Toast.show({ type: 'error', text1: 'Business category is required' });
       return;
     }
 
@@ -51,12 +91,15 @@ export default function AddListingScreen() {
           name: trimmedName,
           description: description.trim() || null,
           contact_phone: finalPhone,
+          category_id: selectedCategoryId,
+          image_url: imageUrl,
           is_active: true,
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!listing) throw new Error('Listing was not returned after insert');
 
       Toast.show({ type: 'success', text1: 'Business listing created' });
       // Navigate to the manage screen for this listing
@@ -75,8 +118,26 @@ export default function AddListingScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
     >
-      <Stack.Screen options={{ title: 'Add business listing' }} />
+      <Stack.Screen
+        options={{
+          title: 'Add business listing',
+          headerBackVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity onPress={handleGoBack} style={styles.headerBackBtn} hitSlop={8}>
+              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <ImageUploader
+          currentImageUrl={imageUrl}
+          onImageUploaded={setImageUrl}
+          onImageRemoved={() => setImageUrl(null)}
+          subfolder="listings"
+          placeholder="Add cover photo (optional)"
+        />
+
         <View style={styles.field}>
           <Text style={[styles.label, { color: colors.textPrimary }]}>
             Business name <Text style={{ color: colors.danger }}>*</Text>
@@ -104,6 +165,38 @@ export default function AddListingScreen() {
             textAlignVertical="top"
             maxLength={280}
           />
+        </View>
+
+        <View style={styles.field}>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>Business category <Text style={{ color: colors.danger }}>*</Text></Text>
+          <View style={styles.categoryGrid}>
+            {categories.map((category) => {
+              const isSelected = selectedCategoryId === category.id;
+              return (
+                <TouchableOpacity
+                  key={category.id}
+                  style={[
+                    styles.categoryChip,
+                    { borderColor: colors.border, backgroundColor: colors.card },
+                    isSelected && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+                  ]}
+                  onPress={() => setSelectedCategoryId(category.id)}
+                  activeOpacity={0.85}
+                >
+                  <Text
+                    style={[
+                      styles.categoryChipText,
+                      { color: colors.textSecondary },
+                      isSelected && { color: colors.accent },
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {category.emoji} {category.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
         <View style={styles.field}>
@@ -161,6 +254,25 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 100,
   },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  categoryChip: {
+    width: '49%',
+    borderWidth: 1,
+    borderRadius: VerandahRadius.md,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    minHeight: 54,
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  categoryChipText: {
+    ...VerandahType.caption,
+    lineHeight: 18,
+  },
   submitBtn: {
     marginTop: 12,
     height: 52,
@@ -171,5 +283,9 @@ const styles = StyleSheet.create({
   submitText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  headerBackBtn: {
+    marginLeft: 2,
+    padding: 6,
   },
 });

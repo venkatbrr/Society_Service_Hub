@@ -186,6 +186,9 @@ type AuthContextType = {
 | Table | Purpose | Scope |
 |-------|---------|-------|
 | `mcn_posts` | Lightweight social posts for local businesses and borrowing/free items within a community. Includes `kind`, `title`, `description`, `contact_hint`, and `is_available` status. | Community |
+| `mcn_business_categories` | Lookup table for business directory categories (emoji, display name, sort order). Shared across communities for consistent filtering and onboarding. | Global read |
+| `mcn_listings` | Business directory listings owned by residents. Includes `category_id` -> `mcn_business_categories.id` and optional `image_url` for Cloudinary cover photos. | Community |
+| `mcn_products` | Listing offerings. Includes `item_type` (`product` or `service`), optional `image_url` for Cloudinary product photos, and nullable `price` to support price-on-request entries. | Community |
 | `communities` | Community metadata, join code, and funds/block activation flags (`funds_enabled`, `blocks_enabled`) | Community |
 | `profiles` | User profile extension of `auth.users`, including `flat_number` from signup metadata and optional `block_id` when blocks are enabled | Community or self |
 | `community_requests` | Reviewed community creation requests | Requester or platform |
@@ -207,6 +210,8 @@ type AuthContextType = {
 | `funds_access_revocations` | Platform-admin audit trail for funds access revocation | Platform admin |
 | `notifications` | User notification feed | User |
 | `user_services` | Personal service reminders | User |
+| `blood_donors` | Opt-in blood donor profiles with availability status | Community |
+| `emergency_contacts` | Emergency number directory (community-scoped + global defaults) | Community + global |
 | `community_partnerships` | Pairwise federation relationships across communities | Cross-community (backend only) |
 | `community_groups` | Named clusters of communities for federation scopes | Cross-community (backend only) |
 | `community_group_members` | Community memberships inside federation groups | Cross-community (backend only) |
@@ -278,6 +283,8 @@ The marketplace tables `resident_businesses`, `business_offerings`, and `busines
 | `on_auth_user_created` | `auth.users` | INSERT | Create profile row |
 | `on_rating_change` | `ratings` | INSERT/UPDATE/DELETE | Recompute provider rating aggregates |
 | `provider_personal_notes_updated_at_trigger` | `provider_personal_notes` | BEFORE UPDATE | Refresh `updated_at` on note edits |
+| `blood_donors_updated_at_trigger` | `blood_donors` | BEFORE UPDATE | Refresh `updated_at` on donor profile edits |
+| `emergency_contacts_updated_at_trigger` | `emergency_contacts` | BEFORE UPDATE | Refresh `updated_at` on emergency contact edits |
 | `user_services_compute_fields_trigger` | `user_services` | BEFORE INSERT/UPDATE | Recompute `next_due_on` and clear `notified_at` when relevant |
 | `fund_role_guard` | `fund_roles` | INSERT/UPDATE/DELETE | Enforce funds-enabled gate, treasurer cap, global collector cap, and per-block collector cap |
 | `event_transaction_guard` | `event_transactions` | INSERT/UPDATE | Enforce funds-enabled gate and block-scope checks for block in-charges |
@@ -310,7 +317,10 @@ All active tables have RLS enabled.
 | `funds_access_revocations` | Platform-admin reads only; writes are RPC-only |
 | `notifications` | User-owned read and mark-read updates |
 | `user_services` | User-owned only, independent of community filters |
+| `blood_donors` | Community-scoped reads via `get_user_community_id()`; residents can insert/update/delete only their own donor row |
+| `emergency_contacts` | Community + global reads; writes restricted to community leads for their own community and platform admins (including global rows) |
 | `mcn_listings` | Community-scoped reads; owner or lead writes |
+| `mcn_business_categories` | Authenticated read-only lookup |
 | `mcn_products` | Community-scoped reads; owner manages writes |
 | `mcn_orders` | Buyer or owner reads; buyer inserts/cancels; owner updates status |
 | `mcn_order_items` | Buyer or owner reads; buyer inserts |
@@ -386,6 +396,7 @@ app/_layout.tsx
   -> /funds/*
   -> /funds-access/request
   -> /services/*
+  -> /sos/*
   -> /admin-redirect
 ```
 
@@ -398,7 +409,7 @@ app/_layout.tsx
 
 Tab icons are currently rendered with `APP_EMOJIS` inside `Text` elements.
 
-The community tab consolidates the funds summary, residents-directory shortcut, and community information card. The earlier pulse line is intentionally removed from the tab UI. Fund detail and create/transaction flows remain in `/funds/*` top-level routes.
+The community tab consolidates the funds summary, residents-directory shortcut, SOS shortcut, and community information card. The earlier pulse line is intentionally removed from the tab UI. Fund detail and create/transaction flows remain in `/funds/*` top-level routes.
 
 ### Platform Admin Console (Web App Routing)
 

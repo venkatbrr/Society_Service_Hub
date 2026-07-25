@@ -8,7 +8,7 @@ This document describes the current user-facing product surface, the screens inv
 
 ## App Summary
 
-Society Service Hub currently ships four main experiences: trusted provider discovery, community service-visit coordination, activation-gated community funds, and personal service reminders. Residents use the main tabs for everyday workflows, community leads manage local operations such as funds and optional block scoping, and platform admins review community requests plus funds-access requests.
+Society Service Hub currently ships five main experiences: trusted provider discovery, community service-visit coordination, activation-gated community funds, personal service reminders, and a community SOS surface (emergency numbers + blood donors). Residents use the main tabs for everyday workflows, community leads manage local operations such as funds, optional block scoping, and emergency directories, and platform admins review community requests plus funds-access requests.
 
 The web app is configured as a fully installable Progressive Web App (PWA) with offline capabilities, utilizing an optimized service worker cache registration and viewport height styling to mimic a native app experience on mobile browsers.
 
@@ -107,11 +107,22 @@ The app surface is narrower than the backend schema by design. Cross-community f
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Consolidated building-level view: funds section, residents shortcut, and community info in one tab |
+| **Purpose** | Consolidated building-level view: funds section, residents and SOS shortcuts, and community info in one tab |
 | **Tables / RPCs** | Reads: `communities`, `events`, `event_transactions`, `fund_roles`, `profiles`, `funds_access_requests`; RPCs: `get_my_community_funds_overview()`, `withdraw_funds_access_request(...)` |
-| **Business rules** | Section order is fixed: funds, residents tile, community info. Top hero shows only the community name. The pulse/"Going around the building" section is intentionally removed from this tab. Funds are activation-gated: when `funds_enabled = false`, the section renders request/status cards (request CTA, pending, rejected retry, and previously-active note) instead of fund tiles. When `funds_enabled = true`, the section renders one merged Community funds card that includes fund health summary and the "Open community funds" action to route to the dedicated funds page. Community info includes a dedicated community-code tile with an Invite neighbors share action (same copy pattern as Home tab invite). Funds request CTA entry is only in this section. |
-| **Navigation** | To `/funds`, `/funds/[id]`, `/funds/add`, and `/residents?returnTo=community` |
+| **Business rules** | Section order is fixed: funds, residents tile, SOS tile, community info. Top hero shows only the community name. The pulse/"Going around the building" section is intentionally removed from this tab. Funds are activation-gated: when `funds_enabled = false`, the section renders request/status cards (request CTA, pending, rejected retry, and previously-active note) instead of fund tiles. When `funds_enabled = true`, the section renders one merged Community funds card that includes fund health summary and the "Open community funds" action to route to the dedicated funds page. Community info includes a dedicated community-code tile with an Invite neighbors share action (same copy pattern as Home tab invite). Funds request CTA entry is only in this section. |
+| **Navigation** | To `/funds`, `/funds/[id]`, `/funds/add`, `/residents?returnTo=community`, and `/sos` |
 | **Roles** | All residents can view; create-fund action remains role-gated exactly as before. |
+
+### SOS and Emergency (`app/sos/index.tsx`, `app/sos/donor.tsx`, `app/sos/manage-contacts.tsx`)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Fast emergency surface for one-tap calling: emergency directory + blood donor registry |
+| **Tables** | Reads/writes: `blood_donors`, `emergency_contacts`, `profiles` |
+| **Business rules** | Blood donor listing is opt-in only. Residents can register one donor profile per community with blood group, phone, availability toggle, and short note, then edit or delete it any time. Donor listing defaults to only available donors with a blood-group filter and optional show-all toggle. Display names are resolved from `profiles.full_name` at read time so names stay current. Emergency numbers combine global defaults (`community_id IS NULL`) with community-specific rows, grouped by category and sorted by `sort_order` then `name`. Every dial action uses a call-confirm dialog before opening the phone dialer. |
+| **Navigation** | Entry shortcut from Community tab to `/sos`; donor editor at `/sos/donor`; lead/admin management at `/sos/manage-contacts` |
+| **Roles** | All residents can view emergency numbers and donors plus maintain their own donor profile. Only community leads or platform admins can access `/sos/manage-contacts`. Platform admins can also manage global emergency rows. |
+| **Design system** | Uses Verandah tokens, `BaseCard`, `Avatar`, `EmptyState`, and `Ionicons`; no gradients/shadows. |
 
 ## Funds - Activation
 
@@ -392,10 +403,10 @@ Cross-community backend foundations are live in the database: partnerships, grou
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | A lightweight social tool for residents to share local businesses or offer items to borrow/free. |
-| **Tables** | Reads: `mcn_posts`, `profiles`; writes: `mcn_posts` |
-| **Business rules** | Two segments: `business` and `borrow`. Posts are strictly community-scoped. Search is debounced by 300ms. Owners and Community Leads can delete posts. Owners can mark their posts as unavailable. |
-| **Navigation** | To `app/network/add.tsx` |
+| **Purpose** | A local business directory plus social sharing surface for borrow/free needs. |
+| **Tables** | Reads: `mcn_listings`, `mcn_products`, `mcn_business_categories`, `ratings`, `profiles`; writes: `mcn_posts` moderation actions |
+| **Business rules** | Business listings are community-scoped and searchable with a 300ms debounce. A horizontal category chip bar (`All` + lookup categories) filters listings by `category_id`; tapping the active chip toggles back to `All`. Listing cards show business summary only (image, owner, category badge); offerings and prices are shown only after opening listing details. Owners and Community Leads can remove listings as before. |
+| **Navigation** | To `app/network/listing-add.tsx`, `app/network/listing/[id].tsx`, and owner manage routes |
 | **Roles** | All residents can view and add posts. Community leads can moderate (delete) any post. |
 
 ### Add Post (`app/network/add.tsx`)
@@ -422,8 +433,8 @@ Cross-community backend foundations are live in the database: partnerships, grou
 | Aspect | Details |
 |--------|---------|
 | **Purpose** | Create a new local business listing. |
-| **Tables** | Writes: `mcn_listings` |
-| **Business rules** | Business name is required (max 80 chars). Description is optional (max 280 chars). Contact phone is optional and is normalized to 10 digits. |
+| **Tables** | Reads: `mcn_business_categories`; writes: `mcn_listings` |
+| **Business rules** | Business name is required (max 80 chars). Business category is required and selected from the `mcn_business_categories` lookup table. Description is optional (max 280 chars). Contact phone is required and normalized to a 10-digit number. |
 | **Navigation** | From `app/(tabs)/network.tsx` (business segment FAB). Navigates to manage screen on success. |
 | **Roles** | All residents can create listings. |
 
@@ -431,9 +442,10 @@ Cross-community backend foundations are live in the database: partnerships, grou
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | View listing products, contact details, and place or update orders. |
-| **Tables** | Reads: `mcn_listings`, `mcn_products`, `mcn_orders`, `mcn_order_items`, `profiles` |
+| **Purpose** | View business profile details, offerings, contact details, and place or update orders. |
+| **Tables** | Reads: `mcn_listings`, `mcn_business_categories`, `mcn_products`, `mcn_orders`, `mcn_order_items`, `profiles` |
 | **Business rules** | Quantity increments are: `0.5` for kg/litre; `1` for piece/dozen/box/pack. Min quantity is 0. Cart displays line items and subtotals. Note is optional. Action button places a new order or updates an existing pending order (removes old items and inserts new). Direct Call and WhatsApp communication links. |
+| **Offerings UI** | The screen shows a category badge (emoji + name) and splits offerings by `item_type` into `Products` and `Services` sections. Each row shows name, optional description, availability state, and either `₹ amount / unit` or `Price on request` when `price` is `NULL`. |
 | **Navigation** | From listing card click. |
 | **Roles** | Any resident (except listing owner) can place orders. |
 
@@ -441,9 +453,9 @@ Cross-community backend foundations are live in the database: partnerships, grou
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Owner panel to toggle listing visibility, edit listing details, and manage products. |
-| **Tables** | Reads/Writes: `mcn_listings`, `mcn_products`, `mcn_orders` |
-| **Business rules** | Owner can toggle listing active/paused. Products can be edited, toggled available/paused, or deleted. Deletion is restricted if the product has existing order items. Includes inline modal forms for business details and product creation/editing. |
+| **Purpose** | Owner panel to toggle listing visibility, edit listing details, and manage products/services. |
+| **Tables** | Reads/Writes: `mcn_listings`, `mcn_business_categories`, `mcn_products`, `mcn_orders` |
+| **Business rules** | Owner can toggle listing active/paused. Listing details include editable business category. Offering modal supports `item_type` (`product` or `service`) and optional price. When price is blank, `NULL` is stored and shown as `Price on request` in UI. Deletion is restricted if the item has existing order-item references. |
 | **Navigation** | From owner listing card "Manage" link. |
 | **Roles** | Only the listing owner. |
 
@@ -501,9 +513,10 @@ The resident marketplace is not part of the current app. The business screens we
 | Delete own MCN post | Yes | Yes | - | - |
 | Delete any MCN post | No | Yes | - | - |
 | View/Search business listings | Yes | Yes | - | - |
-| Create business listing | Yes | Yes | - | - |
+| Filter listings by business category | Yes | Yes | - | - |
+| Create business listing (with category & cover photo) | Yes | Yes | - | - |
 | Edit/Toggle own listing active | Yes (own only) | Yes (own only) | - | - |
-| Add/Edit/Delete listing products | Yes (own only) | Yes (own only) | - | - |
+| Add/Edit/Delete listing products & services (optional price, item type, photo) | Yes (own only) | Yes (own only) | - | - |
 | View orders received | Yes (own only) | Yes (own only) | - | - |
 | Update order status (fulfill/cancel) | Yes (own only) | Yes (own only) | - | - |
 | Place/Update order | Yes (not own) | Yes (not own) | - | - |
@@ -519,6 +532,7 @@ The resident marketplace is not part of the current app. The business screens we
 |-------------|---------|-----|
 | Google Sign-In | Login | `@react-native-google-signin/google-signin` with Supabase token exchange |
 | Supabase Auth | Login, signup, password reset | Email and password auth with persisted session |
+| Cloudinary | Business cover photos & product images | Direct unsigned HTTP upload to Cloudinary API via `expo-image-picker` |
 | Supabase Realtime | Notifications | `postgres_changes` INSERT subscription on `notifications` |
 | Expo Notifications | Notifications | Runtime permission request, Android channel setup, local alerts |
 | Phone dialer | Provider and visit detail | `Linking.openURL('tel:...')` |

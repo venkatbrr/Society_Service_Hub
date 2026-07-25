@@ -211,7 +211,7 @@ export default function CommunityScreen() {
           <Text style={styles.heroTitle}>{communityDetails?.name ?? 'Your community'}</Text>
         </BaseCard>
 
-        <View style={styles.section}>
+        <View style={styles.fundsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Community funds</Text>
             {canCreateFund ? (
@@ -301,7 +301,7 @@ export default function CommunityScreen() {
 
 
         {fundsEnabled && (appRole === 'president' || appRole === 'vice_president') ? (
-          <View style={styles.section}>
+          <View style={styles.compactSection}>
             <TouchableOpacity onPress={() => router.push('/community/blocks')} activeOpacity={0.85}>
               <BaseCard padding={16} style={styles.actionCard}>
                 <View style={styles.actionCardRow}>
@@ -319,7 +319,7 @@ export default function CommunityScreen() {
           </View>
         ) : null}
 
-        <View style={styles.section}>
+        <View style={styles.compactSection}>
           <TouchableOpacity
             onPress={() => router.push({ pathname: '/residents', params: { returnTo: 'community' } } as any)}
             activeOpacity={0.85}
@@ -332,6 +332,26 @@ export default function CommunityScreen() {
                 <View style={styles.actionCardTextWrap}>
                   <Text style={styles.cardTitle}>Residents directory</Text>
                   <Text style={styles.cardCopy}>See who lives in your community.</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
+              </View>
+            </BaseCard>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.compactSection}>
+          <TouchableOpacity
+            onPress={() => router.push('/sos' as any)}
+            activeOpacity={0.85}
+          >
+            <BaseCard padding={16} style={styles.sosActionCard}>
+              <View style={styles.actionCardRow}>
+                <View style={[styles.actionCardIconWrap, styles.sosIconWrap]}>
+                  <Ionicons name="alert-circle-outline" size={18} color={Verandah.caution} />
+                </View>
+                <View style={styles.actionCardTextWrap}>
+                  <Text style={styles.cardTitle}>SOS and emergency</Text>
+                  <Text style={styles.cardCopy}>Call emergency numbers or find available blood donors.</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
               </View>
@@ -394,10 +414,16 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   section: {
-    marginBottom: 14,
+    marginBottom: 0,
+  },
+  fundsSection: {
+    marginBottom: 0,
+  },
+  compactSection: {
+    marginBottom: 0,
   },
   heroCard: {
-    marginBottom: 14,
+    marginBottom: 8,
   },
   heroTitle: {
     ...VerandahType.display,
@@ -447,7 +473,6 @@ const styles = StyleSheet.create({
     color: Verandah.primary,
   },
   fundsSummaryCard: {
-    marginBottom: 10,
   },
   fundsSummaryTopRow: {
     flexDirection: 'row',
@@ -532,7 +557,9 @@ const styles = StyleSheet.create({
     color: Verandah.textSecondary,
   },
   actionCard: {
-    marginBottom: 0,
+  },
+  sosActionCard: {
+    borderColor: Verandah.caution,
   },
   actionCardRow: {
     flexDirection: 'row',
@@ -548,6 +575,10 @@ const styles = StyleSheet.create({
     borderColor: Verandah.border,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  sosIconWrap: {
+    backgroundColor: Verandah.cautionSoft,
+    borderColor: Verandah.caution,
   },
   actionCardTextWrap: {
     flex: 1,

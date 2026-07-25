@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Verandah } from '../constants/Colors';
+import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
-import { Rupees } from './Rupees';
-import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 
 export interface McnListingItem {
   id: string;
@@ -16,14 +16,17 @@ export interface McnListingItem {
   owner_id: string;
   created_at: string;
   profiles: { full_name: string; flat_number: string | null } | null;
+  category: { name: string; emoji: string } | null;
   mcn_products: Array<{
     id: string;
     name: string;
     unit: string;
-    price: number;
+    price: number | null;
     is_available: boolean;
+    item_type?: 'product' | 'service';
   }>;
   ratings?: Array<{ rating: number }>;
+  image_url?: string | null;
 }
 
 interface McnListingCardProps {
@@ -45,13 +48,21 @@ export const McnListingCard = React.memo(({
 }: McnListingCardProps) => {
   const [showMenu, setShowMenu] = useState(false);
   const isOwner = listing.owner_id === currentUserId;
-  const availableProducts = (listing.mcn_products || []).filter(p => p.is_available);
   const ratings = listing.ratings || [];
   const ratingCount = ratings.length;
   const avgRating = ratingCount > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
 
   return (
-    <BaseCard style={styles.card} padding={16} onPress={() => onPress(listing.id)}>
+    <BaseCard style={styles.card} padding={listing.image_url ? 0 : 16} onPress={() => onPress(listing.id)}>
+      {listing.image_url ? (
+        <Image
+          source={{ uri: listing.image_url }}
+          style={styles.coverImage}
+          contentFit="cover"
+          transition={200}
+        />
+      ) : null}
+      <View style={listing.image_url ? styles.cardContentWithImage : undefined}>
       <View style={styles.header}>
         <Avatar name={listing.profiles?.full_name || 'Resident'} size={40} />
         <View style={styles.headerText}>
@@ -73,8 +84,15 @@ export const McnListingCard = React.memo(({
               </View>
             )}
           </View>
+          {listing.category ? (
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryBadgeText}>
+                {listing.category.emoji} {listing.category.name}
+              </Text>
+            </View>
+          ) : null}
         </View>
-        {isCommunityLead && (
+        {(isOwner || isCommunityLead) && (
           <TouchableOpacity onPress={(e) => { e.stopPropagation(); setShowMenu(true); }} style={styles.menuBtn}>
             <Ionicons name="ellipsis-vertical" size={20} color={Verandah.textSecondary} />
           </TouchableOpacity>
@@ -86,28 +104,6 @@ export const McnListingCard = React.memo(({
           {listing.description}
         </Text>
       ) : null}
-
-      <View style={styles.productsContainer}>
-        {availableProducts.length > 0 ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsScroll}
-          >
-            {availableProducts.map((product) => (
-              <View key={product.id} style={styles.chip}>
-                <Text style={styles.chipText}>{product.name} · </Text>
-                <Rupees amount={product.price} size="sm" />
-                <Text style={styles.chipText}>/{product.unit}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        ) : (
-          <Text style={[styles.noItemsText, { color: Verandah.textMuted }]}>
-            No items available right now
-          </Text>
-        )}
-      </View>
 
       <View style={styles.footer}>
         {isOwner ? (
@@ -125,6 +121,8 @@ export const McnListingCard = React.memo(({
             <Text style={[styles.actionBtnText, { color: Verandah.accent }]}>View details →</Text>
           </TouchableOpacity>
         )}
+      </View>
+
       </View>
 
       <Modal visible={showMenu} transparent animationType="fade" onRequestClose={() => setShowMenu(false)}>
@@ -154,6 +152,14 @@ const styles = StyleSheet.create({
     borderColor: Verandah.border,
     shadowColor: 'transparent',
     elevation: 0,
+    overflow: 'hidden',
+  },
+  coverImage: {
+    width: '100%',
+    height: 120,
+  },
+  cardContentWithImage: {
+    padding: 16,
   },
   header: {
     flexDirection: 'row',
@@ -176,33 +182,22 @@ const styles = StyleSheet.create({
     padding: 4,
     marginRight: -4,
   },
+  categoryBadge: {
+    marginTop: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: Verandah.cardMuted,
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  categoryBadgeText: {
+    ...VerandahType.micro,
+    color: Verandah.textSecondary,
+  },
   description: {
     ...VerandahType.body,
-    marginBottom: 16,
+    marginBottom: 12,
     lineHeight: 20,
-  },
-  productsContainer: {
-    marginBottom: 16,
-  },
-  chipsScroll: {
-    gap: VerandahSpace.sm,
-    paddingRight: 16,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Verandah.accentSoft,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: VerandahRadius.pill,
-  },
-  chipText: {
-    ...VerandahType.caption,
-    color: Verandah.accent,
-  },
-  noItemsText: {
-    ...VerandahType.caption,
-    fontStyle: 'italic',
   },
   footer: {
     flexDirection: 'row',

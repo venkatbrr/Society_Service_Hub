@@ -1,11 +1,13 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState, useCallback } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { ImageUploader } from '../../../../components/ImageUploader';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../../../../constants/Verandah';
+import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
 import { useAuth } from '../../../../context/AuthContext';
 import { supabase } from '../../../../lib/supabase';
 
@@ -15,16 +17,28 @@ interface Product {
   name: string;
   description: string | null;
   unit: 'kg' | 'piece' | 'litre' | 'dozen' | 'box' | 'pack';
-  price: number;
+  price: number | null;
+  item_type: 'product' | 'service';
+  image_url: string | null;
   is_available: boolean;
   sort_order: number;
 }
+
+type McnCategory = {
+  id: string;
+  name: string;
+  emoji: string;
+  sort_order: number;
+};
 
 interface Listing {
   id: string;
   name: string;
   description: string | null;
   contact_phone: string | null;
+  category_id: string | null;
+  category: { name: string; emoji: string } | null;
+  image_url: string | null;
   is_active: boolean;
   owner_id: string;
 }
@@ -37,6 +51,7 @@ export default function ManageListingScreen() {
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<McnCategory[]>([]);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -45,6 +60,8 @@ export default function ManageListingScreen() {
   const [editListingName, setEditListingName] = useState('');
   const [editListingDesc, setEditListingDesc] = useState('');
   const [editListingPhone, setEditListingPhone] = useState('');
+  const [editListingCategoryId, setEditListingCategoryId] = useState<string | null>(null);
+  const [editListingImageUrl, setEditListingImageUrl] = useState<string | null>(null);
   const [savingListing, setSavingListing] = useState(false);
 
   // Product editor state
@@ -53,8 +70,18 @@ export default function ManageListingScreen() {
   const [prodName, setProdName] = useState('');
   const [prodUnit, setProdUnit] = useState<'kg' | 'piece' | 'litre' | 'dozen' | 'box' | 'pack'>('piece');
   const [prodPrice, setProdPrice] = useState('');
+  const [prodItemType, setProdItemType] = useState<'product' | 'service'>('product');
   const [prodDesc, setProdDesc] = useState('');
+  const [prodImageUrl, setProdImageUrl] = useState<string | null>(null);
   const [savingProduct, setSavingProduct] = useState(false);
+
+  const handleGoBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(tabs)/network' as any);
+  };
 
   const fetchData = useCallback(async () => {
     if (!listingId || !user?.id) return;
@@ -62,11 +89,15 @@ export default function ManageListingScreen() {
       // 1. Fetch listing details
       const { data: listingData, error: listingError } = await supabase
         .from('mcn_listings')
-        .select('*')
+        .select(`
+          id, name, description, contact_phone, category_id, image_url, is_active, owner_id,
+          category:mcn_business_categories(name, emoji)
+        `)
         .eq('id', listingId)
-        .single();
+        .maybeSingle();
 
       if (listingError) throw listingError;
+      if (!listingData) throw new Error('Listing not found');
       
       // Security check: ensure current user is owner
       if (listingData.owner_id !== user.id) {
@@ -75,10 +106,15 @@ export default function ManageListingScreen() {
         return;
       }
 
-      setListing(listingData as Listing);
+      const categoryRel = Array.isArray((listingData as any).category)
+        ? (listingData as any).category[0] || null
+        : (listingData as any).category || null;
+      setListing({ ...(listingData as any), category: categoryRel } as Listing);
       setEditListingName(listingData.name);
       setEditListingDesc(listingData.description || '');
       setEditListingPhone(listingData.contact_phone || '');
+      setEditListingCategoryId(listingData.category_id || null);
+      setEditListingImageUrl((listingData as any).image_url || null);
 
       // 2. Fetch products
       const { data: productsData, error: productsError } = await supabase
@@ -91,7 +127,17 @@ export default function ManageListingScreen() {
       if (productsError) throw productsError;
       setProducts(productsData as Product[]);
 
-      // 3. Fetch count of pending orders
+      // 3. Fetch categories for picker
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('mcn_business_categories')
+        .select('id, name, emoji, sort_order')
+        .order('sort_order', { ascending: true })
+        .order('name', { ascending: true });
+
+      if (categoriesError) throw categoriesError;
+      setCategories((categoriesData || []) as McnCategory[]);
+
+      // 4. Fetch count of pending orders
       const { count, error: countError } = await supabase
         .from('mcn_orders')
         .select('*', { count: 'exact', head: true })
@@ -146,11 +192,11 @@ export default function ManageListingScreen() {
       );
       Toast.show({
         type: 'success',
-        text1: value ? 'Service marked available' : 'Service marked unavailable',
+        text1: value ? 'Item marked available' : 'Item marked unavailable',
       });
     } catch (error) {
       console.error(error);
-      Toast.show({ type: 'error', text1: 'Failed to update service status' });
+      Toast.show({ type: 'error', text1: 'Failed to update item status' });
     }
   };
 
@@ -159,6 +205,10 @@ export default function ManageListingScreen() {
     const trimmedName = editListingName.trim();
     if (!trimmedName) {
       Toast.show({ type: 'error', text1: 'Business name is required' });
+      return;
+    }
+    if (!editListingCategoryId) {
+      Toast.show({ type: 'error', text1: 'Business category is required' });
       return;
     }
 
@@ -182,6 +232,8 @@ export default function ManageListingScreen() {
           name: trimmedName,
           description: editListingDesc.trim() || null,
           contact_phone: finalPhone,
+          category_id: editListingCategoryId,
+          image_url: editListingImageUrl,
         })
         .eq('id', listing.id);
 
@@ -203,26 +255,31 @@ export default function ManageListingScreen() {
     if (product) {
       setProdName(product.name);
       setProdUnit(product.unit);
-      setProdPrice(String(product.price));
+      setProdPrice(product.price == null ? '' : String(product.price));
+      setProdItemType(product.item_type || 'product');
       setProdDesc(product.description || '');
+      setProdImageUrl(product.image_url || null);
     } else {
       setProdName('');
       setProdUnit('piece');
       setProdPrice('');
+      setProdItemType('product');
       setProdDesc('');
+      setProdImageUrl(null);
     }
     setShowProductModal(true);
   };
 
   const handleSaveProduct = async () => {
     const trimmedName = prodName.trim();
-    const priceNum = parseFloat(prodPrice);
+    const trimmedPrice = prodPrice.trim();
+    const parsedPrice = trimmedPrice ? parseFloat(trimmedPrice) : null;
 
     if (!trimmedName) {
-      Toast.show({ type: 'error', text1: 'Service name is required' });
+      Toast.show({ type: 'error', text1: 'Item name is required' });
       return;
     }
-    if (isNaN(priceNum) || priceNum < 0) {
+    if (trimmedPrice && (parsedPrice == null || Number.isNaN(parsedPrice) || parsedPrice < 0)) {
       Toast.show({ type: 'error', text1: 'Enter a valid price >= 0' });
       return;
     }
@@ -236,15 +293,17 @@ export default function ManageListingScreen() {
           .update({
             name: trimmedName,
             unit: prodUnit,
-            price: priceNum,
+            price: parsedPrice,
+            item_type: prodItemType,
             description: prodDesc.trim() || null,
+            image_url: prodImageUrl,
           })
           .eq('id', editingProduct.id);
 
         if (error) throw error;
-        Toast.show({ type: 'success', text1: 'Service updated' });
+        Toast.show({ type: 'success', text1: 'Item updated' });
       } else {
-        // Add service
+        // Add item
         const nextSortOrder = products.length > 0 ? Math.max(...products.map(p => p.sort_order)) + 1 : 0;
         const { error } = await supabase
           .from('mcn_products')
@@ -252,21 +311,23 @@ export default function ManageListingScreen() {
             listing_id: listingId,
             name: trimmedName,
             unit: prodUnit,
-            price: priceNum,
+            price: parsedPrice,
+            item_type: prodItemType,
             description: prodDesc.trim() || null,
+            image_url: prodImageUrl,
             is_available: true,
             sort_order: nextSortOrder,
           });
 
         if (error) throw error;
-        Toast.show({ type: 'success', text1: 'Service added' });
+        Toast.show({ type: 'success', text1: 'Item added' });
       }
 
       setShowProductModal(false);
       fetchData();
     } catch (error) {
       console.error(error);
-      Toast.show({ type: 'error', text1: 'Failed to save service' });
+      Toast.show({ type: 'error', text1: 'Failed to save item' });
     } finally {
       setSavingProduct(false);
     }
@@ -274,8 +335,8 @@ export default function ManageListingScreen() {
 
   const handleDeleteProduct = (productId: string) => {
     Alert.alert(
-      'Delete service',
-      'Are you sure you want to delete this service?',
+      'Delete item',
+      'Are you sure you want to delete this item?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -293,19 +354,49 @@ export default function ManageListingScreen() {
                 if (error.code === '23503') {
                   Toast.show({
                     type: 'error',
-                    text1: 'Cannot delete service',
-                    text2: 'This service has existing references and cannot be deleted.',
+                    text1: 'Cannot delete item',
+                    text2: 'This item has existing references and cannot be deleted.',
                   });
                 } else {
                   throw error;
                 }
               } else {
-                Toast.show({ type: 'success', text1: 'Service deleted' });
+                Toast.show({ type: 'success', text1: 'Item deleted' });
                 fetchData();
               }
             } catch (error: any) {
               console.error(error);
-              Toast.show({ type: 'error', text1: 'Failed to delete service' });
+              Toast.show({ type: 'error', text1: 'Failed to delete item' });
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteListing = () => {
+    if (!listing) return;
+    Alert.alert(
+      'Delete business listing',
+      'Are you sure you want to delete this business listing? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error } = await supabase
+                .from('mcn_listings')
+                .delete()
+                .eq('id', listing.id);
+
+              if (error) throw error;
+              Toast.show({ type: 'success', text1: 'Listing deleted' });
+              router.replace('/(tabs)/network');
+            } catch (error: any) {
+              console.error(error);
+              Toast.show({ type: 'error', text1: 'Failed to delete listing' });
             }
           },
         },
@@ -334,6 +425,12 @@ export default function ManageListingScreen() {
       <Stack.Screen
         options={{
           title: 'Manage listing',
+          headerBackVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity onPress={handleGoBack} style={styles.headerBackBtn} hitSlop={8}>
+              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          ),
           headerRight: () => (
             <TouchableOpacity onPress={() => setShowListingModal(true)} style={styles.headerAction}>
               <Text style={[styles.headerActionText, { color: colors.accent }]}>Edit details</Text>
@@ -345,7 +442,22 @@ export default function ManageListingScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Read-only listing Summary */}
         <View style={[styles.card, { borderColor: colors.border }]}>
+          {listing.image_url ? (
+            <Image
+              source={{ uri: listing.image_url }}
+              style={styles.coverImagePreview}
+              contentFit="cover"
+              transition={200}
+            />
+          ) : null}
           <Text style={[styles.listingName, { color: colors.textPrimary }]}>{listing.name}</Text>
+          {listing.category ? (
+            <View style={styles.categoryBadge}>
+              <Text style={[styles.categoryBadgeText, { color: colors.textSecondary }]}>
+                {listing.category.emoji} {listing.category.name}
+              </Text>
+            </View>
+          ) : null}
           {listing.description ? (
             <Text style={[styles.listingDesc, { color: colors.textSecondary }]}>{listing.description}</Text>
           ) : null}
@@ -377,13 +489,13 @@ export default function ManageListingScreen() {
 
         {/* Services Section */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Services</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Products & services</Text>
           <TouchableOpacity
             style={[styles.addProductBtn, { borderColor: colors.border }]}
             onPress={() => handleOpenProductModal(null)}
           >
             <Ionicons name="add" size={16} color={colors.primary} />
-            <Text style={[styles.addProductText, { color: colors.primary }]}>Add service</Text>
+            <Text style={[styles.addProductText, { color: colors.primary }]}>Add item</Text>
           </TouchableOpacity>
         </View>
 
@@ -391,17 +503,38 @@ export default function ManageListingScreen() {
           {products.length === 0 ? (
             <View style={styles.emptyProducts}>
               <Text style={[styles.emptyProductsText, { color: colors.textMuted }]}>
-                No services added yet. Add services you offer with their prices.
+                No items added yet. Add products or services for your business.
               </Text>
             </View>
           ) : (
             products.map((product) => (
               <View key={product.id} style={[styles.productRow, { borderColor: colors.border }]}>
+                {product.image_url ? (
+                  <Image
+                    source={{ uri: product.image_url }}
+                    style={styles.productThumb}
+                    contentFit="cover"
+                    transition={200}
+                  />
+                ) : null}
                 <View style={styles.productMain}>
                   <Text style={[styles.productName, { color: colors.textPrimary }]}>{product.name}</Text>
+                  <View style={styles.productMetaRow}>
+                    <View style={[styles.itemTypeBadge, { borderColor: colors.border }]}> 
+                      <Text style={[styles.itemTypeBadgeText, { color: colors.textSecondary }]}>
+                        {product.item_type === 'service' ? 'Service' : 'Product'}
+                      </Text>
+                    </View>
+                  </View>
                   <View style={styles.priceRow}>
-                    <Rupees amount={Number(product.price)} size="sm" />
-                    <Text style={{ color: colors.textTertiary }}> / {product.unit}</Text>
+                    {product.price == null ? (
+                      <Text style={[styles.priceOnRequestText, { color: colors.textTertiary }]}>Price on request</Text>
+                    ) : (
+                      <>
+                        <Rupees amount={Number(product.price)} size="sm" />
+                        <Text style={{ color: colors.textTertiary }}> / {product.unit}</Text>
+                      </>
+                    )}
                   </View>
                   {product.description ? (
                     <Text style={[styles.productDescText, { color: colors.textSecondary }]} numberOfLines={1}>
@@ -440,6 +573,17 @@ export default function ManageListingScreen() {
             ))
           )}
         </View>
+
+        <View style={styles.deleteListingWrap}>
+          <TouchableOpacity
+            style={[styles.deleteListingBtn, { borderColor: colors.dangerSoft, backgroundColor: colors.dangerSoft }]}
+            onPress={handleDeleteListing}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="trash-outline" size={18} color={colors.danger} />
+            <Text style={[styles.deleteListingBtnText, { color: colors.danger }]}>Delete business listing</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* MODAL 1: Listing Details Editor */}
@@ -449,7 +593,16 @@ export default function ManageListingScreen() {
             style={[styles.modalCard, { backgroundColor: colors.card }]}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
+            <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Edit business details</Text>
+
+            <ImageUploader
+              currentImageUrl={editListingImageUrl}
+              onImageUploaded={setEditListingImageUrl}
+              onImageRemoved={() => setEditListingImageUrl(null)}
+              subfolder="listings"
+              placeholder="Add cover photo (optional)"
+            />
 
             <View style={styles.field}>
               <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Business name</Text>
@@ -472,6 +625,38 @@ export default function ManageListingScreen() {
                 textAlignVertical="top"
                 maxLength={280}
               />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Business category <Text style={{ color: colors.danger }}>*</Text></Text>
+              <View style={styles.categoryGrid}>
+                {categories.map((category) => {
+                  const isSelected = editListingCategoryId === category.id;
+                  return (
+                    <TouchableOpacity
+                      key={category.id}
+                      style={[
+                        styles.categoryChip,
+                        { borderColor: colors.border, backgroundColor: colors.surface },
+                        isSelected && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+                      ]}
+                      onPress={() => setEditListingCategoryId(category.id)}
+                      activeOpacity={0.85}
+                    >
+                      <Text
+                        style={[
+                          styles.categoryChipText,
+                          { color: colors.textSecondary },
+                          isSelected && { color: colors.accent },
+                        ]}
+                        numberOfLines={2}
+                      >
+                        {category.emoji} {category.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
 
             <View style={styles.field}>
@@ -507,6 +692,7 @@ export default function ManageListingScreen() {
                 )}
               </TouchableOpacity>
             </View>
+            </ScrollView>
           </KeyboardAvoidingView>
         </View>
       </Modal>
@@ -519,11 +705,51 @@ export default function ManageListingScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-              {editingProduct ? 'Edit service' : 'Add service'}
+              {editingProduct ? 'Edit item' : 'Add item'}
             </Text>
 
             <View style={styles.field}>
-              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Service name</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Item type</Text>
+              <View style={styles.itemTypeToggleRow}>
+                {(['product', 'service'] as const).map((itemType) => {
+                  const isSelected = prodItemType === itemType;
+                  return (
+                    <TouchableOpacity
+                      key={itemType}
+                      style={[
+                        styles.itemTypeToggleBtn,
+                        { borderColor: colors.border, backgroundColor: colors.surface },
+                        isSelected && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+                      ]}
+                      onPress={() => setProdItemType(itemType)}
+                      activeOpacity={0.85}
+                    >
+                      <Text
+                        style={[
+                          styles.itemTypeToggleText,
+                          { color: colors.textSecondary },
+                          isSelected && { color: colors.accent },
+                        ]}
+                      >
+                        {itemType === 'product' ? 'Product' : 'Service'}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            <ImageUploader
+              currentImageUrl={prodImageUrl}
+              onImageUploaded={setProdImageUrl}
+              onImageRemoved={() => setProdImageUrl(null)}
+              subfolder="products"
+              compact
+              placeholder="Add photo"
+            />
+
+            <View style={styles.field}>
+              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Name</Text>
               <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
                 placeholder="e.g. Banginapalli, Chocolate cake, Mango pickle"
@@ -536,15 +762,16 @@ export default function ManageListingScreen() {
 
             <View style={styles.rowFields}>
               <View style={[styles.field, { flex: 1.2, marginRight: 10 }]}>
-                <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Price per unit</Text>
+                <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Price per unit (optional)</Text>
                 <TextInput
                   style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
-                  placeholder="0.00"
+                  placeholder="Leave empty if price varies"
                   placeholderTextColor={colors.textMuted}
                   value={prodPrice}
                   onChangeText={setProdPrice}
                   keyboardType="numeric"
                 />
+                <Text style={[styles.priceHintText, { color: colors.textMuted }]}>Leave empty if price varies or is free.</Text>
               </View>
 
               <View style={[styles.field, { flex: 1 }]}>
@@ -624,6 +851,10 @@ const styles = StyleSheet.create({
   headerAction: {
     padding: 8,
   },
+  headerBackBtn: {
+    marginLeft: 2,
+    padding: 6,
+  },
   headerActionText: {
     ...VerandahType.captionBold,
   },
@@ -637,6 +868,29 @@ const styles = StyleSheet.create({
   listingName: {
     ...VerandahType.title,
     marginBottom: 6,
+  },
+  coverImagePreview: {
+    width: '100%',
+    height: 140,
+    borderRadius: VerandahRadius.md,
+    marginBottom: 12,
+  },
+  productThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: VerandahRadius.md,
+    marginRight: 10,
+  },
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: Verandah.cardMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginBottom: 10,
+  },
+  categoryBadgeText: {
+    ...VerandahType.caption,
   },
   listingDesc: {
     ...VerandahType.body,
@@ -731,7 +985,7 @@ const styles = StyleSheet.create({
   productRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingVertical: 12,
     borderBottomWidth: 0.5,
   },
@@ -742,10 +996,27 @@ const styles = StyleSheet.create({
   productName: {
     ...VerandahType.bodyBold,
   },
+  productMetaRow: {
+    marginTop: 6,
+  },
+  itemTypeBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: VerandahRadius.pill,
+    borderWidth: 0.5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  itemTypeBadgeText: {
+    ...VerandahType.micro,
+  },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 4,
+  },
+  priceOnRequestText: {
+    ...VerandahType.caption,
+    fontStyle: 'italic',
   },
   productDescText: {
     ...VerandahType.caption,
@@ -808,6 +1079,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  categoryChip: {
+    width: '49%',
+    borderWidth: 1,
+    borderRadius: VerandahRadius.md,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    minHeight: 54,
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  categoryChipText: {
+    ...VerandahType.caption,
+    lineHeight: 18,
+  },
+  itemTypeToggleRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  itemTypeToggleBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: VerandahRadius.md,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  itemTypeToggleText: {
+    ...VerandahType.captionBold,
+  },
   pickerContainer: {
     borderWidth: 1,
     borderRadius: VerandahRadius.md,
@@ -828,6 +1132,10 @@ const styles = StyleSheet.create({
   unitChoiceText: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  priceHintText: {
+    ...VerandahType.micro,
+    marginTop: 6,
   },
   modalActions: {
     flexDirection: 'row',
@@ -856,5 +1164,23 @@ const styles = StyleSheet.create({
   modalPrimaryBtnText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  deleteListingWrap: {
+    marginTop: 32,
+    marginBottom: 16,
+  },
+  deleteListingBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: VerandahRadius.pill,
+    height: 48,
+    paddingHorizontal: 20,
+  },
+  deleteListingBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
