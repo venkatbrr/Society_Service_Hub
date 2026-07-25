@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
@@ -48,22 +48,47 @@ export const McnListingCard = React.memo(({
 }: McnListingCardProps) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
+  const [blockCardPress, setBlockCardPress] = useState(false);
+  const unblockPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isOwner = listing.owner_id === currentUserId;
   const ratings = listing.ratings || [];
   const ratingCount = ratings.length;
   const avgRating = ratingCount > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
 
+  useEffect(() => {
+    return () => {
+      if (unblockPressTimerRef.current) {
+        clearTimeout(unblockPressTimerRef.current);
+      }
+    };
+  }, []);
+
+  const guardCardPress = () => {
+    if (unblockPressTimerRef.current) {
+      clearTimeout(unblockPressTimerRef.current);
+    }
+    setBlockCardPress(true);
+    unblockPressTimerRef.current = setTimeout(() => {
+      setBlockCardPress(false);
+      unblockPressTimerRef.current = null;
+    }, 350);
+  };
+
   return (
     <BaseCard
       style={[styles.card, !listing.is_active && styles.inactiveCard]}
       padding={listing.image_url ? 0 : 16}
-      onPress={() => onPress(listing.id)}
+      onPress={() => {
+        if (blockCardPress || showImageViewer || showMenu) return;
+        onPress(listing.id);
+      }}
     >
       {listing.image_url ? (
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={(e) => {
             e.stopPropagation();
+            guardCardPress();
             setShowImageViewer(true);
           }}
         >
@@ -159,17 +184,35 @@ export const McnListingCard = React.memo(({
           </View>
         </Pressable>
       </Modal>
-      <Modal visible={showImageViewer} transparent animationType="fade" onRequestClose={() => setShowImageViewer(false)}>
-        <Pressable style={styles.viewerOverlay} onPress={() => setShowImageViewer(false)}>
-          <TouchableOpacity style={styles.viewerCloseBtn} onPress={() => setShowImageViewer(false)}>
+      <Modal visible={showImageViewer} transparent animationType="fade" onRequestClose={() => {
+        guardCardPress();
+        setShowImageViewer(false);
+      }}>
+        <Pressable
+          style={styles.viewerOverlay}
+          onPress={() => {
+            guardCardPress();
+            setShowImageViewer(false);
+          }}
+        >
+          <TouchableOpacity
+            style={styles.viewerCloseBtn}
+            onPress={(e) => {
+              e.stopPropagation();
+              guardCardPress();
+              setShowImageViewer(false);
+            }}
+          >
             <Ionicons name="close" size={24} color={Verandah.surface} />
           </TouchableOpacity>
-          <Image
-            source={{ uri: listing.image_url || '' }}
-            style={styles.viewerImage}
-            contentFit="contain"
-            transition={200}
-          />
+          <Pressable onPress={(e) => e.stopPropagation()} style={styles.viewerImageWrap}>
+            <Image
+              source={{ uri: listing.image_url || '' }}
+              style={styles.viewerImage}
+              contentFit="contain"
+              transition={200}
+            />
+          </Pressable>
         </Pressable>
       </Modal>
     </BaseCard>
@@ -292,6 +335,10 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   viewerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  viewerImageWrap: {
     width: '100%',
     height: '100%',
   },

@@ -153,6 +153,9 @@ export default function NetworkScreen() {
     setSelectedCategoryId((prev) => (prev === categoryId ? null : categoryId));
   };
 
+  const firstInactiveBusinessIndex =
+    activeSegment === 'business' ? listings.findIndex((listing) => !listing.is_active) : -1;
+
   const handleMarkUnavailable = async (id: string) => {
     try {
       const { error } = await supabase
@@ -376,17 +379,24 @@ export default function NetworkScreen() {
           }
           refreshing={refreshing}
           onRefresh={() => fetchPosts(true)}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             if (activeSegment === 'business') {
               return (
-                <McnListingCard
-                  listing={item as any as McnListingItem}
-                  currentUserId={user?.id || ''}
-                  isCommunityLead={isCommunityLead}
-                  onPress={(id) => router.push(`/network/listing/${id}` as any)}
-                  onManage={(id) => router.push(`/network/listing/manage/${id}` as any)}
-                  onRemove={handleRemoveListing}
-                />
+                <>
+                  {index === firstInactiveBusinessIndex ? (
+                    <View style={[styles.inactiveSectionHeader, { borderColor: colors.border }]}> 
+                      <Text style={[styles.inactiveSectionTitle, { color: colors.textSecondary }]}>Inactive businesses</Text>
+                    </View>
+                  ) : null}
+                  <McnListingCard
+                    listing={item as any as McnListingItem}
+                    currentUserId={user?.id || ''}
+                    isCommunityLead={isCommunityLead}
+                    onPress={(id) => router.push(`/network/listing/${id}` as any)}
+                    onManage={(id) => router.push(`/network/listing/manage/${id}` as any)}
+                    onRemove={handleRemoveListing}
+                  />
+                </>
               );
             } else if (activeSegment === 'borrow') {
               return (
@@ -553,6 +563,17 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
+  },
+  inactiveSectionHeader: {
+    marginTop: 8,
+    marginBottom: 10,
+    paddingBottom: 6,
+    borderBottomWidth: 0.5,
+  },
+  inactiveSectionTitle: {
+    ...VerandahType.captionBold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
   emptyList: {
     flexGrow: 1,

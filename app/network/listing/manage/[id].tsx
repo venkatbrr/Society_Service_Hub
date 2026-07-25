@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { ImageUploader } from '../../../../components/ImageUploader';
@@ -74,6 +74,7 @@ export default function ManageListingScreen() {
   const [prodDesc, setProdDesc] = useState('');
   const [prodImageUrl, setProdImageUrl] = useState<string | null>(null);
   const [savingProduct, setSavingProduct] = useState(false);
+  const listingModalScrollRef = useRef<ScrollView>(null);
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -158,6 +159,14 @@ export default function ManageListingScreen() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (!showListingModal) return;
+    const timer = setTimeout(() => {
+      listingModalScrollRef.current?.scrollTo({ y: 0, animated: false });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [showListingModal]);
 
   const handleToggleActive = async (value: boolean) => {
     if (!listing) return;
@@ -593,7 +602,7 @@ export default function ManageListingScreen() {
             style={[styles.modalCard, { backgroundColor: colors.card }]}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView ref={listingModalScrollRef} showsVerticalScrollIndicator={false}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Edit business details</Text>
 
             <ImageUploader
