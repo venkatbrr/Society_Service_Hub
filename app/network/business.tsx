@@ -154,6 +154,14 @@ export default function BusinessListingsScreen() {
     );
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/network' as any);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
@@ -161,12 +169,30 @@ export default function BusinessListingsScreen() {
           headerTitle: 'Community Business',
           headerTitleStyle: { fontWeight: '500', fontSize: 17, color: colors.textPrimary },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.replace('/network' as any)} style={{ marginRight: 12 }}>
+            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
               <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
           ),
         }}
       />
+
+      {/* Top Section Switcher Toggle */}
+      <View style={styles.masterToggleRow}>
+        <TouchableOpacity
+          style={styles.masterToggleBtn}
+          onPress={() => router.replace('/network/drops' as any)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.masterToggleText}>🍕 Food Pre-Orders</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.masterToggleBtn, styles.masterToggleBtnActive]}
+          activeOpacity={0.9}
+        >
+          <Text style={styles.masterToggleTextActive}>🏪 Community Businesses</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.headerSubtitleWrap}>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -392,6 +418,36 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
-    elevation: 5,
+    elevation: 4,
+  },
+  masterToggleRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 6,
+    gap: 10,
+  },
+  masterToggleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: '#F3F4F6',
+  },
+  masterToggleBtnActive: {
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  masterToggleText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: Verandah.textSecondary,
+  },
+  masterToggleTextActive: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Verandah.accent,
   },
 });

@@ -124,10 +124,26 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
 
     const shareUrl =
       Platform.OS === 'web' && typeof window !== 'undefined'
-        ? `${window.location.origin}/network/drops/${drop.id}`
-        : `https://society-service-hub.app/network/drops/${drop.id}`;
+        ? `${window.location.origin}/network/drops?id=${drop.id}`
+        : `https://society-service-hub.app/network/drops?id=${drop.id}`;
 
-    const message = `🍕 *Food Drop: ${drop.title}*\nHosted by ${creatorName}${flatNo ? ` (${flatNo})` : ''}\n\n📅 Delivery: ${fulfillFormatted} (${drop.fulfillment_time})\n⏰ Pre-Orders Close: ${cutoffFormatted}\n\n🔗 Order Link: ${shareUrl}\n\nCheck out the menu & place your pre-order in Society Service Hub!`;
+    const messageLines = [
+      `🍕 *Food Drop: ${drop.title}*`,
+      `Hosted by ${creatorName}${flatNo ? ` (${flatNo})` : ''}`,
+      ``,
+      `📅 Delivery: ${fulfillFormatted} (${drop.fulfillment_time})`,
+      `⏰ Pre-Orders Close: ${cutoffFormatted}`,
+    ];
+
+    if (drop.image_url) {
+      messageLines.push(`🖼️ Photo: ${drop.image_url}`);
+    }
+
+    messageLines.push(``);
+    messageLines.push(`🔗 View Menu & Place Pre-Order:`);
+    messageLines.push(shareUrl);
+
+    const message = messageLines.join('\n');
 
     try {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {

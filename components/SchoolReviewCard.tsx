@@ -24,6 +24,7 @@ export interface SchoolReviewItem {
   transport_comment?: string | null;
   value_comment?: string | null;
   happiness_comment?: string | null;
+  overall_comment?: string | null;
   created_at: string;
   profiles?: {
     full_name: string | null;
@@ -121,6 +122,14 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
           );
         })}
       </View>
+
+      {/* Overall Comment / Parent Advice Box */}
+      {review.overall_comment ? (
+        <View style={styles.overallCommentBox}>
+          <Text style={styles.overallCommentTitle}>💬 Parent Note & Advice:</Text>
+          <Text style={styles.overallCommentText}>"{review.overall_comment}"</Text>
+        </View>
+      ) : null}
 
       {/* Per-Aspect Comments (Expandable) */}
       {hasComments ? (
@@ -320,5 +329,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: Verandah.accent,
+  },
+  overallCommentBox: {
+    marginTop: 8,
+    marginBottom: 4,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 0.5,
+    borderColor: '#BBF7D0',
+    borderRadius: 8,
+    padding: 10,
+  },
+  overallCommentTitle: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#065F46',
+    marginBottom: 2,
+  },
+  overallCommentText: {
+    fontSize: 12,
+    color: '#047857',
+    fontStyle: 'italic',
+    lineHeight: 17,
   },
 });

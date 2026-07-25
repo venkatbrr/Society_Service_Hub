@@ -52,6 +52,7 @@ export default function SubmitSchoolReviewScreen() {
     value: '',
     happiness: '',
   });
+  const [overallComment, setOverallComment] = useState<string>('');
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -107,6 +108,9 @@ export default function SubmitSchoolReviewScreen() {
             value: reviewData.value_comment || '',
             happiness: reviewData.happiness_comment || '',
           });
+          if (reviewData.overall_comment) {
+            setOverallComment(reviewData.overall_comment);
+          }
         }
       } catch (err) {
         console.error('Error loading review setup:', err);
@@ -157,6 +161,7 @@ export default function SubmitSchoolReviewScreen() {
         transport_comment: comments.transport.trim() || null,
         value_comment: comments.value.trim() || null,
         happiness_comment: comments.happiness.trim() || null,
+        overall_comment: overallComment.trim() || null,
         updated_at: new Date().toISOString(),
       };
 
@@ -274,6 +279,25 @@ export default function SubmitSchoolReviewScreen() {
             />
           </View>
         ))}
+
+        {/* Overall Comments / Additional Advice Card */}
+        <View style={styles.aspectCard}>
+          <View style={styles.aspectHeader}>
+            <Text style={styles.aspectTitle}>💬 Overall Comments & Parent Advice</Text>
+            <Text style={styles.aspectPrompt}>
+              Share any overall feedback, admission tips, or advice for fellow neighborhood parents...
+            </Text>
+          </View>
+          <TextInput
+            style={[styles.commentInput, { minHeight: 72 }]}
+            placeholder="Optional overall thoughts, admission tips, or advice for neighbor parents..."
+            placeholderTextColor={colors.textMuted}
+            value={overallComment}
+            onChangeText={setOverallComment}
+            maxLength={500}
+            multiline
+          />
+        </View>
 
         {/* Submit CTA */}
         <TouchableOpacity

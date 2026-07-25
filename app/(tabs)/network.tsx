@@ -136,7 +136,7 @@ export default function NetworkScreen() {
       >
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>NETWORK SECTIONS</Text>
 
-        {/* 1A. Food Pre-Orders & Flash Drops Section Card */}
+        {/* Merged Food Drops & Community Business Section Card */}
         <BaseCard
           padding={18}
           onPress={() => router.push('/network/drops' as any)}
@@ -147,48 +147,22 @@ export default function NetworkScreen() {
               <Text style={styles.iconEmoji}>🍕</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Food Pre-Orders & Flash Drops</Text>
-              {preorderCount !== null && (
-                <Text style={[styles.badgeText, { color: '#DC2626' }]}>
-                  {preorderCount} {preorderCount === 1 ? 'open food drop' : 'open food drops'}
-                </Text>
-              )}
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                Food Drops & Community Business
+              </Text>
+              <Text style={[styles.badgeText, { color: colors.accent }]}>
+                {preorderCount || 0} open drops · {businessCount || 0} active listings
+              </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Pre-order weekend pizzas, home-baked sweets & pop-up meals before cut-off deadlines. Host your own food drop!
+            Pre-order weekend pizzas, home-baked sweets, pop-up meals & local resident services. Order directly inside your society!
           </Text>
           <View style={[styles.cardFooter, { borderColor: colors.border }]}>
-            <Text style={[styles.actionLinkText, { color: colors.accent }]}>View Food Drops & Pre-Order →</Text>
-          </View>
-        </BaseCard>
-
-        {/* 1B. Community Business Section Card */}
-        <BaseCard
-          padding={18}
-          onPress={() => router.push('/network/business' as any)}
-          style={styles.sectionCard}
-        >
-          <View style={styles.cardHeaderRow}>
-            <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
-              <Text style={styles.iconEmoji}>🏪</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Community Business</Text>
-              {businessCount !== null && (
-                <Text style={[styles.badgeText, { color: colors.accent }]}>
-                  {businessCount} {businessCount === 1 ? 'active listing' : 'active listings'}
-                </Text>
-              )}
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-          </View>
-          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Explore home bakers, daily essentials, fresh produce & local resident services. Order directly inside your society.
-          </Text>
-          <View style={[styles.cardFooter, { borderColor: colors.border }]}>
-            <Text style={[styles.actionLinkText, { color: colors.primary }]}>Explore Businesses →</Text>
+            <Text style={[styles.actionLinkText, { color: colors.accent }]}>
+              Explore Food Drops & Businesses →
+            </Text>
           </View>
         </BaseCard>
 

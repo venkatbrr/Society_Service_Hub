@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -22,8 +22,15 @@ import { supabase } from '../../../lib/supabase';
 
 export default function FoodDropsCatalogScreen() {
   const router = useRouter();
+  const { id: targetDropId } = useLocalSearchParams<{ id?: string }>();
   const { user, communityId } = useAuth();
   const colors = Verandah;
+
+  useEffect(() => {
+    if (targetDropId) {
+      router.replace(`/network/drops/${targetDropId}` as any);
+    }
+  }, [targetDropId]);
 
   const [drops, setDrops] = useState<PreorderDropItem[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'closed' | 'my_drops'>('active');
@@ -165,6 +172,24 @@ export default function FoodDropsCatalogScreen() {
           ),
         }}
       />
+
+      {/* Top Section Switcher Toggle */}
+      <View style={styles.masterToggleRow}>
+        <TouchableOpacity
+          style={[styles.masterToggleBtn, styles.masterToggleBtnActive]}
+          activeOpacity={0.9}
+        >
+          <Text style={styles.masterToggleTextActive}>🍕 Food Pre-Orders</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.masterToggleBtn}
+          onPress={() => router.replace('/network/business' as any)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.masterToggleText}>🏪 Community Businesses</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Subtitle Banner */}
       <View style={styles.headerBanner}>
@@ -456,5 +481,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#065F46',
+  },
+  masterToggleRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 6,
+    gap: 10,
+  },
+  masterToggleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: '#F3F4F6',
+  },
+  masterToggleBtnActive: {
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  masterToggleText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: Verandah.textSecondary,
+  },
+  masterToggleTextActive: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Verandah.accent,
   },
 });

@@ -61,23 +61,27 @@ export default function SchoolDetailScreen() {
   const fetchSchoolDetails = useCallback(async () => {
     if (!schoolId) return;
     try {
+      let currentSchool: School | null = null;
+
       if (schoolId.startsWith('wh_school_')) {
         const found = WEST_HYDERABAD_SCHOOLS.find((s) => s.id === schoolId);
         if (found) {
-          setSchool(found as unknown as School);
-          setLoading(false);
-          return;
+          currentSchool = found as unknown as School;
         }
       }
 
-      const { data, error } = await supabase
-        .from('schools')
-        .select('*')
-        .eq('id', schoolId)
-        .maybeSingle();
+      if (!currentSchool) {
+        const { data, error } = await supabase
+          .from('schools')
+          .select('*')
+          .eq('id', schoolId)
+          .maybeSingle();
 
-      if (error) throw error;
-      setSchool(data as School);
+        if (error) throw error;
+        currentSchool = data as School;
+      }
+
+      setSchool(currentSchool);
 
       // Load school reviews with profile details
       const { data: reviewsData, error: reviewsErr } = await supabase
@@ -88,8 +92,35 @@ export default function SchoolDetailScreen() {
 
       if (reviewsErr) {
         console.error('Error fetching reviews:', reviewsErr);
-      } else {
-        setReviews(reviewsData as SchoolReviewItem[]);
+      } else if (reviewsData) {
+        const fetchedReviews = reviewsData as SchoolReviewItem[];
+        setReviews(fetchedReviews);
+
+        // If static school, calculate average aspect scores dynamically from reviews
+        if (schoolId.startsWith('wh_school_') && currentSchool && fetchedReviews.length > 0) {
+          let acad = 0, teach = 0, infra = 0, safe = 0, trans = 0, val = 0, hap = 0;
+          fetchedReviews.forEach((r) => {
+            acad += r.academics_score;
+            teach += r.teachers_score;
+            infra += r.infrastructure_score;
+            safe += r.safety_score;
+            trans += r.transport_score;
+            val += r.value_score;
+            hap += r.happiness_score;
+          });
+          const n = fetchedReviews.length;
+          setSchool({
+            ...currentSchool,
+            review_count: n,
+            avg_academics: parseFloat((acad / n).toFixed(1)),
+            avg_teachers: parseFloat((teach / n).toFixed(1)),
+            avg_infrastructure: parseFloat((infra / n).toFixed(1)),
+            avg_safety: parseFloat((safe / n).toFixed(1)),
+            avg_transport: parseFloat((trans / n).toFixed(1)),
+            avg_value: parseFloat((val / n).toFixed(1)),
+            avg_happiness: parseFloat((hap / n).toFixed(1)),
+          });
+        }
       }
     } catch (error) {
       console.error(error);
@@ -372,6 +403,31 @@ export default function SchoolDetailScreen() {
               <Text style={styles.noReviewsText}>
                 Be the first parent from your society to grade this school across 7 key dimensions!
               </Text>
+
+              <View style={styles.whyGradeBox}>
+                <Text style={styles.whyGradeHeader}>💡 How Your Report Card Helps Neighbor Families:</Text>
+
+                <View style={styles.whyGradeBulletRow}>
+                  <Text style={styles.whyGradeBullet}>🎯</Text>
+                  <Text style={styles.whyGradeBulletText}>
+                    <Text style={{ fontWeight: '700', color: colors.textPrimary }}>Real Parent Feedback:</Text> Gives neighboring families authentic 360° ratings on academics, teacher quality, & safety beyond school marketing.
+                  </Text>
+                </View>
+
+                <View style={styles.whyGradeBulletRow}>
+                  <Text style={styles.whyGradeBullet}>🚌</Text>
+                  <Text style={styles.whyGradeBulletText}>
+                    <Text style={{ fontWeight: '700', color: colors.textPrimary }}>Transport & Logistics:</Text> Shares real experiences about school bus safety, route timings, & commute from your society.
+                  </Text>
+                </View>
+
+                <View style={styles.whyGradeBulletRow}>
+                  <Text style={styles.whyGradeBullet}>🤝</Text>
+                  <Text style={styles.whyGradeBulletText}>
+                    <Text style={{ fontWeight: '700', color: colors.textPrimary }}>Confident Admission Choice:</Text> Empowers parents to pick the best school for their child backed by verified neighborhood ratings.
+                  </Text>
+                </View>
+              </View>
             </View>
           )}
 
@@ -608,6 +664,37 @@ const styles = StyleSheet.create({
     color: Verandah.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
+    marginBottom: 14,
+  },
+  whyGradeBox: {
+    width: '100%',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    borderRadius: VerandahRadius.md,
+    padding: 14,
+    gap: 10,
+  },
+  whyGradeHeader: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1E40AF',
+    marginBottom: 2,
+  },
+  whyGradeBulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  whyGradeBullet: {
+    fontSize: 14,
+    marginTop: 1,
+  },
+  whyGradeBulletText: {
+    flex: 1,
+    fontSize: 11.5,
+    color: '#1E3A8A',
+    lineHeight: 16,
   },
   reviewCtaBtn: {
     flexDirection: 'row',
