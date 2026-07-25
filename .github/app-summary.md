@@ -10,12 +10,14 @@ Society Service Hub is a multi-tenant community management app for gated residen
 
 - discover trusted local service providers
 - coordinate shared service visits
+- run a local business directory and social sharing surface (My Community Network)
 - manage community funds with transparent role-based ledgers
 - track personal maintenance reminders for appliances and recurring services
+- access emergency contacts and blood donor registries (SOS)
 - handle community onboarding and platform-reviewed community creation
 - receive realtime notifications about visits, onboarding outcomes, and due services
 
-The app targets iOS, Android, and Web from one Expo codebase.
+The app targets iOS, Android, and Web from one Expo codebase. The web app is a fully installable PWA with offline capabilities.
 
 ---
 
@@ -30,7 +32,8 @@ The app targets iOS, Android, and Web from one Expo codebase.
 | State | React Context | `AuthContext` and `NotificationContext` |
 | Notifications | `expo-notifications` | Local mobile alerts and Expo token registration |
 | Auth | Supabase Auth + Google Sign-In | Email/password, reset password, Google token exchange |
-| UI | Vanilla React Native + custom components | Light theme, glassmorphism styling |
+| UI Design System | Verandah | Light-mode-only, flat surfaces, no shadows, Verandah tokens |
+| Image Upload | Cloudinary | Unsigned HTTP upload for listing/product images |
 
 ### Key Dependencies
 
@@ -39,6 +42,7 @@ The app targets iOS, Android, and Web from one Expo codebase.
 - `@react-native-community/datetimepicker`
 - `expo-linear-gradient`
 - `expo-notifications`
+- `expo-image-picker`
 - `react-native-toast-message`
 - `@expo/vector-icons`
 
@@ -53,15 +57,18 @@ The app targets iOS, Android, and Web from one Expo codebase.
 - `/community-select`
 - `/community-request`
 - `/community-request-submitted`
+- `/community-join-block`
 - `/notifications`
 - `/residents`
+- `/admin-redirect`
 
-### Main tabs (`app/(tabs)`)
+### Main tabs (`app/(tabs)`) — 5 tabs
 
-- `index.tsx`: Help dashboard with Providers (two-level category group filters) and Visits (grouped by category, split into Upcoming, Recent, and Archived) segments
+- `index.tsx`: Help dashboard with Providers (two-level category group filters) and Visits (grouped by category, split into Upcoming, Recent, and Archived) segments. Uses compact WhatsApp chat-tile inspired UI density.
 - `favorites.tsx`: Saved providers
-- `community.tsx`: Community tab with funds status (activation CTA, pending request, rejected, or active overview), blocks management shortcut (for leads), residents shortcut, and community info
-- `profile.tsx`: Personal hub for identity, reminders shortcut, recent service history, and sign-out
+- `network.tsx`: MCN (My Community Network) — business directory with listings, offerings, orders; plus borrow & share social posts
+- `community.tsx`: Community tab with funds status (activation CTA, pending request, rejected, or active overview), residents shortcut, SOS shortcut, and community info
+- `profile.tsx`: Personal hub for identity, reminders shortcut, recent service history, my orders, my posts, and sign-out
 
 ### Feature route groups
 
@@ -73,7 +80,9 @@ The app targets iOS, Android, and Web from one Expo codebase.
 - `/hire-feedback/[hireId]`
 - `/services`, `/services/add`, `/services/[id]`
 - `/profile/edit`
-- `/platform/approvals`, `/platform/communities`, `/platform/community/[id]`, `/platform/funds-requests`, `/platform/funds-access/[requestId]`
+- `/sos`, `/sos/donor`, `/sos/manage-contacts`
+- `/network/add`, `/network/my-posts`, `/network/my-orders`
+- `/network/listing-add`, `/network/listing/[id]`, `/network/listing/manage/[id]`, `/network/listing/orders/[id]`
 
 ### Removed route area
 
@@ -94,7 +103,7 @@ The former marketplace routes under `app/business/*` do not exist in the current
 
 ```text
 No session -> /login
-Platform admin -> /platform/approvals
+Platform admin -> /admin-redirect
 Authenticated, no community, active request -> /community-request-submitted
 Authenticated, no community, no request -> /community-select
 Authenticated with community -> /(tabs)
@@ -121,6 +130,25 @@ Authenticated with community -> /(tabs)
 - Category emojis are shared between the Providers `CategoryFilter` and the Service Visits section headers via the same `getServiceCategoryEmoji` helper
 - Residents can report service providers for predefined reasons (Wrong info, Spam, etc.) which notifications alert community leads; community leads and platform admins can delete providers
 - Residents can add private personal notes to provider profiles, which are visible only to the resident who wrote them
+- **Compact UI**: The entire Help screen uses a WhatsApp chat-tile inspired information density. Provider cards are single-row horizontal tiles (avatar · name · inline meta · bookmark). Visit cards use reduced padding and smaller avatars. Search bars are 36px tall, category chips have compact padding, and the header uses a reduced title size.
+
+### My Community Network (MCN)
+
+- Dedicated MCN tab (3rd tab, "MCN" label) for local business directory and social sharing
+- Business listings are community-scoped and searchable with category-based filtering via `mcn_business_categories`
+- Listings include cover photos uploaded to Cloudinary, business category badges, and owner information
+- Offering details support products and services with optional pricing (nullable price = "Price on request")
+- Residents can place, update, and cancel orders against business listings
+- Owners can manage listings (toggle active/paused, add/edit/delete products/services, view/manage orders)
+- Borrow & Share posts allow lightweight social sharing for borrowing/free items
+- Community leads can moderate (delete) any post or remove any listing
+
+### SOS & Emergency
+
+- Emergency directory with community-specific and global default emergency numbers
+- Blood donor registry with opt-in profiles, availability toggles, and blood group filtering
+- Call-confirm dialogs prevent accidental dialing
+- Community leads manage emergency contacts; platform admins can manage global entries
 
 ### Funds
 
@@ -207,17 +235,26 @@ Authenticated with community -> /(tabs)
 - `favorites`
 - `ratings`
 - `provider_hires`
+- `provider_reports`
+- `provider_personal_notes`
+- `provider_public_rating_nudges`
+- `hire_feedback`
 - `events`
 - `event_transactions`
 - `fund_roles`
-- `notifications`
-- `user_services`
-- `community_blocks`
 - `funds_access_requests`
 - `funds_access_revocations`
-- `hire_feedback`
-- `provider_reports`
-- `provider_personal_notes`
+- `community_blocks`
+- `notifications`
+- `user_services`
+- `blood_donors`
+- `emergency_contacts`
+- `mcn_posts`
+- `mcn_listings`
+- `mcn_products`
+- `mcn_business_categories`
+- `mcn_orders`
+- `mcn_order_items`
 - `community_partnerships` (backend only)
 - `community_groups` (backend only)
 - `community_group_members` (backend only)
@@ -263,19 +300,24 @@ The notification screen also contains compatibility handling for some older prom
 
 ## 9. UI Conventions
 
-- Light theme only in practice, using `constants/Colors.ts`
-- Rounded glassmorphism cards and gradient accents
-- `APP_EMOJIS` for decorative and tab iconography
-- `Ionicons` for interactive controls already implemented in the app
+- **Verandah design system** is the only active UI language:
+  - Colors from `constants/Colors.ts` (`Verandah` palette: surface `#FAF8F4`, card `#FFFFFF`, accent `#0F6E56`, etc.)
+  - Typography, spacing, radius from `constants/Verandah.ts`
+  - No shadows, elevation, or glassmorphism on cards. Flat surfaces with hairline borders.
+  - Font weights capped at 400 and 500. Sentence case only.
+- Shared components: `BaseCard`, `Avatar`, `Rupees`, `EmptyState`
+- `Ionicons` from `@expo/vector-icons` for interactive icons
 - `react-native-toast-message` for success and failure feedback
+- Tab icons use `Ionicons` with filled/outline variants for active/inactive states
+- The Help tab uses **compact WhatsApp chat-tile inspired density** for provider and visit cards
 
 ---
 
 ## 10. Storage and Assets
 
-- The current product does not expose an active media-upload feature
+- Cloudinary is used for business listing cover photos and product images via unsigned HTTP upload
 - The Supabase setup still includes a public `community-uploads` bucket, but no current screen writes to it
-- Profile avatars come from auth metadata when available
+- Profile avatars use deterministic initials via the `Avatar` component (no photo upload)
 - The Community tab funds overview background is a bundled JPEG asset at `assets/images/funds_bg.jpg`
 
 ---
@@ -297,8 +339,8 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 
 ## 12. Current Product Boundaries
 
-- Marketplace is removed, not hidden
+- The former marketplace is removed, not hidden. Replaced by MCN (My Community Network) business directory.
 - Community membership does not use a resident approval queue
 - `user_services` is user-scoped, not community-scoped
-- Platform admins are separated from community members by the `admin` plus no-community rule
+- Platform admins are separated from community members by the `admin` plus no-community rule; they are redirected to `/admin-redirect` in the mobile app
 - Cross-community UI is deferred even though backend federation objects are active

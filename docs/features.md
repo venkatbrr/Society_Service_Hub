@@ -8,9 +8,11 @@ This document describes the current user-facing product surface, the screens inv
 
 ## App Summary
 
-Society Service Hub currently ships five main experiences: trusted provider discovery, community service-visit coordination, activation-gated community funds, personal service reminders, and a community SOS surface (emergency numbers + blood donors). Residents use the main tabs for everyday workflows, community leads manage local operations such as funds, optional block scoping, and emergency directories, and platform admins review community requests plus funds-access requests.
+Society Service Hub currently ships six main experiences across five bottom tabs: trusted provider discovery (Help), community service-visit coordination (Help), a local business directory and social sharing surface (MCN), activation-gated community funds (Community), personal service reminders (Profile), and a community SOS surface — emergency numbers + blood donors (Community). Residents use the main tabs for everyday workflows, community leads manage local operations such as funds, optional block scoping, and emergency directories, and platform admins review community requests plus funds-access requests.
 
 The web app is configured as a fully installable Progressive Web App (PWA) with offline capabilities, utilizing an optimized service worker cache registration and viewport height styling to mimic a native app experience on mobile browsers.
+
+The entire home screen uses a **compact, WhatsApp chat-tile inspired UI density** where provider cards, visit cards, maintenance banners, search bars, category filters, segment controls, and headers are all vertically compact to maximize visible content per screen. Provider tiles follow a single-row horizontal layout (avatar · name · inline meta · bookmark) instead of multi-section cards.
 
 The app surface is narrower than the backend schema by design. Cross-community federation tables and RPCs already exist, but the current UI remains centered on the resident's home community, with no exposed federation controls or cross-community browsing screens yet.
 
@@ -92,6 +94,7 @@ The app surface is narrower than the backend schema by design. Cross-community f
 | **Roles** | All community members can browse and create providers or visits |
 | **Components** | `UpcomingServicesCard`, `ActiveFundTeaser`, `ProviderCard`, `VisitCard`, `SearchBar`, `CategoryFilter`, `EmptyState` |
 | **State additions** | `selectedGroupCategories: string[] \| null` — set by `CategoryFilter` via `onSelectGroupCategories` callback; used to build the `IN` clause on the provider query when a group (but not specific category) is active. |
+| **Compact UI** | The entire Help screen uses a compact, information-dense layout inspired by WhatsApp chat tiles. The header title uses a reduced serif font (22px), header action buttons are 36px circles (down from 44px), the Providers/Visits segmented control uses 6px vertical padding (down from 10px), the search bar is 36px tall (down from 44px), category filter chips use 4px vertical padding (down from 8px), and the FAB is 56px (down from 64px). Provider cards are redesigned as single-row horizontal tiles with avatar, name+verified badge, and an inline meta row (category · ★ rating · hire count) all on one compact card. Visit cards use reduced padding (10px), smaller avatars (30px), and smaller text sizes. The `UpcomingServicesCard` zero-state is a single-row inline banner instead of a multi-row card with full-width CTA button. |
 
 ### Tab 2: Saved - Favorites (`app/(tabs)/favorites.tsx`)
 
@@ -385,7 +388,7 @@ In the mobile app, platform admins are automatically redirected to the `/admin-r
 
 | Surface | Details |
 |---------|---------|
-| **Home card** | `components/UpcomingServicesCard.tsx` appears above the main Help content. It can show urgent reminders, an all-clear state, or a dismissible onboarding prompt persisted in AsyncStorage. |
+| **Home card** | `components/UpcomingServicesCard.tsx` appears above the main Help content. In the zero-service state, it renders as a compact single-row inline banner with the wrench emoji, title, body text, an inline "Add service" CTA button, and a dismiss button — all in one ~40px row (previously a multi-row card with a full-width CTA button). The all-clear state and has-due states are similarly compacted with reduced padding (8px vertical, 12px horizontal) and smaller text sizes (13px titles, 12px links). |
 | **Profile row** | `app/(tabs)/profile.tsx` shows a due-soon badge sourced from `get_my_due_soon_count()` and links into `/services`. |
 | **Notifications** | `notify_due_services()` creates `service_reminder` notifications when reminders are due within 7 days and `notified_at` is empty. The fallback scheduler is the `check_due_services` edge function. |
 
@@ -415,7 +418,7 @@ Cross-community backend foundations are live in the database: partnerships, grou
 |--------|---------|
 | **Purpose** | Create a new business or borrow post. |
 | **Tables** | Writes: `mcn_posts` |
-| **Business rules** | Title is required (max 80 chars). Description is optional (max 280 chars). Contact hint is optional, and if a 10 digit number is extracted, it is normalized. |
+| **Business rules** | Title is required (max 80 chars). Description is optional (max 280 chars). For Borrow & Share posts (`kind='borrow'`), contact info is mandatory; business-kind posts can still keep it optional. If a 10 digit number is extracted, it is normalized. |
 | **Navigation** | From `app/(tabs)/network.tsx`. Routes back on success. |
 | **Roles** | All residents can create posts. |
 
@@ -425,8 +428,8 @@ Cross-community backend foundations are live in the database: partnerships, grou
 |--------|---------|
 | **Purpose** | Management screen for a user's own active and closed MCN posts. |
 | **Tables** | Reads/Writes: `mcn_posts` |
-| **Business rules** | Users can view all their posts grouped by Active and Closed. They can close active posts or hard-delete any post. |
-| **Navigation** | From `app/(tabs)/profile.tsx`. |
+| **Business rules** | In default mode, users can view their own posts grouped by Active and Closed and can close/delete their own posts. When launched from the Network hub Borrow & Share card, the screen runs in borrow-only community-feed mode (local businesses hidden) and shows borrow posts from the whole community; close/delete actions remain only for the signed-in user's own posts. |
+| **Navigation** | From `app/(tabs)/profile.tsx`. The Borrow & Share card in `app/(tabs)/network.tsx` deep-links here in borrow-only community-feed mode. The floating add button creates a borrow post in borrow-only mode, otherwise it creates either a business listing (business segment) or borrow post (borrow segment). |
 
 ### Add Listing (`app/network/listing-add.tsx`)
 

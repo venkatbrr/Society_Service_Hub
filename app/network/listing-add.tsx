@@ -29,7 +29,7 @@ export default function AddListingScreen() {
       router.back();
       return;
     }
-    router.replace('/(tabs)/network' as any);
+    router.replace('/network' as any);
   };
 
   useEffect(() => {

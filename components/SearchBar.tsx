@@ -14,7 +14,7 @@ type SearchBarProps = {
 export const SearchBar = ({ value, onChangeText, isLightMode, placeholder = "Search..." }: SearchBarProps) => {
   return (
     <View style={styles.container}>
-      <Ionicons name="search-outline" size={18} color={Verandah.textTertiary} style={styles.icon} />
+      <Ionicons name="search-outline" size={16} color={Verandah.textTertiary} style={styles.icon} />
       <TextInput
         style={styles.input}
         placeholder={placeholder}
@@ -24,7 +24,7 @@ export const SearchBar = ({ value, onChangeText, isLightMode, placeholder = "Sea
       />
       {value.length > 0 && (
         <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearButton}>
-          <Ionicons name="close-circle" size={18} color={Verandah.textMuted} />
+          <Ionicons name="close-circle" size={16} color={Verandah.textMuted} />
         </TouchableOpacity>
       )}
     </View>
@@ -35,22 +35,22 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-    paddingHorizontal: 14,
-    height: 44,
+    marginBottom: 6,
+    paddingHorizontal: 12,
+    height: 36,
     borderRadius: VerandahRadius.md,
     backgroundColor: Verandah.cardMuted,
   },
   icon: {
-    marginRight: 8,
+    marginRight: 6,
   },
   input: {
     flex: 1,
-    ...VerandahType.body,
+    fontSize: 13,
     color: Verandah.textPrimary,
     height: '100%',
   },
   clearButton: {
-    padding: 4,
+    padding: 2,
   },
 });

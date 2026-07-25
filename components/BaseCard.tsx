@@ -9,7 +9,7 @@ interface BaseCardProps extends ViewProps {
   padding?: number;
 }
 
-export const BaseCard = React.memo(({ children, onPress, isLightMode = true, style, padding = 16, ...rest }: BaseCardProps) => {
+export const BaseCard = React.memo(({ children, onPress, isLightMode = true, style, padding = 10, ...rest }: BaseCardProps) => {
   const cardStyle = [
     styles.card,
     { padding },
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Verandah.card,
     borderRadius: VerandahRadius.lg,
-    marginBottom: 8,
+    marginBottom: 6,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     overflow: 'hidden',

@@ -52,7 +52,6 @@ export const Avatar = React.memo(({ name, size = 36, shape = 'circle' }: Props) 
           styles.initials,
           {
             fontSize,
-            lineHeight: fontSize * 1.2,
             color: tint.fg,
           },
         ]}

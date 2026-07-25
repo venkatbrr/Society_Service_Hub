@@ -3,12 +3,12 @@ import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahRadius } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
 export default function AddPostScreen() {
-  const { kind } = useLocalSearchParams<{ kind: 'business' | 'borrow' }>();
+  const { kind, source } = useLocalSearchParams<{ kind: 'business' | 'borrow'; source?: string }>();
   const router = useRouter();
   const { communityId, user } = useAuth();
   const colors = Verandah;
@@ -18,7 +18,7 @@ export default function AddPostScreen() {
   const [contactHint, setContactHint] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const headerTitle = kind === 'business' ? 'Share with neighbours' : 'Offer to borrow or free';
+  const headerTitle = kind === 'business' ? 'Share with neighbours' : 'Borrow & Share';
   const titlePlaceholder = kind === 'business' 
     ? 'e.g. Homemade pickles, Yoga classes, Laptop repair' 
     : 'e.g. Ladder to borrow, Baby stroller — free';
@@ -40,6 +40,12 @@ export default function AddPostScreen() {
         finalContact = digitsOnly;
       }
 
+      if (kind === 'borrow' && !finalContact) {
+        Toast.show({ type: 'error', text1: 'Contact info is required for Borrow & Share posts' });
+        setIsSubmitting(false);
+        return;
+      }
+
       const { error } = await supabase.from('mcn_posts').insert({
         community_id: communityId,
         user_id: user.id,
@@ -53,7 +59,11 @@ export default function AddPostScreen() {
       if (error) throw error;
       
       Toast.show({ type: 'success', text1: 'Post added' });
-      router.replace('/(tabs)/network');
+      if (source === 'my-posts') {
+        router.replace('/network/my-posts?segment=borrow' as any);
+        return;
+      }
+      router.replace('/network' as any);
     } catch (error) {
       console.error(error);
       Toast.show({ type: 'error', text1: 'Failed to add post' });
@@ -98,10 +108,10 @@ export default function AddPostScreen() {
         </View>
 
         <View style={styles.field}>
-          <Text style={[styles.label, { color: colors.textPrimary }]}>Contact info</Text>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>Contact info {kind === 'borrow' ? <Text style={{ color: colors.danger }}>*</Text> : null}</Text>
           <TextInput
             style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
-            placeholder="e.g. 9876543210 or say 'knock on A101'"
+            placeholder={kind === 'borrow' ? "Required: phone number or where to reach you" : "e.g. 9876543210 or say 'knock on A101'"}
             placeholderTextColor={colors.textMuted}
             value={contactHint}
             onChangeText={setContactHint}

@@ -1,7 +1,8 @@
-import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, SectionList, StyleSheet, Text, TouchableOpacity, View, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { EmptyState } from '../../components/EmptyState';
 import { Verandah } from '../../constants/Colors';
@@ -9,17 +10,20 @@ import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
-import { useFocusEffect } from '@react-navigation/native';
 
 type Post = Tables<'mcn_posts'>;
 type Listing = Tables<'mcn_listings'>;
 
 export default function MyPostsScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const params = useLocalSearchParams<{ segment?: string; source?: string }>();
+  const { user, communityId, isCommunityLead } = useAuth();
   const colors = Verandah;
+  const borrowOnlyView = params.source === 'network' || params.segment === 'borrow';
 
-  const [activeSegment, setActiveSegment] = useState<'business' | 'borrow'>('business');
+  const [activeSegment, setActiveSegment] = useState<'business' | 'borrow'>(
+    borrowOnlyView ? 'borrow' : 'business'
+  );
   const [listings, setListings] = useState<Listing[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,15 +31,30 @@ export default function MyPostsScreen() {
 
   const fetchPosts = useCallback(async (isRefresh = false) => {
     if (!user) return;
+    if (borrowOnlyView && !communityId) {
+      setPosts([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('mcn_posts')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+
+      if (borrowOnlyView) {
+        query = query
+          .eq('community_id', communityId || '')
+          .eq('kind', 'borrow');
+      } else {
+        query = query.eq('user_id', user.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setPosts(data as Post[]);
@@ -46,7 +65,7 @@ export default function MyPostsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user]);
+  }, [borrowOnlyView, communityId, user]);
 
   const fetchListings = useCallback(async (isRefresh = false) => {
     if (!user) return;
@@ -73,12 +92,14 @@ export default function MyPostsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (activeSegment === 'business') {
+      if (borrowOnlyView) {
+        fetchPosts();
+      } else if (activeSegment === 'business') {
         fetchListings();
       } else {
         fetchPosts();
       }
-    }, [activeSegment, fetchListings, fetchPosts])
+    }, [activeSegment, borrowOnlyView, fetchListings, fetchPosts])
   );
 
   const handleClose = async (id: string) => {
@@ -98,8 +119,11 @@ export default function MyPostsScreen() {
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: string, postUserId: string) => {
     if (!user) return;
+    const deletingOwnPost = postUserId === user.id;
+    const canModerateAsLead = !!isCommunityLead && !deletingOwnPost;
+
     Alert.alert('Delete post?', 'This action cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -107,12 +131,23 @@ export default function MyPostsScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
-            const { error } = await supabase
+            let deleteQuery = supabase
               .from('mcn_posts')
               .delete()
-              .eq('id', id)
-              .eq('user_id', user.id);
+              .eq('id', id);
+
+            if (canModerateAsLead) {
+              deleteQuery = deleteQuery.eq('community_id', communityId || '');
+            } else {
+              deleteQuery = deleteQuery.eq('user_id', user.id);
+            }
+
+            const { data, error } = await deleteQuery.select('id').maybeSingle();
             if (error) throw error;
+            if (!data) {
+              Toast.show({ type: 'error', text1: 'Delete failed', text2: 'You can delete only your own post.' });
+              return;
+            }
             Toast.show({ type: 'success', text1: 'Post deleted' });
             fetchPosts();
           } catch (error) {
@@ -171,8 +206,9 @@ export default function MyPostsScreen() {
     );
   };
 
-  const activePosts = posts.filter((p) => p.is_available);
-  const closedPosts = posts.filter((p) => !p.is_available);
+  const visiblePosts = borrowOnlyView ? posts : posts;
+  const activePosts = visiblePosts.filter((p) => p.is_available);
+  const closedPosts = visiblePosts.filter((p) => !p.is_available);
 
   const sections = [];
   if (activePosts.length > 0) sections.push({ title: 'Active', data: activePosts });
@@ -192,42 +228,49 @@ export default function MyPostsScreen() {
       <Stack.Screen options={{ title: 'My community posts' }} />
 
       {/* Tab Switched Header */}
-      <View style={styles.segmentContainer}>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeSegment === 'business' && styles.segmentActive]}
-          onPress={() => { setActiveSegment('business'); }}
-          activeOpacity={0.8}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons
-              name="storefront-outline"
-              size={15}
-              color={activeSegment === 'business' ? colors.textPrimary : colors.textSecondary}
-            />
-            <Text style={[styles.segmentText, activeSegment === 'business' && styles.segmentTextActive]}>
-              Local businesses
-            </Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeSegment === 'borrow' && styles.segmentActive]}
-          onPress={() => { setActiveSegment('borrow'); }}
-          activeOpacity={0.8}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons
-              name="swap-horizontal-outline"
-              size={15}
-              color={activeSegment === 'borrow' ? colors.textPrimary : colors.textSecondary}
-            />
-            <Text style={[styles.segmentText, activeSegment === 'borrow' && styles.segmentTextActive]}>
-              Borrow & free
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </View>
+      {borrowOnlyView ? (
+        <View style={styles.borrowOnlyHeader}>
+          <Text style={[styles.borrowOnlyTitle, { color: colors.textPrimary }]}>Borrow & Share</Text>
+          <Text style={[styles.borrowOnlySubtitle, { color: colors.textSecondary }]}>Community borrow posts in your society</Text>
+        </View>
+      ) : (
+        <View style={styles.segmentContainer}>
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeSegment === 'business' && styles.segmentActive]}
+            onPress={() => { setActiveSegment('business'); }}
+            activeOpacity={0.8}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons
+                name="storefront-outline"
+                size={15}
+                color={activeSegment === 'business' ? colors.textPrimary : colors.textSecondary}
+              />
+              <Text style={[styles.segmentText, activeSegment === 'business' && styles.segmentTextActive]}>
+                Local businesses
+              </Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentBtn, activeSegment === 'borrow' && styles.segmentActive]}
+            onPress={() => { setActiveSegment('borrow'); }}
+            activeOpacity={0.8}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons
+                name="swap-horizontal-outline"
+                size={15}
+                color={activeSegment === 'borrow' ? colors.textPrimary : colors.textSecondary}
+              />
+              <Text style={[styles.segmentText, activeSegment === 'borrow' && styles.segmentTextActive]}>
+                Borrow & Share
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      )}
 
-      {activeSegment === 'business' ? (
+      {!borrowOnlyView && activeSegment === 'business' ? (
         <FlatList
           data={listings}
           keyExtractor={(item) => item.id}
@@ -312,14 +355,14 @@ export default function MyPostsScreen() {
         <SectionList
           sections={sections}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={posts.length === 0 ? styles.emptyList : styles.listContent}
+          contentContainerStyle={visiblePosts.length === 0 ? styles.emptyList : styles.listContent}
           refreshing={refreshing}
           onRefresh={() => fetchPosts(true)}
           ListEmptyComponent={
             <EmptyState
               icon="document-text-outline"
               title="No posts found"
-              message="You haven't shared anything yet."
+              message={borrowOnlyView ? 'No borrow posts in your community yet.' : "You haven't shared anything yet."}
             />
           }
           renderSectionHeader={({ section: { title } }) => (
@@ -327,6 +370,11 @@ export default function MyPostsScreen() {
           )}
           renderItem={({ item }) => (
             <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              {(() => {
+                const isOwner = item.user_id === user?.id;
+                const canDeletePost = isOwner || !!isCommunityLead;
+                return (
+                  <>
               <View style={styles.cardHeader}>
                 <View style={styles.cardTitleWrap}>
                   <Text style={[styles.cardTitle, { color: colors.textPrimary }]} numberOfLines={1}>
@@ -341,30 +389,56 @@ export default function MyPostsScreen() {
                 <Text style={[styles.dateText, { color: colors.textTertiary }]}>
                   {new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </Text>
+                {item.contact_hint ? (
+                  <Text style={[styles.phoneText, { color: colors.textSecondary }]}>Contact: {item.contact_hint}</Text>
+                ) : null}
               </View>
 
-              <View style={styles.cardActions}>
-                {item.is_available ? (
-                  <TouchableOpacity style={styles.actionBtn} onPress={() => handleClose(item.id)}>
-                    <Ionicons name="close-circle-outline" size={14} color={colors.textPrimary} />
-                    <Text style={[styles.actionText, { color: colors.textPrimary }]}>Close</Text>
+              {(!borrowOnlyView || isOwner || canDeletePost) ? (
+                <View style={styles.cardActions}>
+                  {item.is_available && isOwner ? (
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => handleClose(item.id)}>
+                      <Ionicons name="close-circle-outline" size={14} color={colors.textPrimary} />
+                      <Text style={[styles.actionText, { color: colors.textPrimary }]}>Close</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.actionBtn}>
+                      <Ionicons name="checkmark-circle-outline" size={14} color={colors.textMuted} />
+                      <Text style={[styles.actionText, { color: colors.textMuted }]}>Closed</Text>
+                    </View>
+                  )}
+                  <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={() => handleDelete(item.id, item.user_id)}
+                    disabled={!canDeletePost}
+                  >
+                    <Ionicons name="trash-outline" size={14} color={colors.danger} />
+                    <Text style={[styles.actionText, { color: canDeletePost ? colors.danger : colors.textMuted }]}>Delete</Text>
                   </TouchableOpacity>
-                ) : (
-                  <View style={styles.actionBtn}>
-                    <Ionicons name="checkmark-circle-outline" size={14} color={colors.textMuted} />
-                    <Text style={[styles.actionText, { color: colors.textMuted }]}>Closed</Text>
-                  </View>
-                )}
-                <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
-                <TouchableOpacity style={styles.actionBtn} onPress={() => handleDelete(item.id)}>
-                  <Ionicons name="trash-outline" size={14} color={colors.danger} />
-                  <Text style={[styles.actionText, { color: colors.danger }]}>Delete</Text>
-                </TouchableOpacity>
-              </View>
+                </View>
+              ) : null}
+                  </>
+                );
+              })()}
             </View>
           )}
         />
       )}
+
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: colors.primary }]}
+        activeOpacity={0.8}
+        onPress={() => {
+          if (borrowOnlyView || activeSegment === 'borrow') {
+            router.push('/network/add?kind=borrow&source=my-posts' as any);
+            return;
+          }
+          router.push('/network/listing-add' as any);
+        }}
+      >
+        <Ionicons name="add" size={28} color={colors.primaryFg} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -386,6 +460,19 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.cardMuted,
     borderRadius: VerandahRadius.pill,
     padding: 4,
+  },
+  borrowOnlyHeader: {
+    marginHorizontal: 24,
+    marginTop: 16,
+    marginBottom: 10,
+  },
+  borrowOnlyTitle: {
+    ...VerandahType.title,
+    fontSize: 18,
+  },
+  borrowOnlySubtitle: {
+    ...VerandahType.caption,
+    marginTop: 2,
   },
   segmentBtn: {
     flex: 1,
@@ -493,5 +580,20 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
   },
 });

@@ -28,7 +28,7 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 
 ### Layers
 
-- **Screens** (`app/`): expo-router file-based routing. 4 bottom tabs in `app/(tabs)/` (Help, Saved, Community, Profile), onboarding and status routes such as `community-select`, `community-request`, and `community-join-block`, plus feature screens under `app/visits/`, `app/funds/`, `app/funds-access/`, `app/provider/`, `app/services/`, `app/community/`, `app/profile/`, and `app/admin-redirect.tsx`.
+- **Screens** (`app/`): expo-router file-based routing. 5 bottom tabs in `app/(tabs)/` (Help, Saved, MCN, Community, Profile), onboarding and status routes such as `community-select`, `community-request`, and `community-join-block`, plus feature screens under `app/visits/`, `app/funds/`, `app/funds-access/`, `app/provider/`, `app/services/`, `app/community/`, `app/profile/`, `app/network/`, `app/sos/`, and `app/admin-redirect.tsx`.
 - **Components** (`components/`): Reusable UI — `ProviderCard`, `VisitCard`, `FundCard`, `EmptyState`, `SearchBar`, `CategoryFilter`, etc.
 - **State** (`context/`): Two React Context providers — `AuthContext` (session, profile, communityId, appRole, isCommunityLead, isPlatformAdmin) and `NotificationContext` (real-time via Supabase Realtime).
 - **Backend** (`lib/`): Supabase client (`supabase.ts`), auth helpers (`auth.ts`), auto-generated DB types (`database.types.ts`), fund role logic (`fundRoles.ts`), error utilities (`supabaseErrors.ts`).
@@ -65,8 +65,9 @@ Funds activation is gated by platform-admin approval. A community without `funds
 
 - **Icons**: Use `Ionicons` from `@expo/vector-icons` for bottom-tab and other interactive controls. Reserve `APP_EMOJIS` for decorative and non-interactive iconography only.
 - **Date/Time inputs**: Always use `@react-native-community/datetimepicker`, never raw TextInput
-- **Theme**: Enforced light mode. Colors in `constants/Colors.ts` — primary `#6C63FF` (soft indigo), secondary `#10B981` (emerald), accent `#FF6B6B` (coral). Glassmorphism style with `expo-linear-gradient` for gradient headers/buttons.
-- **Style**: Rounded corners (20-24px border-radius), glassmorphism cards (`glass`, `glassBorder` from Colors.ts), soft indigo shadows (`shadowColor: '#6C63FF'`), premium pastel look
+- **Theme**: Enforced light mode via Verandah design system. Colors in `constants/Colors.ts` (`Verandah` palette). Typography, spacing, radius in `constants/Verandah.ts`. No shadows, elevation, or glassmorphism on cards. Font weights capped at 400 and 500.
+- **Style**: Flat surfaces with hairline borders. `BaseCard` for card shells. `Avatar` for deterministic initials avatars. `Rupees` for currency. `EmptyState` for empty screens.
+- **Compact UI**: The Help tab uses WhatsApp chat-tile inspired density — provider cards are single-row horizontal tiles, visit cards use reduced padding, search bars are 36px tall, and category chips use minimal padding. New cards added to the Help screen should follow the same compact convention.
 - **Toast feedback**: Use `react-native-toast-message` for user-facing messages
 - **Single-row queries**: Use `.maybeSingle()` instead of `.single()`
 - **Information architecture**: Community-level info is rendered in the Community tab. Profile tab is account-level only.

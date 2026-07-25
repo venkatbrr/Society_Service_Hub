@@ -19,10 +19,21 @@ Your mission is to take a feature from request to working code with validation a
 ## Repo-Specific Rules
 - Respect multi-tenant boundaries. Any data query must scope by communityId from auth context.
 - For single-row Supabase reads, prefer maybeSingle over single.
-- Use Ionicons from @expo/vector-icons for icons.
+- Use Ionicons from @expo/vector-icons for interactive icons.
 - Use react-native-toast-message for user feedback toasts.
 - Use @react-native-community/datetimepicker for date inputs.
-- Keep the app light-mode compatible and follow established visual style.
+- Follow the **Verandah design system** strictly:
+  - Colors from `constants/Colors.ts` (`Verandah` palette)
+  - Typography, spacing, radius from `constants/Verandah.ts` (`VerandahType`, `VerandahSpace`, `VerandahRadius`)
+  - No shadows, elevation, or glassmorphism on cards. Use flat surfaces with hairline borders.
+  - Font weights capped at 400 and 500. Sentence case only.
+  - Reuse shared components: `BaseCard`, `Avatar`, `Rupees`, `EmptyState`.
+- Categories come from `constants/categories.ts` (`CATEGORIES`, `CATEGORY_GROUPS`) for providers and visits, and from `lib/serviceCategories.ts` for personal reminders.
+- The app has 5 bottom tabs: Help, Saved, MCN (My Community Network), Community, Profile.
+- MCN tables: `mcn_posts`, `mcn_listings`, `mcn_products`, `mcn_orders`, `mcn_order_items`, `mcn_business_categories`.
+- SOS tables: `blood_donors`, `emergency_contacts`.
+- The Help tab uses a compact, WhatsApp chat-tile inspired UI density. New cards on this screen should follow the same compact conventions (reduced padding, inline horizontal layouts, smaller avatars).
+- Image uploads (listing cover photos, product images) use Cloudinary unsigned HTTP upload via `expo-image-picker`.
 
 ## Delivery Workflow
 1. Understand the request and identify impacted routes, components, data tables, and roles.

@@ -1,13 +1,12 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState, useCallback } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { supabase } from '../../../lib/supabase';
 
-import { WEST_HYDERABAD_SCHOOLS, WestHyderabadSchool } from '../../../data/westHyderabadSchools';
+import { WEST_HYDERABAD_SCHOOLS } from '../../../data/westHyderabadSchools';
 
 interface School {
   id: string;
@@ -130,20 +129,6 @@ export default function CompareSchoolsScreen() {
               {schools.map((school) => (
                 <View key={school.id} style={styles.valueCell}>
                   <Text style={[styles.valueText, { color: colors.textPrimary }]}>{school.syllabus}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Distance Row */}
-            <View style={[styles.row, { borderBottomColor: colors.border }]}>
-              <View style={styles.labelCell}>
-                <Text style={[styles.labelText, { color: colors.textSecondary }]}>Distance</Text>
-              </View>
-              {schools.map((school) => (
-                <View key={school.id} style={styles.valueCell}>
-                  <Text style={[styles.valueText, styles.highlightText, { color: colors.accent }]}>
-                    {school.distance} km
-                  </Text>
                 </View>
               ))}
             </View>

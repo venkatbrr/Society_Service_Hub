@@ -16,6 +16,7 @@ Use the user request plus any provided logs, screenshots, file references, and a
 Choose exactly one agent using these rules:
 - Use `bug_fix` when the request is about bugs, regressions, crashes, failing checks, broken data flows, or incorrect existing behavior.
 - Use `Feature Implementation` when the request is about building new functionality, adding or changing screens, wiring data, or extending behavior.
+- Use `docs_update` when the request is specifically about updating, syncing, or auditing documentation after code changes.
 
 If classification is ambiguous, ask up to 2 concise clarifying questions before delegating.
 
@@ -30,8 +31,8 @@ Before delegation, collect only relevant context:
 Pass a structured handoff to the selected agent using this exact template:
 
 ```
-Task Type: <Bug | Feature>
-Selected Agent: <bug_fix | Feature Implementation>
+Task Type: <Bug | Feature | Docs>
+Selected Agent: <bug_fix | Feature Implementation | docs_update>
 Objective: <one-paragraph goal>
 Current Behavior: <for bugs; else N/A>
 Expected Behavior: <for bugs or features>
@@ -60,7 +61,7 @@ Known Risks/Unknowns:
 
 ## Delegation
 Invoke exactly one subagent with the handoff packet.
-- Use agent name `bug_fix` or `Feature Implementation` (exact spelling).
+- Use agent name `bug_fix`, `Feature Implementation`, or `docs_update` (exact spelling).
 - Instruct the subagent to keep changes minimal, validate fully, and update docs when required.
 
 ## Response Format

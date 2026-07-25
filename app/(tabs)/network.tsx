@@ -3,21 +3,20 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../components/BaseCard';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { WEST_HYDERABAD_SCHOOLS } from '../../data/westHyderabadSchools';
 import { supabase } from '../../lib/supabase';
 
 export default function NetworkScreen() {
@@ -63,7 +62,7 @@ export default function NetworkScreen() {
 
         setBusinessCount(businessRes.count ?? 0);
         setParentCount(parentRes.count ?? 0);
-        setSchoolCount(schoolRes.count ?? 0);
+        setSchoolCount(WEST_HYDERABAD_SCHOOLS.length + (schoolRes.count ?? 0));
         setPostCount(postRes.count ?? 0);
       } catch (err) {
         console.error('Error fetching MCN section stats:', err);
@@ -217,7 +216,7 @@ export default function NetworkScreen() {
         {/* 4. Borrow & Share Section Card */}
         <BaseCard
           padding={18}
-          onPress={() => router.push('/network/my-posts' as any)}
+          onPress={() => router.push('/network/my-posts?segment=borrow&source=network' as any)}
           style={styles.sectionCard}
         >
           <View style={styles.cardHeaderRow}>

@@ -47,6 +47,7 @@ Verandah is the only active UI language in the app. UI surfaces must follow thes
 - No decorative gradients for cards, chrome, or CTA fills.
 - No elevation/shadow-based depth for cards.
 - Font weights capped to `400` and `500`.
+- **Compact density**: The Help tab uses WhatsApp chat-tile inspired UI density where provider cards are single-row horizontal tiles (avatar · name · inline meta · bookmark), visit cards have reduced padding (10px) and smaller avatars (30px), search bars are 36px tall, and category chips use minimal vertical padding (4px). New cards added to the Help screen should follow this compact convention.
 
 Token sources:
 
@@ -397,6 +398,7 @@ app/_layout.tsx
   -> /funds-access/request
   -> /services/*
   -> /sos/*
+  -> /network/*
   -> /admin-redirect
 ```
 
@@ -404,10 +406,11 @@ app/_layout.tsx
 
 - Help
 - Saved
+- MCN (My Community Network)
 - Community
 - Profile
 
-Tab icons are currently rendered with `APP_EMOJIS` inside `Text` elements.
+Tab icons use `Ionicons` with filled/outline variants for active/inactive states.
 
 The community tab consolidates the funds summary, residents-directory shortcut, SOS shortcut, and community information card. The earlier pulse line is intentionally removed from the tab UI. Fund detail and create/transaction flows remain in `/funds/*` top-level routes.
 

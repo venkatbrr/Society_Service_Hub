@@ -135,22 +135,22 @@ export const CategoryFilter = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: VerandahSpace.xs + 2,
+    marginBottom: 4,
     marginHorizontal: -24,
   },
   groupScrollContent: {
     paddingHorizontal: 24,
-    gap: VerandahSpace.sm,
-    paddingBottom: VerandahSpace.xs + 2,
+    gap: 6,
+    paddingBottom: 4,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    gap: VerandahSpace.sm,
+    gap: 6,
   },
   chip: {
-    paddingHorizontal: VerandahSpace.lg,
-    paddingVertical: VerandahSpace.sm,
-    borderRadius: VerandahRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: VerandahRadius.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     borderColor: Verandah.border,
   },
   chipText: {
-    ...VerandahType.body,
+    fontSize: 12.5,
     fontWeight: '500',
   },
   chipTextActive: {

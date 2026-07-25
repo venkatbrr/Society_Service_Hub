@@ -73,7 +73,7 @@ export default function ListingDetailScreen() {
       router.back();
       return;
     }
-    router.replace('/(tabs)/network' as any);
+    router.replace('/network' as any);
   };
 
   const fetchPublicReviews = useCallback(async () => {

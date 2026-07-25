@@ -4,15 +4,16 @@ import * as Linking from 'expo-linking';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../../components/BaseCard';
@@ -21,8 +22,8 @@ import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { APP_EMOJIS } from '../../../constants/emojis';
-import { WEST_HYDERABAD_SCHOOLS, WestHyderabadSchool } from '../../../data/westHyderabadSchools';
 import { useAuth } from '../../../context/AuthContext';
+import { WEST_HYDERABAD_SCHOOLS, WestHyderabadSchool } from '../../../data/westHyderabadSchools';
 import { supabase } from '../../../lib/supabase';
 
 const LEVEL_MAP = {
@@ -174,9 +175,23 @@ export default function SchoolsCatalogScreen() {
     if (!/^https?:\/\//i.test(finalUrl)) {
       finalUrl = 'https://' + finalUrl;
     }
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.open(finalUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
     Linking.openURL(finalUrl).catch(() => {
       Toast.show({ type: 'error', text1: 'Could not open link' });
     });
+  };
+
+  const getMapsUrl = (school: WestHyderabadSchool) => {
+    if (school.google_maps_link?.trim()) {
+      return school.google_maps_link.trim();
+    }
+    if (school.address?.trim()) {
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(school.address.trim())}`;
+    }
+    return null;
   };
 
   const handleCall = (phone: string | null) => {
@@ -189,6 +204,7 @@ export default function SchoolsCatalogScreen() {
 
   const renderSchoolCard = (school: WestHyderabadSchool) => {
     const isSelected = selectedSchoolIds.includes(school.id);
+    const mapsUrl = getMapsUrl(school);
 
     return (
       <BaseCard key={school.id} padding={16} style={styles.card}>
@@ -272,10 +288,10 @@ export default function SchoolsCatalogScreen() {
             </TouchableOpacity>
           ) : null}
 
-          {school.google_maps_link ? (
+          {mapsUrl ? (
             <TouchableOpacity
               style={[styles.actionBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
-              onPress={() => handleOpenLink(school.google_maps_link)}
+              onPress={() => handleOpenLink(mapsUrl)}
             >
               <Ionicons name="navigate-outline" size={15} color="#2563EB" style={{ marginRight: 4 }} />
               <Text style={[styles.actionBtnText, { color: colors.textPrimary }]}>Maps</Text>
@@ -283,7 +299,7 @@ export default function SchoolsCatalogScreen() {
           ) : null}
 
           <TouchableOpacity
-            style={[styles.detailsBtn, { backgroundColor: colors.surface2 }]}
+            style={[styles.detailsBtn, { backgroundColor: colors.cardMuted }]}
             onPress={() => router.push(`/network/schools/${school.id}` as any)}
           >
             <Text style={[styles.detailsBtnText, { color: colors.primary }]}>Details →</Text>

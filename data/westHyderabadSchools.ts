@@ -1257,5 +1257,29 @@ export const WEST_HYDERABAD_SCHOOLS: WestHyderabadSchool[] = [
       "CCTV"
     ],
     "description": "Verified school listing in Gachibowli. Board/Curriculum: CBSE. Located at University of Hyderabad Campus, Gachibowli, Hyderabad - 500046, Telangana"
+  },
+  {
+    "id": "wh_school_51",
+    "name": "Delhi Public School, Kollur",
+    "area_locality": "Kollur",
+    "syllabus": "CBSE",
+    "level": "all_in_one",
+    "address": "Kollur, Hyderabad, Telangana",
+    "contact_phone": "",
+    "google_rating": "",
+    "website": "",
+    "google_maps_link": "",
+    "fee_range": "₹1.2L - ₹2.8L / yr",
+    "distance": 0,
+    "facilities": [
+      "Transport",
+      "Playground",
+      "Smart Classes",
+      "Science Lab",
+      "Library",
+      "Computer Lab",
+      "CCTV"
+    ],
+    "description": "Community-requested listing for DPS in Kollur. Address and contact details can be updated by residents when verified."
   }
 ];

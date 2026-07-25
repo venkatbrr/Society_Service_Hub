@@ -87,22 +87,22 @@ export function UpcomingServicesCard() {
         <View style={styles.zeroRow}>
           <Text style={styles.zeroEmoji}>🔧</Text>
           <View style={styles.zeroContent}>
-            <Text style={styles.zeroTitle}>Never miss maintenance</Text>
-            <Text style={styles.zeroBody}>
-              Track your AC, RO and other services
+            <Text style={styles.zeroTitle} numberOfLines={1}>Never miss maintenance</Text>
+            <Text style={styles.zeroBody} numberOfLines={1}>
+              Track AC, RO and other services
             </Text>
           </View>
+          <TouchableOpacity
+            style={styles.zeroCtaCompact}
+            onPress={() => router.push('/services/add')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.zeroCtaTextCompact}>Add service</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={handleDismiss} style={styles.dismissBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Text style={styles.dismissText}>✕</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.zeroCta}
-          onPress={() => router.push('/services/add')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.zeroCtaText}>Add your first service</Text>
-        </TouchableOpacity>
       </View>
     );
   }
@@ -163,50 +163,51 @@ export function UpcomingServicesCard() {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: VerandahRadius.lg,
+    borderRadius: VerandahRadius.md,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     backgroundColor: Verandah.card,
-    marginBottom: VerandahSpace.sm + 2,
-    padding: VerandahSpace.md,
+    marginBottom: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   // Zero state
-  zeroRow: { flexDirection: 'row', alignItems: 'center', gap: VerandahSpace.sm + 2, marginBottom: VerandahSpace.sm },
-  zeroEmoji: { fontSize: 22 },
+  zeroRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  zeroEmoji: { fontSize: 18 },
   zeroContent: { flex: 1 },
-  zeroTitle: { ...VerandahType.bodyBold, color: Verandah.textPrimary },
-  zeroBody: { ...VerandahType.caption, color: Verandah.textSecondary, marginTop: 2 },
-  dismissBtn: { padding: 2 },
-  dismissText: { color: Verandah.textMuted, fontSize: 16 },
-  zeroCta: { borderRadius: VerandahRadius.md, paddingVertical: VerandahSpace.sm, alignItems: 'center', backgroundColor: Verandah.primary },
-  zeroCtaText: { ...VerandahType.bodyBold, color: Verandah.primaryFg },
+  zeroTitle: { fontSize: 13, fontWeight: '500', color: Verandah.textPrimary },
+  zeroBody: { fontSize: 11, color: Verandah.textSecondary, marginTop: 1 },
+  dismissBtn: { padding: 4, marginLeft: 2 },
+  dismissText: { color: Verandah.textMuted, fontSize: 14 },
+  zeroCtaCompact: { borderRadius: VerandahRadius.sm, paddingVertical: 5, paddingHorizontal: 10, backgroundColor: Verandah.primary },
+  zeroCtaTextCompact: { fontSize: 12, fontWeight: '500', color: Verandah.primaryFg },
   // All on track
   trackRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  trackText: { ...VerandahType.bodyBold, color: Verandah.accent },
-  viewAll: { ...VerandahType.caption, fontWeight: '500', color: Verandah.accent },
+  trackText: { fontSize: 13, fontWeight: '500', color: Verandah.accent },
+  viewAll: { fontSize: 12, fontWeight: '500', color: Verandah.accent },
   // Has-due
-  cardHeader: { marginBottom: VerandahSpace.sm + 2 },
-  cardTitle: { ...VerandahType.bodyBold, color: Verandah.textPrimary },
+  cardHeader: { marginBottom: 4 },
+  cardTitle: { fontSize: 13, fontWeight: '500', color: Verandah.textPrimary },
   serviceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: VerandahSpace.sm,
+    paddingVertical: 6,
     borderTopWidth: 0.5,
     borderTopColor: Verandah.border,
-    gap: VerandahSpace.sm,
+    gap: 8,
   },
-  rowEmoji: { fontSize: 20 },
-  rowContent: { flex: 1, gap: VerandahSpace.xs },
-  rowName: { ...VerandahType.bodyBold, color: Verandah.textPrimary },
-  findTech: { ...VerandahType.caption, fontWeight: '500', color: Verandah.accent },
+  rowEmoji: { fontSize: 18 },
+  rowContent: { flex: 1, gap: 2 },
+  rowName: { fontSize: 13, fontWeight: '500', color: Verandah.textPrimary },
+  findTech: { fontSize: 12, fontWeight: '500', color: Verandah.accent },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: VerandahSpace.sm + 2,
-    paddingTop: VerandahSpace.sm + 2,
+    marginTop: 4,
+    paddingTop: 4,
     borderTopWidth: 0.5,
     borderTopColor: Verandah.border,
   },
-  footerLink: { ...VerandahType.caption, fontWeight: '500', color: Verandah.accent },
-  footerLinkMuted: { ...VerandahType.caption, fontWeight: '500', color: Verandah.textTertiary },
+  footerLink: { fontSize: 12, fontWeight: '500', color: Verandah.accent },
+  footerLinkMuted: { fontSize: 12, fontWeight: '500', color: Verandah.textTertiary },
 });

@@ -81,7 +81,7 @@ export default function ManageListingScreen() {
       router.back();
       return;
     }
-    router.replace('/(tabs)/network' as any);
+    router.replace('/network' as any);
   };
 
   const fetchData = useCallback(async () => {
@@ -103,7 +103,7 @@ export default function ManageListingScreen() {
       // Security check: ensure current user is owner
       if (listingData.owner_id !== user.id) {
         Toast.show({ type: 'error', text1: 'Not authorized to manage this listing' });
-        router.replace('/(tabs)/network');
+        router.replace('/network' as any);
         return;
       }
 
@@ -402,7 +402,7 @@ export default function ManageListingScreen() {
 
               if (error) throw error;
               Toast.show({ type: 'success', text1: 'Listing deleted' });
-              router.replace('/(tabs)/network');
+              router.replace('/network' as any);
             } catch (error: any) {
               console.error(error);
               Toast.show({ type: 'error', text1: 'Failed to delete listing' });
