@@ -4,14 +4,16 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { AspectScores, SchoolRadarChart } from '../../../components/SchoolRadarChart';
+import { SchoolReviewCard, SchoolReviewItem } from '../../../components/SchoolReviewCard';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { getEmojiForScore, SCHOOL_ASPECTS } from '../../../constants/schoolReviewAspects';
 import { useAuth } from '../../../context/AuthContext';
+import { WEST_HYDERABAD_SCHOOLS } from '../../../data/westHyderabadSchools';
 import { supabase } from '../../../lib/supabase';
 
-import { WEST_HYDERABAD_SCHOOLS } from '../../../data/westHyderabadSchools';
-
-interface School {
+interface School extends AspectScores {
   id: string;
   name: string;
   level: 'pre_school' | 'primary' | 'high_school' | 'all_in_one';
@@ -27,6 +29,7 @@ interface School {
   address?: string;
   google_rating?: string;
   google_maps_link?: string;
+  review_count?: number;
 }
 
 const LEVEL_MAP = {
@@ -43,7 +46,9 @@ export default function SchoolDetailScreen() {
   const colors = Verandah;
 
   const [school, setSchool] = useState<School | null>(null);
+  const [reviews, setReviews] = useState<SchoolReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAllReviews, setShowAllReviews] = useState(false);
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -73,6 +78,19 @@ export default function SchoolDetailScreen() {
 
       if (error) throw error;
       setSchool(data as School);
+
+      // Load school reviews with profile details
+      const { data: reviewsData, error: reviewsErr } = await supabase
+        .from('school_reviews')
+        .select('*, profiles(full_name, flat_number)')
+        .eq('school_id', schoolId)
+        .order('created_at', { ascending: false });
+
+      if (reviewsErr) {
+        console.error('Error fetching reviews:', reviewsErr);
+      } else {
+        setReviews(reviewsData as SchoolReviewItem[]);
+      }
     } catch (error) {
       console.error(error);
       Toast.show({ type: 'error', text1: 'Failed to load school details' });
@@ -176,6 +194,28 @@ export default function SchoolDetailScreen() {
 
   const isOwner = school.created_by === user?.id;
   const canDelete = isOwner || isCommunityLead;
+  const ownReview = reviews.find((r) => r.user_id === user?.id);
+  const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 3);
+
+  // Overall average across the 7 aspects
+  const aspectScores: AspectScores = {
+    avg_academics: school.avg_academics || 0,
+    avg_teachers: school.avg_teachers || 0,
+    avg_infrastructure: school.avg_infrastructure || 0,
+    avg_safety: school.avg_safety || 0,
+    avg_transport: school.avg_transport || 0,
+    avg_value: school.avg_value || 0,
+    avg_happiness: school.avg_happiness || 0,
+  };
+
+  const totalAspectAvg =
+    (aspectScores.avg_academics +
+      aspectScores.avg_teachers +
+      aspectScores.avg_infrastructure +
+      aspectScores.avg_safety +
+      aspectScores.avg_transport +
+      aspectScores.avg_value +
+      aspectScores.avg_happiness) / 7;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -288,6 +328,94 @@ export default function SchoolDetailScreen() {
           )}
         </View>
 
+        {/* --- PARENT REPORT CARD SECTION --- */}
+        <View style={styles.section}>
+          <View style={styles.reportHeaderRow}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              📋 Parent Report Card
+            </Text>
+            {school.review_count ? (
+              <Text style={styles.reviewCountBadge}>
+                {school.review_count} {school.review_count === 1 ? 'review' : 'reviews'}
+              </Text>
+            ) : null}
+          </View>
+
+          {/* Spider/Radar Chart (when reviews >= 1) */}
+          {reviews.length > 0 ? (
+            <View style={styles.chartBox}>
+              <Text style={styles.chartSubtitle}>Community Score Breakdown (7 Dimensions)</Text>
+              <SchoolRadarChart scores={aspectScores} size={250} />
+
+              {/* Aspect Breakdown List */}
+              <View style={styles.aspectListWrap}>
+                {SCHOOL_ASPECTS.map((aspect) => {
+                  const key = `avg_${aspect.key}` as keyof AspectScores;
+                  const val = aspectScores[key] || 0;
+                  return (
+                    <View key={aspect.key} style={styles.aspectListRow}>
+                      <Text style={styles.aspectListLabel}>
+                        {aspect.emoji} {aspect.label}
+                      </Text>
+                      <View style={styles.aspectListValWrap}>
+                        <Text style={styles.aspectListEmoji}>{getEmojiForScore(val)}</Text>
+                        <Text style={styles.aspectListScore}>{val > 0 ? val.toFixed(1) : '-'}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          ) : (
+            <View style={styles.noReviewsBox}>
+              <Text style={styles.noReviewsTitle}>No parent report cards yet</Text>
+              <Text style={styles.noReviewsText}>
+                Be the first parent from your society to grade this school across 7 key dimensions!
+              </Text>
+            </View>
+          )}
+
+          {/* Write / Edit Review CTA */}
+          <TouchableOpacity
+            style={styles.reviewCtaBtn}
+            onPress={() => router.push(`/network/schools/review?schoolId=${school.id}` as any)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="clipboard-outline" size={18} color="#FFFFFF" />
+            <Text style={styles.reviewCtaText}>
+              {ownReview ? 'Edit Your Parent Report Card' : 'Grade This School (Parent Report Card)'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Parent Reviews List */}
+          {reviews.length > 0 ? (
+            <View style={{ marginTop: 24 }}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 12 }]}>
+                Community Parent Reviews ({reviews.length})
+              </Text>
+              {displayedReviews.map((item) => (
+                <SchoolReviewCard
+                  key={item.id}
+                  review={item}
+                  isOwnReview={item.user_id === user?.id}
+                  onEdit={() => router.push(`/network/schools/review?schoolId=${school.id}` as any)}
+                />
+              ))}
+
+              {reviews.length > 3 ? (
+                <TouchableOpacity
+                  style={styles.toggleReviewsBtn}
+                  onPress={() => setShowAllReviews(!showAllReviews)}
+                >
+                  <Text style={styles.toggleReviewsText}>
+                    {showAllReviews ? 'Show fewer reviews' : `View all ${reviews.length} parent reviews`}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ) : null}
+        </View>
+
       </ScrollView>
     </View>
   );
@@ -398,5 +526,110 @@ const styles = StyleSheet.create({
   emptyFacilitiesText: {
     fontSize: 13,
     fontStyle: 'italic',
+  },
+  reportHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  reviewCountBadge: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Verandah.accent,
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  chartBox: {
+    backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    borderRadius: VerandahRadius.lg,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  chartSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: Verandah.textSecondary,
+    marginBottom: 8,
+  },
+  aspectListWrap: {
+    width: '100%',
+    marginTop: 16,
+    borderTopWidth: 0.5,
+    borderTopColor: Verandah.border,
+    paddingTop: 12,
+    gap: 8,
+  },
+  aspectListRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  aspectListLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: Verandah.textSecondary,
+  },
+  aspectListValWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  aspectListEmoji: {
+    fontSize: 13,
+  },
+  aspectListScore: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Verandah.textPrimary,
+  },
+  noReviewsBox: {
+    backgroundColor: '#F9FAFB',
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    borderRadius: VerandahRadius.lg,
+    padding: 18,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  noReviewsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Verandah.textPrimary,
+    marginBottom: 4,
+  },
+  noReviewsText: {
+    fontSize: 12,
+    color: Verandah.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  reviewCtaBtn: {
+    flexDirection: 'row',
+    backgroundColor: Verandah.accent,
+    paddingVertical: 12,
+    borderRadius: VerandahRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  reviewCtaText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  toggleReviewsBtn: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  toggleReviewsText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Verandah.accent,
   },
 });

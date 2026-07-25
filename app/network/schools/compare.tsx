@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../../constants/Colors';
 import { supabase } from '../../../lib/supabase';
@@ -46,6 +46,7 @@ const COMPARE_FACILITIES = [
 
 export default function CompareSchoolsScreen() {
   const { ids: idsParam } = useLocalSearchParams<{ ids: string }>();
+  const router = useRouter();
   const colors = Verandah;
 
   const [schools, setSchools] = useState<School[]>([]);
@@ -101,7 +102,16 @@ export default function CompareSchoolsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
-      <Stack.Screen options={{ title: 'Compare schools' }} />
+      <Stack.Screen
+        options={{
+          title: 'Compare schools',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.replace('/network/schools' as any)} style={{ marginRight: 12 }}>
+              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
 
       <ScrollView horizontal contentContainerStyle={{ flexGrow: 1 }} showsHorizontalScrollIndicator={false}>
         <ScrollView style={styles.verticalScroll} showsVerticalScrollIndicator={false}>

@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../components/Avatar';
 import { RatingStars } from '../../../components/RatingStars';
@@ -67,6 +67,7 @@ export default function ListingDetailScreen() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -313,12 +314,17 @@ export default function ListingDetailScreen() {
       />
 
       {listing.image_url ? (
-        <Image
-          source={{ uri: listing.image_url }}
-          style={styles.heroImage}
-          contentFit="cover"
-          transition={300}
-        />
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => setSelectedImageUrl(listing.image_url || null)}
+        >
+          <Image
+            source={{ uri: listing.image_url }}
+            style={styles.heroImage}
+            contentFit="cover"
+            transition={300}
+          />
+        </TouchableOpacity>
       ) : null}
 
       <View style={styles.ownerCard}>
@@ -394,12 +400,17 @@ export default function ListingDetailScreen() {
                     ]}
                   >
                     {(product as any).image_url ? (
-                      <Image
-                        source={{ uri: (product as any).image_url }}
-                        style={styles.productThumb}
-                        contentFit="cover"
-                        transition={200}
-                      />
+                      <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPress={() => setSelectedImageUrl((product as any).image_url || null)}
+                      >
+                        <Image
+                          source={{ uri: (product as any).image_url }}
+                          style={styles.productThumb}
+                          contentFit="cover"
+                          transition={200}
+                        />
+                      </TouchableOpacity>
                     ) : null}
                     <View style={styles.productLeft}>
                       <Text style={[styles.productName, { color: colors.textPrimary }]}>{product.name}</Text>
@@ -443,12 +454,17 @@ export default function ListingDetailScreen() {
                     ]}
                   >
                     {(product as any).image_url ? (
-                      <Image
-                        source={{ uri: (product as any).image_url }}
-                        style={styles.productThumb}
-                        contentFit="cover"
-                        transition={200}
-                      />
+                      <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPress={() => setSelectedImageUrl((product as any).image_url || null)}
+                      >
+                        <Image
+                          source={{ uri: (product as any).image_url }}
+                          style={styles.productThumb}
+                          contentFit="cover"
+                          transition={200}
+                        />
+                      </TouchableOpacity>
                     ) : null}
                     <View style={styles.productLeft}>
                       <Text style={[styles.productName, { color: colors.textPrimary }]}>{product.name}</Text>
@@ -575,6 +591,33 @@ export default function ListingDetailScreen() {
          </TouchableOpacity>
          <Text style={[styles.reviewNote, { color: colors.textSecondary }]}>Reviews are only visible to our community members.</Text>
       </View>
+
+      <Modal
+        visible={!!selectedImageUrl}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedImageUrl(null)}
+      >
+        <Pressable style={styles.viewerOverlay} onPress={() => setSelectedImageUrl(null)}>
+          <TouchableOpacity
+            style={styles.viewerCloseBtn}
+            onPress={(e) => {
+              e.stopPropagation();
+              setSelectedImageUrl(null);
+            }}
+          >
+            <Ionicons name="close" size={24} color={colors.surface} />
+          </TouchableOpacity>
+          <Pressable onPress={(e) => e.stopPropagation()} style={styles.viewerImageWrap}>
+            <Image
+              source={{ uri: selectedImageUrl || '' }}
+              style={styles.viewerImage}
+              contentFit="contain"
+              transition={200}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -735,6 +778,33 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: Verandah.border,
     marginBottom: 16,
+  },
+  viewerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  viewerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  viewerImageWrap: {
+    width: '100%',
+    height: '100%',
+  },
+  viewerCloseBtn: {
+    position: 'absolute',
+    top: 48,
+    right: 20,
+    zIndex: 2,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
   },
   publicReviewList: {
     gap: 12,

@@ -26,6 +26,7 @@ export default function NetworkScreen() {
   const colors = Verandah;
 
   const [businessCount, setBusinessCount] = useState<number | null>(null);
+  const [preorderCount, setPreorderCount] = useState<number | null>(null);
   const [parentCount, setParentCount] = useState<number | null>(null);
   const [schoolCount, setSchoolCount] = useState<number | null>(null);
   const [postCount, setPostCount] = useState<number | null>(null);
@@ -39,12 +40,17 @@ export default function NetworkScreen() {
       else setLoading(true);
 
       try {
-        const [businessRes, parentRes, schoolRes, postRes] = await Promise.all([
+        const [businessRes, preorderRes, parentRes, schoolRes, postRes] = await Promise.all([
           supabase
             .from('mcn_listings')
             .select('id', { count: 'exact', head: true })
             .eq('community_id', communityId)
             .eq('is_active', true),
+          supabase
+            .from('mcn_preorder_drops')
+            .select('id', { count: 'exact', head: true })
+            .eq('community_id', communityId)
+            .eq('status', 'open'),
           supabase
             .from('mcn_parent_corner')
             .select('id', { count: 'exact', head: true })
@@ -61,6 +67,7 @@ export default function NetworkScreen() {
         ]);
 
         setBusinessCount(businessRes.count ?? 0);
+        setPreorderCount(preorderRes.count ?? 0);
         setParentCount(parentRes.count ?? 0);
         setSchoolCount(WEST_HYDERABAD_SCHOOLS.length + (schoolRes.count ?? 0));
         setPostCount(postRes.count ?? 0);
@@ -154,6 +161,34 @@ export default function NetworkScreen() {
           </Text>
           <View style={[styles.cardFooter, { borderColor: colors.border }]}>
             <Text style={[styles.actionLinkText, { color: colors.primary }]}>Explore Businesses →</Text>
+          </View>
+        </BaseCard>
+
+        {/* 1B. Food Pre-Orders & Flash Drops Section Card */}
+        <BaseCard
+          padding={18}
+          onPress={() => router.push('/network/drops' as any)}
+          style={styles.sectionCard}
+        >
+          <View style={styles.cardHeaderRow}>
+            <View style={[styles.iconCircle, { backgroundColor: '#FEE2E2' }]}>
+              <Text style={styles.iconEmoji}>🍕</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Food Pre-Orders & Flash Drops</Text>
+              {preorderCount !== null && (
+                <Text style={[styles.badgeText, { color: '#DC2626' }]}>
+                  {preorderCount} {preorderCount === 1 ? 'open food drop' : 'open food drops'}
+                </Text>
+              )}
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            Pre-order weekend pizzas, home-baked sweets & pop-up meals before cut-off deadlines. Host your own food drop!
+          </Text>
+          <View style={[styles.cardFooter, { borderColor: colors.border }]}>
+            <Text style={[styles.actionLinkText, { color: colors.accent }]}>View Food Drops & Pre-Order →</Text>
           </View>
         </BaseCard>
 

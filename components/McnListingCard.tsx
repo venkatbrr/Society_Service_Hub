@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import React, { useEffect, useRef, useState } from 'react';
-import { BackHandler, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { Avatar } from './Avatar';
@@ -47,70 +47,27 @@ export const McnListingCard = React.memo(({
   onRemove,
 }: McnListingCardProps) => {
   const [showMenu, setShowMenu] = useState(false);
-  const [showImageViewer, setShowImageViewer] = useState(false);
-  const [blockCardPress, setBlockCardPress] = useState(false);
-  const unblockPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isOwner = listing.owner_id === currentUserId;
   const ratings = listing.ratings || [];
   const ratingCount = ratings.length;
   const avgRating = ratingCount > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
-
-  useEffect(() => {
-    return () => {
-      if (unblockPressTimerRef.current) {
-        clearTimeout(unblockPressTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!showImageViewer) return;
-
-    const backSub = BackHandler.addEventListener('hardwareBackPress', () => {
-      guardCardPress();
-      setShowImageViewer(false);
-      return true;
-    });
-
-    return () => backSub.remove();
-  }, [showImageViewer]);
-
-  const guardCardPress = () => {
-    if (unblockPressTimerRef.current) {
-      clearTimeout(unblockPressTimerRef.current);
-    }
-    setBlockCardPress(true);
-    unblockPressTimerRef.current = setTimeout(() => {
-      setBlockCardPress(false);
-      unblockPressTimerRef.current = null;
-    }, 350);
-  };
 
   return (
     <BaseCard
       style={[styles.card, !listing.is_active && styles.inactiveCard]}
       padding={listing.image_url ? 0 : 16}
       onPress={() => {
-        if (blockCardPress || showImageViewer || showMenu) return;
+        if (showMenu) return;
         onPress(listing.id);
       }}
     >
       {listing.image_url ? (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={(e) => {
-            e.stopPropagation();
-            guardCardPress();
-            setShowImageViewer(true);
-          }}
-        >
-          <Image
-            source={{ uri: listing.image_url }}
-            style={styles.coverImage}
-            contentFit="cover"
-            transition={200}
-          />
-        </TouchableOpacity>
+        <Image
+          source={{ uri: listing.image_url }}
+          style={styles.coverImage}
+          contentFit="cover"
+          transition={200}
+        />
       ) : null}
       <View style={listing.image_url ? styles.cardContentWithImage : undefined}>
       <View style={styles.header}>
@@ -196,37 +153,6 @@ export const McnListingCard = React.memo(({
           </View>
         </Pressable>
       </Modal>
-      <Modal visible={showImageViewer} transparent animationType="fade" onRequestClose={() => {
-        guardCardPress();
-        setShowImageViewer(false);
-      }}>
-        <Pressable
-          style={styles.viewerOverlay}
-          onPress={() => {
-            guardCardPress();
-            setShowImageViewer(false);
-          }}
-        >
-          <TouchableOpacity
-            style={styles.viewerCloseBtn}
-            onPress={(e) => {
-              e.stopPropagation();
-              guardCardPress();
-              setShowImageViewer(false);
-            }}
-          >
-            <Ionicons name="close" size={24} color={Verandah.surface} />
-          </TouchableOpacity>
-          <Pressable onPress={(e) => e.stopPropagation()} style={styles.viewerImageWrap}>
-            <Image
-              source={{ uri: listing.image_url || '' }}
-              style={styles.viewerImage}
-              contentFit="contain"
-              transition={200}
-            />
-          </Pressable>
-        </Pressable>
-      </Modal>
     </BaseCard>
   );
 });
@@ -266,36 +192,37 @@ const styles = StyleSheet.create({
   },
   ownerMeta: {
     ...VerandahType.caption,
-  },
-  menuBtn: {
-    padding: 4,
-    marginRight: -4,
+    fontSize: 12,
   },
   categoryBadge: {
-    marginTop: 6,
     alignSelf: 'flex-start',
-    backgroundColor: Verandah.cardMuted,
-    borderRadius: VerandahRadius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 4,
   },
   categoryBadgeText: {
-    ...VerandahType.micro,
+    fontSize: 11,
+    fontWeight: '500',
     color: Verandah.textSecondary,
   },
   inactiveBadge: {
     alignSelf: 'flex-start',
-    marginTop: 6,
-    borderRadius: VerandahRadius.pill,
-    backgroundColor: Verandah.cardMuted,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 4,
   },
   inactiveBadgeText: {
     ...VerandahType.micro,
     color: Verandah.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
+  },
+  menuBtn: {
+    padding: 6,
   },
   description: {
     ...VerandahType.body,

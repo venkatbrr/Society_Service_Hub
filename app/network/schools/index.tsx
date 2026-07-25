@@ -251,7 +251,13 @@ export default function SchoolsCatalogScreen() {
             <Text style={[styles.syllabusLabel, { color: colors.textMuted }]}>Board: </Text>
             <Text style={[styles.syllabusVal, { color: colors.textPrimary }]}>{school.syllabus}</Text>
           </View>
-          {school.google_rating ? (
+          {school.review_count && school.review_count > 0 ? (
+            <View style={styles.parentReviewBadge}>
+              <Text style={styles.parentReviewBadgeText}>
+                📋 {school.review_count} {school.review_count === 1 ? 'parent review' : 'parent reviews'}
+              </Text>
+            </View>
+          ) : school.google_rating ? (
             <View style={styles.ratingBadge}>
               <Ionicons name="star" size={14} color="#F59E0B" style={{ marginRight: 4 }} />
               <Text style={[styles.ratingText, { color: colors.textPrimary }]}>{school.google_rating}</Text>
@@ -620,6 +626,17 @@ const styles = StyleSheet.create({
   syllabusVal: {
     ...VerandahType.bodyBold,
     fontSize: 13,
+  },
+  parentReviewBadge: {
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: VerandahRadius.pill,
+  },
+  parentReviewBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Verandah.accent,
   },
   ratingBadge: {
     flexDirection: 'row',
