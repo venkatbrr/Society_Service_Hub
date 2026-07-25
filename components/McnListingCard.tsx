@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BackHandler, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { Avatar } from './Avatar';
@@ -62,6 +62,18 @@ export const McnListingCard = React.memo(({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!showImageViewer) return;
+
+    const backSub = BackHandler.addEventListener('hardwareBackPress', () => {
+      guardCardPress();
+      setShowImageViewer(false);
+      return true;
+    });
+
+    return () => backSub.remove();
+  }, [showImageViewer]);
 
   const guardCardPress = () => {
     if (unblockPressTimerRef.current) {

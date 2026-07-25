@@ -7,6 +7,8 @@ import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { supabase } from '../../../lib/supabase';
 
+import { WEST_HYDERABAD_SCHOOLS, WestHyderabadSchool } from '../../../data/westHyderabadSchools';
+
 interface School {
   id: string;
   name: string;
@@ -18,6 +20,9 @@ interface School {
   description: string | null;
   contact_phone: string | null;
   website: string | null;
+  area_locality?: string;
+  google_rating?: string;
+  google_maps_link?: string;
 }
 
 const LEVEL_MAP = {
@@ -51,13 +56,22 @@ export default function CompareSchoolsScreen() {
     if (!idsParam) return;
     const ids = idsParam.split(',');
     try {
-      const { data, error } = await supabase
-        .from('schools')
-        .select('*')
-        .in('id', ids);
+      const staticMatches = WEST_HYDERABAD_SCHOOLS.filter((s) => ids.includes(s.id));
+      const dbIds = ids.filter((id) => !id.startsWith('wh_school_'));
 
-      if (error) throw error;
-      setSchools(data as School[] || []);
+      let dbMatches: School[] = [];
+      if (dbIds.length > 0) {
+        const { data, error } = await supabase
+          .from('schools')
+          .select('*')
+          .in('id', dbIds);
+
+        if (!error && data) {
+          dbMatches = data as School[];
+        }
+      }
+
+      setSchools([...(staticMatches as unknown as School[]), ...dbMatches]);
     } catch (error) {
       console.error(error);
       Toast.show({ type: 'error', text1: 'Failed to fetch comparison data' });

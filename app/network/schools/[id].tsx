@@ -9,6 +9,8 @@ import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
 
+import { WEST_HYDERABAD_SCHOOLS, WestHyderabadSchool } from '../../../data/westHyderabadSchools';
+
 interface School {
   id: string;
   name: string;
@@ -20,7 +22,11 @@ interface School {
   description: string | null;
   contact_phone: string | null;
   website: string | null;
-  created_by: string;
+  created_by?: string;
+  area_locality?: string;
+  address?: string;
+  google_rating?: string;
+  google_maps_link?: string;
 }
 
 const LEVEL_MAP = {
@@ -42,6 +48,15 @@ export default function SchoolDetailScreen() {
   const fetchSchoolDetails = useCallback(async () => {
     if (!schoolId) return;
     try {
+      if (schoolId.startsWith('wh_school_')) {
+        const found = WEST_HYDERABAD_SCHOOLS.find((s) => s.id === schoolId);
+        if (found) {
+          setSchool(found as unknown as School);
+          setLoading(false);
+          return;
+        }
+      }
+
       const { data, error } = await supabase
         .from('schools')
         .select('*')
