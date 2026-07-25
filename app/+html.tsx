@@ -151,6 +151,19 @@ input:focus, textarea:focus, select:focus {
   display: none !important;
 }
 
+@media (max-width: 767px) {
+  body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: auto;
+  }
+
+  #root {
+    min-height: 100%;
+    height: auto;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   body {
     background-color: #1a1a1a;

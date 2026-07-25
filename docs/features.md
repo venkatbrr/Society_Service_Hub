@@ -405,7 +405,7 @@ Cross-community backend foundations are live in the database: partnerships, grou
 |--------|---------|
 | **Purpose** | A local business directory plus social sharing surface for borrow/free needs. |
 | **Tables** | Reads: `mcn_listings`, `mcn_products`, `mcn_business_categories`, `ratings`, `profiles`; writes: `mcn_posts` moderation actions |
-| **Business rules** | Business listings are community-scoped and searchable with a 300ms debounce. A horizontal category chip bar (`All` + lookup categories) filters listings by `category_id`; tapping the active chip toggles back to `All`. Listing cards show business summary only (image, owner, category badge); offerings and prices are shown only after opening listing details. Owners and Community Leads can remove listings as before. |
+| **Business rules** | Business listings are community-scoped and searchable with a 300ms debounce. A horizontal category chip bar (`All` + lookup categories) filters listings by `category_id`; tapping the active chip toggles back to `All`. Inactive listings remain visible in the feed with an inactive badge, while active listings are sorted first. Listing cards show business summary only (image, owner, category badge); offerings and prices are shown only after opening listing details. The Remove listing action is the permanent delete path. |
 | **Navigation** | To `app/network/listing-add.tsx`, `app/network/listing/[id].tsx`, and owner manage routes |
 | **Roles** | All residents can view and add posts. Community leads can moderate (delete) any post. |
 

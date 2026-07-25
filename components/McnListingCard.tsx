@@ -47,20 +47,33 @@ export const McnListingCard = React.memo(({
   onRemove,
 }: McnListingCardProps) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [showImageViewer, setShowImageViewer] = useState(false);
   const isOwner = listing.owner_id === currentUserId;
   const ratings = listing.ratings || [];
   const ratingCount = ratings.length;
   const avgRating = ratingCount > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
 
   return (
-    <BaseCard style={styles.card} padding={listing.image_url ? 0 : 16} onPress={() => onPress(listing.id)}>
+    <BaseCard
+      style={[styles.card, !listing.is_active && styles.inactiveCard]}
+      padding={listing.image_url ? 0 : 16}
+      onPress={() => onPress(listing.id)}
+    >
       {listing.image_url ? (
-        <Image
-          source={{ uri: listing.image_url }}
-          style={styles.coverImage}
-          contentFit="cover"
-          transition={200}
-        />
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={(e) => {
+            e.stopPropagation();
+            setShowImageViewer(true);
+          }}
+        >
+          <Image
+            source={{ uri: listing.image_url }}
+            style={styles.coverImage}
+            contentFit="cover"
+            transition={200}
+          />
+        </TouchableOpacity>
       ) : null}
       <View style={listing.image_url ? styles.cardContentWithImage : undefined}>
       <View style={styles.header}>
@@ -89,6 +102,11 @@ export const McnListingCard = React.memo(({
               <Text style={styles.categoryBadgeText}>
                 {listing.category.emoji} {listing.category.name}
               </Text>
+            </View>
+          ) : null}
+          {!listing.is_active ? (
+            <View style={styles.inactiveBadge}>
+              <Text style={styles.inactiveBadgeText}>Inactive</Text>
             </View>
           ) : null}
         </View>
@@ -141,6 +159,19 @@ export const McnListingCard = React.memo(({
           </View>
         </Pressable>
       </Modal>
+      <Modal visible={showImageViewer} transparent animationType="fade" onRequestClose={() => setShowImageViewer(false)}>
+        <Pressable style={styles.viewerOverlay} onPress={() => setShowImageViewer(false)}>
+          <TouchableOpacity style={styles.viewerCloseBtn} onPress={() => setShowImageViewer(false)}>
+            <Ionicons name="close" size={24} color={Verandah.surface} />
+          </TouchableOpacity>
+          <Image
+            source={{ uri: listing.image_url || '' }}
+            style={styles.viewerImage}
+            contentFit="contain"
+            transition={200}
+          />
+        </Pressable>
+      </Modal>
     </BaseCard>
   );
 });
@@ -153,6 +184,9 @@ const styles = StyleSheet.create({
     shadowColor: 'transparent',
     elevation: 0,
     overflow: 'hidden',
+  },
+  inactiveCard: {
+    opacity: 0.72,
   },
   coverImage: {
     width: '100%',
@@ -193,6 +227,20 @@ const styles = StyleSheet.create({
   categoryBadgeText: {
     ...VerandahType.micro,
     color: Verandah.textSecondary,
+  },
+  inactiveBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 6,
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: Verandah.cardMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  inactiveBadgeText: {
+    ...VerandahType.micro,
+    color: Verandah.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
   description: {
     ...VerandahType.body,
@@ -235,5 +283,28 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: Verandah.textPrimary,
+  },
+  viewerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  viewerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  viewerCloseBtn: {
+    position: 'absolute',
+    top: 48,
+    right: 20,
+    zIndex: 2,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

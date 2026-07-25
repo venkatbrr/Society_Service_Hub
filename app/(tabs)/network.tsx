@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { EmptyState } from '../../components/EmptyState';
@@ -85,8 +85,7 @@ export default function NetworkScreen() {
             mcn_products(id, name, unit, price, is_available, item_type),
             ratings(rating)
           `)
-          .eq('community_id', communityId)
-          .eq('is_active', true);
+          .eq('community_id', communityId);
 
         if (selectedCategoryId) {
           query = query.eq('category_id', selectedCategoryId);
@@ -96,7 +95,9 @@ export default function NetworkScreen() {
           query = query.ilike('name', `%${debouncedSearch.trim()}%`);
         }
 
-        const { data, error } = await query.order('created_at', { ascending: false });
+        const { data, error } = await query
+          .order('is_active', { ascending: false })
+          .order('created_at', { ascending: false });
         if (error) throw error;
         const normalizedListings = (data || []).map((item: any) => ({
           ...item,
@@ -185,7 +186,7 @@ export default function NetworkScreen() {
   const handleRemoveListing = async (id: string) => {
     Alert.alert(
       'Remove listing',
-      'Are you sure you want to remove this business listing from the feed?',
+      'Are you sure you want to permanently remove this business listing?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -195,11 +196,11 @@ export default function NetworkScreen() {
             try {
               const { error } = await supabase
                 .from('mcn_listings')
-                .update({ is_active: false })
+                .delete()
                 .eq('id', id)
                 .eq('community_id', communityId || '');
               if (error) throw error;
-              Toast.show({ type: 'success', text1: 'Listing removed from feed' });
+              Toast.show({ type: 'success', text1: 'Listing removed' });
               fetchPosts();
             } catch (error) {
               console.error(error);
@@ -346,6 +347,7 @@ export default function NetworkScreen() {
       ) : (
         <FlatList
           {...webPullProps}
+          style={styles.list}
           data={
             activeSegment === 'business'
               ? listings
@@ -354,6 +356,15 @@ export default function NetworkScreen() {
               : schools
           }
           keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => fetchPosts(true)}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+          alwaysBounceVertical
           contentContainerStyle={
             (activeSegment === 'business'
               ? listings.length
@@ -539,6 +550,9 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 24,
     paddingBottom: 120,
+  },
+  list: {
+    flex: 1,
   },
   emptyList: {
     flexGrow: 1,
