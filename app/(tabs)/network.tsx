@@ -136,35 +136,7 @@ export default function NetworkScreen() {
       >
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>NETWORK SECTIONS</Text>
 
-        {/* 1. Community Business Section Card */}
-        <BaseCard
-          padding={18}
-          onPress={() => router.push('/network/business' as any)}
-          style={styles.sectionCard}
-        >
-          <View style={styles.cardHeaderRow}>
-            <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
-              <Text style={styles.iconEmoji}>🏪</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Community Business</Text>
-              {businessCount !== null && (
-                <Text style={[styles.badgeText, { color: colors.accent }]}>
-                  {businessCount} {businessCount === 1 ? 'active listing' : 'active listings'}
-                </Text>
-              )}
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-          </View>
-          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Explore home bakers, daily essentials, fresh produce & local resident services. Order directly inside your society.
-          </Text>
-          <View style={[styles.cardFooter, { borderColor: colors.border }]}>
-            <Text style={[styles.actionLinkText, { color: colors.primary }]}>Explore Businesses →</Text>
-          </View>
-        </BaseCard>
-
-        {/* 1B. Food Pre-Orders & Flash Drops Section Card */}
+        {/* 1A. Food Pre-Orders & Flash Drops Section Card */}
         <BaseCard
           padding={18}
           onPress={() => router.push('/network/drops' as any)}
@@ -189,6 +161,34 @@ export default function NetworkScreen() {
           </Text>
           <View style={[styles.cardFooter, { borderColor: colors.border }]}>
             <Text style={[styles.actionLinkText, { color: colors.accent }]}>View Food Drops & Pre-Order →</Text>
+          </View>
+        </BaseCard>
+
+        {/* 1B. Community Business Section Card */}
+        <BaseCard
+          padding={18}
+          onPress={() => router.push('/network/business' as any)}
+          style={styles.sectionCard}
+        >
+          <View style={styles.cardHeaderRow}>
+            <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
+              <Text style={styles.iconEmoji}>🏪</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Community Business</Text>
+              {businessCount !== null && (
+                <Text style={[styles.badgeText, { color: colors.accent }]}>
+                  {businessCount} {businessCount === 1 ? 'active listing' : 'active listings'}
+                </Text>
+              )}
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            Explore home bakers, daily essentials, fresh produce & local resident services. Order directly inside your society.
+          </Text>
+          <View style={[styles.cardFooter, { borderColor: colors.border }]}>
+            <Text style={[styles.actionLinkText, { color: colors.primary }]}>Explore Businesses →</Text>
           </View>
         </BaseCard>
 

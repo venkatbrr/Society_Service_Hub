@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { EmptyState } from '../../../components/EmptyState';
 import { PreorderDropCard, PreorderDropItem } from '../../../components/PreorderDropCard';
+import { Rupees } from '../../../components/Rupees';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
@@ -26,6 +27,12 @@ export default function FoodDropsCatalogScreen() {
 
   const [drops, setDrops] = useState<PreorderDropItem[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'closed' | 'my_drops'>('active');
+  const [myMetrics, setMyMetrics] = useState<{
+    totalRevenue: number;
+    completedRevenue: number;
+    totalOrders: number;
+  }>({ totalRevenue: 0, completedRevenue: 0, totalOrders: 0 });
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -50,20 +57,44 @@ export default function FoodDropsCatalogScreen() {
         if (error) throw error;
 
         if (data) {
-          // Fetch order counts per drop
+          // Fetch order counts and revenue metrics per drop
           const dropIds = data.map((d: any) => d.id);
           let orderCounts: Record<string, number> = {};
+          let totRev = 0;
+          let compRev = 0;
+          let totOrd = 0;
 
           if (dropIds.length > 0) {
             const { data: orderData } = await supabase
               .from('mcn_preorder_orders')
-              .select('drop_id');
+              .select('drop_id, total_amount, status')
+              .in('drop_id', dropIds);
+
             if (orderData) {
+              const dropStatusMap: Record<string, string> = {};
+              data.forEach((d: any) => {
+                dropStatusMap[d.id] = d.status;
+              });
+
               orderData.forEach((row: any) => {
-                orderCounts[row.drop_id] = (orderCounts[row.drop_id] || 0) + 1;
+                if (row.status !== 'cancelled') {
+                  orderCounts[row.drop_id] = (orderCounts[row.drop_id] || 0) + 1;
+                  totOrd += 1;
+                  const amt = parseFloat(row.total_amount || 0);
+                  totRev += amt;
+                  if (dropStatusMap[row.drop_id] === 'completed' || row.status === 'fulfilled') {
+                    compRev += amt;
+                  }
+                }
               });
             }
           }
+
+          setMyMetrics({
+            totalRevenue: totRev,
+            completedRevenue: compRev,
+            totalOrders: totOrd,
+          });
 
           const now = new Date();
           const formatted: PreorderDropItem[] = data.map((d: any) => ({
@@ -78,9 +109,11 @@ export default function FoodDropsCatalogScreen() {
               (d) => d.status === 'open' && new Date(d.cutoff_at) > now
             );
           } else if (activeTab === 'closed') {
-            filtered = formatted.filter(
-              (d) => d.status !== 'open' || new Date(d.cutoff_at) <= now
+            const preparing = formatted.filter(
+              (d) => d.status !== 'completed' && (d.status === 'closed' || new Date(d.cutoff_at) <= now)
             );
+            const completed = formatted.filter((d) => d.status === 'completed');
+            filtered = [...preparing, ...completed];
           }
 
           setDrops(filtered);
@@ -103,6 +136,14 @@ export default function FoodDropsCatalogScreen() {
 
   const webPullProps = useWebPullToRefresh(() => fetchDrops(true));
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/network' as any);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
@@ -110,7 +151,7 @@ export default function FoodDropsCatalogScreen() {
           headerTitle: 'Food Pre-Orders & Flash Drops',
           headerTitleStyle: { fontWeight: '500', fontSize: 16, color: colors.textPrimary },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
+            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
               <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
           ),
@@ -163,6 +204,34 @@ export default function FoodDropsCatalogScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* My Food Drops Revenue & Earnings Card */}
+      {activeTab === 'my_drops' && !loading ? (
+        <View style={styles.revenueCard}>
+          <Text style={styles.revenueCardTitle}>💰 My Food Drops Performance & Revenue</Text>
+          <View style={styles.revenueRow}>
+            <View style={styles.revenueCol}>
+              <Text style={styles.revenueSub}>Drops Hosted</Text>
+              <Text style={styles.revenueValText}>{drops.length}</Text>
+            </View>
+            <View style={styles.revenueDivider} />
+            <View style={styles.revenueCol}>
+              <Text style={styles.revenueSub}>Total Orders</Text>
+              <Text style={styles.revenueValText}>{myMetrics.totalOrders}</Text>
+            </View>
+            <View style={styles.revenueDivider} />
+            <View style={styles.revenueCol}>
+              <Text style={styles.revenueSub}>Total Revenue</Text>
+              <Rupees amount={myMetrics.totalRevenue} size="md" tone="in" />
+            </View>
+            <View style={styles.revenueDivider} />
+            <View style={styles.revenueCol}>
+              <Text style={styles.revenueSub}>Delivered</Text>
+              <Rupees amount={myMetrics.completedRevenue} size="md" tone="in" />
+            </View>
+          </View>
+        </View>
+      ) : null}
+
       {/* Content List */}
       {loading ? (
         <View style={styles.loaderWrap}>
@@ -183,14 +252,42 @@ export default function FoodDropsCatalogScreen() {
               colors={[colors.accent]}
             />
           }
-          renderItem={({ item }) => (
-            <PreorderDropCard
-              drop={item}
-              isCreator={item.created_by === user?.id}
-              onPress={() => router.push(`/network/drops/${item.id}` as any)}
-              onManage={() => router.push(`/network/drops/manage/${item.id}` as any)}
-            />
-          )}
+          renderItem={({ item, index }) => {
+            const isFirstPreparing =
+              activeTab === 'closed' &&
+              item.status !== 'completed' &&
+              index === 0;
+
+            const firstCompletedIdx = drops.findIndex((d) => d.status === 'completed');
+            const isFirstCompleted =
+              activeTab === 'closed' &&
+              item.status === 'completed' &&
+              index === firstCompletedIdx;
+
+            return (
+              <View>
+                {isFirstPreparing ? (
+                  <View style={styles.sectionHeaderWrap}>
+                    <Text style={styles.sectionHeaderText}>👨‍🍳 Kitchen Preparing</Text>
+                  </View>
+                ) : null}
+
+                {isFirstCompleted ? (
+                  <View style={[styles.sectionHeaderWrap, { flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+                    <Ionicons name="checkmark-circle" size={16} color="#059669" />
+                    <Text style={styles.sectionHeaderText}>Past Completed & Delivered Drops</Text>
+                  </View>
+                ) : null}
+
+                <PreorderDropCard
+                  drop={item}
+                  isCreator={item.created_by === user?.id}
+                  onPress={() => router.push(`/network/drops/${item.id}` as any)}
+                  onManage={() => router.push(`/network/drops/manage/${item.id}` as any)}
+                />
+              </View>
+            );
+          }}
           ListEmptyComponent={
             <EmptyState
               icon="restaurant-outline"
@@ -308,5 +405,56 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
+  },
+  sectionHeaderWrap: {
+    marginTop: 10,
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  sectionHeaderText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Verandah.textPrimary,
+  },
+  revenueCard: {
+    marginHorizontal: 20,
+    marginBottom: 14,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    borderRadius: VerandahRadius.lg,
+    padding: 14,
+  },
+  revenueCardTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#065F46',
+    marginBottom: 10,
+  },
+  revenueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  revenueCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  revenueSub: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#047857',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  revenueDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: '#A7F3D0',
+  },
+  revenueValText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#065F46',
   },
 });

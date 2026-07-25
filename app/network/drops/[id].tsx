@@ -75,6 +75,7 @@ export default function PreorderDropDetailScreen() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   const fetchDropDetails = useCallback(async () => {
     if (!dropId) return;
@@ -82,12 +83,39 @@ export default function PreorderDropDetailScreen() {
       // 1. Fetch drop metadata
       const { data: dropData, error: dropErr } = await supabase
         .from('mcn_preorder_drops')
-        .select('*, profiles(full_name, flat_number, phone_number), mcn_listings(name)')
+        .select('*')
         .eq('id', dropId)
         .maybeSingle();
 
-      if (dropErr) throw dropErr;
-      setDrop(dropData as DropDetails);
+      if (dropErr || !dropData) throw dropErr || new Error('Drop not found');
+
+      // Fetch host profile
+      let hostProfile = null;
+      if (dropData.created_by) {
+        const { data: pData } = await supabase
+          .from('profiles')
+          .select('full_name, flat_number, phone_number')
+          .eq('id', dropData.created_by)
+          .maybeSingle();
+        hostProfile = pData;
+      }
+
+      // Fetch linked business listing if any
+      let listingMeta = null;
+      if (dropData.listing_id) {
+        const { data: lData } = await supabase
+          .from('mcn_listings')
+          .select('name')
+          .eq('id', dropData.listing_id)
+          .maybeSingle();
+        listingMeta = lData;
+      }
+
+      setDrop({
+        ...dropData,
+        profiles: hostProfile,
+        mcn_listings: listingMeta,
+      } as DropDetails);
 
       // 2. Fetch drop items
       const { data: itemsData, error: itemsErr } = await supabase
@@ -312,8 +340,6 @@ export default function PreorderDropDetailScreen() {
     );
   }
 
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-
   const isCreator = drop?.created_by === user?.id;
   const hostName = drop?.profiles?.full_name || drop?.mcn_listings?.name || 'Local Food Host';
   const hostFlat = drop?.profiles?.flat_number ? `Flat ${drop.profiles.flat_number}` : '';
@@ -333,16 +359,29 @@ export default function PreorderDropDetailScreen() {
 
   const handleShareDrop = async () => {
     if (!drop) return;
-    const message = `🍕 *Food Drop: ${drop.title}*\nHosted by ${hostName}${hostFlat ? ` (${hostFlat})` : ''}\n\n📅 Delivery: ${fulfillFormatted} (${drop.fulfillment_time})\n⏰ Pre-Orders Close: ${cutoffFormatted}\n\nCheck out the menu & place your pre-order in Society Service Hub!`;
+    const shareUrl =
+      Platform.OS === 'web' && typeof window !== 'undefined'
+        ? `${window.location.origin}/network/drops/${drop.id}`
+        : `https://society-service-hub.app/network/drops/${drop.id}`;
+
+    const message = `🍕 *Food Drop: ${drop.title}*\nHosted by ${hostName}${hostFlat ? ` (${hostFlat})` : ''}\n\n📅 Delivery: ${fulfillFormatted} (${drop.fulfillment_time})\n⏰ Pre-Orders Close: ${cutoffFormatted}\n\n🔗 Order Link: ${shareUrl}\n\nCheck out the menu & place your pre-order in Society Service Hub!`;
 
     try {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: drop.title, text: message });
+        await (navigator as any).share({ title: drop.title, text: message, url: shareUrl });
       } else {
-        await Share.share({ message, title: drop.title });
+        await Share.share({ message, title: drop.title, url: shareUrl });
       }
     } catch (err) {
       console.error('Error sharing food drop:', err);
+    }
+  };
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/network/drops' as any);
     }
   };
 
@@ -354,6 +393,11 @@ export default function PreorderDropDetailScreen() {
       <Stack.Screen
         options={{
           title: drop.title,
+          headerLeft: () => (
+            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
+              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          ),
           headerRight: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <TouchableOpacity onPress={handleShareDrop} style={{ padding: 4 }} hitSlop={8}>
@@ -433,13 +477,15 @@ export default function PreorderDropDetailScreen() {
                   <Text style={styles.hostManageBtnText}>Open Manage Dashboard →</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.hostManageBtn, { backgroundColor: '#FFFFFF', borderWidth: 0.5, borderColor: Verandah.accent }]}
-                  onPress={() => router.push(`/network/drops/add?dropId=${drop.id}` as any)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.hostManageBtnText, { color: Verandah.accent }]}>✏️ Edit Drop</Text>
-                </TouchableOpacity>
+                {isOpen ? (
+                  <TouchableOpacity
+                    style={[styles.hostManageBtn, { backgroundColor: '#FFFFFF', borderWidth: 0.5, borderColor: Verandah.accent }]}
+                    onPress={() => router.push(`/network/drops/add?dropId=${drop.id}` as any)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.hostManageBtnText, { color: Verandah.accent }]}>✏️ Edit Drop</Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
             </View>
           </View>
@@ -449,11 +495,16 @@ export default function PreorderDropDetailScreen() {
         {existingOrder ? (
           <View style={styles.existingOrderBox}>
             <View style={styles.existingHeader}>
-              <Text style={styles.existingTitle}>
-                {existingOrder.status === 'fulfilled'
-                  ? '✅ Pre-Order Delivered & Fulfilled'
-                  : '📦 Your Pre-Order is Confirmed'}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                {existingOrder.status === 'fulfilled' ? (
+                  <Ionicons name="checkmark-circle" size={18} color="#059669" />
+                ) : null}
+                <Text style={styles.existingTitle}>
+                  {existingOrder.status === 'fulfilled'
+                    ? 'Pre-Order Delivered & Fulfilled'
+                    : '📦 Your Pre-Order is Confirmed'}
+                </Text>
+              </View>
               <Text style={styles.existingStatusText}>
                 {existingOrder.status.toUpperCase()}
               </Text>

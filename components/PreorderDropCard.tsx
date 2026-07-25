@@ -122,13 +122,18 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
       minute: '2-digit',
     });
 
-    const message = `🍕 *Food Drop: ${drop.title}*\nHosted by ${creatorName}${flatNo ? ` (${flatNo})` : ''}\n\n📅 Delivery: ${fulfillFormatted} (${drop.fulfillment_time})\n⏰ Pre-Orders Close: ${cutoffFormatted}\n\nCheck out the menu & place your pre-order in Society Service Hub!`;
+    const shareUrl =
+      Platform.OS === 'web' && typeof window !== 'undefined'
+        ? `${window.location.origin}/network/drops/${drop.id}`
+        : `https://society-service-hub.app/network/drops/${drop.id}`;
+
+    const message = `🍕 *Food Drop: ${drop.title}*\nHosted by ${creatorName}${flatNo ? ` (${flatNo})` : ''}\n\n📅 Delivery: ${fulfillFormatted} (${drop.fulfillment_time})\n⏰ Pre-Orders Close: ${cutoffFormatted}\n\n🔗 Order Link: ${shareUrl}\n\nCheck out the menu & place your pre-order in Society Service Hub!`;
 
     try {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: drop.title, text: message });
+        await (navigator as any).share({ title: drop.title, text: message, url: shareUrl });
       } else {
-        await Share.share({ message, title: drop.title });
+        await Share.share({ message, title: drop.title, url: shareUrl });
       }
     } catch (err) {
       console.error('Error sharing drop:', err);
@@ -153,11 +158,6 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
             <TouchableOpacity style={styles.shareIconBtn} onPress={handleShare} hitSlop={8}>
               <Ionicons name="share-outline" size={18} color={Verandah.accent} />
             </TouchableOpacity>
-            {isCreator && onManage ? (
-              <TouchableOpacity style={styles.manageBadgeBtn} onPress={onManage}>
-                <Text style={styles.manageBadgeText}>Manage</Text>
-              </TouchableOpacity>
-            ) : null}
           </View>
         </View>
 
@@ -169,8 +169,13 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
         ) : null}
 
         {/* Cutoff Badge Banner */}
-        <View style={[styles.badgeBanner, { backgroundColor: badge.bgColor }]}>
-          <Text style={[styles.badgeText, { color: badge.color }]}>{badge.label}</Text>
+        <View style={[styles.badgeBanner, { backgroundColor: badge.bgColor, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+          {drop.status === 'completed' ? (
+            <Ionicons name="checkmark-circle" size={15} color="#059669" />
+          ) : null}
+          <Text style={[styles.badgeText, { color: badge.color }]}>
+            {drop.status === 'completed' ? 'Delivered & Completed' : badge.label}
+          </Text>
         </View>
 
         {/* Title & Description */}

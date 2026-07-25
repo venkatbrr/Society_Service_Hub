@@ -1,3 +1,4 @@
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -19,20 +20,24 @@ import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
 
+export type UnitOption = '250g' | '500g' | 'piece' | 'kg' | 'box' | 'pack' | 'portion' | 'litre';
+
 interface ItemForm {
   id: string;
   name: string;
-  unit: 'piece' | 'kg' | 'box' | 'pack' | 'portion' | 'litre';
+  unit: UnitOption;
   price: string;
   description: string;
   image_url?: string | null;
 }
 
-const UNIT_OPTIONS: ('piece' | 'kg' | 'box' | 'pack' | 'portion' | 'litre')[] = [
+const UNIT_OPTIONS: UnitOption[] = [
+  '250g',
+  '500g',
   'piece',
-  'box',
-  'portion',
   'kg',
+  'portion',
+  'box',
   'pack',
   'litre',
 ];
@@ -55,6 +60,43 @@ export default function CreateOrEditFoodDropScreen() {
   const [cutoffDate, setCutoffDate] = useState(''); // YYYY-MM-DD
   const [cutoffTime, setCutoffTime] = useState('21:00'); // HH:mm (e.g. 21:00 for 9 PM)
   const [maxOrders, setMaxOrders] = useState('');
+
+  // System Pickers State (Native iOS/Android)
+  const [showFulfillDatePicker, setShowFulfillDatePicker] = useState(false);
+  const [showCutoffDatePicker, setShowCutoffDatePicker] = useState(false);
+  const [showCutoffTimePicker, setShowCutoffTimePicker] = useState(false);
+
+  const parseDateStr = (str: string): Date => {
+    if (!str) return new Date();
+    const parts = str.split('-');
+    if (parts.length === 3) {
+      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+    return new Date();
+  };
+
+  const formatDateStr = (d: Date): string => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const parseTimeStr = (str: string): Date => {
+    const d = new Date();
+    if (!str) return d;
+    const parts = str.split(':');
+    if (parts.length >= 2) {
+      d.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+    }
+    return d;
+  };
+
+  const formatTimeStr = (d: Date): string => {
+    const hours = String(d.getHours()).padStart(2, '0');
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    return `${hours}:${mins}`;
+  };
 
   // Items
   const [items, setItems] = useState<ItemForm[]>([
@@ -109,6 +151,16 @@ export default function CreateOrEditFoodDropScreen() {
         if (dropErr) throw dropErr;
 
         if (dropData) {
+          if (dropData.status === 'completed' || dropData.status === 'closed') {
+            Toast.show({
+              type: 'error',
+              text1: 'Drop cannot be edited',
+              text2: 'Completed or closed food drops cannot be edited.',
+            });
+            router.back();
+            return;
+          }
+
           setTitle(dropData.title || '');
           setDescription(dropData.description || '');
           setImageUrl(dropData.image_url || null);
@@ -334,6 +386,14 @@ export default function CreateOrEditFoodDropScreen() {
     );
   }
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/network/drops' as any);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.surface }]}
@@ -343,7 +403,7 @@ export default function CreateOrEditFoodDropScreen() {
         options={{
           title: isEditMode ? 'Edit Food Drop' : 'Host a Food Drop',
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
+            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
               <Ionicons name="close" size={24} color={colors.textPrimary} />
             </TouchableOpacity>
           ),
@@ -419,15 +479,48 @@ export default function CreateOrEditFoodDropScreen() {
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.subLabel}>Fulfillment Date (YYYY-MM-DD) *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="2026-07-26"
-                placeholderTextColor={colors.textMuted}
-                value={fulfillmentDate}
-                onChangeText={setFulfillmentDate}
-              />
+              <Text style={styles.subLabel}>Fulfillment Date *</Text>
+              {Platform.OS === 'web' ? (
+                <input
+                  type="date"
+                  value={fulfillmentDate}
+                  onChange={(e) => setFulfillmentDate(e.target.value)}
+                  style={{
+                    height: 42,
+                    borderRadius: 8,
+                    border: `0.5px solid ${colors.border}`,
+                    padding: '0 10px',
+                    fontSize: 14,
+                    color: colors.textPrimary,
+                    backgroundColor: colors.card,
+                    fontFamily: 'inherit',
+                  }}
+                />
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={[styles.input, { justifyContent: 'center' }]}
+                    onPress={() => setShowFulfillDatePicker(true)}
+                  >
+                    <Text style={{ fontSize: 14, color: colors.textPrimary }}>
+                      {fulfillmentDate || 'Select Date'}
+                    </Text>
+                  </TouchableOpacity>
+                  {showFulfillDatePicker && (
+                    <DateTimePicker
+                      value={parseDateStr(fulfillmentDate)}
+                      mode="date"
+                      display="default"
+                      onChange={(event: DateTimePickerEvent, date?: Date) => {
+                        setShowFulfillDatePicker(Platform.OS === 'ios');
+                        if (date) setFulfillmentDate(formatDateStr(date));
+                      }}
+                    />
+                  )}
+                </>
+              )}
             </View>
+
             <View style={{ flex: 1 }}>
               <Text style={styles.subLabel}>Delivery Time Slot *</Text>
               <TextInput
@@ -450,24 +543,89 @@ export default function CreateOrEditFoodDropScreen() {
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.subLabel}>Cut-off Date (YYYY-MM-DD) *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="2026-07-25"
-                placeholderTextColor={colors.textMuted}
-                value={cutoffDate}
-                onChangeText={setCutoffDate}
-              />
+              <Text style={styles.subLabel}>Cut-off Date *</Text>
+              {Platform.OS === 'web' ? (
+                <input
+                  type="date"
+                  value={cutoffDate}
+                  onChange={(e) => setCutoffDate(e.target.value)}
+                  style={{
+                    height: 42,
+                    borderRadius: 8,
+                    border: `0.5px solid ${colors.border}`,
+                    padding: '0 10px',
+                    fontSize: 14,
+                    color: colors.textPrimary,
+                    backgroundColor: colors.card,
+                    fontFamily: 'inherit',
+                  }}
+                />
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={[styles.input, { justifyContent: 'center' }]}
+                    onPress={() => setShowCutoffDatePicker(true)}
+                  >
+                    <Text style={{ fontSize: 14, color: colors.textPrimary }}>
+                      {cutoffDate || 'Select Date'}
+                    </Text>
+                  </TouchableOpacity>
+                  {showCutoffDatePicker && (
+                    <DateTimePicker
+                      value={parseDateStr(cutoffDate)}
+                      mode="date"
+                      display="default"
+                      onChange={(event: DateTimePickerEvent, date?: Date) => {
+                        setShowCutoffDatePicker(Platform.OS === 'ios');
+                        if (date) setCutoffDate(formatDateStr(date));
+                      }}
+                    />
+                  )}
+                </>
+              )}
             </View>
+
             <View style={{ flex: 1 }}>
-              <Text style={styles.subLabel}>Cut-off Time (24h HH:mm) *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="21:00 (for 9 PM)"
-                placeholderTextColor={colors.textMuted}
-                value={cutoffTime}
-                onChangeText={setCutoffTime}
-              />
+              <Text style={styles.subLabel}>Cut-off Time *</Text>
+              {Platform.OS === 'web' ? (
+                <input
+                  type="time"
+                  value={cutoffTime}
+                  onChange={(e) => setCutoffTime(e.target.value)}
+                  style={{
+                    height: 42,
+                    borderRadius: 8,
+                    border: `0.5px solid ${colors.border}`,
+                    padding: '0 10px',
+                    fontSize: 14,
+                    color: colors.textPrimary,
+                    backgroundColor: colors.card,
+                    fontFamily: 'inherit',
+                  }}
+                />
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={[styles.input, { justifyContent: 'center' }]}
+                    onPress={() => setShowCutoffTimePicker(true)}
+                  >
+                    <Text style={{ fontSize: 14, color: colors.textPrimary }}>
+                      {cutoffTime || 'Select Time'}
+                    </Text>
+                  </TouchableOpacity>
+                  {showCutoffTimePicker && (
+                    <DateTimePicker
+                      value={parseTimeStr(cutoffTime)}
+                      mode="time"
+                      display="default"
+                      onChange={(event: DateTimePickerEvent, date?: Date) => {
+                        setShowCutoffTimePicker(Platform.OS === 'ios');
+                        if (date) setCutoffTime(formatTimeStr(date));
+                      }}
+                    />
+                  )}
+                </>
+              )}
             </View>
           </View>
 

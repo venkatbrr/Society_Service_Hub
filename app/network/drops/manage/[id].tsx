@@ -236,11 +236,24 @@ export default function ManagePreorderDropScreen() {
   const isCutoffPassed = now >= cutoffDate;
   const isOpen = drop.status === 'open' && !isCutoffPassed;
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/network/drops' as any);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
         options={{
           title: 'Food Drop Dashboard',
+          headerLeft: () => (
+            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
+              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          ),
         }}
       />
 
@@ -269,11 +282,13 @@ export default function ManagePreorderDropScreen() {
 
             {drop.status !== 'completed' ? (
               <TouchableOpacity style={styles.completeBtn} onPress={handleCompleteDrop}>
-                <Text style={styles.completeBtnText}>✅ Mark Drop Completed</Text>
+                <Ionicons name="checkmark-circle-outline" size={16} color="#059669" />
+                <Text style={styles.completeBtnText}> Mark Drop Completed</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.completedBadge}>
-                <Text style={styles.completedBadgeText}>✅ Drop Completed & Delivered</Text>
+                <Ionicons name="checkmark-circle" size={16} color="#059669" />
+                <Text style={styles.completedBadgeText}> Drop Completed & Delivered</Text>
               </View>
             )}
           </View>
@@ -383,8 +398,13 @@ export default function ManagePreorderDropScreen() {
                       style={[styles.fulfillmentBtn, isFulfilled && styles.fulfillmentBtnDone]}
                       onPress={() => handleToggleFulfillment(order.id, order.status)}
                     >
+                      <Ionicons
+                        name={isFulfilled ? "checkmark-circle" : "checkmark-circle-outline"}
+                        size={15}
+                        color={isFulfilled ? "#059669" : colors.accent}
+                      />
                       <Text style={[styles.fulfillmentBtnText, isFulfilled && styles.fulfillmentBtnTextDone]}>
-                        {isFulfilled ? '✅ Delivered' : 'Mark Delivered'}
+                        {isFulfilled ? ' Delivered' : ' Mark Delivered'}
                       </Text>
                     </TouchableOpacity>
                   </View>
