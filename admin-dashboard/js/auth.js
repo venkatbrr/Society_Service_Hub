@@ -7,9 +7,17 @@ const Auth = {
     // Listen for auth state changes
     supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, session);
-      if (session) {
+      if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
+        this.handleSignOut();
+      } else if (session) {
         await this.handleSignIn(session.user);
-      } else {
+      }
+    });
+
+    // Re-verify session when returning focus to admin dashboard window/tab
+    window.addEventListener('focus', async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
         this.handleSignOut();
       }
     });

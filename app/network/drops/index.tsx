@@ -72,6 +72,9 @@ export default function FoodDropsCatalogScreen() {
           // Fetch order counts and revenue metrics per drop
           const dropIds = data.map((d: any) => d.id);
           let orderCounts: Record<string, number> = {};
+          let itemCounts: Record<string, number> = {};
+          let profileMap: Record<string, { full_name: string | null; flat_number: string | null }> = {};
+          let listingMap: Record<string, { name: string; image_url: string | null }> = {};
           let totRev = 0;
           let compRev = 0;
           let totOrd = 0;
@@ -79,7 +82,7 @@ export default function FoodDropsCatalogScreen() {
           if (dropIds.length > 0 && user?.id) {
             const { data: orderData } = await supabase
               .from('mcn_preorder_orders')
-              .select('drop_id, total_amount, status')
+              .select('drop_id, total_amount, status, mcn_preorder_order_items(quantity)')
               .in('drop_id', dropIds);
 
             if (orderData) {
@@ -91,6 +94,16 @@ export default function FoodDropsCatalogScreen() {
               orderData.forEach((row: any) => {
                 if (row.status !== 'cancelled') {
                   orderCounts[row.drop_id] = (orderCounts[row.drop_id] || 0) + 1;
+                  const rowItems = Array.isArray(row.mcn_preorder_order_items)
+                    ? row.mcn_preorder_order_items
+                    : [];
+                  const qtySum = rowItems.reduce((sum: number, line: any) => {
+                    const quantity = typeof line?.quantity === 'number'
+                      ? line.quantity
+                      : parseFloat(String(line?.quantity || 0));
+                    return sum + (isNaN(quantity) ? 0 : quantity);
+                  }, 0);
+                  itemCounts[row.drop_id] = (itemCounts[row.drop_id] || 0) + qtySum;
                   totOrd += 1;
                   const amt = parseFloat(row.total_amount || 0);
                   totRev += amt;
@@ -100,6 +113,42 @@ export default function FoodDropsCatalogScreen() {
                 }
               });
             }
+          }
+
+          const creatorIds = Array.from(
+            new Set(data.map((d: any) => d.created_by).filter(Boolean))
+          );
+
+          if (creatorIds.length > 0) {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('id, full_name, flat_number')
+              .in('id', creatorIds);
+
+            (profileData || []).forEach((profile: any) => {
+              profileMap[profile.id] = {
+                full_name: profile.full_name || null,
+                flat_number: profile.flat_number || null,
+              };
+            });
+          }
+
+          const listingIds = Array.from(
+            new Set(data.map((d: any) => d.listing_id).filter(Boolean))
+          );
+
+          if (listingIds.length > 0) {
+            const { data: listingData } = await supabase
+              .from('mcn_listings')
+              .select('id, name, image_url')
+              .in('id', listingIds);
+
+            (listingData || []).forEach((listing: any) => {
+              listingMap[listing.id] = {
+                name: listing.name,
+                image_url: listing.image_url || null,
+              };
+            });
           }
 
           setMyMetrics({
@@ -112,6 +161,9 @@ export default function FoodDropsCatalogScreen() {
           const formatted: PreorderDropItem[] = data.map((d: any) => ({
             ...d,
             order_count: orderCounts[d.id] || 0,
+            item_count: itemCounts[d.id] || 0,
+            profiles: profileMap[d.created_by] || null,
+            mcn_listings: d.listing_id ? listingMap[d.listing_id] || null : null,
           }));
 
           // Filter by active vs closed tab if not in my_drops

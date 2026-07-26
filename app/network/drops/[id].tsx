@@ -92,7 +92,7 @@ export default function PreorderDropDetailScreen() {
 
       // Fetch host profile
       let hostProfile = null;
-      if (dropData.created_by && user?.id) {
+      if (dropData.created_by) {
         const { data: pData } = await supabase
           .from('profiles')
           .select('full_name, flat_number, phone_number')
@@ -103,7 +103,7 @@ export default function PreorderDropDetailScreen() {
 
       // Fetch linked business listing if any
       let listingMeta = null;
-      if (dropData.listing_id && user?.id) {
+      if (dropData.listing_id) {
         const { data: lData } = await supabase
           .from('mcn_listings')
           .select('name')
@@ -227,6 +227,36 @@ export default function PreorderDropDetailScreen() {
       return;
     }
 
+    const selectedItemsQty = selectedItems.reduce((sum, item) => sum + (quantities[item.id] || 0), 0);
+
+    if (drop?.max_orders) {
+      const { data: capacityData, error: capacityErr } = await supabase.rpc(
+        'check_mcn_drop_item_capacity',
+        {
+          p_drop_id: dropId,
+          p_requested_qty: selectedItemsQty,
+          p_existing_order_id: existingOrder?.id || null,
+        }
+      );
+
+      if (capacityErr) {
+        Toast.show({ type: 'error', text1: 'Could not validate available item capacity' });
+        return;
+      }
+
+      const capacity = Array.isArray(capacityData) ? capacityData[0] : capacityData;
+      if (capacity && !capacity.can_place) {
+        const maxItems = Number(capacity.max_items || drop.max_orders || 0);
+        const remaining = Number(capacity.remaining_capacity || 0);
+        Toast.show({
+          type: 'error',
+          text1: 'Item limit reached',
+          text2: `This drop is capped at ${maxItems} total items. Remaining capacity: ${remaining}.`,
+        });
+        return;
+      }
+    }
+
     if (!flatNumber.trim()) {
       Toast.show({ type: 'error', text1: 'Please enter your flat / house number' });
       return;
@@ -337,16 +367,22 @@ export default function PreorderDropDetailScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loaderWrap}>
-        <ActivityIndicator color={colors.accent} />
+      <View style={[styles.container, { backgroundColor: colors.surface }]}>
+        <Stack.Screen options={{ title: 'Food drop details' }} />
+        <View style={styles.loaderWrap}>
+          <ActivityIndicator color={colors.accent} />
+        </View>
       </View>
     );
   }
 
   if (!drop) {
     return (
-      <View style={styles.loaderWrap}>
-        <Text style={{ color: colors.textSecondary }}>Food drop not found.</Text>
+      <View style={[styles.container, { backgroundColor: colors.surface }]}>
+        <Stack.Screen options={{ title: 'Food drop details' }} />
+        <View style={styles.loaderWrap}>
+          <Text style={{ color: colors.textSecondary }}>Food drop not found.</Text>
+        </View>
       </View>
     );
   }

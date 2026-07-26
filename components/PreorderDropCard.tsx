@@ -49,7 +49,6 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
   const isCutoffPassed = now >= cutoffDate;
   const isOpen = drop.status === 'open' && !isCutoffPassed;
 
-  // Format Cut-off Display
   const getCutoffBadge = () => {
     if (drop.status === 'completed') {
       return {
@@ -103,7 +102,12 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
 
   const badge = getCutoffBadge();
 
-  // Format Fulfillment Date
+  const cutoffFormatted = cutoffDate.toLocaleDateString('en-IN', {
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
   const fulfillDateObj = new Date(drop.fulfillment_date);
   const fulfillFormatted = fulfillDateObj.toLocaleDateString('en-IN', {
     weekday: 'short',
@@ -111,8 +115,9 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
     month: 'short',
   });
 
-  const creatorName = drop.profiles?.full_name || drop.mcn_listings?.name || 'Local Food Host';
+  const creatorName = drop.profiles?.full_name || drop.mcn_listings?.name || 'Host';
   const flatNo = drop.profiles?.flat_number ? `Flat ${drop.profiles.flat_number}` : null;
+  const hostDisplay = flatNo ? `${creatorName} (${flatNo})` : creatorName;
 
   const handleShare = async (e: any) => {
     e.stopPropagation();
@@ -129,7 +134,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
 
     const messageLines = [
       `🍲 *Food Drop: ${drop.title}*`,
-      `Hosted by ${creatorName}${flatNo ? ` (${flatNo})` : ''}`,
+      `Hosted by ${hostDisplay}`,
       ``,
       `📅 Delivery: ${fulfillFormatted} (${drop.fulfillment_time})`,
       `⏰ Pre-Orders Close: ${cutoffFormatted}`,
@@ -166,13 +171,12 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
             <Text style={styles.creatorName} numberOfLines={1}>
               {creatorName}
             </Text>
-            <Text style={styles.flatNo}>
-                {flatNo ? `${flatNo} · ` : ''}Community food drop
-            </Text>
+            <Text style={styles.flatNo}>{hostDisplay}</Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <TouchableOpacity style={styles.shareIconBtn} onPress={handleShare} hitSlop={8}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <TouchableOpacity style={styles.shareHeaderBtn} onPress={handleShare} hitSlop={8}>
               <Ionicons name="share-outline" size={18} color={Verandah.accent} />
+              <Text style={styles.shareHeaderText}>Share</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -184,14 +188,22 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
           </View>
         ) : null}
 
-        {/* Cutoff Badge Banner */}
-        <View style={[styles.badgeBanner, { backgroundColor: badge.bgColor, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
-          {drop.status === 'completed' ? (
-            <Ionicons name="checkmark-circle" size={15} color="#059669" />
-          ) : null}
-          <Text style={[styles.badgeText, { color: badge.color }]}>
-            {drop.status === 'completed' ? 'Delivered & Completed' : badge.label}
-          </Text>
+        {/* Delivery and cut-off info */}
+        <View style={styles.metaRow}>
+          <View style={[styles.metaChip, { backgroundColor: badge.bgColor }]}> 
+            {drop.status === 'completed' ? (
+              <Ionicons name="checkmark-circle" size={14} color="#059669" />
+            ) : null}
+            <Text style={[styles.metaChipText, { color: badge.color }]} numberOfLines={1}>
+              {drop.status === 'completed' ? 'Completed' : `Closes: ${cutoffFormatted}`}
+            </Text>
+          </View>
+          <View style={styles.metaChipNeutral}>
+            <Ionicons name="calendar-outline" size={14} color={Verandah.accent} />
+            <Text style={styles.metaChipNeutralText} numberOfLines={1}>
+              Delivery: {fulfillFormatted} ({drop.fulfillment_time})
+            </Text>
+          </View>
         </View>
 
         {/* Title & Description */}
@@ -202,21 +214,21 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
           </Text>
         ) : null}
 
-        {/* Delivery Schedule Row */}
-        <View style={styles.scheduleRow}>
-          <Ionicons name="calendar-outline" size={16} color={Verandah.accent} />
-          <Text style={styles.scheduleText}>
-            Delivery: <Text style={styles.scheduleBold}>{fulfillFormatted}</Text> ({drop.fulfillment_time})
-          </Text>
-        </View>
-
         {/* Action Row */}
         <View style={styles.footer}>
-          {drop.order_count !== undefined ? (
-            <Text style={styles.orderStats}>
-              📦 {drop.order_count} {drop.order_count === 1 ? 'pre-order' : 'pre-orders'}
-            </Text>
-          ) : <View />}
+          <View style={styles.footerLeft}>
+            {drop.item_count !== undefined ? (
+              <Text style={styles.orderStats}>
+                🍲 {drop.item_count}
+                {drop.max_orders ? ` / ${drop.max_orders}` : ''}{' '}
+                {drop.item_count === 1 ? 'item ordered' : 'items ordered'}
+              </Text>
+            ) : null}
+            <TouchableOpacity style={styles.shareInlineBtn} onPress={handleShare}>
+              <Ionicons name="share-social-outline" size={14} color={Verandah.accent} />
+              <Text style={styles.shareInlineText}>Share drop</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={[
@@ -259,12 +271,25 @@ const styles = StyleSheet.create({
   },
   flatNo: {
     ...VerandahType.caption,
-    fontSize: 11,
+    fontSize: 12,
     color: Verandah.textSecondary,
     marginTop: 1,
   },
-  shareIconBtn: {
-    padding: 4,
+  shareHeaderBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: VerandahRadius.pill,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  shareHeaderText: {
+    ...VerandahType.captionBold,
+    color: Verandah.accent,
+    fontSize: 12,
   },
   manageBadgeBtn: {
     backgroundColor: '#EEF2FF',
@@ -287,16 +312,42 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  badgeBanner: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 8,
   },
-  badgeText: {
+  metaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  metaChipText: {
     fontSize: 11,
     fontWeight: '600',
+  },
+  metaChipNeutral: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 0.5,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  metaChipNeutralText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: Verandah.textPrimary,
+    flex: 1,
   },
   title: {
     ...VerandahType.title,
@@ -311,25 +362,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     lineHeight: 18,
   },
-  scheduleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#F9FAFB',
-    padding: 8,
-    borderRadius: 8,
-    borderWidth: 0.5,
-    borderColor: '#E5E7EB',
-    marginBottom: 12,
-  },
-  scheduleText: {
-    fontSize: 12,
-    color: Verandah.textSecondary,
-  },
-  scheduleBold: {
-    fontWeight: '600',
-    color: Verandah.textPrimary,
-  },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -338,10 +370,26 @@ const styles = StyleSheet.create({
     borderTopColor: Verandah.border,
     paddingTop: 10,
   },
+  footerLeft: {
+    flex: 1,
+    paddingRight: 8,
+  },
   orderStats: {
     fontSize: 11,
     fontWeight: '500',
     color: Verandah.textSecondary,
+  },
+  shareInlineBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+  },
+  shareInlineText: {
+    ...VerandahType.captionBold,
+    color: Verandah.accent,
+    fontSize: 11,
   },
   actionBtn: {
     backgroundColor: Verandah.accent,

@@ -26,6 +26,7 @@ function RootLayoutNav() {
   const pathname = usePathname();
   const router = useRouter();
   const lastRedirectRef = useRef<string | null>(null);
+  const savedTargetRouteRef = useRef<string | null>(null);
 
   // Initialize Google Sign In when the layout mounts
   useEffect(() => {
@@ -75,6 +76,9 @@ function RootLayoutNav() {
     if (!session) {
       // No session → login
       if (!inAuthGroup && !isPublicFoodDropRoute) {
+        if (pathname && pathname !== '/' && pathname !== '/login') {
+          savedTargetRouteRef.current = pathname;
+        }
         redirectTo = '/login';
       }
     } else if (isPlatformAdmin) {
@@ -85,7 +89,8 @@ function RootLayoutNav() {
     } else if (isOnAdminRedirect) {
       // Non-admin landed on admin-redirect route → redirect appropriately
       if (communityId) {
-        redirectTo = '/(tabs)';
+        redirectTo = savedTargetRouteRef.current || '/(tabs)';
+        savedTargetRouteRef.current = null;
       } else if (activeCommunityRequest) {
         redirectTo = '/community-request-submitted';
       } else {
@@ -101,8 +106,9 @@ function RootLayoutNav() {
       communityId &&
       (inAuthGroup || isOnCommunitySelect || isOnCommunityRequest || isOnCommunityRequestSubmitted)
     ) {
-      // Has community → main app
-      redirectTo = '/(tabs)';
+      // Has community → main app or saved target route
+      redirectTo = savedTargetRouteRef.current || '/(tabs)';
+      savedTargetRouteRef.current = null;
     }
 
     if (!redirectTo) {

@@ -16,7 +16,6 @@ import Toast from 'react-native-toast-message';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
-import { useAuth } from '../../../../context/AuthContext';
 import { supabase } from '../../../../lib/supabase';
 
 interface DropOrder {
@@ -46,7 +45,6 @@ interface DropItem {
 export default function ManagePreorderDropScreen() {
   const { id: dropId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuth();
   const colors = Verandah;
 
   const [drop, setDrop] = useState<any | null>(null);
@@ -216,16 +214,22 @@ export default function ManagePreorderDropScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loaderWrap}>
-        <ActivityIndicator color={colors.accent} />
+      <View style={[styles.container, { backgroundColor: colors.surface }]}>
+        <Stack.Screen options={{ title: 'Food drop dashboard' }} />
+        <View style={styles.loaderWrap}>
+          <ActivityIndicator color={colors.accent} />
+        </View>
       </View>
     );
   }
 
   if (!drop) {
     return (
-      <View style={styles.loaderWrap}>
-        <Text style={{ color: colors.textSecondary }}>Drop not found.</Text>
+      <View style={[styles.container, { backgroundColor: colors.surface }]}>
+        <Stack.Screen options={{ title: 'Food drop dashboard' }} />
+        <View style={styles.loaderWrap}>
+          <Text style={{ color: colors.textSecondary }}>Drop not found.</Text>
+        </View>
       </View>
     );
   }
@@ -266,24 +270,26 @@ export default function ManagePreorderDropScreen() {
               style={styles.editDropBtn}
               onPress={() => router.push(`/network/drops/add?dropId=${drop.id}` as any)}
             >
-              <Text style={styles.editDropBtnText}>✏️ Edit Drop Details</Text>
+              <Ionicons name="create-outline" size={14} color={Verandah.accent} />
+              <Text style={styles.editDropBtnText} numberOfLines={1}>Edit drop</Text>
             </TouchableOpacity>
 
             {isOpen ? (
               <TouchableOpacity style={styles.closeBtn} onPress={handleCloseDropEarly}>
-                <Text style={styles.closeBtnText}>🔒 Close Pre-Orders Early</Text>
+                <Ionicons name="lock-closed-outline" size={14} color="#D97706" />
+                <Text style={styles.closeBtnText} numberOfLines={1}>Close early</Text>
               </TouchableOpacity>
             ) : null}
 
             {drop.status !== 'completed' ? (
               <TouchableOpacity style={styles.completeBtn} onPress={handleCompleteDrop}>
                 <Ionicons name="checkmark-circle-outline" size={16} color="#059669" />
-                <Text style={styles.completeBtnText}> Mark Drop Completed</Text>
+                <Text style={styles.completeBtnText} numberOfLines={1}>Mark completed</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.completedBadge}>
                 <Ionicons name="checkmark-circle" size={16} color="#059669" />
-                <Text style={styles.completedBadgeText}> Drop Completed & Delivered</Text>
+                <Text style={styles.completedBadgeText} numberOfLines={1}>Completed</Text>
               </View>
             )}
           </View>
@@ -384,7 +390,7 @@ export default function ManagePreorderDropScreen() {
 
                   {/* Order Footer & Action */}
                   <View style={styles.orderFooter}>
-                    <View>
+                    <View style={styles.orderTotalWrap}>
                       <Text style={styles.totalLabel}>Collect on Delivery:</Text>
                       <Rupees amount={order.total_amount} size="md" tone="in" />
                     </View>
@@ -399,7 +405,7 @@ export default function ManagePreorderDropScreen() {
                         color={isFulfilled ? "#059669" : colors.accent}
                       />
                       <Text style={[styles.fulfillmentBtnText, isFulfilled && styles.fulfillmentBtnTextDone]}>
-                        {isFulfilled ? ' Delivered' : ' Mark Delivered'}
+                        {isFulfilled ? 'Delivered' : 'Mark delivered'}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -448,7 +454,8 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     gap: 8,
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
+    alignItems: 'center',
   },
   editDropBtn: {
     backgroundColor: '#EEF2FF',
@@ -457,9 +464,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: VerandahRadius.pill,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    flex: 1,
+    minWidth: 0,
   },
   editDropBtnText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: Verandah.accent,
   },
@@ -470,9 +483,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: VerandahRadius.pill,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    flex: 1,
+    minWidth: 0,
   },
   closeBtnText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: '#D97706',
   },
@@ -483,9 +502,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: VerandahRadius.pill,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    flex: 1,
+    minWidth: 0,
   },
   completeBtnText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: '#059669',
   },
@@ -494,9 +519,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: VerandahRadius.pill,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
   },
   completedBadgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: '#059669',
   },
@@ -653,11 +684,15 @@ const styles = StyleSheet.create({
   },
   orderFooter: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
     borderTopWidth: 0.5,
     borderTopColor: '#E5E7EB',
     paddingTop: 8,
+  },
+  orderTotalWrap: {
+    flex: 1,
+    marginRight: 8,
   },
   totalLabel: {
     fontSize: 10,
@@ -670,9 +705,15 @@ const styles = StyleSheet.create({
   },
   fulfillmentBtn: {
     backgroundColor: Verandah.accent,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: VerandahRadius.pill,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    minWidth: 122,
+    alignSelf: 'flex-end',
   },
   fulfillmentBtnDone: {
     backgroundColor: '#D1FAE5',

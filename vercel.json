@@ -2,6 +2,10 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/network/drops/manage/:id",
+      "destination": "/network/drops/manage?id=:id"
+    },
+    {
       "source": "/network/drops/:id",
       "destination": "/network/drops?id=:id"
     },

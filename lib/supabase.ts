@@ -31,3 +31,39 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: Platform.OS === 'web',
   },
 });
+
+/**
+ * Checks whether an error is a PostgREST/Supabase authentication or JWT expiration error.
+ */
+export function isAuthOrSessionError(error: any): boolean {
+  if (!error) return false;
+  const message = String(error.message || error.details || '').toLowerCase();
+  const code = String(error.code || '');
+  return (
+    code === 'PGRST301' ||
+    code === '401' ||
+    message.includes('jwt expired') ||
+    message.includes('invalid JWT') ||
+    message.includes('invalid_claim') ||
+    message.includes('token expired')
+  );
+}
+
+/**
+ * Executes a Supabase operation with automatic token refresh retry if a 401/JWT error occurs.
+ */
+export async function executeWithSessionCheck<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error: any) {
+    if (isAuthOrSessionError(error)) {
+      console.warn('Authentication token expired during operation. Attempting session refresh...');
+      const { data, error: refreshError } = await supabase.auth.refreshSession();
+      if (!refreshError && data.session) {
+        return await operation();
+      }
+    }
+    throw error;
+  }
+}
+

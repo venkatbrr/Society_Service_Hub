@@ -1,6 +1,6 @@
 import { Session, User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { Enums, Tables } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 
@@ -116,12 +116,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (error) {
       console.error('Error loading profile:', error);
-      setProfile(null);
-      setFundsEnabled(false);
-      setBlocksEnabled(false);
-      setBlockLabel('Block');
-      setMyBlockId(null);
-      setMyFundsAccessRequest(null);
+      // On network errors / server issues, retain existing profile if already loaded
+      // to prevent kicking user to /community-select.
       return;
     }
 
@@ -291,15 +287,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     fetchSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      loadProfile(session?.user?.id, session).finally(() => {
+    // Re-verify session when mobile app resumes to foreground from background
+    const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        fetchSession();
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (event === 'SIGNED_OUT' || (!currentSession && event !== 'INITIAL_SESSION')) {
+        await clearLocalSession();
         setIsLoading(false);
-      });
+        return;
+      }
+
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      
+      if (currentSession?.user?.id) {
+        await loadProfile(currentSession.user.id, currentSession);
+      }
+      setIsLoading(false);
     });
 
     return () => {
+      appStateSubscription.remove();
       subscription.unsubscribe();
     };
   }, []);

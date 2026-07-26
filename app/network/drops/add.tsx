@@ -670,10 +670,10 @@ export default function CreateOrEditFoodDropScreen() {
           </View>
 
           <View style={{ marginTop: 10 }}>
-            <Text style={styles.subLabel}>Max Total Orders (Optional limit)</Text>
+            <Text style={styles.subLabel}>Max total items (Optional limit)</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g. 25 orders max"
+              placeholder="e.g. 120 items max"
               placeholderTextColor={colors.textMuted}
               value={maxOrders}
               onChangeText={setMaxOrders}
