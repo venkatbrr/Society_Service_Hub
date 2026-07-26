@@ -19,11 +19,11 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
   return (
     <BaseCard
       onPress={onPress}
-      padding={10}
+      padding={12}
       style={styles.card}
     >
       <View style={styles.content}>
-        <Avatar name={provider.name} size={38} />
+        <Avatar name={provider.name} size={40} />
         
         <View style={styles.mainInfo}>
           <View style={styles.headerRow}>
@@ -78,7 +78,7 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 6,
+    marginBottom: 8,
   },
   content: {
     flexDirection: 'row',
@@ -93,18 +93,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   name: {
-    fontSize: 14,
+    fontSize: 14.5,
     fontWeight: '500',
     color: Verandah.textPrimary,
     flexShrink: 1,
+    lineHeight: 19,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
   categoryText: {
     fontSize: 12,
@@ -114,6 +115,7 @@ const styles = StyleSheet.create({
   dot: {
     fontSize: 12,
     color: Verandah.textMuted,
+    marginHorizontal: 1,
   },
   ratingBox: {
     flexDirection: 'row',

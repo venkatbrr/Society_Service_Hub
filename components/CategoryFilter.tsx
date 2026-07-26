@@ -135,13 +135,13 @@ export const CategoryFilter = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 4,
+    marginBottom: 10,
     marginHorizontal: -24,
   },
   groupScrollContent: {
     paddingHorizontal: 24,
     gap: 6,
-    paddingBottom: 4,
+    paddingBottom: 8,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -149,8 +149,8 @@ const styles = StyleSheet.create({
   },
   chip: {
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: VerandahRadius.sm,
+    paddingVertical: 5,
+    borderRadius: VerandahRadius.pill,
     justifyContent: 'center',
     alignItems: 'center',
   },

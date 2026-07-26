@@ -35,10 +35,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 10,
     paddingHorizontal: 12,
-    height: 36,
-    borderRadius: VerandahRadius.md,
+    height: 40,
+    borderRadius: VerandahRadius.pill,
     backgroundColor: Verandah.cardMuted,
   },
   icon: {
