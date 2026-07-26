@@ -147,9 +147,9 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
 
     try {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: drop.title, text: message, url: shareUrl });
+        await (navigator as any).share({ title: drop.title, text: message });
       } else {
-        await Share.share({ message, title: drop.title, url: shareUrl });
+        await Share.share({ message, title: drop.title });
       }
     } catch (err) {
       console.error('Error sharing drop:', err);

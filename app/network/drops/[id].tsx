@@ -395,9 +395,9 @@ export default function PreorderDropDetailScreen() {
 
     try {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: drop.title, text: message, url: shareUrl });
+        await (navigator as any).share({ title: drop.title, text: message });
       } else {
-        await Share.share({ message, title: drop.title, url: shareUrl });
+        await Share.share({ message, title: drop.title });
       }
     } catch (err) {
       console.error('Error sharing food drop:', err);
@@ -679,11 +679,11 @@ export default function PreorderDropDetailScreen() {
           </View>
         ) : null}
 
-        {isOpen && !isCreator && !user?.id ? (
+        {!isCreator && !user?.id ? (
           <View style={styles.loginPromptCard}>
             <Text style={styles.loginPromptTitle}>Login to place pre-order</Text>
             <Text style={styles.loginPromptSub}>
-              You can browse this menu without login. Sign in to submit your order.
+              You can browse this menu without login. Sign in to place pre-orders and track your orders.
             </Text>
             <TouchableOpacity
               style={styles.loginPromptBtn}
