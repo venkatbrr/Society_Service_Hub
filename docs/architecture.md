@@ -222,7 +222,7 @@ type AuthContextType = {
 | `schools` | School directory entries with aggregate aspect ratings (`avg_academics`, `avg_teachers`, `avg_infrastructure`, `avg_safety`, `avg_transport`, `avg_value`, `avg_happiness`, `review_count`). | Community |
 | `school_reviews` | Parent report cards for schools across 8 dimensions on an emoji scale, tagged with child grade and per-aspect comments. | Community |
 | `mcn_preorder_drops` | Scheduled, time-gated food drops published by local food businesses & home chefs with fulfillment schedule and cut-off deadline. | Community |
-| `mcn_preorder_items` | Items offered for a specific food pre-order drop with unit and price. | Community |
+| `mcn_preorder_items` | Items offered for a specific food pre-order drop with unit, price, and optional per-item `max_quantity` cap. | Community |
 | `mcn_preorder_orders` | Resident pre-orders for a food drop containing delivery flat number, contact phone, note, total, and fulfillment status. | Community |
 | `mcn_preorder_order_items` | Line items and snapshot prices for a resident pre-order. | Community |
 | `announcement_audiences` | Explicit announcement audience targets | Cross-community (backend only) |
