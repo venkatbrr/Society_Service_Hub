@@ -472,7 +472,7 @@ Cross-community backend foundations are live in the database: partnerships, grou
 | **Navigation** | From Manage Listing screen. |
 | **Roles** | Only the listing owner. |
 
-### Pre-Orders & Flash Drops (`app/network/drops/index.tsx`, `app/network/drops/add.tsx`, `app/network/drops/[id].tsx`, `app/network/drops/manage/[id].tsx`)
+### Pre-Order Food (`app/network/drops/index.tsx`, `app/network/drops/add.tsx`, `app/network/drops/[id].tsx`, `app/network/drops/manage/[id].tsx`)
 
 | Aspect | Details |
 |--------|---------|

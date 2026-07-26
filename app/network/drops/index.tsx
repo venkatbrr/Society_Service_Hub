@@ -221,7 +221,7 @@ export default function FoodDropsCatalogScreen() {
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
         options={{
-          headerTitle: 'Pre-Orders & Flash Drops',
+          headerTitle: 'Pre-Order Food',
           headerTitleStyle: { fontWeight: '500', fontSize: 16, color: colors.textPrimary },
           headerLeft: () => (
             <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
@@ -261,7 +261,6 @@ export default function FoodDropsCatalogScreen() {
 
       {/* Subtitle Banner */}
       <View style={styles.headerBanner}>
-        <Text style={styles.bannerTitle}>🍲 Pre-order food</Text>
         <Text style={styles.bannerSub}>
           Browse fresh weekend specials, home-baked items, and neighborhood food pop-ups before cut-off deadlines.
         </Text>
