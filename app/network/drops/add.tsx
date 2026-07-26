@@ -29,6 +29,7 @@ interface ItemForm {
   price: string;
   description: string;
   image_url?: string | null;
+  max_quantity?: string;
 }
 
 const UNIT_OPTIONS: UnitOption[] = [
@@ -56,7 +57,7 @@ export default function CreateOrEditFoodDropScreen() {
   const [fulfillmentTime, setFulfillmentTime] = useState('13:00'); // HH:mm
   const [cutoffDate, setCutoffDate] = useState(''); // YYYY-MM-DD
   const [cutoffTime, setCutoffTime] = useState('21:00'); // HH:mm (e.g. 21:00 for 9 PM)
-  const [maxOrders, setMaxOrders] = useState('');
+
 
   // System Pickers State (Native iOS/Android)
   const [showFulfillDatePicker, setShowFulfillDatePicker] = useState(false);
@@ -124,7 +125,7 @@ export default function CreateOrEditFoodDropScreen() {
 
   // Items
   const [items, setItems] = useState<ItemForm[]>([
-    { id: '1', name: '', unit: 'piece', price: '', description: '', image_url: null },
+    { id: '1', name: '', unit: 'piece', price: '', description: '', image_url: null, max_quantity: '' },
   ]);
 
   const [loadingDrop, setLoadingDrop] = useState(false);
@@ -176,7 +177,7 @@ export default function CreateOrEditFoodDropScreen() {
           setImageUrl(dropData.image_url || null);
           setFulfillmentDate(dropData.fulfillment_date || '');
           setFulfillmentTime(normalizeFulfillmentTime(dropData.fulfillment_time || '13:00'));
-          setMaxOrders(dropData.max_orders ? String(dropData.max_orders) : '');
+
 
           if (dropData.cutoff_at) {
             const cutoffObj = new Date(dropData.cutoff_at);
@@ -204,6 +205,7 @@ export default function CreateOrEditFoodDropScreen() {
               price: String(item.price),
               description: item.description || '',
               image_url: item.image_url || null,
+              max_quantity: item.max_quantity ? String(item.max_quantity) : '',
             }))
           );
         }
@@ -221,7 +223,7 @@ export default function CreateOrEditFoodDropScreen() {
   const handleAddItem = () => {
     setItems((prev) => [
       ...prev,
-      { id: Date.now().toString(), name: '', unit: 'piece', price: '', description: '', image_url: null },
+      { id: Date.now().toString(), name: '', unit: 'piece', price: '', description: '', image_url: null, max_quantity: '' },
     ]);
   };
 
@@ -315,7 +317,7 @@ export default function CreateOrEditFoodDropScreen() {
             fulfillment_date: fulfillmentDate.trim(),
             fulfillment_time: fulfillmentTime.trim(),
             cutoff_at: cutoffAtObj.toISOString(),
-            max_orders: maxOrders ? parseInt(maxOrders, 10) : null,
+
             updated_at: new Date().toISOString(),
           })
           .eq('id', dropId);
@@ -335,6 +337,7 @@ export default function CreateOrEditFoodDropScreen() {
           price: parseFloat(item.price),
           description: item.description.trim() || null,
           image_url: item.image_url || null,
+          max_quantity: item.max_quantity ? parseInt(item.max_quantity, 10) : null,
         }));
 
         const { error: itemsErr } = await supabase
@@ -364,7 +367,7 @@ export default function CreateOrEditFoodDropScreen() {
             fulfillment_date: fulfillmentDate.trim(),
             fulfillment_time: fulfillmentTime.trim(),
             cutoff_at: cutoffAtObj.toISOString(),
-            max_orders: maxOrders ? parseInt(maxOrders, 10) : null,
+
             status: 'open',
           })
           .select()
@@ -380,6 +383,7 @@ export default function CreateOrEditFoodDropScreen() {
           price: parseFloat(item.price),
           description: item.description.trim() || null,
           image_url: item.image_url || null,
+          max_quantity: item.max_quantity ? parseInt(String(item.max_quantity), 10) : null,
         }));
 
         const { error: itemsErr } = await supabase
@@ -669,18 +673,8 @@ export default function CreateOrEditFoodDropScreen() {
             </View>
           </View>
 
-          <View style={{ marginTop: 10 }}>
-            <Text style={styles.subLabel}>Max total items (Optional limit)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. 120 items max"
-              placeholderTextColor={colors.textMuted}
-              value={maxOrders}
-              onChangeText={setMaxOrders}
-              keyboardType="numeric"
-            />
-          </View>
         </View>
+
 
         {/* Drop Items Menu */}
         <View style={styles.cardSection}>
@@ -752,6 +746,20 @@ export default function CreateOrEditFoodDropScreen() {
                       );
                     })}
                   </View>
+                </View>
+              </View>
+
+              <View style={[styles.row, { marginTop: 8 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.subLabel}>Max Quantity (Optional)</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="No limit"
+                    placeholderTextColor={colors.textMuted}
+                    value={item.max_quantity || ''}
+                    onChangeText={(txt) => handleItemChange(item.id, 'max_quantity', txt)}
+                    keyboardType="numeric"
+                  />
                 </View>
               </View>
             </View>

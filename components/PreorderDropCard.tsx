@@ -315,6 +315,7 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
     marginBottom: 8,
   },
@@ -322,7 +323,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    flex: 1,
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 8,
@@ -332,7 +332,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   metaChipNeutral: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -347,7 +346,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '500',
     color: Verandah.textPrimary,
-    flex: 1,
+    flexShrink: 1,
   },
   title: {
     ...VerandahType.title,

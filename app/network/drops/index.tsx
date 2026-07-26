@@ -221,7 +221,7 @@ export default function FoodDropsCatalogScreen() {
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
         options={{
-          headerTitle: 'Food Pre-Orders & Flash Drops',
+          headerTitle: 'Pre-Orders & Flash Drops',
           headerTitleStyle: { fontWeight: '500', fontSize: 16, color: colors.textPrimary },
           headerLeft: () => (
             <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
@@ -247,7 +247,7 @@ export default function FoodDropsCatalogScreen() {
           style={[styles.masterToggleBtn, styles.masterToggleBtnActive]}
           activeOpacity={0.9}
         >
-          <Text style={styles.masterToggleTextActive}>🍲 Food Drops</Text>
+          <Text style={styles.masterToggleTextActive}>🍲 Pre-order Food</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -261,7 +261,7 @@ export default function FoodDropsCatalogScreen() {
 
       {/* Subtitle Banner */}
       <View style={styles.headerBanner}>
-        <Text style={styles.bannerTitle}>🍲 Pre-orders & food pop-ups</Text>
+        <Text style={styles.bannerTitle}>🍲 Pre-order food</Text>
         <Text style={styles.bannerSub}>
           Browse fresh weekend specials, home-baked items, and neighborhood food pop-ups before cut-off deadlines.
         </Text>
@@ -298,7 +298,7 @@ export default function FoodDropsCatalogScreen() {
           }}
         >
           <Text style={[styles.tabText, activeTab === 'my_drops' && styles.tabTextActive]}>
-            👩‍🍳 My Food Drops
+            👩‍🍳 My Pre-order Food
           </Text>
         </TouchableOpacity>
       </View>
@@ -306,7 +306,7 @@ export default function FoodDropsCatalogScreen() {
       {/* My Food Drops Revenue & Earnings Card */}
       {activeTab === 'my_drops' && !loading ? (
         <View style={styles.revenueCard}>
-          <Text style={styles.revenueCardTitle}>💰 My Food Drops Performance & Revenue</Text>
+          <Text style={styles.revenueCardTitle}>💰 My Pre-order Food Performance & Revenue</Text>
           <View style={styles.revenueRow}>
             <View style={styles.revenueCol}>
               <Text style={styles.revenueSub}>Drops Hosted</Text>
@@ -397,12 +397,12 @@ export default function FoodDropsCatalogScreen() {
                 activeTab === 'active'
                   ? 'No active pre-order drops'
                   : activeTab === 'my_drops'
-                  ? 'You haven’t published any food drops'
-                  : 'No past food drops'
+                  ? 'You haven’t published any pre-order food'
+                  : 'No past pre-order food'
               }
               message={
                 activeTab === 'active'
-                  ? 'No local food drops open right now. Check back soon or host your own food pop-up!'
+                  ? 'No local pre-order food open right now. Check back soon or host your own food pop-up!'
                   : 'Publish a pre-order drop to let neighbors order your weekend specials!'
               }
             />

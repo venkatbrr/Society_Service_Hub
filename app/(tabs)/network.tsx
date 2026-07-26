@@ -146,7 +146,7 @@ export default function NetworkScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-                Food Drops & Community Business
+                Pre-order Food & Community Business
               </Text>
               <Text style={[styles.badgeText, { color: colors.accent }]}>
                 {preorderCount || 0} open drops · {businessCount || 0} active listings
@@ -159,7 +159,7 @@ export default function NetworkScreen() {
           </Text>
           <View style={[styles.cardFooter, { borderColor: colors.border }]}>
             <Text style={[styles.actionLinkText, { color: colors.accent }]}>
-              Explore Food Drops & Businesses →
+              Explore Pre-order Food & Businesses →
             </Text>
           </View>
         </BaseCard>

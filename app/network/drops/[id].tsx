@@ -31,6 +31,7 @@ interface DropItem {
   unit: string;
   price: number;
   image_url?: string | null;
+  max_quantity?: number | null;
 }
 
 interface DropDetails {
@@ -169,9 +170,18 @@ export default function PreorderDropDetailScreen() {
   }, [profile]);
 
   const handleQtyChange = (itemId: string, delta: number) => {
+    const item = items.find((i) => i.id === itemId);
+    const maxQty = item?.max_quantity;
+
     setQuantities((prev) => {
       const current = prev[itemId] || 0;
-      const updated = Math.max(0, current + delta);
+      let updated = Math.max(0, current + delta);
+      
+      if (maxQty !== undefined && maxQty !== null && updated > maxQty) {
+        updated = maxQty;
+        Toast.show({ type: 'info', text1: 'Maximum item capacity reached' });
+      }
+      
       return { ...prev, [itemId]: updated };
     });
   };

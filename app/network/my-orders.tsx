@@ -490,7 +490,7 @@ export default function MyOrdersScreen() {
             color={activeTab === 'preorder' ? colors.accent : colors.textSecondary}
           />
           <Text style={[styles.tabText, activeTab === 'preorder' && styles.tabTextActive]}>
-            Food drops ({preorderOrders.length})
+            Pre-order food ({preorderOrders.length})
           </Text>
         </TouchableOpacity>
 
