@@ -98,11 +98,12 @@ export default function SchoolDetailScreen() {
 
         // If static school, calculate average aspect scores dynamically from reviews
         if (schoolId.startsWith('wh_school_') && currentSchool && fetchedReviews.length > 0) {
-          let acad = 0, teach = 0, infra = 0, safe = 0, trans = 0, val = 0, hap = 0;
+          let acad = 0, teach = 0, infra = 0, sports = 0, safe = 0, trans = 0, val = 0, hap = 0;
           fetchedReviews.forEach((r) => {
             acad += r.academics_score;
             teach += r.teachers_score;
             infra += r.infrastructure_score;
+            sports += r.sports_activities_score;
             safe += r.safety_score;
             trans += r.transport_score;
             val += r.value_score;
@@ -115,6 +116,7 @@ export default function SchoolDetailScreen() {
             avg_academics: parseFloat((acad / n).toFixed(1)),
             avg_teachers: parseFloat((teach / n).toFixed(1)),
             avg_infrastructure: parseFloat((infra / n).toFixed(1)),
+            avg_sports_activities: parseFloat((sports / n).toFixed(1)),
             avg_safety: parseFloat((safe / n).toFixed(1)),
             avg_transport: parseFloat((trans / n).toFixed(1)),
             avg_value: parseFloat((val / n).toFixed(1)),
@@ -233,6 +235,7 @@ export default function SchoolDetailScreen() {
     avg_academics: school.avg_academics || 0,
     avg_teachers: school.avg_teachers || 0,
     avg_infrastructure: school.avg_infrastructure || 0,
+    avg_sports_activities: school.avg_sports_activities || 0,
     avg_safety: school.avg_safety || 0,
     avg_transport: school.avg_transport || 0,
     avg_value: school.avg_value || 0,
@@ -243,10 +246,11 @@ export default function SchoolDetailScreen() {
     (aspectScores.avg_academics +
       aspectScores.avg_teachers +
       aspectScores.avg_infrastructure +
+      aspectScores.avg_sports_activities +
       aspectScores.avg_safety +
       aspectScores.avg_transport +
       aspectScores.avg_value +
-      aspectScores.avg_happiness) / 7;
+      aspectScores.avg_happiness) / SCHOOL_ASPECTS.length;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -375,7 +379,7 @@ export default function SchoolDetailScreen() {
           {/* Spider/Radar Chart (when reviews >= 1) */}
           {reviews.length > 0 ? (
             <View style={styles.chartBox}>
-              <Text style={styles.chartSubtitle}>Community Score Breakdown (7 Dimensions)</Text>
+              <Text style={styles.chartSubtitle}>Community Score Breakdown ({SCHOOL_ASPECTS.length} Dimensions)</Text>
               <SchoolRadarChart scores={aspectScores} size={250} />
 
               {/* Aspect Breakdown List */}
@@ -401,7 +405,7 @@ export default function SchoolDetailScreen() {
             <View style={styles.noReviewsBox}>
               <Text style={styles.noReviewsTitle}>No parent report cards yet</Text>
               <Text style={styles.noReviewsText}>
-                Be the first parent from your society to grade this school across 7 key dimensions!
+                Be the first parent from your society to grade this school across {SCHOOL_ASPECTS.length} key dimensions!
               </Text>
 
               <View style={styles.whyGradeBox}>

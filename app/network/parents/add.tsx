@@ -2,15 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../../constants/Colors';
@@ -53,6 +53,10 @@ export default function AddParentCornerScreen() {
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(!!editId);
+
+  const handleBack = () => {
+    router.replace('/network/parents' as any);
+  };
 
   // Auto-fill user profile info if creating new entry
   useEffect(() => {
@@ -182,7 +186,7 @@ export default function AddParentCornerScreen() {
         Toast.show({ type: 'success', text1: 'Child details added to Parent Corner!' });
       }
 
-      router.back();
+      router.replace('/network/parents' as any);
     } catch (err: any) {
       console.error('Error saving parent corner record:', err);
       Toast.show({ type: 'error', text1: err.message || 'Failed to save details' });
@@ -209,7 +213,7 @@ export default function AddParentCornerScreen() {
           headerTitle: editId ? 'Edit Child Details' : 'Add Child Details',
           headerTitleStyle: { fontWeight: '500', fontSize: 17, color: colors.textPrimary },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
+            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
               <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
           ),

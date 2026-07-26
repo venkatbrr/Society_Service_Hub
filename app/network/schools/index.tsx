@@ -63,6 +63,10 @@ export default function SchoolsCatalogScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const handleBack = () => {
+    router.replace('/(tabs)/network' as any);
+  };
+
   const webPullProps = useWebPullToRefresh(() => fetchCustomSchools(true));
 
   useEffect(() => {
@@ -322,7 +326,7 @@ export default function SchoolsCatalogScreen() {
           headerTitle: 'West Hyderabad Schools',
           headerTitleStyle: { fontWeight: '500', fontSize: 17, color: colors.textPrimary },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
+            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
               <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
           ),

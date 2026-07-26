@@ -13,6 +13,7 @@ export interface SchoolReviewItem {
   academics_score: number;
   teachers_score: number;
   infrastructure_score: number;
+  sports_activities_score: number;
   safety_score: number;
   transport_score: number;
   value_score: number;
@@ -20,6 +21,7 @@ export interface SchoolReviewItem {
   academics_comment?: string | null;
   teachers_comment?: string | null;
   infrastructure_comment?: string | null;
+  sports_activities_comment?: string | null;
   safety_comment?: string | null;
   transport_comment?: string | null;
   value_comment?: string | null;
@@ -52,6 +54,7 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
     academics: review.academics_score,
     teachers: review.teachers_score,
     infrastructure: review.infrastructure_score,
+    sports_activities: review.sports_activities_score,
     safety: review.safety_score,
     transport: review.transport_score,
     value: review.value_score,
@@ -62,6 +65,7 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
     academics: review.academics_comment,
     teachers: review.teachers_comment,
     infrastructure: review.infrastructure_comment,
+    sports_activities: review.sports_activities_comment,
     safety: review.safety_comment,
     transport: review.transport_comment,
     value: review.value_comment,
@@ -72,7 +76,7 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
 
   // Overall average score for this parent
   const totalScore = Object.values(scoreMap).reduce((a, b) => a + b, 0);
-  const avgScore = (totalScore / 7).toFixed(1);
+  const avgScore = (totalScore / SCHOOL_ASPECTS.length).toFixed(1);
 
   return (
     <View

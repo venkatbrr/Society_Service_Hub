@@ -3,14 +3,15 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { EmptyState } from '../../../components/EmptyState';
 import { PreorderDropCard, PreorderDropItem } from '../../../components/PreorderDropCard';
 import { Rupees } from '../../../components/Rupees';
@@ -30,7 +31,7 @@ export default function FoodDropsCatalogScreen() {
     if (targetDropId) {
       router.replace(`/network/drops/${targetDropId}` as any);
     }
-  }, [targetDropId]);
+  }, [targetDropId, router]);
 
   const [drops, setDrops] = useState<PreorderDropItem[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'closed' | 'my_drops'>('active');
@@ -45,19 +46,23 @@ export default function FoodDropsCatalogScreen() {
 
   const fetchDrops = useCallback(
     async (isRefresh = false) => {
-      if (!communityId) return;
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
 
       try {
-        let query = supabase
-          .from('mcn_preorder_drops')
-          .select('*, profiles(full_name, flat_number), mcn_listings(name, image_url)')
-          .eq('community_id', communityId)
-          .order('cutoff_at', { ascending: true });
+        const isAnonymousView = !user?.id;
+        let query = supabase.from('mcn_preorder_drops').select('*').order('cutoff_at', { ascending: true });
 
-        if (activeTab === 'my_drops') {
+        if (communityId) {
+          query = query.eq('community_id', communityId);
+        }
+
+        if (activeTab === 'my_drops' && user?.id) {
           query = query.eq('created_by', user?.id);
+        }
+
+        if (activeTab === 'active' && isAnonymousView) {
+          query = query.eq('status', 'open');
         }
 
         const { data, error } = await query;
@@ -71,7 +76,7 @@ export default function FoodDropsCatalogScreen() {
           let compRev = 0;
           let totOrd = 0;
 
-          if (dropIds.length > 0) {
+          if (dropIds.length > 0 && user?.id) {
             const { data: orderData } = await supabase
               .from('mcn_preorder_orders')
               .select('drop_id, total_amount, status')
@@ -124,6 +129,8 @@ export default function FoodDropsCatalogScreen() {
           }
 
           setDrops(filtered);
+        } else {
+          setDrops([]);
         }
       } catch (err) {
         console.error('Error fetching preorder drops:', err);
@@ -144,11 +151,18 @@ export default function FoodDropsCatalogScreen() {
   const webPullProps = useWebPullToRefresh(() => fetchDrops(true));
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)/network' as any);
-    }
+    router.replace('/(tabs)/network' as any);
+  };
+
+  const requireLoginForAction = () => {
+    if (user?.id) return true;
+    Toast.show({
+      type: 'info',
+      text1: 'Login required',
+      text2: 'You can browse drops now. Please login to host or manage orders.',
+    });
+    router.push('/login' as any);
+    return false;
   };
 
   return (
@@ -163,12 +177,14 @@ export default function FoodDropsCatalogScreen() {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.push('/network/drops/add' as any)}
-              style={{ marginRight: 6 }}
-            >
-              <Ionicons name="add-circle-outline" size={24} color={colors.accent} />
-            </TouchableOpacity>
+            user?.id ? (
+              <TouchableOpacity
+                onPress={() => router.push('/network/drops/add' as any)}
+                style={{ marginRight: 6 }}
+              >
+                <Ionicons name="add-circle-outline" size={24} color={colors.accent} />
+              </TouchableOpacity>
+            ) : null
           ),
         }}
       />
@@ -179,7 +195,7 @@ export default function FoodDropsCatalogScreen() {
           style={[styles.masterToggleBtn, styles.masterToggleBtnActive]}
           activeOpacity={0.9}
         >
-          <Text style={styles.masterToggleTextActive}>🍕 Food Pre-Orders</Text>
+          <Text style={styles.masterToggleTextActive}>🍲 Food Drops</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -193,9 +209,9 @@ export default function FoodDropsCatalogScreen() {
 
       {/* Subtitle Banner */}
       <View style={styles.headerBanner}>
-        <Text style={styles.bannerTitle}>🍕 Pre-Orders & Food Pop-Ups</Text>
+        <Text style={styles.bannerTitle}>🍲 Pre-orders & food pop-ups</Text>
         <Text style={styles.bannerSub}>
-          Order fresh weekend pizzas, home-baked cakes, or special festival menus before cut-off deadlines.
+          Browse fresh weekend specials, home-baked items, and neighborhood food pop-ups before cut-off deadlines.
         </Text>
       </View>
 
@@ -221,7 +237,13 @@ export default function FoodDropsCatalogScreen() {
 
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'my_drops' && styles.tabBtnActive]}
-          onPress={() => setActiveTab('my_drops')}
+          onPress={() => {
+            if (!user?.id) {
+              requireLoginForAction();
+              return;
+            }
+            setActiveTab('my_drops');
+          }}
         >
           <Text style={[styles.tabText, activeTab === 'my_drops' && styles.tabTextActive]}>
             👩‍🍳 My Food Drops
@@ -300,7 +322,7 @@ export default function FoodDropsCatalogScreen() {
                 {isFirstCompleted ? (
                   <View style={[styles.sectionHeaderWrap, { flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
                     <Ionicons name="checkmark-circle" size={16} color="#059669" />
-                    <Text style={styles.sectionHeaderText}>Past Completed & Delivered Drops</Text>
+                    <Text style={[styles.sectionHeaderText, styles.sectionHeaderTextCompleted]}>Past Completed & Delivered Drops</Text>
                   </View>
                 ) : null}
 
@@ -308,7 +330,10 @@ export default function FoodDropsCatalogScreen() {
                   drop={item}
                   isCreator={item.created_by === user?.id}
                   onPress={() => router.push(`/network/drops/${item.id}` as any)}
-                  onManage={() => router.push(`/network/drops/manage/${item.id}` as any)}
+                  onManage={() => {
+                    if (!requireLoginForAction()) return;
+                    router.push(`/network/drops/manage/${item.id}` as any);
+                  }}
                 />
               </View>
             );
@@ -334,14 +359,16 @@ export default function FoodDropsCatalogScreen() {
       )}
 
       {/* Floating Add FAB */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push('/network/drops/add' as any)}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="add" size={24} color="#FFFFFF" />
-        <Text style={styles.fabText}>Host Food Drop</Text>
-      </TouchableOpacity>
+      {user?.id ? (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push('/network/drops/add' as any)}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add" size={24} color="#FFFFFF" />
+          <Text style={styles.fabText}>Host Food Drop</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
@@ -440,6 +467,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: Verandah.textPrimary,
+  },
+  sectionHeaderTextCompleted: {
+    fontSize: 14,
   },
   revenueCard: {
     marginHorizontal: 20,

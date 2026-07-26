@@ -7,6 +7,7 @@ export interface AspectScores {
   avg_academics: number;
   avg_teachers: number;
   avg_infrastructure: number;
+  avg_sports_activities: number;
   avg_safety: number;
   avg_transport: number;
   avg_value: number;
@@ -25,17 +26,10 @@ export const SchoolRadarChart: React.FC<SchoolRadarChartProps> = ({
   const center = size / 2;
   const radius = size * 0.32; // Leaving space for labels
 
-  const aspectKeys: (keyof AspectScores)[] = [
-    'avg_academics',
-    'avg_teachers',
-    'avg_infrastructure',
-    'avg_safety',
-    'avg_transport',
-    'avg_value',
-    'avg_happiness',
-  ];
-
   const aspectList = SCHOOL_ASPECTS;
+  const aspectKeys: (keyof AspectScores)[] = aspectList.map(
+    (aspect) => `avg_${aspect.key}` as keyof AspectScores
+  );
   const totalAxes = aspectList.length;
 
   // Calculate coordinates for an axis at given angle and score (1..5)

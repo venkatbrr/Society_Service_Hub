@@ -134,8 +134,6 @@ export default function NetworkScreen() {
           />
         }
       >
-        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>NETWORK SECTIONS</Text>
-
         {/* Merged Food Drops & Community Business Section Card */}
         <BaseCard
           padding={18}
@@ -144,7 +142,7 @@ export default function NetworkScreen() {
         >
           <View style={styles.cardHeaderRow}>
             <View style={[styles.iconCircle, { backgroundColor: '#FEE2E2' }]}>
-              <Text style={styles.iconEmoji}>🍕</Text>
+              <Text style={styles.iconEmoji}>🍲</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
@@ -157,7 +155,7 @@ export default function NetworkScreen() {
             <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Pre-order weekend pizzas, home-baked sweets, pop-up meals & local resident services. Order directly inside your society!
+            Pre-order weekend specials, home-baked sweets, pop-up meals & local resident services. Order directly inside your society!
           </Text>
           <View style={[styles.cardFooter, { borderColor: colors.border }]}>
             <Text style={[styles.actionLinkText, { color: colors.accent }]}>
@@ -299,10 +297,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 24,
-  },
-  sectionLabel: {
-    ...VerandahType.sectionLabel,
-    marginBottom: 12,
   },
   sectionCard: {
     marginBottom: 14,

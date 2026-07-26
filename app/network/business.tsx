@@ -155,11 +155,7 @@ export default function BusinessListingsScreen() {
   };
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)/network' as any);
-    }
+    router.replace('/(tabs)/network' as any);
   };
 
   return (
@@ -183,7 +179,7 @@ export default function BusinessListingsScreen() {
           onPress={() => router.replace('/network/drops' as any)}
           activeOpacity={0.8}
         >
-          <Text style={styles.masterToggleText}>🍕 Food Pre-Orders</Text>
+          <Text style={styles.masterToggleText}>🍲 Food Drops</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

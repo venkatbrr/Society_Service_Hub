@@ -1,17 +1,17 @@
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { ImageUploader } from '../../../components/ImageUploader';
@@ -48,21 +48,19 @@ export default function CreateOrEditFoodDropScreen() {
   const { user, communityId } = useAuth();
   const colors = Verandah;
 
-  const [myListings, setMyListings] = useState<{ id: string; name: string }[]>([]);
-  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
-
   // Drop Details
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [fulfillmentDate, setFulfillmentDate] = useState(''); // YYYY-MM-DD
-  const [fulfillmentTime, setFulfillmentTime] = useState('1:00 PM - 3:00 PM');
+  const [fulfillmentTime, setFulfillmentTime] = useState('13:00'); // HH:mm
   const [cutoffDate, setCutoffDate] = useState(''); // YYYY-MM-DD
   const [cutoffTime, setCutoffTime] = useState('21:00'); // HH:mm (e.g. 21:00 for 9 PM)
   const [maxOrders, setMaxOrders] = useState('');
 
   // System Pickers State (Native iOS/Android)
   const [showFulfillDatePicker, setShowFulfillDatePicker] = useState(false);
+  const [showFulfillTimePicker, setShowFulfillTimePicker] = useState(false);
   const [showCutoffDatePicker, setShowCutoffDatePicker] = useState(false);
   const [showCutoffTimePicker, setShowCutoffTimePicker] = useState(false);
 
@@ -98,6 +96,32 @@ export default function CreateOrEditFoodDropScreen() {
     return `${hours}:${mins}`;
   };
 
+  const normalizeFulfillmentTime = (raw: string): string => {
+    const trimmed = raw.trim();
+    if (/^\d{2}:\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    const twelveHour = trimmed.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (twelveHour) {
+      const hourRaw = parseInt(twelveHour[1], 10);
+      const minuteRaw = parseInt(twelveHour[2], 10);
+      const meridiem = twelveHour[3].toUpperCase();
+      let hour24 = hourRaw % 12;
+      if (meridiem === 'PM') {
+        hour24 += 12;
+      }
+      return `${String(hour24).padStart(2, '0')}:${String(minuteRaw).padStart(2, '0')}`;
+    }
+
+    return '13:00';
+  };
+
+  const formatDisplayTime = (timeStr: string): string => {
+    const parsed = parseTimeStr(timeStr);
+    return parsed.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+  };
+
   // Items
   const [items, setItems] = useState<ItemForm[]>([
     { id: '1', name: '', unit: 'piece', price: '', description: '', image_url: null },
@@ -120,21 +144,7 @@ export default function CreateOrEditFoodDropScreen() {
       setFulfillmentDate(tomorrowStr);
     }
 
-    // Fetch user's business listings
-    async function loadListings() {
-      if (!user?.id) return;
-      const { data } = await supabase
-        .from('mcn_listings')
-        .select('id, name')
-        .eq('owner_id', user.id);
-
-      if (data && data.length > 0) {
-        setMyListings(data);
-        if (!dropId) setSelectedListingId(data[0].id);
-      }
-    }
-    loadListings();
-  }, [user?.id, dropId]);
+  }, [dropId]);
 
   // Load existing drop data if in Edit Mode
   useEffect(() => {
@@ -165,8 +175,7 @@ export default function CreateOrEditFoodDropScreen() {
           setDescription(dropData.description || '');
           setImageUrl(dropData.image_url || null);
           setFulfillmentDate(dropData.fulfillment_date || '');
-          setFulfillmentTime(dropData.fulfillment_time || '');
-          setSelectedListingId(dropData.listing_id || null);
+          setFulfillmentTime(normalizeFulfillmentTime(dropData.fulfillment_time || '13:00'));
           setMaxOrders(dropData.max_orders ? String(dropData.max_orders) : '');
 
           if (dropData.cutoff_at) {
@@ -246,6 +255,11 @@ export default function CreateOrEditFoodDropScreen() {
       return;
     }
 
+    if (!fulfillmentTime.trim()) {
+      Toast.show({ type: 'error', text1: 'Please specify delivery time' });
+      return;
+    }
+
     if (!cutoffDate.trim() || !cutoffTime.trim()) {
       Toast.show({ type: 'error', text1: 'Please specify pre-order cut-off date & time' });
       return;
@@ -264,9 +278,25 @@ export default function CreateOrEditFoodDropScreen() {
     // Construct cutoff ISO timestamp
     const cutoffDateTimeStr = `${cutoffDate.trim()}T${cutoffTime.trim()}:00`;
     const cutoffAtObj = new Date(cutoffDateTimeStr);
+    const fulfillmentDateTimeStr = `${fulfillmentDate.trim()}T${fulfillmentTime.trim()}:00`;
+    const fulfillmentAtObj = new Date(fulfillmentDateTimeStr);
 
     if (isNaN(cutoffAtObj.getTime())) {
       Toast.show({ type: 'error', text1: 'Invalid cut-off date or time format' });
+      return;
+    }
+
+    if (isNaN(fulfillmentAtObj.getTime())) {
+      Toast.show({ type: 'error', text1: 'Invalid delivery date or time format' });
+      return;
+    }
+
+    if (fulfillmentAtObj.getTime() <= cutoffAtObj.getTime()) {
+      Toast.show({
+        type: 'error',
+        text1: 'Delivery time must be after cut-off time',
+        text2: 'Choose a delivery date/time greater than pre-order cut-off.',
+      });
       return;
     }
 
@@ -278,7 +308,7 @@ export default function CreateOrEditFoodDropScreen() {
         const { error: updateErr } = await supabase
           .from('mcn_preorder_drops')
           .update({
-            listing_id: selectedListingId,
+            listing_id: null,
             title: title.trim(),
             description: description.trim() || null,
             image_url: imageUrl,
@@ -326,7 +356,7 @@ export default function CreateOrEditFoodDropScreen() {
           .from('mcn_preorder_drops')
           .insert({
             community_id: communityId,
-            listing_id: selectedListingId,
+            listing_id: null,
             created_by: user.id,
             title: title.trim(),
             description: description.trim() || null,
@@ -387,11 +417,12 @@ export default function CreateOrEditFoodDropScreen() {
   }
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
+    if (!dropId) {
       router.replace('/network/drops' as any);
+      return;
     }
+
+    router.replace(`/network/drops/${dropId}` as any);
   };
 
   return (
@@ -411,29 +442,6 @@ export default function CreateOrEditFoodDropScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Linked Listing (if any) */}
-        {myListings.length > 0 ? (
-          <View style={styles.section}>
-            <Text style={styles.label}>Linked Food Business (Optional)</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-              {myListings.map((l) => {
-                const active = selectedListingId === l.id;
-                return (
-                  <TouchableOpacity
-                    key={l.id}
-                    style={[styles.chip, active && styles.chipActive]}
-                    onPress={() => setSelectedListingId(active ? null : l.id)}
-                  >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                      🏪 {l.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        ) : null}
-
         {/* Cover Photo Uploader */}
         <View style={styles.section}>
           <Text style={styles.label}>Drop Banner / Cover Photo (Optional)</Text>
@@ -452,7 +460,7 @@ export default function CreateOrEditFoodDropScreen() {
           <Text style={styles.label}>Drop Title *</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g. Saturday Woodfired Pizza Night, Sunday Dum Biryani"
+            placeholder="e.g. Saturday dinner special, Sunday dum biryani"
             placeholderTextColor={colors.textMuted}
             value={title}
             onChangeText={setTitle}
@@ -523,13 +531,45 @@ export default function CreateOrEditFoodDropScreen() {
 
             <View style={{ flex: 1 }}>
               <Text style={styles.subLabel}>Delivery Time Slot *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="1:00 PM - 3:00 PM"
-                placeholderTextColor={colors.textMuted}
-                value={fulfillmentTime}
-                onChangeText={setFulfillmentTime}
-              />
+              {Platform.OS === 'web' ? (
+                <input
+                  type="time"
+                  value={fulfillmentTime}
+                  onChange={(e) => setFulfillmentTime(e.target.value)}
+                  style={{
+                    height: 42,
+                    borderRadius: 8,
+                    border: `0.5px solid ${colors.border}`,
+                    padding: '0 10px',
+                    fontSize: 14,
+                    color: colors.textPrimary,
+                    backgroundColor: colors.card,
+                    fontFamily: 'inherit',
+                  }}
+                />
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={[styles.input, { justifyContent: 'center' }]}
+                    onPress={() => setShowFulfillTimePicker(true)}
+                  >
+                    <Text style={{ fontSize: 14, color: colors.textPrimary }}>
+                      {fulfillmentTime ? formatDisplayTime(fulfillmentTime) : 'Select Time'}
+                    </Text>
+                  </TouchableOpacity>
+                  {showFulfillTimePicker && (
+                    <DateTimePicker
+                      value={parseTimeStr(fulfillmentTime)}
+                      mode="time"
+                      display="default"
+                      onChange={(event: DateTimePickerEvent, date?: Date) => {
+                        setShowFulfillTimePicker(Platform.OS === 'ios');
+                        if (date) setFulfillmentTime(formatTimeStr(date));
+                      }}
+                    />
+                  )}
+                </>
+              )}
             </View>
           </View>
         </View>
@@ -645,7 +685,7 @@ export default function CreateOrEditFoodDropScreen() {
         {/* Drop Items Menu */}
         <View style={styles.cardSection}>
           <View style={styles.itemsHeader}>
-            <Text style={styles.cardSectionTitle}>🍕 Items Offered for this Drop</Text>
+            <Text style={styles.cardSectionTitle}>🍲 Items offered for this drop</Text>
             <TouchableOpacity style={styles.addItemBtn} onPress={handleAddItem}>
               <Ionicons name="add" size={16} color={colors.accent} />
               <Text style={styles.addItemBtnText}>Add Item</Text>
@@ -675,7 +715,7 @@ export default function CreateOrEditFoodDropScreen() {
                   <Text style={styles.subLabel}>Item Name *</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="e.g. Margherita Sourdough Pizza"
+                    placeholder="e.g. Millet khichdi bowl"
                     placeholderTextColor={colors.textMuted}
                     value={item.name}
                     onChangeText={(txt) => handleItemChange(item.id, 'name', txt)}
@@ -778,31 +818,6 @@ const styles = StyleSheet.create({
   },
   multiline: {
     minHeight: 64,
-  },
-  chipRow: {
-    gap: 8,
-    paddingVertical: 2,
-  },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: VerandahRadius.pill,
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  chipActive: {
-    backgroundColor: '#EEF2FF',
-    borderColor: Verandah.accent,
-  },
-  chipText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: Verandah.textSecondary,
-  },
-  chipTextActive: {
-    color: Verandah.accent,
-    fontWeight: '600',
   },
   cardSection: {
     backgroundColor: Verandah.card,

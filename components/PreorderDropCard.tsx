@@ -2,10 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import React from 'react';
 import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Avatar } from './Avatar';
-import { BaseCard } from './BaseCard';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
+import { Avatar } from './Avatar';
+import { BaseCard } from './BaseCard';
 
 export interface PreorderDropItem {
   id: string;
@@ -128,7 +128,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
         : `https://society-service-hub.app/network/drops?id=${drop.id}`;
 
     const messageLines = [
-      `🍕 *Food Drop: ${drop.title}*`,
+      `🍲 *Food Drop: ${drop.title}*`,
       `Hosted by ${creatorName}${flatNo ? ` (${flatNo})` : ''}`,
       ``,
       `📅 Delivery: ${fulfillFormatted} (${drop.fulfillment_time})`,
@@ -167,7 +167,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
               {creatorName}
             </Text>
             <Text style={styles.flatNo}>
-              {flatNo ? `${flatNo} · ` : ''}Food Drop
+                {flatNo ? `${flatNo} · ` : ''}Community food drop
             </Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

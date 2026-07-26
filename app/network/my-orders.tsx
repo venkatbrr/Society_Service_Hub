@@ -1,11 +1,11 @@
-import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useState, useCallback } from 'react';
-import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
+import { Stack, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Rupees } from '../../components/Rupees';
 import { McnOrderStatusBadge } from '../../components/McnOrderStatusBadge';
+import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
@@ -230,11 +230,7 @@ export default function MyOrdersScreen() {
   };
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)/network' as any);
-    }
+    router.replace('/(tabs)/network' as any);
   };
 
   // Render Pre-Order Card
@@ -489,12 +485,12 @@ export default function MyOrdersScreen() {
           onPress={() => setActiveTab('preorder')}
         >
           <Ionicons
-            name="pizza-outline"
+            name="restaurant-outline"
             size={16}
             color={activeTab === 'preorder' ? colors.accent : colors.textSecondary}
           />
           <Text style={[styles.tabText, activeTab === 'preorder' && styles.tabTextActive]}>
-            Food Pre-Orders ({preorderOrders.length})
+            Food drops ({preorderOrders.length})
           </Text>
         </TouchableOpacity>
 
@@ -519,7 +515,7 @@ export default function MyOrdersScreen() {
             preorderOrders.map(renderPreorderCard)
           ) : (
             <View style={styles.emptyWrap}>
-              <Ionicons name="pizza-outline" size={48} color={colors.textMuted} />
+              <Ionicons name="restaurant-outline" size={48} color={colors.textMuted} />
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 You haven't placed any food pop-up pre-orders yet.
               </Text>

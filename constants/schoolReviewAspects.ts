@@ -2,6 +2,7 @@ export type AspectKey =
   | 'academics'
   | 'teachers'
   | 'infrastructure'
+  | 'sports_activities'
   | 'safety'
   | 'transport'
   | 'value'
@@ -34,8 +35,15 @@ export const SCHOOL_ASPECTS: AspectDefinition[] = [
     key: 'infrastructure',
     label: 'Infrastructure',
     emoji: '🏗️',
-    prompt: 'How are the classrooms, labs, sports & campus facilities?',
-    description: 'Building upkeep, playground, technology, and sanitation.',
+    prompt: 'How are the classrooms, labs, library & campus facilities?',
+    description: 'Building upkeep, technology access, and sanitation.',
+  },
+  {
+    key: 'sports_activities',
+    label: 'Sports & Activities',
+    emoji: '⚽',
+    prompt: 'How good are sports coaching, clubs, and extracurricular activities?',
+    description: 'Sports culture, events, clubs, arts, and activity participation.',
   },
   {
     key: 'safety',

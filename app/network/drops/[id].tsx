@@ -3,18 +3,18 @@ import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    Share,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../components/Avatar';
@@ -35,6 +35,7 @@ interface DropItem {
 
 interface DropDetails {
   id: string;
+  community_id: string;
   title: string;
   description: string | null;
   image_url?: string | null;
@@ -91,7 +92,7 @@ export default function PreorderDropDetailScreen() {
 
       // Fetch host profile
       let hostProfile = null;
-      if (dropData.created_by) {
+      if (dropData.created_by && user?.id) {
         const { data: pData } = await supabase
           .from('profiles')
           .select('full_name, flat_number, phone_number')
@@ -102,7 +103,7 @@ export default function PreorderDropDetailScreen() {
 
       // Fetch linked business listing if any
       let listingMeta = null;
-      if (dropData.listing_id) {
+      if (dropData.listing_id && user?.id) {
         const { data: lData } = await supabase
           .from('mcn_listings')
           .select('name')
@@ -187,8 +188,18 @@ export default function PreorderDropDetailScreen() {
   const isOpen = drop?.status === 'open' && !isCutoffPassed;
 
   const handleSubmitOrder = async () => {
-    if (!user?.id || !communityId || !dropId) {
-      Toast.show({ type: 'error', text1: 'Authentication required' });
+    if (!dropId) {
+      Toast.show({ type: 'error', text1: 'Drop is unavailable' });
+      return;
+    }
+
+    if (!user?.id) {
+      Toast.show({
+        type: 'info',
+        text1: 'Login required',
+        text2: 'You can place an order after login.',
+      });
+      router.push('/login' as any);
       return;
     }
 
@@ -241,7 +252,7 @@ export default function PreorderDropDetailScreen() {
         .from('mcn_preorder_orders')
         .insert({
           drop_id: dropId,
-          community_id: communityId,
+          community_id: drop?.community_id || communityId || '',
           buyer_id: user.id,
           buyer_name: buyerName.trim() || profile?.full_name || 'Resident',
           buyer_phone: buyerPhone.trim(),
@@ -365,7 +376,7 @@ export default function PreorderDropDetailScreen() {
         : `https://society-service-hub.app/network/drops?id=${drop.id}`;
 
     const messageLines = [
-      `🍕 *Food Drop: ${drop.title}*`,
+      `🍲 *Food Drop: ${drop.title}*`,
       `Hosted by ${hostName}${hostFlat ? ` (${hostFlat})` : ''}`,
       ``,
       `📅 Delivery: ${fulfillFormatted} (${drop.fulfillment_time})`,
@@ -394,11 +405,7 @@ export default function PreorderDropDetailScreen() {
   };
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/network/drops' as any);
-    }
+    router.replace('/network/drops' as any);
   };
 
   return (
@@ -601,7 +608,7 @@ export default function PreorderDropDetailScreen() {
         })}
 
         {/* Resident Order Form (if open and not creator) */}
-        {isOpen && !isCreator ? (
+        {isOpen && !isCreator && user?.id ? (
           <View style={styles.formSection}>
             <Text style={styles.sectionHeader}>Delivery Information</Text>
 
@@ -668,6 +675,22 @@ export default function PreorderDropDetailScreen() {
                   {existingOrder ? 'Update Pre-Order' : 'Submit Pre-Order'}
                 </Text>
               )}
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {isOpen && !isCreator && !user?.id ? (
+          <View style={styles.loginPromptCard}>
+            <Text style={styles.loginPromptTitle}>Login to place pre-order</Text>
+            <Text style={styles.loginPromptSub}>
+              You can browse this menu without login. Sign in to submit your order.
+            </Text>
+            <TouchableOpacity
+              style={styles.loginPromptBtn}
+              onPress={() => router.push('/login' as any)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.loginPromptBtnText}>Go to login</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -963,6 +986,38 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Verandah.textSecondary,
     marginTop: 4,
+  },
+  loginPromptCard: {
+    marginTop: 14,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    borderRadius: VerandahRadius.lg,
+    padding: 14,
+    gap: 8,
+  },
+  loginPromptTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Verandah.textPrimary,
+  },
+  loginPromptSub: {
+    fontSize: 12,
+    color: Verandah.textSecondary,
+    lineHeight: 18,
+  },
+  loginPromptBtn: {
+    alignSelf: 'flex-start',
+    marginTop: 2,
+    backgroundColor: Verandah.accent,
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  loginPromptBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
   hostNoticeBox: {
     flexDirection: 'row',

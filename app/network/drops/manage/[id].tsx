@@ -3,17 +3,16 @@ import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Avatar } from '../../../../components/Avatar';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
@@ -237,11 +236,7 @@ export default function ManagePreorderDropScreen() {
   const isOpen = drop.status === 'open' && !isCutoffPassed;
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/network/drops' as any);
-    }
+    router.replace(`/network/drops/${dropId}` as any);
   };
 
   return (

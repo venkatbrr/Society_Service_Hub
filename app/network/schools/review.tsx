@@ -2,15 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { EmojiRating } from '../../../components/EmojiRating';
@@ -38,6 +38,7 @@ export default function SubmitSchoolReviewScreen() {
     academics: 4,
     teachers: 4,
     infrastructure: 4,
+    sports_activities: 4,
     safety: 4,
     transport: 4,
     value: 4,
@@ -47,6 +48,7 @@ export default function SubmitSchoolReviewScreen() {
     academics: '',
     teachers: '',
     infrastructure: '',
+    sports_activities: '',
     safety: '',
     transport: '',
     value: '',
@@ -94,6 +96,7 @@ export default function SubmitSchoolReviewScreen() {
             academics: reviewData.academics_score,
             teachers: reviewData.teachers_score,
             infrastructure: reviewData.infrastructure_score,
+            sports_activities: reviewData.sports_activities_score,
             safety: reviewData.safety_score,
             transport: reviewData.transport_score,
             value: reviewData.value_score,
@@ -103,6 +106,7 @@ export default function SubmitSchoolReviewScreen() {
             academics: reviewData.academics_comment || '',
             teachers: reviewData.teachers_comment || '',
             infrastructure: reviewData.infrastructure_comment || '',
+            sports_activities: reviewData.sports_activities_comment || '',
             safety: reviewData.safety_comment || '',
             transport: reviewData.transport_comment || '',
             value: reviewData.value_comment || '',
@@ -150,6 +154,7 @@ export default function SubmitSchoolReviewScreen() {
         academics_score: scores.academics,
         teachers_score: scores.teachers,
         infrastructure_score: scores.infrastructure,
+        sports_activities_score: scores.sports_activities,
         safety_score: scores.safety,
         transport_score: scores.transport,
         value_score: scores.value,
@@ -157,6 +162,7 @@ export default function SubmitSchoolReviewScreen() {
         academics_comment: comments.academics.trim() || null,
         teachers_comment: comments.teachers.trim() || null,
         infrastructure_comment: comments.infrastructure.trim() || null,
+        sports_activities_comment: comments.sports_activities.trim() || null,
         safety_comment: comments.safety.trim() || null,
         transport_comment: comments.transport.trim() || null,
         value_comment: comments.value.trim() || null,
@@ -220,7 +226,7 @@ export default function SubmitSchoolReviewScreen() {
         <View style={styles.introCard}>
           <Text style={styles.schoolName}>{schoolName || 'School'}</Text>
           <Text style={styles.introDesc}>
-            Grade this school across 7 key dimensions to help fellow community parents make informed decisions.
+            Grade this school across {SCHOOL_ASPECTS.length} key dimensions to help fellow community parents make informed decisions.
           </Text>
         </View>
 
@@ -246,8 +252,8 @@ export default function SubmitSchoolReviewScreen() {
           </ScrollView>
         </View>
 
-        {/* 7 Aspects Form */}
-        <Text style={styles.sectionTitle}>Rate 7 Key Aspects</Text>
+        {/* Aspect Form */}
+        <Text style={styles.sectionTitle}>Rate {SCHOOL_ASPECTS.length} key aspects</Text>
 
         {SCHOOL_ASPECTS.map((aspect) => (
           <View key={aspect.key} style={styles.aspectCard}>

@@ -1,20 +1,19 @@
-import { Platform } from 'react-native';
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
-import { LogBox } from 'react-native';
+import { LogBox, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
+import { Verandah } from '../constants/Colors';
+import { AuthProvider, useAuth } from '../context/AuthContext';
+import { NotificationProvider } from '../context/NotificationContext';
+import { configureGoogleSignIn } from '../lib/auth';
 
 // Notifications module — native only (Android/iOS).
 let Notifications: typeof import('expo-notifications') | null = null;
 if (Platform.OS !== 'web') {
   Notifications = require('expo-notifications');
 }
-import Toast from 'react-native-toast-message';
-import { Verandah } from '../constants/Colors';
-import { AuthProvider, useAuth } from '../context/AuthContext';
-import { NotificationProvider } from '../context/NotificationContext';
-import { configureGoogleSignIn } from '../lib/auth';
 
 LogBox.ignoreLogs([
   'AuthApiError: Invalid Refresh Token: Refresh Token Not Found',
@@ -38,9 +37,32 @@ function RootLayoutNav() {
   }, []);
 
   useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const originalWarn = console.warn;
+    console.warn = (...args: any[]) => {
+      const first = args[0];
+      if (
+        typeof first === 'string' &&
+        first.includes('props.pointerEvents is deprecated. Use style.pointerEvents')
+      ) {
+        return;
+      }
+      originalWarn(...args);
+    };
+
+    return () => {
+      console.warn = originalWarn;
+    };
+  }, []);
+
+  useEffect(() => {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === 'login';
+    const isPublicFoodDropRoute =
+      pathname === '/network/drops' ||
+      pathname.startsWith('/network/drops/');
     const currentRoute = String(segments[0] ?? '');
     const isOnTabsRoute = currentRoute === '(tabs)';
     const isOnAdminRedirect = currentRoute === 'admin-redirect';
@@ -52,7 +74,7 @@ function RootLayoutNav() {
 
     if (!session) {
       // No session → login
-      if (!inAuthGroup) {
+      if (!inAuthGroup && !isPublicFoodDropRoute) {
         redirectTo = '/login';
       }
     } else if (isPlatformAdmin) {

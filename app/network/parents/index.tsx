@@ -4,16 +4,16 @@ import * as Linking from 'expo-linking';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../../components/BaseCard';
@@ -74,6 +74,10 @@ export default function ParentCornerScreen() {
   const [sortBy, setSortBy] = useState<SortOption>('school');
 
   const webPullProps = useWebPullToRefresh(() => fetchEntries(true));
+
+  const handleBack = () => {
+    router.replace('/(tabs)/network' as any);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -328,7 +332,7 @@ export default function ParentCornerScreen() {
           headerTitle: 'Parent Corner',
           headerTitleStyle: { fontWeight: '500', fontSize: 17, color: colors.textPrimary },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
+            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
               <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
           ),
