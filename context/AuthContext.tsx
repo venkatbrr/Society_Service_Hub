@@ -75,6 +75,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeCommunityRequest, setActiveCommunityRequest] = useState<ActiveCommunityRequest>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const isClearingRef = React.useRef(false);
+
   const resetAuthState = () => {
     setSession(null);
     setUser(null);
@@ -89,10 +91,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const clearLocalSession = async () => {
-    // Local scope clears persisted AsyncStorage tokens even when the refresh token
-    // is stale or already revoked on the server.
-    await supabase.auth.signOut({ scope: 'local' }).catch(() => { });
-    resetAuthState();
+    if (isClearingRef.current) return;
+    isClearingRef.current = true;
+    try {
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => { });
+    } finally {
+      resetAuthState();
+      isClearingRef.current = false;
+    }
   };
 
   const loadProfile = async (userId: string | null | undefined, currentSession?: Session | null) => {
@@ -265,7 +271,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       // getSession() only reads the locally cached JWT – it never contacts the
-      // server.  Validate that the user still exists server-side so that
+      // server. Validate that the user still exists server-side so that
       // deleted / banned users are signed out immediately on app launch.
       if (session?.user?.id) {
         const { error: userError } = await supabase.auth.getUser();
@@ -276,15 +282,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         await loadProfile(session.user.id, session);
       } else {
-        await clearLocalSession();
+        resetAuthState();
       }
 
       setSession(session);
       setUser(session?.user ?? null);
     } catch (error) {
       console.error('Error fetching session:', error);
-      // Treat any unexpected auth error as a sign-out to avoid a broken state.
-      await clearLocalSession();
+      resetAuthState();
     } finally {
       setIsLoading(false);
     }
@@ -298,16 +303,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
     }, 3500);
 
-    // Re-verify session when mobile app resumes to foreground from background
-    const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
-        fetchSession();
-      }
-    });
+    // Re-verify session when mobile app resumes to foreground from background (Native only)
+    let appStateSubscription: any = null;
+    if (Platform.OS !== 'web') {
+      appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
+        if (nextAppState === 'active') {
+          fetchSession();
+        }
+      });
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      if (event === 'SIGNED_OUT' || (!currentSession && event !== 'INITIAL_SESSION')) {
-        clearLocalSession();
+      if (event === 'SIGNED_OUT') {
+        resetAuthState();
+        setIsLoading(false);
+        return;
+      }
+
+      if (!currentSession && event !== 'INITIAL_SESSION') {
+        resetAuthState();
         setIsLoading(false);
         return;
       }
@@ -320,14 +334,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.warn('Profile hydration warning:', err);
         });
       } else {
-        clearLocalSession();
+        resetAuthState();
         setIsLoading(false);
       }
     });
 
     return () => {
       clearTimeout(safetyTimer);
-      appStateSubscription.remove();
+      appStateSubscription?.remove();
       subscription.unsubscribe();
     };
   }, []);

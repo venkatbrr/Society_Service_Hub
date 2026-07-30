@@ -26,9 +26,11 @@ export default function FoodDropsCatalogScreen() {
   const { id: targetDropId } = useLocalSearchParams<{ id?: string }>();
   const { user, communityId } = useAuth();
   const colors = Verandah;
+  const redirectedRef = React.useRef<string | null>(null);
 
   useEffect(() => {
-    if (targetDropId) {
+    if (targetDropId && redirectedRef.current !== targetDropId) {
+      redirectedRef.current = targetDropId;
       router.replace(`/network/drops/${targetDropId}` as any);
     }
   }, [targetDropId, router]);
@@ -401,15 +403,15 @@ export default function FoodDropsCatalogScreen() {
             return (
               <View>
                 {isFirstPreparing ? (
-                  <View style={styles.sectionHeaderWrap}>
-                    <Text style={styles.sectionHeaderText}>👨‍🍳 Kitchen Preparing</Text>
+                  <View style={styles.sectionHeaderPreparing}>
+                    <Text style={styles.sectionHeaderTextPreparing}>👨‍🍳 Kitchen Preparing</Text>
                   </View>
                 ) : null}
 
                 {isFirstCompleted ? (
-                  <View style={[styles.sectionHeaderWrap, { flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+                  <View style={styles.sectionHeaderCompleted}>
                     <Ionicons name="checkmark-circle" size={16} color="#059669" />
-                    <Text style={[styles.sectionHeaderText, styles.sectionHeaderTextCompleted]}>Past Completed & Delivered Drops</Text>
+                    <Text style={styles.sectionHeaderTextCompleted}>Past Completed & Delivered Drops</Text>
                   </View>
                 ) : null}
 
@@ -545,18 +547,40 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-  sectionHeaderWrap: {
-    marginTop: 10,
-    marginBottom: 8,
-    paddingHorizontal: 4,
+  sectionHeaderPreparing: {
+    marginTop: 14,
+    marginBottom: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#FEF3C7',
+    borderRadius: VerandahRadius.md,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  sectionHeaderText: {
+  sectionHeaderTextPreparing: {
     fontSize: 13,
     fontWeight: '700',
-    color: Verandah.textPrimary,
+    color: '#92400E',
+  },
+  sectionHeaderCompleted: {
+    marginTop: 18,
+    marginBottom: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#ECFDF5',
+    borderRadius: VerandahRadius.md,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   sectionHeaderTextCompleted: {
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#065F46',
   },
   revenueCard: {
     marginHorizontal: 20,

@@ -452,7 +452,15 @@ export default function PreorderDropDetailScreen() {
   };
 
   const handleBack = () => {
-    router.replace('/network/drops' as any);
+    if (selectedImageUrl) {
+      setSelectedImageUrl(null);
+      return;
+    }
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/network/drops' as any);
+    }
   };
 
   return (
