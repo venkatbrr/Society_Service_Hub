@@ -24,6 +24,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
+  <script>
+    (function() {
+      if (window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
+        window.location.replace('/login' + window.location.search + window.location.hash);
+      }
+    })();
+  </script>
 
   <style>
     /* CSS Variables matching the Verandah color system */

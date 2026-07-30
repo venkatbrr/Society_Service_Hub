@@ -201,6 +201,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setCommunityId(resolvedCommunityId);
     setMyBlockId(profileData?.block_id ?? null);
     setActiveCommunityRequest(nextActiveRequest);
+    setIsLoading(false);
 
     if (!resolvedCommunityId || profileRole === 'admin') {
       setFundsEnabled(false);
@@ -210,43 +211,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    const [{ data: communityData, error: communityError }, { data: fundsRequestStatus, error: fundsStatusError }] = await Promise.all([
+    // Secondary background queries: load community settings and funds access status non-blockingly
+    Promise.all([
       supabase
         .from('communities')
         .select('funds_enabled, blocks_enabled, block_label')
         .eq('id', resolvedCommunityId)
         .maybeSingle(),
       supabase.rpc('get_funds_access_status', { p_community_id: resolvedCommunityId }),
-    ]);
+    ]).then(([{ data: communityData, error: communityError }, { data: fundsRequestStatus, error: fundsStatusError }]) => {
+      if (communityError) {
+        console.error('Error loading community activation status:', communityError);
+        setFundsEnabled(false);
+        setBlocksEnabled(false);
+        setBlockLabel('Block');
+      } else {
+        const enabledFunds = Boolean(communityData?.funds_enabled);
+        setFundsEnabled(enabledFunds);
+        setBlocksEnabled(Boolean(communityData?.blocks_enabled));
+        setBlockLabel((communityData as any)?.block_label ?? 'Block');
+      }
 
-    if (communityError) {
-      console.error('Error loading community activation status:', communityError);
-      setFundsEnabled(false);
-      setBlocksEnabled(false);
-      setBlockLabel('Block');
-    } else {
-      const enabledFunds = Boolean(communityData?.funds_enabled);
-      setFundsEnabled(enabledFunds);
-      setBlocksEnabled(Boolean(communityData?.blocks_enabled));
-      setBlockLabel((communityData as any)?.block_label ?? 'Block');
-    }
-
-    if (fundsStatusError) {
-      console.error('Error loading funds access status:', fundsStatusError);
-      setMyFundsAccessRequest(null);
-    } else {
-      const latest = (fundsRequestStatus ?? [])[0] ?? null;
-      setMyFundsAccessRequest(
-        latest
-          ? {
-            id: latest.request_id,
-            status: latest.status,
-            rejection_reason: latest.rejection_reason,
-            decided_at: latest.decided_at,
-          }
-          : null
-      );
-    }
+      if (fundsStatusError) {
+        console.error('Error loading funds access status:', fundsStatusError);
+        setMyFundsAccessRequest(null);
+      } else {
+        const latest = (fundsRequestStatus ?? [])[0] ?? null;
+        setMyFundsAccessRequest(
+          latest
+            ? {
+              id: latest.request_id,
+              status: latest.status,
+              rejection_reason: latest.rejection_reason,
+              decided_at: latest.decided_at,
+            }
+            : null
+        );
+      }
+    }).catch(err => {
+      console.warn('Background community settings load warning:', err);
+    });
   };
 
   const fetchSession = async () => {
@@ -263,18 +267,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // getSession() only reads the locally cached JWT – it never contacts the
       // server.  Validate that the user still exists server-side so that
       // deleted / banned users are signed out immediately on app launch.
-      if (session) {
+      if (session?.user?.id) {
         const { error: userError } = await supabase.auth.getUser();
         if (userError) {
           console.warn('User no longer exists on server — signing out:', userError.message);
           await clearLocalSession();
           return;
         }
+        await loadProfile(session.user.id, session);
+      } else {
+        await clearLocalSession();
       }
 
       setSession(session);
       setUser(session?.user ?? null);
-      await loadProfile(session?.user?.id, session);
     } catch (error) {
       console.error('Error fetching session:', error);
       // Treat any unexpected auth error as a sign-out to avoid a broken state.
@@ -299,20 +305,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       if (event === 'SIGNED_OUT' || (!currentSession && event !== 'INITIAL_SESSION')) {
-        await clearLocalSession();
+        clearLocalSession();
         setIsLoading(false);
         return;
       }
 
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      
+
       if (currentSession?.user?.id) {
-        await loadProfile(currentSession.user.id, currentSession);
+        loadProfile(currentSession.user.id, currentSession).catch((err) => {
+          console.warn('Profile hydration warning:', err);
+        });
+      } else {
+        clearLocalSession();
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     return () => {
@@ -354,15 +364,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
+    resetAuthState();
     try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.warn('Error during Supabase signout:', err);
-    } finally {
-      resetAuthState();
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      // Ignore local storage clear issues
+    }
+
+    supabase.auth.signOut().catch((err) => {
+      console.warn('Background signout notification error:', err);
+    });
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.location.href = '/login';
     }
   };
 

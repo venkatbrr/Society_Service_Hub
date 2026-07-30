@@ -117,13 +117,9 @@ export default function ProfileScreen() {
     loadFundRole();
   }, [communityId, fundsEnabled, user?.id]);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      router.replace('/login');
-    } catch (error) {
-      Toast.show({ type: 'error', text1: 'Error signing out' });
-    }
+  const handleSignOut = () => {
+    signOut();
+    router.replace('/login');
   };
 
   const saveMyBlock = async () => {

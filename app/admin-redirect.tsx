@@ -15,9 +15,9 @@ export default function AdminRedirectScreen() {
 
   const handleOpenAdmin = () => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      window.location.href = '/admin/';
+      window.location.href = '/admin/index.html';
     } else {
-      Linking.openURL('https://commloom.vercel.app/admin/').catch(() => {
+      Linking.openURL('https://commloom.vercel.app/admin/index.html').catch(() => {
         Toast.show({ type: 'error', text1: 'Could not open Admin Dashboard' });
       });
     }

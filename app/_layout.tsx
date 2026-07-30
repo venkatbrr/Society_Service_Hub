@@ -82,7 +82,11 @@ function RootLayoutNav() {
         redirectTo = '/login';
       }
     } else if (isPlatformAdmin) {
-      // Platform admin → redirect screen
+      // Platform admin on web → direct to full page web console
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin')) {
+        window.location.replace('/admin/index.html');
+        return;
+      }
       if (!isOnAdminRedirect) {
         redirectTo = '/admin-redirect';
       }

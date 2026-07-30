@@ -134,10 +134,11 @@ export default function LoginScreen() {
     try {
       if (Platform.OS === 'web') {
         // Web: use Supabase OAuth redirect flow
+        const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/login` : undefined;
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: window.location.origin,
+            redirectTo: redirectUrl,
           },
         });
         if (error) throw error;

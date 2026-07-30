@@ -19,7 +19,8 @@ function copyFolderSync(from, to) {
 
 try {
   copyFolderSync('admin-dashboard', 'dist/admin');
-  console.log('Successfully copied admin-dashboard to dist/admin');
+  copyFolderSync('admin-dashboard', 'public/admin');
+  console.log('Successfully copied admin-dashboard to dist/admin and public/admin');
 } catch (err) {
   console.error('Failed to copy admin-dashboard:', err);
   process.exit(1);
