@@ -7,7 +7,7 @@ import Toast from 'react-native-toast-message';
 import { McnOrderStatusBadge } from '../../components/McnOrderStatusBadge';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { format12HourTime, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -283,7 +283,7 @@ export default function MyOrdersScreen() {
         <View style={styles.deliveryBanner}>
           <Ionicons name="calendar-outline" size={15} color={colors.accent} />
           <Text style={styles.deliveryBannerText}>
-            Delivery: <Text style={{ fontWeight: '700' }}>{fulfillFormatted}</Text> ({drop?.fulfillment_time})
+            Delivery: <Text style={{ fontWeight: '700' }}>{fulfillFormatted}</Text> ({format12HourTime(drop?.fulfillment_time)})
           </Text>
         </View>
 

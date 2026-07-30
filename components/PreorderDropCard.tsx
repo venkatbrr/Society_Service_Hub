@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import React from 'react';
 import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahType } from '../constants/Verandah';
+import { format12HourTime, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
 
@@ -115,7 +115,8 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
     month: 'short',
   });
 
-  const creatorName = drop.profiles?.full_name || drop.mcn_listings?.name || 'Host';
+  const rawHostName = drop.profiles?.full_name?.trim() || drop.mcn_listings?.name?.trim() || 'Resident Host';
+  const creatorName = rawHostName === 'Host' ? 'Resident Host' : rawHostName;
   const flatNo = drop.profiles?.flat_number ? `Flat ${drop.profiles.flat_number}` : null;
   const hostDisplay = flatNo ? `${creatorName} (${flatNo})` : creatorName;
 
@@ -136,7 +137,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
       `🍲 *Food Drop: ${drop.title}*`,
       `Hosted by ${hostDisplay}`,
       ``,
-      `📅 Delivery: ${fulfillFormatted} (${drop.fulfillment_time})`,
+      `📅 Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
       `⏰ Pre-Orders Close: ${cutoffFormatted}`,
     ];
 
@@ -201,7 +202,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
           <View style={styles.metaChipNeutral}>
             <Ionicons name="calendar-outline" size={14} color={Verandah.accent} />
             <Text style={styles.metaChipNeutralText} numberOfLines={1}>
-              Delivery: {fulfillFormatted} ({drop.fulfillment_time})
+              Delivery: {fulfillFormatted} ({format12HourTime(drop.fulfillment_time)})
             </Text>
           </View>
         </View>

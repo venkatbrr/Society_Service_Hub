@@ -61,3 +61,26 @@ export const VerandahRadius = {
 export const VerandahLayout = {
   screenPaddingTop: Platform.select({ web: 16, default: 60 }) as number,
 };
+
+/**
+ * Formats a 24-hour time string (e.g. "13:00", "09:30")
+ * into 12-hour AM/PM format (e.g. "01:00 pm", "09:30 am").
+ */
+export const format12HourTime = (timeStr: string | null | undefined): string => {
+  if (!timeStr) return '';
+  const trimmed = timeStr.trim();
+  if (/am|pm/i.test(trimmed)) return trimmed;
+
+  const parts = trimmed.split(':');
+  if (parts.length >= 2) {
+    let hour = parseInt(parts[0], 10);
+    const minute = parts[1].slice(0, 2);
+    if (isNaN(hour)) return trimmed;
+    const ampm = hour >= 12 ? 'pm' : 'am';
+    hour = hour % 12;
+    if (hour === 0) hour = 12;
+    const padHour = String(hour).padStart(2, '0');
+    return `${padHour}:${minute} ${ampm}`;
+  }
+  return trimmed;
+};

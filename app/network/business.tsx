@@ -112,6 +112,13 @@ export default function BusinessListingsScreen() {
     [communityId, debouncedSearch, selectedCategoryId]
   );
 
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    fetchListings();
+    fetchCategories();
+  }, [communityId, fetchListings, fetchCategories]);
+
   useFocusEffect(
     useCallback(() => {
       fetchListings();
@@ -123,7 +130,42 @@ export default function BusinessListingsScreen() {
     setSelectedCategoryId((prev) => (prev === categoryId ? null : categoryId));
   };
 
-  const firstInactiveBusinessIndex = listings.findIndex((listing) => !listing.is_active);
+  const toggleCategoryCollapse = (catName: string) => {
+    setCollapsedCategories((prev) => ({
+      ...prev,
+      [catName]: !prev[catName],
+    }));
+  };
+
+  // Group listings by category
+  const groupedListings = React.useMemo(() => {
+    const activeListings = listings.filter((l) => l.is_active);
+    const inactiveListings = listings.filter((l) => !l.is_active);
+
+    const groupsMap: Record<string, { categoryName: string; emoji: string; items: McnListingItem[] }> = {};
+
+    activeListings.forEach((item) => {
+      const catName = item.category?.name || 'Other Community Businesses';
+      const catEmoji = item.category?.emoji || '🏪';
+
+      if (!groupsMap[catName]) {
+        groupsMap[catName] = { categoryName: catName, emoji: catEmoji, items: [] };
+      }
+      groupsMap[catName].items.push(item);
+    });
+
+    const groupsList = Object.values(groupsMap);
+
+    if (inactiveListings.length > 0) {
+      groupsList.push({
+        categoryName: 'Inactive Businesses',
+        emoji: '🔒',
+        items: inactiveListings,
+      });
+    }
+
+    return groupsList;
+  }, [listings]);
 
   const handleRemoveListing = async (id: string) => {
     Alert.alert(
@@ -273,8 +315,8 @@ export default function BusinessListingsScreen() {
         <FlatList
           {...webPullProps}
           style={styles.list}
-          data={listings}
-          keyExtractor={(item) => item.id}
+          data={groupedListings}
+          keyExtractor={(group) => group.categoryName}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -284,26 +326,53 @@ export default function BusinessListingsScreen() {
             />
           }
           alwaysBounceVertical
-          contentContainerStyle={listings.length === 0 ? styles.emptyList : styles.listContent}
-          renderItem={({ item, index }) => (
-            <>
-              {index === firstInactiveBusinessIndex ? (
-                <View style={[styles.inactiveSectionHeader, { borderColor: colors.border }]}>
-                  <Text style={[styles.inactiveSectionTitle, { color: colors.textSecondary }]}>
-                    Inactive businesses
-                  </Text>
-                </View>
-              ) : null}
-              <McnListingCard
-                listing={item}
-                currentUserId={user?.id || ''}
-                isCommunityLead={isCommunityLead}
-                onPress={(id) => router.push(`/network/listing/${id}` as any)}
-                onManage={(id) => router.push(`/network/listing/manage/${id}` as any)}
-                onRemove={handleRemoveListing}
-              />
-            </>
-          )}
+          contentContainerStyle={groupedListings.length === 0 ? styles.emptyList : styles.listContent}
+          renderItem={({ item: group }) => {
+            const isCollapsed = !!collapsedCategories[group.categoryName];
+
+            return (
+              <View style={{ marginBottom: 14 }}>
+                {/* Collapsible Category Header */}
+                <TouchableOpacity
+                  style={styles.categorySectionHeader}
+                  onPress={() => toggleCategoryCollapse(group.categoryName)}
+                  activeOpacity={0.8}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                    <Text style={styles.categoryHeaderEmoji}>{group.emoji}</Text>
+                    <Text style={styles.categoryHeaderTitle} numberOfLines={1}>
+                      {group.categoryName}
+                    </Text>
+                    <View style={styles.categoryCountBadge}>
+                      <Text style={styles.categoryCountBadgeText}>{group.items.length}</Text>
+                    </View>
+                  </View>
+                  <Ionicons
+                    name={isCollapsed ? 'chevron-down' : 'chevron-up'}
+                    size={18}
+                    color={Verandah.textSecondary}
+                  />
+                </TouchableOpacity>
+
+                {/* Listing Cards under Category */}
+                {!isCollapsed ? (
+                  <View style={{ marginTop: 8 }}>
+                    {group.items.map((listing) => (
+                      <McnListingCard
+                        key={listing.id}
+                        listing={listing}
+                        currentUserId={user?.id || ''}
+                        isCommunityLead={isCommunityLead}
+                        onPress={(id) => router.push(`/network/listing/${id}` as any)}
+                        onManage={(id) => router.push(`/network/listing/manage/${id}` as any)}
+                        onRemove={handleRemoveListing}
+                      />
+                    ))}
+                  </View>
+                ) : null}
+              </View>
+            );
+          }}
           ListEmptyComponent={
             <EmptyState
               icon="storefront-outline"
@@ -431,10 +500,42 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.pill,
     backgroundColor: '#F3F4F6',
   },
+  categorySectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F9FAFB',
+    borderWidth: 0.5,
+    borderColor: '#E5E7EB',
+    borderRadius: VerandahRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  categoryHeaderEmoji: {
+    fontSize: 16,
+  },
+  categoryHeaderTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Verandah.textPrimary,
+    flex: 1,
+  },
+  categoryCountBadge: {
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: VerandahRadius.pill,
+  },
+  categoryCountBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Verandah.accent,
+  },
   masterToggleBtnActive: {
-    backgroundColor: '#ECFDF5',
+    backgroundColor: Verandah.primary,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: Verandah.primary,
   },
   masterToggleText: {
     fontSize: 13,
@@ -444,6 +545,6 @@ const styles = StyleSheet.create({
   masterToggleTextActive: {
     fontSize: 13,
     fontWeight: '700',
-    color: Verandah.accent,
+    color: '#FFFFFF',
   },
 });

@@ -166,6 +166,18 @@ export default function FoodDropsCatalogScreen() {
             mcn_listings: d.listing_id ? listingMap[d.listing_id] || null : null,
           }));
 
+          const isDeliveryPassed = (d: PreorderDropItem): boolean => {
+            if (d.status === 'completed' || d.status === 'cancelled') return true;
+            if (!d.fulfillment_date) return false;
+            const timeStr = d.fulfillment_time || '23:59';
+            const fulfillDateTime = new Date(`${d.fulfillment_date}T${timeStr}:00`);
+            if (isNaN(fulfillDateTime.getTime())) {
+              const fulfillDateOnly = new Date(`${d.fulfillment_date}T23:59:59`);
+              return now > fulfillDateOnly;
+            }
+            return now > fulfillDateTime;
+          };
+
           // Filter by active vs closed tab if not in my_drops
           let filtered = formatted;
           if (activeTab === 'active') {
@@ -174,9 +186,11 @@ export default function FoodDropsCatalogScreen() {
             );
           } else if (activeTab === 'closed') {
             const preparing = formatted.filter(
-              (d) => d.status !== 'completed' && (d.status === 'closed' || new Date(d.cutoff_at) <= now)
+              (d) => d.status !== 'completed' && d.status !== 'cancelled' && (d.status === 'closed' || new Date(d.cutoff_at) <= now) && !isDeliveryPassed(d)
             );
-            const completed = formatted.filter((d) => d.status === 'completed');
+            const completed = formatted.filter(
+              (d) => d.status === 'completed' || d.status === 'cancelled' || isDeliveryPassed(d)
+            );
             filtered = [...preparing, ...completed];
           }
 
@@ -193,6 +207,10 @@ export default function FoodDropsCatalogScreen() {
     },
     [communityId, activeTab, user?.id]
   );
+
+  useEffect(() => {
+    fetchDrops();
+  }, [communityId, activeTab]);
 
   useFocusEffect(
     useCallback(() => {
@@ -351,15 +369,33 @@ export default function FoodDropsCatalogScreen() {
             />
           }
           renderItem={({ item, index }) => {
+            const isItemDeliveryPassed = (d: PreorderDropItem): boolean => {
+              if (d.status === 'completed' || d.status === 'cancelled') return true;
+              if (!d.fulfillment_date) return false;
+              const timeStr = d.fulfillment_time || '23:59';
+              const fulfillDateTime = new Date(`${d.fulfillment_date}T${timeStr}:00`);
+              const now = new Date();
+              if (isNaN(fulfillDateTime.getTime())) {
+                const fulfillDateOnly = new Date(`${d.fulfillment_date}T23:59:59`);
+                return now > fulfillDateOnly;
+              }
+              return now > fulfillDateTime;
+            };
+
+            const firstPreparingIdx = drops.findIndex(
+              (d) => d.status !== 'completed' && d.status !== 'cancelled' && !isItemDeliveryPassed(d)
+            );
             const isFirstPreparing =
               activeTab === 'closed' &&
-              item.status !== 'completed' &&
-              index === 0;
+              firstPreparingIdx !== -1 &&
+              index === firstPreparingIdx;
 
-            const firstCompletedIdx = drops.findIndex((d) => d.status === 'completed');
+            const firstCompletedIdx = drops.findIndex(
+              (d) => d.status === 'completed' || d.status === 'cancelled' || isItemDeliveryPassed(d)
+            );
             const isFirstCompleted =
               activeTab === 'closed' &&
-              item.status === 'completed' &&
+              firstCompletedIdx !== -1 &&
               index === firstCompletedIdx;
 
             return (
@@ -460,9 +496,9 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.pill,
   },
   tabBtnActive: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 0.5,
-    borderColor: '#E5E7EB',
+    backgroundColor: Verandah.primary,
+    borderWidth: 1,
+    borderColor: Verandah.primary,
   },
   tabText: {
     fontSize: 11,
@@ -470,8 +506,8 @@ const styles = StyleSheet.create({
     color: Verandah.textSecondary,
   },
   tabTextActive: {
-    fontWeight: '600',
-    color: Verandah.accent,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   loaderWrap: {
     flex: 1,
@@ -579,9 +615,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   masterToggleBtnActive: {
-    backgroundColor: '#ECFDF5',
+    backgroundColor: Verandah.primary,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: Verandah.primary,
   },
   masterToggleText: {
     fontSize: 13,
@@ -591,6 +627,6 @@ const styles = StyleSheet.create({
   masterToggleTextActive: {
     fontSize: 13,
     fontWeight: '700',
-    color: Verandah.accent,
+    color: '#FFFFFF',
   },
 });

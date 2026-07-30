@@ -232,9 +232,33 @@ export default function ProviderDetailScreen() {
 
   const handleShare = async () => {
     if (!provider) return;
-    const message = `Check out ${provider.name} (${provider.category}) on Society Service Hub!\nPhone: ${provider.phone}`;
+    const ratingText = provider.avg_rating ? `★ ${Number(provider.avg_rating).toFixed(1)} (${provider.rating_count} reviews)` : '';
+    const shareUrl =
+      Platform.OS === 'web' && typeof window !== 'undefined'
+        ? `${window.location.origin}/provider/${provider.id}`
+        : `https://society-service-hub.app/provider/${provider.id}`;
+
+    const messageLines = [
+      `👤 *Service Provider Contact*`,
+      `Name: ${provider.name}`,
+      `Category: ${provider.category}`,
+      `Phone: ${provider.phone}`,
+      ratingText ? `Rating: ${ratingText}` : '',
+      provider.flat_block ? `Block/Flat: ${provider.flat_block}` : '',
+      provider.hire_count ? `Community Hires: ${provider.hire_count} homes` : '',
+      provider.description ? `About: "${provider.description}"` : '',
+      ``,
+      `🔗 View Profile & Contact Details:`,
+      shareUrl,
+    ];
+
+    const message = messageLines.filter(Boolean).join('\n');
     try {
-      await Share.share({ message });
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({ title: provider.name, text: message });
+      } else {
+        await Share.share({ message, title: provider.name });
+      }
     } catch (error) {
       const err = error as any;
       if (err && (err.name === 'AbortError' || err.message?.includes('abort') || err.message?.includes('cancel'))) {

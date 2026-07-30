@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { APP_EMOJIS, getServiceCategoryEmoji } from '../constants/emojis';
@@ -16,6 +16,40 @@ type ProviderCardProps = {
 };
 
 export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, isLightMode }: ProviderCardProps) => {
+  const handleShare = async (e: any) => {
+    e.stopPropagation();
+    const ratingText = provider.avg_rating ? `★ ${Number(provider.avg_rating).toFixed(1)} (${provider.rating_count} reviews)` : '';
+    const shareUrl =
+      Platform.OS === 'web' && typeof window !== 'undefined'
+        ? `${window.location.origin}/provider/${provider.id}`
+        : `https://society-service-hub.app/provider/${provider.id}`;
+
+    const messageLines = [
+      `👤 *Service Provider Contact*`,
+      `Name: ${provider.name}`,
+      `Category: ${getServiceCategoryEmoji(provider.category)} ${provider.category}`,
+      `Phone: ${provider.phone}`,
+      ratingText ? `Rating: ${ratingText}` : '',
+      provider.flat_block ? `Block/Flat: ${provider.flat_block}` : '',
+      provider.description ? `About: "${provider.description}"` : '',
+      ``,
+      `🔗 View Provider Profile:`,
+      shareUrl,
+    ];
+
+    const message = messageLines.filter(Boolean).join('\n');
+
+    try {
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({ title: provider.name, text: message });
+      } else {
+        await Share.share({ message, title: provider.name });
+      }
+    } catch (err) {
+      console.error('Error sharing provider contact:', err);
+    }
+  };
+
   return (
     <BaseCard
       onPress={onPress}
@@ -60,17 +94,31 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.favoriteBtn}
-          onPress={() => onToggleFavorite(provider.id, !!provider.is_favorite)}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons
-            name={provider.is_favorite ? 'bookmark' : 'bookmark-outline'}
-            size={18}
-            color={provider.is_favorite ? Verandah.accent : Verandah.textMuted}
-          />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <TouchableOpacity
+            style={styles.favoriteBtn}
+            onPress={handleShare}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons
+              name="share-outline"
+              size={18}
+              color={Verandah.accent}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.favoriteBtn}
+            onPress={() => onToggleFavorite(provider.id, !!provider.is_favorite)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons
+              name={provider.is_favorite ? 'bookmark' : 'bookmark-outline'}
+              size={18}
+              color={provider.is_favorite ? Verandah.accent : Verandah.textMuted}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </BaseCard>
   );

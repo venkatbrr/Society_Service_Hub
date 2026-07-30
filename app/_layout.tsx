@@ -1,7 +1,7 @@
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
-import { LogBox, Platform } from 'react-native';
+import { ActivityIndicator, LogBox, Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
@@ -159,7 +159,11 @@ function RootLayoutNav() {
   }, [router]);
 
   if (isLoading) {
-    return null;
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Verandah.surface }}>
+        <ActivityIndicator size="large" color={Verandah.accent} />
+      </View>
+    );
   }
 
   return (

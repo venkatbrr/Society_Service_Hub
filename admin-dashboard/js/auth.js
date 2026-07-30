@@ -82,21 +82,23 @@ const Auth = {
         .eq('id', user.id)
         .single();
 
+      const isCanonicalAdmin = user.email && user.email.trim().toLowerCase() === 'societyservicehub@gmail.com';
+
       if (error) {
-        // Fallback: check RPC if profile select fails (e.g. due to policy)
-        const { data: isAdminRpc, error: rpcError } = await supabase.rpc('is_platform_admin');
-        if (rpcError || !isAdminRpc) {
+        // Fallback: check RPC or canonical email if profile select fails
+        const { data: isAdminRpc } = await supabase.rpc('is_platform_admin');
+        if (!isAdminRpc && !isCanonicalAdmin) {
           throw new Error('Access restricted. Only platform admins are allowed.');
         }
         
-        // Mock profile for admin if query failed but RPC succeeded
+        // Mock profile for admin
         this.profile = { id: user.id, email: user.email, app_role: 'admin' };
       } else {
-        // Check if role is admin
-        if (profile.app_role !== 'admin') {
+        // Check if role is admin or email is canonical platform admin
+        if (profile.app_role !== 'admin' && !isCanonicalAdmin) {
           throw new Error('Access restricted. Only platform admins are allowed.');
         }
-        this.profile = profile;
+        this.profile = { ...profile, app_role: 'admin' };
       }
 
       this.currentUser = user;

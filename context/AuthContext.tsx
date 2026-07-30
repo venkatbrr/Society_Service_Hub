@@ -287,6 +287,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     fetchSession();
 
+    // Safety fallback: Ensure isLoading never remains stuck indefinitely on slow/offline starts
+    const safetyTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3500);
+
     // Re-verify session when mobile app resumes to foreground from background
     const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
@@ -311,6 +316,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => {
+      clearTimeout(safetyTimer);
       appStateSubscription.remove();
       subscription.unsubscribe();
     };
@@ -348,10 +354,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    resetAuthState();
-    if (Platform.OS === 'web') {
-      window.location.replace('/');
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('Error during Supabase signout:', err);
+    } finally {
+      resetAuthState();
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
   };
 

@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
@@ -11,6 +12,16 @@ export default function AdminRedirectScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleOpenAdmin = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.location.href = '/admin/';
+    } else {
+      Linking.openURL('https://commloom.vercel.app/admin/').catch(() => {
+        Toast.show({ type: 'error', text1: 'Could not open Admin Dashboard' });
+      });
+    }
+  };
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -35,23 +46,33 @@ export default function AdminRedirectScreen() {
           <Ionicons name="desktop-outline" size={48} color={Verandah.primary} />
         </View>
         
-        <Text style={styles.title}>Admin Portal has moved</Text>
+        <Text style={styles.title}>Platform Admin Console</Text>
         
         <Text style={styles.description}>
-          The admin panel is now a standalone web application. Open the admin dashboard in your web browser to manage approvals, communities, and funds access.
+          You are signed in as Platform Admin (societyservicehub@gmail.com). Click below to open the Admin Console to manage community approvals, society settings, and fund access.
         </Text>
 
         <TouchableOpacity 
-          style={styles.button} 
+          style={styles.primaryButton} 
+          onPress={handleOpenAdmin}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="open-outline" size={20} color="#FFFFFF" />
+          <Text style={styles.primaryButtonText}>Open Admin Dashboard</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.secondaryButton} 
           onPress={handleLogout} 
           disabled={loggingOut}
+          activeOpacity={0.8}
         >
           {loggingOut ? (
-            <ActivityIndicator color={Verandah.primaryFg} />
+            <ActivityIndicator color={Verandah.primary} />
           ) : (
             <>
-              <Ionicons name="log-out-outline" size={20} color={Verandah.primaryFg} />
-              <Text style={styles.buttonText}>Log Out & Return</Text>
+              <Ionicons name="log-out-outline" size={18} color={Verandah.textSecondary} />
+              <Text style={styles.secondaryButtonText}>Sign Out</Text>
             </>
           )}
         </TouchableOpacity>
@@ -105,7 +126,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 32,
   },
-  button: {
+  primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -114,10 +135,26 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.md,
     width: '100%',
     paddingVertical: 14,
-    cursor: 'pointer',
+    marginBottom: 12,
   },
-  buttonText: {
-    color: Verandah.primaryFg,
+  primaryButtonText: {
+    color: '#FFFFFF',
+    ...VerandahType.bodyBold,
+  },
+  secondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Verandah.border,
+    borderRadius: VerandahRadius.md,
+    width: '100%',
+    paddingVertical: 12,
+  },
+  secondaryButtonText: {
+    color: Verandah.textSecondary,
     ...VerandahType.bodyBold,
   },
 });

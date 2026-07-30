@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import React, { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { Avatar } from './Avatar';
@@ -51,6 +51,48 @@ export const McnListingCard = React.memo(({
   const ratings = listing.ratings || [];
   const ratingCount = ratings.length;
   const avgRating = ratingCount > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
+
+  const handleShare = async (e: any) => {
+    e.stopPropagation();
+    const ownerName = listing.profiles?.full_name || 'Resident';
+    const flatNo = listing.profiles?.flat_number ? `Flat ${listing.profiles.flat_number}` : '';
+    const catLabel = listing.category ? `${listing.category.emoji} ${listing.category.name}` : '';
+
+    const shareUrl =
+      Platform.OS === 'web' && typeof window !== 'undefined'
+        ? `${window.location.origin}/network/listing/${listing.id}`
+        : `https://society-service-hub.app/network/listing/${listing.id}`;
+
+    const messageLines = [
+      `🏪 *Community Business: ${listing.name}*`,
+      catLabel ? `Category: ${catLabel}` : '',
+      `Owner: ${ownerName} ${flatNo ? `(${flatNo})` : ''}`,
+    ];
+
+    if (listing.description) {
+      messageLines.push(`About: "${listing.description}"`);
+    }
+
+    if (listing.contact_phone) {
+      messageLines.push(`📞 Phone/WhatsApp: ${listing.contact_phone}`);
+    }
+
+    messageLines.push(``);
+    messageLines.push(`🔗 View Offerings & Order:`);
+    messageLines.push(shareUrl);
+
+    const message = messageLines.filter(Boolean).join('\n');
+
+    try {
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({ title: listing.name, text: message });
+      } else {
+        await Share.share({ message, title: listing.name });
+      }
+    } catch (err) {
+      console.error('Error sharing business listing:', err);
+    }
+  };
 
   return (
     <BaseCard
@@ -118,21 +160,32 @@ export const McnListingCard = React.memo(({
       ) : null}
 
       <View style={styles.footer}>
-        {isOwner ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          {isOwner ? (
+            <TouchableOpacity
+              onPress={(e) => { e.stopPropagation(); onManage(listing.id); }}
+              style={styles.actionBtn}
+            >
+              <Text style={[styles.actionBtnText, { color: Verandah.accent }]}>Manage</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => onPress(listing.id)}
+              style={styles.actionBtn}
+            >
+              <Text style={[styles.actionBtnText, { color: Verandah.accent }]}>View details →</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
-            onPress={(e) => { e.stopPropagation(); onManage(listing.id); }}
-            style={styles.actionBtn}
+            onPress={handleShare}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 }}
+            hitSlop={8}
           >
-            <Text style={[styles.actionBtnText, { color: Verandah.accent }]}>Manage</Text>
+            <Ionicons name="share-outline" size={16} color={Verandah.accent} />
+            <Text style={[styles.actionBtnText, { color: Verandah.accent, fontSize: 12 }]}>Share</Text>
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            onPress={() => onPress(listing.id)}
-            style={styles.actionBtn}
-          >
-            <Text style={[styles.actionBtnText, { color: Verandah.accent }]}>View details →</Text>
-          </TouchableOpacity>
-        )}
+        </View>
       </View>
 
       </View>

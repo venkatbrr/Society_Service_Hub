@@ -120,6 +120,7 @@ export default function ProfileScreen() {
   const handleSignOut = async () => {
     try {
       await signOut();
+      router.replace('/login');
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Error signing out' });
     }

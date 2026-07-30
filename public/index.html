@@ -24,29 +24,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Check active Supabase session before paint to prevent flashing -->
-  <script>
-    (function() {
-      try {
-        let hasSession = false;
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.endsWith('-auth-token')) {
-            const val = localStorage.getItem(key);
-            if (val && val.includes('access_token')) {
-              hasSession = true;
-              break;
-            }
-          }
-        }
-        if (hasSession) {
-          window.location.replace('/(tabs)/');
-        }
-      } catch (e) {
-        console.error('Session check error:', e);
-      }
-    })();
-  </script>
 
   <style>
     /* CSS Variables matching the Verandah color system */

@@ -7,8 +7,10 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
+    Platform,
     RefreshControl,
     ScrollView,
+    Share,
     StyleSheet,
     Text,
     TextInput,
@@ -188,6 +190,34 @@ export default function ParentCornerScreen() {
     return list;
   }, [entries, debouncedSearch, selectedType, selectedBoard, selectedSchool, sortBy]);
 
+  useEffect(() => {
+    fetchEntries();
+  }, [communityId, fetchEntries]);
+
+  const handleShareParentPost = async (item: ParentCornerItem) => {
+    const messageLines = [
+      `🎓 *Parent Corner Student Record*`,
+      `Student: ${item.student_name} (${item.grade_class})`,
+      `School/Inst: ${item.school_name} (${item.board})`,
+      `Parent: ${item.parent_name} (Flat ${item.flat_number})`,
+      `Contact: ${item.contact_phone}`,
+    ];
+    if (item.notes) {
+      messageLines.push(`Notes: "${item.notes}"`);
+    }
+    const message = messageLines.join('\n');
+
+    try {
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({ title: `Parent Corner: ${item.student_name}`, text: message });
+      } else {
+        await Share.share({ message, title: `Parent Corner: ${item.student_name}` });
+      }
+    } catch (err) {
+      console.error('Error sharing parent post:', err);
+    }
+  };
+
   const handleWhatsAppPress = (item: ParentCornerItem) => {
     const cleanPhone = item.contact_phone.replace(/\D/g, '');
     const text = `Hi ${item.parent_name}, I saw your entry for ${item.student_name} (${item.school_name}) in our community Parent Corner.`;
@@ -302,7 +332,7 @@ export default function ParentCornerScreen() {
           </View>
         ) : null}
 
-        {/* Contact Action Bar: WhatsApp & Phone Call */}
+        {/* Contact Action Bar: WhatsApp, Call, & Share */}
         <View style={styles.contactBar}>
           <TouchableOpacity
             style={[styles.whatsappBtn, { backgroundColor: '#25D366' }]}
@@ -319,6 +349,14 @@ export default function ParentCornerScreen() {
             activeOpacity={0.8}
           >
             <Ionicons name="call-outline" size={18} color={colors.primary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.callBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
+            onPress={() => handleShareParentPost(item)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="share-outline" size={18} color={colors.accent} />
           </TouchableOpacity>
         </View>
       </BaseCard>

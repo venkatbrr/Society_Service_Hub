@@ -45,7 +45,7 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
   isOwnReview = false,
   onEdit,
 }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   const parentName = review.profiles?.full_name || 'Resident Parent';
   const flatNumber = review.profiles?.flat_number ? `Flat ${review.profiles.flat_number}` : null;

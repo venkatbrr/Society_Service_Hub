@@ -20,7 +20,7 @@ import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../components/Avatar';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { format12HourTime, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
 
@@ -398,7 +398,8 @@ export default function PreorderDropDetailScreen() {
   }
 
   const isCreator = drop?.created_by === user?.id;
-  const hostName = drop?.profiles?.full_name || drop?.mcn_listings?.name || 'Local Food Host';
+  const rawHostName = drop?.profiles?.full_name?.trim() || drop?.mcn_listings?.name?.trim() || 'Local Food Host';
+  const hostName = rawHostName === 'Host' ? 'Local Food Host' : rawHostName;
   const hostFlat = drop?.profiles?.flat_number ? `Flat ${drop.profiles.flat_number}` : '';
 
   const fulfillDateObj = new Date(drop?.fulfillment_date || Date.now());
@@ -425,7 +426,7 @@ export default function PreorderDropDetailScreen() {
       `🍲 *Food Drop: ${drop.title}*`,
       `Hosted by ${hostName}${hostFlat ? ` (${hostFlat})` : ''}`,
       ``,
-      `📅 Delivery: ${fulfillFormatted} (${drop.fulfillment_time})`,
+      `📅 Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
       `⏰ Pre-Orders Close: ${cutoffFormatted}`,
     ];
 
@@ -519,7 +520,7 @@ export default function PreorderDropDetailScreen() {
               {isOpen ? `Pre-Orders Open until ${cutoffFormatted}` : 'Pre-Orders Closed'}
             </Text>
             <Text style={styles.bannerSubText}>
-              Delivery: <Text style={{ fontWeight: '600' }}>{fulfillFormatted}</Text> ({drop.fulfillment_time})
+              Delivery: <Text style={{ fontWeight: '600' }}>{fulfillFormatted}</Text> ({format12HourTime(drop.fulfillment_time)})
             </Text>
           </View>
         </View>
