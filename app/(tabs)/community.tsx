@@ -204,10 +204,10 @@ export default function CommunityScreen() {
   return (
     <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: Math.max(28, insets.top + 12) }]}
+        contentContainerStyle={[styles.content, { paddingTop: Math.max(16, insets.top + 6) }]}
         showsVerticalScrollIndicator={false}
       >
-        <BaseCard padding={18} style={styles.heroCard}>
+        <BaseCard padding={12} style={styles.heroCard}>
           <Text style={styles.heroTitle}>{communityDetails?.name ?? 'Your community'}</Text>
         </BaseCard>
 
@@ -228,7 +228,7 @@ export default function CommunityScreen() {
 
           {fundsEnabled ? (
             <TouchableOpacity onPress={() => router.push('/funds' as any)} activeOpacity={0.85}>
-              <BaseCard padding={16} style={styles.fundsSummaryCard}>
+              <BaseCard padding={10} style={styles.fundsSummaryCard}>
                 <View style={styles.fundsSummaryTopRow}>
                   <View style={styles.fundsSummaryBadge}>
                     <Ionicons name="stats-chart-outline" size={14} color={Verandah.accent} />
@@ -267,7 +267,7 @@ export default function CommunityScreen() {
               </BaseCard>
             </TouchableOpacity>
           ) : pendingFundsRequest ? (
-            <BaseCard padding={16}>
+            <BaseCard padding={10}>
               <Text style={styles.cardTitle}>Funds support - pending review</Text>
               <Text style={styles.cardCopy}>Submitted by {pendingFundsRequest.requester_name ?? 'Resident'} on {new Date(pendingFundsRequest.created_at).toLocaleDateString('en-IN')}.</Text>
               <Text style={styles.cardCopy}>We'll be in touch on {pendingFundsRequest.contact_phone}.</Text>
@@ -278,7 +278,7 @@ export default function CommunityScreen() {
               ) : null}
             </BaseCard>
           ) : myFundsAccessRequest?.status === 'rejected' ? (
-            <BaseCard padding={16}>
+            <BaseCard padding={10}>
               <Text style={styles.cardTitle}>Funds support</Text>
               <Text style={styles.cardCopy}>Last request was rejected: {myFundsAccessRequest.rejection_reason ?? 'No reason provided'}.</Text>
               <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/funds-access/request')}>
@@ -286,7 +286,7 @@ export default function CommunityScreen() {
               </TouchableOpacity>
             </BaseCard>
           ) : (
-            <BaseCard padding={16}>
+            <BaseCard padding={10}>
               <Text style={styles.cardTitle}>Funds support</Text>
               <Text style={styles.cardCopy}>Your community can request funds support to start collecting and tracking community contributions.</Text>
               {hadHistoricalFunds ? (
@@ -303,7 +303,7 @@ export default function CommunityScreen() {
         {fundsEnabled && (appRole === 'president' || appRole === 'vice_president') ? (
           <View style={styles.compactSection}>
             <TouchableOpacity onPress={() => router.push('/community/blocks')} activeOpacity={0.85}>
-              <BaseCard padding={16} style={styles.actionCard}>
+              <BaseCard padding={10} style={styles.actionCard}>
                 <View style={styles.actionCardRow}>
                   <View style={styles.actionCardIconWrap}>
                     <Ionicons name="layers-outline" size={18} color={Verandah.primary} />
@@ -324,7 +324,7 @@ export default function CommunityScreen() {
             onPress={() => router.push({ pathname: '/residents', params: { returnTo: 'community' } } as any)}
             activeOpacity={0.85}
           >
-            <BaseCard padding={16} style={styles.actionCard}>
+            <BaseCard padding={10} style={styles.actionCard}>
               <View style={styles.actionCardRow}>
                 <View style={styles.actionCardIconWrap}>
                   <Ionicons name="people-outline" size={18} color={Verandah.primary} />
@@ -344,7 +344,7 @@ export default function CommunityScreen() {
             onPress={() => router.push('/sos' as any)}
             activeOpacity={0.85}
           >
-            <BaseCard padding={16} style={styles.sosActionCard}>
+            <BaseCard padding={10} style={styles.sosActionCard}>
               <View style={styles.actionCardRow}>
                 <View style={[styles.actionCardIconWrap, styles.sosIconWrap]}>
                   <Ionicons name="alert-circle-outline" size={18} color={Verandah.caution} />
@@ -360,7 +360,7 @@ export default function CommunityScreen() {
         </View>
 
         <View style={styles.section}>
-          <BaseCard padding={16}>
+          <BaseCard padding={10}>
             <View style={styles.infoHeaderRow}>
               <Text style={styles.cardTitle}>Community info</Text>
               <Ionicons name="information-circle-outline" size={18} color={Verandah.textTertiary} />
@@ -409,9 +409,9 @@ const styles = StyleSheet.create({
     borderTopColor: Verandah.primary,
   },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 28,
-    paddingBottom: 40,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 30,
   },
   section: {
     marginBottom: 0,
@@ -423,16 +423,17 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   heroCard: {
-    marginBottom: 8,
+    marginBottom: 6,
   },
   heroTitle: {
     ...VerandahType.display,
+    fontSize: 22,
     color: Verandah.textPrimary,
   },
   sectionLabel: {
     ...VerandahType.sectionLabel,
     color: Verandah.textTertiary,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   sectionHeaderCompact: {
     flexDirection: 'row',
@@ -449,10 +450,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '500',
     color: Verandah.textPrimary,
   },
@@ -461,14 +462,14 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderColor: Verandah.borderStrong,
     backgroundColor: Verandah.card,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   createButtonText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
     color: Verandah.primary,
   },
@@ -478,34 +479,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   fundsOpenRow: {
-    marginTop: 10,
-    paddingTop: 12,
+    marginTop: 6,
+    paddingTop: 8,
     borderTopWidth: 0.5,
     borderTopColor: Verandah.border,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   fundsSummaryBadge: {
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     backgroundColor: Verandah.accentSoft,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
   fundsSummaryBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
     color: Verandah.accent,
   },
   pulseRow: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   pulseDivider: {
     borderBottomWidth: 0.5,
@@ -518,42 +519,42 @@ const styles = StyleSheet.create({
   pulseTime: {
     ...VerandahType.caption,
     color: Verandah.textTertiary,
-    marginTop: 4,
+    marginTop: 2,
   },
   summaryLine: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
-    lineHeight: 20,
+    lineHeight: 18,
     color: Verandah.textPrimary,
   },
   summarySubline: {
-    marginTop: 6,
-    fontSize: 12,
+    marginTop: 2,
+    fontSize: 11,
     fontWeight: '400',
     color: Verandah.textSecondary,
   },
   summaryStatus: {
-    marginTop: 10,
-    fontSize: 13,
-    lineHeight: 18,
+    marginTop: 6,
+    fontSize: 12,
+    lineHeight: 16,
     color: Verandah.textSecondary,
   },
   moneyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 3,
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
-    marginBottom: 4,
+    marginBottom: 2,
     color: Verandah.textPrimary,
   },
   cardCopy: {
-    fontSize: 13,
-    marginTop: 2,
-    lineHeight: 19,
+    fontSize: 12,
+    marginTop: 1,
+    lineHeight: 16,
     color: Verandah.textSecondary,
   },
   actionCard: {
@@ -564,12 +565,12 @@ const styles = StyleSheet.create({
   actionCardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   actionCardIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: Verandah.cardMuted,
     borderWidth: 0.5,
     borderColor: Verandah.border,
@@ -587,7 +588,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   codeTile: {
     borderWidth: 0.5,

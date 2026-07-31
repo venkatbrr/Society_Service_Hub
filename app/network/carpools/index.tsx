@@ -256,7 +256,7 @@ export default function CarpoolListScreen() {
             const isOwner = user?.id === item.created_by;
             return (
               <BaseCard
-                padding={16}
+                padding={10}
                 style={styles.card}
                 onPress={() => router.push(`/network/carpools/${item.id}` as any)}
               >
@@ -395,7 +395,7 @@ export default function CarpoolListScreen() {
         activeOpacity={0.8}
         onPress={() => router.push('/network/carpools/add' as any)}
       >
-        <Ionicons name="add" size={26} color={colors.primaryFg} />
+        <Ionicons name="add" size={24} color={colors.primaryFg} />
         <Text style={[styles.fabText, { color: colors.primaryFg }]}>Offer / Request</Text>
       </TouchableOpacity>
     </View>
@@ -410,12 +410,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 6,
+    paddingTop: 8,
+    paddingBottom: 2,
     gap: 12,
   },
   backBtn: {
-    padding: 6,
+    padding: 4,
     borderRadius: VerandahRadius.pill,
   },
   headerTitle: {
@@ -424,44 +424,46 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingHorizontal: 16,
+    paddingTop: 2,
+    paddingBottom: 2,
   },
   subText: {
     ...VerandahType.body,
-    fontSize: 13,
+    fontSize: 12,
+    lineHeight: 16,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 20,
-    marginVertical: 8,
-    paddingHorizontal: 12,
-    height: 44,
+    marginHorizontal: 16,
+    marginVertical: 4,
+    paddingHorizontal: 10,
+    height: 36,
     borderRadius: VerandahRadius.md,
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
     borderColor: Verandah.borderStrong,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: 6,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
+    paddingVertical: 0,
   },
   tabsContainer: {
     flexDirection: 'row',
-    marginHorizontal: 20,
-    marginVertical: 8,
+    marginHorizontal: 16,
+    marginVertical: 4,
     backgroundColor: Verandah.cardMuted,
     borderRadius: VerandahRadius.pill,
-    padding: 3,
+    padding: 2,
   },
   tabBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 5,
     alignItems: 'center',
     borderRadius: VerandahRadius.pill,
   },
@@ -471,7 +473,7 @@ const styles = StyleSheet.create({
     borderColor: Verandah.primary,
   },
   tabText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
     color: Verandah.textSecondary,
   },
@@ -485,40 +487,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 90,
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 80,
   },
   emptyList: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   card: {
-    marginBottom: 14,
+    marginBottom: 8,
   },
   cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 4,
   },
   roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: VerandahRadius.sm,
     gap: 4,
   },
   roleBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: VerandahRadius.pill,
   },
   badgeText: {
@@ -527,39 +529,40 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     ...VerandahType.title,
-    fontSize: 16,
-    marginBottom: 12,
+    fontSize: 15,
+    marginBottom: 4,
   },
   routeContainer: {
     backgroundColor: Verandah.cardMuted,
     borderRadius: VerandahRadius.md,
-    padding: 10,
-    marginBottom: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 6,
   },
   routePointRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dotCircle: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginRight: 6,
   },
   routeLine: {
     width: 1,
-    height: 12,
+    height: 6,
     backgroundColor: Verandah.borderStrong,
-    marginLeft: 3.5,
-    marginVertical: 2,
+    marginLeft: 3,
+    marginVertical: 1,
   },
   routeLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    width: 42,
+    width: 38,
   },
   routeValue: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     flex: 1,
   },
@@ -567,28 +570,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 8,
+    paddingTop: 4,
     borderTopWidth: 0.5,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   metaText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
   },
   daysRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 4,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   dayChip: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
     borderRadius: VerandahRadius.sm,
   },
   dayChipText: {
@@ -599,33 +602,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 4,
+    marginTop: 2,
   },
   hostText: {
-    fontSize: 12,
+    fontSize: 11,
   },
   viewDetailsLink: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
-    right: 20,
+    bottom: 20,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    height: 50,
-    borderRadius: 25,
+    paddingHorizontal: 14,
+    height: 44,
+    borderRadius: 22,
     gap: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
   },
   fabText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
 });

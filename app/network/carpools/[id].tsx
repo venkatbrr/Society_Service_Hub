@@ -277,7 +277,7 @@ export default function CarpoolDetailScreen() {
         }
       >
         {/* Main Card Header */}
-        <BaseCard padding={18} style={styles.card}>
+        <BaseCard padding={12} style={styles.card}>
           <View style={styles.headerTopRow}>
             <View
               style={[
@@ -441,7 +441,7 @@ export default function CarpoolDetailScreen() {
 
         {/* Host Control Panel */}
         {(isOwner || isCommunityLead) && (
-          <BaseCard padding={18} style={styles.card}>
+          <BaseCard padding={12} style={styles.card}>
             <Text style={[styles.controlHeader, { color: colors.textPrimary }]}>Host Controls</Text>
             <View style={styles.hostActionsRow}>
               {carpool.status === 'active' ? (
@@ -491,7 +491,7 @@ export default function CarpoolDetailScreen() {
         {isOwner && (() => {
           const hostRequests = requests.filter((r) => r.status !== 'cancelled');
           return (
-            <BaseCard padding={18} style={styles.card}>
+            <BaseCard padding={12} style={styles.card}>
               <View style={styles.headerBetween}>
                 <Text style={[styles.controlHeader, { color: colors.textPrimary }]}>
                   Join Requests ({hostRequests.length})
@@ -549,7 +549,7 @@ export default function CarpoolDetailScreen() {
 
         {/* Rider Booking Card (Non-Owner View) */}
         {!isOwner && carpool.status === 'active' && (
-          <BaseCard padding={18} style={styles.card}>
+          <BaseCard padding={12} style={styles.card}>
             {myExistingRequest ? (
               <View style={{ gap: 8 }}>
                 <View style={styles.headerBetween}>
@@ -690,12 +690,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 10,
+    paddingTop: 8,
+    paddingBottom: 4,
     gap: 12,
   },
   backBtn: {
-    padding: 6,
+    padding: 4,
     borderRadius: VerandahRadius.pill,
   },
   headerTitle: {
@@ -709,10 +709,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 40,
-    gap: 14,
+    gap: 8,
   },
   card: {
     marginBottom: 0,
@@ -721,24 +721,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 4,
   },
   roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: VerandahRadius.sm,
     gap: 4,
   },
   roleBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: VerandahRadius.pill,
   },
   statusText: {
@@ -747,55 +747,56 @@ const styles = StyleSheet.create({
   },
   title: {
     ...VerandahType.display,
-    fontSize: 20,
-    marginBottom: 14,
+    fontSize: 18,
+    marginBottom: 6,
   },
   routeContainer: {
     backgroundColor: Verandah.cardMuted,
     borderRadius: VerandahRadius.md,
-    padding: 12,
-    marginBottom: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginBottom: 8,
   },
   routePointRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dotCircle: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginRight: 6,
   },
   routeLine: {
     width: 1,
-    height: 14,
+    height: 8,
     backgroundColor: Verandah.borderStrong,
-    marginLeft: 3.5,
-    marginVertical: 2,
+    marginLeft: 3,
+    marginVertical: 1,
   },
   routeLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    width: 110,
+    width: 100,
   },
   routeValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     flex: 1,
   },
   infoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
-    paddingVertical: 14,
+    gap: 10,
+    paddingVertical: 8,
     borderTopWidth: 0.5,
     borderBottomWidth: 0.5,
-    marginBottom: 14,
+    marginBottom: 8,
   },
   gridItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     minWidth: '45%',
   },
   gridLabel: {

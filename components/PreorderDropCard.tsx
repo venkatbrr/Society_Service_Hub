@@ -163,11 +163,11 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
   };
 
   return (
-    <BaseCard padding={16} style={styles.card}>
+    <BaseCard padding={10} style={styles.card}>
       <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
         {/* Top Creator Header */}
         <View style={styles.header}>
-          <Avatar name={creatorName} size={38} />
+          <Avatar name={creatorName} size={36} />
           <View style={styles.headerText}>
             <Text style={styles.creatorName} numberOfLines={1}>
               {creatorName}
@@ -176,7 +176,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <TouchableOpacity style={styles.shareHeaderBtn} onPress={handleShare} hitSlop={8}>
-              <Ionicons name="share-outline" size={18} color={Verandah.accent} />
+              <Ionicons name="share-outline" size={16} color={Verandah.accent} />
               <Text style={styles.shareHeaderText}>Share</Text>
             </TouchableOpacity>
           </View>
@@ -193,14 +193,14 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
         <View style={styles.metaRow}>
           <View style={[styles.metaChip, { backgroundColor: badge.bgColor }]}> 
             {drop.status === 'completed' ? (
-              <Ionicons name="checkmark-circle" size={14} color="#059669" />
+              <Ionicons name="checkmark-circle" size={13} color="#059669" />
             ) : null}
             <Text style={[styles.metaChipText, { color: badge.color }]} numberOfLines={1}>
               {drop.status === 'completed' ? 'Completed' : `Closes: ${cutoffFormatted}`}
             </Text>
           </View>
           <View style={styles.metaChipNeutral}>
-            <Ionicons name="calendar-outline" size={14} color={Verandah.accent} />
+            <Ionicons name="calendar-outline" size={13} color={Verandah.accent} />
             <Text style={styles.metaChipNeutralText} numberOfLines={1}>
               Delivery: {fulfillFormatted} ({format12HourTime(drop.fulfillment_time)})
             </Text>
@@ -226,7 +226,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
               </Text>
             ) : null}
             <TouchableOpacity style={styles.shareInlineBtn} onPress={handleShare}>
-              <Ionicons name="share-social-outline" size={14} color={Verandah.accent} />
+              <Ionicons name="share-social-outline" size={13} color={Verandah.accent} />
               <Text style={styles.shareInlineText}>Share drop</Text>
             </TouchableOpacity>
           </View>
@@ -254,31 +254,31 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 14,
+    marginBottom: 8,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   headerText: {
     flex: 1,
-    marginLeft: 10,
+    marginLeft: 8,
   },
   creatorName: {
     ...VerandahType.bodyBold,
-    fontSize: 14,
+    fontSize: 13,
     color: Verandah.textPrimary,
   },
   flatNo: {
     ...VerandahType.caption,
-    fontSize: 12,
+    fontSize: 11,
     color: Verandah.textSecondary,
-    marginTop: 1,
+    marginTop: 0,
   },
   shareHeaderBtn: {
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: VerandahRadius.pill,
     borderWidth: 0.5,
     borderColor: Verandah.border,
@@ -290,12 +290,12 @@ const styles = StyleSheet.create({
   shareHeaderText: {
     ...VerandahType.captionBold,
     color: Verandah.accent,
-    fontSize: 12,
+    fontSize: 11,
   },
   manageBadgeBtn: {
     backgroundColor: '#EEF2FF',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: VerandahRadius.pill,
   },
   manageBadgeText: {
@@ -304,10 +304,10 @@ const styles = StyleSheet.create({
     color: Verandah.accent,
   },
   coverImageWrap: {
-    height: 140,
+    height: 125,
     borderRadius: VerandahRadius.md,
     overflow: 'hidden',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   coverImage: {
     width: '100%',
@@ -317,19 +317,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 8,
+    gap: 6,
+    marginBottom: 4,
   },
   metaChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   metaChipText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
   },
   metaChipNeutral: {
@@ -339,28 +339,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     borderWidth: 0.5,
     borderColor: '#E5E7EB',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
   },
   metaChipNeutralText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
     color: Verandah.textPrimary,
     flexShrink: 1,
   },
   title: {
     ...VerandahType.title,
-    fontSize: 16,
+    fontSize: 15,
     color: Verandah.textPrimary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   description: {
     ...VerandahType.body,
-    fontSize: 13,
+    fontSize: 12,
     color: Verandah.textSecondary,
-    marginBottom: 10,
-    lineHeight: 18,
+    marginBottom: 6,
+    lineHeight: 16,
   },
   footer: {
     flexDirection: 'row',
@@ -368,33 +368,33 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderTopWidth: 0.5,
     borderTopColor: Verandah.border,
-    paddingTop: 10,
+    paddingTop: 6,
   },
   footerLeft: {
     flex: 1,
     paddingRight: 8,
   },
   orderStats: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
     color: Verandah.textSecondary,
   },
   shareInlineBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
+    gap: 3,
+    marginTop: 2,
     alignSelf: 'flex-start',
   },
   shareInlineText: {
     ...VerandahType.captionBold,
     color: Verandah.accent,
-    fontSize: 11,
+    fontSize: 10,
   },
   actionBtn: {
     backgroundColor: Verandah.accent,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: VerandahRadius.md,
   },
   actionBtnDisabled: {
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   },
   actionBtnText: {
     ...VerandahType.captionBold,
-    fontSize: 12,
+    fontSize: 11,
     color: '#FFFFFF',
   },
 });
