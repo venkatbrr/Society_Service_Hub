@@ -1,7 +1,8 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, TouchableOpacityProps, View, ViewProps } from 'react-native';
+import { Platform, StyleSheet, TouchableOpacity, TouchableOpacityProps, View, ViewProps } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahSpace } from '../constants/Verandah';
+import { VerandahRadius } from '../constants/Verandah';
+import { MotionWrapper } from './MotionWrapper';
 
 interface BaseCardProps extends ViewProps {
   onPress?: () => void;
@@ -9,23 +10,50 @@ interface BaseCardProps extends ViewProps {
   padding?: number;
 }
 
-export const BaseCard = React.memo(({ children, onPress, isLightMode = true, style, padding = 10, ...rest }: BaseCardProps) => {
+export const BaseCard = React.memo(({ children, onPress, isLightMode = true, style, padding = 12, ...rest }: BaseCardProps) => {
   const cardStyle = [
     styles.card,
     { padding },
     style
   ];
 
+  const flattenedStyle = StyleSheet.flatten(cardStyle);
+
   if (onPress) {
+    if (Platform.OS === 'web') {
+      return (
+        <MotionWrapper
+          enableHoverEffect={true}
+          enableTapEffect={true}
+          onClick={onPress}
+          style={flattenedStyle}
+        >
+          {children}
+        </MotionWrapper>
+      );
+    }
+
     return (
       <TouchableOpacity
         style={cardStyle}
         onPress={onPress}
-        activeOpacity={0.9}
+        activeOpacity={0.88}
         {...(rest as TouchableOpacityProps)}
       >
         {children}
       </TouchableOpacity>
+    );
+  }
+
+  if (Platform.OS === 'web') {
+    return (
+      <MotionWrapper
+        enableHoverEffect={false}
+        enableTapEffect={false}
+        style={flattenedStyle}
+      >
+        {children}
+      </MotionWrapper>
     );
   }
 
@@ -40,9 +68,14 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Verandah.card,
     borderRadius: VerandahRadius.lg,
-    marginBottom: 6,
-    borderWidth: 0.5,
+    marginBottom: 8,
+    borderWidth: 1,
     borderColor: Verandah.border,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
 });
