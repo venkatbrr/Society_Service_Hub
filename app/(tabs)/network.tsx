@@ -27,6 +27,7 @@ export default function NetworkScreen() {
 
   const [businessCount, setBusinessCount] = useState<number | null>(null);
   const [preorderCount, setPreorderCount] = useState<number | null>(null);
+  const [carpoolCount, setCarpoolCount] = useState<number | null>(null);
   const [parentCount, setParentCount] = useState<number | null>(null);
   const [schoolCount, setSchoolCount] = useState<number | null>(null);
   const [postCount, setPostCount] = useState<number | null>(null);
@@ -40,7 +41,7 @@ export default function NetworkScreen() {
       else setLoading(true);
 
       try {
-        const [businessRes, preorderRes, parentRes, schoolRes, postRes] = await Promise.all([
+        const [businessRes, preorderRes, carpoolRes, parentRes, schoolRes, postRes] = await Promise.all([
           supabase
             .from('mcn_listings')
             .select('id', { count: 'exact', head: true })
@@ -51,6 +52,11 @@ export default function NetworkScreen() {
             .select('id', { count: 'exact', head: true })
             .eq('community_id', communityId)
             .eq('status', 'open'),
+          supabase
+            .from('mcn_carpools')
+            .select('id', { count: 'exact', head: true })
+            .eq('community_id', communityId)
+            .eq('status', 'active'),
           supabase
             .from('mcn_parent_corner')
             .select('id', { count: 'exact', head: true })
@@ -68,6 +74,7 @@ export default function NetworkScreen() {
 
         setBusinessCount(businessRes.count ?? 0);
         setPreorderCount(preorderRes.count ?? 0);
+        setCarpoolCount(carpoolRes.count ?? 0);
         setParentCount(parentRes.count ?? 0);
         setSchoolCount(WEST_HYDERABAD_SCHOOLS.length + (schoolRes.count ?? 0));
         setPostCount(postRes.count ?? 0);
@@ -136,7 +143,7 @@ export default function NetworkScreen() {
       >
         {/* Merged Food Drops & Community Business Section Card */}
         <BaseCard
-          padding={18}
+          padding={14}
           onPress={() => router.push('/network/drops' as any)}
           style={styles.sectionCard}
         >
@@ -157,16 +164,36 @@ export default function NetworkScreen() {
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             Pre-order weekend specials, home-baked sweets, pop-up meals & local resident services. Order directly inside your society!
           </Text>
-          <View style={[styles.cardFooter, { borderColor: colors.border }]}>
-            <Text style={[styles.actionLinkText, { color: colors.accent }]}>
-              Explore Pre-order Food & Businesses →
-            </Text>
+        </BaseCard>
+
+        {/* 2. Carpooling Section Card */}
+        <BaseCard
+          padding={14}
+          onPress={() => router.push('/network/carpools' as any)}
+          style={styles.sectionCard}
+        >
+          <View style={styles.cardHeaderRow}>
+            <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
+              <Text style={styles.iconEmoji}>🚘</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                Community Carpooling
+              </Text>
+              <Text style={[styles.badgeText, { color: '#D97706' }]}>
+                {carpoolCount ?? 0} active rides · City & Outstation
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
           </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            Share daily office commutes, weekend intercity travel, outstation trips & school runs with verified society neighbors!
+          </Text>
         </BaseCard>
 
         {/* 2. Parent Corner Section Card */}
         <BaseCard
-          padding={18}
+          padding={14}
           onPress={() => router.push('/network/parents' as any)}
           style={styles.sectionCard}
         >
@@ -187,14 +214,11 @@ export default function NetworkScreen() {
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             Connect with neighborhood parents, share children's school & college details, organize morning carpool & study groups.
           </Text>
-          <View style={[styles.cardFooter, { borderColor: colors.border }]}>
-            <Text style={[styles.actionLinkText, { color: colors.primary }]}>Open Parent Directory →</Text>
-          </View>
         </BaseCard>
 
         {/* 3. School Catalog Section Card */}
         <BaseCard
-          padding={18}
+          padding={14}
           onPress={() => router.push('/network/schools' as any)}
           style={styles.sectionCard}
         >
@@ -215,14 +239,11 @@ export default function NetworkScreen() {
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             Browse and compare 50+ nearby schools, syllabus, distances, & fee structures curated by community residents.
           </Text>
-          <View style={[styles.cardFooter, { borderColor: colors.border }]}>
-            <Text style={[styles.actionLinkText, { color: colors.primary }]}>Explore Schools Directory →</Text>
-          </View>
         </BaseCard>
 
         {/* 4. Borrow & Share Section Card */}
         <BaseCard
-          padding={18}
+          padding={14}
           onPress={() => router.push('/network/my-posts?segment=borrow&source=network' as any)}
           style={styles.sectionCard}
         >
@@ -243,9 +264,6 @@ export default function NetworkScreen() {
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             Borrow or lend household items, power tools, textbooks, & travel gear safely within your society.
           </Text>
-          <View style={[styles.cardFooter, { borderColor: colors.border }]}>
-            <Text style={[styles.actionLinkText, { color: colors.primary }]}>View Community Posts →</Text>
-          </View>
         </BaseCard>
 
         <View style={{ height: 40 }} />
@@ -261,7 +279,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   title: {
     ...VerandahType.display,
@@ -275,14 +293,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 20,
     gap: 12,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   quickActionBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 7,
     paddingHorizontal: 12,
     borderRadius: VerandahRadius.md,
     borderWidth: 1,
@@ -299,12 +317,12 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   sectionCard: {
-    marginBottom: 14,
+    marginBottom: 8,
   },
   cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   iconCircle: {
     width: 44,
@@ -330,15 +348,6 @@ const styles = StyleSheet.create({
     ...VerandahType.body,
     fontSize: 13,
     lineHeight: 18,
-    marginBottom: 12,
-  },
-  cardFooter: {
-    paddingTop: 10,
-    borderTopWidth: 0.5,
-    alignItems: 'flex-start',
-  },
-  actionLinkText: {
-    ...VerandahType.bodyBold,
-    fontSize: 13,
+    marginBottom: 0,
   },
 });

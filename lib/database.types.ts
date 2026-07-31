@@ -931,6 +931,145 @@ export type Database = {
         }
         Relationships: []
       }
+      mcn_carpools: {
+        Row: {
+          available_seats: number
+          community_id: string
+          created_at: string
+          created_by: string
+          departure_time: string
+          end_point: string
+          id: string
+          notes: string | null
+          recurring_days: string[]
+          return_time: string | null
+          role_type: 'offering' | 'seeking'
+          start_point: string
+          status: 'active' | 'paused' | 'cancelled' | 'completed'
+          title: string
+          updated_at: string
+          vehicle_info: string | null
+        }
+        Insert: {
+          available_seats?: number
+          community_id: string
+          created_at?: string
+          created_by: string
+          departure_time: string
+          end_point: string
+          id?: string
+          notes?: string | null
+          recurring_days?: string[]
+          return_time?: string | null
+          role_type?: 'offering' | 'seeking'
+          start_point: string
+          status?: 'active' | 'paused' | 'cancelled' | 'completed'
+          title: string
+          updated_at?: string
+          vehicle_info?: string | null
+        }
+        Update: {
+          available_seats?: number
+          community_id?: string
+          created_at?: string
+          created_by?: string
+          departure_time?: string
+          end_point?: string
+          id?: string
+          notes?: string | null
+          recurring_days?: string[]
+          return_time?: string | null
+          role_type?: 'offering' | 'seeking'
+          start_point?: string
+          status?: 'active' | 'paused' | 'cancelled' | 'completed'
+          title?: string
+          updated_at?: string
+          vehicle_info?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_carpools_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_carpools_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      mcn_carpool_requests: {
+        Row: {
+          carpool_id: string
+          community_id: string
+          created_at: string
+          flat_number: string
+          id: string
+          note: string | null
+          rider_id: string
+          rider_name: string
+          rider_phone: string
+          seats_requested: number
+          status: 'pending' | 'accepted' | 'rejected' | 'cancelled'
+          updated_at: string
+        }
+        Insert: {
+          carpool_id: string
+          community_id: string
+          created_at?: string
+          flat_number: string
+          id?: string
+          note?: string | null
+          rider_id: string
+          rider_name: string
+          rider_phone: string
+          seats_requested?: number
+          status?: 'pending' | 'accepted' | 'rejected' | 'cancelled'
+          updated_at?: string
+        }
+        Update: {
+          carpool_id?: string
+          community_id?: string
+          created_at?: string
+          flat_number?: string
+          id?: string
+          note?: string | null
+          rider_id?: string
+          rider_name?: string
+          rider_phone?: string
+          seats_requested?: number
+          status?: 'pending' | 'accepted' | 'rejected' | 'cancelled'
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_carpool_requests_carpool_id_fkey"
+            columns: ["carpool_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_carpools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_carpool_requests_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_carpool_requests_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       mcn_listings: {
         Row: {
           category_id: string | null
