@@ -78,7 +78,11 @@ export default function ParentCornerScreen() {
   const webPullProps = useWebPullToRefresh(() => fetchEntries(true));
 
   const handleBack = () => {
-    router.replace('/(tabs)/network' as any);
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/network' as any);
+    }
   };
 
   useEffect(() => {

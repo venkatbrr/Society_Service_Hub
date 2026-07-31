@@ -64,7 +64,11 @@ export default function SchoolsCatalogScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const handleBack = () => {
-    router.replace('/(tabs)/network' as any);
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/network' as any);
+    }
   };
 
   const webPullProps = useWebPullToRefresh(() => fetchCustomSchools(true));

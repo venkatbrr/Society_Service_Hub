@@ -223,7 +223,11 @@ export default function FoodDropsCatalogScreen() {
   const webPullProps = useWebPullToRefresh(() => fetchDrops(true));
 
   const handleBack = () => {
-    router.replace('/(tabs)/network' as any);
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/network' as any);
+    }
   };
 
   const requireLoginForAction = () => {
@@ -272,7 +276,7 @@ export default function FoodDropsCatalogScreen() {
 
         <TouchableOpacity
           style={styles.masterToggleBtn}
-          onPress={() => router.replace('/network/business' as any)}
+          onPress={() => router.push('/network/business' as any)}
           activeOpacity={0.8}
         >
           <Text style={styles.masterToggleText}>🏪 Community Businesses</Text>

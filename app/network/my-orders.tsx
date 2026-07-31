@@ -230,7 +230,11 @@ export default function MyOrdersScreen() {
   };
 
   const handleBack = () => {
-    router.replace('/(tabs)/network' as any);
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/network' as any);
+    }
   };
 
   // Render Pre-Order Card

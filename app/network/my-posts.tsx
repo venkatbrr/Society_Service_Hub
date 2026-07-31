@@ -223,9 +223,26 @@ export default function MyPostsScreen() {
     );
   }
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/network' as any);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
-      <Stack.Screen options={{ title: 'My community posts' }} />
+      <Stack.Screen
+        options={{
+          title: borrowOnlyView ? 'Borrow & Share' : 'My community posts',
+          headerLeft: () => (
+            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
+              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
 
       {/* Tab Switched Header */}
       {borrowOnlyView ? (
