@@ -278,7 +278,7 @@ export default function HomeScreen() {
       });
 
       // Split into upcoming and past buckets.
-      // Cancelled visits move to past immediately, regardless of date.
+      // Completed and cancelled visits move to past immediately, regardless of date.
       let upcomingData = allVisits.filter(v => {
         const visitDate = parseLocalDateOnly(v.visit_date);
         visitDate.setHours(0, 0, 0, 0);
@@ -293,14 +293,14 @@ export default function HomeScreen() {
         const visitDate = parseLocalDateOnly(v.visit_date);
         visitDate.setHours(0, 0, 0, 0);
         const status = normalizeVisitStatus(v.status);
-        return (visitDate < today || status === 'cancelled') && visitDate >= thirtyDaysAgo;
+        return (visitDate < today || status === 'completed' || status === 'cancelled') && visitDate >= thirtyDaysAgo;
       });
 
       let archivedData = allVisits.filter(v => {
         const visitDate = parseLocalDateOnly(v.visit_date);
         visitDate.setHours(0, 0, 0, 0);
         const status = normalizeVisitStatus(v.status);
-        return (visitDate < today || status === 'cancelled') && visitDate < thirtyDaysAgo;
+        return (visitDate < today || status === 'completed' || status === 'cancelled') && visitDate < thirtyDaysAgo;
       });
 
       // Sort: upcoming ASC, past DESC, archived DESC

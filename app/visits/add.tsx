@@ -170,6 +170,16 @@ export default function AddVisitScreen() {
       ? (normalizeIndianMobile(selectedProvider.whatsapp) ?? selectedProvider.whatsapp)
       : null;
 
+    const startMins = startTime.getHours() * 60 + startTime.getMinutes();
+    const endMins = endTime.getHours() * 60 + endTime.getMinutes();
+    if (endMins <= startMins) {
+      return Toast.show({
+        type: 'error',
+        text1: 'Invalid Time Slot',
+        text2: 'End time must be greater than start time.',
+      });
+    }
+
     const timeSlot = `${formatTime(startTime)} - ${formatTime(endTime)}`;
 
     isSubmittingRef.current = true;

@@ -38,6 +38,21 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const errorDesc = params.get('error_description') || params.get('error');
+      if (errorDesc) {
+        Toast.show({
+          type: 'error',
+          text1: 'Google Sign-In Error',
+          text2: errorDesc.replace(/\+/g, ' '),
+          visibilityTime: 6000,
+        });
+      }
+    }
+  }, []);
+
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

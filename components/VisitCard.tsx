@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { Avatar } from './Avatar';
@@ -31,6 +31,7 @@ interface VisitCardProps {
 }
 
 export const VisitCard = React.memo(({
+  id,
   title,
   providerName,
   hasProviderProfile,
@@ -69,22 +70,36 @@ export const VisitCard = React.memo(({
     return `${Math.floor(diffInHours / 24)}d ago`;
   };
 
-  const handleShare = (e: any) => {
-    e.stopPropagation();
+  const handleShare = async (e: any) => {
+    e?.stopPropagation?.();
     try {
       const formattedDate = formatDate(visitDate);
-      const message = `Join my service visit on Society Hub!\n\n` +
-        `• Title: ${title}\n` +
-        `• Provider: ${providerName}\n` +
-        `• Date: ${formattedDate}\n` +
-        `• Time: ${visitTimeSlot}\n` +
-        (estimatedCost ? `• Estimated Cost: ${estimatedCost}\n\n` : '\n') +
-        `Let's coordinate to split costs!`;
+      const shareUrl =
+        Platform.OS === 'web' && typeof window !== 'undefined'
+          ? `${window.location.origin}/visits/${id}`
+          : `https://society-service-hub.app/visits/${id}`;
 
-      Share.share({
-        message,
-        title,
-      });
+      const messageLines = [
+        `🚗 *Service Visit: ${title}*`,
+        `Provider: ${providerName}`,
+        `📅 Date: ${formattedDate}`,
+        `⏰ Time: ${visitTimeSlot}`,
+        estimatedCost ? `Estimated Cost: ~${estimatedCost}` : '',
+        ``,
+        `🔗 View Visit & Join:`,
+        shareUrl,
+      ];
+
+      const message = messageLines.filter(Boolean).join('\n');
+
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({ title, text: message });
+      } else {
+        await Share.share({
+          message,
+          title,
+        });
+      }
     } catch (error: any) {
       console.error('Error sharing:', error);
     }
@@ -101,7 +116,13 @@ export const VisitCard = React.memo(({
           <Text style={styles.creatorName}>{creatorName} {creatorFlat ? `· ${creatorFlat}` : ''}</Text>
           <Text style={styles.relativeTime}>{getRelativeTime(createdAt)}</Text>
         </View>
-        <VisitStatusBadge status={status} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <TouchableOpacity style={styles.shareHeaderBtn} onPress={handleShare} hitSlop={8}>
+            <Ionicons name="share-outline" size={15} color={Verandah.accent} />
+            <Text style={styles.shareHeaderText}>Share</Text>
+          </TouchableOpacity>
+          <VisitStatusBadge status={status} />
+        </View>
       </View>
 
       {/* Main Info */}
@@ -140,8 +161,9 @@ export const VisitCard = React.memo(({
               {joinerCount} {maxJoiners ? `/ ${maxJoiners}` : ''} {joinerCount === 1 ? 'neighbor' : 'neighbors'} joined
             </Text>
           </View>
-          <TouchableOpacity onPress={handleShare} style={styles.shareBtn}>
-            <Ionicons name="share-social-outline" size={14} color={Verandah.textSecondary} />
+          <TouchableOpacity onPress={handleShare} style={styles.shareInlineBtn}>
+            <Ionicons name="share-social-outline" size={14} color={Verandah.accent} />
+            <Text style={styles.shareInlineText}>Share visit</Text>
           </TouchableOpacity>
         </View>
 
@@ -257,11 +279,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  shareBtn: {
-    padding: 2,
-    borderRadius: VerandahRadius.sm,
-    justifyContent: 'center',
+  shareHeaderBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: VerandahRadius.pill,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 3,
+  },
+  shareHeaderText: {
+    ...VerandahType.captionBold,
+    color: Verandah.accent,
+    fontSize: 12,
+  },
+  shareInlineBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 4,
+  },
+  shareInlineText: {
+    ...VerandahType.captionBold,
+    color: Verandah.accent,
+    fontSize: 11,
   },
   joinerCount: {
     flexDirection: 'row',

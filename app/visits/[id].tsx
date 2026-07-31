@@ -119,6 +119,17 @@ export default function VisitDetailScreen() {
 
   const handleReschedule = async () => {
     if (!id || !newVisitDate || !newStartTime || !newEndTime) return;
+
+    const startMins = newStartTime.getHours() * 60 + newStartTime.getMinutes();
+    const endMins = newEndTime.getHours() * 60 + newEndTime.getMinutes();
+    if (endMins <= startMins) {
+      return Toast.show({
+        type: 'error',
+        text1: 'Invalid Time Slot',
+        text2: 'End time must be greater than start time.',
+      });
+    }
+
     setIsRescheduling(true);
     try {
       const formattedDate = formatLocalDateForDb(newVisitDate);
@@ -248,29 +259,37 @@ export default function VisitDetailScreen() {
     }
   };
 
-  const handleLeave = async () => {
-    Alert.alert('Leave Visit', 'Are you sure you want to leave this visit?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Leave',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const { error } = await supabase
-              .from('visit_joiners')
-              .delete()
-              .match({ visit_id: id, user_id: user?.id });
+  const performLeave = async () => {
+    try {
+      const { error } = await supabase
+        .from('visit_joiners')
+        .delete()
+        .match({ visit_id: id, user_id: user?.id });
 
-            if (error) throw error;
-            Toast.show({ type: 'success', text1: 'Left visit' });
-            refreshJoiners();
-          } catch (e) {
-            console.error(e);
-            Toast.show({ type: 'error', text1: 'Error leaving' });
-          }
-        }
+      if (error) throw error;
+      Toast.show({ type: 'success', text1: 'Left visit' });
+      refreshJoiners();
+    } catch (e) {
+      console.error(e);
+      Toast.show({ type: 'error', text1: 'Error leaving' });
+    }
+  };
+
+  const handleLeave = async () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm('Are you sure you want to leave this visit?')) {
+        await performLeave();
       }
-    ]);
+    } else {
+      Alert.alert('Leave Visit', 'Are you sure you want to leave this visit?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: performLeave,
+        },
+      ]);
+    }
   };
 
   const updateStatus = async (status: string) => {

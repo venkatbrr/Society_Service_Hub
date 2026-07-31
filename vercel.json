@@ -2,16 +2,17 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/network/drops/manage/:id",
-      "destination": "/network/drops/manage?id=:id"
-    },
-    {
-      "source": "/network/drops/:id",
-      "destination": "/network/drops?id=:id"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/",
       "destination": "/index.html"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/admin/:path*"
+    },
+    {
+      "source": "/((?!images|assets|favicon.ico|_expo|admin).*)",
+      "destination": "/index.bak.html"
     }
   ]
 }
+
