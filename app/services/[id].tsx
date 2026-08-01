@@ -1,5 +1,6 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -16,11 +17,12 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { ImageUploader } from '../../components/ImageUploader';
 import { ProviderSelector } from '../../components/ProviderSelector';
 import { ServiceHistoryList } from '../../components/ServiceHistoryList';
 import { UrgencyBadge } from '../../components/UrgencyBadge';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import {
     mapServiceCategoryToProviderCategory,
@@ -31,6 +33,23 @@ import {
     ServiceCategory,
 } from '../../lib/serviceCategories';
 import { supabase } from '../../lib/supabase';
+
+const extractImageUrl = (
+  imageUrl: string | null | undefined,
+  notesText: string | null | undefined
+): { url: string | null; cleanNotes: string } => {
+  if (imageUrl) {
+    const cleanNotes = (notesText || '').replace(/\[Receipt:\s*https?:\/\/[^\]]+\]/gi, '').trim();
+    return { url: imageUrl, cleanNotes };
+  }
+  if (!notesText) return { url: null, cleanNotes: '' };
+  const match = notesText.match(/\[Receipt:\s*(https?:\/\/[^\]]+)\]/i) || notesText.match(/(https:\/\/res\.cloudinary\.com\/[^\s]+)/i);
+  if (match && match[1]) {
+    const cleanNotes = notesText.replace(/\[Receipt:\s*https?:\/\/[^\]]+\]/gi, '').trim();
+    return { url: match[1], cleanNotes };
+  }
+  return { url: null, cleanNotes: notesText };
+};
 
 interface ServiceDetail {
   id: string;
@@ -104,13 +123,15 @@ export default function ServiceDetailScreen() {
   const [markDoneNote, setMarkDoneNote] = useState('');
   const [markDoneSubmitting, setMarkDoneSubmitting] = useState(false);
   const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [editReceiptUrl, setEditReceiptUrl] = useState<string | null>(null);
 
   const fetchService = useCallback(async () => {
     if (!id) return;
     try {
       const { data, error } = await supabase
         .from('user_services')
-        .select('id, service_name, category, last_serviced_on, frequency_months, next_due_on, notes, provider_id')
+        .select('*')
         .eq('id', id)
         .maybeSingle();
 
@@ -124,15 +145,19 @@ export default function ServiceDetailScreen() {
         const msPerDay = 1000 * 60 * 60 * 24;
         const daysUntilDue = Math.round((dueDate.getTime() - today.getTime()) / msPerDay);
 
+        const { url, cleanNotes } = extractImageUrl((serviceRow as any).image_url, serviceRow.notes);
+
         setService({
           ...serviceRow,
           days_until_due: daysUntilDue,
         });
+        setReceiptUrl(url);
+        setEditReceiptUrl(url);
         setEditName(serviceRow.service_name);
         setEditCategory(serviceRow.category as ServiceCategory);
         setEditLastServiced(new Date(serviceRow.last_serviced_on));
         setEditFrequency(String(serviceRow.frequency_months));
-        setEditNotes(serviceRow.notes ?? '');
+        setEditNotes(cleanNotes);
       }
     } catch (err: any) {
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load service' });
@@ -306,19 +331,38 @@ export default function ServiceDetailScreen() {
     setSaving(true);
     try {
       const dateStr = editLastServiced.toISOString().split('T')[0];
-      const { error } = await supabase
+      let notesText = editNotes.trim();
+      if (editReceiptUrl) {
+        notesText = notesText ? `${notesText}\n[Receipt: ${editReceiptUrl}]` : `[Receipt: ${editReceiptUrl}]`;
+      }
+
+      const updatePayload: any = {
+        service_name: editName.trim(),
+        category: editCategory,
+        last_serviced_on: dateStr,
+        frequency_months: freq,
+        notes: notesText || null,
+        provider_id: selectedProvider?.id ?? null,
+        next_due_on: dateStr,
+      };
+
+      if (editReceiptUrl) {
+        updatePayload.image_url = editReceiptUrl;
+      }
+
+      let { error } = await supabase
         .from('user_services')
-        .update({
-          service_name: editName.trim(),
-          category: editCategory,
-          last_serviced_on: dateStr,
-          frequency_months: freq,
-          notes: editNotes.trim() || null,
-          provider_id: selectedProvider?.id ?? null,
-          // next_due_on is recomputed by DB trigger on UPDATE
-          next_due_on: dateStr, // placeholder; trigger overwrites
-        })
+        .update(updatePayload)
         .eq('id', service.id);
+
+      if (error && 'image_url' in updatePayload) {
+        delete updatePayload.image_url;
+        const fallback = await supabase
+          .from('user_services')
+          .update(updatePayload)
+          .eq('id', service.id);
+        error = fallback.error;
+      }
 
       if (error) throw error;
       Toast.show({ type: 'success', text1: 'Service updated' });
@@ -332,31 +376,48 @@ export default function ServiceDetailScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      'Delete reminder?',
-      'This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            if (!service) return;
-            try {
-              const { error } = await supabase
-                .from('user_services')
-                .delete()
-                .eq('id', service.id);
-              if (error) throw error;
-              Toast.show({ type: 'success', text1: 'Reminder deleted' });
-              router.back();
-            } catch (err: any) {
-              Toast.show({ type: 'error', text1: 'Error', text2: err.message });
-            }
-          },
-        },
-      ]
-    );
+    const performDelete = async () => {
+      if (!service) return;
+      try {
+        const { error, count } = await supabase
+          .from('user_services')
+          .delete({ count: 'exact' })
+          .eq('id', service.id)
+          .eq('user_id', (await supabase.auth.getUser()).data.user?.id ?? '');
+
+        if (error) throw error;
+
+        if (!count) {
+          Toast.show({
+            type: 'error',
+            text1: 'Delete failed',
+            text2: 'Reminder was not found or is no longer accessible.',
+          });
+          return;
+        }
+
+        Toast.show({ type: 'success', text1: 'Reminder deleted' });
+        router.back();
+      } catch (err: any) {
+        Toast.show({ type: 'error', text1: 'Error', text2: err.message ?? 'Failed to delete reminder.' });
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Delete reminder? This cannot be undone.');
+      if (!confirmed) return;
+      void performDelete();
+      return;
+    }
+
+    Alert.alert('Delete reminder?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: performDelete,
+      },
+    ]);
   };
 
   if (loading) {
@@ -415,6 +476,27 @@ export default function ServiceDetailScreen() {
           <Text style={[styles.dueDate, { color: colors.text }]}>{dueDate}</Text>
           <UrgencyBadge daysUntilDue={service.days_until_due} />
         </View>
+
+        {/* Receipt / Warranty Card */}
+        {receiptUrl ? (
+          <View style={[styles.dueCard, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 12 }]}>
+            <Text style={[styles.dueLabel, { color: colors.textMuted, marginBottom: 8 }]}>Receipt / Warranty Card</Text>
+            <TouchableOpacity
+              onPress={() => {
+                if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                  window.open(receiptUrl, '_blank');
+                }
+              }}
+              activeOpacity={0.9}
+            >
+              <Image
+                source={{ uri: receiptUrl }}
+                style={{ width: '100%', height: 180, borderRadius: 12, backgroundColor: colors.surface2 }}
+                contentFit="contain"
+              />
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
         {/* Action buttons */}
         <TouchableOpacity
@@ -646,6 +728,16 @@ export default function ServiceDetailScreen() {
               </View>
             )}
 
+            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Receipt or warranty card (optional)</Text>
+            <ImageUploader
+              currentImageUrl={editReceiptUrl}
+              onImageUploaded={(url) => setEditReceiptUrl(url)}
+              onImageRemoved={() => setEditReceiptUrl(null)}
+              subfolder="service_receipts"
+              placeholder="Upload receipt or warranty card photo"
+              compact={true}
+            />
+
             <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Notes (optional)</Text>
             <TextInput
               style={[styles.input, styles.notesInput, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
@@ -765,7 +857,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 14,
+    paddingBottom: 10,
     gap: 10,
   },
   backButton: {
@@ -783,56 +875,56 @@ const styles = StyleSheet.create({
     ...VerandahType.display,
     color: Verandah.textPrimary,
   },
-  scrollContent: { paddingHorizontal: 16, paddingBottom: 60, gap: 12 },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 48, gap: 8 },
   dueCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 20,
-    gap: 8,
-  },
-  dueLabel: { fontSize: 10, fontWeight: '500', letterSpacing: 1 },
-  dueDate: { fontSize: 22, fontWeight: '500' },
-  primaryBtn: { borderRadius: 16, overflow: 'hidden' },
-  secondaryBtn: {
     borderRadius: 16,
     borderWidth: 1,
-    paddingVertical: 14,
+    padding: 16,
+    gap: 6,
+  },
+  dueLabel: { fontSize: 10, fontWeight: '500', letterSpacing: 1 },
+  dueDate: { fontSize: 20, fontWeight: '500' },
+  primaryBtn: { borderRadius: 14, overflow: 'hidden' },
+  secondaryBtn: {
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingVertical: 11,
     alignItems: 'center',
   },
-  btnGradient: { paddingVertical: 15, alignItems: 'center', borderRadius: 16 },
+  btnGradient: { paddingVertical: 12, alignItems: 'center', borderRadius: 14 },
   btnText: { color: Verandah.primaryFg, fontSize: 15, fontWeight: '500' },
   secondaryBtnText: { fontSize: 15, fontWeight: '500' },
   editToggle: {
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    marginTop: 4,
+    marginTop: 2,
   },
   editToggleText: { fontSize: 14, fontWeight: '500' },
   editSection: {
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 16,
-    gap: 4,
+    padding: 14,
+    gap: 2,
   },
   fieldLabel: {
     fontSize: 10,
     fontWeight: '500',
     letterSpacing: 1,
-    marginTop: 12,
+    marginTop: 10,
     marginBottom: 4,
   },
   providerHelperText: {
     fontSize: 12,
-    marginBottom: 8,
-    lineHeight: 18,
+    marginBottom: 6,
+    lineHeight: 16,
   },
   input: {
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 8,
     fontSize: 14,
     fontWeight: '400',
   },
@@ -841,7 +933,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  notesInput: { height: 76, paddingTop: 10 },
+  notesInput: { height: 68, paddingTop: 8 },
   providerStateCard: {
     borderRadius: 12,
     borderWidth: 1,
@@ -858,10 +950,10 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   providerActionBtn: {
-    marginTop: 8,
+    marginTop: 6,
     borderRadius: 12,
     borderWidth: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
     alignItems: 'center',
   },
   providerActionBtnText: {
@@ -945,12 +1037,12 @@ const styles = StyleSheet.create({
     minWidth: '44%',
     flexShrink: 1,
   },
-  saveBtn: { marginTop: 16, borderRadius: 14, overflow: 'hidden' },
+  saveBtn: { marginTop: 12, borderRadius: 12, overflow: 'hidden' },
   deleteBtn: {
-    marginTop: 8,
-    paddingVertical: 14,
+    marginTop: 6,
+    paddingVertical: 11,
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
   },
   deleteBtnText: { fontSize: 14, fontWeight: '500' },
@@ -967,7 +1059,7 @@ const styles = StyleSheet.create({
   },
   sheetHeader: {
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: Verandah.border,
     flexDirection: 'row',
@@ -984,8 +1076,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   sheetBody: {
-    padding: 16,
-    paddingBottom: 28,
+    padding: 14,
+    paddingBottom: 20,
   },
   sheetNoteInput: {
     minHeight: 76,

@@ -60,6 +60,7 @@ const DashboardPage = {
   },
 
   async loadMetrics(communityId) {
+    const targetParam = communityId || null;
     const loader = document.getElementById('dashboard-loading');
     const content = document.getElementById('dashboard-content');
     

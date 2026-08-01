@@ -149,7 +149,7 @@ export default function ProfileScreen() {
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <View style={styles.profileHeader}>
-            <Avatar name={String(user?.user_metadata?.full_name || 'User')} size={64} />
+            <Avatar name={String(user?.user_metadata?.full_name || 'User')} size={52} />
             <View style={styles.profileInfo}>
               <Text style={styles.name}>
                 {user?.user_metadata?.full_name || 'User'}
@@ -162,11 +162,6 @@ export default function ProfileScreen() {
                   You are: {roleLabel}
                 </Text>
               </View>
-              {fundRoleLabel ? (
-                <View style={styles.roleBadge}>
-                  <Text style={styles.roleBadgeText}>Fund access: {fundRoleLabel}</Text>
-                </View>
-              ) : null}
             </View>
             <TouchableOpacity onPress={() => router.push('/profile/edit' as any)} style={{ padding: 8, alignSelf: 'flex-start' }}>
               <Ionicons name="pencil" size={20} color={Verandah.textTertiary} />
@@ -317,9 +312,9 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   card: {
-    padding: 20,
-    borderRadius: VerandahRadius.lg,
-    marginBottom: 14,
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 10,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     backgroundColor: Verandah.card,
@@ -327,41 +322,41 @@ const styles = StyleSheet.create({
   profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
   },
   profileInfo: {
     flex: 1,
   },
   name: {
-    fontSize: 20,
-    fontWeight: '500',
-    marginBottom: 2,
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 1,
     color: Verandah.textPrimary,
   },
   email: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '400',
     color: Verandah.textSecondary,
   },
   roleBadge: {
     alignSelf: 'flex-start',
-    marginTop: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    marginTop: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 999,
     backgroundColor: Verandah.accentSoft,
   },
   roleBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
     letterSpacing: 0.4,
     textTransform: 'uppercase',
     color: Verandah.accent,
   },
   section: {
-    padding: 20,
-    borderRadius: VerandahRadius.lg,
-    marginBottom: 14,
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 10,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     backgroundColor: Verandah.card,
@@ -369,11 +364,11 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 20,
+    gap: 8,
+    marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
     color: Verandah.textPrimary,
   },
@@ -412,62 +407,63 @@ const styles = StyleSheet.create({
   adminCard: {
     borderWidth: 0.5,
     borderColor: Verandah.border,
-    borderRadius: VerandahRadius.lg,
-    padding: 18,
-    marginBottom: 12,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
     backgroundColor: Verandah.card,
   },
   adminIconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Verandah.accentSoft,
   },
   adminIcon: {
-    fontSize: 22,
-    lineHeight: 24,
+    fontSize: 20,
+    lineHeight: 22,
   },
   adminContent: {
     flex: 1,
   },
   adminTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
     color: Verandah.textPrimary,
   },
   adminCopy: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 2,
     color: Verandah.textSecondary,
   },
   pendingBadge: {
-    minWidth: 28,
-    height: 28,
-    borderRadius: 14,
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
   },
   pendingBadgeText: {
     color: '#FFF',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
   },
   chevronIcon: {
-    fontSize: 18,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 18,
   },
   recentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: Verandah.border,
     gap: 8,
@@ -492,18 +488,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
-    borderRadius: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 14,
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 12,
     backgroundColor: Verandah.dangerSoft,
   },
   signOutIcon: {
-    fontSize: 20,
-    lineHeight: 22,
+    fontSize: 18,
+    lineHeight: 20,
   },
   signOutText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
     color: Verandah.danger,
   },

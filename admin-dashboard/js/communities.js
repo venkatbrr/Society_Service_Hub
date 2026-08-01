@@ -164,21 +164,31 @@ const CommunitiesPage = {
 
       // 3. Fetch collectors if funds are enabled
       if (community.funds_enabled) {
-        const { data: collectorsData, error: collectorsError } = await supabase
-          .from('fund_roles')
-          .select('id, event_id, user_id, block_id, events!inner(title, community_id)')
-          .eq('role', 'collector')
-          .eq('events.community_id', communityId);
+        const { data: eventsData } = await supabase
+          .from('events')
+          .select('id, title')
+          .eq('community_id', communityId);
 
-        if (collectorsError) throw collectorsError;
+        const eventIds = (eventsData || []).map(e => e.id);
+        const eventTitleMap = new Map((eventsData || []).map(e => [e.id, e.title]));
 
-        this.fundCollectors = (collectorsData || []).map(c => ({
-          id: c.id,
-          event_id: c.event_id,
-          user_id: c.user_id,
-          block_id: c.block_id,
-          fund_title: c.events?.title ?? null,
-        }));
+        if (eventIds.length > 0) {
+          const { data: collectorsData } = await supabase
+            .from('fund_roles')
+            .select('id, event_id, user_id, block_id')
+            .eq('role', 'collector')
+            .in('event_id', eventIds);
+
+          this.fundCollectors = (collectorsData || []).map(c => ({
+            id: c.id,
+            event_id: c.event_id,
+            user_id: c.user_id,
+            block_id: c.block_id,
+            fund_title: eventTitleMap.get(c.event_id) ?? null,
+          }));
+        } else {
+          this.fundCollectors = [];
+        }
 
         // 4. Fetch community funds via platform admin RPC
         const { data: fundsData } = await supabase.rpc('platform_get_community_funds', { p_community_id: communityId });
@@ -313,12 +323,16 @@ const CommunitiesPage = {
     if (community.funds_enabled) {
       if (this.fundCollectors.length > 0) {
         this.fundCollectors.forEach(fc => {
-          const residentName = this.residents.find(r => r.id === fc.user_id)?.full_name ?? 'Resident';
+          const resident = this.residents.find(r => r.id === fc.user_id);
+          const residentName = resident?.full_name ?? 'Resident';
+          const residentFlat = resident?.flat_number ? ` (Flat ${resident.flat_number})` : '';
+          const blockObj = this.communityBlocks.find(b => b.id === fc.block_id);
+          const blockName = blockObj ? blockObj.name : 'All Blocks';
           collectorsHtml += `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border);">
               <div>
-                <strong>${residentName}</strong><br>
-                <span class="text-3" style="font-size: 0.8rem;">Fund: ${fc.fund_title || 'N/A'}</span>
+                <strong>${residentName}${residentFlat}</strong><br>
+                <span class="text-3" style="font-size: 0.8rem;">Block: <strong>${blockName}</strong> · Fund: ${fc.fund_title || 'N/A'}</span>
               </div>
               <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; color: var(--danger);" onclick="CommunitiesPage.removeBlockInCharge('${fc.event_id}', '${fc.user_id}')">Remove</button>
             </div>

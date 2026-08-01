@@ -14,8 +14,9 @@ import {
     View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import {
     mapServiceCategoryToProviderCategory,
@@ -26,6 +27,32 @@ import {
     ServiceCategory,
 } from '../../lib/serviceCategories';
 import { supabase } from '../../lib/supabase';
+
+type ReminderImage = {
+  title: string;
+  url: string;
+};
+
+type ReminderImageDraft = {
+  title: string;
+  url: string | null;
+};
+
+const MAX_REMINDER_IMAGES = 3;
+const REMINDER_IMAGE_TAG_REGEX = /\[ReminderImage:([^|\]]+)\|(https?:\/\/[^\]]+)\]/gi;
+
+const createEmptyReminderImageDrafts = (): ReminderImageDraft[] =>
+  Array.from({ length: MAX_REMINDER_IMAGES }, () => ({ title: '', url: null }));
+
+const buildNotesWithReminderImages = (notesText: string, images: ReminderImage[]): string | null => {
+  const cleanText = notesText.trim();
+  const imageTags = images
+    .map((image) => `[ReminderImage:${encodeURIComponent(image.title.trim())}|${image.url}]`)
+    .join('\n');
+
+  const combined = [cleanText, imageTags].filter(Boolean).join('\n');
+  return combined || null;
+};
 
 type ProviderOption = {
   id: string;
@@ -53,6 +80,9 @@ export default function AddServiceScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [frequencyMonths, setFrequencyMonths] = useState('6');
   const [notes, setNotes] = useState('');
+  const [reminderImageDrafts, setReminderImageDrafts] = useState<ReminderImageDraft[]>(
+    createEmptyReminderImageDrafts()
+  );
   const [providers, setProviders] = useState<ProviderOption[]>([]);
   const [providersLoading, setProvidersLoading] = useState(false);
   const [providerPickerOpen, setProviderPickerOpen] = useState(false);
@@ -139,6 +169,32 @@ export default function AddServiceScreen() {
     }
     if (!user) return;
 
+    const hasTitleWithoutImage = reminderImageDrafts.some(
+      (item) => item.title.trim().length > 0 && !item.url
+    );
+    if (hasTitleWithoutImage) {
+      Toast.show({
+        type: 'error',
+        text1: 'Missing image',
+        text2: 'Upload an image for each entered title, or clear the unused title.',
+      });
+      return;
+    }
+
+    const selectedImages = reminderImageDrafts
+      .filter((item): item is ReminderImageDraft & { url: string } => !!item.url)
+      .map((item) => ({ title: item.title.trim(), url: item.url }));
+
+    const missingTitle = selectedImages.find((item) => !item.title);
+    if (missingTitle) {
+      Toast.show({
+        type: 'error',
+        text1: 'Title required',
+        text2: 'Please add a title for every uploaded image.',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       // Format date as YYYY-MM-DD
@@ -146,7 +202,10 @@ export default function AddServiceScreen() {
       // next_due_on is auto-computed by DB trigger
       const nextDueOn = dateStr; // placeholder; trigger overwrites this
 
-      const { error } = await supabase.from('user_services').insert({
+      const notesText = buildNotesWithReminderImages(notes, selectedImages);
+      const firstImageUrl = selectedImages[0]?.url ?? null;
+
+      const insertPayload: any = {
         user_id: user.id,
         community_id: communityId ?? null,
         service_name: serviceName.trim(),
@@ -154,9 +213,18 @@ export default function AddServiceScreen() {
         last_serviced_on: dateStr,
         frequency_months: freq,
         next_due_on: nextDueOn, // DB trigger will overwrite
-        notes: notes.trim() || null,
+        notes: notesText || null,
         provider_id: selectedProvider?.id ?? null,
-      });
+        image_url: firstImageUrl,
+      };
+
+      let { error } = await supabase.from('user_services').insert(insertPayload);
+
+      if (error && 'image_url' in insertPayload) {
+        delete insertPayload.image_url;
+        const fallback = await supabase.from('user_services').insert(insertPayload);
+        error = fallback.error;
+      }
 
       if (error) throw error;
 
@@ -398,6 +466,57 @@ export default function AddServiceScreen() {
           </View>
         )}
 
+        {/* Reminder images */}
+        <Text style={[styles.label, { color: colors.textMuted }]}>Reminder images (optional, up to 3)</Text>
+        <Text style={[styles.helperText, { color: colors.textMuted }]}>Title is mandatory for every uploaded image.</Text>
+        <View style={styles.imageSlotsWrap}>
+          {reminderImageDrafts.map((item, index) => (
+            <View key={`service-image-slot-${index}`} style={styles.imageSlot}>
+              <Text style={[styles.slotLabel, { color: colors.textMuted }]}>Image {index + 1} title</Text>
+              <TextInput
+                style={[styles.input, styles.slotTitleInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
+                placeholder={`e.g., Warranty card ${index + 1}`}
+                placeholderTextColor={colors.textMuted}
+                value={item.title}
+                onChangeText={(value) => {
+                  setReminderImageDrafts((prev) =>
+                    prev.map((row, rowIndex) =>
+                      rowIndex === index ? { ...row, title: value.slice(0, 60) } : row
+                    )
+                  );
+                }}
+                maxLength={60}
+              />
+              <ImageUploader
+                currentImageUrl={item.url}
+                onImageUploaded={(url) => {
+                  setReminderImageDrafts((prev) =>
+                    prev.map((row, rowIndex) =>
+                      rowIndex === index
+                        ? {
+                            ...row,
+                            url,
+                            title: row.title.trim().length ? row.title : `Image ${index + 1}`,
+                          }
+                        : row
+                    )
+                  );
+                }}
+                onImageRemoved={() => {
+                  setReminderImageDrafts((prev) =>
+                    prev.map((row, rowIndex) =>
+                      rowIndex === index ? { title: '', url: null } : row
+                    )
+                  );
+                }}
+                subfolder="service_receipts"
+                placeholder={`Upload image ${index + 1}`}
+                compact={true}
+              />
+            </View>
+          ))}
+        </View>
+
         {/* Notes */}
         <Text style={[styles.label, { color: colors.textMuted }]}>Notes (optional)</Text>
         <TextInput
@@ -596,6 +715,27 @@ const styles = StyleSheet.create({
   providerSuggestedTag: {
     fontSize: 11,
     fontWeight: '500',
+  },
+  imageSlotsWrap: {
+    marginTop: 8,
+    gap: 10,
+  },
+  imageSlot: {
+    borderWidth: 1,
+    borderColor: Verandah.border,
+    borderRadius: 12,
+    padding: 10,
+    gap: 8,
+  },
+  slotLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  slotTitleInput: {
+    marginTop: 0,
+    marginBottom: 0,
+    paddingVertical: 10,
+    fontSize: 13,
   },
   submitButton: { marginTop: 32, borderRadius: 16, overflow: 'hidden' },
   submitGradient: { paddingVertical: 16, alignItems: 'center', borderRadius: 16 },
