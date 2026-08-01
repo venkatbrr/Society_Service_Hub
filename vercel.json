@@ -1,24 +1,19 @@
 {
   "cleanUrls": true,
-  "routes": [
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
     {
-      "src": "/",
-      "dest": "/landing.html"
+      "source": "/",
+      "destination": "/index.html"
     },
     {
-      "src": "/admin/(.*)",
-      "dest": "/admin/$1"
+      "source": "/admin/:path*",
+      "destination": "/admin/:path*"
     },
     {
-      "src": "/admin",
-      "dest": "/admin/index.html"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
-      "dest": "/index.html"
+      "source": "/((?!images|assets|favicon.ico|_expo|admin).*)",
+      "destination": "/index.html"
     }
   ]
 }
