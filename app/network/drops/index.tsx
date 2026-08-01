@@ -225,11 +225,7 @@ export default function FoodDropsCatalogScreen() {
   const webPullProps = useWebPullToRefresh(() => fetchDrops(true));
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)/network' as any);
-    }
+    router.replace('/(tabs)/network' as any);
   };
 
   const requireLoginForAction = () => {

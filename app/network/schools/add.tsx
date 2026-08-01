@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 const LEVELS = [
@@ -111,13 +112,26 @@ export default function AddSchoolScreen() {
     }
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/network/schools' as any);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.surface }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
     >
-      <Stack.Screen options={{ title: 'Add school' }} />
+      <Stack.Screen
+        options={buildMcnHeaderOptions({
+          title: 'Add school',
+          onBack: handleBack,
+        })}
+      />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         
         {/* Name input */}

@@ -20,11 +20,9 @@ export default function MyPostsScreen() {
   const params = useLocalSearchParams<{ segment?: string; source?: string }>();
   const { user, communityId, isCommunityLead } = useAuth();
   const colors = Verandah;
-  const borrowOnlyView = params.source === 'network' || params.segment === 'borrow';
+  const borrowOnlyView = false;
 
-  const [activeSegment, setActiveSegment] = useState<'business' | 'borrow'>(
-    borrowOnlyView ? 'borrow' : 'business'
-  );
+  const [activeSegment, setActiveSegment] = useState<'business' | 'borrow'>('business');
   const [listings, setListings] = useState<Listing[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -239,11 +237,11 @@ export default function MyPostsScreen() {
       router.replace('/(tabs)/network' as any);
       return;
     }
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)/network' as any);
+    if (source === 'community') {
+      router.replace('/(tabs)/community' as any);
+      return;
     }
+    router.replace('/(tabs)/network' as any);
   };
 
   return (
@@ -264,34 +262,17 @@ export default function MyPostsScreen() {
       ) : (
         <View style={styles.segmentContainer}>
           <TouchableOpacity
-            style={[styles.segmentBtn, activeSegment === 'business' && styles.segmentActive]}
-            onPress={() => { setActiveSegment('business'); }}
+            style={[styles.segmentBtn, styles.segmentActive]}
             activeOpacity={0.8}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Ionicons
                 name="storefront-outline"
                 size={15}
-                color={activeSegment === 'business' ? colors.textPrimary : colors.textSecondary}
+                color={colors.textPrimary}
               />
-              <Text style={[styles.segmentText, activeSegment === 'business' && styles.segmentTextActive]}>
+              <Text style={[styles.segmentText, styles.segmentTextActive]}>
                 Local businesses
-              </Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.segmentBtn, activeSegment === 'borrow' && styles.segmentActive]}
-            onPress={() => { setActiveSegment('borrow'); }}
-            activeOpacity={0.8}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons
-                name="swap-horizontal-outline"
-                size={15}
-                color={activeSegment === 'borrow' ? colors.textPrimary : colors.textSecondary}
-              />
-              <Text style={[styles.segmentText, activeSegment === 'borrow' && styles.segmentTextActive]}>
-                Borrow & Share
               </Text>
             </View>
           </TouchableOpacity>

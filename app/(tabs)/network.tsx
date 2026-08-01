@@ -243,30 +243,7 @@ export default function NetworkScreen() {
           </Text>
         </BaseCard>
 
-        {/* 4. Borrow & Share Section Card */}
-        <BaseCard
-          padding={14}
-          onPress={() => router.push('/network/my-posts?segment=borrow&source=network' as any)}
-          style={styles.sectionCard}
-        >
-          <View style={styles.cardHeaderRow}>
-            <View style={[styles.iconCircle, { backgroundColor: '#FCE7F3' }]}>
-              <NetworkTileIcon kind="borrow" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Borrow & Share</Text>
-              {postCount !== null && (
-                <Text style={[styles.badgeText, { color: '#DB2777' }]}>
-                  {postCount} {postCount === 1 ? 'item available' : 'items available'}
-                </Text>
-              )}
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-          </View>
-          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Borrow or lend household items, power tools, textbooks, & travel gear safely within your society.
-          </Text>
-        </BaseCard>
+
 
         <View style={{ height: 40 }} />
       </ScrollView>
