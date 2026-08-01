@@ -26,5 +26,18 @@ try {
   process.exit(1);
 }
 
-// Post-build script to inject the public landing page at the root route
-// DISABLED: SPA mode doesn't use a separate landing page — Expo index.html handles all routing
+// Copy landing.html to dist so Vercel can serve it at the root route
+try {
+  const distLandingPath = path.join(__dirname, 'dist', 'landing.html');
+  const publicLandingPath = path.join(__dirname, 'public', 'landing.html');
+
+  if (fs.existsSync(publicLandingPath)) {
+    fs.copyFileSync(publicLandingPath, distLandingPath);
+    console.log('Successfully copied public/landing.html to dist/landing.html');
+  } else {
+    console.warn('public/landing.html not found, skipping');
+  }
+} catch (err) {
+  console.error('Failed to copy landing.html:', err);
+  process.exit(1);
+}
