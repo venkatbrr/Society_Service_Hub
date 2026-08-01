@@ -14,12 +14,17 @@ export const buildMcnHeaderOptions = ({
   onBack,
   headerRight,
 }: BuildMcnHeaderOptionsParams): NativeStackNavigationOptions => ({
+  headerShown: true,
   headerTitle: title,
   headerTitleStyle: {
     fontWeight: '500',
     fontSize: 17,
     color: Verandah.textPrimary,
   },
+  headerStyle: {
+    backgroundColor: Verandah.surface,
+  },
+  headerShadowVisible: false,
   headerLeft: () => (
     <HeaderBackButton
       onPress={onBack}
