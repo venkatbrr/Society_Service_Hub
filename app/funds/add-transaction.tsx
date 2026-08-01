@@ -17,6 +17,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { BlockPicker } from '../../components/BlockPicker';
 import { HeaderBackButton } from '../../components/HeaderBackButton';
+import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
@@ -37,6 +38,34 @@ type EligibleContributor = {
   full_name: string;
   flat_no: string | null;
   has_contributed: boolean;
+};
+
+const extractImageUrl = (
+  imageUrl: string | null | undefined,
+  description: string | null | undefined
+): { url: string | null; cleanNotes: string } => {
+  if (imageUrl) {
+    const cleanNotes = (description || '').replace(/\[Receipt:\s*https?:\/\/[^\]]+\]/gi, '').trim();
+    return { url: imageUrl, cleanNotes };
+  }
+
+  if (!description) {
+    return { url: null, cleanNotes: '' };
+  }
+
+  const receiptMatch = description.match(/\[Receipt:\s*(https?:\/\/[^\]]+)\]/i);
+  if (receiptMatch && receiptMatch[1]) {
+    const cleanNotes = description.replace(/\[Receipt:\s*https?:\/\/[^\]]+\]/gi, '').trim();
+    return { url: receiptMatch[1], cleanNotes };
+  }
+
+  const cloudinaryMatch = description.match(/(https:\/\/res\.cloudinary\.com\/[^\s]+)/i);
+  if (cloudinaryMatch && cloudinaryMatch[1]) {
+    const cleanNotes = description.replace(cloudinaryMatch[1], '').trim();
+    return { url: cloudinaryMatch[1], cleanNotes };
+  }
+
+  return { url: null, cleanNotes: description };
 };
 
 export default function AddTransactionScreen() {
@@ -63,6 +92,7 @@ export default function AddTransactionScreen() {
   const [amount, setAmount] = useState('');
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isFetchingContext, setIsFetchingContext] = useState(true);
@@ -118,7 +148,9 @@ export default function AddTransactionScreen() {
           if (existingTx.type === 'expense') {
             setTitle(existingTx.title || '');
           }
-          setNotes(existingTx.description || '');
+          const { url, cleanNotes } = extractImageUrl((existingTx as any).image_url, existingTx.description);
+          setNotes(cleanNotes);
+          setImageUrl(url);
           if (existingTx.type === 'income') {
             setSelectedMemberId(existingTx.contributor_user_id);
           }
@@ -224,45 +256,48 @@ export default function AddTransactionScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      type === 'income' ? 'Delete contribution?' : 'Delete expense?',
-      type === 'income'
-        ? 'Are you sure you want to delete this contribution? The resident will be marked as unpaid.'
-        : 'Are you sure you want to delete this expense? This will permanently remove it from the fund ledger.',
-      [
+    const title = type === 'income' ? 'Delete contribution?' : 'Delete expense?';
+    const message = type === 'income'
+      ? 'Are you sure you want to delete this contribution? The resident will be marked as unpaid.'
+      : 'Are you sure you want to delete this expense? This will permanently remove it from the fund ledger.';
+
+    const performDelete = async () => {
+      setIsDeleting(true);
+      try {
+        const { error } = await supabase
+          .from('event_transactions')
+          .delete()
+          .eq('id', transaction_id as string);
+
+        if (error) throw error;
+
+        Toast.show({
+          type: 'success',
+          text1: type === 'income' ? 'Contribution deleted' : 'Expense deleted',
+          text2: 'The fund ledger was updated successfully.',
+        });
+        router.back();
+      } catch (error: any) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error deleting',
+          text2: error.message,
+        });
+      } finally {
+        setIsDeleting(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm(`${title}\n${message}`)) {
+        performDelete();
+      }
+    } else {
+      Alert.alert(title, message, [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setIsDeleting(true);
-            try {
-              const { error } = await supabase
-                .from('event_transactions')
-                .delete()
-                .eq('id', transaction_id as string);
-
-              if (error) throw error;
-
-              Toast.show({
-                type: 'success',
-                text1: type === 'income' ? 'Contribution deleted' : 'Expense deleted',
-                text2: 'The fund ledger was updated successfully.',
-              });
-              router.back();
-            } catch (error: any) {
-              Toast.show({
-                type: 'error',
-                text1: 'Error deleting',
-                text2: error.message,
-              });
-            } finally {
-              setIsDeleting(false);
-            }
-          },
-        },
-      ]
-    );
+        { text: 'Delete', style: 'destructive', onPress: performDelete },
+      ]);
+    }
   };
 
   const handleSave = async () => {
@@ -301,7 +336,12 @@ export default function AddTransactionScreen() {
     setIsLoading(true);
     try {
       const memberName = members.find((member) => member.user_id === selectedMemberId)?.full_name?.trim() || 'Resident';
-      const basePayload =
+      let notesText = notes.trim();
+      if (type === 'expense' && imageUrl) {
+        notesText = notesText ? `${notesText}\n[Receipt: ${imageUrl}]` : `[Receipt: ${imageUrl}]`;
+      }
+
+      const basePayload: any =
         type === 'income'
           ? {
               event_id: event_id as string,
@@ -317,14 +357,26 @@ export default function AddTransactionScreen() {
               amount: Number(amount),
               type,
               title: title.trim(),
-              description: notes.trim() || null,
+              description: notesText || null,
               category: 'Expense',
               contributor_user_id: null,
             };
 
-      const { error } = transaction_id
+      if (imageUrl) {
+        basePayload.image_url = imageUrl;
+      }
+
+      let { error } = transaction_id
         ? await supabase.from('event_transactions').update(basePayload).eq('id', transaction_id as string)
         : await supabase.from('event_transactions').insert({ ...basePayload, created_by: user?.id as string });
+
+      if (error && 'image_url' in basePayload && isMissingFundSchemaError(error)) {
+        delete basePayload.image_url;
+        const fallback = transaction_id
+          ? await supabase.from('event_transactions').update(basePayload).eq('id', transaction_id as string)
+          : await supabase.from('event_transactions').insert({ ...basePayload, created_by: user?.id as string });
+        error = fallback.error;
+      }
 
       if (error) throw error;
 
@@ -391,14 +443,16 @@ export default function AddTransactionScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <HeaderBackButton onPress={() => router.back()} color={colors.text} style={styles.backButton} />
-          <Text style={styles.title}>
-            {transaction_id
-              ? type === 'income' ? 'Edit contribution' : 'Edit expense'
-              : type === 'income' ? 'Record contribution' : 'Record expense'}
-          </Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-            {fund.title} - You are a {formatRole(fundRole)}
-          </Text>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.title}>
+              {transaction_id
+                ? type === 'income' ? 'Edit contribution' : 'Edit expense'
+                : type === 'income' ? 'Record contribution' : 'Record expense'}
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+              {fund.title} - You are a {formatRole(fundRole)}
+            </Text>
+          </View>
         </View>
 
         <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -476,14 +530,14 @@ export default function AddTransactionScreen() {
               ) : (
                 <>
                   <TextInput
-                    style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background, marginBottom: 12, height: 50, fontSize: 15 }]}
+                    style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background, marginBottom: 8, height: 42, fontSize: 14 }]}
                     placeholder="Search by name or flat..."
                     placeholderTextColor={colors.textMuted}
                     value={searchMember}
                     onChangeText={setSearchMember}
                   />
                   {!searchMember.trim() && members.length > 3 && (
-                    <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: 12, marginLeft: 4 }}>
+                    <Text style={{ color: colors.textMuted, fontSize: 12, marginBottom: 8, marginLeft: 4 }}>
                       Type to search all residents...
                     </Text>
                   )}
@@ -566,6 +620,20 @@ export default function AddTransactionScreen() {
             </View>
           )}
 
+          {type === 'expense' && (
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.text }]}>Bill / Receipt photo (optional)</Text>
+              <ImageUploader
+                currentImageUrl={imageUrl}
+                onImageUploaded={(url) => setImageUrl(url)}
+                onImageRemoved={() => setImageUrl(null)}
+                subfolder="expense_receipts"
+                placeholder="Upload bill / receipt photo"
+                compact={true}
+              />
+            </View>
+          )}
+
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Notes (optional)</Text>
             <TextInput
@@ -575,7 +643,7 @@ export default function AddTransactionScreen() {
               value={notes}
               onChangeText={setNotes}
               multiline
-              numberOfLines={4}
+              numberOfLines={2}
               textAlignVertical="top"
             />
           </View>
@@ -674,71 +742,77 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scrollContent: {
-    padding: 24,
-    paddingTop: VerandahLayout.screenPaddingTop,
+    padding: 16,
+    paddingTop: Platform.OS === 'web' ? 16 : VerandahLayout.screenPaddingTop,
   },
   header: {
-    marginBottom: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
     gap: 12,
   },
+  headerTextContainer: {
+    flex: 1,
+  },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: Verandah.cardMuted,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: -4,
   },
   title: {
-    ...VerandahType.display,
+    fontSize: 20,
+    fontWeight: '600',
     color: Verandah.textPrimary,
+    lineHeight: 24,
   },
   subtitle: {
-    fontSize: 15,
-    marginTop: 6,
-    lineHeight: 20,
+    fontSize: 13,
+    marginTop: 2,
+    lineHeight: 16,
   },
   form: {
-    padding: 24,
-    borderRadius: 24,
+    padding: 16,
+    borderRadius: 18,
     borderWidth: 1,
   },
   notice: {
     flexDirection: 'row',
-    gap: 10,
-    alignItems: 'flex-start',
+    gap: 8,
+    alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 24,
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 14,
   },
   noticeText: {
     flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 16,
   },
   inputGroup: {
-    marginBottom: 24,
+    marginBottom: 12,
   },
   label: {
     fontSize: 11,
-    fontWeight: '500',
-    letterSpacing: 1.5,
-    marginBottom: 10,
-    marginLeft: 4,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+    marginLeft: 2,
   },
   tabContainer: {
     flexDirection: 'row',
-    borderRadius: 16,
-    padding: 4,
-    marginBottom: 24,
+    borderRadius: 10,
+    padding: 3,
+    marginBottom: 10,
     borderWidth: 1,
   },
   tab: {
     flex: 1,
-    height: 48,
-    borderRadius: 12,
+    height: 36,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -749,54 +823,56 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.dangerSoft,
   },
   noticeIcon: {
-    fontSize: 18,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 16,
   },
   tabText: {
-    fontWeight: '500',
-    fontSize: 14,
+    fontWeight: '600',
+    fontSize: 13,
   },
   input: {
-    height: 56,
-    borderWidth: 1.5,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    fontSize: 18,
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 15,
     fontWeight: '500',
   },
   textArea: {
-    minHeight: 110,
-    borderWidth: 1.5,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    fontSize: 16,
+    minHeight: 56,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 8,
+    fontSize: 14,
   },
   memberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 12,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    marginBottom: 5,
   },
   memberInfo: {
     flex: 1,
   },
   memberName: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
   },
   memberMeta: {
-    marginTop: 4,
+    marginTop: 2,
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '400',
   },
   memberStatus: {
-    marginLeft: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    marginLeft: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: VerandahRadius.pill,
   },
   memberStatusPending: {
@@ -809,8 +885,8 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.accentSoft,
   },
   memberStatusText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -824,21 +900,21 @@ const styles = StyleSheet.create({
     color: Verandah.accent,
   },
   footer: {
-    padding: 24,
-    paddingBottom: 40,
+    padding: 12,
+    paddingBottom: 16,
     borderTopWidth: 1,
   },
   saveButton: {
-    height: 60,
-    borderRadius: 20,
+    height: 42,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 0,
   },
   saveButtonText: {
     color: Verandah.primaryFg,
-    fontSize: 17,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
   },
   backInactiveBtn: {
     marginTop: 14,
@@ -877,14 +953,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   deleteButton: {
-    height: 60,
-    borderRadius: 20,
+    height: 42,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
   },
   deleteButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
   },
 });

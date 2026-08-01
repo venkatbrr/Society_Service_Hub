@@ -29,16 +29,20 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
   });
 
   return (
-    <BaseCard padding={16} onPress={onPress}>
+    <BaseCard padding={12} onPress={onPress}>
       <View style={styles.header}>
         <View style={styles.titleArea}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Text style={styles.title} numberOfLines={1}>
               {fund.title}
             </Text>
-            {fund.is_closed && (
+            {fund.is_closed ? (
               <View style={{ backgroundColor: Verandah.cardMuted, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
                 <Text style={{ fontSize: 10, color: Verandah.textSecondary, fontWeight: 'bold', textTransform: 'uppercase' }}>Closed</Text>
+              </View>
+            ) : (
+              <View style={{ backgroundColor: Verandah.accentSoft, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ fontSize: 10, color: Verandah.accent, fontWeight: 'bold', textTransform: 'uppercase' }}>Active</Text>
               </View>
             )}
           </View>
@@ -80,45 +84,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: VerandahSpace.lg,
+    marginBottom: 8,
   },
   titleArea: {
     flex: 1,
-    marginRight: VerandahSpace.md,
+    marginRight: 8,
   },
   title: {
-    ...VerandahType.title,
+    fontSize: 16,
+    fontWeight: '600',
     color: Verandah.textPrimary,
   },
   date: {
-    ...VerandahType.caption,
+    fontSize: 11,
     color: Verandah.textTertiary,
-    marginTop: VerandahSpace.xs,
+    marginTop: 2,
   },
   rolePill: {
     borderRadius: VerandahRadius.pill,
-    paddingHorizontal: VerandahSpace.md,
-    paddingVertical: VerandahSpace.xs + 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     backgroundColor: Verandah.cardMuted,
   },
   roleText: {
-    ...VerandahType.micro,
+    fontSize: 11,
     fontWeight: '500',
     color: Verandah.textSecondary,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: VerandahSpace.lg,
-    marginBottom: VerandahSpace.lg,
+    gap: 12,
+    marginBottom: 8,
   },
   statItem: {
     flex: 1,
   },
   statLabel: {
-    ...VerandahType.sectionLabel,
     fontSize: 10,
+    fontWeight: '500',
     color: Verandah.textTertiary,
-    marginBottom: VerandahSpace.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
   },
   statDivider: {
     width: 0.5,
@@ -131,16 +138,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 0.5,
     borderTopColor: Verandah.border,
-    paddingTop: VerandahSpace.md,
+    paddingTop: 6,
   },
   footerText: {
-    ...VerandahType.caption,
+    fontSize: 12,
     fontWeight: '500',
     color: Verandah.textSecondary,
   },
   footerIcon: {
-    fontSize: 16,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 16,
     color: Verandah.textTertiary,
   },
 });

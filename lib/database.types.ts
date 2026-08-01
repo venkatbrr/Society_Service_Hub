@@ -508,6 +508,7 @@ export type Database = {
           description: string | null
           event_id: string
           id: string
+          image_url: string | null
           title: string | null
           type: string
         }
@@ -520,6 +521,7 @@ export type Database = {
           description?: string | null
           event_id: string
           id?: string
+          image_url?: string | null
           title?: string | null
           type: string
         }
@@ -532,6 +534,7 @@ export type Database = {
           description?: string | null
           event_id?: string
           id?: string
+          image_url?: string | null
           title?: string | null
           type?: string
         }

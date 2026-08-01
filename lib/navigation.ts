@@ -2,6 +2,27 @@ import { usePathname, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { BackHandler, Platform } from 'react-native';
 
+const HISTORY_STORAGE_KEY = 'ssh_mcn_navigation_stack';
+
+function getSessionStack(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = sessionStorage.getItem(HISTORY_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setSessionStack(stack: string[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(stack.slice(-20)));
+  } catch {
+    // Ignore storage quota
+  }
+}
+
 /**
  * Deterministic mapping of every sub-route to its immediate parent route.
  * This ensures that browser back buttons, hardware back buttons, and in-app
@@ -86,23 +107,55 @@ export function useSyncedBackNavigation() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // 1. Maintain in-memory and sessionStorage route stack
   useEffect(() => {
-    // A. Web Browser Back Button Sync
+    if (!pathname || Platform.OS !== 'web' || typeof window === 'undefined') return;
+
+    const currentFull = window.location.pathname + window.location.search;
+    const stack = getSessionStack();
+
+    // If returning to root MCN tab, reset stack
+    if (currentFull === '/network' || currentFull === '/(tabs)/network') {
+      setSessionStack(['/(tabs)/network']);
+    } else {
+      if (stack.length === 0 || stack[stack.length - 1] !== currentFull) {
+        stack.push(currentFull);
+        setSessionStack(stack);
+      }
+    }
+  }, [pathname]);
+
+  // 2. Handle Browser Back (popstate) and Android Back Button
+  useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       let isNavigating = false;
 
       const handlePopState = (e: PopStateEvent) => {
         if (isNavigating) return;
 
-        const currentWebPath = window.location.pathname;
+        const stack = getSessionStack();
+        const currentWebPath = window.location.pathname.split('?')[0].split('#')[0];
 
-        // If we are on an MCN sub-route, enforce immediate parent fallback
-        if (currentWebPath.startsWith('/network/') || currentWebPath === '/network') {
-          const expectedParent = getImmediateParentRoute(currentWebPath);
-          
-          // Perform controlled replace to the immediate parent
+        // Pop current top screen
+        const poppedRoute = stack.pop();
+        setSessionStack(stack);
+
+        const previousRouteInStack = stack[stack.length - 1];
+
+        // If popping from a sub-route (e.g. /network/drops/[id]) and browser popped to root MCN (/network)
+        if (
+          poppedRoute &&
+          poppedRoute.startsWith('/network/') &&
+          poppedRoute !== '/network' &&
+          (currentWebPath === '/network' || currentWebPath === '/' || currentWebPath.startsWith('/(tabs)'))
+        ) {
+          let target = previousRouteInStack;
+          if (!target || target === '/network' || target === '/(tabs)/network') {
+            target = getImmediateParentRoute(poppedRoute);
+          }
+
           isNavigating = true;
-          router.replace(expectedParent as any);
+          router.replace(target as any);
 
           setTimeout(() => {
             isNavigating = false;
@@ -116,15 +169,14 @@ export function useSyncedBackNavigation() {
       };
     }
 
-    // B. Native Mobile Android Back Button Sync
     if (Platform.OS === 'android') {
       const onBackPress = () => {
         if (pathname.startsWith('/network/') || pathname === '/network') {
           const parent = getImmediateParentRoute(pathname);
           router.replace(parent as any);
-          return true; // Handled
+          return true;
         }
-        return false; // Default behavior
+        return false;
       };
 
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);

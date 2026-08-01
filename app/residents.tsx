@@ -219,8 +219,8 @@ export default function ResidentsScreen() {
             );
           }}
           renderItem={({ item }) => (
-            <View style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 10 }]}>
-              <Avatar name={item.full_name || 'Resident'} size={36} />
+            <View style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 6 }]}>
+              <Avatar name={item.full_name || 'Resident'} size={32} />
               <View style={styles.rowCopy}>
                 <View style={styles.rowTop}>
                   {canViewPhone ? (
@@ -260,7 +260,7 @@ export default function ResidentsScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}> 
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
               {selectedResident?.full_name || 'Resident'}
             </Text>
             <Text style={[styles.modalMeta, { color: colors.textSecondary }]}>
@@ -311,26 +311,26 @@ const styles = StyleSheet.create({
   headerCopy: { flex: 1 },
   title: { fontSize: 24, fontWeight: '500', letterSpacing: -0.4 },
   subtitle: { fontSize: 13, marginTop: 2 },
-  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: VerandahRadius.lg, paddingHorizontal: 14, height: 48, marginBottom: 14 },
-  searchIcon: { fontSize: 16, lineHeight: 18 },
-  searchInput: { flex: 1, fontSize: 14 },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, height: 40, marginBottom: 10 },
+  searchIcon: { fontSize: 15, lineHeight: 16 },
+  searchInput: { flex: 1, fontSize: 13 },
   loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  listContent: { paddingBottom: 30, gap: 10 },
+  listContent: { paddingBottom: 24, gap: 6 },
   emptyContent: { flexGrow: 1, justifyContent: 'center' },
-  emptyText: { textAlign: 'center', fontSize: 14 },
-  blockTile: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderRadius: VerandahRadius.lg, borderWidth: 1, marginTop: 12, marginBottom: 8 },
-  blockTileTitle: { fontSize: 16, fontWeight: '600' },
-  blockTileRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  blockTileCount: { fontSize: 13 },
-  row: { borderWidth: 1, borderRadius: VerandahRadius.lg, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  emptyText: { textAlign: 'center', fontSize: 13 },
+  blockTile: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, marginTop: 8, marginBottom: 6 },
+  blockTileTitle: { fontSize: 15, fontWeight: '600' },
+  blockTileRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  blockTileCount: { fontSize: 12 },
+  row: { borderWidth: 1, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
   rowCopy: { flex: 1 },
-  rowTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontSize: 15, fontWeight: '500' },
-  meta: { fontSize: 13, marginTop: 4, lineHeight: 18 },
-  metaRow: { flexDirection: 'row', gap: 12, marginTop: 3 },
-  metaCompact: { fontSize: 12 },
-  leadBadge: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
-  leadBadgeText: { fontSize: 11, fontWeight: '500' },
+  rowTop: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  name: { fontSize: 14, fontWeight: '600' },
+  meta: { fontSize: 12, marginTop: 1, lineHeight: 16 },
+  metaRow: { flexDirection: 'row', gap: 10, marginTop: 2 },
+  metaCompact: { fontSize: 11 },
+  leadBadge: { borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2 },
+  leadBadgeText: { fontSize: 10, fontWeight: '500' },
   modalOverlay: { flex: 1, backgroundColor: Verandah.borderStrong, justifyContent: 'flex-end' },
   modalCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 8 },
   modalTitle: { fontSize: 18, fontWeight: '500' },

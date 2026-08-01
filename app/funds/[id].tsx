@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Switch,
@@ -55,6 +57,7 @@ export default function FundDetailScreen() {
   const [blockNames, setBlockNames] = useState<Map<string, string>>(new Map());
   const [searchTreasurer, setSearchTreasurer] = useState('');
   const [searchCollector, setSearchCollector] = useState('');
+  const [selectedExpense, setSelectedExpense] = useState<Tables<'event_transactions'> | null>(null);
   const { user, appRole } = useAuth();
   const router = useRouter();
   const colors = {
@@ -300,17 +303,24 @@ export default function FundDetailScreen() {
       }
     };
 
-    if (assignment.role === 'collector' && assignment.block_id) {
+    if (assignment.role === 'collector') {
       const assigneeName = profileNames.get(assignment.user_id) ?? 'Resident';
-      const blockName = blockNames.get(assignment.block_id) ?? 'this block';
-      Alert.alert(
-        'Remove block in-charge?',
-        `Remove ${assigneeName} as block in-charge for ${blockName}? Past contributions they recorded will remain in the ledger.`,
-        [
+      const blockName = assignment.block_id ? blockNames.get(assignment.block_id) ?? 'this block' : null;
+      const title = assignment.block_id ? 'Remove block in-charge?' : 'Remove collector?';
+      const message = assignment.block_id
+        ? `Remove ${assigneeName} as block in-charge for ${blockName}? Past contributions they recorded will remain in the ledger.`
+        : `Remove ${assigneeName} as collector? Past contributions they recorded will remain in the ledger.`;
+
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined' && window.confirm(`${title}\n${message}`)) {
+          removeNow();
+        }
+      } else {
+        Alert.alert(title, message, [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Remove', style: 'destructive', onPress: removeNow },
-        ]
-      );
+        ]);
+      }
       return;
     }
 
@@ -321,14 +331,17 @@ export default function FundDetailScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={[styles.header, { backgroundColor: colors.background }]}>
-          <View style={styles.headerTop}>
+          <View style={styles.headerRow}>
             <HeaderBackButton onPress={() => router.back()} color={Verandah.primary} style={styles.iconButton} />
-            <Text style={styles.headerLabel}>Fund Transparency</Text>
-            <View style={{ width: 40 }} />
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.fundTitle}>{fund.title}</Text>
+              <Text style={styles.headerLabel}>Fund Transparency</Text>
+            </View>
           </View>
 
-          <Text style={styles.fundTitle}>{fund.title}</Text>
-          <Text style={styles.fundDesc}>{fund.description || 'Transparent community fund tracking for every resident.'}</Text>
+          {fund.description ? (
+            <Text style={styles.fundDesc}>{fund.description}</Text>
+          ) : null}
 
           {(appRole === 'president' || appRole === 'vice_president') && (
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface2, padding: 12, borderRadius: 12, marginBottom: 12 }}>
@@ -690,44 +703,37 @@ export default function FundDetailScreen() {
             <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>{expenseTransactions.length} entries</Text>
           </View>
           {expenseTransactions.map((transaction) => {
-            const RowContent = (
-              <>
+            const receiptUrl = ((transaction as any).image_url || null) || (() => {
+              const match = (transaction.description || '').match(/\[Receipt:\s*(https?:\/\/[^\]]+)\]/i) || (transaction.description || '').match(/(https:\/\/res\.cloudinary\.com\/[^\s]+)/i);
+              return match ? match[1] : null;
+            })();
+            const cleanDescription = (transaction.description || '').replace(/\[Receipt:\s*https?:\/\/[^\]]+\]/gi, '').trim();
+
+            return (
+              <TouchableOpacity
+                key={transaction.id}
+                style={styles.transactionRow}
+                onPress={() => setSelectedExpense(transaction)}
+                activeOpacity={0.75}
+              >
                 <View style={[styles.avatar, { backgroundColor: Verandah.dangerSoft }]}>
                   <Text style={styles.statusEmoji}>{APP_EMOJIS.expense}</Text>
                 </View>
                 <View style={styles.transMain}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={[styles.transName, { color: colors.text }]}>{transaction.title || 'Expense'}</Text>
-                    {permissions.canAddExpense && (
-                      <Ionicons name="pencil" size={13} color={colors.textMuted} />
-                    )}
+                    {receiptUrl ? (
+                      <Ionicons name="document-attach-outline" size={14} color={Verandah.primary} />
+                    ) : null}
                   </View>
                   <Text style={[styles.transDate, { color: colors.textMuted }]}>
-                    {transaction.description?.trim()
-                      ? `${transaction.description.trim()} - ${new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}`
+                    {cleanDescription
+                      ? `${cleanDescription} • ${new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}`
                       : new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}
                   </Text>
                 </View>
-                <Rupees amount={Number(transaction.amount)} size="sm" />
-              </>
-            );
-
-            if (permissions.canAddExpense) {
-              return (
-                <TouchableOpacity
-                  key={transaction.id}
-                  style={styles.transactionRow}
-                  onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=expense&transaction_id=${transaction.id}`)}
-                >
-                  {RowContent}
-                </TouchableOpacity>
-              );
-            }
-
-            return (
-              <View key={transaction.id} style={styles.transactionRow}>
-                {RowContent}
-              </View>
+                <Rupees amount={Number(transaction.amount)} size="sm" tone="out" />
+              </TouchableOpacity>
             );
           })}
           {expenseTransactions.length === 0 ? <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No expenses logged yet.</Text> : null}
@@ -780,6 +786,93 @@ export default function FundDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal visible={!!selectedExpense} transparent animationType="slide" onRequestClose={() => setSelectedExpense(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: colors.background, padding: 20 }]}>
+            {selectedExpense && (() => {
+              const receiptUrl = ((selectedExpense as any).image_url || null) || (() => {
+                const match = (selectedExpense.description || '').match(/\[Receipt:\s*(https?:\/\/[^\]]+)\]/i) || (selectedExpense.description || '').match(/(https:\/\/res\.cloudinary\.com\/[^\s]+)/i);
+                return match ? match[1] : null;
+              })();
+              const cleanDescription = (selectedExpense.description || '').replace(/\[Receipt:\s*https?:\/\/[^\]]+\]/gi, '').trim();
+
+              return (
+                <>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                    <Text style={[styles.modalTitle, { color: colors.text, fontSize: 18 }]}>Expense Details</Text>
+                    <TouchableOpacity onPress={() => setSelectedExpense(null)} style={{ padding: 4 }}>
+                      <Ionicons name="close" size={22} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={{ backgroundColor: Verandah.card, padding: 14, borderRadius: 14, marginBottom: 14, borderWidth: 1, borderColor: colors.border }}>
+                    <Text style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Expense Name</Text>
+                    <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text, marginBottom: 12 }}>{selectedExpense.title || 'Expense'}</Text>
+                    
+                    <Text style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Amount Spent</Text>
+                    <Rupees amount={Number(selectedExpense.amount)} size="md" tone="out" />
+                    
+                    <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 10 }}>
+                      Logged on {new Date(selectedExpense.created_at ?? Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </Text>
+
+                    {cleanDescription ? (
+                      <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 0.5, borderTopColor: colors.border }}>
+                        <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 2 }}>Notes</Text>
+                        <Text style={{ fontSize: 14, color: colors.text }}>{cleanDescription}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+
+                  {receiptUrl ? (
+                    <View style={{ marginBottom: 14 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 6 }}>Bill / Receipt Photo</Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                            window.open(receiptUrl, '_blank');
+                          }
+                        }}
+                        activeOpacity={0.9}
+                      >
+                        <Image
+                          source={{ uri: receiptUrl }}
+                          style={{ width: '100%', height: 180, borderRadius: 12, backgroundColor: colors.surface2 }}
+                          contentFit="contain"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  ) : null}
+
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                    <TouchableOpacity
+                      style={[styles.roleAction, { backgroundColor: colors.surface2, flex: 1, height: 42, borderRadius: 12, marginLeft: 0 }]}
+                      onPress={() => setSelectedExpense(null)}
+                    >
+                      <Text style={[styles.roleActionText, { color: colors.text }]}>Close</Text>
+                    </TouchableOpacity>
+
+                    {permissions.canAddExpense ? (
+                      <TouchableOpacity
+                        style={[styles.roleAction, { backgroundColor: Verandah.accent, flex: 1, height: 42, borderRadius: 12, marginLeft: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}
+                        onPress={() => {
+                          const expId = selectedExpense.id;
+                          setSelectedExpense(null);
+                          router.push(`/funds/add-transaction?event_id=${fund.id}&type=expense&transaction_id=${expId}`);
+                        }}
+                      >
+                        <Ionicons name="pencil" size={15} color="#FFF" style={{ marginRight: 6 }} />
+                        <Text style={[styles.roleActionText, { color: '#FFF', fontWeight: '600' }]}>Edit Expense</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                </>
+              );
+            })()}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -794,22 +887,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 24,
-    paddingHorizontal: 24,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingTop: Platform.OS === 'web' ? 16 : VerandahLayout.screenPaddingTop,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  headerTop: {
+  headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 8,
+    gap: 10,
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: Verandah.cardMuted,
     justifyContent: 'center',
     alignItems: 'center',
@@ -817,48 +913,50 @@ const styles = StyleSheet.create({
   headerIcon: {
     color: Verandah.primaryFg,
   },
+  fundTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: Verandah.textPrimary,
+    lineHeight: 24,
+  },
   headerLabel: {
     color: Verandah.textSecondary,
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '500',
     textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  fundTitle: {
-    ...VerandahType.display,
-    color: Verandah.textPrimary,
-    marginBottom: 8,
+    letterSpacing: 0.6,
+    marginTop: 1,
   },
   fundDesc: {
-    fontSize: 15,
+    fontSize: 12,
     color: Verandah.textSecondary,
-    marginBottom: 12,
-    lineHeight: 22,
+    marginBottom: 8,
+    lineHeight: 16,
   },
   roleSummaryCard: {
     backgroundColor: Verandah.card,
-    borderRadius: 20,
-    padding: 14,
-    marginBottom: 12,
-    gap: 4,
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 8,
+    gap: 2,
     borderWidth: 0.5,
     borderColor: Verandah.border,
   },
   roleSummaryTitle: {
     color: Verandah.textPrimary,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
   },
   roleSummaryText: {
     color: Verandah.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 16,
   },
   summaryGrid: {
     flexDirection: 'row',
     backgroundColor: Verandah.card,
-    borderRadius: 20,
-    padding: 14,
+    borderRadius: 14,
+    padding: 10,
     borderWidth: 0.5,
     borderColor: Verandah.border,
   },
@@ -868,16 +966,16 @@ const styles = StyleSheet.create({
   },
   sumLabel: {
     color: Verandah.textSecondary,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   sumValue: {
     color: Verandah.textPrimary,
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '600',
   },
   sumDivider: {
     width: 1,
@@ -886,10 +984,10 @@ const styles = StyleSheet.create({
   },
   accessCard: {
     backgroundColor: Verandah.card,
-    marginHorizontal: 24,
-    marginTop: -12,
-    padding: 16,
-    borderRadius: 20,
+    marginHorizontal: 16,
+    marginTop: -4,
+    padding: 10,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: Verandah.border,
   },
@@ -897,101 +995,103 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
-  },
-  accessIcon: {
-    fontSize: 18,
-    lineHeight: 20,
-  },
-  accessTitle: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  accessText: {
-    fontSize: 13,
-    lineHeight: 19,
     marginBottom: 4,
   },
+  accessIcon: {
+    fontSize: 16,
+    lineHeight: 18,
+  },
+  accessTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  accessText: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 2,
+  },
   actionsCard: {
-    marginHorizontal: 24,
+    marginHorizontal: 16,
     marginTop: 8,
   },
   actionsRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
   actionButton: {
     flex: 1,
-    minHeight: 52,
-    borderRadius: 18,
+    minHeight: 40,
+    height: 40,
+    borderRadius: 12,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
+    gap: 6,
+    paddingHorizontal: 10,
   },
   actionIcon: {
-    fontSize: 18,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 18,
   },
   actionButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
   },
   section: {
-    paddingHorizontal: 24,
-    marginTop: 16,
+    paddingHorizontal: 16,
+    marginTop: 12,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
     letterSpacing: -0.3,
   },
   sectionBadge: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   helperText: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginBottom: 12,
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 8,
   },
   transactionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 5,
     backgroundColor: Verandah.card,
-    padding: 8,
-    borderRadius: 16,
+    padding: 6,
+    paddingHorizontal: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: Verandah.border,
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   statusEmoji: {
-    fontSize: 15,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 16,
   },
   transMain: {
     flex: 1,
   },
   transName: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
   },
   transDate: {
     fontSize: 11,
@@ -1002,18 +1102,18 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   statusLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    marginBottom: 4,
+    marginBottom: 2,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   transAmount: {
     fontSize: 14,
     fontWeight: '500',
   },
   emptyNote: {
-    fontSize: 14,
+    fontSize: 13,
     fontStyle: 'italic',
   },
   roleRow: {
@@ -1021,9 +1121,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Verandah.card,
-    padding: 12,
-    borderRadius: 16,
-    marginBottom: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 12,
+    marginBottom: 5,
     borderWidth: 1,
     borderColor: Verandah.border,
   },
@@ -1031,34 +1132,35 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   roleName: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
   },
   roleMeta: {
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 2,
   },
   roleMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 2,
   },
   searchInput: {
-    height: 44,
+    height: 40,
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-    fontSize: 14,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginBottom: 8,
+    fontSize: 13,
   },
   roleAction: {
-    minWidth: 84,
-    minHeight: 38,
+    minWidth: 72,
+    minHeight: 32,
+    height: 32,
     borderRadius: 999,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    marginLeft: 12,
+    paddingHorizontal: 12,
+    marginLeft: 8,
   },
   roleActionText: {
     fontSize: 13,

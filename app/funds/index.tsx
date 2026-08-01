@@ -77,7 +77,7 @@ export default function FundsHomeScreen() {
         </View>
 
         {overview ? (
-          <BaseCard padding={16} style={styles.summaryCard}>
+          <BaseCard padding={12} style={styles.summaryCard}>
             <Text style={styles.sectionTitle}>Fund health</Text>
             <View style={styles.moneyRow}>
               <Text style={styles.summaryLine}>Collected</Text>
@@ -91,11 +91,11 @@ export default function FundsHomeScreen() {
               <Text style={styles.summaryLine}>Available</Text>
               <Rupees amount={overview.total_available ?? 0} size="sm" />
             </View>
-            <Text style={styles.summaryStatus}>
-              {overview.funds_contributed_to > 0
-                ? `You have contributed to ${overview.funds_contributed_to} of ${overview.active_funds_count} active funds.`
-                : 'You have not contributed to any active fund yet.'}
-            </Text>
+            {overview.funds_contributed_to > 0 ? (
+              <Text style={styles.summaryStatus}>
+                You have contributed to {overview.funds_contributed_to} of {overview.active_funds_count} active funds.
+              </Text>
+            ) : null}
           </BaseCard>
         ) : null}
 
