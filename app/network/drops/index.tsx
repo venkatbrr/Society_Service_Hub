@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -225,7 +226,7 @@ export default function FoodDropsCatalogScreen() {
   const webPullProps = useWebPullToRefresh(() => fetchDrops(true));
 
   const handleBack = () => {
-    router.replace('/(tabs)/network' as any);
+    goBackSmart(router, '/network/drops');
   };
 
   const requireLoginForAction = () => {

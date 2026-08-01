@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -241,11 +242,7 @@ export default function ManagePreorderDropScreen() {
   const isOpen = drop.status === 'open' && !isCutoffPassed;
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace(`/network/drops/${dropId}` as any);
-    }
+    goBackSmart(router, '/network/drops/manage/' + String(dropId || ''));
   };
 
   return (

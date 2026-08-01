@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -422,11 +423,7 @@ export default function CreateOrEditFoodDropScreen() {
   }
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/network/drops' as any);
-    }
+    goBackSmart(router, '/network/drops/add');
   };
 
   return (

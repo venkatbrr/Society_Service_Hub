@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -457,11 +458,7 @@ export default function PreorderDropDetailScreen() {
       setSelectedImageUrl(null);
       return;
     }
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/network/drops' as any);
-    }
+    goBackSmart(router, '/network/drops/' + String(dropId || ''));
   };
 
   return (

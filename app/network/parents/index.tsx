@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { Stack, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -79,7 +80,7 @@ export default function ParentCornerScreen() {
   const webPullProps = useWebPullToRefresh(() => fetchEntries(true));
 
   const handleBack = () => {
-    router.replace('/(tabs)/network' as any);
+    goBackSmart(router, '/network/parents');
   };
 
   useEffect(() => {

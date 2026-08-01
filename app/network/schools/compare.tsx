@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -106,13 +107,7 @@ export default function CompareSchoolsScreen() {
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: 'Compare schools',
-          onBack: () => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace('/network/schools' as any);
-            }
-          },
+          onBack: () => goBackSmart(router, '/network/schools/compare'),
         })}
       />
 

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useCallback, useState } from 'react';
 import {
     ActivityIndicator,
@@ -239,11 +240,7 @@ export default function CarpoolDetailScreen() {
   };
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/network/carpools' as any);
-    }
+    goBackSmart(router, '/network/carpools/' + String(id || ''));
   };
 
   if (loading || !carpool) {

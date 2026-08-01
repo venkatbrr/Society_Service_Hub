@@ -21,6 +21,8 @@ LogBox.ignoreLogs([
   'AuthApiError',
 ]);
 
+import { useSyncedBackNavigation } from '../lib/navigation';
+
 function RootLayoutNav() {
   const { session, communityId, activeCommunityRequest, isPlatformAdmin, isLoading } = useAuth();
   const segments = useSegments();
@@ -28,6 +30,9 @@ function RootLayoutNav() {
   const router = useRouter();
   const lastRedirectRef = useRef<string | null>(null);
   const savedTargetRouteRef = useRef<string | null>(null);
+
+  // Synchronize browser back button and mobile back button to immediate parent routes
+  useSyncedBackNavigation();
 
   // Initialize Google Sign In when the layout mounts
   useEffect(() => {

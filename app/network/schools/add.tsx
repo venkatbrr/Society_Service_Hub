@@ -1,4 +1,5 @@
 import { Stack, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -113,11 +114,7 @@ export default function AddSchoolScreen() {
   };
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/network/schools' as any);
-    }
+    goBackSmart(router, '/network/schools/add');
   };
 
   return (

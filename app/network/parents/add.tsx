@@ -1,4 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -56,11 +57,7 @@ export default function AddParentCornerScreen() {
   const [initialLoading, setInitialLoading] = useState(!!editId);
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/network/parents' as any);
-    }
+    goBackSmart(router, '/network/parents/add');
   };
 
   // Auto-fill user profile info if creating new entry

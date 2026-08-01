@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { Stack, useRouter } from 'expo-router';
+import { goBackSmart } from '../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -231,7 +232,7 @@ export default function MyOrdersScreen() {
   };
 
   const handleBack = () => {
-    router.replace('/(tabs)/network' as any);
+    goBackSmart(router, '/network/my-orders');
   };
 
   // Render Pre-Order Card

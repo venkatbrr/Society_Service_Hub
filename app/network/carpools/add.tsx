@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
@@ -144,11 +145,7 @@ export default function AddCarpoolScreen() {
   };
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/network/carpools' as any);
-    }
+    goBackSmart(router, '/network/carpools/add');
   };
 
   return (

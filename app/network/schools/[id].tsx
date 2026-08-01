@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -54,11 +55,7 @@ export default function SchoolDetailScreen() {
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   const handleGoBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace('/network/schools' as any);
+    goBackSmart(router, '/network/schools/' + String(schoolId || ''));
   };
 
   const fetchSchoolDetails = useCallback(async () => {

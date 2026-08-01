@@ -1,6 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { Stack, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -63,7 +64,7 @@ export default function SchoolsCatalogScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const handleBack = () => {
-    router.replace('/(tabs)/network' as any);
+    goBackSmart(router, '/network/schools');
   };
 
   const webPullProps = useWebPullToRefresh(() => fetchCustomSchools(true));

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { goBackSmart } from '../../lib/navigation';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -233,15 +234,7 @@ export default function MyPostsScreen() {
   }
 
   const handleBack = () => {
-    if (borrowOnlyView) {
-      router.replace('/(tabs)/network' as any);
-      return;
-    }
-    if (source === 'community') {
-      router.replace('/(tabs)/community' as any);
-      return;
-    }
-    router.replace('/(tabs)/network' as any);
+    goBackSmart(router, '/network/my-posts');
   };
 
   return (

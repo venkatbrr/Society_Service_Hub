@@ -1,4 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { goBackSmart } from '../../../lib/navigation';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -58,11 +59,7 @@ export default function SubmitSchoolReviewScreen() {
   const [overallComment, setOverallComment] = useState<string>('');
 
   const handleGoBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/network/schools' as any);
-    }
+    goBackSmart(router, '/network/schools/review');
   };
 
   useEffect(() => {
