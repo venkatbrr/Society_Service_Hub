@@ -1,18 +1,19 @@
 {
-  "cleanUrls": true,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/",
       "destination": "/landing.html"
     },
     {
+      "source": "/admin",
+      "destination": "/admin/index.html"
+    },
+    {
       "source": "/admin/:path*",
       "destination": "/admin/:path*"
     },
     {
-      "source": "/((?!images|assets|favicon.ico|_expo|admin).*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ]
