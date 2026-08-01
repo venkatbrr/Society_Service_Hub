@@ -1,8 +1,6 @@
 import { Building05 } from '@untitledui/icons/Building05';
-import { Car01 } from '@untitledui/icons/Car01';
 import { Coins01 } from '@untitledui/icons/Coins01';
 import { ShoppingBag03 } from '@untitledui/icons/ShoppingBag03';
-import { Star01 } from '@untitledui/icons/Star01';
 import { Tool02 } from '@untitledui/icons/Tool02';
 import { ScrollViewStyleReset } from 'expo-router/html';
 
@@ -17,7 +15,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
 
         {/* SEO Optimization */}
-        <title>Society Service Hub — Silicon Valley Resident Portal</title>
+        <title>Society Service Hub — Resident Portal</title>
         <meta name="description" content="Your premium community marketplace — find trusted service providers rated by neighbors, coordinate visits, manage cultural funds, and connect with residents." />
 
         {/* PWA manifest & theme */}
@@ -40,83 +38,73 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
         <ScrollViewStyleReset />
 
-        {/* Custom CSS overrides for Motion Desktop Shell & Mobile Compatibility */}
+        {/* Custom CSS overrides for Desktop Shell & Mobile Compatibility */}
         <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
       </head>
       <body>
-        {/* Background Ambient Glowing Orbs for Desktop */}
+        {/* Background Ambient Orbs for Desktop */}
         <div className="desktop-orb desktop-orb-1"></div>
         <div className="desktop-orb desktop-orb-2"></div>
 
-        {/* Left Side Motion Aesthetic Floating Cards */}
-        <div className="desktop-side-panel panel-left">
-          <div className="side-card float-anim-1">
-            <div className="side-card-badge">
+        {/* Desktop Wrapper Layout */}
+        <div className="desktop-layout-container">
+          {/* Left Brand Panel for Wide Desktop Viewports */}
+          <div className="desktop-brand-panel">
+            <div className="brand-badge">
               <span className="pulse-dot"></span>
-              <span>LIVE GRID</span>
+              <span>RESIDENT PORTAL</span>
             </div>
-            <div className="side-card-title">
-              <Building05 size={20} color="currentColor" aria-hidden="true" style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />
-              Society Hub
+            
+            <div className="brand-header">
+              <div className="brand-logo-icon">
+                <Building05 size={24} color="#10B981" aria-hidden="true" />
+              </div>
+              <h1 className="brand-title">Society Hub</h1>
             </div>
-            <p className="side-card-desc">Premium gated community ecosystem for modern housing societies.</p>
+
+            <p className="brand-tagline">
+              The modern residential operating system for gated communities.
+            </p>
+
+            <div className="brand-features-list">
+              <div className="brand-feature-item">
+                <div className="feature-item-icon">
+                  <Tool02 size={18} color="#10B981" aria-hidden="true" />
+                </div>
+                <div>
+                  <div className="feature-item-title">Verified Services</div>
+                  <div className="feature-item-desc">Neighbor-rated plumbers, electricians & maids</div>
+                </div>
+              </div>
+
+              <div className="brand-feature-item">
+                <div className="feature-item-icon">
+                  <ShoppingBag03 size={18} color="#10B981" aria-hidden="true" />
+                </div>
+                <div>
+                  <div className="feature-item-title">Food Drops</div>
+                  <div className="feature-item-desc">Pre-order home meals from resident hosts</div>
+                </div>
+              </div>
+
+              <div className="brand-feature-item">
+                <div className="feature-item-icon">
+                  <Coins01 size={18} color="#10B981" aria-hidden="true" />
+                </div>
+                <div>
+                  <div className="feature-item-title">Cultural Funds</div>
+                  <div className="feature-item-desc">Transparent festival collection tracking</div>
+                </div>
+              </div>
+            </div>
+
+            <a href="/" className="landing-back-link">
+              ← Back to Main Website
+            </a>
           </div>
 
-          <div className="side-card float-anim-2">
-            <div className="side-card-icon">
-              <ShoppingBag03 size={20} color="currentColor" aria-hidden="true" />
-            </div>
-            <div>
-              <div className="side-card-title">Food Drops</div>
-              <p className="side-card-desc">Pre-order home-style meals & bakery items from verified resident hosts.</p>
-            </div>
-          </div>
-
-          <div className="side-card float-anim-3">
-            <div className="side-card-icon">
-              <Tool02 size={20} color="currentColor" aria-hidden="true" />
-            </div>
-            <div>
-              <div className="side-card-title">Verified Hiring</div>
-              <p className="side-card-desc">Hire electricians, plumbers & maids rated by your same neighbors.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* The Central Mobile-View App Container */}
-        {children}
-
-        {/* Right Side Motion Aesthetic Floating Cards */}
-        <div className="desktop-side-panel panel-right">
-          <div className="side-card float-anim-2">
-            <div className="side-card-icon">
-              <Star01 size={20} color="currentColor" aria-hidden="true" />
-            </div>
-            <div>
-              <div className="side-card-title">4.9 Ratings</div>
-              <p className="side-card-desc">100% verified neighbor reviews and trust metrics.</p>
-            </div>
-          </div>
-
-          <div className="side-card float-anim-1">
-            <div className="side-card-icon">
-              <Car01 size={20} color="currentColor" aria-hidden="true" />
-            </div>
-            <div>
-              <div className="side-card-title">Co-Planned Visits</div>
-              <p className="side-card-desc">Share maintenance visits with neighbors & split travel fees.</p>
-            </div>
-          </div>
-
-          <div className="side-card float-anim-3">
-            <div className="side-card-icon">
-              <Coins01 size={20} color="currentColor" aria-hidden="true" />
-            </div>
-            <div>
-              <div className="side-card-title">Cultural Funds</div>
-              <p className="side-card-desc">Transparent festival collection tracking & financial reporting.</p>
-            </div>
-          </div>
+          {/* Central Mobile View App Container */}
+          {children}
         </div>
 
         {/* Register PWA service worker */}
@@ -153,8 +141,15 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* Hide desktop elements on mobile viewports */
-.desktop-orb, .desktop-side-panel {
+.desktop-orb, .desktop-brand-panel {
   display: none !important;
+}
+
+.desktop-layout-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Mobile Viewports (< 768px): Full-Screen Native App Feel */
@@ -171,36 +166,45 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
-/* Desktop Viewports (>= 768px): Centered Mobile View Container with Motion Side Animations */
+/* Desktop Viewports (>= 768px): Centered Portal Shell */
 @media (min-width: 768px) {
   body {
     background-color: #0A1D1A;
     background-image: 
-      radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.15) 0%, transparent 45%),
-      radial-gradient(circle at 85% 85%, rgba(15, 55, 50, 0.4) 0%, transparent 55%),
+      radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(15, 55, 50, 0.3) 0%, transparent 55%),
       radial-gradient(circle at 50% 50%, #0A1D1A 0%, #040E0C 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  .desktop-layout-container {
     display: flex;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    padding: 24px;
+    padding: 32px 24px;
     box-sizing: border-box;
-    overflow: hidden;
+    gap: 48px;
     position: relative;
+    z-index: 10;
   }
 
   /* Central Mobile View Container */
   #root {
-    max-width: 460px;
+    max-width: 440px;
     width: 100%;
-    height: 90vh !important;
-    max-height: 880px;
+    height: 88vh !important;
+    max-height: 860px;
     border-radius: 28px;
     background-color: #FAF8F4;
     box-shadow: 0 35px 90px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.12);
     overflow: hidden;
     position: relative;
     z-index: 10;
+    flex-shrink: 0;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -215,8 +219,8 @@ input:focus, textarea:focus, select:focus {
     display: block !important;
     position: absolute;
     border-radius: 50%;
-    filter: blur(90px);
-    opacity: 0.35;
+    filter: blur(100px);
+    opacity: 0.25;
     pointer-events: none;
     z-index: 1;
   }
@@ -226,7 +230,6 @@ input:focus, textarea:focus, select:focus {
     background: radial-gradient(circle, #10B981 0%, transparent 70%);
     top: -150px;
     left: -100px;
-    animation: orbDrift1 22s infinite alternate ease-in-out;
   }
   .desktop-orb-2 {
     width: 600px;
@@ -234,16 +237,6 @@ input:focus, textarea:focus, select:focus {
     background: radial-gradient(circle, #0F3732 0%, transparent 70%);
     bottom: -200px;
     right: -100px;
-    animation: orbDrift2 28s infinite alternate ease-in-out;
-  }
-
-  @keyframes orbDrift1 {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(100px, 80px) scale(1.15); }
-  }
-  @keyframes orbDrift2 {
-    0% { transform: translate(0, 0) scale(1.1); }
-    100% { transform: translate(-80px, -60px) scale(0.95); }
   }
 
   /* Custom Scrollbar for central container */
@@ -263,66 +256,37 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
-/* Wide Screen Side Panels (>= 1100px) */
-@media (min-width: 1100px) {
-  .desktop-side-panel {
+/* Wide Screen Desktop Branding Panel (>= 960px) */
+@media (min-width: 960px) {
+  .desktop-brand-panel {
     display: flex !important;
     flex-direction: column;
-    gap: 20px;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 290px;
-    z-index: 5;
-    pointer-events: none;
-  }
-
-  .panel-left {
-    left: max(32px, calc(50% - 590px));
-  }
-
-  .panel-right {
-    right: max(32px, calc(50% - 590px));
-  }
-
-  /* Motion Floating Side Cards */
-  .side-card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 20px;
-    padding: 20px 22px;
+    width: 340px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 36px 30px;
     color: #FAF8F4;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-  }
-
-  .side-card-icon {
-    font-size: 26px;
-    padding: 8px;
-    background: rgba(16, 185, 129, 0.12);
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
     flex-shrink: 0;
   }
 
-  .side-card-badge {
+  .brand-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     background: rgba(16, 185, 129, 0.15);
     border: 1px solid rgba(16, 185, 129, 0.3);
-    padding: 4px 10px;
+    padding: 4px 12px;
     border-radius: 20px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
     color: #6EE7B7;
-    margin-bottom: 8px;
+    margin-bottom: 24px;
+    align-self: flex-start;
   }
 
   .pulse-dot {
@@ -331,54 +295,92 @@ input:focus, textarea:focus, select:focus {
     background: #10B981;
     border-radius: 50%;
     box-shadow: 0 0 8px #10B981;
-    animation: pulseDot 2s infinite;
   }
 
-  @keyframes pulseDot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.4); }
+  .brand-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
   }
 
-  .side-card-title {
-    font-size: 16px;
-    font-weight: 700;
+  .brand-logo-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .brand-title {
+    font-size: 22px;
+    font-weight: 800;
     color: #ffffff;
-    margin-bottom: 4px;
-  }
-
-  .side-card-desc {
-    font-size: 12px;
-    color: rgba(250, 248, 244, 0.65);
-    line-height: 1.45;
+    letter-spacing: -0.5px;
     margin: 0;
   }
 
-  /* Motion Floating Animation Classes */
-  .float-anim-1 {
-    animation: motionFloat1 6s infinite ease-in-out;
+  .brand-tagline {
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(250, 248, 244, 0.7);
+    margin: 0 0 28px 0;
   }
 
-  .float-anim-2 {
-    animation: motionFloat2 7s infinite ease-in-out;
+  .brand-features-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-bottom: 32px;
   }
 
-  .float-anim-3 {
-    animation: motionFloat3 8s infinite ease-in-out;
+  .brand-feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
   }
 
-  @keyframes motionFloat1 {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+  .feature-item-icon {
+    width: 32px;
+    height: 32px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
   }
 
-  @keyframes motionFloat2 {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-14px); }
+  .feature-item-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
   }
 
-  @keyframes motionFloat3 {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
+  .feature-item-desc {
+    font-size: 12px;
+    color: rgba(250, 248, 244, 0.55);
+    line-height: 1.4;
+  }
+
+  .landing-back-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6EE7B7;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .landing-back-link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
   }
 }
 `;
