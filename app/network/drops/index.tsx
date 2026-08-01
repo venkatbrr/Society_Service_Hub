@@ -12,13 +12,15 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { AppIcon } from '../../../components/AppIcon';
 import { EmptyState } from '../../../components/EmptyState';
 import { PreorderDropCard, PreorderDropItem } from '../../../components/PreorderDropCard';
 import { Rupees } from '../../../components/Rupees';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 export default function FoodDropsCatalogScreen() {
@@ -244,14 +246,9 @@ export default function FoodDropsCatalogScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
-        options={{
-          headerTitle: 'Pre-Order Food',
-          headerTitleStyle: { fontWeight: '500', fontSize: 16, color: colors.textPrimary },
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
+        options={buildMcnHeaderOptions({
+          title: 'Pre-Order Food',
+          onBack: handleBack,
           headerRight: () => (
             user?.id ? (
               <TouchableOpacity
@@ -262,7 +259,7 @@ export default function FoodDropsCatalogScreen() {
               </TouchableOpacity>
             ) : null
           ),
-        }}
+        })}
       />
 
       {/* Top Section Switcher Toggle */}
@@ -271,7 +268,10 @@ export default function FoodDropsCatalogScreen() {
           style={[styles.masterToggleBtn, styles.masterToggleBtnActive]}
           activeOpacity={0.9}
         >
-          <Text style={styles.masterToggleTextActive}>🍲 Pre-order Food</Text>
+          <View style={styles.iconLabelRow}>
+            <Ionicons name="restaurant-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.masterToggleTextActive}>Pre-order Food</Text>
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -279,7 +279,10 @@ export default function FoodDropsCatalogScreen() {
           onPress={() => router.push('/network/business' as any)}
           activeOpacity={0.8}
         >
-          <Text style={styles.masterToggleText}>🏪 Community Businesses</Text>
+          <View style={styles.iconLabelRow}>
+            <AppIcon name="store" size={16} color={colors.textSecondary} />
+            <Text style={styles.masterToggleText}>Community Businesses</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -296,18 +299,20 @@ export default function FoodDropsCatalogScreen() {
           style={[styles.tabBtn, activeTab === 'active' && styles.tabBtnActive]}
           onPress={() => setActiveTab('active')}
         >
-          <Text style={[styles.tabText, activeTab === 'active' && styles.tabTextActive]}>
-            🔥 Open Drops
-          </Text>
+          <View style={styles.iconLabelRow}>
+            <Ionicons name="restaurant-outline" size={14} color={activeTab === 'active' ? '#FFFFFF' : Verandah.textSecondary} />
+            <Text style={[styles.tabText, activeTab === 'active' && styles.tabTextActive]}>Open Pre-orders</Text>
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'closed' && styles.tabBtnActive]}
           onPress={() => setActiveTab('closed')}
         >
-          <Text style={[styles.tabText, activeTab === 'closed' && styles.tabTextActive]}>
-            🔒 Past / Preparing
-          </Text>
+          <View style={styles.iconLabelRow}>
+            <AppIcon name="lock" size={14} color={activeTab === 'closed' ? '#FFFFFF' : Verandah.textSecondary} />
+            <Text style={[styles.tabText, activeTab === 'closed' && styles.tabTextActive]}>Past / Preparing</Text>
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -320,16 +325,20 @@ export default function FoodDropsCatalogScreen() {
             setActiveTab('my_drops');
           }}
         >
-          <Text style={[styles.tabText, activeTab === 'my_drops' && styles.tabTextActive]}>
-            👩‍🍳 My Pre-order Food
-          </Text>
+          <View style={styles.iconLabelRow}>
+            <AppIcon name="chef" size={14} color={activeTab === 'my_drops' ? '#FFFFFF' : Verandah.textSecondary} />
+            <Text style={[styles.tabText, activeTab === 'my_drops' && styles.tabTextActive]}>My Pre-order Food</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
       {/* My Food Drops Revenue & Earnings Card */}
       {activeTab === 'my_drops' && !loading ? (
         <View style={styles.revenueCard}>
-          <Text style={styles.revenueCardTitle}>💰 My Pre-order Food Performance & Revenue</Text>
+          <View style={styles.iconLabelRow}>
+            <AppIcon name="money" size={16} />
+            <Text style={styles.revenueCardTitle}>My Pre-order Food Performance & Revenue</Text>
+          </View>
           <View style={styles.revenueRow}>
             <View style={styles.revenueCol}>
               <Text style={styles.revenueSub}>Drops Hosted</Text>
@@ -408,7 +417,10 @@ export default function FoodDropsCatalogScreen() {
               <View>
                 {isFirstPreparing ? (
                   <View style={styles.sectionHeaderPreparing}>
-                    <Text style={styles.sectionHeaderTextPreparing}>👨‍🍳 Kitchen Preparing</Text>
+                    <View style={styles.iconLabelRow}>
+                      <AppIcon name="chef" size={14} />
+                      <Text style={styles.sectionHeaderTextPreparing}>Kitchen Preparing</Text>
+                    </View>
                   </View>
                 ) : null}
 
@@ -494,6 +506,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
     borderRadius: VerandahRadius.pill,
     padding: 2,
+  },
+  iconLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   tabBtn: {
     flex: 1,
@@ -630,7 +647,7 @@ const styles = StyleSheet.create({
   masterToggleRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: VerandahLayout.mcnHeaderToContentGap,
     paddingBottom: 2,
     gap: 8,
   },

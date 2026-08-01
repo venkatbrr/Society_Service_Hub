@@ -9,6 +9,7 @@ import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
 import { format12HourTime, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../lib/mcnHeader';
 import { supabase } from '../../lib/supabase';
 
 interface BusinessOrderItem {
@@ -472,14 +473,10 @@ export default function MyOrdersScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
-        options={{
+        options={buildMcnHeaderOptions({
           title: 'My Orders',
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
-        }}
+          onBack: handleBack,
+        })}
       />
 
       {/* Segmented Control Tabs */}

@@ -18,6 +18,7 @@ import { ImageUploader } from '../../../components/ImageUploader';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 export type UnitOption = '250g' | '500g' | 'piece' | 'kg' | 'box' | 'pack' | 'portion' | 'litre';
@@ -435,14 +436,10 @@ export default function CreateOrEditFoodDropScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Stack.Screen
-        options={{
+        options={buildMcnHeaderOptions({
           title: isEditMode ? 'Edit Food Drop' : 'Host a Food Drop',
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
-              <Ionicons name="close" size={24} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
-        }}
+          onBack: handleBack,
+        })}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

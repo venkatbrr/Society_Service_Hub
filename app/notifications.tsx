@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { HeaderBackButton } from '../components/HeaderBackButton';
 import { Verandah } from '../constants/Colors';
-import { VerandahType , VerandahLayout } from '../constants/Verandah';
+import { VerandahLayout } from '../constants/Verandah';
 import { useNotifications } from '../context/NotificationContext';
 
 export default function NotificationsScreen() {
@@ -144,12 +145,11 @@ export default function NotificationsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: Verandah.surface }]}>
       <View style={styles.header}>
-        <TouchableOpacity
+        <HeaderBackButton
           onPress={() => router.back()}
+          color={Verandah.textPrimary}
           style={[styles.backButton, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}
-        >
-          <Ionicons name="arrow-back" size={24} color={Verandah.textPrimary} />
-        </TouchableOpacity>
+        />
         <Text style={[styles.headerTitle, { color: Verandah.textPrimary }]}>Notifications</Text>
         {notifications.length > 0 && (
           <TouchableOpacity

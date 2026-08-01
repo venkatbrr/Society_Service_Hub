@@ -18,13 +18,14 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { AppIcon } from '../../../components/AppIcon';
 import { BaseCard } from '../../../components/BaseCard';
 import { EmptyState } from '../../../components/EmptyState';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
-import { APP_EMOJIS } from '../../../constants/emojis';
+import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 import { isSupabaseSchemaError } from '../../../lib/supabaseErrors';
@@ -49,10 +50,10 @@ export interface ParentCornerItem {
 type SortOption = 'school' | 'grade' | 'flat' | 'recent';
 
 const INSTITUTION_TYPES = [
-  { id: 'all', label: 'All Types', emoji: '📚' },
-  { id: 'school', label: 'School', emoji: '🏫' },
-  { id: 'college', label: 'College', emoji: '🎓' },
-  { id: 'preschool', label: 'Pre-School', emoji: '👶' },
+  { id: 'all', label: 'All Types', icon: 'book' as const },
+  { id: 'school', label: 'School', icon: 'school' as const },
+  { id: 'college', label: 'College', icon: 'graduation' as const },
+  { id: 'preschool', label: 'Pre-School', icon: 'baby' as const },
 ];
 
 const BOARD_OPTIONS = ['All', 'CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University', 'Other'];
@@ -200,7 +201,7 @@ export default function ParentCornerScreen() {
 
   const handleShareParentPost = async (item: ParentCornerItem) => {
     const messageLines = [
-      `🎓 *Parent Corner Student Record*`,
+      `*Parent Corner Student Record*`,
       `Student: ${item.student_name} (${item.grade_class})`,
       `School/Inst: ${item.school_name} (${item.board})`,
       `Parent: ${item.parent_name} (Flat ${item.flat_number})`,
@@ -269,9 +270,10 @@ export default function ParentCornerScreen() {
         <View style={styles.cardHeader}>
           <View style={styles.studentInfoLeft}>
             <View style={[styles.avatarCircle, { backgroundColor: colors.accentSoft }]}>
-              <Text style={styles.avatarEmoji}>
-                {item.institution_type === 'college' ? '🎓' : item.institution_type === 'preschool' ? '👶' : '🎒'}
-              </Text>
+              <AppIcon
+                name={item.institution_type === 'college' ? 'graduation' : item.institution_type === 'preschool' ? 'baby' : 'backpack'}
+                size={18}
+              />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.studentName, { color: colors.textPrimary }]}>{item.student_name}</Text>
@@ -370,14 +372,9 @@ export default function ParentCornerScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
-        options={{
-          headerTitle: 'Parent Corner',
-          headerTitleStyle: { fontWeight: '500', fontSize: 17, color: colors.textPrimary },
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
+        options={buildMcnHeaderOptions({
+          title: 'Parent Corner',
+          onBack: handleBack,
           headerRight: () => (
             <TouchableOpacity
               onPress={() => router.push('/network/parents/add' as any)}
@@ -386,7 +383,7 @@ export default function ParentCornerScreen() {
               <Ionicons name="add-circle" size={26} color={colors.primary} />
             </TouchableOpacity>
           ),
-        }}
+        })}
       />
 
       {/* Header Subtitle */}
@@ -398,7 +395,9 @@ export default function ParentCornerScreen() {
 
       {/* Search Input */}
       <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
-        <Text style={styles.searchIcon}>{APP_EMOJIS.search}</Text>
+        <View style={styles.searchIconWrap}>
+          <AppIcon name="search" size={14} />
+        </View>
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder="Search student, school, grade, board..."
@@ -432,15 +431,18 @@ export default function ParentCornerScreen() {
                 ]}
                 onPress={() => setSelectedType(t.id)}
               >
-                <Text
-                  style={[
-                    styles.chipText,
-                    { color: colors.textSecondary },
-                    isActive && { color: colors.accent, fontWeight: '500' },
-                  ]}
-                >
-                  {t.emoji} {t.label}
-                </Text>
+                <View style={styles.iconLabelRow}>
+                  <AppIcon name={t.icon} size={12} />
+                  <Text
+                    style={[
+                      styles.chipText,
+                      { color: colors.textSecondary },
+                      isActive && { color: colors.accent, fontWeight: '500' },
+                    ]}
+                  >
+                    {t.label}
+                  </Text>
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -522,15 +524,18 @@ export default function ParentCornerScreen() {
                   ]}
                   onPress={() => setSelectedSchool(isActive ? null : s)}
                 >
-                  <Text
-                    style={[
-                      styles.chipTextSm,
-                      { color: colors.textSecondary },
-                      isActive && { color: colors.accent, fontWeight: '500' },
-                    ]}
-                  >
-                    🏫 {s}
-                  </Text>
+                  <View style={styles.iconLabelRow}>
+                    <AppIcon name="school" size={11} />
+                    <Text
+                      style={[
+                        styles.chipTextSm,
+                        { color: colors.textSecondary },
+                        isActive && { color: colors.accent, fontWeight: '500' },
+                      ]}
+                    >
+                      {s}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -544,10 +549,10 @@ export default function ParentCornerScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {(
             [
-              { id: 'school', label: '🏫 School Name (A-Z)' },
-              { id: 'grade', label: '🎒 Class / Grade' },
-              { id: 'flat', label: '🏠 Flat No' },
-              { id: 'recent', label: '🕒 Recently Added' },
+              { id: 'school', label: 'School Name (A-Z)', icon: 'school' as const },
+              { id: 'grade', label: 'Class / Grade', icon: 'backpack' as const },
+              { id: 'flat', label: 'Flat No', icon: 'home' as const },
+              { id: 'recent', label: 'Recently Added', icon: 'clock' as const },
             ] as const
           ).map((s) => {
             const isActive = sortBy === s.id;
@@ -561,9 +566,12 @@ export default function ParentCornerScreen() {
                   isActive && { backgroundColor: colors.card, borderColor: colors.primary },
                 ]}
               >
-                <Text style={[styles.sortBtnText, { color: isActive ? colors.primary : colors.textSecondary }]}>
-                  {s.label}
-                </Text>
+                <View style={styles.iconLabelRow}>
+                  <AppIcon name={s.icon} size={12} />
+                  <Text style={[styles.sortBtnText, { color: isActive ? colors.primary : colors.textSecondary }]}>
+                    {s.label}
+                  </Text>
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -632,8 +640,8 @@ const styles = StyleSheet.create({
   },
   headerSubtitleWrap: {
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: VerandahLayout.mcnHeaderToContentGap,
+    paddingBottom: 6,
   },
   subtitle: {
     ...VerandahType.body,
@@ -642,15 +650,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 20,
-    marginBottom: 10,
+    marginBottom: 8,
     paddingHorizontal: 12,
     height: 44,
     borderRadius: VerandahRadius.md,
     borderWidth: 1,
   },
-  searchIcon: {
+  searchIconWrap: {
     marginRight: 8,
-    fontSize: 16,
   },
   searchInput: {
     flex: 1,
@@ -752,8 +759,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 10,
   },
-  avatarEmoji: {
-    fontSize: 20,
+  iconLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   studentName: {
     ...VerandahType.title,

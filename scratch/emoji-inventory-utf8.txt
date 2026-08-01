@@ -1,0 +1,392 @@
+﻿.github/agents/test.agent.md:15:> ΓÜá∩╕Å **Security note**: Credentials below are for a local dev/test account only. Do NOT commit this file to a public repository.
+.github/agents/test.agent.md:31:Run each section in order. For each check, record Γ£à pass or Γ¥î fail with a brief note on what was observed.
+admin-dashboard/js/communities.js:115:            ≡ƒæÑ ${counts.active} members &nbsp;&nbsp; ≡ƒöæ ${counts.leads} lead${counts.leads !== 1 ? 's' : ''}
+admin-dashboard/js/communities.js:238:          category_emoji: b.mcn_business_categories?.emoji || '≡ƒÅ¬',
+admin-dashboard/js/communities.js:389:            <td>≡ƒôà ${delivDate}<br><span class="text-3" style="font-size: 0.8rem;">ΓÅ░ ${drop.fulfillment_time || 'N/A'}</span></td>
+admin-dashboard/js/communities.js:419:              ${biz.category_emoji || '≡ƒÅ¬'} ${biz.name || 'Business'}<br>
+admin-dashboard/js/communities.js:425:              ${waLink ? `<a href="${waLink}" target="_blank" style="margin-left: 6px; text-decoration: none;" title="Chat on WhatsApp">≡ƒÆ¼</a>` : ''}
+admin-dashboard/js/communities.js:427:            <td>Γ¡É ${Number(biz.avg_rating || 0).toFixed(1)} (${biz.rating_count || 0})</td>
+admin-dashboard/js/communities.js:607:                <h2>≡ƒì▓ Pre-Order Food Drops & Statistics</h2>
+admin-dashboard/js/communities.js:639:                <h2>≡ƒÅ¬ Businesses Available in Community</h2>
+admin-dashboard/js/dashboard.js:41:      allOption.textContent = '≡ƒîÉ All Communities (Platform Overview)';
+admin-dashboard/js/dashboard.js:58:      selector.innerHTML = '<option value="ALL">≡ƒîÉ All Communities (Platform Overview)</option>';
+admin-dashboard/js/dashboard.js:208:              Γ¡É ${parseFloat(p.avg_rating || 0).toFixed(1)}
+admin-dashboard/js/providers.js:85:          ? `Γ¡É ${parseFloat(sp.avg_rating).toFixed(1)} <span class="text-3">(${sp.rating_count})</span>` 
+admin-dashboard/js/providers.js:167:                <span style="color: var(--caution); font-weight: 500;">${'Γ¡É'.repeat(rv.rating)}</span>
+admin-dashboard/js/providers.js:205:                  <div style="color: var(--caution); font-size: 1.1rem;">${'Γ¡É'.repeat(Math.round(data.avg_rating || 0)) || 'Γÿå'}</div>
+admin-dashboard/js/providers.js:210:                ≡ƒæÑ <strong>${data.hires_count || 0}</strong> residents have contacted this provider
+app/(tabs)/network.tsx:153:              <Text style={styles.iconEmoji}>≡ƒì▓</Text>
+app/(tabs)/network.tsx:178:              <Text style={styles.iconEmoji}>≡ƒÜÿ</Text>
+app/(tabs)/network.tsx:203:              <Text style={styles.iconEmoji}>≡ƒæ¿ΓÇì≡ƒæ⌐ΓÇì≡ƒæºΓÇì≡ƒæª</Text>
+app/(tabs)/network.tsx:228:              <Text style={styles.iconEmoji}>≡ƒÅ½</Text>
+app/(tabs)/network.tsx:253:              <Text style={styles.iconEmoji}>≡ƒöä</Text>
+app/hire-feedback/[hireId].tsx:244:            <Text style={styles.signalEmoji}>≡ƒæì</Text>
+app/hire-feedback/[hireId].tsx:257:            <Text style={styles.signalEmoji}>≡ƒæÄ</Text>
+app/hire-feedback/[hireId].tsx:273:            <Text style={styles.signalEmoji}>ΓÅ¡</Text>
+app/network/business.tsx:149:      const catEmoji = item.category?.emoji || '≡ƒÅ¬';
+app/network/business.tsx:162:        emoji: '≡ƒöÆ',
+app/network/business.tsx:228:          <Text style={styles.masterToggleText}>≡ƒì▓ Pre-order Food</Text>
+app/network/business.tsx:235:          <Text style={styles.masterToggleTextActive}>≡ƒÅ¬ Community Businesses</Text>
+app/network/business.tsx:283:            ≡ƒÅ¬ All
+app/network/carpools/index.tsx:148:        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Community Carpooling ≡ƒÜÿ</Text>
+app/network/carpools/[id].tsx:411:                    ? ` ┬╖ ≡ƒô₧ ${(carpool as any).contact_phone || carpool.creator_profile?.phone_number}`
+app/network/drops/add.tsx:490:          <Text style={styles.cardSectionTitle}>≡ƒôà Delivery / Fulfillment Schedule</Text>
+app/network/drops/add.tsx:583:          <Text style={styles.cardSectionTitle}>ΓÅ░ Pre-Order Cut-off Deadline</Text>
+app/network/drops/add.tsx:682:            <Text style={styles.cardSectionTitle}>≡ƒì▓ Items offered for this drop</Text>
+app/network/drops/index.tsx:274:          <Text style={styles.masterToggleTextActive}>≡ƒì▓ Pre-order Food</Text>
+app/network/drops/index.tsx:282:          <Text style={styles.masterToggleText}>≡ƒÅ¬ Community Businesses</Text>
+app/network/drops/index.tsx:300:            ≡ƒöÑ Open Drops
+app/network/drops/index.tsx:309:            ≡ƒöÆ Past / Preparing
+app/network/drops/index.tsx:324:            ≡ƒæ⌐ΓÇì≡ƒì│ My Pre-order Food
+app/network/drops/index.tsx:332:          <Text style={styles.revenueCardTitle}>≡ƒÆ░ My Pre-order Food Performance & Revenue</Text>
+app/network/drops/index.tsx:411:                    <Text style={styles.sectionHeaderTextPreparing}>≡ƒæ¿ΓÇì≡ƒì│ Kitchen Preparing</Text>
+app/network/drops/manage/[id].tsx:318:          <Text style={styles.sectionTitle}>≡ƒæ⌐ΓÇì≡ƒì│ Kitchen Prep Aggregation Summary</Text>
+app/network/drops/manage/[id].tsx:339:          <Text style={styles.sectionTitle}>≡ƒôì Resident Delivery Roster ({orders.length})</Text>
+app/network/drops/[id].tsx:326:        text1: 'Pre-order placed successfully! ≡ƒÄë',
+app/network/drops/[id].tsx:426:      `≡ƒì▓ *Food Drop: ${drop.title}*`,
+app/network/drops/[id].tsx:429:      `≡ƒôà Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
+app/network/drops/[id].tsx:430:      `ΓÅ░ Pre-Orders Close: ${cutoffFormatted}`,
+app/network/drops/[id].tsx:434:      messageLines.push(`≡ƒû╝∩╕Å Photo: ${drop.image_url}`);
+app/network/drops/[id].tsx:438:    messageLines.push(`≡ƒöù View Menu & Place Pre-Order:`);
+app/network/drops/[id].tsx:525:          <Text style={styles.bannerIcon}>{isOpen ? 'ΓÅ│' : '≡ƒöÆ'}</Text>
+app/network/drops/[id].tsx:564:                    <Text style={[styles.hostManageBtnText, { color: Verandah.accent }]}>Γ£Å∩╕Å Edit Drop</Text>
+app/network/drops/[id].tsx:583:                    : '≡ƒôª Your Pre-Order is Confirmed'}
+app/network/listing/[id].tsx:533:                    {'Γÿà'.repeat(review.rating)}{'Γÿå'.repeat(Math.max(0, 5 - review.rating))}
+app/network/listing/[id].tsx:561:           <Text style={[styles.tapHint, { color: colors.accent, marginTop: 8 }]}>Γ¼å Tap a star above to rate (required)</Text>
+app/network/parents/add.tsx:22:  { id: 'school', label: 'School', emoji: '≡ƒÅ½' },
+app/network/parents/add.tsx:23:  { id: 'college', label: 'College', emoji: '≡ƒÄô' },
+app/network/parents/add.tsx:24:  { id: 'preschool', label: 'Pre-School', emoji: '≡ƒæ╢' },
+app/network/parents/add.tsx:226:          <Text style={styles.bannerEmoji}>≡ƒæ¿ΓÇì≡ƒæ⌐ΓÇì≡ƒæºΓÇì≡ƒæª</Text>
+app/network/parents/index.tsx:52:  { id: 'all', label: 'All Types', emoji: '≡ƒôÜ' },
+app/network/parents/index.tsx:53:  { id: 'school', label: 'School', emoji: '≡ƒÅ½' },
+app/network/parents/index.tsx:54:  { id: 'college', label: 'College', emoji: '≡ƒÄô' },
+app/network/parents/index.tsx:55:  { id: 'preschool', label: 'Pre-School', emoji: '≡ƒæ╢' },
+app/network/parents/index.tsx:203:      `≡ƒÄô *Parent Corner Student Record*`,
+app/network/parents/index.tsx:273:                {item.institution_type === 'college' ? '≡ƒÄô' : item.institution_type === 'preschool' ? '≡ƒæ╢' : '≡ƒÄÆ'}
+app/network/parents/index.tsx:532:                    ≡ƒÅ½ {s}
+app/network/parents/index.tsx:547:              { id: 'school', label: '≡ƒÅ½ School Name (A-Z)' },
+app/network/parents/index.tsx:548:              { id: 'grade', label: '≡ƒÄÆ Class / Grade' },
+app/network/parents/index.tsx:549:              { id: 'flat', label: '≡ƒÅá Flat No' },
+app/network/parents/index.tsx:550:              { id: 'recent', label: '≡ƒòÆ Recently Added' },
+app/network/schools/index.tsx:265:                ≡ƒôï {school.review_count} {school.review_count === 1 ? 'parent review' : 'parent reviews'}
+app/network/schools/index.tsx:279:            ≡ƒôì {school.address}
+app/network/schools/index.tsx:397:                  ≡ƒôì {loc}
+app/network/schools/index.tsx:431:                  ≡ƒô£ {b}
+app/network/schools/review.tsx:292:            <Text style={styles.aspectTitle}>≡ƒÆ¼ Overall Comments & Parent Advice</Text>
+app/network/schools/[id].tsx:370:              ≡ƒôï Parent Report Card
+app/network/schools/[id].tsx:412:                <Text style={styles.whyGradeHeader}>≡ƒÆí How Your Report Card Helps Neighbor Families:</Text>
+app/network/schools/[id].tsx:415:                  <Text style={styles.whyGradeBullet}>≡ƒÄ»</Text>
+app/network/schools/[id].tsx:422:                  <Text style={styles.whyGradeBullet}>≡ƒÜî</Text>
+app/network/schools/[id].tsx:429:                  <Text style={styles.whyGradeBullet}>≡ƒñ¥</Text>
+app/provider/[id].tsx:235:    const ratingText = provider.avg_rating ? `Γÿà ${Number(provider.avg_rating).toFixed(1)} (${provider.rating_count} reviews)` : '';
+app/provider/[id].tsx:242:      `≡ƒæñ *Service Provider Contact*`,
+app/provider/[id].tsx:251:      `≡ƒöù View Profile & Contact Details:`,
+app/provider/[id].tsx:629:            <Text style={styles.statValue}>Γÿà {Number(provider.avg_rating || 0).toFixed(1)}</Text>
+app/provider/[id].tsx:726:                    {'Γÿà'.repeat(review.rating)}{'Γÿå'.repeat(Math.max(0, 5 - review.rating))}
+app/provider/[id].tsx:791:           <Text style={[styles.tapHint, { color: colors.accent }]}>Γ¼å Tap a star above to rate (required)</Text>
+app/services/add.tsx:249:          <Text style={{ color: colors.textMuted, fontSize: 16 }}>≡ƒôà</Text>
+app/services/add.tsx:290:              <Text style={styles.providerStateIcon}>≡ƒæÑ</Text>
+app/services/index.tsx:91:              <Text style={styles.emptyEmoji}>≡ƒöº</Text>
+app/services/[id].tsx:379:  const emoji = SERVICE_CATEGORY_EMOJI[category] ?? '≡ƒöº';
+app/services/[id].tsx:436:          <Text style={[styles.secondaryBtnText, { color: colors.primary }]}>≡ƒöì Find technicians</Text>
+app/services/[id].tsx:452:            {editOpen ? 'Γû▓ Hide edit details' : 'Γ£Å∩╕Å Edit details'}
+app/services/[id].tsx:503:              <Text style={{ color: colors.textMuted }}>≡ƒôà</Text>
+app/services/[id].tsx:538:                  <Text style={styles.providerStateIcon}>≡ƒæÑ</Text>
+app/services/[id].tsx:680:          <Text style={[styles.deleteBtnText, { color: colors.accent }]}>≡ƒùæ∩╕Å Delete this reminder</Text>
+app/services/[id].tsx:690:                <Text style={[styles.sheetClose, { color: colors.textMuted }]}>Γ£ò</Text>
+components/McnListingCard.tsx:67:      `≡ƒÅ¬ *Community Business: ${listing.name}*`,
+components/McnListingCard.tsx:77:      messageLines.push(`≡ƒô₧ Phone/WhatsApp: ${listing.contact_phone}`);
+components/McnListingCard.tsx:81:    messageLines.push(`≡ƒöù View Offerings & Order:`);
+components/PreorderDropCard.tsx:55:        label: 'Γ£à Delivered & Completed',
+components/PreorderDropCard.tsx:62:        label: 'Γ¥î Drop Cancelled',
+components/PreorderDropCard.tsx:69:        label: '≡ƒöÆ Pre-Orders Closed (Preparing)',
+components/PreorderDropCard.tsx:97:      label: `ΓÅ│ ${timeText} (${cutoffFormatted})`,
+components/PreorderDropCard.tsx:137:      `≡ƒì▓ *Food Drop: ${drop.title}*`,
+components/PreorderDropCard.tsx:140:      `≡ƒôà Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
+components/PreorderDropCard.tsx:141:      `ΓÅ░ Pre-Orders Close: ${cutoffFormatted}`,
+components/PreorderDropCard.tsx:145:      messageLines.push(`≡ƒû╝∩╕Å Photo: ${drop.image_url}`);
+components/PreorderDropCard.tsx:149:    messageLines.push(`≡ƒöù View Menu & Place Pre-Order:`);
+components/PreorderDropCard.tsx:223:                ≡ƒì▓ {drop.item_count}
+components/ProviderCard.tsx:21:    const ratingText = provider.avg_rating ? `Γÿà ${Number(provider.avg_rating).toFixed(1)} (${provider.rating_count} reviews)` : '';
+components/ProviderCard.tsx:28:      `≡ƒæñ *Service Provider Contact*`,
+components/ProviderCard.tsx:36:      `≡ƒöù View Provider Profile:`,
+components/SchoolReviewCard.tsx:133:          <Text style={styles.overallCommentTitle}>≡ƒÆ¼ Parent Note & Advice:</Text>
+components/ServiceCard.tsx:24:  const emoji = SERVICE_CATEGORY_EMOJI[category] ?? '≡ƒöº';
+components/ServiceHistoryList.tsx:264:                <Text style={[styles.closeIcon, { color: colors.textMuted }]}>Γ£ò</Text>
+components/ServiceHistoryList.tsx:278:                <Text style={{ color: colors.textMuted }}>≡ƒôà</Text>
+components/UpcomingServicesCard.tsx:88:          <Text style={styles.zeroEmoji}>≡ƒöº</Text>
+components/UpcomingServicesCard.tsx:103:            <Text style={styles.dismissText}>Γ£ò</Text>
+components/UpcomingServicesCard.tsx:115:          <Text style={styles.trackText}>Γ£ô All services on track</Text>
+components/UpcomingServicesCard.tsx:132:        const emoji = SERVICE_CATEGORY_EMOJI[s.category as ServiceCategory] ?? '≡ƒöº';
+components/VisitCard.tsx:83:        `≡ƒÜù *Service Visit: ${title}*`,
+components/VisitCard.tsx:85:        `≡ƒôà Date: ${formattedDate}`,
+components/VisitCard.tsx:86:        `ΓÅ░ Time: ${visitTimeSlot}`,
+components/VisitCard.tsx:89:        `≡ƒöù View Visit & Join:`,
+constants/emojis.ts:2:  home: '≡ƒÅá',
+constants/emojis.ts:3:  favoritesFilled: 'Γ¥ñ∩╕Å',
+constants/emojis.ts:4:  favoritesEmpty: '≡ƒñì',
+constants/emojis.ts:5:  funds: '≡ƒÆ░',
+constants/emojis.ts:6:  profile: '≡ƒæñ',
+constants/emojis.ts:8:  search: '≡ƒöì',
+constants/emojis.ts:9:  settings: 'ΓÜÖ∩╕Å',
+constants/emojis.ts:10:  notifications: '≡ƒöö',
+constants/emojis.ts:13:  close: 'Γ£ò',
+constants/emojis.ts:14:  call: '≡ƒô₧',
+constants/emojis.ts:15:  whatsapp: '≡ƒÆ¼',
+constants/emojis.ts:16:  verified: 'Γ£à',
+constants/emojis.ts:17:  starFilled: 'Γÿà',
+constants/emojis.ts:19:  starEmpty: 'Γÿå',
+constants/emojis.ts:20:  photo: '≡ƒô╖',
+constants/emojis.ts:21:  share: '≡ƒôñ',
+constants/emojis.ts:22:  contribution: '≡ƒÆÜ',
+constants/emojis.ts:23:  expense: '≡ƒôñ',
+constants/emojis.ts:24:  wallet: '≡ƒÆ░',
+constants/emojis.ts:25:  fundActive: '≡ƒƒó',
+constants/emojis.ts:26:  community: '≡ƒÅÿ∩╕Å',
+constants/emojis.ts:27:  house: '≡ƒÅí',
+constants/emojis.ts:28:  members: '≡ƒæÑ',
+constants/emojis.ts:29:  admin: '≡ƒ¢í∩╕Å',
+constants/emojis.ts:30:  treasurer: '≡ƒÆ╝',
+constants/emojis.ts:31:  collector: '≡ƒôï',
+constants/emojis.ts:32:  resident: '≡ƒÅá',
+constants/emojis.ts:33:  success: 'Γ£à',
+constants/emojis.ts:34:  warning: 'ΓÜá∩╕Å',
+constants/emojis.ts:35:  error: 'Γ¥î',
+constants/emojis.ts:36:  info: 'Γä╣∩╕Å',
+constants/emojis.ts:37:  loading: 'ΓÅ│',
+constants/emojis.ts:38:  mail: 'Γ£ë∩╕Å',
+constants/emojis.ts:39:  lock: '≡ƒöÆ',
+constants/emojis.ts:40:  visible: '≡ƒæü∩╕Å',
+constants/emojis.ts:41:  hidden: '≡ƒÖê',
+constants/emojis.ts:46:  plumber: '≡ƒöº',
+constants/emojis.ts:47:  electrician: 'ΓÜí',
+constants/emojis.ts:48:  carpenter: '≡ƒ¬╡',
+constants/emojis.ts:49:  carpentry: '≡ƒ¬╡',
+constants/emojis.ts:50:  cleaner: '≡ƒº╣',
+constants/emojis.ts:51:  cleaning: '≡ƒº╣',
+constants/emojis.ts:52:  maid: '≡ƒº╣',
+constants/emojis.ts:53:  painter: '≡ƒÄ¿',
+constants/emojis.ts:54:  painting: '≡ƒÄ¿',
+constants/emojis.ts:55:  cook: '≡ƒì│',
+constants/emojis.ts:56:  cooking: '≡ƒì│',
+constants/emojis.ts:57:  chef: '≡ƒì│',
+constants/emojis.ts:58:  driver: '≡ƒÜù',
+constants/emojis.ts:59:  driving: '≡ƒÜù',
+constants/emojis.ts:60:  chauffeur: '≡ƒÜù',
+constants/emojis.ts:61:  delivery: '≡ƒôª',
+constants/emojis.ts:62:  cctv: '≡ƒô╖',
+constants/emojis.ts:63:  camera: '≡ƒô╖',
+constants/emojis.ts:64:  photography: '≡ƒô╖',
+constants/emojis.ts:65:  photographer: '≡ƒô╖',
+constants/emojis.ts:66:  decoration: '≡ƒÄê',
+constants/emojis.ts:67:  decorator: '≡ƒÄê',
+constants/emojis.ts:68:  'ac repair': 'Γ¥ä∩╕Å',
+constants/emojis.ts:69:  'ac technician': 'Γ¥ä∩╕Å',
+constants/emojis.ts:70:  'ac service': 'Γ¥ä∩╕Å',
+constants/emojis.ts:71:  gardener: '≡ƒî▒',
+constants/emojis.ts:72:  garden: '≡ƒî▒',
+constants/emojis.ts:73:  tailor: 'Γ£é∩╕Å',
+constants/emojis.ts:74:  'ironing / press': '≡ƒæö',
+constants/emojis.ts:75:  ironing: '≡ƒæö',
+constants/emojis.ts:76:  press: '≡ƒæö',
+constants/emojis.ts:77:  dhobi: '≡ƒæö',
+constants/emojis.ts:78:  'salon / beautician': '≡ƒÆç',
+constants/emojis.ts:79:  salon: '≡ƒÆç',
+constants/emojis.ts:80:  beautician: '≡ƒÆç',
+constants/emojis.ts:81:  'door rangoli': '≡ƒÄ¿',
+constants/emojis.ts:82:  rangoli: '≡ƒÄ¿',
+constants/emojis.ts:83:  'gas repair': '≡ƒöÑ',
+constants/emojis.ts:84:  'gas agency': 'Γ¢╜',
+constants/emojis.ts:85:  'cycle repair': '≡ƒÜ▓',
+constants/emojis.ts:86:  'car repair': '≡ƒÜÿ',
+constants/emojis.ts:87:  'bike repair': '≡ƒÅì∩╕Å',
+constants/emojis.ts:88:  'motorbike repair': '≡ƒÅì∩╕Å',
+constants/emojis.ts:89:  'washroom cleaner': '≡ƒÜ┐',
+constants/emojis.ts:90:  'water supply': '≡ƒÆº',
+constants/emojis.ts:91:  'pest control': '≡ƒÉ¢',
+constants/emojis.ts:92:  'car wash': '≡ƒÜù',
+constants/emojis.ts:93:  milkman: '≡ƒÑ¢',
+constants/emojis.ts:94:  milk: '≡ƒÑ¢',
+constants/emojis.ts:95:  'ro / water purifier': '≡ƒÆº',
+constants/emojis.ts:96:  'water purifier': '≡ƒÆº',
+constants/emojis.ts:97:  'movers & packers': '≡ƒôª',
+constants/emojis.ts:98:  movers: '≡ƒôª',
+constants/emojis.ts:99:  packers: '≡ƒôª',
+constants/emojis.ts:101:  'grills & mesh work': '≡ƒ¬ƒ',
+constants/emojis.ts:102:  grills: '≡ƒ¬ƒ',
+constants/emojis.ts:103:  mesh: '≡ƒ¬ƒ',
+constants/emojis.ts:105:  'tent house': 'Γ¢║',
+constants/emojis.ts:106:  tent: 'Γ¢║',
+constants/emojis.ts:108:  'water cans': '≡ƒ½ù',
+constants/emojis.ts:110:  catering: '≡ƒì╜∩╕Å',
+constants/emojis.ts:111:  caterer: '≡ƒì╜∩╕Å',
+constants/emojis.ts:113:  boutique: '≡ƒæù',
+constants/emojis.ts:115:  teaching: '≡ƒôÜ',
+constants/emojis.ts:116:  'tutor / home teacher': '≡ƒôÜ', // backward compat
+constants/emojis.ts:117:  tutor: '≡ƒôÜ',
+constants/emojis.ts:118:  teacher: '≡ƒôÜ',
+constants/emojis.ts:119:  coaching: '≡ƒôÜ',
+constants/emojis.ts:121:  'rto agent': '≡ƒÜÖ',
+constants/emojis.ts:122:  rto: '≡ƒÜÖ',
+constants/emojis.ts:124:  'aadhar centre': '≡ƒ¬¬',
+constants/emojis.ts:125:  aadhar: '≡ƒ¬¬',
+constants/emojis.ts:126:  aadhaar: '≡ƒ¬¬',
+constants/emojis.ts:128:  'pandit / pujari': '≡ƒÖÅ',
+constants/emojis.ts:129:  'mosquito net / screens': '≡ƒªƒ',
+constants/emojis.ts:130:  'balcony safety nets': '≡ƒò╕∩╕Å',
+constants/emojis.ts:131:  'blinds & curtains': '≡ƒ¬ƒ',
+constants/emojis.ts:132:  'core cutting': '≡ƒò│∩╕Å',
+constants/emojis.ts:133:  'false ceiling / pop': '≡ƒÅá',
+constants/emojis.ts:134:  'marble & granite work': '≡ƒ¬¿',
+constants/emojis.ts:135:  'balcony cloth hangers': '≡ƒæò',
+constants/emojis.ts:136:  'internet provider / tech': '≡ƒîÉ',
+constants/emojis.ts:137:  'washing machine repair': '≡ƒº║',
+constants/emojis.ts:138:  'tv repair & install': '≡ƒô║',
+constants/emojis.ts:139:  'swimming / fitness coach': '≡ƒÅè',
+constants/emojis.ts:140:  'doctor / clinic': '≡ƒ⌐║',
+constants/emojis.ts:141:  'pharmacy delivery': '≡ƒÆè',
+constants/emojis.ts:142:  'diagnostics / lab tests': '≡ƒº¬',
+constants/emojis.ts:143:  'physiotherapy': '≡ƒª╜',
+constants/emojis.ts:144:  'home nurse / nanny': '≡ƒºæΓÇìΓÜò∩╕Å',
+constants/emojis.ts:149:    return '≡ƒ¢á∩╕Å';
+constants/emojis.ts:153:  return SERVICE_CATEGORY_EMOJIS[normalized] ?? '≡ƒ¢á∩╕Å';
+constants/schoolReviewAspects.ts:23:    emoji: '≡ƒôÜ',
+constants/schoolReviewAspects.ts:30:    emoji: '≡ƒæ⌐ΓÇì≡ƒÅ½',
+constants/schoolReviewAspects.ts:37:    emoji: '≡ƒÅù∩╕Å',
+constants/schoolReviewAspects.ts:44:    emoji: 'ΓÜ╜',
+constants/schoolReviewAspects.ts:51:    emoji: '≡ƒ¢í∩╕Å',
+constants/schoolReviewAspects.ts:58:    emoji: '≡ƒÜî',
+constants/schoolReviewAspects.ts:65:    emoji: '≡ƒÆ░',
+constants/schoolReviewAspects.ts:72:    emoji: '≡ƒÿè',
+constants/schoolReviewAspects.ts:85:  { score: 1, emoji: '≡ƒÿƒ', label: 'Poor' },
+constants/schoolReviewAspects.ts:86:  { score: 2, emoji: '≡ƒÿò', label: 'Fair' },
+constants/schoolReviewAspects.ts:87:  { score: 3, emoji: '≡ƒÿÉ', label: 'Average' },
+constants/schoolReviewAspects.ts:88:  { score: 4, emoji: '≡ƒÖé', label: 'Good' },
+constants/schoolReviewAspects.ts:89:  { score: 5, emoji: '≡ƒñ⌐', label: 'Excellent' },
+constants/schoolReviewAspects.ts:104:  return found ? found.emoji : '≡ƒÿÉ';
+data/service-providers/extracted_providers.md:53:#### ≡ƒÜ⌐≡ƒÜ⌐PARVIDA SRINIVAS≡ƒÄ╝≡ƒÄ╢ Aparna Pharmacy Kollur
+data/service-providers/extracted_providers.md:55:- **Source File**: `≡ƒÜ⌐≡ƒÜ⌐PARVIDA SRINIVAS≡ƒÄ╝≡ƒÄ╢ Aparna Pharmacy Kollur.vcf`
+data/service-providers/extracted_providers.md:59:  > 21/04/26, 6:00ΓÇ»pm - +91 97013 85462: ≡ƒÜ⌐≡ƒÜ⌐PARVIDA SRINIVAS≡ƒÄ╝≡ƒÄ╢ Aparna Pharmacy Kollur.vcf (file attached)
+data/service-providers/extracted_providers.md:65:VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', '≡ƒÜ⌐≡ƒÜ⌐PARVIDA SRINIVAS≡ƒÄ╝≡ƒÄ╢ Aparna Pharmacy Kollur', '+919392034156', 'AC Technician', NULL, 'PASS', 'COMMUNITY');
+data/service-providers/extracted_providers.md:91:  > 13/05/26, 7:21ΓÇ»am - +91 89783 23456: Hi Good Morning, ≡ƒÅá Flat for Sale at IRA Aspiration   B811 with area 1895 Sft and East Facing S/W corner flat  (Vastu Compliant) with 2 car parking.
+data/service-providers/extracted_providers.md:138:  > 04/10/25, 7:46ΓÇ»pm - +91 97405 79792: Can some please share contact details for AC installation? Thanks ≡ƒÖÅ≡ƒÅ╝
+data/service-providers/extracted_providers.md:143:  > 31/10/25, 10:15ΓÇ»pm - +91 788 821 5290: ≡ƒÿÆ will miss the fun
+data/service-providers/extracted_providers.md:194:  > 09/09/25, 5:24ΓÇ»pm - +91 99662 57555: Friends if any body is having rental agreement,kindly share me to my personal whatsapp≡ƒÖÅ≡ƒÅ╗
+data/service-providers/extracted_providers.md:314:  > 30/01/26, 2:23ΓÇ»pm - +91 95539 15388: Thank you for sharing pandit details ≡ƒÖÅ≡ƒÖé
+data/service-providers/extracted_providers.md:355:  > 02/09/25, 9:24ΓÇ»am - +91 86868 80522: Thank you Mahesh ≡ƒñ¥
+data/service-providers/extracted_providers.md:503:  > 02/04/26, 11:51ΓÇ»am - +91 88171 49576: Ji..vo available hai≡ƒÖÅ
+data/service-providers/extracted_providers.md:553:  > 30/03/26, 9:19ΓÇ»pm - +91 98485 44918: Jai sree ram ≡ƒÖÅ≡ƒÖÅ
+data/service-providers/extracted_providers.md:562:  > 02/04/26, 4:36ΓÇ»pm - +91 95848 10193: Can anyone share number of any carpenter, need to fix some hangers in bathrooms. Thanks in advance Γÿ║∩╕Å
+data/service-providers/extracted_providers.md:665:  > Wish you happy birthday ≡ƒÄé
+data/service-providers/extracted_providers.md:785:  > 10/03/26, 2:44ΓÇ»pm - +91 85888 47738: Meanwhile we can order from blinkit ≡ƒñ¬
+data/service-providers/extracted_providers.md:788:  > 10/03/26, 2:47ΓÇ»pm - +91 88979 42149: What about our DG diesel ? Do we have stock ≡ƒÿï
+data/service-providers/extracted_providers.md:919:  > 31/10/25, 10:15ΓÇ»pm - +91 788 821 5290: ≡ƒÿÆ will miss the fun
+data/service-providers/extracted_providers.md:950:  > It looks like trees played ≡ƒÆ¢*yellow holi* recently <This message was edited>
+data/service-providers/extracted_providers.md:978:  > 31/10/25, 10:15ΓÇ»pm - +91 788 821 5290: ≡ƒÿÆ will miss the fun
+data/service-providers/extracted_providers.md:1009:  > It looks like trees played ≡ƒÆ¢*yellow holi* recently <This message was edited>
+data/service-providers/extracted_providers.md:1068:  > 12/04/26, 12:23ΓÇ»pm - +91 96422 97422: Please Gave them to me sir....These Software Jobs are Quite Volatile now....Don't know What happens tomorrow at least I will start this Side Business≡ƒÿÇ≡ƒÿÇ≡ƒÿÇ
+data/service-providers/extracted_providers.md:1069:  > 12/04/26, 12:25ΓÇ»pm - +91 96422 97422: This Job is Also Fine...Please Make me President of USA≡ƒÿÇ≡ƒÿÇ≡ƒÿÇ <This message was edited>
+data/service-providers/extracted_providers.md:1225:  > 21/04/26, 6:00ΓÇ»pm - +91 97013 85462: ≡ƒÜ⌐≡ƒÜ⌐PARVIDA SRINIVAS≡ƒÄ╝≡ƒÄ╢ Aparna Pharmacy Kollur.vcf (file attached)
+data/service-providers/extracted_providers.md:1478:  > 25/05/25, 8:21ΓÇ»pm - +91 90333 86708: Thanks ≡ƒæì @Γü¿ramesh D812 AspirationΓü⌐ , @Γü¿~SriniΓü⌐
+data/service-providers/extracted_providers.md:1503:  > DM or WhatsApp on 9347213664 to confirm your order ≡ƒÆò
+data/service-providers/extracted_providers.md:1643:  > 30/05/26, 1:51ΓÇ»am - +91 93978 11190: Thanks for supporting ≡ƒÖé
+data/service-providers/extracted_providers.md:1716:  > 02/11/25, 7:11ΓÇ»pm - +91 93978 11190: Thanks ≡ƒÿè
+data/service-providers/extracted_providers.md:1871:  > 18/03/26, 2:19ΓÇ»pm - +91 95810 50050: ≡ƒî╕ Our New Year Celebration ΓÇô Ugadi / Gudi Padwa ≡ƒî╕
+data/service-providers/extracted_providers.md:1900:  > 05/09/25, 12:58ΓÇ»pm - +91 79812 88969: Thank you ≡ƒÖÅ
+data/service-providers/extracted_providers.md:1926:  > 10/04/26, 7:07ΓÇ»am - +91 91875 79866: Hello all, Suman here ..we moved-in today to IRA Aspiration as tenants in C-613, need some contact for HP Gas agency and RO installation.. Thanks in Advance ≡ƒÖÅ
+data/service-providers/extracted_providers.md:1934:  > 29/04/26, 8:21ΓÇ»am - +91 63615 76937: Thanks @Γü¿Raju A104 IRA AspirationΓü⌐ ≡ƒæì
+data/service-providers/extracted_providers.md:2122:  > 10/06/25, 11:07ΓÇ»am - +91 78424 92036: Thanks AllΓÿ║∩╕Å for quick response
+data/service-providers/extracted_providers.md:2216:  > 10/06/25, 11:07ΓÇ»am - +91 78424 92036: Thanks AllΓÿ║∩╕Å for quick response
+data/service-providers/extracted_providers.md:2222:  > 08/08/25, 7:06ΓÇ»pm - +91 95535 00082: Please  come for tambulam ≡ƒÖÅ≡ƒÖÅ≡ƒÖÅ
+data/service-providers/extracted_providers.md:2299:  > 09/04/26, 9:05ΓÇ»am - +91 70937 01477: Thank you ≡ƒÖÅ
+data/service-providers/extracted_providers.md:2305:  > 08/05/26, 6:11ΓÇ»pm - Ramakrishna D904: Try to reach him ≡ƒæå
+data/service-providers/extracted_providers.md:2328:  > 01/10/25, 10:26ΓÇ»am - +91 88008 46805: Thanks ≡ƒæì
+data/service-providers/extracted_providers.md:2335:  > 03/11/25, 10:45ΓÇ»pm - +91 93978 11190: Tysm ≡ƒæì
+data/service-providers/extracted_providers.md:2347:  > 06/01/26, 7:06ΓÇ»pm - +91 81438 62296: ≡ƒî╛ Organic Sonamasuri Rice Available ≡ƒî╛
+data/service-providers/extracted_providers.md:2388:  > 04/03/26, 9:38ΓÇ»pm - +91 77991 42007: Please keep away from IRA plumbers and electricians as they are demanding huge amounts for a small work ≡ƒÿ⌐
+data/service-providers/extracted_providers.md:2602:  > 02/11/25, 6:31ΓÇ»pm - +91 93978 11190: Thanks for your support ≡ƒÿè
+data/service-providers/extracted_providers.md:2641:  > 15/10/25, 11:59ΓÇ»am - Ramakrishna D904: 1 liter Cow milk available with milk vendor Manikayam.If anyone want you can contact him ≡ƒæå
+data/service-providers/extracted_providers.md:2653:  > 02/11/25, 6:31ΓÇ»pm - +91 93978 11190: Thanks for your support ≡ƒÿè
+data/service-providers/extracted_providers.md:2671:  > 15/01/25, 7:51ΓÇ»am - +91 91821 59210: Achha tabhi to mai sochu kal raat kise aake mere ghar k kachre me interest aa gaya achhe se sab bahar nikal k pata nhi kya dhund raha hoga. Ab pata chala yaha dogs upar tak aa ja rahe≡ƒñö
+data/service-providers/extracted_providers.md:2703:  > 15/10/25, 11:59ΓÇ»am - Ramakrishna D904: 1 liter Cow milk available with milk vendor Manikayam.If anyone want you can contact him ≡ƒæå
+data/service-providers/extracted_providers.md:2708:  > Example you can't stop gas cylinder guy or milkman to stop delivery ≡ƒÖé etc.. etc..
+data/service-providers/extracted_providers.md:2749:  > 02/11/25, 6:31ΓÇ»pm - +91 93978 11190: Thanks for your support ≡ƒÿè
+data/service-providers/extracted_providers.md:2758:  > 11/02/26, 8:50ΓÇ»am - +91 80996 65806: Please come and collect if not I will consume it≡ƒñ¬≡ƒñ¬
+data/service-providers/extracted_providers.md:2807:  > 02/09/25, 9:24ΓÇ»am - +91 86868 80522: Thank you Mahesh ≡ƒñ¥
+data/service-providers/extracted_providers.md:2918:  > 10/04/26, 7:07ΓÇ»am - +91 91875 79866: Hello all, Suman here ..we moved-in today to IRA Aspiration as tenants in C-613, need some contact for HP Gas agency and RO installation.. Thanks in Advance ≡ƒÖÅ
+data/service-providers/extracted_providers.md:2947:  > 12/09/25, 7:19ΓÇ»pm - +91 73848 81574: Thanks ≡ƒÿè
+data/service-providers/extracted_providers.md:2986:- **Bio/Description**: *HyderabadΓÇÖs Most Trusted Blinds & Screens Manufacturer ≡ƒÅáDirect from Manufacturer | Best Price Guaranteed ≡ƒÆ»Premium Blinds & Screens for Every Space ≡ƒ¬ƒ*
+data/service-providers/extracted_providers.md:2996:VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Asif Freedom Screens And Blinds', '+919177237634', 'Other', 'HyderabadΓÇÖs Most Trusted Blinds & Screens Manufacturer ≡ƒÅáDirect from Manufacturer | Best Price Guaranteed ≡ƒÆ»Premium Blinds & Screens for Every Space ≡ƒ¬ƒ', 'PASS', 'COMMUNITY');
+data/service-providers/extracted_providers.md:3122:  > ≡ƒô₧ *Help Desk: +91 79936 30077*
+data/service-providers/extracted_providers.md:3131:  > ≡ƒô₧ *Help Desk: +91 79936 30077*
+data/service-providers/extracted_providers.md:3135:  > ≡ƒô₧ *Help Desk: +91 79936 30077*
+data/service-providers/extracted_providers.md:3166:  > 06/06/25, 8:42ΓÇ»am - Ramakrishna D904: Working ≡ƒæì
+data/service-providers/extracted_providers.md:3167:  > 06/06/25, 9:00ΓÇ»am - +91 95535 00082: But when can we start using it and there are no running treadmill ≡ƒÖê
+data/service-providers/extracted_providers.md:3232:  > 10/06/25, 11:46ΓÇ»am - +91 80561 86514: ≡ƒæî≡ƒæì≡ƒæì≡ƒæì, i quit airtel 4 back, wasn't a great experience.
+data/service-providers/extracted_providers.md:3279:  > 21/03/26, 12:25ΓÇ»pm - +91 90005 45246: Thank you for sharing≡ƒñ¥
+data/service-providers/extracted_providers.md:3301:  > 14/04/26, 8:16ΓÇ»am - +91 70440 80050: Om shanti ≡ƒÖÅ≡ƒÅ╗≡ƒÖÅ≡ƒÅ╗
+data/service-providers/extracted_providers.md:3302:  > 14/04/26, 8:18ΓÇ»am - Raju A104 IRA Aspiration: Rest In Peace≡ƒÖÅ≡ƒÖÅ≡ƒÖÅ
+data/service-providers/extracted_providers.md:3303:  > 14/04/26, 8:19ΓÇ»am - +91 90005 45246: Sorry to hear, may his soul rest in peace ≡ƒÖÅ≡ƒÖÅ
+data/service-providers/extracted_providers.md:3304:  > 14/04/26, 8:24ΓÇ»am - +91 90529 06655: May the departed soul rest in peace. Om shanti≡ƒÖÅ≡ƒÅ╗
+data/service-providers/extracted_providers.md:3305:  > 14/04/26, 8:26ΓÇ»am - +91 81213 07007: Heartfelt condolences ≡ƒÖÅ≡ƒÅ╗
+data/service-providers/extracted_providers.md:3402:  > 16/02/26, 9:27ΓÇ»pm - +91 89032 21132: Looking for a carpool ride to Gachibowli tomorrow! Please DM me if you can help out. ≡ƒÜù
+data/service-providers/extracted_providers.md:3442:- **Bio/Description**: *Γ£ê∩╕Å≡ƒÜÿ≡ƒç«≡ƒç│Sri Tirumala tours/Travels 24/7 service on Hyderabad, airport pickup, airport drop and outstation round trip and one way drop /City local packages, TOYOTA INNOVA CRYSTA 9609≡ƒç«≡ƒç│≡ƒÜÿΓ£ê∩╕Å≡ƒÜ⌐*
+data/service-providers/extracted_providers.md:3452:VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Meravath Banny 9609 Innova Crysta', '+919014282961', 'Other', 'Γ£ê∩╕Å≡ƒÜÿ≡ƒç«≡ƒç│Sri Tirumala tours/Travels 24/7 service on Hyderabad, airport pickup, airport drop and outstation round trip and one way drop /City local packages, TOYOTA INNOVA CRYSTA 9609≡ƒç«≡ƒç│≡ƒÜÿΓ£ê∩╕Å≡ƒÜ⌐', 'PASS', 'COMMUNITY');
+data/service-providers/extracted_providers.md:3521:  > I have a good and reliable Physiotherapist who is coming daily for sessions, if anybody is interested you can contact him at the above number or ping me as wellΓÇª Γ£î∩╕Å
+data/service-providers/extracted_providers.md:3622:  > 25/05/25, 8:21ΓÇ»pm - +91 90333 86708: Thanks ≡ƒæì @Γü¿ramesh D812 AspirationΓü⌐ , @Γü¿~SriniΓü⌐
+data/service-providers/extracted_providers.md:3697:  > 24/08/25, 1:11ΓÇ»pm - Ramakrishna D904: ≡ƒæåClay Vendor in Kollur... You can purchase clay vinayak from this person.
+data/service-providers/extracted_providers.md:3897:  > 30/01/26, 2:23ΓÇ»pm - +91 95539 15388: Thank you for sharing pandit details ≡ƒÖÅ≡ƒÖé
+data/service-providers/extracted_providers.md:3923:  > 30/01/26, 2:23ΓÇ»pm - +91 95539 15388: Thank you for sharing pandit details ≡ƒÖÅ≡ƒÖé
+data/service-providers/extracted_providers.md:3965:  > 08/09/25, 8:45ΓÇ»pm - +91 96527 02736: ≡ƒÿ│
+data/service-providers/extracted_providers.md:4016:  > 13/08/25, 5:51ΓÇ»pm - +91 79897 33429: Appreciate the thought ≡ƒæì≡ƒÅ╗
+data/service-providers/extracted_providers.md:4146:  > 17/04/26, 10:55ΓÇ»am - +91 90529 06655: Every day i see see electricity charges are going around 300, not even using AC for whole night, keep turning on nd off. We IRA people r so reach to spend 7 k approax for electricity easily in summer ≡ƒÿå
+data/service-providers/extracted_providers.md:4148:  > 17/04/26, 10:59ΓÇ»am - +91 78930 59116: ≡ƒö╕≡ƒö╢"α░ùα▒ï α░åα░ºα░╛α░░α▒ì" : α░ùα▒ï α░åα░ºα░╛α░░α░┐α░ñ α░░α▒êα░ñα▒ü α░«α░┐α░ñα▒ìα░░ α░╕α░éα░ÿα░é:α░¡α░╛α░ùα▒ìα░»α░¿α░ùα░░α▒ì:
+data/service-providers/extracted_providers.md:4201:  > 04/03/26, 1:16ΓÇ»pm - +91 94403 01972: The Man of the Match in todayΓÇÖs Holi celebration goes to @Γü¿~Srinivas TutikaΓü⌐ ≡ƒò║≡ƒæÅ
+data/service-providers/extracted_providers.md:4215:- **Bio/Description**: *CPR , BASIC FIRST AID , LIFE SAVER , POOL LIFE GUARD , BEACH LIFE GUARD , SWIMMING , FLOOD RESCUE , FREE DIVING , SUBA DIVING , ROPE RESCUE. ≡ƒÆ¬≡ƒÅ╜*
+data/service-providers/extracted_providers.md:4249:  > 16/03/26, 4:14ΓÇ»pm - +91 80999 11702: Everyone ≡ƒÿä
+data/service-providers/extracted_providers.md:4263:VALUES ('YOUR_COMMUNITY_ID', 'YOUR_USER_ID', 'Swimming Coach', '+919052539224', 'Swimming / Fitness Coach', 'CPR , BASIC FIRST AID , LIFE SAVER , POOL LIFE GUARD , BEACH LIFE GUARD , SWIMMING , FLOOD RESCUE , FREE DIVING , SUBA DIVING , ROPE RESCUE. ≡ƒÆ¬≡ƒÅ╜', 'PASS', 'COMMUNITY');
+data/service-providers/extracted_providers.md:4437:  > 26/04/26, 10:26ΓÇ»am - +91 77025 05556: A bathroom cleaning service is currently available in our community. Anyone who would like to avail the service can contact using the details below ≡ƒæç≡ƒÅ╗
+data/service-providers/extracted_providers.md:4442:  > 02/05/26, 12:04ΓÇ»pm - +91 90529 06655: A bathroom cleaning service is currently available in our community. Anyone who would like to avail the service can contact using the details below ≡ƒæç≡ƒÅ╗
+data/service-providers/extracted_providers.md:4447:  > ≡ƒô▒ 96185 44054
+data/service-providers/extracted_providers.md:4550:  > 17/03/26, 11:26ΓÇ»pm - +91 70937 01477: Requesting everyone to address people with pets as pet parents≡ƒÖÅ
+docs/cross-community.md:62:| C = P (own community)            | Γ£à          | Γ£à         | Γ£à      | Γ£à       |
+docs/cross-community.md:63:| Active partnership CΓåöP with `scope.providers = true` | Γ¥î unless explicit share | Γ£à | Γ£à | Γ£à |
+docs/cross-community.md:64:| C and P share a group            | Γ¥î unless explicit share | Γ¥î | Γ£à | Γ£à |
+docs/cross-community.md:65:| No relationship                  | Γ¥î unless explicit share | Γ¥î | Γ¥î | Γ£à |
+docs/features.md:97:| **Compact UI** | The entire Help screen uses a compact, information-dense layout inspired by WhatsApp chat tiles. The header title uses a reduced serif font (22px), header action buttons are 36px circles (down from 44px), the Providers/Visits segmented control uses 6px vertical padding (down from 10px), the search bar is 36px tall (down from 44px), category filter chips use 4px vertical padding (down from 8px), and the FAB is 56px (down from 64px). Provider cards are redesigned as single-row horizontal tiles with avatar, name+verified badge, and an inline meta row (category ┬╖ Γÿà rating ┬╖ hire count) all on one compact card. Visit cards use reduced padding (10px), smaller avatars (30px), and smaller text sizes. The `UpcomingServicesCard` zero-state is a single-row inline banner instead of a multi-row card with full-width CTA button. |
+docs/features.md:491:| **Business rules** | Schools catalog aggregates curated regional data and community-submitted schools. The Parent Report Card replaces flat 1-5 star reviews with 8 aspect dimensions (Academics, Teachers, Infrastructure, Sports & Activities, Safety & Hygiene, Transport, Value for Money, Child's Happiness) rated on an emoji scale (≡ƒÿƒ ≡ƒÿò ≡ƒÿÉ ≡ƒÖé ≡ƒñ⌐). Parents select their child's grade and can add optional 140-char per-aspect notes. Aggregate aspect averages are stored on the `schools` table via database trigger. School detail page renders an 8-axis spider/radar chart (`SchoolRadarChart`), aspect score breakdown, parent review cards (`SchoolReviewCard`), and a report card CTA button (`app/network/schools/review.tsx`). School listing cards display parent review counts and review badges. |
+docs/session_handling_analysis.md:94:| Persistent Storage (Native & Web) | Γ£à Handled | Configured in `lib/supabase.ts` |
+docs/session_handling_analysis.md:95:| Foreground App Resume Validation | Γ¥î Missing | Add `AppState` listener in `AuthContext` |
+docs/session_handling_analysis.md:96:| Explicit `onAuthStateChange` Routing | ΓÜá∩╕Å Partial | Distinguish `SIGNED_OUT`, `TOKEN_REFRESHED`, `PASSWORD_RECOVERY` |
+docs/session_handling_analysis.md:97:| Network Error vs Missing Profile Handling | Γ¥î Misclassified | Do not wipe profile/community state on transient network errors |
+docs/session_handling_analysis.md:98:| Intended Destination Redirect | Γ¥î Missing | Save target route before redirecting to `/login` |
+docs/session_handling_analysis.md:99:| Token Refresh on 401 Query Error | Γ¥î Missing | Helper wrapper or error interceptor for Supabase requests |
+docs/session_handling_analysis.md:100:| Session Health / Token Expiry Safeguards | ΓÜá∩╕Å Basic | Validate user existence on app resume & handle refresh errors |
+docs/verandah.md:139:- **Decorative emojis in core UI chrome**: Do not use random emojis as decorative bullets in profile screens, list items, or navigation bars (e.g., "ΓÜÖ∩╕Å Settings"). Rely on elegant outline icon packages (such as `Ionicons` 18px in `Verandah.textTertiary`) for consistent and restrained chrome illustration. Emojis are reserved only for dynamic category tags (like AC or Pest Control category icons).
+lib/serviceCategories.ts:48:  ac: 'Γ¥ä∩╕Å',
+lib/serviceCategories.ts:49:  ro_water_purifier: '≡ƒÆº',
+lib/serviceCategories.ts:50:  geyser: 'ΓÖ¿∩╕Å',
+lib/serviceCategories.ts:51:  washing_machine: '≡ƒ½º',
+lib/serviceCategories.ts:52:  refrigerator: '≡ƒºè',
+lib/serviceCategories.ts:53:  chimney: '≡ƒöÑ',
+lib/serviceCategories.ts:54:  pest_control: '≡ƒÉ£',
+lib/serviceCategories.ts:55:  car: '≡ƒÜù',
+lib/serviceCategories.ts:56:  bike: '≡ƒÅì∩╕Å',
+lib/serviceCategories.ts:57:  inverter_battery: '≡ƒöï',
+lib/serviceCategories.ts:58:  other: '≡ƒöº',
+public/admin/js/communities.js:115:            ≡ƒæÑ ${counts.active} members &nbsp;&nbsp; ≡ƒöæ ${counts.leads} lead${counts.leads !== 1 ? 's' : ''}
+public/admin/js/communities.js:238:          category_emoji: b.mcn_business_categories?.emoji || '≡ƒÅ¬',
+public/admin/js/communities.js:389:            <td>≡ƒôà ${delivDate}<br><span class="text-3" style="font-size: 0.8rem;">ΓÅ░ ${drop.fulfillment_time || 'N/A'}</span></td>
+public/admin/js/communities.js:419:              ${biz.category_emoji || '≡ƒÅ¬'} ${biz.name || 'Business'}<br>
+public/admin/js/communities.js:425:              ${waLink ? `<a href="${waLink}" target="_blank" style="margin-left: 6px; text-decoration: none;" title="Chat on WhatsApp">≡ƒÆ¼</a>` : ''}
+public/admin/js/communities.js:427:            <td>Γ¡É ${Number(biz.avg_rating || 0).toFixed(1)} (${biz.rating_count || 0})</td>
+public/admin/js/communities.js:607:                <h2>≡ƒì▓ Pre-Order Food Drops & Statistics</h2>
+public/admin/js/communities.js:639:                <h2>≡ƒÅ¬ Businesses Available in Community</h2>
+public/admin/js/dashboard.js:41:      allOption.textContent = '≡ƒîÉ All Communities (Platform Overview)';
+public/admin/js/dashboard.js:58:      selector.innerHTML = '<option value="ALL">≡ƒîÉ All Communities (Platform Overview)</option>';
+public/admin/js/dashboard.js:208:              Γ¡É ${parseFloat(p.avg_rating || 0).toFixed(1)}
+public/admin/js/providers.js:85:          ? `Γ¡É ${parseFloat(sp.avg_rating).toFixed(1)} <span class="text-3">(${sp.rating_count})</span>` 
+public/admin/js/providers.js:167:                <span style="color: var(--caution); font-weight: 500;">${'Γ¡É'.repeat(rv.rating)}</span>
+public/admin/js/providers.js:205:                  <div style="color: var(--caution); font-size: 1.1rem;">${'Γ¡É'.repeat(Math.round(data.avg_rating || 0)) || 'Γÿå'}</div>
+public/admin/js/providers.js:210:                ≡ƒæÑ <strong>${data.hires_count || 0}</strong> residents have contacted this provider
+supabase/functions/fraud-check/index.ts:298:        evidence: `All ${totalReviews} reviews are ${all5Stars ? '5Γÿà' : '1Γÿà'}`,

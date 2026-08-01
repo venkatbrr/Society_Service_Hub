@@ -3,25 +3,26 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Linking,
-  Modal,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Linking,
+    Modal,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../../components/BaseCard';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
+import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { Tables } from '../../../lib/database.types';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 type Carpool = Tables<'mcn_carpools'> & {
@@ -237,6 +238,14 @@ export default function CarpoolDetailScreen() {
     Linking.openURL(`https://wa.me/${formattedPhone}?text=${msg}`);
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/network/carpools' as any);
+    }
+  };
+
   if (loading || !carpool) {
     return (
       <View style={[styles.center, { backgroundColor: colors.surface }]}>
@@ -248,27 +257,12 @@ export default function CarpoolDetailScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
-      <Stack.Screen options={{ headerShown: false }} />
-
-      {/* Top Header Bar with Back Button */}
-      <View style={styles.topHeader}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace('/network/carpools' as any);
-            }
-          }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]} numberOfLines={1}>
-          {carpool.title}
-        </Text>
-      </View>
+      <Stack.Screen
+        options={buildMcnHeaderOptions({
+          title: carpool.title,
+          onBack: handleBack,
+        })}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -548,7 +542,7 @@ export default function CarpoolDetailScreen() {
         ); })()}
 
         {/* Rider Booking Card (Non-Owner View) */}
-        {!isOwner && carpool.status === 'active' && (
+        {!isOwner && carpool.status === 'active' && carpool.role_type === 'offering' && (
           <BaseCard padding={12} style={styles.card}>
             {myExistingRequest ? (
               <View style={{ gap: 8 }}>

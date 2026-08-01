@@ -1,3 +1,9 @@
+import { Building05 } from '@untitledui/icons/Building05';
+import { Car01 } from '@untitledui/icons/Car01';
+import { Coins01 } from '@untitledui/icons/Coins01';
+import { ShoppingBag03 } from '@untitledui/icons/ShoppingBag03';
+import { Star01 } from '@untitledui/icons/Star01';
+import { Tool02 } from '@untitledui/icons/Tool02';
 import { ScrollViewStyleReset } from 'expo-router/html';
 
 // This file is web-only and used to configure the root HTML for every
@@ -49,12 +55,17 @@ export default function Root({ children }: { children: React.ReactNode }) {
               <span className="pulse-dot"></span>
               <span>LIVE GRID</span>
             </div>
-            <div className="side-card-title">🏢 Society Hub</div>
+            <div className="side-card-title">
+              <Building05 size={20} color="currentColor" aria-hidden="true" style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />
+              Society Hub
+            </div>
             <p className="side-card-desc">Premium gated community ecosystem for modern housing societies.</p>
           </div>
 
           <div className="side-card float-anim-2">
-            <div className="side-card-icon">🍲</div>
+            <div className="side-card-icon">
+              <ShoppingBag03 size={20} color="currentColor" aria-hidden="true" />
+            </div>
             <div>
               <div className="side-card-title">Food Drops</div>
               <p className="side-card-desc">Pre-order home-style meals & bakery items from verified resident hosts.</p>
@@ -62,7 +73,9 @@ export default function Root({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="side-card float-anim-3">
-            <div className="side-card-icon">🛠️</div>
+            <div className="side-card-icon">
+              <Tool02 size={20} color="currentColor" aria-hidden="true" />
+            </div>
             <div>
               <div className="side-card-title">Verified Hiring</div>
               <p className="side-card-desc">Hire electricians, plumbers & maids rated by your same neighbors.</p>
@@ -76,15 +89,19 @@ export default function Root({ children }: { children: React.ReactNode }) {
         {/* Right Side Motion Aesthetic Floating Cards */}
         <div className="desktop-side-panel panel-right">
           <div className="side-card float-anim-2">
-            <div className="side-card-icon">⭐</div>
+            <div className="side-card-icon">
+              <Star01 size={20} color="currentColor" aria-hidden="true" />
+            </div>
             <div>
-              <div className="side-card-title">4.9 ★ Ratings</div>
+              <div className="side-card-title">4.9 Ratings</div>
               <p className="side-card-desc">100% verified neighbor reviews and trust metrics.</p>
             </div>
           </div>
 
           <div className="side-card float-anim-1">
-            <div className="side-card-icon">🚗</div>
+            <div className="side-card-icon">
+              <Car01 size={20} color="currentColor" aria-hidden="true" />
+            </div>
             <div>
               <div className="side-card-title">Co-Planned Visits</div>
               <p className="side-card-desc">Share maintenance visits with neighbors & split travel fees.</p>
@@ -92,7 +109,9 @@ export default function Root({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="side-card float-anim-3">
-            <div className="side-card-icon">💳</div>
+            <div className="side-card-icon">
+              <Coins01 size={20} color="currentColor" aria-hidden="true" />
+            </div>
             <div>
               <div className="side-card-title">Cultural Funds</div>
               <p className="side-card-desc">Transparent festival collection tracking & financial reporting.</p>

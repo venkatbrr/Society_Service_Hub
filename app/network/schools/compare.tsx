@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../../constants/Colors';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 import { WEST_HYDERABAD_SCHOOLS } from '../../../data/westHyderabadSchools';
@@ -103,14 +104,10 @@ export default function CompareSchoolsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
-        options={{
+        options={buildMcnHeaderOptions({
           title: 'Compare schools',
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.replace('/network/schools' as any)} style={{ marginRight: 12 }}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
-        }}
+          onBack: () => router.replace('/network/schools' as any),
+        })}
       />
 
       <ScrollView horizontal contentContainerStyle={{ flexGrow: 1 }} showsHorizontalScrollIndicator={false}>

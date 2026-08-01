@@ -11,7 +11,7 @@
     },
     {
       "source": "/((?!images|assets|favicon.ico|_expo|admin).*)",
-      "destination": "/index.bak.html"
+      "destination": "/index.html"
     }
   ]
 }

@@ -6,9 +6,10 @@ import { ActivityIndicator, Alert, FlatList, SectionList, StyleSheet, Text, Touc
 import Toast from 'react-native-toast-message';
 import { EmptyState } from '../../components/EmptyState';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
+import { buildMcnHeaderOptions } from '../../lib/mcnHeader';
 import { supabase } from '../../lib/supabase';
 
 type Post = Tables<'mcn_posts'>;
@@ -30,7 +31,12 @@ export default function MyPostsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchPosts = useCallback(async (isRefresh = false) => {
-    if (!user) return;
+    if (!user) {
+      setPosts([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     if (borrowOnlyView && !communityId) {
       setPosts([]);
       setLoading(false);
@@ -68,7 +74,12 @@ export default function MyPostsScreen() {
   }, [borrowOnlyView, communityId, user]);
 
   const fetchListings = useCallback(async (isRefresh = false) => {
-    if (!user) return;
+    if (!user) {
+      setListings([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
 
@@ -224,6 +235,10 @@ export default function MyPostsScreen() {
   }
 
   const handleBack = () => {
+    if (borrowOnlyView) {
+      router.replace('/(tabs)/network' as any);
+      return;
+    }
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -234,14 +249,10 @@ export default function MyPostsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
-        options={{
+        options={buildMcnHeaderOptions({
           title: borrowOnlyView ? 'Borrow & Share' : 'My community posts',
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
-        }}
+          onBack: handleBack,
+        })}
       />
 
       {/* Tab Switched Header */}
@@ -418,6 +429,11 @@ export default function MyPostsScreen() {
                       <Ionicons name="close-circle-outline" size={14} color={colors.textPrimary} />
                       <Text style={[styles.actionText, { color: colors.textPrimary }]}>Close</Text>
                     </TouchableOpacity>
+                  ) : item.is_available ? (
+                    <View style={styles.actionBtn}>
+                      <Ionicons name="checkmark-circle-outline" size={14} color={colors.accent} />
+                      <Text style={[styles.actionText, { color: colors.accent }]}>Active</Text>
+                    </View>
                   ) : (
                     <View style={styles.actionBtn}>
                       <Ionicons name="checkmark-circle-outline" size={14} color={colors.textMuted} />
@@ -472,7 +488,7 @@ const styles = StyleSheet.create({
   segmentContainer: {
     flexDirection: 'row',
     marginHorizontal: 24,
-    marginTop: 16,
+    marginTop: VerandahLayout.mcnHeaderToContentGap,
     marginBottom: 8,
     backgroundColor: Verandah.cardMuted,
     borderRadius: VerandahRadius.pill,
@@ -480,16 +496,16 @@ const styles = StyleSheet.create({
   },
   borrowOnlyHeader: {
     marginHorizontal: 24,
-    marginTop: 16,
-    marginBottom: 10,
+    marginTop: VerandahLayout.mcnHeaderToContentGap,
+    marginBottom: 6,
   },
   borrowOnlyTitle: {
     ...VerandahType.title,
-    fontSize: 18,
+    fontSize: 17,
   },
   borrowOnlySubtitle: {
     ...VerandahType.caption,
-    marginTop: 2,
+    marginTop: 0,
   },
   segmentBtn: {
     flex: 1,
@@ -514,7 +530,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 24,
-    paddingTop: 12,
+    paddingTop: 8,
     paddingBottom: 40,
   },
   emptyList: {
@@ -525,23 +541,23 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 16,
     fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 10,
+    marginBottom: 6,
   },
   card: {
     borderRadius: VerandahRadius.lg,
     borderWidth: 0.5,
-    padding: 16,
-    marginBottom: 12,
+    padding: 12,
+    marginBottom: 8,
   },
   cardHeader: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   cardTitleWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 2,
     gap: 8,
   },
   cardTitle: {
@@ -574,8 +590,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderTopWidth: 0.5,
     borderTopColor: Verandah.border,
-    paddingTop: 12,
-    marginTop: 4,
+    paddingTop: 8,
+    marginTop: 2,
   },
   actionBtn: {
     flex: 1,
@@ -583,10 +599,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   actionText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
   },
   actionDivider: {

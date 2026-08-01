@@ -4,13 +4,16 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { SchoolAspectIcon } from '../../../components/SchoolAspectIcon';
 import { AspectScores, SchoolRadarChart } from '../../../components/SchoolRadarChart';
 import { SchoolReviewCard, SchoolReviewItem } from '../../../components/SchoolReviewCard';
+import { ScoreSentimentIcon } from '../../../components/ScoreSentimentIcon';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
-import { getEmojiForScore, SCHOOL_ASPECTS } from '../../../constants/schoolReviewAspects';
+import { SCHOOL_ASPECTS } from '../../../constants/schoolReviewAspects';
 import { useAuth } from '../../../context/AuthContext';
 import { WEST_HYDERABAD_SCHOOLS } from '../../../data/westHyderabadSchools';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 interface School extends AspectScores {
@@ -255,20 +258,15 @@ export default function SchoolDetailScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
-        options={{
+        options={buildMcnHeaderOptions({
           title: 'School details',
-          headerBackVisible: false,
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleGoBack} style={styles.headerBackBtn} hitSlop={8}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
+          onBack: handleGoBack,
           headerRight: () => canDelete ? (
             <TouchableOpacity onPress={handleDelete} style={styles.headerDeleteBtn}>
               <Ionicons name="trash-outline" size={20} color={colors.danger} />
             </TouchableOpacity>
           ) : null,
-        }}
+        })}
       />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={[styles.schoolName, { color: colors.textPrimary }]}>{school.name}</Text>
@@ -279,13 +277,13 @@ export default function SchoolDetailScreen() {
         {/* Quick info row */}
         <View style={[styles.quickInfoCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
           <View style={styles.infoCol}>
-            <Ionicons name="location-outline" size={20} color={colors.accent} />
+            <Ionicons name="location-outline" size={18} color={colors.accent} />
             <Text style={[styles.infoVal, { color: colors.textPrimary }]} numberOfLines={1}>{school.area_locality || 'Nearby'}</Text>
             <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Locality</Text>
           </View>
           <View style={[styles.infoDivider, { backgroundColor: colors.border }]} />
           <View style={styles.infoCol}>
-            <Ionicons name="cash-outline" size={20} color={colors.accent} />
+            <Ionicons name="cash-outline" size={18} color={colors.accent} />
             <Text style={[styles.infoVal, { color: colors.textPrimary }]} numberOfLines={1}>{school.fee_range}</Text>
             <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Annual Fees</Text>
           </View>
@@ -309,7 +307,7 @@ export default function SchoolDetailScreen() {
                   onPress={handleCall}
                   style={[styles.contactCard, { borderColor: colors.border, backgroundColor: colors.card }]}
                 >
-                  <Ionicons name="call" size={18} color={colors.accent} />
+                  <Ionicons name="call" size={16} color={colors.accent} />
                   <Text style={[styles.contactCardVal, { color: colors.textSecondary }]}>{school.contact_phone}</Text>
                   <Text style={[styles.contactCardLabel, { color: colors.textTertiary }]}>Call School</Text>
                 </TouchableOpacity>
@@ -320,7 +318,7 @@ export default function SchoolDetailScreen() {
                   onPress={handleWebsite}
                   style={[styles.contactCard, { borderColor: colors.border, backgroundColor: colors.card }]}
                 >
-                  <Ionicons name="globe" size={18} color={colors.accent} />
+                  <Ionicons name="globe" size={16} color={colors.accent} />
                   <Text style={[styles.contactCardVal, { color: colors.textSecondary }]} numberOfLines={1}>
                     {school.website}
                   </Text>
@@ -333,7 +331,7 @@ export default function SchoolDetailScreen() {
                   onPress={handleMaps}
                   style={[styles.contactCard, { borderColor: colors.border, backgroundColor: colors.card }]}
                 >
-                  <Ionicons name="navigate" size={18} color={colors.accent} />
+                  <Ionicons name="navigate" size={16} color={colors.accent} />
                   <Text style={[styles.contactCardVal, { color: colors.textSecondary }]} numberOfLines={1}>
                     Open location
                   </Text>
@@ -367,7 +365,7 @@ export default function SchoolDetailScreen() {
         <View style={styles.section}>
           <View style={styles.reportHeaderRow}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-              📋 Parent Report Card
+              Parent Report Card
             </Text>
             {school.review_count ? (
               <Text style={styles.reviewCountBadge}>
@@ -389,11 +387,12 @@ export default function SchoolDetailScreen() {
                   const val = aspectScores[key] || 0;
                   return (
                     <View key={aspect.key} style={styles.aspectListRow}>
-                      <Text style={styles.aspectListLabel}>
-                        {aspect.emoji} {aspect.label}
-                      </Text>
+                      <View style={styles.aspectListLabelWrap}>
+                        <SchoolAspectIcon aspectKey={aspect.key} size={14} />
+                        <Text style={styles.aspectListLabel}>{aspect.label}</Text>
+                      </View>
                       <View style={styles.aspectListValWrap}>
-                        <Text style={styles.aspectListEmoji}>{getEmojiForScore(val)}</Text>
+                        <ScoreSentimentIcon score={val} size={14} />
                         <Text style={styles.aspectListScore}>{val > 0 ? val.toFixed(1) : '-'}</Text>
                       </View>
                     </View>
@@ -409,24 +408,24 @@ export default function SchoolDetailScreen() {
               </Text>
 
               <View style={styles.whyGradeBox}>
-                <Text style={styles.whyGradeHeader}>💡 How Your Report Card Helps Neighbor Families:</Text>
+                <Text style={styles.whyGradeHeader}>How Your Report Card Helps Neighbor Families:</Text>
 
                 <View style={styles.whyGradeBulletRow}>
-                  <Text style={styles.whyGradeBullet}>🎯</Text>
+                  <Text style={styles.whyGradeBullet}>•</Text>
                   <Text style={styles.whyGradeBulletText}>
                     <Text style={{ fontWeight: '700', color: colors.textPrimary }}>Real Parent Feedback:</Text> Gives neighboring families authentic 360° ratings on academics, teacher quality, & safety beyond school marketing.
                   </Text>
                 </View>
 
                 <View style={styles.whyGradeBulletRow}>
-                  <Text style={styles.whyGradeBullet}>🚌</Text>
+                  <Text style={styles.whyGradeBullet}>•</Text>
                   <Text style={styles.whyGradeBulletText}>
                     <Text style={{ fontWeight: '700', color: colors.textPrimary }}>Transport & Logistics:</Text> Shares real experiences about school bus safety, route timings, & commute from your society.
                   </Text>
                 </View>
 
                 <View style={styles.whyGradeBulletRow}>
-                  <Text style={styles.whyGradeBullet}>🤝</Text>
+                  <Text style={styles.whyGradeBullet}>•</Text>
                   <Text style={styles.whyGradeBulletText}>
                     <Text style={{ fontWeight: '700', color: colors.textPrimary }}>Confident Admission Choice:</Text> Empowers parents to pick the best school for their child backed by verified neighborhood ratings.
                   </Text>
@@ -491,8 +490,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scrollContent: {
-    padding: 24,
-    paddingBottom: 60,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 36,
   },
   headerDeleteBtn: {
     padding: 8,
@@ -503,18 +503,18 @@ const styles = StyleSheet.create({
   },
   schoolName: {
     ...VerandahType.display,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   schoolMeta: {
     ...VerandahType.body,
-    marginBottom: 24,
+    marginBottom: 14,
   },
   quickInfoCard: {
     flexDirection: 'row',
     borderWidth: 0.5,
     borderRadius: VerandahRadius.lg,
-    paddingVertical: 12,
-    marginBottom: 28,
+    paddingVertical: 8,
+    marginBottom: 16,
   },
   infoCol: {
     flex: 1,
@@ -523,43 +523,44 @@ const styles = StyleSheet.create({
   infoVal: {
     fontSize: 15,
     fontWeight: '600',
-    marginTop: 4,
+    marginTop: 2,
   },
   infoLabel: {
     ...VerandahType.micro,
-    marginTop: 1,
+    marginTop: 0,
   },
   infoDivider: {
     width: 0.5,
     height: '100%',
   },
   section: {
-    marginBottom: 28,
+    marginBottom: 16,
   },
   sectionTitle: {
     ...VerandahType.title,
     fontSize: 16,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   descriptionText: {
     ...VerandahType.body,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   contactRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   contactCard: {
     flex: 1,
     borderWidth: 0.5,
     borderRadius: VerandahRadius.lg,
-    padding: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     alignItems: 'center',
   },
   contactCardVal: {
     fontSize: 13,
     fontWeight: '500',
-    marginTop: 8,
+    marginTop: 6,
     textAlign: 'center',
   },
   contactCardLabel: {
@@ -570,14 +571,14 @@ const styles = StyleSheet.create({
   facilitiesList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   facilityItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     width: '48%',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   facilityText: {
     fontSize: 13,
@@ -591,7 +592,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   reviewCountBadge: {
     fontSize: 12,
@@ -609,7 +610,7 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.lg,
     padding: 16,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   chartSubtitle: {
     fontSize: 12,
@@ -619,16 +620,21 @@ const styles = StyleSheet.create({
   },
   aspectListWrap: {
     width: '100%',
-    marginTop: 16,
+    marginTop: 12,
     borderTopWidth: 0.5,
     borderTopColor: Verandah.border,
-    paddingTop: 12,
-    gap: 8,
+    paddingTop: 10,
+    gap: 6,
   },
   aspectListRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  aspectListLabelWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   aspectListLabel: {
     fontSize: 12,
@@ -640,9 +646,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  aspectListEmoji: {
-    fontSize: 13,
-  },
   aspectListScore: {
     fontSize: 12,
     fontWeight: '700',
@@ -653,9 +656,9 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
-    padding: 18,
+    padding: 14,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   noReviewsTitle: {
     fontSize: 14,
@@ -667,8 +670,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Verandah.textSecondary,
     textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: 14,
+    lineHeight: 16,
+    marginBottom: 10,
   },
   whyGradeBox: {
     width: '100%',
@@ -676,8 +679,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#BFDBFE',
     borderRadius: VerandahRadius.md,
-    padding: 14,
-    gap: 10,
+    padding: 12,
+    gap: 8,
   },
   whyGradeHeader: {
     fontSize: 12,
@@ -703,7 +706,7 @@ const styles = StyleSheet.create({
   reviewCtaBtn: {
     flexDirection: 'row',
     backgroundColor: Verandah.accent,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: VerandahRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
@@ -716,7 +719,7 @@ const styles = StyleSheet.create({
   },
   toggleReviewsBtn: {
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   toggleReviewsText: {
     fontSize: 13,

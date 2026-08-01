@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
-import { getEmojiForScore, SCHOOL_ASPECTS } from '../constants/schoolReviewAspects';
+import { SCHOOL_ASPECTS } from '../constants/schoolReviewAspects';
 import { Avatar } from './Avatar';
+import { SchoolAspectIcon } from './SchoolAspectIcon';
+import { ScoreSentimentIcon } from './ScoreSentimentIcon';
 
 export interface SchoolReviewItem {
   id: string;
@@ -104,7 +106,7 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
           </Text>
         </View>
         <View style={styles.scorePill}>
-          <Text style={styles.scorePillEmoji}>{getEmojiForScore(parseFloat(avgScore))}</Text>
+          <ScoreSentimentIcon score={parseFloat(avgScore)} size={14} />
           <Text style={styles.scorePillVal}>{avgScore}</Text>
         </View>
       </View>
@@ -115,13 +117,14 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
           const score = scoreMap[aspect.key];
           return (
             <View key={aspect.key} style={styles.aspectGridItem}>
-              <Text style={styles.aspectEmoji}>{aspect.emoji}</Text>
+              <SchoolAspectIcon aspectKey={aspect.key} size={13} />
               <Text style={styles.aspectLabel} numberOfLines={1}>
                 {aspect.label}
               </Text>
-              <Text style={styles.aspectScore}>
-                {getEmojiForScore(score)} {score}
-              </Text>
+              <View style={styles.aspectScoreWrap}>
+                <ScoreSentimentIcon score={score} size={12} />
+                <Text style={styles.aspectScore}>{score}</Text>
+              </View>
             </View>
           );
         })}
@@ -130,7 +133,7 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
       {/* Overall Comment / Parent Advice Box */}
       {review.overall_comment ? (
         <View style={styles.overallCommentBox}>
-          <Text style={styles.overallCommentTitle}>💬 Parent Note & Advice:</Text>
+          <Text style={styles.overallCommentTitle}>Parent Note & Advice:</Text>
           <Text style={styles.overallCommentText}>"{review.overall_comment}"</Text>
         </View>
       ) : null}
@@ -161,7 +164,7 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
                 return (
                   <View key={`comment-${aspect.key}`} style={styles.commentRow}>
                     <Text style={styles.commentHeader}>
-                      {aspect.emoji} {aspect.label}:
+                      {aspect.label}:
                     </Text>
                     <Text style={styles.commentBody}>{comment}</Text>
                   </View>
@@ -240,9 +243,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: VerandahRadius.pill,
   },
-  scorePillEmoji: {
-    fontSize: 13,
-  },
   scorePillVal: {
     fontSize: 13,
     fontWeight: '700',
@@ -264,15 +264,16 @@ const styles = StyleSheet.create({
     width: '48%',
     justifyContent: 'space-between',
   },
-  aspectEmoji: {
-    fontSize: 12,
-    marginRight: 4,
-  },
   aspectLabel: {
     fontSize: 11,
     fontWeight: '500',
     color: Verandah.textSecondary,
     flex: 1,
+  },
+  aspectScoreWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
   aspectScore: {
     fontSize: 11,

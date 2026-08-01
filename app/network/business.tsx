@@ -15,13 +15,14 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { AppIcon } from '../../components/AppIcon';
 import { EmptyState } from '../../components/EmptyState';
 import { McnListingCard, McnListingItem } from '../../components/McnListingCard';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
-import { APP_EMOJIS } from '../../constants/emojis';
+import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../lib/mcnHeader';
 import { supabase } from '../../lib/supabase';
 
 type McnCategory = { id: string; name: string; emoji: string; sort_order: number };
@@ -142,14 +143,12 @@ export default function BusinessListingsScreen() {
     const activeListings = listings.filter((l) => l.is_active);
     const inactiveListings = listings.filter((l) => !l.is_active);
 
-    const groupsMap: Record<string, { categoryName: string; emoji: string; items: McnListingItem[] }> = {};
+    const groupsMap: Record<string, { categoryName: string; icon: 'store' | 'lock'; items: McnListingItem[] }> = {};
 
     activeListings.forEach((item) => {
       const catName = item.category?.name || 'Other Community Businesses';
-      const catEmoji = item.category?.emoji || '🏪';
-
       if (!groupsMap[catName]) {
-        groupsMap[catName] = { categoryName: catName, emoji: catEmoji, items: [] };
+        groupsMap[catName] = { categoryName: catName, icon: 'store', items: [] };
       }
       groupsMap[catName].items.push(item);
     });
@@ -159,7 +158,7 @@ export default function BusinessListingsScreen() {
     if (inactiveListings.length > 0) {
       groupsList.push({
         categoryName: 'Inactive Businesses',
-        emoji: '🔒',
+        icon: 'lock',
         items: inactiveListings,
       });
     }
@@ -207,15 +206,10 @@ export default function BusinessListingsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
-        options={{
-          headerTitle: 'Community Business',
-          headerTitleStyle: { fontWeight: '500', fontSize: 17, color: colors.textPrimary },
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
-        }}
+        options={buildMcnHeaderOptions({
+          title: 'Community Business',
+          onBack: handleBack,
+        })}
       />
 
       {/* Top Section Switcher Toggle */}
@@ -225,14 +219,20 @@ export default function BusinessListingsScreen() {
           onPress={() => router.push('/network/drops' as any)}
           activeOpacity={0.8}
         >
-          <Text style={styles.masterToggleText}>🍲 Pre-order Food</Text>
+          <View style={styles.iconLabelRow}>
+            <Ionicons name="restaurant-outline" size={16} color={colors.textSecondary} />
+            <Text style={styles.masterToggleText}>Pre-order Food</Text>
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.masterToggleBtn, styles.masterToggleBtnActive]}
           activeOpacity={0.9}
         >
-          <Text style={styles.masterToggleTextActive}>🏪 Community Businesses</Text>
+          <View style={styles.iconLabelRow}>
+            <AppIcon name="store" size={16} />
+            <Text style={styles.masterToggleTextActive}>Community Businesses</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -243,7 +243,9 @@ export default function BusinessListingsScreen() {
       </View>
 
       <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
-        <Text style={styles.searchIcon}>{APP_EMOJIS.search}</Text>
+        <View style={styles.searchIconWrap}>
+          <AppIcon name="search" size={14} />
+        </View>
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder="Search businesses..."
@@ -273,15 +275,18 @@ export default function BusinessListingsScreen() {
           onPress={() => handleToggleCategory(null)}
           activeOpacity={0.8}
         >
-          <Text
-            style={[
-              styles.categoryChipText,
-              { color: colors.textSecondary },
-              selectedCategoryId === null && { color: colors.accent },
-            ]}
-          >
-            🏪 All
-          </Text>
+          <View style={styles.iconLabelRow}>
+            <AppIcon name="store" size={14} />
+            <Text
+              style={[
+                styles.categoryChipText,
+                { color: colors.textSecondary },
+                selectedCategoryId === null && { color: colors.accent },
+              ]}
+            >
+              All
+            </Text>
+          </View>
         </TouchableOpacity>
 
         {categories.map((category) => {
@@ -304,7 +309,7 @@ export default function BusinessListingsScreen() {
                   isActive && { color: colors.accent },
                 ]}
               >
-                {category.emoji} {category.name}
+                {category.name}
               </Text>
             </TouchableOpacity>
           );
@@ -335,7 +340,7 @@ export default function BusinessListingsScreen() {
             const isCollapsed = !!collapsedCategories[group.categoryName];
 
             return (
-              <View style={{ marginBottom: 14 }}>
+              <View style={{ marginBottom: 8 }}>
                 {/* Collapsible Category Header */}
                 <TouchableOpacity
                   style={styles.categorySectionHeader}
@@ -343,7 +348,7 @@ export default function BusinessListingsScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                    <Text style={styles.categoryHeaderEmoji}>{group.emoji}</Text>
+                    <AppIcon name={group.icon} size={14} />
                     <Text style={styles.categoryHeaderTitle} numberOfLines={1}>
                       {group.categoryName}
                     </Text>
@@ -360,7 +365,7 @@ export default function BusinessListingsScreen() {
 
                 {/* Listing Cards under Category */}
                 {!isCollapsed ? (
-                  <View style={{ marginTop: 8 }}>
+                  <View style={{ marginTop: 4 }}>
                     {group.items.map((listing) => (
                       <McnListingCard
                         key={listing.id}
@@ -404,8 +409,8 @@ const styles = StyleSheet.create({
   },
   headerSubtitleWrap: {
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: 8,
+    paddingBottom: 6,
   },
   subtitle: {
     ...VerandahType.body,
@@ -414,15 +419,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 20,
-    marginBottom: 12,
+    marginBottom: 8,
     paddingHorizontal: 12,
     height: 44,
     borderRadius: VerandahRadius.md,
     borderWidth: 1,
   },
-  searchIcon: {
+  searchIconWrap: {
     marginRight: 8,
-    fontSize: 16,
   },
   searchInput: {
     flex: 1,
@@ -431,7 +435,7 @@ const styles = StyleSheet.create({
   },
   categoryChipsWrap: {
     maxHeight: 44,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   categoryChipsScroll: {
     paddingHorizontal: 20,
@@ -458,7 +462,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 88,
+    paddingBottom: 82,
   },
   emptyList: {
     flexGrow: 1,
@@ -492,13 +496,13 @@ const styles = StyleSheet.create({
   masterToggleRow: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 6,
-    gap: 10,
+    paddingTop: VerandahLayout.mcnHeaderToContentGap,
+    paddingBottom: 4,
+    gap: 8,
   },
   masterToggleBtn: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 9,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: VerandahRadius.pill,
@@ -513,11 +517,13 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     borderRadius: VerandahRadius.md,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginTop: 4,
+    paddingVertical: 8,
+    marginTop: 2,
   },
-  categoryHeaderEmoji: {
-    fontSize: 16,
+  iconLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   categoryHeaderTitle: {
     fontSize: 14,

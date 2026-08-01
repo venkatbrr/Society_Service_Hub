@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -14,11 +13,13 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { EmojiRating } from '../../../components/EmojiRating';
+import { SchoolAspectIcon } from '../../../components/SchoolAspectIcon';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { GRADE_OPTIONS, SCHOOL_ASPECTS } from '../../../constants/schoolReviewAspects';
 import { useAuth } from '../../../context/AuthContext';
 import { WEST_HYDERABAD_SCHOOLS } from '../../../data/westHyderabadSchools';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 export default function SubmitSchoolReviewScreen() {
@@ -210,15 +211,10 @@ export default function SubmitSchoolReviewScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Stack.Screen
-        options={{
+        options={buildMcnHeaderOptions({
           title: existingReviewId ? 'Edit report card' : 'Parent report card',
-          headerBackVisible: false,
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleGoBack} style={styles.headerBackBtn} hitSlop={8}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
-        }}
+          onBack: handleGoBack,
+        })}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -258,9 +254,10 @@ export default function SubmitSchoolReviewScreen() {
         {SCHOOL_ASPECTS.map((aspect) => (
           <View key={aspect.key} style={styles.aspectCard}>
             <View style={styles.aspectHeader}>
-              <Text style={styles.aspectTitle}>
-                {aspect.emoji} {aspect.label}
-              </Text>
+              <View style={styles.aspectTitleRow}>
+                <SchoolAspectIcon aspectKey={aspect.key} size={16} />
+                <Text style={styles.aspectTitle}>{aspect.label}</Text>
+              </View>
               <Text style={styles.aspectPrompt}>{aspect.prompt}</Text>
             </View>
 
@@ -289,7 +286,7 @@ export default function SubmitSchoolReviewScreen() {
         {/* Overall Comments / Additional Advice Card */}
         <View style={styles.aspectCard}>
           <View style={styles.aspectHeader}>
-            <Text style={styles.aspectTitle}>💬 Overall Comments & Parent Advice</Text>
+            <Text style={styles.aspectTitle}>Overall Comments & Parent Advice</Text>
             <Text style={styles.aspectPrompt}>
               Share any overall feedback, admission tips, or advice for fellow neighborhood parents...
             </Text>
@@ -406,11 +403,16 @@ const styles = StyleSheet.create({
   aspectHeader: {
     marginBottom: 12,
   },
+  aspectTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
   aspectTitle: {
     ...VerandahType.bodyBold,
     fontSize: 15,
     color: Verandah.textPrimary,
-    marginBottom: 2,
   },
   aspectPrompt: {
     fontSize: 12,

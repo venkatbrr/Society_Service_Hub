@@ -1,22 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahRadius } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 const ALL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -143,32 +143,25 @@ export default function AddCarpoolScreen() {
     }
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/network/carpools' as any);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.container, { backgroundColor: colors.surface }]}
     >
-      <Stack.Screen options={{ headerShown: false }} />
-
-      {/* Top Header Bar with Back Button */}
-      <View style={styles.topHeader}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace('/network/carpools' as any);
-            }
-          }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
-          {roleType === 'offering' ? 'Offer a Carpool Ride' : 'Request a Carpool Ride'}
-        </Text>
-      </View>
+      <Stack.Screen
+        options={buildMcnHeaderOptions({
+          title: roleType === 'offering' ? 'Offer a Carpool Ride' : 'Request a Carpool Ride',
+          onBack: handleBack,
+        })}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Toggle Mode Segment */}
@@ -660,23 +653,6 @@ export default function AddCarpoolScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  topHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 6,
-    gap: 12,
-  },
-  backBtn: {
-    padding: 6,
-    borderRadius: VerandahRadius.pill,
-  },
-  headerTitle: {
-    ...VerandahType.title,
-    fontSize: 18,
     flex: 1,
   },
   scrollContent: {

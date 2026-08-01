@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../components/BaseCard';
+import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { Verandah } from '../../constants/Colors';
 import { BLOOD_GROUPS } from '../../constants/sos';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
@@ -178,9 +178,7 @@ export default function DonorFormScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color={Verandah.primary} />
-        </TouchableOpacity>
+        <HeaderBackButton onPress={() => router.back()} color={Verandah.primary} style={styles.backButton} />
         <View style={styles.headerCopy}>
           <Text style={styles.title}>{existingId ? 'Edit donor profile' : 'Register as donor'}</Text>
           <Text style={styles.subtitle}>Only your community members can view this number.</Text>

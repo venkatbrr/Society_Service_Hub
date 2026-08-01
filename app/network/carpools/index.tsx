@@ -3,22 +3,23 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { BaseCard } from '../../../components/BaseCard';
 import { EmptyState } from '../../../components/EmptyState';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { Tables } from '../../../lib/database.types';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 type Carpool = Tables<'mcn_carpools'> & {
@@ -132,27 +133,22 @@ export default function CarpoolListScreen() {
     }
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/network' as any);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
-      <Stack.Screen options={{ headerShown: false }} />
-
-      {/* Top Header Bar with Back Button */}
-      <View style={styles.topHeader}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace('/(tabs)/network' as any);
-            }
-          }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Community Carpooling 🚘</Text>
-      </View>
+      <Stack.Screen
+        options={buildMcnHeaderOptions({
+          title: 'Community Carpooling',
+          onBack: handleBack,
+        })}
+      />
 
       {/* Header Info */}
       <View style={styles.header}>
@@ -406,26 +402,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  topHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 2,
-    gap: 12,
-  },
-  backBtn: {
-    padding: 4,
-    borderRadius: VerandahRadius.pill,
-  },
-  headerTitle: {
-    ...VerandahType.title,
-    fontSize: 18,
-    flex: 1,
-  },
   header: {
     paddingHorizontal: 16,
-    paddingTop: 2,
+    paddingTop: VerandahLayout.mcnHeaderToContentGap,
     paddingBottom: 2,
   },
   subText: {

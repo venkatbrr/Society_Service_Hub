@@ -9,6 +9,7 @@ import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
 import { useAuth } from '../../../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
 import { supabase } from '../../../../lib/supabase';
 
 interface Product {
@@ -432,20 +433,15 @@ export default function ManageListingScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
-        options={{
-          title: 'Manage listing',
-          headerBackVisible: false,
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleGoBack} style={styles.headerBackBtn} hitSlop={8}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <TouchableOpacity onPress={() => setShowListingModal(true)} style={styles.headerAction}>
-              <Text style={[styles.headerActionText, { color: colors.accent }]}>Edit details</Text>
-            </TouchableOpacity>
-          ),
-        }}
+          options={buildMcnHeaderOptions({
+            title: 'Manage listing',
+            onBack: handleGoBack,
+            headerRight: () => (
+              <TouchableOpacity onPress={() => setShowListingModal(true)} style={styles.headerAction}>
+                <Text style={[styles.headerActionText, { color: colors.accent }]}>Edit details</Text>
+              </TouchableOpacity>
+            ),
+          })}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

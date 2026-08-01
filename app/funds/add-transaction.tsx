@@ -16,9 +16,10 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BlockPicker } from '../../components/BlockPicker';
+import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
-import { VerandahRadius, VerandahType , VerandahLayout } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { formatRole, getEffectiveFundRole, getFundPermissions } from '../../lib/fundRoles';
@@ -389,9 +390,7 @@ export default function AddTransactionScreen() {
     >
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
+          <HeaderBackButton onPress={() => router.back()} color={colors.text} style={styles.backButton} />
           <Text style={styles.title}>
             {transaction_id
               ? type === 'income' ? 'Edit contribution' : 'Edit expense'

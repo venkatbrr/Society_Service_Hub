@@ -3,9 +3,11 @@ import { Image } from 'expo-image';
 import React from 'react';
 import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { format12HourTime, VerandahRadius, VerandahType } from '../constants/Verandah';
+import { format12HourTime, getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
+
+const NETWORK_TILE_IMAGE_HEIGHT = getNetworkTileImageHeight();
 
 export interface PreorderDropItem {
   id: string;
@@ -304,7 +306,7 @@ const styles = StyleSheet.create({
     color: Verandah.accent,
   },
   coverImageWrap: {
-    height: 125,
+    height: NETWORK_TILE_IMAGE_HEIGHT,
     borderRadius: VerandahRadius.md,
     overflow: 'hidden',
     marginBottom: 6,

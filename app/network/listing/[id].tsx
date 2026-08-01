@@ -11,6 +11,7 @@ import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 interface Product {
@@ -302,15 +303,10 @@ export default function ListingDetailScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <Stack.Screen
-        options={{
+        options={buildMcnHeaderOptions({
           title: listing.name,
-          headerBackVisible: false,
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleGoBack} style={styles.headerBackBtn} hitSlop={8}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
-        }}
+          onBack: handleGoBack,
+        })}
       />
 
       {listing.image_url ? (

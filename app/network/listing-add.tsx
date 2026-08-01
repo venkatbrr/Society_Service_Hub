@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -7,6 +6,7 @@ import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../lib/mcnHeader';
 import { supabase } from '../../lib/supabase';
 
 type McnCategory = { id: string; name: string; emoji: string; sort_order: number };
@@ -119,15 +119,10 @@ export default function AddListingScreen() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
     >
       <Stack.Screen
-        options={{
+        options={buildMcnHeaderOptions({
           title: 'Add business listing',
-          headerBackVisible: false,
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleGoBack} style={styles.headerBackBtn} hitSlop={8}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
-        }}
+          onBack: handleGoBack,
+        })}
       />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <ImageUploader

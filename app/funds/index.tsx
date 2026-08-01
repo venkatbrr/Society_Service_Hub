@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../components/BaseCard';
 import { FundsList } from '../../components/FundsList';
+import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
 import { VerandahType } from '../../constants/Verandah';
@@ -70,9 +71,7 @@ export default function FundsHomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-            <Ionicons name="arrow-back" size={20} color={Verandah.primary} />
-          </TouchableOpacity>
+          <HeaderBackButton onPress={() => router.back()} color={Verandah.primary} style={styles.iconButton} />
           <Text style={styles.headerTitle}>Community funds</Text>
           <View style={{ width: 36 }} />
         </View>

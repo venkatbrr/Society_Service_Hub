@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { Stack, useRouter } from 'expo-router';
@@ -20,10 +19,10 @@ import { BaseCard } from '../../../components/BaseCard';
 import { EmptyState } from '../../../components/EmptyState';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
-import { APP_EMOJIS } from '../../../constants/emojis';
+import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { WEST_HYDERABAD_SCHOOLS, WestHyderabadSchool } from '../../../data/westHyderabadSchools';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 const LEVEL_MAP = {
@@ -225,7 +224,6 @@ export default function SchoolsCatalogScreen() {
             <Text style={[styles.schoolName, { color: colors.textPrimary }]}>{school.name}</Text>
             <View style={styles.badgeRow}>
               <View style={[styles.localityBadge, { backgroundColor: colors.accentSoft }]}>
-                <Ionicons name="location-outline" size={12} color={colors.accent} style={{ marginRight: 2 }} />
                 <Text style={[styles.localityBadgeText, { color: colors.accent }]}>{school.area_locality}</Text>
               </View>
               <Text style={[styles.levelText, { color: colors.textSecondary }]}>
@@ -242,13 +240,8 @@ export default function SchoolsCatalogScreen() {
               isSelected && { backgroundColor: colors.accentSoft, borderColor: colors.accent },
             ]}
           >
-            <Ionicons
-              name={isSelected ? 'checkbox' : 'square-outline'}
-              size={18}
-              color={isSelected ? colors.accent : colors.textMuted}
-            />
             <Text style={[styles.compareToggleText, { color: isSelected ? colors.accent : colors.textSecondary }]}>
-              Compare
+              {isSelected ? 'Selected' : 'Compare'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -262,13 +255,12 @@ export default function SchoolsCatalogScreen() {
           {school.review_count && school.review_count > 0 ? (
             <View style={styles.parentReviewBadge}>
               <Text style={styles.parentReviewBadgeText}>
-                📋 {school.review_count} {school.review_count === 1 ? 'parent review' : 'parent reviews'}
+                {school.review_count} {school.review_count === 1 ? 'parent review' : 'parent reviews'}
               </Text>
             </View>
           ) : school.google_rating ? (
             <View style={styles.ratingBadge}>
-              <Ionicons name="star" size={14} color="#F59E0B" style={{ marginRight: 4 }} />
-              <Text style={[styles.ratingText, { color: colors.textPrimary }]}>{school.google_rating}</Text>
+              <Text style={[styles.ratingText, { color: colors.textPrimary }]}>Rating {school.google_rating}</Text>
             </View>
           ) : null}
         </View>
@@ -276,7 +268,7 @@ export default function SchoolsCatalogScreen() {
         {/* Address */}
         {school.address ? (
           <Text style={[styles.addressText, { color: colors.textSecondary }]} numberOfLines={2}>
-            📍 {school.address}
+            {school.address}
           </Text>
         ) : null}
 
@@ -287,7 +279,6 @@ export default function SchoolsCatalogScreen() {
               style={[styles.actionBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
               onPress={() => handleCall(school.contact_phone)}
             >
-              <Ionicons name="call-outline" size={15} color={colors.primary} style={{ marginRight: 4 }} />
               <Text style={[styles.actionBtnText, { color: colors.textPrimary }]}>Call</Text>
             </TouchableOpacity>
           ) : null}
@@ -297,7 +288,6 @@ export default function SchoolsCatalogScreen() {
               style={[styles.actionBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
               onPress={() => handleOpenLink(school.website)}
             >
-              <Ionicons name="globe-outline" size={15} color={colors.accent} style={{ marginRight: 4 }} />
               <Text style={[styles.actionBtnText, { color: colors.textPrimary }]}>Website</Text>
             </TouchableOpacity>
           ) : null}
@@ -307,7 +297,6 @@ export default function SchoolsCatalogScreen() {
               style={[styles.actionBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
               onPress={() => handleOpenLink(mapsUrl)}
             >
-              <Ionicons name="navigate-outline" size={15} color="#2563EB" style={{ marginRight: 4 }} />
               <Text style={[styles.actionBtnText, { color: colors.textPrimary }]}>Maps</Text>
             </TouchableOpacity>
           ) : null}
@@ -316,7 +305,7 @@ export default function SchoolsCatalogScreen() {
             style={[styles.detailsBtn, { backgroundColor: colors.cardMuted }]}
             onPress={() => router.push(`/network/schools/${school.id}` as any)}
           >
-            <Text style={[styles.detailsBtnText, { color: colors.primary }]}>Details →</Text>
+            <Text style={[styles.detailsBtnText, { color: colors.primary }]}>Details</Text>
           </TouchableOpacity>
         </View>
       </BaseCard>
@@ -326,23 +315,18 @@ export default function SchoolsCatalogScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
-        options={{
-          headerTitle: 'West Hyderabad Schools',
-          headerTitleStyle: { fontWeight: '500', fontSize: 17, color: colors.textPrimary },
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
+        options={buildMcnHeaderOptions({
+          title: 'West Hyderabad Schools',
+          onBack: handleBack,
           headerRight: () => (
             <TouchableOpacity
               onPress={() => router.push('/network/schools/add' as any)}
-              style={{ marginRight: 8 }}
+              style={styles.headerTextBtn}
             >
-              <Ionicons name="add-circle-outline" size={24} color={colors.primary} />
+              <Text style={[styles.headerTextBtnLabel, { color: colors.primary }]}>Add</Text>
             </TouchableOpacity>
           ),
-        }}
+        })}
       />
 
       <View style={styles.headerSubtitleWrap}>
@@ -353,7 +337,6 @@ export default function SchoolsCatalogScreen() {
 
       {/* Search Input */}
       <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
-        <Text style={styles.searchIcon}>{APP_EMOJIS.search}</Text>
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder="Search school name, board, locality..."
@@ -362,8 +345,8 @@ export default function SchoolsCatalogScreen() {
           onChangeText={setSearch}
         />
         {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')} style={{ padding: 4 }}>
-            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          <TouchableOpacity onPress={() => setSearch('')} style={styles.clearSearchBtn}>
+            <Text style={[styles.clearSearchText, { color: colors.textMuted }]}>Clear</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -394,7 +377,7 @@ export default function SchoolsCatalogScreen() {
                     isActive && { color: colors.accent, fontWeight: '500' },
                   ]}
                 >
-                  📍 {loc}
+                  {loc}
                 </Text>
               </TouchableOpacity>
             );
@@ -428,7 +411,7 @@ export default function SchoolsCatalogScreen() {
                     isActive && { color: colors.primary, fontWeight: '500' },
                   ]}
                 >
-                  📜 {b}
+                  {b}
                 </Text>
               </TouchableOpacity>
             );
@@ -485,7 +468,7 @@ export default function SchoolsCatalogScreen() {
               }
               style={[styles.compareBtn, { backgroundColor: colors.primary }]}
             >
-              <Text style={[styles.compareBtnText, { color: colors.primaryFg }]}>Compare Side-by-Side →</Text>
+              <Text style={[styles.compareBtnText, { color: colors.primaryFg }]}>Compare Side-by-Side</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -498,10 +481,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerTextBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
   headerSubtitleWrap: {
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: VerandahLayout.mcnHeaderToContentGap,
+    paddingBottom: 6,
   },
   subtitle: {
     ...VerandahType.body,
@@ -511,20 +498,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 20,
-    marginBottom: 10,
+    marginBottom: 8,
     paddingHorizontal: 12,
     height: 44,
     borderRadius: VerandahRadius.md,
     borderWidth: 1,
   },
-  searchIcon: {
-    marginRight: 8,
-    fontSize: 16,
-  },
   searchInput: {
     flex: 1,
     fontSize: 14,
     paddingVertical: 0,
+  },
+  clearSearchBtn: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  clearSearchText: {
+    ...VerandahType.caption,
+    fontSize: 12,
   },
   filterSection: {
     marginBottom: 6,

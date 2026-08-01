@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
-import { APP_EMOJIS, getServiceCategoryEmoji } from '../constants/emojis';
+import { VerandahRadius } from '../constants/Verandah';
+import { getServiceCategoryEmoji } from '../constants/emojis';
 import { ProviderWithInteraction } from '../lib/database.types';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
@@ -53,11 +53,11 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
   return (
     <BaseCard
       onPress={onPress}
-      padding={12}
+      padding={10}
       style={styles.card}
     >
       <View style={styles.content}>
-        <Avatar name={provider.name} size={40} />
+        <Avatar name={provider.name} size={36} />
         
         <View style={styles.mainInfo}>
           <View style={styles.headerRow}>
@@ -126,12 +126,12 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 8,
+    marginBottom: 6,
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   mainInfo: {
     flex: 1,
@@ -140,20 +140,20 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
+    gap: 4,
+    marginBottom: 1,
   },
   name: {
-    fontSize: 14.5,
+    fontSize: 14,
     fontWeight: '500',
     color: Verandah.textPrimary,
     flexShrink: 1,
-    lineHeight: 19,
+    lineHeight: 18,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
   },
   categoryText: {
     fontSize: 12,
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     color: Verandah.accent,
   },
   favoriteBtn: {
-    padding: 4,
+    padding: 2,
     justifyContent: 'center',
     alignItems: 'center',
   },

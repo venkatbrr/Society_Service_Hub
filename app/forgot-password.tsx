@@ -3,8 +3,9 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { HeaderBackButton } from '../components/HeaderBackButton';
 import { Verandah } from '../constants/Colors';
-import { VerandahType , VerandahLayout } from '../constants/Verandah';
+import { VerandahLayout, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, resetPassword } from '../lib/auth';
 
 export default function ForgotPasswordScreen() {
@@ -47,12 +48,11 @@ export default function ForgotPasswordScreen() {
       style={[styles.container, { backgroundColor: Verandah.surface }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <TouchableOpacity
+        <HeaderBackButton
           style={[styles.backButton, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}
           onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color={Verandah.textPrimary} />
-        </TouchableOpacity>
+          color={Verandah.textPrimary}
+        />
 
         <View style={styles.header}>
           <View style={[styles.iconContainer, { backgroundColor: Verandah.primary }]}>

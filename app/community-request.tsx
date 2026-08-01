@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import {
     ActivityIndicator,
     Modal,
-    Pressable,
     Platform,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -14,8 +14,9 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { HeaderBackButton } from '../components/HeaderBackButton';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahType } from '../constants/Verandah';
+import { VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -90,10 +91,7 @@ export default function CommunityRequestScreen() {
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: Verandah.surface }]}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.75}>
-        <Ionicons name="chevron-back" size={18} color={Verandah.primary} />
-        <Text style={[styles.backButtonText, { color: Verandah.primary }]}>Back</Text>
-      </TouchableOpacity>
+      <HeaderBackButton onPress={() => router.back()} color={Verandah.primary} style={styles.backButton} />
 
       <Text style={styles.title}>Request a new community</Text>
       <View style={[styles.banner, { backgroundColor: Verandah.cautionSoft, borderColor: Verandah.caution + '40' }]}>
@@ -276,10 +274,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     marginBottom: 18,
-  },
-  backButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
   },
   title: {
     ...VerandahType.display,

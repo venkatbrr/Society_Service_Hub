@@ -7,6 +7,7 @@ import { ActivityIndicator, Alert, Modal, Platform, Pressable, ScrollView, Share
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../components/Avatar';
 import { BaseCard } from '../../components/BaseCard';
+import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { RatingStars } from '../../components/RatingStars';
 import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../constants/Verandah';
@@ -587,9 +588,7 @@ export default function ProviderDetailScreen() {
     <ScrollView style={[styles.container, { backgroundColor: colors.surface }]}>
       <View style={styles.headerCard}> 
         <View style={styles.headerTop}>
-           <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-             <Ionicons name="arrow-back" size={20} color={Verandah.textPrimary} />
-           </TouchableOpacity>
+           <HeaderBackButton onPress={() => router.back()} color={Verandah.textPrimary} style={styles.backButtonInline} />
            <TouchableOpacity onPress={handleToggleFavorite} style={styles.iconButton}>
              <Ionicons 
                name={provider.is_favorite ? 'bookmark' : 'bookmark-outline'} 
@@ -600,7 +599,7 @@ export default function ProviderDetailScreen() {
         </View>
 
         <View style={styles.headerContent}>
-          <Avatar name={provider.name} size={64} shape="square" />
+          <Avatar name={provider.name} size={56} shape="square" />
           <View style={styles.headerInfo}>
             <Text style={styles.name}>{provider.name}</Text>
             <Text style={styles.categoryTextDisp}>
@@ -622,7 +621,7 @@ export default function ProviderDetailScreen() {
         </View>
       </View>
 
-      <BaseCard padding={16} style={styles.trustBanner}>
+      <BaseCard padding={10} style={styles.trustBanner}>
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text style={styles.statLabel}>Rating</Text>
@@ -663,7 +662,7 @@ export default function ProviderDetailScreen() {
               activeOpacity={0.85}
               style={[
                 styles.submitReviewBtn,
-                { marginTop: 12, backgroundColor: colors.secondary },
+                { marginTop: 8, backgroundColor: colors.secondary },
                 isSavingPersonalNote && [styles.submitReviewBtnDisabled, { borderColor: colors.border }],
               ]}
             >
@@ -693,7 +692,7 @@ export default function ProviderDetailScreen() {
 
       {/* Community Reviews List */}
       <View style={styles.detailsCard}>
-        <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 12 }]}>Community Reviews</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 8 }]}>Community Reviews</Text>
         {reviewsLoading ? (
           <ActivityIndicator color={colors.primary} />
         ) : publicReviews.length === 0 ? (
@@ -727,7 +726,7 @@ export default function ProviderDetailScreen() {
                   </Text>
                 </View>
                 {review.review_text ? (
-                  <Text style={[styles.publicReviewText, { color: colors.textMuted, marginTop: 8 }]}>{review.review_text}</Text>
+                  <Text style={[styles.publicReviewText, { color: colors.textMuted, marginTop: 6 }]}>{review.review_text}</Text>
                 ) : null}
               </View>
             ))}
@@ -749,7 +748,7 @@ export default function ProviderDetailScreen() {
       {/* Community Reports Summary */}
       {reports.length > 0 && (
         <View style={styles.detailsCard}>
-          <Text style={[styles.sectionTitle, { color: colors.accent, marginBottom: 12 }]}>
+          <Text style={[styles.sectionTitle, { color: colors.accent, marginBottom: 8 }]}>
             Community Reports ({reports.length})
           </Text>
           <View style={styles.publicReviewList}>
@@ -770,7 +769,7 @@ export default function ProviderDetailScreen() {
                   </Text>
                 </View>
                 {group.details.length > 0 && (
-                  <View style={{ marginTop: 8, gap: 4 }}>
+                  <View style={{ marginTop: 6, gap: 2 }}>
                     {group.details.map((detail, idx) => (
                       <Text key={idx} style={[styles.publicReviewText, { color: colors.textMuted }]}>
                         • "{detail}"
@@ -785,8 +784,8 @@ export default function ProviderDetailScreen() {
       )}
 
       <View style={styles.detailsCard}>
-         <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 16 }]}>Rate this Provider</Text>
-         <RatingStars rating={selectedRating || provider.user_rating || 0} onRating={handleRating} size={36} isLightMode={true} />
+        <Text style={[styles.sectionTitle, styles.rateTitleCompact, { color: colors.text, marginBottom: 0 }]}>Rate this Provider</Text>
+         <RatingStars rating={selectedRating || provider.user_rating || 0} onRating={handleRating} size={30} isLightMode={true} />
          {selectedRating === 0 && !provider.user_rating && (
            <Text style={[styles.tapHint, { color: colors.accent }]}>⬆ Tap a star above to rate (required)</Text>
          )}
@@ -806,7 +805,7 @@ export default function ProviderDetailScreen() {
            activeOpacity={0.85}
            style={[
              styles.submitReviewBtn,
-             { marginTop: 12, backgroundColor: isReviewSubmitDisabled ? colors.cardMuted : colors.primary },
+             { marginTop: 8, backgroundColor: isReviewSubmitDisabled ? colors.cardMuted : colors.primary },
              isReviewSubmitDisabled && [styles.submitReviewBtnDisabled, { borderColor: colors.border }],
            ]}
          >
@@ -999,14 +998,14 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   headerCard: {
-    paddingHorizontal: 20,
-    paddingTop: Platform.select({ web: 16, default: 48 }),
-    paddingBottom: 8,
+    paddingHorizontal: 16,
+    paddingTop: Platform.select({ web: 12, default: 28 }),
+    paddingBottom: 2,
     backgroundColor: Verandah.surface,
   },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  headerContent: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 2 },
-  headerInfo: { flex: 1, gap: 4 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  headerContent: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 0 },
+  headerInfo: { flex: 1, gap: 2 },
   name: {
     ...VerandahType.display,
     color: Verandah.textPrimary,
@@ -1018,12 +1017,12 @@ const styles = StyleSheet.create({
   pillRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 2,
+    gap: 6,
+    marginTop: 1,
   },
   pill: {
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: VerandahRadius.sm,
   },
   pillText: {
@@ -1031,23 +1030,26 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  backButtonInline: {
+    marginLeft: 2,
+  },
   trustBanner: {
-    marginHorizontal: 20,
-    marginTop: 6,
-    marginBottom: 12,
+    marginHorizontal: 16,
+    marginTop: 2,
+    marginBottom: 6,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 4,
   },
   statItem: {
     flex: 1,
@@ -1055,12 +1057,14 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     ...VerandahType.sectionLabel,
-    fontSize: 10,
+    fontSize: 9,
     color: Verandah.textTertiary,
-    marginBottom: 4,
+    marginBottom: 1,
   },
   statValue: {
-    ...VerandahType.title,
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: '500',
     color: Verandah.textPrimary,
   },
   statDivider: {
@@ -1068,28 +1072,33 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.border,
     alignSelf: 'stretch',
   },
-  actionGrid: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 0, paddingBottom: 0, marginBottom: 12, gap: 12 },
-  mainActionBtn: { flex: 1, flexDirection: 'row', height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', gap: 10, elevation: 0 },
-  mainActionIcon: { fontSize: 24, lineHeight: 28 },
-  mainActionText: { color: Verandah.primaryFg, fontSize: 16, fontWeight: '500' },
+  actionGrid: { flexDirection: 'row', paddingHorizontal: 16, paddingTop: 0, paddingBottom: 0, marginBottom: 6, gap: 8 },
+  mainActionBtn: { flex: 1, flexDirection: 'row', height: 46, borderRadius: 12, justifyContent: 'center', alignItems: 'center', gap: 6, elevation: 0 },
+  mainActionIcon: { fontSize: 18, lineHeight: 20 },
+  mainActionText: { color: Verandah.primaryFg, fontSize: 13, fontWeight: '500' },
   detailsCard: {
     backgroundColor: Verandah.card,
-    marginHorizontal: 20,
-    marginBottom: 12,
-    padding: 24,
-    borderRadius: 24,
+    marginHorizontal: 16,
+    marginBottom: 6,
+    padding: 12,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: Verandah.border,
   },
   historyCard: {
-    marginBottom: 12,
+    marginBottom: 6,
   },
   personalNoteCard: {
-    paddingTop: 18,
-    paddingBottom: 14,
-    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingHorizontal: 12,
   },
   sectionTitle: { fontSize: 12, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 1 },
+  rateTitleCompact: {
+    fontSize: 11,
+    letterSpacing: 0.6,
+    lineHeight: 16,
+  },
   sectionTitleSentenceCase: {
     ...VerandahType.bodyBold,
     color: Verandah.textPrimary,
@@ -1098,42 +1107,42 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 20, paddingTop: 20, borderTopWidth: 1 },
   infoIcon: { fontSize: 20, lineHeight: 24 },
   infoText: { fontSize: 15, fontWeight: '500' },
-  reviewNote: { fontSize: 12, marginTop: 12, textAlign: 'center' },
-  tapHint: { fontSize: 12, marginTop: 6, fontWeight: '500' },
+  reviewNote: { fontSize: 11, marginTop: 6, textAlign: 'center' },
+  tapHint: { fontSize: 11, marginTop: 4, fontWeight: '500' },
   reviewInput: {
     borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 14,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: 8,
     fontSize: 15,
-    lineHeight: 22,
-    marginTop: 16,
-    minHeight: 80,
+    lineHeight: 18,
+    marginTop: 8,
+    minHeight: 64,
   },
   personalNoteInput: {
-    marginTop: 10,
-    minHeight: 66,
-    paddingTop: 10,
-    paddingBottom: 10,
+    marginTop: 6,
+    minHeight: 52,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   submitReviewBtn: {
-    height: 48,
-    borderRadius: 14,
+    height: 40,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   submitReviewText: {
     color: Verandah.primaryFg,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
   },
-  actionRowAlt: { paddingHorizontal: 20, paddingTop: 0, paddingBottom: 0, marginBottom: 12, alignItems: 'center' },
+  actionRowAlt: { paddingHorizontal: 16, paddingTop: 0, paddingBottom: 0, marginBottom: 6, alignItems: 'center' },
   altBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   altIcon: { fontSize: 20, lineHeight: 24 },
   altBtnText: { fontSize: 14, fontWeight: '500' },
-  adminControls: { paddingHorizontal: 20, paddingTop: 0, paddingBottom: 60 },
-  dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 18, borderRadius: 16, borderWidth: 1 },
+  adminControls: { paddingHorizontal: 16, paddingTop: 0, paddingBottom: 28 },
+  dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 12, borderRadius: 10, borderWidth: 1 },
   dangerIcon: { fontSize: 20, lineHeight: 24 },
   detailsMetaSection: {
     borderTopWidth: 1,
@@ -1204,16 +1213,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
-  reportBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 18, borderRadius: 16, borderWidth: 1 },
+  reportBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 12, borderRadius: 10, borderWidth: 1 },
   submitReviewBtnDisabled: {
     borderWidth: 1,
   },
   publicReviewList: {
     gap: 0,
-    marginTop: 8,
+    marginTop: 4,
   },
   publicReviewItem: {
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderTopWidth: 1,
   },
   publicReviewHeader: {
@@ -1231,7 +1240,7 @@ const styles = StyleSheet.create({
   },
   publicReviewDate: {
     marginTop: 2,
-    fontSize: 12,
+    fontSize: 11,
   },
   publicReviewStars: {
     fontSize: 14,
@@ -1243,10 +1252,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   loadMoreReviewsBtn: {
-    marginTop: 12,
+    marginTop: 6,
     borderWidth: 1,
     borderRadius: 12,
-    paddingVertical: 10,
+    paddingVertical: 7,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BlockPicker } from '../../components/BlockPicker';
+import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
@@ -321,9 +322,7 @@ export default function FundDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={[styles.header, { backgroundColor: colors.background }]}>
           <View style={styles.headerTop}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-              <Ionicons name="arrow-back" size={24} color={Verandah.primary} />
-            </TouchableOpacity>
+            <HeaderBackButton onPress={() => router.back()} color={Verandah.primary} style={styles.iconButton} />
             <Text style={styles.headerLabel}>Fund Transparency</Text>
             <View style={{ width: 40 }} />
           </View>

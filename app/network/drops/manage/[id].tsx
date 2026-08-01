@@ -16,6 +16,7 @@ import Toast from 'react-native-toast-message';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
+import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
 import { supabase } from '../../../../lib/supabase';
 
 interface DropOrder {
@@ -246,14 +247,10 @@ export default function ManagePreorderDropScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
-        options={{
+        options={buildMcnHeaderOptions({
           title: 'Food Drop Dashboard',
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
-        }}
+          onBack: handleBack,
+        })}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

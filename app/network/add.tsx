@@ -13,15 +13,20 @@ export default function AddPostScreen() {
   const { communityId, user } = useAuth();
   const colors = Verandah;
 
+  const normalizedKind: 'business' | 'borrow' = kind === 'business' ? 'business' : 'borrow';
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [contactHint, setContactHint] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const headerTitle = kind === 'business' ? 'Share with neighbours' : 'Borrow & Share';
-  const titlePlaceholder = kind === 'business' 
+  const headerTitle = normalizedKind === 'business' ? 'Share with neighbours' : 'Borrow & Share';
+  const titlePlaceholder = normalizedKind === 'business' 
     ? 'e.g. Homemade pickles, Yoga classes, Laptop repair' 
     : 'e.g. Ladder to borrow, Baby stroller — free';
+  const descriptionPlaceholder = normalizedKind === 'business'
+    ? 'Add details about your offer...'
+    : 'Add item condition, borrowing duration, and return notes...';
 
   const handleSubmit = async () => {
     const trimmedTitle = title.trim();
@@ -40,7 +45,7 @@ export default function AddPostScreen() {
         finalContact = digitsOnly;
       }
 
-      if (kind === 'borrow' && !finalContact) {
+      if (normalizedKind === 'borrow' && !finalContact) {
         Toast.show({ type: 'error', text1: 'Contact info is required for Borrow & Share posts' });
         setIsSubmitting(false);
         return;
@@ -49,7 +54,7 @@ export default function AddPostScreen() {
       const { error } = await supabase.from('mcn_posts').insert({
         community_id: communityId,
         user_id: user.id,
-        kind,
+        kind: normalizedKind,
         title: trimmedTitle,
         description: description.trim() || null,
         contact_hint: finalContact || null,
@@ -96,7 +101,7 @@ export default function AddPostScreen() {
           <Text style={[styles.label, { color: colors.textPrimary }]}>Description</Text>
           <TextInput
             style={[styles.input, styles.textArea, { borderColor: colors.border, color: colors.textPrimary }]}
-            placeholder="Add details about your offer..."
+            placeholder={descriptionPlaceholder}
             placeholderTextColor={colors.textMuted}
             value={description}
             onChangeText={setDescription}
@@ -108,10 +113,10 @@ export default function AddPostScreen() {
         </View>
 
         <View style={styles.field}>
-          <Text style={[styles.label, { color: colors.textPrimary }]}>Contact info {kind === 'borrow' ? <Text style={{ color: colors.danger }}>*</Text> : null}</Text>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>Contact info {normalizedKind === 'borrow' ? <Text style={{ color: colors.danger }}>*</Text> : null}</Text>
           <TextInput
             style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
-            placeholder={kind === 'borrow' ? "Required: phone number or where to reach you" : "e.g. 9876543210 or say 'knock on A101'"}
+            placeholder={normalizedKind === 'borrow' ? "Required: phone number or where to reach you" : "e.g. 9876543210 or say 'knock on A101'"}
             placeholderTextColor={colors.textMuted}
             value={contactHint}
             onChangeText={setContactHint}

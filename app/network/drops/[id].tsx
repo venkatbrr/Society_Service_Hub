@@ -22,6 +22,7 @@ import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
 import { format12HourTime, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 interface DropItem {
@@ -469,13 +470,9 @@ export default function PreorderDropDetailScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Stack.Screen
-        options={{
+        options={buildMcnHeaderOptions({
           title: drop.title,
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
+          onBack: handleBack,
           headerRight: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <TouchableOpacity onPress={handleShareDrop} style={{ padding: 4 }} hitSlop={8}>
@@ -494,7 +491,7 @@ export default function PreorderDropDetailScreen() {
               ) : null}
             </View>
           ),
-        }}
+        })}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

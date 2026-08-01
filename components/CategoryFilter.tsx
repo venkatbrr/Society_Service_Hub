@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../constants/categories';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
-import { getServiceCategoryEmoji } from '../constants/emojis';
+import { VerandahRadius } from '../constants/Verandah';
 
 type CategoryFilterProps = {
   selectedCategory: string | null;
@@ -20,6 +19,17 @@ export const CategoryFilter = ({
   isLightMode,
   categories = CATEGORIES
 }: CategoryFilterProps) => {
+  const groupScrollRef = useRef<ScrollView | null>(null);
+  const categoryScrollRef = useRef<ScrollView | null>(null);
+  const groupOffsetRef = useRef(0);
+  const categoryOffsetRef = useRef(0);
+  const dragStateRef = useRef<{ active: boolean; startX: number; startOffset: number }>({
+    active: false,
+    startX: 0,
+    startOffset: 0,
+  });
+  const suppressPressRef = useRef(false);
+
   const displayCategories = categories.filter(c => c !== 'All');
 
   const groups = useMemo(() => {
@@ -70,10 +80,50 @@ export const CategoryFilter = ({
     return groups.find((group) => group.id === selectedGroupId)?.categories ?? displayCategories;
   }, [selectedGroupId, groups, displayCategories]);
 
-  const renderChip = (label: string, isSelected: boolean, onPress: () => void) => {
-    const isServiceCategoryChip = label === 'All' || displayCategories.includes(label);
-    const chipLabel = isServiceCategoryChip ? `${getServiceCategoryEmoji(label)} ${label}` : label;
+  const runChipPress = (onPress: () => void) => {
+    if (suppressPressRef.current) return;
+    onPress();
+  };
 
+  const buildWebDragHandlers = (scrollRef: React.RefObject<ScrollView | null>, offsetRef: React.MutableRefObject<number>) => {
+    if (Platform.OS !== 'web') {
+      return {};
+    }
+
+    return {
+      onMouseDown: (event: any) => {
+        dragStateRef.current = {
+          active: true,
+          startX: event.nativeEvent.pageX,
+          startOffset: offsetRef.current,
+        };
+      },
+      onMouseMove: (event: any) => {
+        if (!dragStateRef.current.active) return;
+
+        const delta = event.nativeEvent.pageX - dragStateRef.current.startX;
+        if (Math.abs(delta) > 4) {
+          suppressPressRef.current = true;
+        }
+
+        const nextX = Math.max(0, dragStateRef.current.startOffset - delta);
+        scrollRef.current?.scrollTo({ x: nextX, animated: false });
+      },
+      onMouseUp: () => {
+        dragStateRef.current.active = false;
+        if (suppressPressRef.current) {
+          setTimeout(() => {
+            suppressPressRef.current = false;
+          }, 0);
+        }
+      },
+      onMouseLeave: () => {
+        dragStateRef.current.active = false;
+      },
+    };
+  };
+
+  const renderChip = (label: string, isSelected: boolean, onPress: () => void) => {
     return (
       <TouchableOpacity
         key={label}
@@ -83,7 +133,7 @@ export const CategoryFilter = ({
             ? styles.chipActive
             : styles.chipInactive,
         ]}
-        onPress={onPress}
+        onPress={() => runChipPress(onPress)}
       >
         <Text
           style={[
@@ -91,7 +141,7 @@ export const CategoryFilter = ({
             isSelected ? styles.chipTextActive : styles.chipTextInactive,
           ]}
         >
-          {chipLabel}
+          {label}
         </Text>
       </TouchableOpacity>
     );
@@ -100,9 +150,16 @@ export const CategoryFilter = ({
   return (
     <View style={styles.container}>
       <ScrollView
+        ref={groupScrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.groupScrollContent}
+        onScroll={(event) => {
+          groupOffsetRef.current = event.nativeEvent.contentOffset.x;
+        }}
+        scrollEventThrottle={16}
+        style={styles.dragScroll}
+        {...(buildWebDragHandlers(groupScrollRef, groupOffsetRef) as any)}
       >
         {renderChip('All services', selectedGroupId === 'all', () => {
           setSelectedGroupId('all');
@@ -119,9 +176,16 @@ export const CategoryFilter = ({
       </ScrollView>
 
       <ScrollView
+        ref={categoryScrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        onScroll={(event) => {
+          categoryOffsetRef.current = event.nativeEvent.contentOffset.x;
+        }}
+        scrollEventThrottle={16}
+        style={styles.dragScroll}
+        {...(buildWebDragHandlers(categoryScrollRef, categoryOffsetRef) as any)}
       >
         {renderChip('All', selectedCategory === null, () => onSelectCategory(null))}
 
@@ -146,6 +210,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     gap: 6,
+  },
+  dragScroll: {
+    cursor: 'grab' as any,
   },
   chip: {
     paddingHorizontal: 12,

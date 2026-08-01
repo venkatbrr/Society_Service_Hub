@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { SCHOOL_ASPECTS } from '../constants/schoolReviewAspects';
+import { SchoolAspectIcon } from './SchoolAspectIcon';
 
 export interface AspectScores {
   avg_academics: number;
@@ -143,9 +144,10 @@ export const SchoolRadarChart: React.FC<SchoolRadarChartProps> = ({
               },
             ]}
           >
-            <Text style={styles.labelText}>
-              {aspect.emoji} {aspect.label}
-            </Text>
+            <View style={styles.labelIconRow}>
+              <SchoolAspectIcon aspectKey={aspect.key} size={10} />
+              <Text style={styles.labelText}>{aspect.label}</Text>
+            </View>
             <Text style={styles.scoreText}>{scoreVal > 0 ? scoreVal.toFixed(1) : '-'}</Text>
           </View>
         );
@@ -175,6 +177,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 20,
+  },
+  labelIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
   },
   labelText: {
     fontSize: 9.5,

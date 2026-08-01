@@ -1,0 +1,297 @@
+﻿admin-dashboard/js/communities.js:115:            ðŸ‘¥ ${counts.active} members &nbsp;&nbsp; ðŸ”‘ ${counts.leads} lead${counts.leads !== 1 ? 's' : ''}
+admin-dashboard/js/communities.js:238:          category_emoji: b.mcn_business_categories?.emoji || 'ðŸª',
+admin-dashboard/js/communities.js:389:            <td>ðŸ“… ${delivDate}<br><span class="text-3" style="font-size: 0.8rem;">â° ${drop.fulfillment_time || 'N/A'}</span></td>
+admin-dashboard/js/communities.js:419:              ${biz.category_emoji || 'ðŸª'} ${biz.name || 'Business'}<br>
+admin-dashboard/js/communities.js:425:              ${waLink ? `<a href="${waLink}" target="_blank" style="margin-left: 6px; text-decoration: none;" title="Chat on WhatsApp">ðŸ’¬</a>` : ''}
+admin-dashboard/js/communities.js:427:            <td>â­ ${Number(biz.avg_rating || 0).toFixed(1)} (${biz.rating_count || 0})</td>
+admin-dashboard/js/communities.js:607:                <h2>ðŸ² Pre-Order Food Drops & Statistics</h2>
+admin-dashboard/js/communities.js:639:                <h2>ðŸª Businesses Available in Community</h2>
+admin-dashboard/js/dashboard.js:41:      allOption.textContent = 'ðŸŒ All Communities (Platform Overview)';
+admin-dashboard/js/dashboard.js:58:      selector.innerHTML = '<option value="ALL">ðŸŒ All Communities (Platform Overview)</option>';
+admin-dashboard/js/dashboard.js:208:              â­ ${parseFloat(p.avg_rating || 0).toFixed(1)}
+admin-dashboard/js/providers.js:85:          ? `â­ ${parseFloat(sp.avg_rating).toFixed(1)} <span class="text-3">(${sp.rating_count})</span>` 
+admin-dashboard/js/providers.js:167:                <span style="color: var(--caution); font-weight: 500;">${'â­'.repeat(rv.rating)}</span>
+admin-dashboard/js/providers.js:205:                  <div style="color: var(--caution); font-size: 1.1rem;">${'â­'.repeat(Math.round(data.avg_rating || 0)) || 'â˜†'}</div>
+admin-dashboard/js/providers.js:210:                ðŸ‘¥ <strong>${data.hires_count || 0}</strong> residents have contacted this provider
+app/(tabs)/network.tsx:153:              <Text style={styles.iconEmoji}>ðŸ²</Text>
+app/(tabs)/network.tsx:178:              <Text style={styles.iconEmoji}>ðŸš˜</Text>
+app/(tabs)/network.tsx:203:              <Text style={styles.iconEmoji}>ðŸ‘¨â€ðŸ‘©â€ðŸ‘§â€ðŸ‘¦</Text>
+app/(tabs)/network.tsx:228:              <Text style={styles.iconEmoji}>ðŸ«</Text>
+app/(tabs)/network.tsx:253:              <Text style={styles.iconEmoji}>ðŸ”„</Text>
+app/+html.tsx:52:            <div className="side-card-title">ðŸ¢ Society Hub</div>
+app/+html.tsx:57:            <div className="side-card-icon">ðŸ²</div>
+app/+html.tsx:65:            <div className="side-card-icon">ðŸ› ï¸</div>
+app/+html.tsx:79:            <div className="side-card-icon">â­</div>
+app/+html.tsx:81:              <div className="side-card-title">4.9 â˜… Ratings</div>
+app/+html.tsx:87:            <div className="side-card-icon">ðŸš—</div>
+app/+html.tsx:95:            <div className="side-card-icon">ðŸ’³</div>
+app/hire-feedback/[hireId].tsx:244:            <Text style={styles.signalEmoji}>ðŸ‘</Text>
+app/hire-feedback/[hireId].tsx:257:            <Text style={styles.signalEmoji}>ðŸ‘Ž</Text>
+app/hire-feedback/[hireId].tsx:273:            <Text style={styles.signalEmoji}>â­</Text>
+app/network/business.tsx:149:      const catEmoji = item.category?.emoji || 'ðŸª';
+app/network/business.tsx:162:        emoji: 'ðŸ”’',
+app/network/business.tsx:228:          <Text style={styles.masterToggleText}>ðŸ² Pre-order Food</Text>
+app/network/business.tsx:235:          <Text style={styles.masterToggleTextActive}>ðŸª Community Businesses</Text>
+app/network/business.tsx:283:            ðŸª All
+app/network/carpools/index.tsx:148:        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Community Carpooling ðŸš˜</Text>
+app/network/carpools/[id].tsx:411:                    ? ` Â· ðŸ“ž ${(carpool as any).contact_phone || carpool.creator_profile?.phone_number}`
+app/network/drops/add.tsx:490:          <Text style={styles.cardSectionTitle}>ðŸ“… Delivery / Fulfillment Schedule</Text>
+app/network/drops/add.tsx:583:          <Text style={styles.cardSectionTitle}>â° Pre-Order Cut-off Deadline</Text>
+app/network/drops/add.tsx:682:            <Text style={styles.cardSectionTitle}>ðŸ² Items offered for this drop</Text>
+app/network/drops/index.tsx:274:          <Text style={styles.masterToggleTextActive}>ðŸ² Pre-order Food</Text>
+app/network/drops/index.tsx:282:          <Text style={styles.masterToggleText}>ðŸª Community Businesses</Text>
+app/network/drops/index.tsx:300:            ðŸ”¥ Open Drops
+app/network/drops/index.tsx:309:            ðŸ”’ Past / Preparing
+app/network/drops/index.tsx:324:            ðŸ‘©â€ðŸ³ My Pre-order Food
+app/network/drops/index.tsx:332:          <Text style={styles.revenueCardTitle}>ðŸ’° My Pre-order Food Performance & Revenue</Text>
+app/network/drops/index.tsx:411:                    <Text style={styles.sectionHeaderTextPreparing}>ðŸ‘¨â€ðŸ³ Kitchen Preparing</Text>
+app/network/drops/manage/[id].tsx:318:          <Text style={styles.sectionTitle}>ðŸ‘©â€ðŸ³ Kitchen Prep Aggregation Summary</Text>
+app/network/drops/manage/[id].tsx:339:          <Text style={styles.sectionTitle}>ðŸ“ Resident Delivery Roster ({orders.length})</Text>
+app/network/drops/[id].tsx:326:        text1: 'Pre-order placed successfully! ðŸŽ‰',
+app/network/drops/[id].tsx:426:      `ðŸ² *Food Drop: ${drop.title}*`,
+app/network/drops/[id].tsx:429:      `ðŸ“… Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
+app/network/drops/[id].tsx:430:      `â° Pre-Orders Close: ${cutoffFormatted}`,
+app/network/drops/[id].tsx:434:      messageLines.push(`ðŸ–¼ï¸ Photo: ${drop.image_url}`);
+app/network/drops/[id].tsx:438:    messageLines.push(`ðŸ”— View Menu & Place Pre-Order:`);
+app/network/drops/[id].tsx:525:          <Text style={styles.bannerIcon}>{isOpen ? 'â³' : 'ðŸ”’'}</Text>
+app/network/drops/[id].tsx:564:                    <Text style={[styles.hostManageBtnText, { color: Verandah.accent }]}>âœï¸ Edit Drop</Text>
+app/network/drops/[id].tsx:583:                    : 'ðŸ“¦ Your Pre-Order is Confirmed'}
+app/network/listing/[id].tsx:533:                    {'â˜…'.repeat(review.rating)}{'â˜†'.repeat(Math.max(0, 5 - review.rating))}
+app/network/listing/[id].tsx:561:           <Text style={[styles.tapHint, { color: colors.accent, marginTop: 8 }]}>â¬† Tap a star above to rate (required)</Text>
+app/network/parents/add.tsx:22:  { id: 'school', label: 'School', emoji: 'ðŸ«' },
+app/network/parents/add.tsx:23:  { id: 'college', label: 'College', emoji: 'ðŸŽ“' },
+app/network/parents/add.tsx:24:  { id: 'preschool', label: 'Pre-School', emoji: 'ðŸ‘¶' },
+app/network/parents/add.tsx:226:          <Text style={styles.bannerEmoji}>ðŸ‘¨â€ðŸ‘©â€ ðŸ‘§â€ðŸ‘¦</Text>
+app/network/parents/index.tsx:52:  { id: 'all', label: 'All Types', emoji: 'ðŸ“š' },
+app/network/parents/index.tsx:53:  { id: 'school', label: 'School', emoji: 'ðŸ«' },
+app/network/parents/index.tsx:54:  { id: 'college', label: 'College', emoji: 'ðŸŽ“' },
+app/network/parents/index.tsx:55:  { id: 'preschool', label: 'Pre-School', emoji: 'ðŸ‘¶' },
+app/network/parents/index.tsx:203:      `ðŸŽ“ *Parent Corner Student Record*`,
+app/network/parents/index.tsx:273:                {item.institution_type === 'college' ? 'ðŸŽ“' : item.institution_type === 'preschool' ? 'ðŸ‘¶' : 'ðŸŽ’'}
+app/network/parents/index.tsx:532:                    ðŸ« {s}
+app/network/parents/index.tsx:547:              { id: 'school', label: 'ðŸ« School Name (A-Z)' },
+app/network/parents/index.tsx:548:              { id: 'grade', label: 'ðŸŽ’ Class / Grade' },
+app/network/parents/index.tsx:549:              { id: 'flat', label: 'ðŸ  Flat No' },
+app/network/parents/index.tsx:550:              { id: 'recent', label: 'ðŸ•’ Recently Added' },
+app/network/schools/index.tsx:265:                ðŸ“‹ {school.review_count} {school.review_count === 1 ? 'parent review' : 'parent reviews'}
+app/network/schools/index.tsx:279:            ðŸ“ {school.address}
+app/network/schools/index.tsx:397:                  ðŸ“ {loc}
+app/network/schools/index.tsx:431:                  ðŸ“œ {b}
+app/network/schools/review.tsx:292:            <Text style={styles.aspectTitle}>ðŸ’¬ Overall Comments & Parent Advice</Text>
+app/network/schools/[id].tsx:370:              ðŸ“‹ Parent Report Card
+app/network/schools/[id].tsx:412:                <Text style={styles.whyGradeHeader}>ðŸ’¡ How Your Report Card Helps Neighbor Families:</Text>
+app/network/schools/[id].tsx:415:                  <Text style={styles.whyGradeBullet}>ðŸŽ¯</Text>
+app/network/schools/[id].tsx:422:                  <Text style={styles.whyGradeBullet}>ðŸšŒ</Text>
+app/network/schools/[id].tsx:429:                  <Text style={styles.whyGradeBullet}>ðŸ¤</Text>
+app/provider/[id].tsx:235:    const ratingText = provider.avg_rating ? `â˜… ${Number(provider.avg_rating).toFixed(1)} (${provider.rating_count} reviews)` : '';
+app/provider/[id].tsx:242:      `ðŸ‘¤ *Service Provider Contact*`,
+app/provider/[id].tsx:251:      `ðŸ”— View Profile & Contact Details:`,
+app/provider/[id].tsx:629:            <Text style={styles.statValue}>â˜… {Number(provider.avg_rating || 0).toFixed(1)}</Text>
+app/provider/[id].tsx:726:                    {'â˜…'.repeat(review.rating)}{'â˜†'.repeat(Math.max(0, 5 - review.rating))}
+app/provider/[id].tsx:791:           <Text style={[styles.tapHint, { color: colors.accent }]}>â¬† Tap a star above to rate (required)</Text>
+app/services/add.tsx:249:          <Text style={{ color: colors.textMuted, fontSize: 16 }}>ðŸ“…</Text>
+app/services/add.tsx:290:              <Text style={styles.providerStateIcon}>ðŸ‘¥</Text>
+app/services/index.tsx:91:              <Text style={styles.emptyEmoji}>ðŸ”§</Text>
+app/services/[id].tsx:379:  const emoji = SERVICE_CATEGORY_EMOJI[category] ?? ' ðŸ”§';
+app/services/[id].tsx:436:          <Text style={[styles.secondaryBtnText, { color: colors.primary }]}>ðŸ” Find technicians</Text>
+app/services/[id].tsx:452:            {editOpen ? 'â–² Hide edit details' : 'âœï¸ Edit details'}
+app/services/[id].tsx:503:              <Text style={{ color: colors.textMuted }}>ðŸ“…</Text>
+app/services/[id].tsx:538:                  <Text style={styles.providerStateIcon}>ðŸ‘¥</Text>
+app/services/[id].tsx:680:          <Text style={[styles.deleteBtnText, { color: colors.accent }]}>ðŸ—‘ï¸ Delete this reminder</Text>
+app/services/[id].tsx:690:                <Text style={[styles.sheetClose, { color: colors.textMuted }]}>âœ•</Text>
+components/McnListingCard.tsx:67:      `ðŸª *Community Business: ${listing.name}*`,
+components/McnListingCard.tsx:77:      messageLines.push(`ðŸ“ž Phone/WhatsApp: ${listing.contact_phone}`);
+components/McnListingCard.tsx:81:    messageLines.push(`ðŸ”— View Offerings & Order:`);
+components/PreorderDropCard.tsx:55:        label: 'âœ… Delivered & Completed',
+components/PreorderDropCard.tsx:62:        label: 'âŒ Drop Cancelled',
+components/PreorderDropCard.tsx:69:        label: 'ðŸ”’ Pre-Orders Closed (Preparing)',
+components/PreorderDropCard.tsx:97:      label: `â³ ${timeText} (${cutoffFormatted})`,
+components/PreorderDropCard.tsx:137:      `ðŸ² *Food Drop: ${drop.title}*`,
+components/PreorderDropCard.tsx:140:      `ðŸ“… Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
+components/PreorderDropCard.tsx:141:      `â° Pre-Orders Close: ${cutoffFormatted}`,
+components/PreorderDropCard.tsx:145:      messageLines.push(`ðŸ–¼ï¸ Photo: ${drop.image_url}`);
+components/PreorderDropCard.tsx:149:    messageLines.push(`ðŸ”— View Menu & Place Pre-Order:`);
+components/PreorderDropCard.tsx:223:                ðŸ² {drop.item_count}
+components/ProviderCard.tsx:21:    const ratingText = provider.avg_rating ? `â˜… ${Number(provider.avg_rating).toFixed(1)} (${provider.rating_count} reviews)` : '';
+components/ProviderCard.tsx:28:      `ðŸ‘¤ *Service Provider Contact*`,
+components/ProviderCard.tsx:36:      `ðŸ”— View Provider Profile:`,
+components/SchoolReviewCard.tsx:133:          <Text style={styles.overallCommentTitle}>ðŸ’¬ Parent Note & Advice:</Text>
+components/ServiceCard.tsx:24:  const emoji = SERVICE_CATEGORY_EMOJI[category] ?? 'ðŸ”§';
+components/ServiceHistoryList.tsx:264:                <Text style={[styles.closeIcon, { color: colors.textMuted }]}>âœ•</Text>
+components/ServiceHistoryList.tsx:278:                <Text style={{ color: colors.textMuted }}>ðŸ“…</Text>
+components/UpcomingServicesCard.tsx:88:          <Text style={styles.zeroEmoji}>ðŸ”§</Text>
+components/UpcomingServicesCard.tsx:103:            <Text style={styles.dismissText}>âœ•</Text>
+components/UpcomingServicesCard.tsx:115:          <Text style={styles.trackText}>âœ“ All services on track</Text>
+components/UpcomingServicesCard.tsx:132:        const emoji = SERVICE_CATEGORY_EMOJI[s.category as ServiceCategory] ?? 'ðŸ”§';
+components/VisitCard.tsx:83:        `ðŸš— *Service Visit: ${title}*`,
+components/VisitCard.tsx:85:        `ðŸ“… Date: ${formattedDate}`,
+components/VisitCard.tsx:86:        `â° Time: ${visitTimeSlot}`,
+components/VisitCard.tsx:89:        `ðŸ”— View Visit & Join:`,
+constants/emojis.ts:2:  home: 'ðŸ ',
+constants/emojis.ts:3:  favoritesFilled: 'â¤ï¸',
+constants/emojis.ts:4:  favoritesEmpty: 'ðŸ¤',
+constants/emojis.ts:5:  funds: 'ðŸ’°',
+constants/emojis.ts:6:  profile: 'ðŸ‘¤',
+constants/emojis.ts:8:  search: 'ðŸ”',
+constants/emojis.ts:9:  settings: 'âš™ï¸',
+constants/emojis.ts:10:  notifications: 'ðŸ””',
+constants/emojis.ts:13:  close: 'âœ•',
+constants/emojis.ts:14:  call: 'ðŸ“ž',
+constants/emojis.ts:15:  whatsapp: 'ðŸ’¬',
+constants/emojis.ts:16:  verified: 'âœ…',
+constants/emojis.ts:17:  starFilled: 'â˜…',
+constants/emojis.ts:19:  starEmpty: 'â˜†',
+constants/emojis.ts:20:  photo: 'ðŸ“·',
+constants/emojis.ts:21:  share: 'ðŸ“¤',
+constants/emojis.ts:22:  contribution: 'ðŸ’š',
+constants/emojis.ts:23:  expense: 'ðŸ“¤',
+constants/emojis.ts:24:  wallet: 'ðŸ’°',
+constants/emojis.ts:25:  fundActive: 'ðŸŸ¢',
+constants/emojis.ts:26:  community: 'ðŸ˜ï¸',
+constants/emojis.ts:27:  house: 'ðŸ¡',
+constants/emojis.ts:28:  members: 'ðŸ‘¥',
+constants/emojis.ts:29:  admin: 'ðŸ›¡ï¸',
+constants/emojis.ts:30:  treasurer: 'ðŸ’¼',
+constants/emojis.ts:31:  collector: 'ðŸ“‹',
+constants/emojis.ts:32:  resident: 'ðŸ ',
+constants/emojis.ts:33:  success: 'âœ…',
+constants/emojis.ts:34:  warning: 'âš ï¸',
+constants/emojis.ts:35:  error: 'âŒ',
+constants/emojis.ts:36:  info: 'â„¹ï¸',
+constants/emojis.ts:37:  loading: 'â³',
+constants/emojis.ts:38:  mail: 'âœ‰ï¸',
+constants/emojis.ts:39:  lock: 'ðŸ”’',
+constants/emojis.ts:40:  visible: 'ðŸ‘ï¸',
+constants/emojis.ts:41:  hidden: 'ðŸ™ˆ',
+constants/emojis.ts:46:  plumber: 'ðŸ”§',
+constants/emojis.ts:47:  electrician: 'âš¡',
+constants/emojis.ts:48:  carpenter: 'ðŸªµ',
+constants/emojis.ts:49:  carpentry: 'ðŸªµ',
+constants/emojis.ts:50:  cleaner: 'ðŸ§¹',
+constants/emojis.ts:51:  cleaning: 'ðŸ§¹',
+constants/emojis.ts:52:  maid: 'ðŸ§¹',
+constants/emojis.ts:53:  painter: 'ðŸŽ¨',
+constants/emojis.ts:54:  painting: 'ðŸŽ¨',
+constants/emojis.ts:55:  cook: 'ðŸ³',
+constants/emojis.ts:56:  cooking: 'ðŸ³',
+constants/emojis.ts:57:  chef: 'ðŸ³',
+constants/emojis.ts:58:  driver: 'ðŸš—',
+constants/emojis.ts:59:  driving: 'ðŸš—',
+constants/emojis.ts:60:  chauffeur: 'ðŸš—',
+constants/emojis.ts:61:  delivery: 'ðŸ“¦',
+constants/emojis.ts:62:  cctv: 'ðŸ“·',
+constants/emojis.ts:63:  camera: 'ðŸ“·',
+constants/emojis.ts:64:  photography: 'ðŸ“·',
+constants/emojis.ts:65:  photographer: 'ðŸ“·',
+constants/emojis.ts:66:  decoration: 'ðŸŽˆ',
+constants/emojis.ts:67:  decorator: 'ðŸŽˆ',
+constants/emojis.ts:68:  'ac repair': 'â„ï¸',
+constants/emojis.ts:69:  'ac technician': 'â„ï¸',
+constants/emojis.ts:70:  'ac service': 'â„ï¸',
+constants/emojis.ts:71:  gardener: 'ðŸŒ±',
+constants/emojis.ts:72:  garden: 'ðŸŒ±',
+constants/emojis.ts:73:  tailor: 'âœ‚ï¸',
+constants/emojis.ts:74:  'ironing / press': 'ðŸ‘”',
+constants/emojis.ts:75:  ironing: 'ðŸ‘”',
+constants/emojis.ts:76:  press: 'ðŸ‘”',
+constants/emojis.ts:77:  dhobi: 'ðŸ‘”',
+constants/emojis.ts:78:  'salon / beautician': 'ðŸ’‡',
+constants/emojis.ts:79:  salon: 'ðŸ’‡',
+constants/emojis.ts:80:  beautician: 'ðŸ’‡',
+constants/emojis.ts:81:  'door rangoli': 'ðŸŽ¨',
+constants/emojis.ts:82:  rangoli: 'ðŸŽ¨',
+constants/emojis.ts:83:  'gas repair': 'ðŸ”¥',
+constants/emojis.ts:84:  'gas agency': 'â›½',
+constants/emojis.ts:85:  'cycle repair': 'ðŸš²',
+constants/emojis.ts:86:  'car repair': 'ðŸš˜',
+constants/emojis.ts:87:  'bike repair': 'ðŸï¸',
+constants/emojis.ts:88:  'motorbike repair': 'ðŸï¸',
+constants/emojis.ts:89:  'washroom cleaner': 'ðŸš¿',
+constants/emojis.ts:90:  'water supply': 'ðŸ’§',
+constants/emojis.ts:91:  'pest control': 'ðŸ›',
+constants/emojis.ts:92:  'car wash': 'ðŸš—',
+constants/emojis.ts:93:  milkman: 'ðŸ¥›',
+constants/emojis.ts:94:  milk: 'ðŸ¥›',
+constants/emojis.ts:95:  'ro / water purifier': 'ðŸ’§',
+constants/emojis.ts:96:  'water purifier': 'ðŸ’§',
+constants/emojis.ts:97:  'movers & packers': 'ðŸ“¦',
+constants/emojis.ts:98:  movers: 'ðŸ“¦',
+constants/emojis.ts:99:  packers: 'ðŸ“¦',
+constants/emojis.ts:101:  'grills & mesh work': 'ðŸªŸ',
+constants/emojis.ts:102:  grills: 'ðŸªŸ',
+constants/emojis.ts:103:  mesh: 'ðŸªŸ',
+constants/emojis.ts:105:  'tent house': 'â›º',
+constants/emojis.ts:106:  tent: 'â›º',
+constants/emojis.ts:108:  'water cans': 'ðŸ«—',
+constants/emojis.ts:110:  catering: 'ðŸ½ï¸',
+constants/emojis.ts:111:  caterer: 'ðŸ½ï¸',
+constants/emojis.ts:113:  boutique: 'ðŸ‘—',
+constants/emojis.ts:115:  teaching: 'ðŸ“š',
+constants/emojis.ts:116:  'tutor / home teacher': 'ðŸ“š', // backward compat
+constants/emojis.ts:117:  tutor: 'ðŸ“š',
+constants/emojis.ts:118:  teacher: 'ðŸ“š',
+constants/emojis.ts:119:  coaching: 'ðŸ“š',
+constants/emojis.ts:121:  'rto agent': 'ðŸš™',
+constants/emojis.ts:122:  rto: 'ðŸš™',
+constants/emojis.ts:124:  'aadhar centre': 'ðŸªª',
+constants/emojis.ts:125:  aadhar: 'ðŸªª',
+constants/emojis.ts:126:  aadhaar: 'ðŸªª',
+constants/emojis.ts:128:  'pandit / pujari': 'ðŸ™',
+constants/emojis.ts:129:  'mosquito net / screens': 'ðŸ¦Ÿ',
+constants/emojis.ts:130:  'balcony safety nets': 'ðŸ•¸ï¸',
+constants/emojis.ts:131:  'blinds & curtains': 'ðŸªŸ',
+constants/emojis.ts:132:  'core cutting': 'ðŸ•³ï¸',
+constants/emojis.ts:133:  'false ceiling / pop': 'ðŸ ',
+constants/emojis.ts:134:  'marble & granite work': 'ðŸª¨',
+constants/emojis.ts:135:  'balcony cloth hangers': 'ðŸ‘•',
+constants/emojis.ts:136:  'internet provider / tech': 'ðŸŒ',
+constants/emojis.ts:137:  'washing machine repair': 'ðŸ§º',
+constants/emojis.ts:138:  'tv repair & install': 'ðŸ“º',
+constants/emojis.ts:139:  'swimming / fitness coach': 'ðŸŠ',
+constants/emojis.ts:140:  'doctor / clinic': 'ðŸ©º',
+constants/emojis.ts:141:  'pharmacy delivery': 'ðŸ’Š',
+constants/emojis.ts:142:  'diagnostics / lab tests': 'ðŸ§ª',
+constants/emojis.ts:143:  'physiotherapy': 'ðŸ¦½',
+constants/emojis.ts:144:  'home nurse / nanny': 'ðŸ§‘â€âš•ï¸',
+constants/emojis.ts:149:    return 'ðŸ› ï¸';
+constants/emojis.ts:153:  return SERVICE_CATEGORY_EMOJIS[normalized] ?? 'ðŸ› ï¸';
+constants/schoolReviewAspects.ts:23:    emoji: 'ðŸ“š',
+constants/schoolReviewAspects.ts:30:    emoji: 'ðŸ‘©â€ðŸ«',
+constants/schoolReviewAspects.ts:37:    emoji: 'ðŸ—ï¸',
+constants/schoolReviewAspects.ts:44:    emoji: 'âš½',
+constants/schoolReviewAspects.ts:51:    emoji: 'ðŸ›¡ï¸',
+constants/schoolReviewAspects.ts:58:    emoji: 'ðŸšŒ',
+constants/schoolReviewAspects.ts:65:    emoji: 'ðŸ’°',
+constants/schoolReviewAspects.ts:72:    emoji: 'ðŸ˜Š',
+constants/schoolReviewAspects.ts:85:  { score: 1, emoji: 'ðŸ˜Ÿ', label: 'Poor' },
+constants/schoolReviewAspects.ts:86:  { score: 2, emoji: 'ðŸ˜•', label: 'Fair' },
+constants/schoolReviewAspects.ts:87:  { score: 3, emoji: 'ðŸ˜', label: 'Average' },
+constants/schoolReviewAspects.ts:88:  { score: 4, emoji: 'ðŸ™‚', label: 'Good' },
+constants/schoolReviewAspects.ts:89:  { score: 5, emoji: 'ðŸ¤©', label: 'Excellent' },
+constants/schoolReviewAspects.ts:104:  return found ? found.emoji : 'ðŸ˜';
+lib/serviceCategories.ts:48:  ac: 'â„ï¸',
+lib/serviceCategories.ts:49:  ro_water_purifier: 'ðŸ’§',
+lib/serviceCategories.ts:50:  geyser: 'â™¨ï¸',
+lib/serviceCategories.ts:51:  washing_machine: 'ðŸ«§',
+lib/serviceCategories.ts:52:  refrigerator: 'ðŸ§Š',
+lib/serviceCategories.ts:53:  chimney: 'ðŸ”¥',
+lib/serviceCategories.ts:54:  pest_control: 'ðŸœ',
+lib/serviceCategories.ts:55:  car: 'ðŸš—',
+lib/serviceCategories.ts:56:  bike: 'ðŸï¸',
+lib/serviceCategories.ts:57:  inverter_battery: 'ðŸ”‹',
+lib/serviceCategories.ts:58:  other: 'ðŸ”§',
+public/admin/js/communities.js:115:            ðŸ‘¥ ${counts.active} members &nbsp;&nbsp; ðŸ”‘ ${counts.leads} lead${counts.leads !== 1 ? 's' : ''}
+public/admin/js/communities.js:238:          category_emoji: b.mcn_business_categories?.emoji || 'ðŸª',
+public/admin/js/communities.js:389:            <td>ðŸ“… ${delivDate}<br><span class="text-3" style="font-size: 0.8rem;">â° ${drop.fulfillment_time || 'N/A'}</span></td>
+public/admin/js/communities.js:419:              ${biz.category_emoji || 'ðŸª'} ${biz.name || 'Business'}<br>
+public/admin/js/communities.js:425:              ${waLink ? `<a href="${waLink}" target="_blank" style="margin-left: 6px; text-decoration: none;" title="Chat on WhatsApp">ðŸ’¬</a>` : ''}
+public/admin/js/communities.js:427:            <td>â­ ${Number(biz.avg_rating || 0).toFixed(1)} (${biz.rating_count || 0})</td>
+public/admin/js/communities.js:607:                <h2>ðŸ² Pre-Order Food Drops & Statistics</h2>
+public/admin/js/communities.js:639:                <h2>ðŸª Businesses Available in Community</h2>
+public/admin/js/dashboard.js:41:      allOption.textContent = 'ðŸŒ All Communities (Platform Overview)';
+public/admin/js/dashboard.js:58:      selector.innerHTML = '<option value="ALL">ðŸŒ All Communities (Platform Overview)</option>';
+public/admin/js/dashboard.js:208:              â­ ${parseFloat(p.avg_rating || 0).toFixed(1)}
+public/admin/js/providers.js:85:          ? `â­ ${parseFloat(sp.avg_rating).toFixed(1)} <span class="text-3">(${sp.rating_count})</span>` 
+public/admin/js/providers.js:167:                <span style="color: var(--caution); font-weight: 500;">${'â­'.repeat(rv.rating)}</span>
+public/admin/js/providers.js:205:                  <div style="color: var(--caution); font-size: 1.1rem;">${'â­'.repeat(Math.round(data.avg_rating || 0)) || 'â˜†'}</div>
+public/admin/js/providers.js:210:                ðŸ‘¥ <strong>${data.hires_count || 0}</strong> residents have contacted this provider

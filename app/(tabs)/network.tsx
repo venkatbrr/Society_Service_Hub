@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BaseCard } from '../../components/BaseCard';
+import { NetworkTileIcon } from '../../components/NetworkTileIcon';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
@@ -69,6 +70,7 @@ export default function NetworkScreen() {
             .from('mcn_posts')
             .select('id', { count: 'exact', head: true })
             .eq('community_id', communityId)
+            .eq('kind', 'borrow')
             .eq('is_available', true),
         ]);
 
@@ -149,7 +151,7 @@ export default function NetworkScreen() {
         >
           <View style={styles.cardHeaderRow}>
             <View style={[styles.iconCircle, { backgroundColor: '#FEE2E2' }]}>
-              <Text style={styles.iconEmoji}>🍲</Text>
+              <NetworkTileIcon kind="food" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
@@ -174,7 +176,7 @@ export default function NetworkScreen() {
         >
           <View style={styles.cardHeaderRow}>
             <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
-              <Text style={styles.iconEmoji}>🚘</Text>
+              <NetworkTileIcon kind="carpool" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
@@ -199,7 +201,7 @@ export default function NetworkScreen() {
         >
           <View style={styles.cardHeaderRow}>
             <View style={[styles.iconCircle, { backgroundColor: '#E0E7FF' }]}>
-              <Text style={styles.iconEmoji}>👨‍👩‍👧‍👦</Text>
+              <NetworkTileIcon kind="parents" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Parent Corner</Text>
@@ -224,7 +226,7 @@ export default function NetworkScreen() {
         >
           <View style={styles.cardHeaderRow}>
             <View style={[styles.iconCircle, { backgroundColor: '#D1FAE5' }]}>
-              <Text style={styles.iconEmoji}>🏫</Text>
+              <NetworkTileIcon kind="schools" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Schools Catalog & Compare</Text>
@@ -249,7 +251,7 @@ export default function NetworkScreen() {
         >
           <View style={styles.cardHeaderRow}>
             <View style={[styles.iconCircle, { backgroundColor: '#FCE7F3' }]}>
-              <Text style={styles.iconEmoji}>🔄</Text>
+              <NetworkTileIcon kind="borrow" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Borrow & Share</Text>
@@ -331,9 +333,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
-  },
-  iconEmoji: {
-    fontSize: 22,
   },
   cardTitle: {
     ...VerandahType.title,

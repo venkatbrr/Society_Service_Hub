@@ -60,7 +60,14 @@ export const VerandahRadius = {
  */
 export const VerandahLayout = {
   screenPaddingTop: Platform.select({ web: 16, default: 60 }) as number,
+  mcnHeaderToContentGap: 4,
 };
+
+/**
+ * Shared height token for image-based network tiles
+ * (used by Pre-order Food and Community Business cards).
+ */
+export const getNetworkTileImageHeight = (): number => 108;
 
 /**
  * Formats a 24-hour time string (e.g. "13:00", "09:30")

@@ -3,9 +3,11 @@ import { Image } from 'expo-image';
 import React, { useState } from 'react';
 import { Modal, Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahType } from '../constants/Verandah';
+import { getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
+
+const NETWORK_TILE_IMAGE_HEIGHT = getNetworkTileImageHeight();
 
 export interface McnListingItem {
   id: string;
@@ -97,7 +99,7 @@ export const McnListingCard = React.memo(({
   return (
     <BaseCard
       style={[styles.card, !listing.is_active && styles.inactiveCard]}
-      padding={listing.image_url ? 0 : 16}
+      padding={listing.image_url ? 0 : 12}
       onPress={() => {
         if (showMenu) return;
         onPress(listing.id);
@@ -113,7 +115,7 @@ export const McnListingCard = React.memo(({
       ) : null}
       <View style={listing.image_url ? styles.cardContentWithImage : undefined}>
       <View style={styles.header}>
-        <Avatar name={listing.profiles?.full_name || 'Resident'} size={40} />
+        <Avatar name={listing.profiles?.full_name || 'Resident'} size={36} />
         <View style={styles.headerText}>
           <Text style={[styles.name, { color: Verandah.textPrimary }]}>{listing.name}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -212,7 +214,7 @@ export const McnListingCard = React.memo(({
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 12,
+    marginBottom: 8,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     shadowColor: 'transparent',
@@ -224,20 +226,20 @@ const styles = StyleSheet.create({
   },
   coverImage: {
     width: '100%',
-    height: 120,
+    height: NETWORK_TILE_IMAGE_HEIGHT,
   },
   cardContentWithImage: {
-    padding: 16,
+    padding: 12,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   headerText: {
     flex: 1,
-    marginLeft: 12,
-    marginRight: 8,
+    marginLeft: 10,
+    marginRight: 6,
   },
   name: {
     ...VerandahType.bodyBold,
@@ -253,7 +255,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
-    marginTop: 4,
+    marginTop: 3,
   },
   categoryBadgeText: {
     fontSize: 11,
@@ -266,7 +268,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    marginTop: 4,
+    marginTop: 3,
   },
   inactiveBadgeText: {
     ...VerandahType.micro,
@@ -275,19 +277,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   menuBtn: {
-    padding: 6,
+    padding: 4,
   },
   description: {
     ...VerandahType.body,
-    marginBottom: 12,
-    lineHeight: 20,
+    marginBottom: 8,
+    lineHeight: 18,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
   },
   actionBtn: {
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   actionBtnText: {
     ...VerandahType.captionBold,

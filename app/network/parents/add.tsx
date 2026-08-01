@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -13,15 +12,17 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { AppIcon } from '../../../components/AppIcon';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
+import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
 const INSTITUTION_TYPES = [
-  { id: 'school', label: 'School', emoji: '🏫' },
-  { id: 'college', label: 'College', emoji: '🎓' },
-  { id: 'preschool', label: 'Pre-School', emoji: '👶' },
+  { id: 'school', label: 'School', icon: 'school' as const },
+  { id: 'college', label: 'College', icon: 'graduation' as const },
+  { id: 'preschool', label: 'Pre-School', icon: 'baby' as const },
 ];
 
 const BOARD_OPTIONS = ['CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University / Autonomous', 'Other'];
@@ -209,21 +210,18 @@ export default function AddParentCornerScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Stack.Screen
-        options={{
-          headerTitle: editId ? 'Edit Child Details' : 'Add Child Details',
-          headerTitleStyle: { fontWeight: '500', fontSize: 17, color: colors.textPrimary },
-          headerLeft: () => (
-            <TouchableOpacity onPress={handleBack} style={{ marginRight: 12 }}>
-              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          ),
-        }}
+        options={buildMcnHeaderOptions({
+          title: editId ? 'Edit Child Details' : 'Add Child Details',
+          onBack: handleBack,
+        })}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Card Header Banner */}
         <View style={[styles.headerBanner, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={styles.bannerEmoji}>👨‍👩‍👧‍👦</Text>
+          <View style={styles.bannerIconWrap}>
+            <AppIcon name="users" size={24} />
+          </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.bannerTitle, { color: colors.textPrimary }]}>Parent Corner Registration</Text>
             <Text style={[styles.bannerSubtitle, { color: colors.textSecondary }]}>
@@ -260,9 +258,12 @@ export default function AddParentCornerScreen() {
                   ]}
                   onPress={() => setInstitutionType(t.id as any)}
                 >
-                  <Text style={[styles.typeBtnText, { color: isActive ? colors.accent : colors.textSecondary }]}>
-                    {t.emoji} {t.label}
-                  </Text>
+                  <View style={styles.iconLabelRow}>
+                    <AppIcon name={t.icon} size={12} />
+                    <Text style={[styles.typeBtnText, { color: isActive ? colors.accent : colors.textSecondary }]}>
+                      {t.label}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -433,8 +434,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 20,
   },
-  bannerEmoji: {
-    fontSize: 32,
+  bannerIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
   bannerTitle: {
@@ -481,6 +486,11 @@ const styles = StyleSheet.create({
   typeBtnText: {
     ...VerandahType.bodyBold,
     fontSize: 12,
+  },
+  iconLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   suggestionChip: {
     paddingHorizontal: 10,
