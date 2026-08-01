@@ -67,7 +67,7 @@ The resident marketplace is not part of the current product. `app/business/*` is
 2. `AuthProvider` hydrates session and profile
 3. `NotificationProvider` becomes active for signed-in users
 4. Root redirects are:
-   - No session -> `/login`
+   - No session -> `/login` (except web `/`, which remains public and forwards to `/landing.html`)
    - Platform admin -> `/admin-redirect`
    - No community with active request -> `/community-request-submitted`
    - No community and no request -> `/community-select`

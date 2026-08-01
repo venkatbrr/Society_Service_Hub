@@ -46,66 +46,63 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <div className="desktop-orb desktop-orb-1"></div>
         <div className="desktop-orb desktop-orb-2"></div>
 
-        {/* Desktop Wrapper Layout */}
-        <div className="desktop-layout-container">
-          {/* Left Brand Panel for Wide Desktop Viewports */}
-          <div className="desktop-brand-panel">
-            <div className="brand-badge">
-              <span className="pulse-dot"></span>
-              <span>RESIDENT PORTAL</span>
+        {/* Left Side Branded Panel for Wide Desktop Screens */}
+        <div className="desktop-brand-panel">
+          <div className="brand-badge">
+            <span className="pulse-dot"></span>
+            <span>RESIDENT PORTAL</span>
+          </div>
+          
+          <div className="brand-header">
+            <div className="brand-logo-icon">
+              <Building05 size={22} color="#10B981" aria-hidden="true" />
             </div>
-            
-            <div className="brand-header">
-              <div className="brand-logo-icon">
-                <Building05 size={24} color="#10B981" aria-hidden="true" />
-              </div>
-              <h1 className="brand-title">Society Hub</h1>
-            </div>
-
-            <p className="brand-tagline">
-              The modern residential operating system for gated communities.
-            </p>
-
-            <div className="brand-features-list">
-              <div className="brand-feature-item">
-                <div className="feature-item-icon">
-                  <Tool02 size={18} color="#10B981" aria-hidden="true" />
-                </div>
-                <div>
-                  <div className="feature-item-title">Verified Services</div>
-                  <div className="feature-item-desc">Neighbor-rated plumbers, electricians & maids</div>
-                </div>
-              </div>
-
-              <div className="brand-feature-item">
-                <div className="feature-item-icon">
-                  <ShoppingBag03 size={18} color="#10B981" aria-hidden="true" />
-                </div>
-                <div>
-                  <div className="feature-item-title">Food Drops</div>
-                  <div className="feature-item-desc">Pre-order home meals from resident hosts</div>
-                </div>
-              </div>
-
-              <div className="brand-feature-item">
-                <div className="feature-item-icon">
-                  <Coins01 size={18} color="#10B981" aria-hidden="true" />
-                </div>
-                <div>
-                  <div className="feature-item-title">Cultural Funds</div>
-                  <div className="feature-item-desc">Transparent festival collection tracking</div>
-                </div>
-              </div>
-            </div>
-
-            <a href="/" className="landing-back-link">
-              ← Back to Main Website
-            </a>
+            <h1 className="brand-title">Society Hub</h1>
           </div>
 
-          {/* Central Mobile View App Container */}
-          {children}
+          <p className="brand-tagline">
+            The operating system for modern residential communities.
+          </p>
+
+          <div className="brand-features-list">
+            <div className="brand-feature-item">
+              <div className="feature-item-icon">
+                <Tool02 size={16} color="#10B981" aria-hidden="true" />
+              </div>
+              <div>
+                <div className="feature-item-title">Verified Services</div>
+                <div className="feature-item-desc">Neighbor-rated plumbers & electricians</div>
+              </div>
+            </div>
+
+            <div className="brand-feature-item">
+              <div className="feature-item-icon">
+                <ShoppingBag03 size={16} color="#10B981" aria-hidden="true" />
+              </div>
+              <div>
+                <div className="feature-item-title">Food Drops</div>
+                <div className="feature-item-desc">Pre-order home meals from hosts</div>
+              </div>
+            </div>
+
+            <div className="brand-feature-item">
+              <div className="feature-item-icon">
+                <Coins01 size={16} color="#10B981" aria-hidden="true" />
+              </div>
+              <div>
+                <div className="feature-item-title">Cultural Funds</div>
+                <div className="feature-item-desc">Transparent festival tracking</div>
+              </div>
+            </div>
+          </div>
+
+          <a href="/" className="landing-back-link">
+            ← Main Website
+          </a>
         </div>
+
+        {/* The Central Mobile-View App Container */}
+        {children}
 
         {/* Register PWA service worker */}
         <script dangerouslySetInnerHTML={{ __html: serviceWorkerRegistration }} />
@@ -145,13 +142,6 @@ input:focus, textarea:focus, select:focus {
   display: none !important;
 }
 
-.desktop-layout-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
 /* Mobile Viewports (< 768px): Full-Screen Native App Feel */
 @media (max-width: 767px) {
   body {
@@ -166,51 +156,43 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
-/* Desktop Viewports (>= 768px): Centered Portal Shell */
+/* Desktop Viewports (>= 768px): Centered Mobile View Container with Dark Backdrop */
 @media (min-width: 768px) {
   body {
-    background-color: #0A1D1A;
+    background-color: #0A1D1A !important;
     background-image: 
-      radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
-      radial-gradient(circle at 85% 85%, rgba(15, 55, 50, 0.3) 0%, transparent 55%),
-      radial-gradient(circle at 50% 50%, #0A1D1A 0%, #040E0C 100%);
-    min-height: 100vh;
-    overflow-x: hidden;
-    position: relative;
-  }
-
-  .desktop-layout-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 32px 24px;
-    box-sizing: border-box;
-    gap: 48px;
-    position: relative;
-    z-index: 10;
+      radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.15) 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(15, 55, 50, 0.4) 0%, transparent 55%),
+      radial-gradient(circle at 50% 50%, #0A1D1A 0%, #040E0C 100%) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 100vh !important;
+    padding: 24px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    position: relative !important;
   }
 
   /* Central Mobile View Container */
   #root {
-    max-width: 440px;
-    width: 100%;
-    height: 88vh !important;
-    max-height: 860px;
-    border-radius: 28px;
-    background-color: #FAF8F4;
-    box-shadow: 0 35px 90px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.12);
-    overflow: hidden;
-    position: relative;
-    z-index: 10;
-    flex-shrink: 0;
+    max-width: 460px !important;
+    width: 100% !important;
+    height: 90vh !important;
+    max-height: 880px !important;
+    border-radius: 28px !important;
+    background-color: #FAF8F4 !important;
+    box-shadow: 0 35px 90px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+    overflow: hidden !important;
+    position: relative !important;
+    z-index: 10 !important;
+    flex-shrink: 0 !important;
   }
 
   @media (prefers-color-scheme: dark) {
     #root {
-      background-color: #071412;
-      box-shadow: 0 35px 90px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(16, 185, 129, 0.2);
+      background-color: #071412 !important;
+      box-shadow: 0 35px 90px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(16, 185, 129, 0.2) !important;
     }
   }
 
@@ -219,8 +201,8 @@ input:focus, textarea:focus, select:focus {
     display: block !important;
     position: absolute;
     border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.25;
+    filter: blur(90px);
+    opacity: 0.35;
     pointer-events: none;
     z-index: 1;
   }
@@ -256,36 +238,40 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
-/* Wide Screen Desktop Branding Panel (>= 960px) */
-@media (min-width: 960px) {
+/* Wide Screen Anchored Brand Panel (>= 1120px) */
+@media (min-width: 1120px) {
   .desktop-brand-panel {
     display: flex !important;
     flex-direction: column;
-    width: 340px;
+    position: absolute;
+    top: 50%;
+    left: max(32px, calc(50% - 580px));
+    transform: translateY(-50%);
+    width: 290px;
     background: rgba(255, 255, 255, 0.04);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 24px;
-    padding: 36px 30px;
+    padding: 28px 24px;
     color: #FAF8F4;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-    flex-shrink: 0;
+    z-index: 5;
   }
 
   .brand-badge {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     background: rgba(16, 185, 129, 0.15);
     border: 1px solid rgba(16, 185, 129, 0.3);
-    padding: 4px 12px;
+    padding: 4px 10px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 1px;
     color: #6EE7B7;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     align-self: flex-start;
   }
 
@@ -300,23 +286,23 @@ input:focus, textarea:focus, select:focus {
   .brand-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: 8px;
   }
 
   .brand-logo-icon {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     background: rgba(16, 185, 129, 0.15);
     border: 1px solid rgba(16, 185, 129, 0.3);
-    border-radius: 12px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
   .brand-title {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 800;
     color: #ffffff;
     letter-spacing: -0.5px;
@@ -324,62 +310,59 @@ input:focus, textarea:focus, select:focus {
   }
 
   .brand-tagline {
-    font-size: 14px;
-    line-height: 1.5;
-    color: rgba(250, 248, 244, 0.7);
-    margin: 0 0 28px 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgba(250, 248, 244, 0.65);
+    margin: 0 0 20px 0;
   }
 
   .brand-features-list {
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    margin-bottom: 32px;
+    gap: 14px;
+    margin-bottom: 24px;
   }
 
   .brand-feature-item {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 10px;
   }
 
   .feature-item-icon {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     background: rgba(16, 185, 129, 0.1);
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    margin-top: 2px;
   }
 
   .feature-item-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: #ffffff;
     margin-bottom: 2px;
   }
 
   .feature-item-desc {
-    font-size: 12px;
-    color: rgba(250, 248, 244, 0.55);
-    line-height: 1.4;
+    font-size: 11px;
+    color: rgba(250, 248, 244, 0.5);
+    line-height: 1.35;
   }
 
   .landing-back-link {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #6EE7B7;
     text-decoration: none;
-    transition: opacity 0.2s ease;
     display: inline-flex;
     align-items: center;
   }
 
   .landing-back-link:hover {
-    opacity: 0.8;
     text-decoration: underline;
   }
 }

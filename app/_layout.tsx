@@ -61,6 +61,7 @@ function RootLayoutNav() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === 'login';
+    const isWebRootPath = Platform.OS === 'web' && pathname === '/';
     const isPublicFoodDropRoute =
       pathname === '/network/drops' ||
       pathname.startsWith('/network/drops/');
@@ -75,7 +76,7 @@ function RootLayoutNav() {
 
     if (!session) {
       // No session → login
-      if (!inAuthGroup && !isPublicFoodDropRoute) {
+      if (!inAuthGroup && !isPublicFoodDropRoute && !isWebRootPath) {
         if (pathname && pathname !== '/' && pathname !== '/login') {
           savedTargetRouteRef.current = pathname;
         }
@@ -134,7 +135,15 @@ function RootLayoutNav() {
       lastRedirectRef.current = redirectTo;
       router.replace(redirectTo as any);
     }
-  }, [session, communityId, activeCommunityRequest, isPlatformAdmin, isLoading, segments]);
+  }, [
+    session,
+    communityId,
+    activeCommunityRequest,
+    isPlatformAdmin,
+    isLoading,
+    segments,
+    pathname,
+  ]);
 
   useEffect(() => {
     if (Platform.OS === 'web' || !Notifications) return;

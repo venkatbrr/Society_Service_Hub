@@ -44,7 +44,7 @@ Every user belongs to a community. **All data queries must filter by `communityI
 
 1. Root layout (`app/_layout.tsx`) initializes Google Sign-In and wraps app in `AuthProvider` + `NotificationProvider`
 2. `AuthContext` watches `supabase.auth.onAuthStateChange`, auto-fetches profile
-3. Redirect logic: no session → `/login`; platform admin → `/admin-redirect`; no community + active request → `/community-request-submitted`; no community + no request → `/community-select`; community present → `/(tabs)`
+3. Redirect logic: no session → `/login` (except web `/`, which remains public and forwards to `/landing.html`); platform admin → `/admin-redirect`; no community + active request → `/community-request-submitted`; no community + no request → `/community-select`; community present → `/(tabs)`
 4. Successful `join_community_by_code()` calls in `app/community-select.tsx` can branch to `/community-join-block` before `/(tabs)` when the joined community has both `funds_enabled` and `blocks_enabled`
 5. Auth methods: Google OAuth (requires dev build, not Expo Go) and email/password; email sign-up collects full name and password on the first screen while `profiles.flat_number` remains optional
 6. Session persisted via AsyncStorage adapter (not SecureStore, due to Android 2KB limit)
