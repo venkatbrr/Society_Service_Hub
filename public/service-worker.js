@@ -1,9 +1,9 @@
-// Society Service Hub — PWA Service Worker
-// Provides offline caching for static assets and a network-first strategy for API calls.
+// Society Service Hub — PWA Service Worker (v2)
+// Provides offline caching for static assets and network-first strategy for navigation.
 
-const CACHE_NAME = 'ssh-pwa-v1';
+const CACHE_NAME = 'ssh-pwa-v2';
 const STATIC_ASSETS = [
-  '/',
+  '/landing.html',
   '/manifest.json',
   '/images/icon.png',
   '/images/favicon.png',
@@ -35,7 +35,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first for API calls, cache-first for static assets
+// Fetch: network-first for navigation and API calls, cache-first for static assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -52,31 +52,39 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For navigation and static assets: try network first, fall back to cache
+  // Network-first for HTML pages / navigation
+  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request).then((cachedResponse) => {
+            return cachedResponse || caches.match('/landing.html') || new Response('Offline', { status: 503 });
+          });
+        })
+    );
+    return;
+  }
+
+  // Cache-first for static assets (images, js, css, fonts)
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        // Cache successful responses for offline use
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(request).then((response) => {
         if (response.ok) {
           const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
         }
         return response;
-      })
-      .catch(() => {
-        // Network failed — try serving from cache
-        return caches.match(request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          // For navigation requests, serve the cached root page (SPA fallback)
-          if (request.mode === 'navigate') {
-            return caches.match('/');
-          }
-          return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-        });
-      })
+      });
+    })
   );
 });
