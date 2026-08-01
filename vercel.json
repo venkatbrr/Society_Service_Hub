@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/index.html"
+      "destination": "/landing.html"
     },
     {
       "source": "/admin/:path*",
