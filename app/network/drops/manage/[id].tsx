@@ -241,7 +241,11 @@ export default function ManagePreorderDropScreen() {
   const isOpen = drop.status === 'open' && !isCutoffPassed;
 
   const handleBack = () => {
-    router.replace(`/network/drops/${dropId}` as any);
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(`/network/drops/${dropId}` as any);
+    }
   };
 
   return (

@@ -1,7 +1,7 @@
 import { Car01 } from '@untitledui/icons/Car01';
 import { GraduationHat02 } from '@untitledui/icons/GraduationHat02';
-import { RefreshCw01 } from '@untitledui/icons/RefreshCw01';
 import { ShoppingBag03 } from '@untitledui/icons/ShoppingBag03';
+import { SwitchHorizontal01 } from '@untitledui/icons/SwitchHorizontal01';
 import { Users01 } from '@untitledui/icons/Users01';
 import React from 'react';
 
@@ -17,7 +17,7 @@ const ICON_BY_KIND: Record<NetworkTileIconKind, React.ComponentType<{ size?: num
   carpool: Car01,
   parents: Users01,
   schools: GraduationHat02,
-  borrow: RefreshCw01,
+  borrow: SwitchHorizontal01,
 };
 
 export function NetworkTileIcon({ kind, size = 20 }: NetworkTileIconProps) {

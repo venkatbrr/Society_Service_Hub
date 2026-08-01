@@ -56,7 +56,11 @@ export default function AddParentCornerScreen() {
   const [initialLoading, setInitialLoading] = useState(!!editId);
 
   const handleBack = () => {
-    router.replace('/network/parents' as any);
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/network/parents' as any);
+    }
   };
 
   // Auto-fill user profile info if creating new entry

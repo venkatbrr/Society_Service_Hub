@@ -14,7 +14,7 @@ const EMOJI_BY_KIND: Record<NetworkTileIconKind, string> = {
   carpool: '🚘',
   parents: '👨‍👩‍👧‍👦',
   schools: '🏫',
-  borrow: '🔄',
+  borrow: '�',
 };
 
 export function NetworkTileIcon({ kind, size = 22, style }: NetworkTileIconProps) {

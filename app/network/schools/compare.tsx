@@ -106,7 +106,13 @@ export default function CompareSchoolsScreen() {
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: 'Compare schools',
-          onBack: () => router.replace('/network/schools' as any),
+          onBack: () => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/network/schools' as any);
+            }
+          },
         })}
       />
 

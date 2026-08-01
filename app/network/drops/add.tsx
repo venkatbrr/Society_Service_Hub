@@ -422,12 +422,11 @@ export default function CreateOrEditFoodDropScreen() {
   }
 
   const handleBack = () => {
-    if (!dropId) {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
       router.replace('/network/drops' as any);
-      return;
     }
-
-    router.replace(`/network/drops/${dropId}` as any);
   };
 
   return (
