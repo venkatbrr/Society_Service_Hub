@@ -3,16 +3,15 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/index.html"
+      "destination": "/landing.html"
     },
     {
       "source": "/admin/:path*",
       "destination": "/admin/:path*"
     },
     {
-      "source": "/((?!images|assets|favicon.ico|_expo|admin).*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ]
 }
-
