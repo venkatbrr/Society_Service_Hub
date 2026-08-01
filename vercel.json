@@ -1,17 +1,24 @@
 {
   "cleanUrls": true,
-  "rewrites": [
+  "routes": [
     {
-      "source": "/",
-      "destination": "/landing.html"
+      "src": "/",
+      "dest": "/landing.html"
     },
     {
-      "source": "/admin/:path*",
-      "destination": "/admin/:path*"
+      "src": "/admin/(.*)",
+      "dest": "/admin/$1"
     },
     {
-      "source": "/:path*",
-      "destination": "/index.html"
+      "src": "/admin",
+      "dest": "/admin/index.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/.*",
+      "dest": "/index.html"
     }
   ]
 }
