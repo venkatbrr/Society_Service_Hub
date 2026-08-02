@@ -18,6 +18,7 @@ import { useNotifications } from '../../context/NotificationContext';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../components/WebPullIndicator';
 
 
 const isMissingRelationError = (error: { code?: string; message?: string } | null) =>
@@ -374,7 +375,7 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const pullToRefresh = useWebPullToRefresh(onRefresh);
+  const pullToRefresh = useWebPullToRefresh(onRefresh, refreshing);
 
   const handleToggleFavorite = async (providerId: string, isCurrentlyFavorite: boolean) => {
     setProviders(current =>
@@ -497,15 +498,13 @@ export default function HomeScreen() {
           maxToRenderPerBatch={10}
           windowSize={5}
           initialNumToRender={8}
-          onScroll={pullToRefresh.onScroll}
-          onTouchStart={pullToRefresh.onTouchStart}
-          onTouchMove={pullToRefresh.onTouchMove}
-          scrollEventThrottle={pullToRefresh.scrollEventThrottle}
+          {...pullToRefresh.pullProps}
           refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
           }
           ListHeaderComponent={
             <>
+              <WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />
               <UpcomingServicesCard />
 
 
@@ -597,15 +596,13 @@ export default function HomeScreen() {
           stickySectionHeadersEnabled={false}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          onScroll={pullToRefresh.onScroll}
-          onTouchStart={pullToRefresh.onTouchStart}
-          onTouchMove={pullToRefresh.onTouchMove}
-          scrollEventThrottle={pullToRefresh.scrollEventThrottle}
+          {...pullToRefresh.pullProps}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
           }
           ListHeaderComponent={
             <>
+              <WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />
               <UpcomingServicesCard />
 
               <View style={styles.filterSection}>

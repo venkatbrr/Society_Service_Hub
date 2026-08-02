@@ -58,6 +58,20 @@ export const SERVICE_CATEGORY_EMOJI: Record<ServiceCategory, string> = {
   other: '🔧',
 };
 
+export const SERVICE_CATEGORY_ICONS: Record<ServiceCategory, string> = {
+  ac: 'snow-outline',
+  ro_water_purifier: 'water-outline',
+  geyser: 'flame-outline',
+  washing_machine: 'sync-outline',
+  refrigerator: 'cube-outline',
+  chimney: 'restaurant-outline',
+  pest_control: 'bug-outline',
+  car: 'car-outline',
+  bike: 'bicycle-outline',
+  inverter_battery: 'battery-charging-outline',
+  other: 'build-outline',
+};
+
 /** Default service frequency in months, prefilled when user selects a category. */
 export const SERVICE_CATEGORY_DEFAULT_FREQUENCY: Record<ServiceCategory, number> = {
   ac: 6,

@@ -1,15 +1,26 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { HeaderBackButton } from '../components/HeaderBackButton';
 import { Verandah } from '../constants/Colors';
 import { VerandahLayout } from '../constants/Verandah';
 import { useNotifications } from '../context/NotificationContext';
+import { useWebPullToRefresh } from '../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../components/WebPullIndicator';
 
 export default function NotificationsScreen() {
   const router = useRouter();
-  const { notifications, loading, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, loading, markAsRead, markAllAsRead, fetchNotifications } = useNotifications();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    if (fetchNotifications) await fetchNotifications();
+    setRefreshing(false);
+  };
+
+  const pullToRefresh = useWebPullToRefresh(onRefresh, refreshing);
 
   useEffect(() => {
     // Optionally mark all as read when leaving the screen
@@ -148,7 +159,7 @@ export default function NotificationsScreen() {
         <HeaderBackButton
           onPress={() => router.back()}
           color={Verandah.textPrimary}
-          style={[styles.backButton, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}
+          style={[styles.backButton, { backgroundColor: Verandah.card, borderColor: Verandah.border }] as any}
         />
         <Text style={[styles.headerTitle, { color: Verandah.textPrimary }]}>Notifications</Text>
         {notifications.length > 0 && (
@@ -171,6 +182,13 @@ export default function NotificationsScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
+          {...pullToRefresh.pullProps}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
+          }
+          ListHeaderComponent={
+            <WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <View style={[styles.emptyIconWrapper, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>

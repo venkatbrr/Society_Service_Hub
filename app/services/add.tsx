@@ -18,14 +18,17 @@ import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
+import { goBackSmart } from '../../lib/navigation';
 import {
     mapServiceCategoryToProviderCategory,
     SERVICE_CATEGORIES,
     SERVICE_CATEGORY_DEFAULT_FREQUENCY,
-    SERVICE_CATEGORY_EMOJI,
+    SERVICE_CATEGORY_ICONS,
     SERVICE_CATEGORY_LABELS,
     ServiceCategory,
 } from '../../lib/serviceCategories';
+import { serializeNotesAndImages } from '../../lib/serviceReminderHelpers';
 import { supabase } from '../../lib/supabase';
 
 type ReminderImage = {
@@ -169,30 +172,28 @@ export default function AddServiceScreen() {
     }
     if (!user) return;
 
-    const hasTitleWithoutImage = reminderImageDrafts.some(
-      (item) => item.title.trim().length > 0 && !item.url
-    );
-    if (hasTitleWithoutImage) {
-      Toast.show({
-        type: 'error',
-        text1: 'Missing image',
-        text2: 'Upload an image for each entered title, or clear the unused title.',
-      });
-      return;
-    }
+    // Validate mandatory image titles and missing uploads
+    for (let i = 0; i < reminderImageDrafts.length; i++) {
+      const draft = reminderImageDrafts[i];
+      const hasUrl = !!draft.url;
+      const hasTitle = draft.title.trim().length > 0;
 
-    const selectedImages = reminderImageDrafts
-      .filter((item): item is ReminderImageDraft & { url: string } => !!item.url)
-      .map((item) => ({ title: item.title.trim(), url: item.url }));
-
-    const missingTitle = selectedImages.find((item) => !item.title);
-    if (missingTitle) {
-      Toast.show({
-        type: 'error',
-        text1: 'Title required',
-        text2: 'Please add a title for every uploaded image.',
-      });
-      return;
+      if (hasUrl && !hasTitle) {
+        Toast.show({
+          type: 'error',
+          text1: 'Title required',
+          text2: `Please enter a title for Image ${i + 1}`,
+        });
+        return;
+      }
+      if (!hasUrl && hasTitle) {
+        Toast.show({
+          type: 'error',
+          text1: 'Image missing',
+          text2: `Please upload an image for "${draft.title.trim()}"`,
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -202,8 +203,11 @@ export default function AddServiceScreen() {
       // next_due_on is auto-computed by DB trigger
       const nextDueOn = dateStr; // placeholder; trigger overwrites this
 
-      const notesText = buildNotesWithReminderImages(notes, selectedImages);
-      const firstImageUrl = selectedImages[0]?.url ?? null;
+      const notesText = serializeNotesAndImages(notes, reminderImageDrafts);
+      const validImages = reminderImageDrafts.filter(
+        (item): item is ReminderImageDraft & { url: string } => !!item.url && item.title.trim().length > 0
+      );
+      const firstImageUrl = validImages[0]?.url ?? null;
 
       const insertPayload: any = {
         user_id: user.id,
@@ -250,11 +254,11 @@ export default function AddServiceScreen() {
     >
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => goBackSmart(router, '/services/add')}
           style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.75}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <Ionicons name="arrow-back" size={20} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add reminder</Text>
       </View>
@@ -294,7 +298,12 @@ export default function AddServiceScreen() {
                 onPress={() => handleCategorySelect(cat)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.catEmoji}>{SERVICE_CATEGORY_EMOJI[cat]}</Text>
+                <Ionicons
+                  name={(SERVICE_CATEGORY_ICONS[cat] as any) ?? 'build-outline'}
+                  size={16}
+                  color={selected ? colors.primary : colors.textMuted}
+                  style={{ marginRight: 6 }}
+                />
                 <Text
                   style={[styles.catLabel, { color: selected ? colors.primary : colors.textMuted }]}
                   numberOfLines={2}
@@ -314,7 +323,7 @@ export default function AddServiceScreen() {
           activeOpacity={0.8}
         >
           <Text style={{ color: colors.text, fontSize: 15, fontWeight: '500' }}>{formattedDate}</Text>
-          <Text style={{ color: colors.textMuted, fontSize: 16 }}>📅</Text>
+          <Ionicons name="calendar-outline" size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         {showDatePicker && (
@@ -391,7 +400,7 @@ export default function AddServiceScreen() {
                   </Text>
                 )}
               </View>
-              <Text style={[styles.selectorChevron, { color: colors.textMuted }]}>{providerPickerOpen ? '▲' : '▼'}</Text>
+              <Ionicons name={providerPickerOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
             </TouchableOpacity>
 
             {providerPickerOpen ? (
@@ -472,47 +481,51 @@ export default function AddServiceScreen() {
         <View style={styles.imageSlotsWrap}>
           {reminderImageDrafts.map((item, index) => (
             <View key={`service-image-slot-${index}`} style={styles.imageSlot}>
-              <Text style={[styles.slotLabel, { color: colors.textMuted }]}>Image {index + 1} title</Text>
-              <TextInput
-                style={[styles.input, styles.slotTitleInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
-                placeholder={`e.g., Warranty card ${index + 1}`}
-                placeholderTextColor={colors.textMuted}
-                value={item.title}
-                onChangeText={(value) => {
-                  setReminderImageDrafts((prev) =>
-                    prev.map((row, rowIndex) =>
-                      rowIndex === index ? { ...row, title: value.slice(0, 60) } : row
-                    )
-                  );
-                }}
-                maxLength={60}
-              />
-              <ImageUploader
-                currentImageUrl={item.url}
-                onImageUploaded={(url) => {
-                  setReminderImageDrafts((prev) =>
-                    prev.map((row, rowIndex) =>
-                      rowIndex === index
-                        ? {
-                            ...row,
-                            url,
-                            title: row.title.trim().length ? row.title : `Image ${index + 1}`,
-                          }
-                        : row
-                    )
-                  );
-                }}
-                onImageRemoved={() => {
-                  setReminderImageDrafts((prev) =>
-                    prev.map((row, rowIndex) =>
-                      rowIndex === index ? { title: '', url: null } : row
-                    )
-                  );
-                }}
-                subfolder="service_receipts"
-                placeholder={`Upload image ${index + 1}`}
-                compact={true}
-              />
+              <View style={styles.imageSlotUploaderWrap}>
+                <ImageUploader
+                  currentImageUrl={item.url}
+                  onImageUploaded={(url) => {
+                    setReminderImageDrafts((prev) =>
+                      prev.map((row, rowIndex) =>
+                        rowIndex === index ? { ...row, url } : row
+                      )
+                    );
+                  }}
+                  onImageRemoved={() => {
+                    setReminderImageDrafts((prev) =>
+                      prev.map((row, rowIndex) =>
+                        rowIndex === index ? { title: '', url: null } : row
+                      )
+                    );
+                  }}
+                  subfolder="service_receipts"
+                  placeholder={`Upload image ${index + 1}`}
+                  compact={true}
+                />
+              </View>
+              <View style={styles.imageSlotTitleWrap}>
+                <Text style={[styles.slotLabel, { color: colors.textMuted }]}>Image {index + 1} title</Text>
+                <TextInput
+                  style={[styles.input, styles.slotTitleInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
+                  placeholder={
+                    index === 0
+                      ? 'e.g., Warranty card'
+                      : index === 1
+                      ? 'e.g., Purchase receipt'
+                      : 'e.g., Model / serial number tag'
+                  }
+                  placeholderTextColor={colors.textMuted}
+                  value={item.title}
+                  onChangeText={(value) => {
+                    setReminderImageDrafts((prev) =>
+                      prev.map((row, rowIndex) =>
+                        rowIndex === index ? { ...row, title: value.slice(0, 60) } : row
+                      )
+                    );
+                  }}
+                  maxLength={60}
+                />
+              </View>
             </View>
           ))}
         </View>
@@ -718,14 +731,25 @@ const styles = StyleSheet.create({
   },
   imageSlotsWrap: {
     marginTop: 8,
-    gap: 10,
+    gap: 8,
   },
   imageSlot: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: Verandah.border,
+    borderColor: Verandah.borderStrong,
     borderRadius: 12,
     padding: 10,
-    gap: 8,
+    gap: 12,
+  },
+  imageSlotUploaderWrap: {
+    width: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageSlotTitleWrap: {
+    flex: 1,
+    gap: 4,
   },
   slotLabel: {
     fontSize: 11,
@@ -734,7 +758,7 @@ const styles = StyleSheet.create({
   slotTitleInput: {
     marginTop: 0,
     marginBottom: 0,
-    paddingVertical: 10,
+    paddingVertical: 8,
     fontSize: 13,
   },
   submitButton: { marginTop: 32, borderRadius: 16, overflow: 'hidden' },

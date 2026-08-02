@@ -6,6 +6,7 @@ import {
     ActivityIndicator,
     Alert,
     Linking,
+    Platform,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -18,6 +19,8 @@ import Toast from 'react-native-toast-message';
 import { Avatar } from '../../components/Avatar';
 import { BaseCard } from '../../components/BaseCard';
 import { EmptyState } from '../../components/EmptyState';
+import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
 import { BLOOD_GROUP_FILTERS, EMERGENCY_CATEGORY_META, EMERGENCY_CATEGORY_ORDER, EmergencyCategory } from '../../constants/sos';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
@@ -204,6 +207,8 @@ export default function SosScreen() {
     }, [loadAll])
   );
 
+  const pullToRefresh = useWebPullToRefresh(() => loadAll(true), refreshing);
+
   useEffect(() => {
     if (loading) return;
 
@@ -251,6 +256,16 @@ export default function SosScreen() {
     ]);
   }, []);
 
+  const handleWhatsApp = useCallback((name: string, phone: string) => {
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const target = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const message = encodeURIComponent(`Hi ${name}, I got your contact from Society Service Hub regarding blood donation.`);
+    const url = `https://wa.me/${target}?text=${message}`;
+    Linking.openURL(url).catch(() => {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Could not open WhatsApp' });
+    });
+  }, []);
+
   const handleToggleMyAvailability = async (value: boolean) => {
     if (!myDonorRow) return;
 
@@ -276,28 +291,34 @@ export default function SosScreen() {
   const handleRemoveMyDonor = () => {
     if (!myDonorRow) return;
 
+    const executeRemove = async () => {
+      try {
+        const { error } = await supabase
+          .from('blood_donors')
+          .delete()
+          .eq('id', myDonorRow.id)
+          .eq('user_id', user?.id as string);
+
+        if (error) throw error;
+        setMyDonorRow(null);
+        await loadDonors(0, true);
+        Toast.show({ type: 'success', text1: 'Donor registration removed' });
+      } catch (error: any) {
+        Toast.show({ type: 'error', text1: 'Unable to remove registration', text2: error.message });
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Remove donor registration? You will no longer appear in blood donor results.');
+      if (confirmed) {
+        executeRemove();
+      }
+      return;
+    }
+
     Alert.alert('Remove donor registration?', 'You will no longer appear in blood donor results.', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const { error } = await supabase
-              .from('blood_donors')
-              .delete()
-              .eq('id', myDonorRow.id)
-              .eq('user_id', user?.id as string);
-
-            if (error) throw error;
-            setMyDonorRow(null);
-            await loadDonors(0, true);
-            Toast.show({ type: 'success', text1: 'Donor registration removed' });
-          } catch (error: any) {
-            Toast.show({ type: 'error', text1: 'Unable to remove registration', text2: error.message });
-          }
-        },
-      },
+      { text: 'Remove', style: 'destructive', onPress: executeRemove },
     ]);
   };
 
@@ -344,7 +365,7 @@ export default function SosScreen() {
           <Ionicons name="arrow-back" size={20} color={Verandah.primary} />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
-          <Text style={styles.title}>SOS and emergency</Text>
+          <Text style={styles.title}>Emergency & Blood Donors</Text>
           <Text style={styles.subtitle}>Fast access to urgent numbers and blood donors</Text>
         </View>
       </View>
@@ -365,10 +386,12 @@ export default function SosScreen() {
       </View>
 
       <ScrollView
+        {...pullToRefresh.pullProps}
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadAll(true)} />}
         showsVerticalScrollIndicator={false}
       >
+        <WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />
         {activeSegment === 'emergency' ? (
           <>
             {canManageContacts ? (
@@ -521,10 +544,20 @@ export default function SosScreen() {
                       </View>
                       {row.note ? <Text style={styles.contactMeta}>{row.note}</Text> : null}
                     </View>
-                    <TouchableOpacity style={styles.callButton} onPress={() => handleCall(row.full_name, row.contact_phone)}>
-                      <Ionicons name="call-outline" size={16} color={Verandah.primaryFg} />
-                      <Text style={styles.callButtonText}>Call</Text>
-                    </TouchableOpacity>
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity
+                        style={styles.whatsappBtn}
+                        onPress={() => handleWhatsApp(row.full_name, row.contact_phone)}
+                        activeOpacity={0.82}
+                      >
+                        <Ionicons name="logo-whatsapp" size={16} color="#FFFFFF" />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity style={styles.callButton} onPress={() => handleCall(row.full_name, row.contact_phone)}>
+                        <Ionicons name="call-outline" size={16} color={Verandah.primaryFg} />
+                        <Text style={styles.callButtonText}>Call</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </BaseCard>
               ))
@@ -669,6 +702,19 @@ const styles = StyleSheet.create({
     ...VerandahType.caption,
     color: Verandah.textSecondary,
     marginTop: 2,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  whatsappBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#25D366',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   callButton: {
     borderRadius: VerandahRadius.md,

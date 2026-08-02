@@ -23,6 +23,7 @@ import { AppIcon } from '../../../components/AppIcon';
 import { BaseCard } from '../../../components/BaseCard';
 import { EmptyState } from '../../../components/EmptyState';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../../components/WebPullIndicator';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
@@ -77,7 +78,7 @@ export default function ParentCornerScreen() {
   const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('school');
 
-  const webPullProps = useWebPullToRefresh(() => fetchEntries(true));
+  const webPullProps = useWebPullToRefresh(() => fetchEntries(true), refreshing);
 
   const handleBack = () => {
     goBackSmart(router, '/network/parents');
@@ -582,7 +583,7 @@ export default function ParentCornerScreen() {
         </View>
       ) : (
         <FlatList
-          {...webPullProps}
+          {...webPullProps.pullProps}
           style={styles.list}
           data={processedEntries}
           keyExtractor={(item) => item.id}
@@ -593,6 +594,9 @@ export default function ParentCornerScreen() {
               colors={[colors.primary]}
               tintColor={colors.primary}
             />
+          }
+          ListHeaderComponent={
+            <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
           }
           contentContainerStyle={
             processedEntries.length === 0 ? styles.emptyList : styles.listContent

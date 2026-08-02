@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: Verandah.border,
+    borderColor: Verandah.borderStrong,
     shadowColor: 'transparent',
     elevation: 0,
   },

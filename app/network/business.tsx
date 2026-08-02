@@ -19,6 +19,7 @@ import { AppIcon } from '../../components/AppIcon';
 import { EmptyState } from '../../components/EmptyState';
 import { McnListingCard, McnListingItem } from '../../components/McnListingCard';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
@@ -40,7 +41,7 @@ export default function BusinessListingsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const webPullProps = useWebPullToRefresh(() => fetchListings(true));
+  const webPullProps = useWebPullToRefresh(() => fetchListings(true), refreshing);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -318,7 +319,7 @@ export default function BusinessListingsScreen() {
         </View>
       ) : (
         <FlatList
-          {...webPullProps}
+          {...webPullProps.pullProps}
           style={styles.list}
           data={groupedListings}
           keyExtractor={(group) => group.categoryName}
@@ -329,6 +330,9 @@ export default function BusinessListingsScreen() {
               colors={[colors.primary]}
               tintColor={colors.primary}
             />
+          }
+          ListHeaderComponent={
+            <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
           }
           alwaysBounceVertical
           contentContainerStyle={groupedListings.length === 0 ? styles.emptyList : styles.listContent}

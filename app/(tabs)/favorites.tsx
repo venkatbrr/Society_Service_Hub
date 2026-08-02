@@ -5,6 +5,8 @@ import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { EmptyState } from '../../components/EmptyState';
 import { ProviderCard } from '../../components/ProviderCard';
+import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
 import { VerandahType , VerandahLayout } from '../../constants/Verandah';
@@ -58,6 +60,8 @@ export default function FavoritesScreen() {
     setRefreshing(false);
   };
 
+  const pullToRefresh = useWebPullToRefresh(onRefresh, refreshing);
+
   const handleToggleFavorite = async (providerId: string, isCurrentlyFavorite: boolean) => {
     // For the favorites screen, toggling off should remove it from the list
     setProviders(current => current.filter(p => p.id !== providerId));
@@ -102,8 +106,12 @@ export default function FavoritesScreen() {
         maxToRenderPerBatch={10}
         windowSize={5}
         initialNumToRender={8}
+        {...pullToRefresh.pullProps}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
+        }
+        ListHeaderComponent={
+          <WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />
         }
         ListEmptyComponent={
           <EmptyState

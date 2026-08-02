@@ -10,6 +10,8 @@ import { VerandahLayout, VerandahRadius } from '../constants/Verandah';
 import { APP_EMOJIS } from '../constants/emojis';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useWebPullToRefresh } from '../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../components/WebPullIndicator';
 
 type DirectoryResident = {
   id: string;
@@ -119,8 +121,14 @@ export default function ResidentsScreen() {
       router.replace('/(tabs)/profile');
       return;
     }
+    if (returnTo === 'community') {
+      router.replace('/(tabs)/community');
+      return;
+    }
     router.back();
   };
+
+  const pullToRefresh = useWebPullToRefresh(() => loadResidents(true), refreshing);
 
   const handleRemoveResident = () => {
     if (!selectedResident) return;
@@ -187,7 +195,9 @@ export default function ResidentsScreen() {
         <SectionList
           sections={groupedResidents}
           keyExtractor={(item) => item.id}
+          {...pullToRefresh.pullProps}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadResidents(true)} />}
+          ListHeaderComponent={<WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />}
           contentContainerStyle={filteredResidents.length ? styles.listContent : styles.emptyContent}
           ListEmptyComponent={
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No residents found.</Text>

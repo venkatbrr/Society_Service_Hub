@@ -2,11 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../components/BaseCard';
 import { Rupees } from '../../components/Rupees';
+import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
@@ -78,6 +80,7 @@ export default function CommunityScreen() {
   const [fundRoles, setFundRoles] = useState<Tables<'fund_roles'>['role'][]>([]);
   const [pendingFundsRequest, setPendingFundsRequest] = useState<PendingFundsRequest | null>(null);
   const [hadHistoricalFunds, setHadHistoricalFunds] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const canCreateFund = fundsEnabled && (appRole === 'president' || appRole === 'vice_president' || appRole === 'admin');
 
@@ -160,6 +163,14 @@ export default function CommunityScreen() {
     }, [loadCommunityData])
   );
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadCommunityData();
+    setRefreshing(false);
+  };
+
+  const webPullProps = useWebPullToRefresh(onRefresh, refreshing);
+
   const appRoleLabel = useMemo(() => {
     if (appRole === 'president') return 'President';
     if (appRole === 'vice_president') return 'Vice President';
@@ -204,9 +215,14 @@ export default function CommunityScreen() {
   return (
     <View style={styles.container}>
       <ScrollView
+        {...webPullProps.pullProps}
         contentContainerStyle={[styles.content, { paddingTop: Math.max(16, insets.top + 6) }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
+        }
       >
+        <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
         <BaseCard padding={12} style={styles.heroCard}>
           <Text style={styles.heroTitle}>{communityDetails?.name ?? 'Your community'}</Text>
         </BaseCard>
@@ -346,11 +362,11 @@ export default function CommunityScreen() {
           >
             <BaseCard padding={10} style={styles.sosActionCard}>
               <View style={styles.actionCardRow}>
-                <View style={[styles.actionCardIconWrap, styles.sosIconWrap]}>
-                  <Ionicons name="alert-circle-outline" size={18} color={Verandah.caution} />
+                <View style={[styles.actionCardIconWrap, { backgroundColor: '#E1F5EE' }]}>
+                  <Ionicons name="call-outline" size={18} color={Verandah.primary} />
                 </View>
                 <View style={styles.actionCardTextWrap}>
-                  <Text style={styles.cardTitle}>SOS and emergency</Text>
+                  <Text style={styles.cardTitle}>Emergency numbers & blood donors</Text>
                   <Text style={styles.cardCopy}>Call emergency numbers or find available blood donors.</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />

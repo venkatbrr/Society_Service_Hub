@@ -87,8 +87,8 @@ export const Verandah = {
   textMuted: '#B4B2A9',
 
   // Borders
-  border: 'rgba(15, 55, 50, 0.12)',
-  borderStrong: 'rgba(15, 55, 50, 0.15)',
+  border: 'rgba(15, 55, 50, 0.14)',
+  borderStrong: 'rgba(15, 55, 50, 0.18)',
 
   // Avatar tinted backgrounds
   avatarTints: [

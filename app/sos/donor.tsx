@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    Platform,
     ScrollView,
     StyleSheet,
     Switch,
@@ -139,31 +140,37 @@ export default function DonorFormScreen() {
   const handleRemove = () => {
     if (!existingId || !user?.id) return;
 
+    const executeRemove = async () => {
+      setIsLoading(true);
+      try {
+        const { error } = await supabase
+          .from('blood_donors')
+          .delete()
+          .eq('id', existingId)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        Toast.show({ type: 'success', text1: 'Donor registration removed' });
+        router.replace('/sos' as any);
+      } catch (error: any) {
+        Toast.show({ type: 'error', text1: 'Unable to remove donor profile', text2: error.message });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Remove donor registration? You can register again at any time.');
+      if (confirmed) {
+        executeRemove();
+      }
+      return;
+    }
+
     Alert.alert('Remove donor registration?', 'You can register again at any time.', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          setIsLoading(true);
-          try {
-            const { error } = await supabase
-              .from('blood_donors')
-              .delete()
-              .eq('id', existingId)
-              .eq('user_id', user.id);
-
-            if (error) throw error;
-
-            Toast.show({ type: 'success', text1: 'Donor registration removed' });
-            router.replace('/sos' as any);
-          } catch (error: any) {
-            Toast.show({ type: 'error', text1: 'Unable to remove donor profile', text2: error.message });
-          } finally {
-            setIsLoading(false);
-          }
-        },
-      },
+      { text: 'Remove', style: 'destructive', onPress: executeRemove },
     ]);
   };
 
@@ -205,18 +212,20 @@ export default function DonorFormScreen() {
         </BaseCard>
 
         <BaseCard padding={14}>
-          <Text style={styles.label}>Contact phone</Text>
-          <TextInput
-            style={styles.input}
-            value={contactPhone}
-            onChangeText={setContactPhone}
-            onBlur={normalizePhoneOnBlur}
-            placeholder="e.g. 9876543210"
-            placeholderTextColor={Verandah.textMuted}
-            keyboardType="phone-pad"
-            maxLength={20}
-          />
-          <Text style={styles.helper}>Used by residents to call you for donation requests.</Text>
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Contact phone</Text>
+            <TextInput
+              style={styles.input}
+              value={contactPhone}
+              onChangeText={setContactPhone}
+              onBlur={normalizePhoneOnBlur}
+              placeholder="e.g. 9876543210"
+              placeholderTextColor={Verandah.textMuted}
+              keyboardType="phone-pad"
+              maxLength={20}
+            />
+            <Text style={styles.helper}>Used by residents to call you for donation requests.</Text>
+          </View>
         </BaseCard>
 
         <BaseCard padding={14}>
@@ -230,17 +239,21 @@ export default function DonorFormScreen() {
         </BaseCard>
 
         <BaseCard padding={14}>
-          <Text style={styles.label}>Note (optional)</Text>
-          <TextInput
-            style={styles.textArea}
-            value={note}
-            onChangeText={(value) => setNote(value.slice(0, MAX_NOTE_LENGTH))}
-            placeholder="e.g. Prefer evenings"
-            placeholderTextColor={Verandah.textMuted}
-            multiline
-            maxLength={MAX_NOTE_LENGTH}
-          />
-          <Text style={styles.helper}>{note.length}/{MAX_NOTE_LENGTH}</Text>
+          <View style={styles.fieldBlock}>
+            <View style={styles.labelRow}>
+              <Text style={styles.label}>Note (optional)</Text>
+              <Text style={styles.counterText}>{note.length}/{MAX_NOTE_LENGTH}</Text>
+            </View>
+            <TextInput
+              style={styles.textArea}
+              value={note}
+              onChangeText={(value) => setNote(value.slice(0, MAX_NOTE_LENGTH))}
+              placeholder="e.g. Prefer evenings"
+              placeholderTextColor={Verandah.textMuted}
+              multiline
+              maxLength={MAX_NOTE_LENGTH}
+            />
+          </View>
         </BaseCard>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={isLoading}>
@@ -330,7 +343,24 @@ const styles = StyleSheet.create({
   groupChipTextActive: {
     color: Verandah.primaryFg,
   },
+  fieldBlock: {
+    width: '100%',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  counterText: {
+    ...VerandahType.caption,
+    color: Verandah.textSecondary,
+  },
   input: {
+    width: '100%',
+    marginTop: 6,
+    marginBottom: 4,
     borderWidth: 1,
     borderColor: Verandah.borderStrong,
     borderRadius: VerandahRadius.md,
@@ -343,7 +373,7 @@ const styles = StyleSheet.create({
   helper: {
     ...VerandahType.caption,
     color: Verandah.textSecondary,
-    marginTop: VerandahSpace.xs,
+    marginTop: 4,
   },
   switchRow: {
     flexDirection: 'row',
@@ -355,6 +385,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   textArea: {
+    width: '100%',
+    marginTop: 6,
+    marginBottom: 4,
     borderWidth: 1,
     borderColor: Verandah.borderStrong,
     borderRadius: VerandahRadius.md,

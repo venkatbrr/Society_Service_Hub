@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
-import { SERVICE_CATEGORY_EMOJI, SERVICE_CATEGORY_LABELS, ServiceCategory } from '../lib/serviceCategories';
+import { SERVICE_CATEGORY_ICONS, SERVICE_CATEGORY_LABELS, ServiceCategory } from '../lib/serviceCategories';
+import { parseNotesAndImages } from '../lib/serviceReminderHelpers';
 import { UrgencyBadge } from './UrgencyBadge';
 
 export interface ServiceCardItem {
@@ -21,8 +23,9 @@ interface ServiceCardProps {
 
 export function ServiceCard({ item, onPress }: ServiceCardProps) {
   const category = item.category as ServiceCategory;
-  const emoji = SERVICE_CATEGORY_EMOJI[category] ?? '🔧';
+  const iconName = (SERVICE_CATEGORY_ICONS[category] as any) ?? 'build-outline';
   const categoryLabel = SERVICE_CATEGORY_LABELS[category] ?? item.category;
+  const { cleanNotes } = parseNotesAndImages(item.notes);
 
   return (
     <TouchableOpacity
@@ -31,16 +34,16 @@ export function ServiceCard({ item, onPress }: ServiceCardProps) {
       activeOpacity={0.82}
     >
       <View style={styles.iconWrap}>
-        <Text style={styles.emoji}>{emoji}</Text>
+        <Ionicons name={iconName} size={20} color={Verandah.primary} />
       </View>
       <View style={styles.content}>
         <Text style={styles.name} numberOfLines={1}>
           {item.service_name}
         </Text>
         <Text style={styles.category}>{categoryLabel}</Text>
-        {item.notes ? (
+        {cleanNotes ? (
           <Text style={styles.notes} numberOfLines={1}>
-            {item.notes}
+            {cleanNotes}
           </Text>
         ) : null}
       </View>
@@ -56,13 +59,13 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: VerandahRadius.lg,
-    borderWidth: 0.5,
-    borderColor: Verandah.border,
+    padding: 10,
+    borderRadius: VerandahRadius.md,
+    borderWidth: 1,
+    borderColor: Verandah.borderStrong,
     backgroundColor: Verandah.card,
-    marginBottom: VerandahSpace.sm + 2,
-    gap: VerandahSpace.md,
+    marginBottom: 6,
+    gap: VerandahSpace.sm + 2,
   },
   iconWrap: {
     width: 44,

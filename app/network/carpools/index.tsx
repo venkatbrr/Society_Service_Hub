@@ -16,6 +16,7 @@ import {
 import { BaseCard } from '../../../components/BaseCard';
 import { EmptyState } from '../../../components/EmptyState';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../../components/WebPullIndicator';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
@@ -96,7 +97,7 @@ export default function CarpoolListScreen() {
     }, [fetchCarpools])
   );
 
-  const webPullProps = useWebPullToRefresh(() => fetchCarpools(true));
+  const webPullProps = useWebPullToRefresh(() => fetchCarpools(true), refreshing);
 
   const filteredCarpools = carpools.filter((item) => {
     if (!searchQuery.trim()) return true;
@@ -221,7 +222,7 @@ export default function CarpoolListScreen() {
         </View>
       ) : (
         <FlatList
-          {...webPullProps}
+          {...webPullProps.pullProps}
           data={filteredCarpools}
           keyExtractor={(item) => item.id}
           contentContainerStyle={
@@ -233,6 +234,9 @@ export default function CarpoolListScreen() {
               onRefresh={() => fetchCarpools(true)}
               colors={[colors.primary]}
             />
+          }
+          ListHeaderComponent={
+            <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
           }
           ListEmptyComponent={
             <EmptyState

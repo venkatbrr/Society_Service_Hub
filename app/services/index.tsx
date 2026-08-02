@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -11,9 +12,12 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { ServiceCard, ServiceCardItem } from '../../components/ServiceCard';
+import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius , VerandahLayout } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 export default function ServicesListScreen() {
@@ -47,15 +51,17 @@ export default function ServicesListScreen() {
     fetchServices();
   };
 
+  const pullToRefresh = useWebPullToRefresh(onRefresh, refreshing);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}
+          onPress={() => goBackSmart(router, '/services')}
+          style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.75}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>My service reminders</Text>
         <TouchableOpacity
@@ -83,12 +89,16 @@ export default function ServicesListScreen() {
           )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          {...pullToRefresh.pullProps}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
+          ListHeaderComponent={
+            <WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyEmoji}>🔧</Text>
+              <Ionicons name="build-outline" size={44} color={colors.textSecondary} />
               <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No service reminders yet</Text>
               <Text style={[styles.emptyBody, { color: colors.textSecondary }]}>
                 Track your AC, RO, and other appliances so you never miss maintenance.
@@ -115,7 +125,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 14,
+    paddingBottom: 6,
     gap: 10,
   },
   backButton: {
@@ -139,7 +149,7 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.md,
   },
   addButtonText: { color: Verandah.primaryFg, fontSize: 13, fontWeight: '500' },
-  listContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
+  listContent: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 20 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyContainer: {
     alignItems: 'center',

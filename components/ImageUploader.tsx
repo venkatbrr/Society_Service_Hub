@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
@@ -89,15 +89,25 @@ export function ImageUploader({
   };
 
   const handleRemove = () => {
+    const doRemove = () => {
+      setLocalPreview(null);
+      onImageRemoved?.();
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Are you sure you want to remove this photo?');
+      if (confirmed) {
+        doRemove();
+      }
+      return;
+    }
+
     Alert.alert('Remove photo', 'Are you sure you want to remove this photo?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
         style: 'destructive',
-        onPress: () => {
-          setLocalPreview(null);
-          onImageRemoved?.();
-        },
+        onPress: doRemove,
       },
     ]);
   };
@@ -129,8 +139,12 @@ export function ImageUploader({
           )}
         </TouchableOpacity>
         {displayUrl && !uploading && onImageRemoved ? (
-          <TouchableOpacity onPress={handleRemove} style={styles.compactRemoveBtn}>
-            <Ionicons name="close-circle" size={18} color={colors.danger} />
+          <TouchableOpacity
+            onPress={handleRemove}
+            style={styles.compactRemoveBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="close-circle" size={20} color={colors.danger} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -253,5 +267,6 @@ const styles = StyleSheet.create({
     right: -6,
     backgroundColor: Verandah.surface,
     borderRadius: 10,
+    zIndex: 10,
   },
 });

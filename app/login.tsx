@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
-import { APP_EMOJIS } from '../constants/emojis';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, signInWithEmail, signUpWithEmail } from '../lib/auth';
 import { supabase } from '../lib/supabase';
@@ -258,7 +257,7 @@ export default function LoginScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Full name</Text>
                 <View style={styles.inputContainer}>
-                  <Text style={styles.inputEmoji}>{APP_EMOJIS.profile}</Text>
+                  <Ionicons name="person-outline" size={18} color={Verandah.textTertiary} style={{ marginRight: 8 }} />
                   <TextInput
                     style={styles.input}
                     placeholder="Aarav Sharma"
@@ -274,7 +273,7 @@ export default function LoginScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email address</Text>
             <View style={styles.inputContainer}>
-              <Text style={styles.inputEmoji}>{APP_EMOJIS.mail}</Text>
+              <Ionicons name="mail-outline" size={18} color={Verandah.textTertiary} style={{ marginRight: 8 }} />
               <TextInput
                 style={styles.input}
                 placeholder="your@email.com"
@@ -290,7 +289,7 @@ export default function LoginScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
             <View style={styles.inputContainer}>
-              <Text style={styles.inputEmoji}>{APP_EMOJIS.lock}</Text>
+              <Ionicons name="lock-closed-outline" size={18} color={Verandah.textTertiary} style={{ marginRight: 8 }} />
               <TextInput
                 style={styles.input}
                 placeholder="Password"
@@ -300,7 +299,7 @@ export default function LoginScreen() {
                 secureTextEntry={!showPassword}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Text style={styles.inputEmoji}>{showPassword ? APP_EMOJIS.hidden : APP_EMOJIS.visible}</Text>
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={Verandah.textTertiary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -310,7 +309,7 @@ export default function LoginScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Confirm password</Text>
                 <View style={styles.inputContainer}>
-                  <Text style={styles.inputEmoji}>{APP_EMOJIS.admin}</Text>
+                  <Ionicons name="shield-checkmark-outline" size={18} color={Verandah.textTertiary} style={{ marginRight: 8 }} />
                   <TextInput
                     style={styles.input}
                     placeholder="Confirm password"
@@ -386,7 +385,7 @@ export default function LoginScreen() {
               <ActivityIndicator color={Verandah.primary} />
             ) : (
               <>
-                <Text style={styles.googleEmoji}>{APP_EMOJIS.google}</Text>
+                <Ionicons name="logo-google" size={18} color={Verandah.primary} style={{ marginRight: 8 }} />
                 <Text style={styles.googleButtonText}>
                   Continue with Google
                 </Text>

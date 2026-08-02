@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../components/Avatar';
 import { BlockPicker } from '../../components/BlockPicker';
 import { Rupees } from '../../components/Rupees';
+import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType , VerandahLayout } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
@@ -28,6 +30,7 @@ export default function ProfileScreen() {
   const [nextBlockId, setNextBlockId] = useState<string | null>(myBlockId);
   const [blockName, setBlockName] = useState<string>('not set');
   const [fundRoleLabel, setFundRoleLabel] = useState<'Treasurer' | 'Collector' | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const colors = Verandah;
   const roleLabel = (appRole ?? 'resident').charAt(0).toUpperCase() + (appRole ?? 'resident').slice(1);
@@ -138,6 +141,28 @@ export default function ProfileScreen() {
     }
   };
 
+  const refreshAllProfileData = async () => {
+    await refreshSession();
+    if (user) {
+      try {
+        const { data } = await supabase.rpc('get_my_due_soon_count');
+        setDueSoonCount(data ?? 0);
+      } catch {}
+      try {
+        const { data } = await supabase.rpc('get_my_recent_service_history', { p_limit: 5 });
+        setRecentServices((data ?? []) as any);
+      } catch {}
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshAllProfileData();
+    setRefreshing(false);
+  };
+
+  const webPullProps = useWebPullToRefresh(onRefresh, refreshing);
+
   return (
     <View style={styles.container}>
       <View style={styles.headerWrapper}>
@@ -146,7 +171,15 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        {...webPullProps.pullProps}
+        style={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
+        }
+      >
+        <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
         <View style={styles.card}>
           <View style={styles.profileHeader}>
             <Avatar name={String(user?.user_metadata?.full_name || 'User')} size={52} />
@@ -194,36 +227,7 @@ export default function ProfileScreen() {
           )}
         </TouchableOpacity>
 
-        {recentServices.length > 0 ? (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="document-text-outline" size={18} color={Verandah.textTertiary} />
-              <Text style={styles.sectionTitle}>Recent home services</Text>
-            </View>
 
-            {recentServices.map((entry) => (
-              <TouchableOpacity
-                key={entry.id}
-                style={styles.recentRow}
-                onPress={() => router.push({ pathname: '/services/[id]', params: { id: entry.service_id } } as any)}
-                activeOpacity={0.82}
-              >
-                <View style={styles.recentRowMain}>
-                  <Text style={styles.recentServiceName} numberOfLines={1}>{entry.service_name}</Text>
-                  <Text style={styles.recentServiceMeta} numberOfLines={1}>
-                    {new Date(entry.serviced_on).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    {entry.provider_name ? ` · ${entry.provider_name}` : ''}
-                  </Text>
-                </View>
-                {entry.cost_paid != null ? (
-                  <Rupees amount={Number(entry.cost_paid)} size="sm" />
-                ) : (
-                  <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        ) : null}
 
         <TouchableOpacity
           onPress={() => router.push('/network/my-posts' as any)}
@@ -299,24 +303,24 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.surface,
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 12,
+    paddingBottom: 6,
   },
   headerTitle: {
     ...VerandahType.display,
     color: Verandah.textPrimary,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingHorizontal: 16,
+    paddingTop: 6,
   },
   card: {
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 10,
-    borderWidth: 0.5,
-    borderColor: Verandah.border,
+    padding: 10,
+    borderRadius: 12,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: Verandah.borderStrong,
     backgroundColor: Verandah.card,
   },
   profileHeader: {
@@ -354,18 +358,18 @@ const styles = StyleSheet.create({
     color: Verandah.accent,
   },
   section: {
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 10,
-    borderWidth: 0.5,
-    borderColor: Verandah.border,
+    padding: 10,
+    borderRadius: 12,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: Verandah.borderStrong,
     backgroundColor: Verandah.card,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 10,
+    marginBottom: 6,
   },
   sectionTitle: {
     fontSize: 15,
@@ -395,25 +399,25 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    marginVertical: 12,
+    marginVertical: 8,
     backgroundColor: Verandah.border,
   },
   hint: {
     fontSize: 12,
-    marginTop: 12,
-    lineHeight: 18,
+    marginTop: 8,
+    lineHeight: 16,
     color: Verandah.textTertiary,
   },
   adminCard: {
-    borderWidth: 0.5,
-    borderColor: Verandah.border,
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Verandah.borderStrong,
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 6,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     backgroundColor: Verandah.card,
   },
   adminIconWrap: {
@@ -488,11 +492,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    gap: 8,
-    marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    gap: 6,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Verandah.dangerSoft,
     backgroundColor: Verandah.dangerSoft,
   },
   signOutIcon: {

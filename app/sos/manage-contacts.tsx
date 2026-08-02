@@ -283,59 +283,69 @@ export default function ManageEmergencyContactsScreen() {
         <BaseCard padding={14}>
           <Text style={styles.formTitle}>{form.id ? 'Edit emergency contact' : `Add to ${scopedTitle.toLowerCase()}`}</Text>
 
-          <Text style={styles.label}>Category</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-            {EMERGENCY_CATEGORY_ORDER.map((category) => {
-              const active = form.category === category;
-              return (
-                <TouchableOpacity
-                  key={category}
-                  style={[styles.chip, active && styles.chipActive]}
-                  onPress={() => setForm((prev) => ({ ...prev, category }))}
-                >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{EMERGENCY_CATEGORY_META[category].label}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Category</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+              {EMERGENCY_CATEGORY_ORDER.map((category) => {
+                const active = form.category === category;
+                return (
+                  <TouchableOpacity
+                    key={category}
+                    style={[styles.chip, active && styles.chipActive]}
+                    onPress={() => setForm((prev) => ({ ...prev, category }))}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{EMERGENCY_CATEGORY_META[category].label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
 
-          <Text style={styles.label}>Name</Text>
-          <TextInput
-            style={styles.input}
-            value={form.name}
-            onChangeText={(value) => setForm((prev) => ({ ...prev, name: value }))}
-            placeholder="e.g. Main Gate Security"
-            placeholderTextColor={Verandah.textMuted}
-          />
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Name</Text>
+            <TextInput
+              style={styles.input}
+              value={form.name}
+              onChangeText={(value) => setForm((prev) => ({ ...prev, name: value }))}
+              placeholder="e.g. Main Gate Security"
+              placeholderTextColor={Verandah.textMuted}
+            />
+          </View>
 
-          <Text style={styles.label}>Phone</Text>
-          <TextInput
-            style={styles.input}
-            value={form.phone}
-            onChangeText={(value) => setForm((prev) => ({ ...prev, phone: value }))}
-            placeholder="e.g. 100 / 108 / 9876543210"
-            placeholderTextColor={Verandah.textMuted}
-            keyboardType="phone-pad"
-          />
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Phone</Text>
+            <TextInput
+              style={styles.input}
+              value={form.phone}
+              onChangeText={(value) => setForm((prev) => ({ ...prev, phone: value }))}
+              placeholder="e.g. 100 / 108 / 9876543210"
+              placeholderTextColor={Verandah.textMuted}
+              keyboardType="phone-pad"
+            />
+          </View>
 
-          <Text style={styles.label}>Description (optional)</Text>
-          <TextInput
-            style={styles.input}
-            value={form.description}
-            onChangeText={(value) => setForm((prev) => ({ ...prev, description: value }))}
-            placeholder="e.g. 24x7, Gate 1"
-            placeholderTextColor={Verandah.textMuted}
-          />
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Description (optional)</Text>
+            <TextInput
+              style={styles.input}
+              value={form.description}
+              onChangeText={(value) => setForm((prev) => ({ ...prev, description: value }))}
+              placeholder="e.g. 24x7, Gate 1"
+              placeholderTextColor={Verandah.textMuted}
+            />
+          </View>
 
-          <Text style={styles.label}>Sort order</Text>
-          <TextInput
-            style={styles.input}
-            value={form.sort_order}
-            onChangeText={(value) => setForm((prev) => ({ ...prev, sort_order: value }))}
-            placeholder="0"
-            placeholderTextColor={Verandah.textMuted}
-            keyboardType="numeric"
-          />
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Sort order</Text>
+            <TextInput
+              style={styles.input}
+              value={form.sort_order}
+              onChangeText={(value) => setForm((prev) => ({ ...prev, sort_order: value }))}
+              placeholder="0"
+              placeholderTextColor={Verandah.textMuted}
+              keyboardType="numeric"
+            />
+          </View>
 
           <View style={styles.switchRow}>
             <Text style={styles.label}>Active</Text>
@@ -472,13 +482,19 @@ const styles = StyleSheet.create({
     color: Verandah.textPrimary,
     marginBottom: VerandahSpace.sm,
   },
+  fieldBlock: {
+    width: '100%',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    marginTop: 8,
+  },
   label: {
     ...VerandahType.captionBold,
     color: Verandah.textPrimary,
-    marginTop: VerandahSpace.sm,
-    marginBottom: VerandahSpace.xs,
+    marginBottom: 4,
   },
   input: {
+    width: '100%',
     borderWidth: 1,
     borderColor: Verandah.borderStrong,
     borderRadius: VerandahRadius.md,

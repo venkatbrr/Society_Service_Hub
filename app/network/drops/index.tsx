@@ -18,6 +18,7 @@ import { EmptyState } from '../../../components/EmptyState';
 import { PreorderDropCard, PreorderDropItem } from '../../../components/PreorderDropCard';
 import { Rupees } from '../../../components/Rupees';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../../components/WebPullIndicator';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
@@ -229,7 +230,7 @@ export default function FoodDropsCatalogScreen() {
     }, [fetchDrops])
   );
 
-  const webPullProps = useWebPullToRefresh(() => fetchDrops(true));
+  const webPullProps = useWebPullToRefresh(() => fetchDrops(true), refreshing);
 
   const handleBack = () => {
     goBackSmart(router, '/network/drops');
@@ -373,7 +374,7 @@ export default function FoodDropsCatalogScreen() {
         </View>
       ) : (
         <FlatList
-          {...webPullProps}
+          {...webPullProps.pullProps}
           data={drops}
           keyExtractor={(item) => item.id}
           contentContainerStyle={
@@ -385,6 +386,9 @@ export default function FoodDropsCatalogScreen() {
               onRefresh={() => fetchDrops(true)}
               colors={[colors.accent]}
             />
+          }
+          ListHeaderComponent={
+            <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
           }
           renderItem={({ item, index }) => {
             const isItemDeliveryPassed = (d: PreorderDropItem): boolean => {

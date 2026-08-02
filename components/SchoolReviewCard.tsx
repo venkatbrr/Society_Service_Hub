@@ -189,8 +189,8 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
-    borderColor: Verandah.border,
+    borderWidth: 1,
+    borderColor: Verandah.borderStrong,
     borderRadius: VerandahRadius.lg,
     padding: 14,
     marginBottom: 12,

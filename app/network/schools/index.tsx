@@ -19,6 +19,7 @@ import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../../components/BaseCard';
 import { EmptyState } from '../../../components/EmptyState';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../../components/WebPullIndicator';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
@@ -67,7 +68,7 @@ export default function SchoolsCatalogScreen() {
     goBackSmart(router, '/network/schools');
   };
 
-  const webPullProps = useWebPullToRefresh(() => fetchCustomSchools(true));
+  const webPullProps = useWebPullToRefresh(() => fetchCustomSchools(true), refreshing);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -423,7 +424,7 @@ export default function SchoolsCatalogScreen() {
         </View>
       ) : (
         <FlatList
-          {...webPullProps}
+          {...webPullProps.pullProps}
           style={styles.list}
           data={filteredSchools}
           keyExtractor={(item) => item.id}
@@ -434,6 +435,9 @@ export default function SchoolsCatalogScreen() {
               colors={[colors.primary]}
               tintColor={colors.primary}
             />
+          }
+          ListHeaderComponent={
+            <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
           }
           contentContainerStyle={
             filteredSchools.length === 0 ? styles.emptyList : styles.listContent

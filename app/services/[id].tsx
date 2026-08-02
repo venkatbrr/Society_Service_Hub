@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
@@ -29,9 +30,17 @@ import {
     SERVICE_CATEGORIES,
     SERVICE_CATEGORY_DEFAULT_FREQUENCY,
     SERVICE_CATEGORY_EMOJI,
+    SERVICE_CATEGORY_ICONS,
     SERVICE_CATEGORY_LABELS,
     ServiceCategory,
 } from '../../lib/serviceCategories';
+import { goBackSmart } from '../../lib/navigation';
+import {
+    parseNotesAndImages,
+    ReminderImage,
+    ReminderImageDraft,
+    serializeNotesAndImages,
+} from '../../lib/serviceReminderHelpers';
 import { supabase } from '../../lib/supabase';
 
 const extractImageUrl = (
@@ -123,8 +132,13 @@ export default function ServiceDetailScreen() {
   const [markDoneNote, setMarkDoneNote] = useState('');
   const [markDoneSubmitting, setMarkDoneSubmitting] = useState(false);
   const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
-  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
-  const [editReceiptUrl, setEditReceiptUrl] = useState<string | null>(null);
+  const [reminderImages, setReminderImages] = useState<ReminderImage[]>([]);
+  const [reminderImageDrafts, setReminderImageDrafts] = useState<ReminderImageDraft[]>([
+    { title: '', url: null },
+    { title: '', url: null },
+    { title: '', url: null },
+  ]);
+  const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
 
   const fetchService = useCallback(async () => {
     if (!id) return;
@@ -145,14 +159,20 @@ export default function ServiceDetailScreen() {
         const msPerDay = 1000 * 60 * 60 * 24;
         const daysUntilDue = Math.round((dueDate.getTime() - today.getTime()) / msPerDay);
 
-        const { url, cleanNotes } = extractImageUrl((serviceRow as any).image_url, serviceRow.notes);
+        const { cleanNotes, images } = parseNotesAndImages(serviceRow.notes, (serviceRow as any).image_url);
 
         setService({
           ...serviceRow,
+          notes: cleanNotes,
           days_until_due: daysUntilDue,
         });
-        setReceiptUrl(url);
-        setEditReceiptUrl(url);
+        setReminderImages(images);
+
+        setReminderImageDrafts([
+          { title: images[0]?.title ?? '', url: images[0]?.url ?? null },
+          { title: images[1]?.title ?? '', url: images[1]?.url ?? null },
+          { title: images[2]?.title ?? '', url: images[2]?.url ?? null },
+        ]);
         setEditName(serviceRow.service_name);
         setEditCategory(serviceRow.category as ServiceCategory);
         setEditLastServiced(new Date(serviceRow.last_serviced_on));
@@ -328,27 +348,49 @@ export default function ServiceDetailScreen() {
       return;
     }
 
+    // Validate mandatory image titles and missing uploads
+    for (let i = 0; i < reminderImageDrafts.length; i++) {
+      const draft = reminderImageDrafts[i];
+      const hasUrl = !!draft.url;
+      const hasTitle = draft.title.trim().length > 0;
+
+      if (hasUrl && !hasTitle) {
+        Toast.show({
+          type: 'error',
+          text1: 'Title required',
+          text2: `Please enter a title for Image ${i + 1}`,
+        });
+        return;
+      }
+      if (!hasUrl && hasTitle) {
+        Toast.show({
+          type: 'error',
+          text1: 'Image missing',
+          text2: `Please upload an image for "${draft.title.trim()}"`,
+        });
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       const dateStr = editLastServiced.toISOString().split('T')[0];
-      let notesText = editNotes.trim();
-      if (editReceiptUrl) {
-        notesText = notesText ? `${notesText}\n[Receipt: ${editReceiptUrl}]` : `[Receipt: ${editReceiptUrl}]`;
-      }
+      const notesText = serializeNotesAndImages(editNotes, reminderImageDrafts);
+      const validImages = reminderImageDrafts.filter(
+        (item): item is ReminderImageDraft & { url: string } => !!item.url && item.title.trim().length > 0
+      );
+      const firstImageUrl = validImages[0]?.url ?? null;
 
       const updatePayload: any = {
         service_name: editName.trim(),
         category: editCategory,
         last_serviced_on: dateStr,
         frequency_months: freq,
-        notes: notesText || null,
+        notes: notesText,
         provider_id: selectedProvider?.id ?? null,
         next_due_on: dateStr,
+        image_url: firstImageUrl,
       };
-
-      if (editReceiptUrl) {
-        updatePayload.image_url = editReceiptUrl;
-      }
 
       let { error } = await supabase
         .from('user_services')
@@ -377,27 +419,17 @@ export default function ServiceDetailScreen() {
 
   const handleDelete = () => {
     const performDelete = async () => {
-      if (!service) return;
+      if (!service?.id) return;
       try {
-        const { error, count } = await supabase
+        const { error } = await supabase
           .from('user_services')
-          .delete({ count: 'exact' })
-          .eq('id', service.id)
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id ?? '');
+          .delete()
+          .eq('id', service.id);
 
         if (error) throw error;
 
-        if (!count) {
-          Toast.show({
-            type: 'error',
-            text1: 'Delete failed',
-            text2: 'Reminder was not found or is no longer accessible.',
-          });
-          return;
-        }
-
         Toast.show({ type: 'success', text1: 'Reminder deleted' });
-        router.back();
+        router.replace('/services');
       } catch (err: any) {
         Toast.show({ type: 'error', text1: 'Error', text2: err.message ?? 'Failed to delete reminder.' });
       }
@@ -457,13 +489,13 @@ export default function ServiceDetailScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => goBackSmart(router, `/services/${id}`)}
           style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.75}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <Ionicons name="arrow-back" size={20} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerEmoji}>{emoji}</Text>
+        <Ionicons name={(SERVICE_CATEGORY_ICONS[category] as any) ?? 'build-outline'} size={20} color={colors.primary} style={{ marginRight: 6 }} />
         <Text style={styles.headerTitle} numberOfLines={1}>
           {service.service_name}
         </Text>
@@ -477,24 +509,25 @@ export default function ServiceDetailScreen() {
           <UrgencyBadge daysUntilDue={service.days_until_due} />
         </View>
 
-        {/* Receipt / Warranty Card */}
-        {receiptUrl ? (
-          <View style={[styles.dueCard, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 12 }]}>
-            <Text style={[styles.dueLabel, { color: colors.textMuted, marginBottom: 8 }]}>Receipt / Warranty Card</Text>
-            <TouchableOpacity
-              onPress={() => {
-                if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                  window.open(receiptUrl, '_blank');
-                }
-              }}
-              activeOpacity={0.9}
-            >
-              <Image
-                source={{ uri: receiptUrl }}
-                style={{ width: '100%', height: 180, borderRadius: 12, backgroundColor: colors.surface2 }}
-                contentFit="contain"
-              />
-            </TouchableOpacity>
+        {/* Reminder Images / Receipts */}
+        {reminderImages.length > 0 ? (
+          <View style={[styles.dueCard, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 10, gap: 10 }]}>
+            <Text style={[styles.dueLabel, { color: colors.textMuted }]}>Reminder Images &amp; Documents</Text>
+            {reminderImages.map((img, index) => (
+              <View key={`detail-image-${index}`} style={{ gap: 4 }}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text }}>{img.title}</Text>
+                <TouchableOpacity
+                  onPress={() => setPreviewImage({ url: img.url, title: img.title })}
+                  activeOpacity={0.88}
+                >
+                  <Image
+                    source={{ uri: img.url }}
+                    style={{ width: '100%', height: 120, borderRadius: 10, backgroundColor: colors.surface2 }}
+                    contentFit="contain"
+                  />
+                </TouchableOpacity>
+              </View>
+            ))}
           </View>
         ) : null}
 
@@ -515,7 +548,10 @@ export default function ServiceDetailScreen() {
           onPress={handleFindTech}
           activeOpacity={0.82}
         >
-          <Text style={[styles.secondaryBtnText, { color: colors.primary }]}>🔍 Find technicians</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="search-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
+            <Text style={[styles.secondaryBtnText, { color: colors.primary }]}>Find technicians</Text>
+          </View>
         </TouchableOpacity>
 
         <ServiceHistoryList
@@ -530,9 +566,12 @@ export default function ServiceDetailScreen() {
           onPress={() => setEditOpen((v) => !v)}
           activeOpacity={0.8}
         >
-          <Text style={[styles.editToggleText, { color: colors.text }]}>
-            {editOpen ? '▲ Hide edit details' : '✏️ Edit details'}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name={editOpen ? 'chevron-up' : 'create-outline'} size={16} color={colors.text} style={{ marginRight: 6 }} />
+            <Text style={[styles.editToggleText, { color: colors.text }]}>
+              {editOpen ? 'Hide edit details' : 'Edit details'}
+            </Text>
+          </View>
         </TouchableOpacity>
 
         {editOpen && (
@@ -567,7 +606,7 @@ export default function ServiceDetailScreen() {
                     }}
                     activeOpacity={0.8}
                   >
-                    <Text style={{ fontSize: 14 }}>{SERVICE_CATEGORY_EMOJI[cat]}</Text>
+                    <Ionicons name={(SERVICE_CATEGORY_ICONS[cat] as any) ?? 'build-outline'} size={16} color={sel ? colors.primary : colors.textMuted} style={{ marginRight: 6 }} />
                     <Text style={[{ fontSize: 11, fontWeight: '500', flexShrink: 1 }, { color: sel ? colors.primary : colors.textMuted }]} numberOfLines={2}>
                       {SERVICE_CATEGORY_LABELS[cat]}
                     </Text>
@@ -582,7 +621,7 @@ export default function ServiceDetailScreen() {
               onPress={() => setShowDatePicker(true)}
             >
               <Text style={{ color: colors.text, fontSize: 14, fontWeight: '500' }}>{formattedEditDate}</Text>
-              <Text style={{ color: colors.textMuted }}>📅</Text>
+              <Ionicons name="calendar-outline" size={18} color={colors.textMuted} />
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
@@ -617,7 +656,7 @@ export default function ServiceDetailScreen() {
             ) : providerOptions.length === 0 ? (
               <>
                 <View style={[styles.providerStateCard, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
-                  <Text style={styles.providerStateIcon}>👥</Text>
+                  <Ionicons name="people-outline" size={22} color={colors.textMuted} />
                   <Text style={[styles.providerStateText, { color: colors.textMuted }]}>No saved providers available to map yet.</Text>
                 </View>
                 <TouchableOpacity
@@ -653,7 +692,7 @@ export default function ServiceDetailScreen() {
                       </Text>
                     )}
                   </View>
-                  <Text style={[styles.selectorChevron, { color: colors.textMuted }]}>{providerPickerOpen ? '▲' : '▼'}</Text>
+                  <Ionicons name={providerPickerOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
                 </TouchableOpacity>
 
                 {providerPickerOpen ? (
@@ -728,15 +767,59 @@ export default function ServiceDetailScreen() {
               </View>
             )}
 
-            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Receipt or warranty card (optional)</Text>
-            <ImageUploader
-              currentImageUrl={editReceiptUrl}
-              onImageUploaded={(url) => setEditReceiptUrl(url)}
-              onImageRemoved={() => setEditReceiptUrl(null)}
-              subfolder="service_receipts"
-              placeholder="Upload receipt or warranty card photo"
-              compact={true}
-            />
+            <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Reminder images (optional, up to 3)</Text>
+            <Text style={[styles.providerHelperText, { color: colors.textMuted }]}>Title is mandatory for every uploaded image.</Text>
+            <View style={{ gap: 8, marginTop: 4 }}>
+              {reminderImageDrafts.map((item, index) => (
+                <View key={`edit-image-slot-${index}`} style={[styles.input, { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10 }]}>
+                  <View style={{ width: 64, alignItems: 'center', justifyContent: 'center' }}>
+                    <ImageUploader
+                      currentImageUrl={item.url}
+                      onImageUploaded={(url) => {
+                        setReminderImageDrafts((prev) =>
+                          prev.map((row, rowIndex) =>
+                            rowIndex === index ? { ...row, url } : row
+                          )
+                        );
+                      }}
+                      onImageRemoved={() => {
+                        setReminderImageDrafts((prev) =>
+                          prev.map((row, rowIndex) =>
+                            rowIndex === index ? { title: '', url: null } : row
+                          )
+                        );
+                      }}
+                      subfolder="service_receipts"
+                      placeholder={`Upload image ${index + 1}`}
+                      compact={true}
+                    />
+                  </View>
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text style={[styles.fieldLabel, { marginTop: 0, marginBottom: 0, color: colors.textMuted }]}>Image {index + 1} title</Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text, paddingVertical: 8, fontSize: 13 }]}
+                      placeholder={
+                        index === 0
+                          ? 'e.g., Warranty card'
+                          : index === 1
+                          ? 'e.g., Purchase receipt'
+                          : 'e.g., Model / serial number tag'
+                      }
+                      placeholderTextColor={colors.textMuted}
+                      value={item.title}
+                      onChangeText={(value) => {
+                        setReminderImageDrafts((prev) =>
+                          prev.map((row, rowIndex) =>
+                            rowIndex === index ? { ...row, title: value.slice(0, 60) } : row
+                          )
+                        );
+                      }}
+                      maxLength={60}
+                    />
+                  </View>
+                </View>
+              ))}
+            </View>
 
             <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Notes (optional)</Text>
             <TextInput
@@ -750,26 +833,39 @@ export default function ServiceDetailScreen() {
               placeholderTextColor={colors.textMuted}
             />
 
-            <TouchableOpacity
-              style={[styles.saveBtn, saving && { opacity: 0.6 }]}
-              onPress={handleSaveEdit}
-              disabled={saving}
-              activeOpacity={0.85}
-            >
-              <View style={[styles.btnGradient, { backgroundColor: colors.primary }]}> 
-                <Text style={styles.btnText}>{saving ? 'Saving…' : 'Save changes'}</Text>
-              </View>
-            </TouchableOpacity>
+            <View style={styles.editBtnRow}>
+              <TouchableOpacity
+                style={styles.cancelEditBtn}
+                onPress={() => setEditOpen(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.cancelEditBtnText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.saveBtn, { flex: 1, marginTop: 0 }, saving && { opacity: 0.6 }]}
+                onPress={handleSaveEdit}
+                disabled={saving}
+                activeOpacity={0.85}
+              >
+                <View style={[styles.btnGradient, { backgroundColor: colors.primary }]}> 
+                  <Text style={styles.btnText}>{saving ? 'Saving…' : 'Save changes'}</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
         {/* Delete */}
         <TouchableOpacity
-          style={[styles.deleteBtn, { borderColor: colors.accent + '40' }]}
+          style={[styles.deleteBtn, { borderColor: Verandah.dangerSoft, backgroundColor: Verandah.dangerSoft }]}
           onPress={handleDelete}
           activeOpacity={0.8}
         >
-          <Text style={[styles.deleteBtnText, { color: colors.accent }]}>🗑️ Delete this reminder</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="trash-outline" size={16} color={Verandah.danger} style={{ marginRight: 6 }} />
+            <Text style={[styles.deleteBtnText, { color: Verandah.danger }]}>Delete this reminder</Text>
+          </View>
         </TouchableOpacity>
       </ScrollView>
 
@@ -838,11 +934,40 @@ export default function ServiceDetailScreen() {
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => submitMarkDone(true)} disabled={markDoneSubmitting} style={styles.skipDetailsWrap}>
-                <Text style={[styles.skipDetailsText, { color: colors.primary }]}>Skip details</Text>
+              <TouchableOpacity onPress={() => setShowMarkDoneSheet(false)} disabled={markDoneSubmitting} style={styles.skipDetailsWrap}>
+                <Text style={[styles.skipDetailsText, { color: Verandah.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
+        </View>
+      </Modal>
+      {/* Fullscreen / In-App Image Viewer Modal */}
+      <Modal
+        visible={!!previewImage}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setPreviewImage(null)}
+      >
+        <View style={styles.imageModalOverlay}>
+          <TouchableOpacity
+            style={styles.imageModalCloseBtn}
+            onPress={() => setPreviewImage(null)}
+            activeOpacity={0.8}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Ionicons name="close-circle" size={34} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {previewImage ? (
+            <View style={styles.imageModalContent}>
+              <Text style={styles.imageModalTitle}>{previewImage.title}</Text>
+              <Image
+                source={{ uri: previewImage.url }}
+                style={styles.imageModalPreview}
+                contentFit="contain"
+              />
+            </View>
+          ) : null}
         </View>
       </Modal>
     </KeyboardAvoidingView>
@@ -875,12 +1000,12 @@ const styles = StyleSheet.create({
     ...VerandahType.display,
     color: Verandah.textPrimary,
   },
-  scrollContent: { paddingHorizontal: 16, paddingBottom: 48, gap: 8 },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 24, gap: 6 },
   dueCard: {
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 16,
-    gap: 6,
+    padding: 10,
+    gap: 4,
   },
   dueLabel: { fontSize: 10, fontWeight: '500', letterSpacing: 1 },
   dueDate: { fontSize: 20, fontWeight: '500' },
@@ -888,14 +1013,14 @@ const styles = StyleSheet.create({
   secondaryBtn: {
     borderRadius: 14,
     borderWidth: 1,
-    paddingVertical: 11,
+    paddingVertical: 10,
     alignItems: 'center',
   },
-  btnGradient: { paddingVertical: 12, alignItems: 'center', borderRadius: 14 },
+  btnGradient: { paddingVertical: 10, alignItems: 'center', borderRadius: 14 },
   btnText: { color: Verandah.primaryFg, fontSize: 15, fontWeight: '500' },
   secondaryBtnText: { fontSize: 15, fontWeight: '500' },
   editToggle: {
-    paddingVertical: 10,
+    paddingVertical: 8,
     alignItems: 'center',
     borderTopWidth: 1,
     borderBottomWidth: 1,
@@ -903,9 +1028,9 @@ const styles = StyleSheet.create({
   },
   editToggleText: { fontSize: 14, fontWeight: '500' },
   editSection: {
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 14,
+    padding: 10,
     gap: 2,
   },
   fieldLabel: {
@@ -1037,6 +1162,27 @@ const styles = StyleSheet.create({
     minWidth: '44%',
     flexShrink: 1,
   },
+  editBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 12,
+  },
+  cancelEditBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Verandah.borderStrong,
+    backgroundColor: Verandah.card,
+  },
+  cancelEditBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Verandah.textSecondary,
+  },
   saveBtn: { marginTop: 12, borderRadius: 12, overflow: 'hidden' },
   deleteBtn: {
     marginTop: 6,
@@ -1090,5 +1236,38 @@ const styles = StyleSheet.create({
   skipDetailsText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  imageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    position: 'relative',
+  },
+  imageModalCloseBtn: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 54 : 24,
+    right: 20,
+    zIndex: 100,
+    padding: 4,
+  },
+  imageModalContent: {
+    width: '100%',
+    height: '80%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  imageModalTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  imageModalPreview: {
+    width: '100%',
+    height: '85%',
+    borderRadius: 12,
   },
 });

@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BaseCard } from '../../components/BaseCard';
 import { NetworkTileIcon } from '../../components/NetworkTileIcon';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
+import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
@@ -96,7 +97,7 @@ export default function NetworkScreen() {
     }, [fetchSectionStats])
   );
 
-  const webPullProps = useWebPullToRefresh(() => fetchSectionStats(true));
+  const webPullProps = useWebPullToRefresh(() => fetchSectionStats(true), refreshing);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -131,7 +132,7 @@ export default function NetworkScreen() {
 
       {/* Main Section Cards */}
       <ScrollView
-        {...webPullProps}
+        {...webPullProps.pullProps}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -143,6 +144,7 @@ export default function NetworkScreen() {
           />
         }
       >
+        <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
         {/* Merged Food Drops & Community Business Section Card */}
         <BaseCard
           padding={14}
@@ -297,6 +299,9 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Verandah.borderStrong,
+    borderStyle: 'solid',
   },
   cardHeaderRow: {
     flexDirection: 'row',

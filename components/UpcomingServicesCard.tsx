@@ -164,8 +164,8 @@ export function UpcomingServicesCard() {
 const styles = StyleSheet.create({
   card: {
     borderRadius: VerandahRadius.md,
-    borderWidth: 0.5,
-    borderColor: Verandah.border,
+    borderWidth: 1,
+    borderColor: Verandah.borderStrong,
     backgroundColor: Verandah.card,
     marginBottom: 6,
     paddingVertical: 8,

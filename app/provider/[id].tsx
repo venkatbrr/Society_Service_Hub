@@ -681,11 +681,11 @@ export default function ProviderDetailScreen() {
 
       <View style={styles.actionGrid}>
         <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: colors.secondary }]} onPress={handleWhatsApp}>
-          <Text style={styles.mainActionIcon}>{APP_EMOJIS.whatsapp}</Text>
+          <Ionicons name="logo-whatsapp" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
           <Text style={styles.mainActionText}>WhatsApp</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: colors.primary }]} onPress={handleCall}>
-          <Text style={styles.mainActionIcon}>{APP_EMOJIS.call}</Text>
+          <Ionicons name="call-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
           <Text style={styles.mainActionText}>Call</Text>
         </TouchableOpacity>
       </View>
@@ -823,7 +823,7 @@ export default function ProviderDetailScreen() {
 
       <View style={styles.actionRowAlt}>
          <TouchableOpacity style={styles.altBtn} onPress={handleShare}>
-          <Text style={styles.altIcon}>{APP_EMOJIS.share}</Text>
+          <Ionicons name="share-social-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
             <Text style={[styles.altBtnText, { color: colors.textMuted }]}>Share Contact</Text>
          </TouchableOpacity>
       </View>
@@ -831,7 +831,7 @@ export default function ProviderDetailScreen() {
       {canDelete ? (
          <View style={styles.adminControls}>
             <TouchableOpacity style={[styles.dangerBtn, { borderColor: colors.accent }]} onPress={handleDelete}>
-              <Text style={styles.dangerIcon}>{APP_EMOJIS.close}</Text>
+              <Ionicons name="close-circle-outline" size={16} color={colors.accent} style={{ marginRight: 6 }} />
               <Text style={{ color: colors.accent, marginLeft: 8, fontWeight: '500' }}>Delete provider</Text>
             </TouchableOpacity>
          </View>

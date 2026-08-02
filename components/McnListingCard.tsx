@@ -215,8 +215,8 @@ export const McnListingCard = React.memo(({
 const styles = StyleSheet.create({
   card: {
     marginBottom: 8,
-    borderWidth: 0.5,
-    borderColor: Verandah.border,
+    borderWidth: 1,
+    borderColor: Verandah.borderStrong,
     shadowColor: 'transparent',
     elevation: 0,
     overflow: 'hidden',

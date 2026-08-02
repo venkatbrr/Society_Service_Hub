@@ -86,6 +86,14 @@ export function getImmediateParentRoute(pathname: string): string {
     return '/(tabs)/network';
   }
 
+  // 6. Service Reminders sub-routes
+  if (cleanPath === '/services/add' || (cleanPath.startsWith('/services/') && cleanPath !== '/services')) {
+    return '/services';
+  }
+  if (cleanPath === '/services') {
+    return '/(tabs)/profile';
+  }
+
   // Default fallback
   return '/(tabs)/network';
 }
