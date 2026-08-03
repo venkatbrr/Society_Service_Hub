@@ -211,15 +211,15 @@ const styles = StyleSheet.create({
   },
   coverImage: {
     width: '100%',
-    height: NETWORK_TILE_IMAGE_HEIGHT,
+    height: 95,
   },
   cardContentWithImage: {
-    padding: 12,
+    padding: 8,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   headerText: {
     flex: 1,

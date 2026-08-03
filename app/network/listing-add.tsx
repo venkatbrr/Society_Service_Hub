@@ -228,8 +228,9 @@ export default function AddListingScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    paddingBottom: 40,
+    paddingHorizontal: 14,
+    paddingTop: 0,
+    paddingBottom: 24,
   },
   field: {
     marginBottom: 12,

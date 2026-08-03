@@ -480,7 +480,10 @@ export default function CreateOrEditFoodDropScreen() {
 
         {/* Fulfillment Schedule */}
         <View style={styles.cardSection}>
-          <Text style={styles.cardSectionTitle}>📅 Delivery / Fulfillment Schedule</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <Ionicons name="calendar-outline" size={16} color={Verandah.accent} />
+            <Text style={styles.cardSectionTitle}>Delivery / Fulfillment Schedule</Text>
+          </View>
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
@@ -573,7 +576,10 @@ export default function CreateOrEditFoodDropScreen() {
 
         {/* Cut-off Deadline */}
         <View style={styles.cardSection}>
-          <Text style={styles.cardSectionTitle}>⏰ Pre-Order Cut-off Deadline</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <Ionicons name="time-outline" size={16} color={Verandah.accent} />
+            <Text style={styles.cardSectionTitle}>Pre-Order Cut-off Deadline</Text>
+          </View>
           <Text style={styles.cardSectionSub}>
             Orders automatically close at this time so you can prepare ingredients.
           </Text>
@@ -672,7 +678,10 @@ export default function CreateOrEditFoodDropScreen() {
         {/* Drop Items Menu */}
         <View style={styles.cardSection}>
           <View style={styles.itemsHeader}>
-            <Text style={styles.cardSectionTitle}>🍲 Items offered for this drop</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="restaurant-outline" size={16} color={Verandah.accent} />
+              <Text style={styles.cardSectionTitle}>Items offered for this drop</Text>
+            </View>
             <TouchableOpacity style={styles.addItemBtn} onPress={handleAddItem}>
               <Ionicons name="add" size={16} color={colors.accent} />
               <Text style={styles.addItemBtnText}>Add Item</Text>
@@ -789,8 +798,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scrollContent: {
-    padding: 14,
-    paddingBottom: 40,
+    paddingHorizontal: 14,
+    paddingTop: 0,
+    paddingBottom: 24,
   },
   section: {
     marginBottom: 10,

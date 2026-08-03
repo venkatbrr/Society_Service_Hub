@@ -653,10 +653,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 40,
-    gap: 16,
+    paddingHorizontal: 14,
+    paddingTop: 0,
+    paddingBottom: 24,
+    gap: 12,
   },
   roleToggleContainer: {
     flexDirection: 'row',

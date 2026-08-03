@@ -306,6 +306,20 @@ export default function ListingDetailScreen() {
         options={buildMcnHeaderOptions({
           title: listing.name,
           onBack: handleGoBack,
+          headerRight: user?.id === listing.owner_id ? () => (
+            <TouchableOpacity
+              onPress={() => router.push(`/network/listing/manage/${listing.id}` as any)}
+              style={{
+                backgroundColor: colors.primary,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: VerandahRadius.pill,
+                marginRight: 6,
+              }}
+            >
+              <Text style={{ color: colors.primaryFg, fontSize: 12, fontWeight: '600' }}>Edit details</Text>
+            </TouchableOpacity>
+          ) : undefined,
         })}
       />
 
@@ -549,44 +563,46 @@ export default function ListingDetailScreen() {
         )}
       </View>
 
-      {/* Rate Business Card */}
-      <View style={styles.detailsCard}>
-         <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 16 }]}>Rate this Business</Text>
-         <RatingStars rating={selectedRating || userRating || 0} onRating={handleRating} size={36} isLightMode={true} />
-         {selectedRating === 0 && !userRating && (
-           <Text style={[styles.tapHint, { color: colors.accent, marginTop: 8 }]}>⬆ Tap a star above to rate (required)</Text>
-         )}
-         <TextInput
-           style={[styles.reviewInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surface }]}
-           placeholder="Share your experience... (optional)"
-           placeholderTextColor={colors.textMuted}
-           value={reviewText}
-           onChangeText={setReviewText}
-           multiline
-           numberOfLines={3}
-           textAlignVertical="top"
-         />
-         <TouchableOpacity
-           onPress={handleSubmitReview}
-           disabled={isReviewSubmitDisabled}
-           activeOpacity={0.85}
-           style={[
-             styles.submitReviewBtn,
-             { marginTop: 12, backgroundColor: isReviewSubmitDisabled ? colors.cardMuted : colors.primary },
-             isReviewSubmitDisabled && [styles.submitReviewBtnDisabled, { borderColor: colors.border }],
-           ]}
-         >
-           {isSubmittingReview
-             ? <ActivityIndicator color={colors.primaryFg} />
-             : (
-               <Text style={[styles.submitReviewText, { color: isReviewSubmitDisabled ? colors.textMuted : colors.primaryFg }]}>
-                 {hasExistingReview ? 'Update review' : 'Submit review'}
-               </Text>
-             )
-           }
-         </TouchableOpacity>
-         <Text style={[styles.reviewNote, { color: colors.textSecondary }]}>Reviews are only visible to our community members.</Text>
-      </View>
+      {/* Rate Business Card - Only for non-owners */}
+      {user?.id !== listing.owner_id && (
+        <View style={styles.detailsCard}>
+           <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 6 }]}>Rate this Business</Text>
+           <RatingStars rating={selectedRating || userRating || 0} onRating={handleRating} size={32} isLightMode={true} />
+           {selectedRating === 0 && !userRating && (
+             <Text style={[styles.tapHint, { color: colors.accent, marginTop: 4, marginBottom: 4 }]}>⬆ Tap a star above to rate (required)</Text>
+           )}
+           <TextInput
+             style={[styles.reviewInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surface, marginTop: 6, minHeight: 60 }]}
+             placeholder="Share your experience... (optional)"
+             placeholderTextColor={colors.textMuted}
+             value={reviewText}
+             onChangeText={setReviewText}
+             multiline
+             numberOfLines={2}
+             textAlignVertical="top"
+           />
+           <TouchableOpacity
+             onPress={handleSubmitReview}
+             disabled={isReviewSubmitDisabled}
+             activeOpacity={0.85}
+             style={[
+               styles.submitReviewBtn,
+               { marginTop: 8, height: 42, backgroundColor: isReviewSubmitDisabled ? colors.cardMuted : colors.primary },
+               isReviewSubmitDisabled && [styles.submitReviewBtnDisabled, { borderColor: colors.border }],
+             ]}
+           >
+             {isSubmittingReview
+               ? <ActivityIndicator color={colors.primaryFg} />
+               : (
+                 <Text style={[styles.submitReviewText, { color: isReviewSubmitDisabled ? colors.textMuted : colors.primaryFg }]}>
+                   {hasExistingReview ? 'Update review' : 'Submit review'}
+                 </Text>
+               )
+             }
+           </TouchableOpacity>
+           <Text style={[styles.reviewNote, { color: colors.textSecondary, marginTop: 6 }]}>Reviews are only visible to our community members.</Text>
+        </View>
+      )}
 
       <Modal
         visible={!!selectedImageUrl}
@@ -623,8 +639,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 24,
-    paddingBottom: 80,
+    paddingHorizontal: 14,
+    paddingTop: 0,
+    paddingBottom: 24,
   },
   loaderWrap: {
     flex: 1,
@@ -633,24 +650,24 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: '100%',
-    height: 180,
-    borderRadius: VerandahRadius.lg,
-    marginBottom: 16,
+    height: 130,
+    borderRadius: VerandahRadius.md,
+    marginBottom: 10,
   },
   productThumb: {
-    width: 48,
-    height: 48,
+    width: 44,
+    height: 44,
     borderRadius: VerandahRadius.md,
     marginRight: 10,
   },
   ownerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
   },
   ownerInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 10,
   },
   ownerName: {
     ...VerandahType.bodyBold,
@@ -660,12 +677,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   categoryBadge: {
-    marginTop: 8,
+    marginTop: 4,
     alignSelf: 'flex-start',
     borderRadius: VerandahRadius.pill,
     backgroundColor: Verandah.cardMuted,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
   categoryBadgeText: {
     ...VerandahType.caption,
@@ -676,23 +693,23 @@ const styles = StyleSheet.create({
   },
   contactIconBtn: {
     borderWidth: 1,
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
   descriptionSection: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   description: {
     ...VerandahType.body,
-    lineHeight: 20,
+    lineHeight: 18,
   },
   divider: {
     height: 0.5,
     backgroundColor: Verandah.border,
-    marginVertical: 20,
+    marginVertical: 10,
   },
   sectionTitle: {
     ...VerandahType.title,

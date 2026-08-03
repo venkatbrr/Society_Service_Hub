@@ -424,16 +424,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scrollContent: {
-    padding: 14,
-    paddingBottom: 30,
+    paddingHorizontal: 14,
+    paddingTop: 0,
+    paddingBottom: 24,
   },
   headerBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    padding: 8,
     borderRadius: VerandahRadius.md,
     borderWidth: 1,
-    marginBottom: 12,
+    marginBottom: 4,
   },
   bannerIconWrap: {
     width: 32,

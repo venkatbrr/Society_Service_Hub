@@ -352,74 +352,81 @@ export default function ManageListingScreen() {
   };
 
   const handleDeleteProduct = (productId: string) => {
-    Alert.alert(
-      'Delete item',
-      'Are you sure you want to delete this item?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { error } = await supabase
-                .from('mcn_products')
-                .delete()
-                .eq('id', productId);
+    const doDelete = async () => {
+      try {
+        const { error } = await supabase
+          .from('mcn_products')
+          .delete()
+          .eq('id', productId);
 
-              if (error) {
-                // If it fails because of database restriction (restrict foreign key)
-                if (error.code === '23503') {
-                  Toast.show({
-                    type: 'error',
-                    text1: 'Cannot delete item',
-                    text2: 'This item has existing references and cannot be deleted.',
-                  });
-                } else {
-                  throw error;
-                }
-              } else {
-                Toast.show({ type: 'success', text1: 'Item deleted' });
-                fetchData();
-              }
-            } catch (error: any) {
-              console.error(error);
-              Toast.show({ type: 'error', text1: 'Failed to delete item' });
-            }
-          },
-        },
-      ]
-    );
+        if (error) {
+          if (error.code === '23503') {
+            Toast.show({
+              type: 'error',
+              text1: 'Cannot delete item',
+              text2: 'This item has existing references and cannot be deleted.',
+            });
+          } else {
+            throw error;
+          }
+        } else {
+          Toast.show({ type: 'success', text1: 'Item deleted' });
+          fetchData();
+        }
+      } catch (error: any) {
+        console.error(error);
+        Toast.show({ type: 'error', text1: 'Failed to delete item' });
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (window.confirm('Delete item?\n\nAre you sure you want to delete this item?')) {
+        doDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete item',
+        'Are you sure you want to delete this item?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: doDelete },
+        ]
+      );
+    }
   };
 
   const handleDeleteListing = () => {
     if (!listing) return;
-    Alert.alert(
-      'Delete business listing',
-      'Are you sure you want to delete this business listing? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { error } = await supabase
-                .from('mcn_listings')
-                .delete()
-                .eq('id', listing.id);
+    const doDelete = async () => {
+      try {
+        const { error } = await supabase
+          .from('mcn_listings')
+          .delete()
+          .eq('id', listing.id);
 
-              if (error) throw error;
-              Toast.show({ type: 'success', text1: 'Listing deleted' });
-              router.replace('/network' as any);
-            } catch (error: any) {
-              console.error(error);
-              Toast.show({ type: 'error', text1: 'Failed to delete listing' });
-            }
-          },
-        },
-      ]
-    );
+        if (error) throw error;
+        Toast.show({ type: 'success', text1: 'Listing deleted' });
+        router.replace('/network/business' as any);
+      } catch (error: any) {
+        console.error(error);
+        Toast.show({ type: 'error', text1: 'Failed to delete listing' });
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (window.confirm('Delete business listing?\n\nAre you sure you want to delete this business listing? This action cannot be undone.')) {
+        doDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete business listing',
+        'Are you sure you want to delete this business listing? This action cannot be undone.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: doDelete },
+        ]
+      );
+    }
   };
 
   if (loading) {
@@ -441,47 +448,112 @@ export default function ManageListingScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
-          options={buildMcnHeaderOptions({
-            title: 'Manage listing',
-            onBack: handleGoBack,
-            headerRight: () => (
-              <TouchableOpacity onPress={() => setShowListingModal(true)} style={styles.headerAction}>
-                <Text style={[styles.headerActionText, { color: colors.accent }]}>Edit details</Text>
-              </TouchableOpacity>
-            ),
-          })}
+        options={buildMcnHeaderOptions({
+          title: 'Manage listing',
+          onBack: handleGoBack,
+        })}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Read-only listing Summary */}
-        <View style={[styles.card, { borderColor: colors.border }]}>
-          {listing.image_url ? (
-            <Image
-              source={{ uri: listing.image_url }}
-              style={styles.coverImagePreview}
-              contentFit="cover"
-              transition={200}
+        {/* Inline Business Details Editor */}
+        <View style={[styles.card, { borderColor: colors.border, padding: 14 }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 10 }]}>Edit Business Details</Text>
+          
+          <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Cover Image</Text>
+          <ImageUploader
+            currentImageUrl={editListingImageUrl}
+            onImageUploaded={setEditListingImageUrl}
+            onImageRemoved={() => setEditListingImageUrl(null)}
+            subfolder="listings"
+            placeholder="Add or change cover photo (optional)"
+          />
+
+          <View style={styles.field}>
+            <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Business name <Text style={{ color: colors.danger }}>*</Text></Text>
+            <TextInput
+              style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+              value={editListingName}
+              onChangeText={setEditListingName}
+              placeholder="e.g. IRA Fashion & Tailoring"
+              placeholderTextColor={colors.textMuted}
+              maxLength={80}
             />
-          ) : null}
-          <Text style={[styles.listingName, { color: colors.textPrimary }]}>{listing.name}</Text>
-          {listing.category ? (
-            <View style={styles.categoryBadge}>
-              <Text style={[styles.categoryBadgeText, { color: colors.textSecondary }]}>
-                {listing.category.emoji} {listing.category.name}
-              </Text>
+          </View>
+
+          <View style={styles.field}>
+            <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>About your business / notes</Text>
+            <TextInput
+              style={[styles.input, styles.textArea, { borderColor: colors.border, color: colors.textPrimary }]}
+              value={editListingDesc}
+              onChangeText={setEditListingDesc}
+              placeholder="Share details, notes, specialties..."
+              placeholderTextColor={colors.textMuted}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+              maxLength={280}
+            />
+          </View>
+
+          <View style={styles.field}>
+            <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Business category <Text style={{ color: colors.danger }}>*</Text></Text>
+            <View style={styles.categoryGrid}>
+              {categories.map((category) => {
+                const isSelected = editListingCategoryId === category.id;
+                return (
+                  <TouchableOpacity
+                    key={category.id}
+                    style={[
+                      styles.categoryChip,
+                      { borderColor: colors.border, backgroundColor: colors.surface },
+                      isSelected && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+                    ]}
+                    onPress={() => setEditListingCategoryId(category.id)}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryChipText,
+                        { color: colors.textSecondary },
+                        isSelected && { color: colors.accent },
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {category.emoji} {category.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-          ) : null}
-          {listing.description ? (
-            <Text style={[styles.listingDesc, { color: colors.textSecondary }]}>{listing.description}</Text>
-          ) : null}
-          {listing.contact_phone ? (
-            <View style={styles.phoneRow}>
-              <Ionicons name="call-outline" size={16} color={colors.textTertiary} />
-              <Text style={[styles.phoneText, { color: colors.textSecondary }]}>
-                {listing.contact_phone}
-              </Text>
-            </View>
-          ) : null}
+          </View>
+
+          <View style={styles.field}>
+            <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>
+              WhatsApp / phone number <Text style={{ color: colors.danger }}>*</Text>
+            </Text>
+            <TextInput
+              style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+              value={editListingPhone}
+              onChangeText={setEditListingPhone}
+              placeholder="10-digit mobile number"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="phone-pad"
+              maxLength={15}
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.modalPrimaryBtn, { backgroundColor: colors.primary, marginTop: 6 }]}
+            onPress={handleSaveListingDetails}
+            disabled={savingListing}
+            activeOpacity={0.85}
+          >
+            {savingListing ? (
+              <ActivityIndicator color={colors.primaryFg} size="small" />
+            ) : (
+              <Text style={[styles.modalPrimaryBtnText, { color: colors.primaryFg }]}>Save business details</Text>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Listing Active Toggle */}
@@ -858,8 +930,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scrollContent: {
-    padding: 24,
-    paddingBottom: 80,
+    paddingHorizontal: 14,
+    paddingTop: 0,
+    paddingBottom: 40,
   },
   headerAction: {
     padding: 8,

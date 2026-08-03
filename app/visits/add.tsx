@@ -315,14 +315,14 @@ export default function AddVisitScreen() {
                 }}
                 min={formatLocalDateForDb(new Date())}
                 style={{
-                  height: 56,
+                  height: 42,
                   borderWidth: 1,
                   borderStyle: 'solid',
                   borderColor: colors.border,
-                  borderRadius: 16,
-                  paddingLeft: 16,
-                  paddingRight: 16,
-                  fontSize: 16,
+                  borderRadius: 10,
+                  paddingLeft: 12,
+                  paddingRight: 12,
+                  fontSize: 14,
                   color: colors.text,
                   backgroundColor: colors.card,
                   fontFamily: 'inherit',
@@ -337,7 +337,7 @@ export default function AddVisitScreen() {
                   style={[styles.input, { borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.card }]}
                   onPress={() => setShowDatePicker(true)}
                 >
-                  <Text style={{ fontSize: 16, color: colors.text }}>
+                  <Text style={{ fontSize: 14, color: colors.text }}>
                     {visitDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </Text>
                 </TouchableOpacity>
@@ -367,14 +367,14 @@ export default function AddVisitScreen() {
                     }
                   }}
                   style={{
-                    height: 56,
+                    height: 42,
                     borderWidth: 1,
                     borderStyle: 'solid',
                     borderColor: colors.border,
-                    borderRadius: 16,
-                    paddingLeft: 16,
-                    paddingRight: 16,
-                    fontSize: 16,
+                    borderRadius: 10,
+                    paddingLeft: 12,
+                    paddingRight: 12,
+                    fontSize: 14,
                     color: colors.text,
                     backgroundColor: colors.card,
                     fontFamily: 'inherit',
@@ -396,14 +396,14 @@ export default function AddVisitScreen() {
                     }
                   }}
                   style={{
-                    height: 56,
+                    height: 42,
                     borderWidth: 1,
                     borderStyle: 'solid',
                     borderColor: colors.border,
-                    borderRadius: 16,
-                    paddingLeft: 16,
-                    paddingRight: 16,
-                    fontSize: 16,
+                    borderRadius: 10,
+                    paddingLeft: 12,
+                    paddingRight: 12,
+                    fontSize: 14,
                     color: colors.text,
                     backgroundColor: colors.card,
                     fontFamily: 'inherit',
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   section: {
-    marginBottom: 32,
+    marginBottom: 14,
   },
   providerSection: {
     marginBottom: 0,
@@ -581,65 +581,65 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: '500',
-    letterSpacing: 1.5,
-    marginBottom: 20,
+    letterSpacing: 1.2,
+    marginBottom: 10,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 10,
   },
   lastInputGroup: {
-    marginBottom: 6,
+    marginBottom: 4,
   },
   label: {
     fontSize: 11,
     fontWeight: '500',
-    letterSpacing: 1.5,
-    marginBottom: 8,
-    marginLeft: 4,
+    letterSpacing: 1.2,
+    marginBottom: 4,
+    marginLeft: 2,
   },
   input: {
-    height: 56,
+    height: 42,
     borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    fontSize: 16,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 14,
   },
   textArea: {
-    height: 100,
+    height: 64,
     borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    fontSize: 16,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    fontSize: 14,
   },
   row: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   infoCard: {
     flexDirection: 'row',
-    padding: 16,
-    borderRadius: 16,
-    gap: 12,
+    padding: 12,
+    borderRadius: 12,
+    gap: 10,
     marginBottom: 6,
     alignItems: 'center',
     borderWidth: 1,
   },
   infoText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
-    lineHeight: 18,
+    lineHeight: 16,
   },
   submitBtn: {
-    height: 58,
-    borderRadius: 18,
+    height: 46,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   submitBtnText: {
     color: Verandah.primaryFg,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '500',
   },
 });

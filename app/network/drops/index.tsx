@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
   masterToggleRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    paddingTop: VerandahLayout.mcnHeaderToContentGap,
+    paddingTop: 0,
     paddingBottom: 2,
     gap: 8,
   },
