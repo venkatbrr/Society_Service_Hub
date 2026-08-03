@@ -43,7 +43,6 @@ export const Avatar = React.memo(({ name, url, size = 36, shape = 'circle' }: Pr
     initials = parts[0][0].toUpperCase();
   }
 
-  const borderRadius = shape === 'circle' ? size / 2 : VerandahRadius.sm + 2;
   const fontSize = size * 0.38;
 
   return (
