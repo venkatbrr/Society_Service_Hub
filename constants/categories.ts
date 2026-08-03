@@ -49,6 +49,7 @@ export const CATEGORIES = [
   'TV Repair & Install',
   'Swimming / Fitness Coach',
   'Doctor / Clinic',
+  'Diagnostic Centre',
   'Pharmacy Delivery',
   'Diagnostics / Lab Tests',
   'Physiotherapy',
@@ -110,6 +111,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     label: 'Healthcare & Wellness',
     categories: [
       'Doctor / Clinic',
+      'Diagnostic Centre',
       'Pharmacy Delivery',
       'Diagnostics / Lab Tests',
       'Physiotherapy',

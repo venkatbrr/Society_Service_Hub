@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Verandah.surface,
-    paddingHorizontal: VerandahSpace.lg,
+    paddingHorizontal: 12,
     paddingTop: VerandahLayout.screenPaddingTop,
   },
   loaderWrap: {
@@ -591,12 +591,12 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: VerandahSpace.md,
-    marginBottom: VerandahSpace.md,
+    gap: VerandahSpace.sm,
+    marginBottom: 8,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 34,
+    height: 34,
     borderRadius: VerandahRadius.md,
     borderWidth: 1,
     borderColor: Verandah.border,
@@ -621,14 +621,14 @@ const styles = StyleSheet.create({
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
     backgroundColor: Verandah.card,
-    padding: 4,
-    marginBottom: VerandahSpace.md,
+    padding: 3,
+    marginBottom: 8,
   },
   segmentButton: {
     flex: 1,
     alignItems: 'center',
     borderRadius: VerandahRadius.md,
-    paddingVertical: VerandahSpace.sm,
+    paddingVertical: 5,
   },
   segmentButtonActive: {
     backgroundColor: Verandah.cardMuted,
@@ -641,8 +641,8 @@ const styles = StyleSheet.create({
     color: Verandah.primary,
   },
   scrollContent: {
-    paddingBottom: VerandahSpace.xxxl,
-    gap: VerandahSpace.sm,
+    paddingBottom: 24,
+    gap: 6,
   },
   manageRow: {
     flexDirection: 'row',

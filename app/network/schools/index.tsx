@@ -319,9 +319,15 @@ export default function SchoolsCatalogScreen() {
           headerRight: () => (
             <TouchableOpacity
               onPress={() => router.push('/network/schools/add' as any)}
-              style={styles.headerTextBtn}
+              style={{
+                backgroundColor: colors.primary,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: VerandahRadius.pill,
+                marginRight: 6,
+              }}
             >
-              <Text style={[styles.headerTextBtnLabel, { color: colors.primary }]}>Add</Text>
+              <Text style={{ color: colors.primaryFg, fontSize: 12, fontWeight: '600' }}>+ Add School</Text>
             </TouchableOpacity>
           ),
         })}

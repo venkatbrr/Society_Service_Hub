@@ -228,26 +228,26 @@ export default function AddListingScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
-    paddingBottom: 80,
+    padding: 16,
+    paddingBottom: 40,
   },
   field: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   input: {
     borderWidth: 1,
-    borderRadius: VerandahRadius.lg,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
+    borderRadius: VerandahRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
   },
   textArea: {
-    minHeight: 100,
+    minHeight: 64,
   },
   categoryGrid: {
     flexDirection: 'row',
@@ -258,19 +258,19 @@ const styles = StyleSheet.create({
     width: '49%',
     borderWidth: 1,
     borderRadius: VerandahRadius.md,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    minHeight: 54,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    minHeight: 40,
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   categoryChipText: {
     ...VerandahType.caption,
-    lineHeight: 18,
+    lineHeight: 16,
   },
   submitBtn: {
-    marginTop: 12,
-    height: 52,
+    marginTop: 8,
+    height: 44,
     borderRadius: VerandahRadius.pill,
     alignItems: 'center',
     justifyContent: 'center',

@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
@@ -6,22 +7,32 @@ import { getAvatarTint } from '../lib/avatarTint';
 
 type Props = {
   name: string;
+  url?: string | null;
   size?: number;
   shape?: 'circle' | 'square';
 };
 
 /**
- * Deterministic initials avatar.
- *
- * Initials = first letter of first name + first letter of last word.
- * One initial if only one name. Background and foreground from
- * getAvatarTint(name). Same person always gets the same tint.
- *
- * Use this component for every person reference. Do not show photos —
- * most residents will not upload one and the inconsistency reads worse
- * than uniform initials.
+ * Avatar component displaying image if available, else initials fallback.
  */
-export const Avatar = React.memo(({ name, size = 36, shape = 'circle' }: Props) => {
+export const Avatar = React.memo(({ name, url, size = 36, shape = 'circle' }: Props) => {
+  const borderRadius = shape === 'circle' ? size / 2 : VerandahRadius.sm + 2;
+
+  if (url) {
+    return (
+      <Image
+        source={{ uri: url }}
+        style={{
+          width: size,
+          height: size,
+          borderRadius,
+        }}
+        contentFit="cover"
+        transition={150}
+      />
+    );
+  }
+
   const tint = getAvatarTint(name);
 
   const parts = name.trim().split(/\s+/).filter(Boolean);

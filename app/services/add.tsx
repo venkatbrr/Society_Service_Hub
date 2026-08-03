@@ -199,9 +199,17 @@ export default function AddServiceScreen() {
     setLoading(true);
     try {
       // Format date as YYYY-MM-DD
-      const dateStr = lastServicedOn.toISOString().split('T')[0];
-      // next_due_on is auto-computed by DB trigger
-      const nextDueOn = dateStr; // placeholder; trigger overwrites this
+      const yyyy = lastServicedOn.getFullYear();
+      const mm = String(lastServicedOn.getMonth() + 1).padStart(2, '0');
+      const dd = String(lastServicedOn.getDate()).padStart(2, '0');
+      const dateStr = `${yyyy}-${mm}-${dd}`;
+
+      const nextDueDate = new Date(lastServicedOn);
+      nextDueDate.setMonth(nextDueDate.getMonth() + freq);
+      const nextYyyy = nextDueDate.getFullYear();
+      const nextMm = String(nextDueDate.getMonth() + 1).padStart(2, '0');
+      const nextDd = String(nextDueDate.getDate()).padStart(2, '0');
+      const nextDueOn = `${nextYyyy}-${nextMm}-${nextDd}`;
 
       const notesText = serializeNotesAndImages(notes, reminderImageDrafts);
       const validImages = reminderImageDrafts.filter(

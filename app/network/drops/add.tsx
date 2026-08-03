@@ -433,7 +433,7 @@ export default function CreateOrEditFoodDropScreen() {
     >
       <Stack.Screen
         options={buildMcnHeaderOptions({
-          title: isEditMode ? 'Edit Food Drop' : 'Host a Food Drop',
+          title: isEditMode ? 'Edit Pre-Order Food' : 'Host Pre-Order Food',
           onBack: handleBack,
         })}
       />
@@ -789,59 +789,59 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scrollContent: {
-    padding: 20,
-    paddingBottom: 60,
+    padding: 14,
+    paddingBottom: 40,
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   label: {
     ...VerandahType.bodyBold,
-    fontSize: 13,
+    fontSize: 12,
     color: Verandah.textPrimary,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   subLabel: {
     fontSize: 11,
     fontWeight: '500',
     color: Verandah.textSecondary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   input: {
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 13,
     color: Verandah.textPrimary,
   },
   multiline: {
-    minHeight: 64,
+    minHeight: 52,
   },
   cardSection: {
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
     borderColor: Verandah.border,
-    borderRadius: VerandahRadius.lg,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: VerandahRadius.md,
+    padding: 10,
+    marginBottom: 10,
   },
   cardSectionTitle: {
     ...VerandahType.title,
-    fontSize: 14,
+    fontSize: 13,
     color: Verandah.textPrimary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   cardSectionSub: {
     fontSize: 11,
     color: Verandah.textSecondary,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   row: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
   itemsHeader: {
     flexDirection: 'row',

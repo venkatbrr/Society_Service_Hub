@@ -296,7 +296,7 @@ export default function AddVisitScreen() {
                   ]}
                   onPress={() => handleCategorySelect(cat)}
                 >
-                  <Text style={[categoryGridStyle.catText, { color: category === cat ? Verandah.primaryFg : colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
+                  <Text style={[categoryGridStyle.catText, { color: category === cat ? Verandah.primaryFg : colors.text }]}>{cat}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>

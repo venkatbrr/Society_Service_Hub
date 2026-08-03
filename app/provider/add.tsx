@@ -346,10 +346,9 @@ export default function AddProviderScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
+        <View style={styles.headerRow}>
           <HeaderBackButton onPress={() => router.back()} color={colors.text} style={styles.backButton} />
           <Text style={styles.title}>Add provider</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>Help your neighbors find trusted local service providers</Text>
         </View>
 
         <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -416,7 +415,7 @@ export default function AddProviderScreen() {
                   ]}
                   onPress={() => handleCategoryChange(cat)}
                 >
-                  <Text style={[styles.categoryText, { color: category === cat ? Verandah.primaryFg : colors.text }]}>{`${getServiceCategoryEmoji(cat)} ${cat}`}</Text>
+                  <Text style={[styles.categoryText, { color: category === cat ? Verandah.primaryFg : colors.text }]}>{cat}</Text>
                 </TouchableOpacity>
               )}
             </ScrollView>
@@ -481,120 +480,117 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 24,
+    padding: 16,
     paddingTop: VerandahLayout.screenPaddingTop,
   },
-  header: {
-    marginBottom: 24,
-    gap: 6,
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 12,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: Verandah.cardMuted,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
   },
   title: {
-    ...VerandahType.display,
+    ...VerandahType.bodyBold,
+    fontSize: 18,
     color: Verandah.textPrimary,
   },
-  subtitle: {
-    fontSize: 16,
-    marginTop: 4,
-    lineHeight: 22,
-  },
   form: {
-    padding: 24,
-    borderRadius: 24,
+    padding: 14,
+    borderRadius: 16,
     borderWidth: 1,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 10,
   },
   label: {
     fontSize: 11,
     fontWeight: '500',
-    letterSpacing: 1.5,
-    marginBottom: 8,
-    marginLeft: 4,
+    letterSpacing: 1.2,
+    marginBottom: 4,
+    marginLeft: 2,
   },
   input: {
-    height: 54,
+    height: 42,
     borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    fontSize: 16,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 14,
   },
   categoryGroupScroll: {
     flexDirection: 'row',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   categoryScroll: {
     flexDirection: 'row',
   },
   categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 14,
-    marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    marginRight: 6,
     borderWidth: 1,
   },
   categoryText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
   },
   detailsSection: {
     borderTopWidth: 1,
     marginTop: 4,
-    paddingTop: 20,
+    paddingTop: 12,
     marginBottom: 4,
   },
   detailsSectionLabel: {
     fontSize: 11,
     fontWeight: '500',
-    letterSpacing: 1.5,
-    marginBottom: 16,
-    marginLeft: 4,
+    letterSpacing: 1.2,
+    marginBottom: 10,
+    marginLeft: 2,
   },
   chipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
     borderWidth: 1,
   },
   chipText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
   },
   textArea: {
-    height: 120,
+    height: 72,
     borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    fontSize: 16,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    fontSize: 14,
   },
   footer: {
-    padding: 24,
+    padding: 16,
     borderTopWidth: 1,
   },
   saveButton: {
-    height: 58,
-    borderRadius: 18,
+    height: 46,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   saveButtonText: {
     color: Verandah.primaryFg,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '500',
   },
 });

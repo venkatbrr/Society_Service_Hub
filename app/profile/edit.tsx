@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
@@ -13,10 +14,34 @@ export default function EditProfileScreen() {
   const { user, refreshSession } = useAuth();
   
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
+  const [flatNumber, setFlatNumber] = useState(user?.user_metadata?.flat_number || '');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.user_metadata?.avatar_url || null);
   const [email, setEmail] = useState(user?.email || '');
   const [loading, setLoading] = useState(false);
 
   const colors = Verandah;
+
+  useEffect(() => {
+    async function loadProfileData() {
+      if (!user?.id) return;
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('flat_number, avatar_url, full_name')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (data) {
+          if (data.flat_number && !flatNumber) setFlatNumber(data.flat_number);
+          if (data.avatar_url && !avatarUrl) setAvatarUrl(data.avatar_url);
+          if (data.full_name && !fullName) setFullName(data.full_name);
+        }
+      } catch (e) {
+        console.error('Error fetching profile detail:', e);
+      }
+    }
+    loadProfileData();
+  }, [user?.id]);
 
   const handleSave = async () => {
     if (!fullName.trim()) {
@@ -26,45 +51,44 @@ export default function EditProfileScreen() {
 
     setLoading(true);
     try {
-      const updates: any = {};
-      let needsAuthUpdate = false;
+      const metadataUpdates: any = {
+        full_name: fullName.trim(),
+        flat_number: flatNumber.trim() || null,
+        avatar_url: avatarUrl,
+      };
 
-      if (fullName !== user?.user_metadata?.full_name) {
-        updates.data = { full_name: fullName.trim() };
-        needsAuthUpdate = true;
+      const authUpdates: any = {
+        data: metadataUpdates,
+      };
+
+      if (email.trim() && email.trim() !== user?.email) {
+        authUpdates.email = email.trim();
+      }
+
+      const { error: authError } = await supabase.auth.updateUser(authUpdates);
+      if (authError) throw authError;
+
+      // Update profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: fullName.trim(),
+          flat_number: flatNumber.trim() || null,
+          avatar_url: avatarUrl,
+        })
+        .eq('id', user?.id as string);
+
+      if (profileError) throw profileError;
+
+      await refreshSession();
+
+      if (authUpdates.email) {
+        Toast.show({ type: 'success', text1: 'Check your new email to confirm the change', text2: 'Profile updated' });
+      } else {
+        Toast.show({ type: 'success', text1: 'Profile updated' });
       }
       
-      if (email.trim() && email.trim() !== user?.email) {
-        updates.email = email.trim();
-        needsAuthUpdate = true;
-      }
-
-      if (needsAuthUpdate) {
-        const { error: authError } = await supabase.auth.updateUser(updates);
-        if (authError) throw authError;
-
-        // Also update profiles table explicitly just in case
-        if (updates.data?.full_name) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ full_name: fullName.trim() })
-            .eq('id', user?.id as string);
-            
-          if (profileError) throw profileError;
-        }
-
-        await refreshSession();
-
-        if (updates.email) {
-          Toast.show({ type: 'success', text1: 'Check your new email to confirm the change', text2: 'Name updated successfully' });
-        } else {
-          Toast.show({ type: 'success', text1: 'Profile updated' });
-        }
-        
-        router.back();
-      } else {
-        router.back();
-      }
+      router.back();
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Update failed', text2: error.message });
     } finally {
@@ -84,6 +108,17 @@ export default function EditProfileScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.inputGroup}>
+          <Text style={styles.label}>Profile Picture</Text>
+          <ImageUploader
+            currentImageUrl={avatarUrl}
+            onImageUploaded={(url) => setAvatarUrl(url)}
+            onImageRemoved={() => setAvatarUrl(null)}
+            subfolder="avatars"
+            aspectRatio={1}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
           <Text style={styles.label}>Full Name</Text>
           <TextInput
             style={styles.input}
@@ -92,6 +127,18 @@ export default function EditProfileScreen() {
             placeholder="Your full name"
             placeholderTextColor={colors.textTertiary}
             autoCapitalize="words"
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Flat / Unit Number</Text>
+          <TextInput
+            style={styles.input}
+            value={flatNumber}
+            onChangeText={setFlatNumber}
+            placeholder="e.g. A-402, B-101"
+            placeholderTextColor={colors.textTertiary}
+            autoCapitalize="characters"
           />
         </View>
 

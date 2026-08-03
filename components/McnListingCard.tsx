@@ -155,29 +155,14 @@ export const McnListingCard = React.memo(({
         )}
       </View>
 
-      {listing.description ? (
-        <Text style={[styles.description, { color: Verandah.textSecondary }]} numberOfLines={2}>
-          {listing.description}
-        </Text>
-      ) : null}
-
       <View style={styles.footer}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          {isOwner ? (
-            <TouchableOpacity
-              onPress={(e) => { e.stopPropagation(); onManage(listing.id); }}
-              style={styles.actionBtn}
-            >
-              <Text style={[styles.actionBtnText, { color: Verandah.accent }]}>Manage</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={() => onPress(listing.id)}
-              style={styles.actionBtn}
-            >
-              <Text style={[styles.actionBtnText, { color: Verandah.accent }]}>View details →</Text>
-            </TouchableOpacity>
-          )}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+          <TouchableOpacity
+            onPress={() => onPress(listing.id)}
+            style={styles.actionBtn}
+          >
+            <Text style={[styles.actionBtnText, { color: Verandah.accent }]}>View details →</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             onPress={handleShare}

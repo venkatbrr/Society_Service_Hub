@@ -206,12 +206,33 @@ export default function CarpoolDetailScreen() {
 
   const handleUpdateRequestStatus = async (requestId: string, newStatus: 'accepted' | 'rejected' | 'cancelled') => {
     try {
+      const targetReq = requests.find((r) => r.id === requestId);
+      const prevStatus = targetReq?.status;
+
       const { error } = await supabase
         .from('mcn_carpool_requests')
         .update({ status: newStatus })
         .eq('id', requestId);
 
       if (error) throw error;
+
+      if (carpool) {
+        let seatAdjustment = 0;
+        if (newStatus === 'accepted' && prevStatus !== 'accepted') {
+          seatAdjustment = -Math.abs(targetReq?.seats_requested || 1);
+        } else if (prevStatus === 'accepted' && newStatus !== 'accepted') {
+          seatAdjustment = Math.abs(targetReq?.seats_requested || 1);
+        }
+
+        if (seatAdjustment !== 0) {
+          const newSeats = Math.max(0, carpool.available_seats + seatAdjustment);
+          await supabase
+            .from('mcn_carpools')
+            .update({ available_seats: newSeats })
+            .eq('id', carpool.id);
+        }
+      }
+
       Toast.show({ type: 'success', text1: `Request ${newStatus}` });
       fetchDetails();
     } catch (err) {
@@ -410,7 +431,7 @@ export default function CarpoolDetailScreen() {
                 </Text>
               </View>
 
-              {!isOwner && ((carpool as any).contact_phone || carpool.creator_profile?.phone_number) && (
+              {(carpool.role_type === 'seeking' || !isOwner) && ((carpool as any).contact_phone || carpool.creator_profile?.phone_number) && (
                 <View style={styles.contactRow}>
                   <TouchableOpacity
                     style={[styles.iconBtn, { backgroundColor: '#D1FAE5' }]}
@@ -430,8 +451,35 @@ export default function CarpoolDetailScreen() {
           )}
         </BaseCard>
 
-        {/* Host Control Panel */}
-        {(isOwner || isCommunityLead) && (
+        {/* Public Confirmed Co-Passengers Section */}
+        {carpool.role_type === 'offering' && (() => {
+          const acceptedRequests = requests.filter((r) => r.status === 'accepted');
+          if (acceptedRequests.length === 0) return null;
+          return (
+            <BaseCard padding={12} style={styles.card}>
+              <Text style={[styles.controlHeader, { color: colors.textPrimary, marginBottom: 8 }]}>
+                Confirmed Co-Passengers ({acceptedRequests.length})
+              </Text>
+              {acceptedRequests.map((req) => (
+                <View key={req.id} style={[styles.reqCard, { borderColor: colors.border, marginBottom: 6 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary }}>
+                      {req.rider_name} (Flat {req.flat_number})
+                    </Text>
+                    <View style={{ backgroundColor: '#D1FAE5', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#059669' }}>
+                        {req.seats_requested} {req.seats_requested === 1 ? 'SEAT' : 'SEATS'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </BaseCard>
+          );
+        })()}
+
+        {/* Host Control Panel - Only for offering rides */}
+        {carpool.role_type === 'offering' && (isOwner || isCommunityLead) && (
           <BaseCard padding={12} style={styles.card}>
             <Text style={[styles.controlHeader, { color: colors.textPrimary }]}>Host Controls</Text>
             <View style={styles.hostActionsRow}>

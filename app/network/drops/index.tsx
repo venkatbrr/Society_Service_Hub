@@ -253,16 +253,6 @@ export default function FoodDropsCatalogScreen() {
         options={buildMcnHeaderOptions({
           title: 'Pre-Order Food',
           onBack: handleBack,
-          headerRight: () => (
-            user?.id ? (
-              <TouchableOpacity
-                onPress={() => router.push('/network/drops/add' as any)}
-                style={{ marginRight: 6 }}
-              >
-                <Ionicons name="add-circle-outline" size={24} color={colors.accent} />
-              </TouchableOpacity>
-            ) : null
-          ),
         })}
       />
 

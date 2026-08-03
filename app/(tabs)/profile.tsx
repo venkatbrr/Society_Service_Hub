@@ -182,7 +182,7 @@ export default function ProfileScreen() {
         <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
         <View style={styles.card}>
           <View style={styles.profileHeader}>
-            <Avatar name={String(user?.user_metadata?.full_name || 'User')} size={52} />
+            <Avatar name={String(user?.user_metadata?.full_name || 'User')} url={user?.user_metadata?.avatar_url || (user as any)?.avatar_url} size={52} />
             <View style={styles.profileInfo}>
               <Text style={styles.name}>
                 {user?.user_metadata?.full_name || 'User'}
@@ -190,6 +190,11 @@ export default function ProfileScreen() {
               <Text style={styles.email}>
                 {user?.email}
               </Text>
+              {user?.user_metadata?.flat_number ? (
+                <Text style={{ fontSize: 13, color: Verandah.textSecondary, marginTop: 2, fontWeight: '500' }}>
+                  Flat / Unit: {user.user_metadata.flat_number}
+                </Text>
+              ) : null}
               <View style={styles.roleBadge}>
                 <Text style={styles.roleBadgeText}>
                   You are: {roleLabel}
@@ -227,8 +232,6 @@ export default function ProfileScreen() {
           )}
         </TouchableOpacity>
 
-
-
         <TouchableOpacity
           onPress={() => router.push('/network/my-posts' as any)}
           style={styles.adminCard}
@@ -244,23 +247,6 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
         </TouchableOpacity>
 
-
-
-        {blocksEnabled && communityId ? (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="cube-outline" size={18} color={Verandah.textTertiary} />
-              <Text style={styles.sectionTitle}>Your {blockLabelLower}</Text>
-            </View>
-            <View style={styles.blockRow}>
-              <Text style={styles.blockValue}>Your {blockLabelLower}: {blockName}</Text>
-              <TouchableOpacity style={styles.blockAction} onPress={() => setBlockPickerVisible(true)}>
-                <Text style={styles.blockActionText}>{myBlockId ? 'Change' : 'Set'}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : null}
-
         <TouchableOpacity
           style={styles.signOutButton}
           onPress={handleSignOut}
@@ -271,23 +257,6 @@ export default function ProfileScreen() {
 
         <Text style={styles.version}>Society Service Hub v1.0.0</Text>
       </ScrollView>
-
-      <Modal visible={blockPickerVisible} transparent animationType="slide" onRequestClose={() => setBlockPickerVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: Verandah.card }]}>
-            <Text style={styles.modalTitle}>Set your {blockLabelLower}</Text>
-            {communityId ? <BlockPicker value={nextBlockId} onChange={setNextBlockId} communityId={communityId} label={blockLabel} hideAllResidents={true} /> : null}
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalSecondary} onPress={() => setBlockPickerVisible(false)}>
-                <Text style={styles.modalSecondaryText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalPrimary} onPress={saveMyBlock}>
-                <Text style={styles.modalPrimaryText}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }

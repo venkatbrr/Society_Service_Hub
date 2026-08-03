@@ -196,12 +196,15 @@ function RootLayoutNav() {
   );
 }
 
+import { PwaInstallBanner } from '../components/PwaInstallBanner';
+
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
         <NotificationProvider>
           <WebDesktopFrame>
+            <PwaInstallBanner />
             <RootLayoutNav />
             <Toast />
             <StatusBar style="dark" />

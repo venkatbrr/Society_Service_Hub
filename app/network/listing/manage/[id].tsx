@@ -77,6 +77,14 @@ export default function ManageListingScreen() {
   const [savingProduct, setSavingProduct] = useState(false);
   const listingModalScrollRef = useRef<ScrollView>(null);
 
+  useEffect(() => {
+    if (showListingModal) {
+      setTimeout(() => {
+        listingModalScrollRef.current?.scrollTo({ y: 0, animated: false });
+      }, 50);
+    }
+  }, [showListingModal]);
+
   const handleGoBack = () => {
     if (router.canGoBack()) {
       router.back();

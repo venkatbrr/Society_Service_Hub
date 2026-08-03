@@ -374,7 +374,18 @@ export default function ServiceDetailScreen() {
 
     setSaving(true);
     try {
-      const dateStr = editLastServiced.toISOString().split('T')[0];
+      const yyyy = editLastServiced.getFullYear();
+      const mm = String(editLastServiced.getMonth() + 1).padStart(2, '0');
+      const dd = String(editLastServiced.getDate()).padStart(2, '0');
+      const dateStr = `${yyyy}-${mm}-${dd}`;
+
+      const nextDueDate = new Date(editLastServiced);
+      nextDueDate.setMonth(nextDueDate.getMonth() + freq);
+      const nextYyyy = nextDueDate.getFullYear();
+      const nextMm = String(nextDueDate.getMonth() + 1).padStart(2, '0');
+      const nextDd = String(nextDueDate.getDate()).padStart(2, '0');
+      const nextDueStr = `${nextYyyy}-${nextMm}-${nextDd}`;
+
       const notesText = serializeNotesAndImages(editNotes, reminderImageDrafts);
       const validImages = reminderImageDrafts.filter(
         (item): item is ReminderImageDraft & { url: string } => !!item.url && item.title.trim().length > 0
@@ -388,7 +399,7 @@ export default function ServiceDetailScreen() {
         frequency_months: freq,
         notes: notesText,
         provider_id: selectedProvider?.id ?? null,
-        next_due_on: dateStr,
+        next_due_on: nextDueStr,
         image_url: firstImageUrl,
       };
 
