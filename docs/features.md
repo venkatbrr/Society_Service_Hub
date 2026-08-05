@@ -1,554 +1,478 @@
 # Features Reference
 
-> **AI agents must review this file before modifying any feature.**
-
-This document describes the current user-facing product surface, the screens involved, the active tables touched, key business rules, navigation flows, role-based access, and live integrations.
-
----
-
-## App Summary
-
-Society Service Hub currently ships six main experiences across five bottom tabs: trusted provider discovery (Help), community service-visit coordination (Help), a local business directory and social sharing surface (MCN), activation-gated community funds (Community), personal service reminders (Profile), and a community SOS surface — emergency numbers + blood donors (Community). Residents use the main tabs for everyday workflows, community leads manage local operations such as funds, optional block scoping, and emergency directories, and platform admins review community requests plus funds-access requests.
-
-The web app is configured as a fully installable Progressive Web App (PWA) with offline capabilities, utilizing an optimized service worker cache registration and viewport height styling to mimic a native app experience on mobile browsers.
-
-The entire home screen uses a **compact, WhatsApp chat-tile inspired UI density** where provider cards, visit cards, maintenance banners, search bars, category filters, segment controls, and headers are all vertically compact to maximize visible content per screen. Provider tiles follow a single-row horizontal layout (avatar · name · inline meta · bookmark) instead of multi-section cards.
-
-The app surface is narrower than the backend schema by design. Cross-community federation tables and RPCs already exist, but the current UI remains centered on the resident's home community, with no exposed federation controls or cross-community browsing screens yet.
+> Per-screen contract for every user-facing surface: purpose, tables, business rules, navigation, and roles.
+> **Schema columns are not repeated here** — [`architecture.md`](architecture.md) §4 owns those. Design rules live in [`verandah.md`](verandah.md). Coding rules live in [`CLAUDE.md`](CLAUDE.md).
 
 ---
 
-## Authentication & Onboarding
+## Screen index
 
-### Login (`app/login.tsx`)
+Jump straight to what you need; skip the rest.
 
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Sign up or sign in via email/password or Google OAuth |
-| **Tables** | Writes: `auth.users` through Supabase Auth. Trigger auto-creates `profiles` row. |
-| **Business rules** | Email must contain `@`. Sign-up requires full name plus matching password and confirm password. Flat number is not collected on the first sign-up screen; `profiles.flat_number` stays optional and can be provided later in flows that ask for it. If sign-up is attempted with an already-registered email, the form switches to sign-in mode and prompts the user to sign in or use Forgot password. Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection (does not silently reuse the last Google account). |
-| **Navigation** | Entry point for unauthenticated users. Links to `/forgot-password`. Post-auth routing is handled by the root layout. |
-| **Roles** | N/A (pre-auth) |
-| **Integrations** | Supabase Auth, Google Sign-In |
+| Domain | Screens | Section |
+|--------|---------|---------|
+| Auth & onboarding | login, forgot-password, community-select, community-request(+submitted), community-join-block | [§1](#1-authentication--onboarding) |
+| Help tab | providers, service visits | [§2](#2-help-tab--providers--visits) |
+| Saved tab | favorites | [§3](#3-saved-tab) |
+| MCN tab | hub, business, drops, carpools, parents, schools, posts, orders | [§4](#4-mcn--my-community-network) |
+| Community tab | funds status, blocks, SOS, residents | [§5](#5-community-tab) |
+| Funds | list, add, detail, transactions, access request | [§6](#6-funds) |
+| Profile tab | profile, edit, reminders, hire feedback | [§7](#7-profile-tab) |
+| Notifications | feed | [§8](#8-notifications) |
+| Platform admin | web console (5 pages) | [`platform-admin.md`](platform-admin.md) |
+| Access matrix | who can do what | [§9](#9-role-based-access-matrix) |
+| Integrations | external services per screen | [§10](#10-external-integrations) |
 
-### Community Select (`app/community-select.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Join an existing community by code or start the request flow for a new one |
-| **Tables** | Writes: `profiles` via `join_community_by_code(p_code)` RPC |
-| **Business rules** | Join code is a 6-character uppercase alphanumeric code. Joining is immediate; there is no resident approval queue. Successful joins call `refreshSession()` so auth state and `communityId` update before redirecting. If the joined community has both funds and blocks enabled, the screen sends the user to block selection before the main app. |
-| **Navigation** | From root redirect when authenticated users have no `community_id` and no active request. To `/community-join-block` after join when block onboarding applies, otherwise `/(tabs)`, or `/community-request` for a new request. |
-| **Roles** | Any authenticated user |
-
-### Community Join Block (`app/community-join-block.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Capture flat number and first block/tower assignment immediately after a resident joins a block-enabled community |
-| **Tables / RPCs** | Writes: `profiles` table updates (`flat_number`, `block_id`) |
-| **Business rules** | This handoff appears only after a successful join into a community where `blocks_enabled` is true. Entering a flat number and picking a block/tower is strictly mandatory; users cannot skip this screen. The flat number is normalized (uppercase, spaces/hyphens removed) on blur. The block/tower is selected via a dropdown. The screen title and subtitle use the community's `block_label` (Block or Tower) for dynamic labeling. |
-| **Navigation** | From `/community-select` after successful join. To `/(tabs)` on save. |
-| **Roles** | Any authenticated resident joining a block-enabled community |
-
-### Community Request (`app/community-request.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Submit a new community creation request for platform review |
-| **Tables** | Writes: `community_requests` through `submit_community_request(...)` RPC |
-| **Business rules** | Required: community name, city, pincode, flat or house number, and accuracy confirmation. Optional: area, address, community type, approximate units. The requester flat or house number input is formatted in uppercase and strips spaces and hyphens on blur to keep approval data consistent. New requests enter `pending` status. |
-| **Navigation** | From `/community-select`. To `/community-request-submitted` on success. |
-| **Roles** | Any authenticated user |
-
-### Community Request Submitted (`app/community-request-submitted.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Status screen for users who have an active community request |
-| **Tables** | Reads: `community_requests`, `communities` |
-| **Business rules** | Root routing lands here when `activeCommunityRequest` exists. `pending` shows a waiting state, `rejected` shows the reason and restart options, and approved users can refresh into the app after their profile is updated. |
-| **Navigation** | Reached from `/community-request` and root redirects. |
-
-### Forgot Password (`app/forgot-password.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Request a password reset email |
-| **Tables** | None directly; Supabase Auth handles the reset flow |
-| **Business rules** | Email must contain `@`. Reset URL uses the `societyservicehub://reset-password` deep link scheme. |
-| **Navigation** | From `/login`. Returns users to `/login` after success. |
+**Role vocabulary used throughout**: *Resident* = any community member · *Lead* = `president` or `vice_president`, checked via `isCommunityLead` · *Platform admin* = `app_role = 'admin'` with no community. The string `community_lead` is a dead legacy value — never test for it.
 
 ---
 
-## Main App Tabs
+## 1. Authentication & onboarding
 
-### Tab 1: Help - Services Dashboard (`app/(tabs)/index.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Main discovery hub with two switchable segments: Trusted Providers and Service Visits |
-| **Tables** | Reads: `service_providers`, `favorites`, `provider_hires`, `service_visits`, `visit_joiners`, `profiles`, `events`, `event_transactions` |
-| **Business rules** | Providers are sorted by `avg_rating` descending. The provider filter uses a two-level grouped navigation: a group row (All Services, Home Support, Repairs & Maintenance, Healthcare & Wellness, Personal Care, Transport & Vehicle, Events & Functions, Education & Classes, Government Services, Other) followed by a category chip row that shows only categories within the selected group. Selecting a group without a specific category filters the provider query to all categories in that group using an `IN` clause, so Events + All returns only Photography, Decoration, Catering, etc. and never shows Maid. Selecting a specific category adds a single equality filter. Service Visits split into Upcoming, Recent (Past up to 30 days), and Archived (older than 30 days) buckets based on date, with cancelled visits moving to Past/Archived immediately regardless of planned date. Past/Archived visits do not display an `upcoming` status badge even if a stale row still has `status = 'upcoming'`. The screen preserves the active segment and visit sub-tab in route params when users drill into details and return. Provider and visit data are refreshed whenever the screen regains focus so newly added records appear immediately after returning. The header includes an Invite Neighbors action beside notifications that opens the native share sheet with the current community join code. The home stack also shows `UpcomingServicesCard` and `ActiveFundTeaser` above the main list. Provider search and visit search are debounced (300 ms) to avoid firing Supabase queries on every keystroke. The `provider_hires` query is scoped to the current `communityId`. The `visit_joiners` query is scoped to the ID set of the current page of visits only. On the web target, swipe-down-to-refresh is enabled via a custom touch gesture hook (`useWebPullToRefresh`) that triggers dynamic list data reloading when dragging down at scroll offset 0. |
-| **Navigation** | To `/provider/[id]`, `/provider/add`, `/visits/[id]`, `/visits/add`, and `/notifications` |
-| **Roles** | All community members can browse and create providers or visits |
-| **Components** | `UpcomingServicesCard`, `ActiveFundTeaser`, `ProviderCard`, `VisitCard`, `SearchBar`, `CategoryFilter`, `EmptyState` |
-| **State additions** | `selectedGroupCategories: string[] \| null` — set by `CategoryFilter` via `onSelectGroupCategories` callback; used to build the `IN` clause on the provider query when a group (but not specific category) is active. |
-| **Compact UI** | The entire Help screen uses a compact, information-dense layout inspired by WhatsApp chat tiles. The header title uses a reduced serif font (22px), header action buttons are 36px circles (down from 44px), the Providers/Visits segmented control uses 6px vertical padding (down from 10px), the search bar is 36px tall (down from 44px), category filter chips use 4px vertical padding (down from 8px), and the FAB is 56px (down from 64px). Provider cards are redesigned as single-row horizontal tiles with avatar, name+verified badge, and an inline meta row (category · ★ rating · hire count) all on one compact card. Visit cards use reduced padding (10px), smaller avatars (30px), and smaller text sizes. The `UpcomingServicesCard` zero-state is a single-row inline banner instead of a multi-row card with full-width CTA button. |
-
-### Tab 2: Saved - Favorites (`app/(tabs)/favorites.tsx`)
+### Login — `app/login.tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Show the current user's saved providers |
-| **Tables** | Reads and writes: `favorites`, joined with `service_providers` |
-| **Business rules** | Favorites are provider-only. Unfavoriting removes the item from the list immediately. `useFocusEffect` refreshes the screen whenever the tab regains focus. On the web target, swipe-down-to-refresh is enabled via the custom `useWebPullToRefresh` hook. |
-| **Navigation** | To `/provider/[id]` |
-| **Roles** | Personal favorites only |
+| **Purpose** | Sign up or sign in with email/password or Google |
+| **Tables** | `auth.users` via Supabase Auth; a trigger auto-creates the `profiles` row |
+| **Rules** | Email must contain `@`. Sign-up requires full name plus matching password and confirmation. Flat number is **not** collected here — `profiles.flat_number` stays optional and is captured later by flows that need it. Signing up with an already-registered email flips the form to sign-in mode and suggests Forgot password. Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection rather than silently reusing the last account. |
+| **Navigation** | Entry point when unauthenticated. Links to `/forgot-password`. Post-auth routing belongs to the root layout, which restores any saved deep-link target. |
+| **Integrations** | Supabase Auth, Google Sign-In (needs a dev build — not Expo Go) |
 
-### Tab 3: Community (`app/(tabs)/community.tsx`)
+### Forgot password — `app/forgot-password.tsx`
 
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Consolidated building-level view: funds section, residents and SOS shortcuts, and community info in one tab |
-| **Tables / RPCs** | Reads: `communities`, `events`, `event_transactions`, `fund_roles`, `profiles`, `funds_access_requests`; RPCs: `get_my_community_funds_overview()`, `withdraw_funds_access_request(...)` |
-| **Business rules** | Section order is fixed: funds, residents tile, SOS tile, community info. Top hero shows only the community name. The pulse/"Going around the building" section is intentionally removed from this tab. Funds are activation-gated: when `funds_enabled = false`, the section renders request/status cards (request CTA, pending, rejected retry, and previously-active note) instead of fund tiles. When `funds_enabled = true`, the section renders one merged Community funds card that includes fund health summary and the "Open community funds" action to route to the dedicated funds page. Community info includes a dedicated community-code tile with an Invite neighbors share action (same copy pattern as Home tab invite). Funds request CTA entry is only in this section. |
-| **Navigation** | To `/funds`, `/funds/[id]`, `/funds/add`, `/residents?returnTo=community`, and `/sos` |
-| **Roles** | All residents can view; create-fund action remains role-gated exactly as before. |
+Sends a Supabase reset email. Email must contain `@`. Reset URL uses the `societyservicehub://reset-password` deep-link scheme. Returns to `/login`.
 
-### SOS and Emergency (`app/sos/index.tsx`, `app/sos/donor.tsx`, `app/sos/manage-contacts.tsx`)
+### Community select — `app/community-select.tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Fast emergency surface for one-tap calling: emergency directory + blood donor registry |
-| **Tables** | Reads/writes: `blood_donors`, `emergency_contacts`, `profiles` |
-| **Business rules** | Blood donor listing is opt-in only. Residents can register one donor profile per community with blood group, phone, availability toggle, and short note, then edit or delete it any time. Donor listing defaults to only available donors with a blood-group filter and optional show-all toggle. Display names are resolved from `profiles.full_name` at read time so names stay current. Emergency numbers combine global defaults (`community_id IS NULL`) with community-specific rows, grouped by category and sorted by `sort_order` then `name`. Every dial action uses a call-confirm dialog before opening the phone dialer. |
-| **Navigation** | Entry shortcut from Community tab to `/sos`; donor editor at `/sos/donor`; lead/admin management at `/sos/manage-contacts` |
-| **Roles** | All residents can view emergency numbers and donors plus maintain their own donor profile. Only community leads or platform admins can access `/sos/manage-contacts`. Platform admins can also manage global emergency rows. |
-| **Design system** | Uses Verandah tokens, `BaseCard`, `Avatar`, `EmptyState`, and `Ionicons`; no gradients/shadows. |
+| **Purpose** | Join an existing community by code, or start a new-community request |
+| **RPC** | `join_community_by_code(p_code)` |
+| **Rules** | 6-character uppercase alphanumeric code. Joining is **immediate — there is no resident approval queue**. On success the screen calls `refreshSession()` so `communityId` is populated before redirecting. If the joined community has `blocks_enabled = true`, the user is routed to `/community-join-block` first. |
+| **Navigation** | → `/community-join-block` or `/(tabs)`; → `/community-request` for a new community |
 
-## Funds - Activation
-
-Residents in communities with `funds_enabled = false` can submit a funds-support request from `/funds-access/request`. The Community tab funds section renders one of the activation states:
-
-- State B: CTA card with "Request funds support"
-- State C: pending review card (requester name/date/phone) with withdraw action for requester only
-- State D: rejected status with reason and "Request again"
-- State E: previously active note after revocation
-
-Platform admin approval promotes one designated resident to `community_lead` and enables funds in the same transaction. Revocation disables funds and blocks while preserving ledger history.
-
-### Funds Access Request (`app/funds-access/request.tsx`)
+### Community join block — `app/community-join-block.tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Submit the resident-side request that asks platform admins to activate funds for a community |
-| **Tables / RPCs** | Writes via RPC: `submit_funds_access_request(...)`; refreshes auth-backed status from `get_funds_access_status(...)` |
-| **Business rules** | Contact name and phone are required. Purpose is optional and capped at 280 characters. After a successful submit, the user is returned to the Community tab where the activation CTA is replaced by the pending-review state. |
-| **Navigation** | From the Community tab funds CTA. Returns to `/(tabs)/community` on success. |
-| **Roles** | Any resident in a community where funds are inactive |
+| **Purpose** | Capture flat number and block/tower right after joining a block-enabled community |
+| **Tables** | Writes `profiles.flat_number` and `profiles.block_id` |
+| **Rules** | Appears only when `blocks_enabled = true`. **Mandatory — cannot be skipped.** Flat number normalizes to uppercase with spaces and hyphens stripped on blur. Block is chosen from a dropdown. All copy uses the community's `block_label` ("Block" or "Tower"). |
+| **Navigation** | From `/community-select` → `/(tabs)` on save |
 
-## Blocks / Towers (Optional)
-
-Blocks (or towers — the label is configurable per community) are visible when `blocks_enabled = true`. They are **decoupled from funds activation**: a platform admin can seed blocks at community creation time before any funds flow exists. Each community stores a `block_label` column (`Block` or `Tower`) that controls how the concept is named across all resident-facing UI.
-
-- Admin seeding: during community approval, the platform admin can optionally add block/tower names and select the label. This sets `blocks_enabled = true` and inserts the block rows at creation time.
-- Join flow: after `join_community_by_code`, users are routed to `/community-join-block` when `blocks_enabled = true` (regardless of funds status) to mandatory enter their flat number and select their block/tower.
-- Profile override: Profile tab shows "Your block/tower" row and block picker modal only when blocks are active.
-- Community lead setup: `/community/blocks` allows block toggling, create/rename/archive, and scoped management. All text uses the community's configured label.
-- Contribution flow: contributor options are loaded through `list_eligible_contributors_for_collector(...)` so block in-charges only see eligible residents.
-- Label management: platform admins can change the block label from the community detail screen in the admin console.
-
-### Community Blocks Management (`app/community/blocks.tsx`)
+### Community request — `app/community-request.tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Let a community lead enable or disable block/tower scoping and manage the roster |
-| **Tables / RPCs** | Reads: `profiles`, `fund_roles`; RPCs: `list_community_blocks`, `set_community_blocks_enabled`, `add_community_block`, `rename_community_block`, `archive_community_block` |
-| **Business rules** | Disabling blocks removes active block scoping for residents and block in-charges but preserves historical fund contributions. The screen surfaces resident counts and in-charge counts per block to support safe cleanup and archival decisions. Re-adding a previously archived block name restores that archived block instead of failing with a duplicate-name error. All text labels use the community's `block_label` from AuthContext. |
-| **Navigation** | Linked from community-management flows. |
-| **Roles** | Community lead only |
+| **Purpose** | Submit a new community for platform review |
+| **RPC** | `submit_community_request(...)` → `community_requests` |
+| **Rules** | Required: name, city, pincode, flat/house number, accuracy confirmation. Optional: area, address, community type, approximate units. Flat number normalizes to uppercase without spaces or hyphens on blur so approval records stay clean. New requests enter `pending`. |
+| **Navigation** | → `/community-request-submitted` |
 
-### Tab 4: Profile - Personal Hub (`app/(tabs)/profile.tsx`)
+### Community request submitted — `app/community-request-submitted.tsx`
 
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Account-level hub for user identity, personal service reminders, recent personal service history, and sign-out |
-| **Tables / RPCs** | RPCs: `get_my_due_soon_count()`, `get_my_recent_service_history(p_limit)` |
-| **Business rules** | Profile now avoids building-level sections. Community metadata and residents-directory access are rendered in the Community tab only. The settings card shows the user's community role and, when applicable, a separate fund access badge (Treasurer or Collector) so fund permissions are explicit. |
-| **Navigation** | To `/services` and `/login` after sign-out |
-| **Roles** | Personal profile only |
-
-### Edit Profile (`app/profile/edit.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Allow residents to edit their full name and email address |
-| **Tables / RPCs** | Writes: `auth.users` via `supabase.auth.updateUser` and `profiles` |
-| **Business rules** | Users can update their name directly. Updating their email sends a verification link to the new address before it takes effect. Validation prevents empty names. |
+Status screen for an active request. Root routing lands here whenever `activeCommunityRequest` exists. `pending` shows a waiting state; `rejected` shows the reason with restart options; approved users refresh into the app once their profile updates.
 
 ---
 
-## Community Directory
+## 2. Help tab — providers & visits
 
-### Residents Directory (`app/residents.tsx`)
+`app/(tabs)/index.tsx` — one screen, two segments.
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Standalone community directory screen linked from the Community tab |
-| **Tables** | Reads via RPC: `get_residents_directory(p_include_phone)`; writes via RPC: `community_lead_remove_resident(p_target_profile_id)` |
-| **Business rules** | Directory shows active residents only. Grouped by block if `blocks_enabled` is true. Phone numbers and emails are shown below names. Phone numbers are exposed only to community leads and platform admins. Community leads can open a resident sheet and remove non-lead residents. The screen supports a `returnTo` param to return to the caller tab context. |
-| **Navigation** | Standalone route: `/residents` |
-| **Roles** | All residents can view. Community leads can remove non-lead residents. Platform admins can view phone numbers. |
+| **Tables** | `service_providers`, `favorites`, `provider_hires`, `service_visits`, `visit_joiners`, `profiles`, `events`, `event_transactions` |
+| **Components** | `UpcomingServicesCard`, `ProviderCard`, `VisitCard`, `SearchBar`, `CategoryFilter`, `EmptyState` |
+| **Shared rules** | Both segments use 300 ms debounced search. Both refetch on focus so newly created records appear on return. The active segment and visit sub-tab are preserved in route params across drill-in and back. `provider_hires` is scoped to `communityId`; `visit_joiners` is scoped to the current page's visit IDs. Web uses `useWebPullToRefresh` since `RefreshControl` is a native no-op. The header carries an Invite-neighbors share action that sends the community join code. |
+| **Compact density** | The whole screen follows a WhatsApp chat-tile layout: 22 px header title, 36 px circular header buttons, 6 px segment padding, 36 px search bar, 4 px category-chip padding, 56 px FAB. Provider cards are single-row tiles (avatar · name + verified badge · inline meta row of category · ★ rating · hire count · bookmark). Visit cards use 10 px padding and 30 px avatars. New cards on this screen must match. |
+
+### Providers segment
+
+| Aspect | Details |
+|--------|---------|
+| **Rules** | Sorted by `avg_rating` descending. Two-level filter: a group row (All Services, Home Support, Repairs & Maintenance, Healthcare & Wellness, Personal Care, Transport & Vehicle Care, Events & Occasions, Education & Coaching, Government & Docs, Other) then a category chip row scoped to the active group. Selecting a group applies `.in('category', groupCategories)`; selecting a category applies `.eq('category', …)`. Groups come from `CATEGORY_GROUPS` in `constants/categories.ts`. |
+| **State** | `selectedCategory: string \| null` and `selectedGroupCategories: string[] \| null`, both reset on tab switch and search clear, both in `fetchProviders` dependencies |
+
+### Service visits segment
+
+| Aspect | Details |
+|--------|---------|
+| **Rules** | Rendered as a `SectionList` grouped by category — each header shows the category emoji (`getServiceCategoryEmoji`), name, and a count badge; sections sort busiest-first and empty categories are hidden. Sub-tabs: Upcoming, Recent (past ≤30 days), Archived (>30 days). Cancelled visits move to Past/Archived immediately regardless of planned date. Past and Archived rows never show an `upcoming` badge even when a stale row still carries that status. |
+
+### Add provider — `app/provider/add.tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Tables** | Writes `service_providers`; optionally `provider_personal_notes` |
+| **Rules** | Required: name, phone, category. Categories come from `constants/categories.ts` via the same grouped picker as the Help tab. Category-specific structured fields come from `constants/providerDetails.ts` and land in `service_providers.details` (JSONB). No salary input — pricing goes in the freeform description. A private "Personal note" can be captured at save time and is visible only to its author. Phone accepts flexible formats (including country code), then normalizes to a validated 10-digit mobile before duplicate check, fraud check, and insert. **A duplicate normalized phone in the same community routes the user to the existing provider instead of creating a row.** Creation runs the `fraud-check` Edge Function and stores the verdict in `service_providers.fraud_status` (and a row in `fraud_verdicts`). |
+| **Roles** | Any resident |
+
+### Provider detail — `app/provider/[id].tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Tables** | Reads/writes `service_providers`, `favorites`, `ratings`, `provider_hires`, `provider_reports`, `provider_personal_notes` |
+| **Rules** | Ratings are 1–5 stars, one upserted row per user. Review text can be edited without re-tapping stars when a rating already exists. Community reviews list reviewer name, optional flat number, stars, and text — collapsed to the first 3 with a Load more / Show less toggle. Contact actions log a hire and schedule the local 24-hour feedback reminder. A private Personal note editor replaces the old history card. Experience Details stay hidden here. Residents get **Report provider** with fixed reasons (Wrong info, Spam, Inappropriate, No longer available, Other), once per provider; reports notify leads. Leads and platform admins get **Delete provider** instead of report. |
+| **Navigation** | From Help, Saved, Visit Detail, and the reminder technician lookup |
+| **Integrations** | Phone dialer, WhatsApp, native Share |
+
+### Add visit — `app/visits/add.tsx`
+
+Required: title, category, provider context, date. Categories use the same two-level grouped picker. Users either link an existing provider ("Select existing provider") or type a manual name and phone; manual phone/WhatsApp accept flexible input but normalize to validated 10-digit mobiles. Dates are stored as local calendar dates (`YYYY-MM-DD`) to avoid timezone rollover. New visits start `upcoming`.
+
+### Visit detail — `app/visits/[id].tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Tables / RPC** | `service_visits`, `visit_joiners`, `profiles`; RPC `get_visit_joiners` |
+| **Rules** | Joiners can add a flat number and note; the join modal seeds the flat number from `profile.flat_number` and normalizes edits on blur. **Only the creator** changes status (`upcoming` → `in_progress`/`completed`/`cancelled`) or reschedules an upcoming visit. Rescheduling updates date/time and emits a `visit_rescheduled` notification to other residents. Mark-complete, reschedule, and cancel are visible only while the visit is `upcoming`. Date parsing is local date-only so status classification is timezone-stable. Back navigation restores prior Help tab state via params. |
+
+### Hire feedback — `app/hire-feedback/[hireId].tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Tables / RPCs** | Reads `provider_hires`, `service_providers`; reads/writes `hire_feedback`; RPCs `record_hire_feedback`, `should_show_public_rating_nudge`, `mark_public_rating_nudge` |
+| **Rules** | Opened by a local notification 24 h after a hire. Records `positive`, `negative`, or `skipped` with an optional 280-char note. Feedback is **strictly private and user-scoped**. A `positive` signal can trigger a public-rating prompt exactly once per provider, gated by existing rating plus nudge memory. `negative` and `skipped` never trigger it. **Public ratings are never auto-created** — only an explicit "Rate now" continues to `/provider/[id]`. |
+| **Integrations** | `expo-notifications` local scheduling; deep link via `data.kind = 'hire_feedback'` |
 
 ---
 
-## Platform Admin Console (Web Application)
+## 3. Saved tab
 
-The Platform Admin Console is a standalone single-page web application (`admin-dashboard/`) built using vanilla HTML/CSS/JS with Supabase JS and Chart.js CDNs. It allows platform admins to manage community-level structures, onboarding, and fund approvals.
-
-In the mobile app, platform admins are automatically redirected to the `/admin-redirect` screen which informs them that the portal has moved and directs them to the web URL.
-
-### Dashboard (`#dashboard`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | High-level metrics visualization and provider category breakdowns per community |
-| **Tables / RPCs** | Calls RPC: `platform_get_community_dashboard`, `platform_get_providers_by_category` |
-| **Business rules** | Admins select a community from a dropdown. It displays 8 metric cards: Residents, Service Providers, Scheduled Visits (Upcoming), Completed Visits, Past Visits (last 30 days), Hires/Contacts (total and monthly), Orders Placed (marketplace orders with pending/fulfilled breakdown), and Funds Health (collected vs spent). A horizontal bar chart visualizes service providers by category, and collapsible cards list the top 3 rated providers for each category. |
-
-### Funds Requests (`#funds-requests`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Review pending/decided funds-access requests, designate lead on approval, or reject with reason |
-| **Tables / RPCs** | Reads: `funds_access_requests`, `communities`, `profiles`; writes via RPC: `platform_approve_funds_access_request`, `platform_reject_funds_access_request` |
-| **Business rules** | Approval requires selecting an active resident to designate as the community lead (defaults to requester). Rejection supports a 280-char reason. Re-evaluates local lists and updates status inline. |
-
-### Community Approvals (`#approvals`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Review and act on pending community creation requests |
-| **Tables** | Reads: `community_requests`, `profiles`; writes via RPC: `platform_approve_community_request`, `platform_reject_community_request`; audit RPC: `set_audit_actor` |
-| **Business rules** | Approval creates the community, generates its join code, and assigns the requester to that community as `resident`. The admin can optionally seed blocks/towers at approval time by adding block names and selecting a label (Block or Tower); when blocks are provided, the community is created with `blocks_enabled = true` and the corresponding `block_label`. Rejection accepts an optional rejection reason. Reviewer cards show requester name, phone, email, flat number, and submitted location details. |
-
-### Communities Directory and Detail (`#communities`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Inspect communities, see membership counts, and manage local community leads, blocks/towers, and residents |
-| **Tables** | Reads: `communities`, `profiles`; writes via RPC: `platform_soft_remove_resident`, `platform_set_community_lead`, `platform_remove_community_lead`, `platform_set_blocks_enabled`, `platform_set_block_label`, `platform_add_community_block`, `platform_archive_community_block`, `platform_remove_block_in_charge`, `platform_revoke_funds_access` |
-| **Business rules** | Platform removals are soft deletes on the profile, reset the role to resident, and preserve last-lead protection. Detail screen includes funds status, revoke action, lead set/remove controls, block list management with block/tower label toggle, and block in-charge removals across funds. The top identity card shows active community leads. |
+`app/(tabs)/favorites.tsx` — the user's saved providers from `favorites` joined to `service_providers`. Provider-only (no business targets). Unfavoriting removes the row immediately. `useFocusEffect` refreshes on return; web uses `useWebPullToRefresh`.
 
 ---
 
-## Service Providers
+## 4. MCN — My Community Network
 
-### Add Provider (`app/provider/add.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Register a trusted service provider for the current community |
-| **Tables** | Writes: `service_providers`; optionally writes: `provider_personal_notes` (creator's private note) |
-| **Business rules** | Required: name, phone, and category. Categories come from `constants/categories.ts` (including options such as Photography, Decoration, Notary, Babysitter). The category picker is grouped into high-level sections (for example Home Support, Repairs & Maintenance, Events & Functions) to make long service lists easier to navigate before choosing a specific category. The form supports category-specific structured details via `constants/providerDetails.ts` but omits salary input; pricing can be written in the freeform description placeholder (for example service-wise charges). Flat/block note input is removed from add-provider. A private "Personal note" field can be filled at save time and is stored only for the current resident. Phone accepts flexible input formats (for example with country code), then normalizes to a validated 10-digit mobile number before duplicate checks, fraud checks, and insert. If a provider with the same normalized phone already exists in the same community, the form explains that the phone is already linked and routes users to that existing provider instead of creating a duplicate row. Provider creation runs the fraud check helper before insert and stores the resulting `fraud_status`. |
-| **Navigation** | From the Help tab add action. Opens the newly created provider after a successful save; duplicate phone matches open the existing provider. |
-| **Roles** | All residents can add providers |
-
-### Provider Detail (`app/provider/[id].tsx`)
+### 4.1 Hub — `app/(tabs)/network.tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Show provider profile, ratings, save state, contact actions, report, and lead/admin-only deletion |
-| **Tables** | Reads: `service_providers`, `favorites`, `ratings`, `provider_hires`, `provider_reports`, `provider_personal_notes`; writes: `favorites`, `ratings`, `provider_hires`, `provider_reports`, `provider_personal_notes` |
-| **Business rules** | Ratings are 1-5 stars with one upserted rating per user. Users can submit or edit review text without re-tapping stars when an existing rating already exists. Community reviews are listed with reviewer name, optional flat number, star rating, and review text for community-visible ratings. The list is collapsed to the first 3 items by default with a Load more/Show less toggle for readability. Contact actions increment provider hire history and schedule a local 24-hour feedback reminder. The old private history card is replaced with a private "Personal note" editor, and the saved note is visible only to the same resident who wrote it. Experience Details remain hidden on this screen. All residents see a "Report provider" button with predefined reason categories (Wrong info, Spam, Inappropriate, No longer available, Other); each user can report a provider once. Community leads and platform admins see a "Delete provider" button instead. Reports notify community leads for review. |
-| **Navigation** | From the Help tab, Favorites, Visit Detail, and Service Reminder technician lookup |
-| **Integrations** | Phone, WhatsApp, native Share |
+| **Purpose** | Landing screen for the resident-to-resident economy |
+| **Tables** | Count-only reads: `mcn_listings`, `mcn_preorder_drops`, `mcn_carpools`, `mcn_parent_corner`, `schools`, `mcn_posts` |
+| **Rules** | Two quick actions (My Orders, My Submissions) above four section cards, each showing a live count fetched in a single `Promise.all`. The schools count adds curated `WEST_HYDERABAD_SCHOOLS` to community rows. Counts refresh on focus and on pull-to-refresh. |
+| **Cards** | Pre-order Food & Community Business → `/network/drops` (open drops + active listings) · Community Carpooling → `/network/carpools` (active rides) · Parent Corner → `/network/parents` (children listed) · Schools Catalog & Compare → `/network/schools` (schools cataloged) |
 
-### Hire Feedback (Private) (`app/hire-feedback/[hireId].tsx`)
+### 4.2 Business listings — `app/network/business.tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Collect a resident's private post-visit signal after a logged hire |
-| **Tables / RPCs** | Reads: `provider_hires`, `service_providers`; reads/writes: `hire_feedback`; RPCs: `record_hire_feedback`, `should_show_public_rating_nudge`, `mark_public_rating_nudge` |
-| **Business rules** | A local notification (24 hours after hire) opens this flow. Resident can record `positive`, `negative`, or `skipped`, with an optional 280-char note for `positive`/`negative`. Feedback is strictly private and user-scoped. A `positive` signal can trigger a same-screen public-rating prompt exactly once per provider, gated by existing rating + nudge memory. `negative` and `skipped` never trigger the public-rating prompt. Public ratings are never auto-created; only explicit `Rate now` continues to provider rating UI. |
-| **Navigation** | Notification deep link route from `data.kind = 'hire_feedback'`; `Rate now` continues to `/provider/[id]` |
-| **Integrations** | `expo-notifications` local scheduling and response handling |
+| **Purpose** | Directory of resident-run businesses |
+| **Tables** | `mcn_listings`, `mcn_business_categories`, `mcn_products`, `ratings`, `profiles` |
+| **Rules** | Community-scoped with 300 ms debounced name search. A horizontal category chip bar filters by `category_id`; tapping the active chip returns to All. Listings are grouped by category into collapsible sections, with active listings sorted ahead of paused ones and inactive listings kept visible behind an inactive badge. Cards show summary only (image, owner, category badge) — offerings and prices appear after opening the listing. |
+| **Roles** | All residents view and create. Owner or lead can manage and delete. |
+
+### Add listing — `app/network/listing-add.tsx`
+
+Business name required (max 80). Category required, from the `mcn_business_categories` lookup. Description optional (max 280). Contact phone required, normalized to 10 digits. Navigates to the manage screen on success.
+
+### Listing detail & order — `app/network/listing/[id].tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Tables** | `mcn_listings`, `mcn_business_categories`, `mcn_products`, `mcn_orders`, `mcn_order_items`, `profiles` |
+| **Rules** | Offerings split by `item_type` into Products and Services, each row showing name, optional description, availability, and either `₹ amount / unit` or **"Price on request"** when `price IS NULL`. Quantity steps are **0.5 for kg/litre and 1 for piece/dozen/box/pack**, minimum 0. The cart shows line items and a subtotal; the note is optional. The action button either places a new order or updates an existing pending order (deletes old items, inserts new). Direct Call and WhatsApp links. |
+| **Roles** | Any resident except the owner can order. Owner **or lead** sees the Manage action in the header. |
+
+### Manage listing — `app/network/listing/manage/[id].tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Rules** | Toggle listing active/paused, edit details including category, and manage offerings. The offering modal supports `item_type` (`product`/`service`) and an optional price — blank stores `NULL` and renders as "Price on request". Deleting a product is blocked when order items reference it. The whole listing can be permanently deleted. |
+| **Roles** | **Owner or lead.** The screen enforces this itself: a non-owner, non-lead is toasted and redirected to `/network/business`. |
+
+### Orders received — `app/network/listing/orders/[id].tsx`
+
+Orders grouped Pending / Fulfilled / Cancelled. The WhatsApp button pre-fills a message with items and total. Pending orders can be marked fulfilled or cancelled behind a confirmation. Owner only.
+
+### 4.3 Pre-order food drops — `app/network/drops/*`
+
+Routes: `index` (catalog) · `add` · `[id]` (detail + ordering) · `manage/[id]` (host dashboard) · `manage/index`
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Time-gated group ordering for home chefs and food businesses — weekend specials, home baking, pop-up meals |
+| **Tables** | `mcn_preorder_drops`, `mcn_preorder_items`, `mcn_preorder_orders`, `mcn_preorder_order_items`, `mcn_listings`, `profiles` |
+| **Catalog rules** | Tabs: Active / Closed / My drops, ordered by `cutoff_at` ascending. Signed-in users additionally get per-drop order counts, item quantities, and revenue metrics (total, completed, order count), computed client-side while excluding cancelled orders. Anonymous viewers see only `status = 'open'` drops. Cards show host identity (name plus flat number when available), the linked business listing when present, and side-by-side close/delivery timing chips. A `?id=` param redirects into the drop detail (web deep-link bridge). |
+| **Publish rules** | A drop specifies title, prep notes, fulfillment date, fulfillment time (system time picker), `cutoff_at` deadline, and items with name, unit, price, and optional `max_quantity`. **Delivery time must be strictly later than the cutoff.** There is no overall drop-order cap — capacity is per item, and it is enforced by a database trigger, not just the UI. |
+| **Ordering rules** | Residents order before the cutoff with flat number and phone. Past the cutoff, new orders are blocked automatically. A resident may place **multiple** orders on the same drop while it is open. `confirmed` orders can be edited or cancelled by the buyer. Once the host marks an order `fulfilled`, it displays as **Delivered** and becomes immutable. |
+| **Host dashboard** | Aggregates item totals across active pre-orders for kitchen prep, and shows a delivery roster split into active pre-orders, collapsible delivered orders, and collapsible cancelled orders (with Mark delivered hidden on cancelled). The host marks orders fulfilled and finally marks the drop `completed`. |
+| **Roles** | **Anonymous users can browse** — drops are publicly readable so shared links work logged-out. Login is required to order or publish. The creator manages the drop. **Creator, lead, or platform admin can permanently delete** a drop and its items/orders, from either the detail header or the manage dashboard; deletion confirms via `window.confirm` on web and `Alert.alert` on native. |
+
+### 4.4 Carpooling — `app/network/carpools/*`
+
+Routes: `index` (list) · `add` · `[id]` (detail + requests)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Neighbor ride sharing: daily commutes, school runs, intercity and outstation trips |
+| **Tables** | `mcn_carpools`, `mcn_carpool_requests`, `profiles` |
+| **List rules** | Tabs: All (active + paused) / Offering / Seeking / My rides, newest first. Client-side search across title, start point, end point, and vehicle info. Status badges: Active (green), Paused (amber), Cancelled (red). |
+| **Publish rules** | Required: title, start point, end point. Also captured: `role_type` (`offering` or `seeking`), departure time, optional return time, recurring weekdays from Mon–Sun, available seats (≥1), vehicle info, `pricing_type` (`free`/`paid`) with `price_per_seat`, contact phone (backfilled from the profile when absent), and notes. |
+| **Request rules** | Only rides that are `active` **and** `offering` accept join requests, and only from non-owners. A rider submits name, phone, flat number, seats, and an optional note; one open request per rider per ride. The host sees all non-cancelled requests and accepts or rejects pending ones. Statuses: `pending`, `accepted`, `rejected`, `cancelled`. |
+| **Roles** | Any resident creates rides and requests seats. **Creator or lead** can edit, change status, and delete. |
+
+### 4.5 Parent Corner — `app/network/parents/*`
+
+Routes: `index` (directory) · `add` (create/edit)
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Opt-in directory of residents' children, for study groups, school-run coordination, and finding neighbors at the same school |
+| **Tables** | `mcn_parent_corner` |
+| **Rules** | Required on save: student name, school/college name, class/grade, parent name, flat number, contact phone. Institution type is `school`, `college`, or `preschool`. Board choices: CBSE, ICSE, State Board, IB, IGCSE, PU Board, University, Other. The directory offers 300 ms debounced search, filters by institution type / board / school (the school list is derived from existing entries), and sorting by school, grade, flat, or recency. Call and share actions are available per entry. If the table has not been deployed, `isSupabaseSchemaError` renders a "feature not available" state instead of an error toast. |
+| **Roles** | Residents manage their own entries. **Owner or lead** can edit or delete any entry. |
+
+### 4.6 Schools catalog & parent report card — `app/network/schools/*`
+
+Routes: `index` · `[id]` · `review` · `add` · `compare`
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Regional school directory plus a structured parent review system |
+| **Tables** | `schools`, `school_reviews`, `profiles`; curated data from `data/westHyderabadSchools.ts` |
+| **Catalog rules** | Merges ~50 curated regional schools with community-submitted ones. Cards show syllabus, level, distance, fee range, parent review count, and review badges. Up to **3 schools** can be selected for side-by-side comparison at `/network/schools/compare?ids=a,b,c`; selecting a fourth is refused with an info toast. |
+| **Report card rules** | Replaces flat 1–5 stars with **8 aspect dimensions** — Academics, Teachers, Infrastructure, Sports & Activities, Safety & Hygiene, Transport, Value for Money, Child's Happiness — scored on an emoji scale (😟 😕 😐 🙂 🤩) defined in `constants/schoolReviewAspects.ts`. Parents pick their child's grade and may add optional 140-char per-aspect notes plus an overall comment. Aggregates are written to `schools.avg_*` and `review_count` by a database trigger. Reviews accept text school IDs so curated (non-UUID) schools can be reviewed. |
+| **Detail view** | 8-axis radar chart (`SchoolRadarChart`), aspect score breakdown, parent review cards (`SchoolReviewCard`), and a report-card CTA |
+| **Add school rules** | Required: name, distance (≥0), fee range. Phone, when supplied, must be 10 digits. |
+| **Roles** | All residents view, compare, add schools, and submit or edit **their own** report card. Leads can delete school listings. |
+
+### 4.7 Borrow & share posts — `app/network/add.tsx`, `app/network/my-posts.tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Tables** | `mcn_posts` |
+| **Rules** | Title required (max 80), description optional (max 280). For `kind = 'borrow'` contact info is mandatory; business-kind posts keep it optional. A detected 10-digit number is normalized. My Posts groups the user's own posts into Active and Closed with close/delete actions. Launched from the hub's Borrow & Share entry, the screen runs in borrow-only community-feed mode: it shows the whole community's borrow posts, but close and delete stay limited to the signed-in user's own rows. |
+| **Roles** | Any resident posts. **Author or lead** can delete. |
+
+### 4.8 My orders — `app/network/my-orders.tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | One place for everything the resident has ordered |
+| **Tables** | `mcn_orders` + `mcn_order_items`, `mcn_preorder_orders` + `mcn_preorder_order_items` |
+| **Rules** | Two tabs — **Pre-order food** and **Business** — each scoped to `buyer_id = user.id` and sorted newest first. Business orders cancel while `pending`; food pre-orders cancel while `confirmed`. `fulfilled` and `cancelled` orders are read-only. |
+| **Navigation** | From the MCN hub quick-action bar |
 
 ---
 
-## Service Visits
+## 5. Community tab
 
-### Add Visit (`app/visits/add.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Schedule a group visit for a service, optionally linked to an existing provider |
-| **Tables** | Reads: `service_providers`; writes: `service_visits` |
-| **Business rules** | Required: title, category, provider context, and date. Categories are drawn from the full shared list in `constants/categories.ts` and presented through the same two-level grouped picker (Home Support, Repairs & Maintenance, Healthcare & Wellness, Personal Care, Transport & Vehicle, Events & Functions, Education & Classes, Government Services, Other) used on the Add Provider form. Users can link an existing provider (label: "Select existing provider") or enter a manual provider name and phone. Manual phone and WhatsApp values accept flexible formats but are validated and normalized to 10-digit mobile numbers before save. Visit dates are stored as local calendar dates (`YYYY-MM-DD`) to avoid timezone rollover into the previous day. New visits start as `upcoming`. |
-| **Navigation** | From the Help tab add action. Returns back on success. |
-| **Roles** | All residents can create visits |
-
-### Visit Detail (`app/visits/[id].tsx`)
+`app/(tabs)/community.tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Show visit details, joiners, join and leave actions, and creator-side status controls |
-| **Tables** | Reads: `service_visits`, `visit_joiners`, `profiles`; RPC: `get_visit_joiners`; writes: `visit_joiners`, `service_visits.status` |
-| **Business rules** | Joiners can add optional flat number and note. The join modal seeds the flat number from `profile.flat_number` when available and formats edited flat numbers to uppercase without spaces or hyphens on blur. Only the creator can move the visit between `upcoming`, `in_progress`, `completed`, and `cancelled`, and can also reschedule an upcoming visit by updating date/start/end time from the detail screen. Rescheduling emits a community notification to other residents so they see the updated schedule. Creator action buttons for mark complete, reschedule, and cancel are shown only while the visit is still `upcoming`; once completed or cancelled, those actions are hidden. Date parsing for display and past/upcoming checks uses local date-only handling to keep status classification consistent across timezones. Back navigation preserves the prior Help tab state through route params. |
-| **Navigation** | From Help and Notifications. Can deep-link to `/provider/[id]` when the visit is linked to a provider. |
+| **Purpose** | Building-level view: funds, residents, SOS, community info |
+| **Tables / RPCs** | `communities`, `events`, `event_transactions`, `fund_roles`, `profiles`, `funds_access_requests`; RPCs `get_my_community_funds_overview()`, `withdraw_funds_access_request(...)` |
+| **Rules** | Section order is fixed: **funds → residents tile → SOS tile → community info**. The hero shows only the community name; the "going around the building" pulse line was intentionally removed. Community info includes a join-code tile with an Invite-neighbors share action. The funds request CTA exists only in this section. |
+| **Roles** | All residents view. Create-fund is visible to leads and platform admins. |
+
+### Funds activation states
+
+Rendered by the funds section based on `communities.funds_enabled`:
+
+| State | UI |
+|-------|-----|
+| Inactive, no request | CTA card "Request funds support" → `/funds-access/request` |
+| Pending | Pending-review card with requester name, date, phone; withdraw shown to the requester only |
+| Rejected | Rejection reason plus "Request again" |
+| Previously active | Post-revocation note |
+| Active | Merged Community funds card with health summary and "Open community funds" |
+
+Platform approval enables funds **and promotes the designated resident to `president`** in the same transaction. Revocation disables funds and blocks while preserving ledger history.
+
+### Funds access request — `app/funds-access/request.tsx`
+
+Contact name and phone required; purpose optional, capped at 280 characters. Writes via `submit_funds_access_request(...)`, refreshes status from `get_funds_access_status(...)`, and returns to the Community tab where the CTA becomes the pending state. Any resident of a funds-inactive community can submit.
+
+### Blocks / towers — `app/community/blocks.tsx`
+
+Blocks are optional per community and **decoupled from funds activation**. `communities.block_label` chooses the noun ("Block" or "Tower") used everywhere.
+
+| Aspect | Details |
+|--------|---------|
+| **RPCs** | `list_community_blocks`, `set_community_blocks_enabled`, `add_community_block`, `rename_community_block`, `archive_community_block` |
+| **Rules** | Disabling blocks removes active scoping for residents and in-charges but preserves historical contributions. Per-block resident and in-charge counts are surfaced to support safe archival. **Re-adding a previously archived block name restores that block** rather than failing on a duplicate name. All labels come from `blockLabel` in AuthContext. |
+| **Lifecycle** | Platform admins may seed blocks at community-approval time (setting `blocks_enabled = true` and the label). Joining residents pass through `/community-join-block`. Profile shows a block picker only while blocks are active. Contribution flows load contributors through `list_eligible_contributors_for_collector(...)` so block in-charges see only their own residents. |
+| **Roles** | Lead only |
+
+### SOS — `app/sos/index.tsx`, `app/sos/donor.tsx`, `app/sos/manage-contacts.tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Fast one-tap emergency surface: emergency directory plus blood donor registry |
+| **Tables** | `emergency_contacts`, `blood_donors`, `profiles` |
+| **Emergency rules** | Merges global defaults (`community_id IS NULL`) with community rows, grouped by category (hospital, ambulance, police, fire, security, helpline, other — see `constants/sos.ts`) and sorted by `sort_order` then `name`. **Every dial passes through a call-confirm dialog.** |
+| **Donor rules** | Opt-in only. One donor profile per resident per community: blood group, phone, availability toggle, short note — editable and deletable at any time. The list defaults to available donors with a blood-group filter and an optional show-all toggle. Display names resolve from `profiles.full_name` at read time so they stay current. |
+| **Roles** | All residents view and maintain their own donor row. `/sos/manage-contacts` is lead/platform-admin only. Platform admins additionally manage global rows. |
+
+### Residents directory — `app/residents.tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **RPCs** | `get_residents_directory(p_include_phone)`; `community_lead_remove_resident(p_target_profile_id)` |
+| **Rules** | Active residents only, grouped by block when `blocks_enabled`. Emails always visible; **phone numbers only to leads and platform admins**. Leads open a resident sheet and can remove non-lead residents. Role badges render President / Vice President / Resident. Accepts `?returnTo=community\|profile`. |
 
 ---
 
-## Fund Management
+## 6. Funds
 
-### Community Funds Home (`app/funds/index.tsx`)
+### Funds home — `app/funds/index.tsx`
 
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Dedicated entry point for the Community funds tile; central place to browse fund health and all community fund events |
-| **Tables / RPCs** | RPC reads: `get_my_community_funds_overview()`; list data via `events`, `event_transactions`, `fund_roles` through `FundsList` |
-| **Business rules** | Layout order is fixed: Fund health summary on top, then Events and funds list below. All community funds/events are shown from this page, and each card opens per-fund detail. Create-fund CTA remains role-gated. |
-| **Navigation** | From `/(tabs)/community` funds tile. To `/funds/[id]` and `/funds/add`. |
-| **Roles** | All residents can view; create remains community-lead/platform-admin gated. |
+Fixed layout: fund health summary on top, then the list of all community funds via `FundsList`. RPC `get_my_community_funds_overview()`. All residents view; create is lead/platform-admin gated.
 
-### Add Fund (`app/funds/add.tsx`)
+### Add fund — `app/funds/add.tsx`
+
+Title required. **Exactly one treasurer must be selected** (leads and platform admins are excluded from the treasurer picker). The fund starts with `goal_amount = 0` and `event_date = now`. The route blocks access when funds are inactive or the caller is not a lead or platform admin. Redirects to `/funds/[id]`.
+
+### Fund detail — `app/funds/[id].tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Create a fund and assign 1 treasurer |
-| **Tables** | Reads: `profiles`; writes: `events`, `fund_roles` |
-| **Business rules** | Fund title is required. Exactly one treasurer must be selected. The fund starts with `goal_amount = 0` and `event_date = now`. The route blocks access when funds are inactive or the caller is not a community lead or platform admin. |
-| **Navigation** | From the Community tab funds action. Redirects to `/funds/[id]` after success. |
-| **Roles** | Intended for community leads or equivalent fund admins |
+| **Tables** | `events`, `event_transactions`, `fund_roles`, `profiles` |
+| **Rules** | Treasurers manage collectors and all transactions; collectors add contributions only; residents are view-only. Leads are treated as treasurer-level. **Exactly one treasurer per fund** (enforced by migration `20260813000000` and `fund_role_guard`). In block-enabled communities, assigning a collector requires choosing a block — there is no all-residents option in that flow. The screen shows a Contributions list (income with contributor details) and a separate Expense list. Leads can mark a fund **closed** (`is_closed`), blocking further transactions and edits. If funds are inactive, stale links render a safe inactive state instead of loading ledger actions. |
+| **Navigation** | → `/funds/add-transaction?event_id=…&type=income\|expense` |
 
-### Fund Detail (`app/funds/[id].tsx`)
+### Add transaction — `app/funds/add-transaction.tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Show ledger totals, transaction history, and role assignment controls |
-| **Tables** | Reads: `events`, `event_transactions`, `fund_roles`, `profiles`; writes: `fund_roles` |
-| **Business rules** | Treasurers can manage collectors and all transactions. Collectors can add contributions only. Existing contributions can be edited by collectors and treasurers. Residents stay view-only. Community leads are treated as treasurer-level in this fund context. Exactly one treasurer per fund. In block-enabled communities, collector assignment from fund detail requires choosing a specific block scope (no all-residents option in that flow). Fund detail explicitly shows a single Contributions list (income entries with contributor details) and an Expense list. If funds are inactive, stale links render a safe inactive state instead of loading ledger actions. Community Leads can mark funds as 'closed' which blocks further transactions or edits. |
-| **Navigation** | To `/funds/add-transaction?event_id=...&type=income|expense` |
-
-### Add Transaction (`app/funds/add-transaction.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Log either an income contribution or an expense against a fund |
-| **Tables** | Reads: `events`, `fund_roles`, `event_transactions`; RPC read: `list_eligible_contributors_for_collector`; writes: `event_transactions` |
-| **Business rules** | Contribution mode uses block-aware eligible contributor list and marks already-contributed residents as disabled. In block-enabled communities, collectors and treasurers without a block assignment must pick a specific block before continuing to contribution mode (no all-residents option in that prompt). Expense mode requires title and amount and does not set `contributor_user_id`. If funds are inactive, screen shows a graceful error state. |
-| **Roles** | Contributions: collector, treasurer, or community lead. Expenses: treasurer or community lead. |
+| **RPC** | `list_eligible_contributors_for_collector` |
+| **Rules** | Contribution mode uses the block-aware eligible-contributor list and disables residents who have already contributed. In block-enabled communities, a collector or treasurer without a block assignment must pick a block before continuing — no all-residents option. Expense mode requires title and amount and never sets `contributor_user_id`. Supports an optional receipt image (`event_transactions.image_url`). Inactive funds render a graceful error state. |
+| **Roles** | Contributions: collector, treasurer, or lead. Expenses: treasurer or lead. |
 
 ---
 
-## Notifications (`app/notifications.tsx`)
+## 7. Profile tab
+
+`app/(tabs)/profile.tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Show a per-user notification feed with mark-as-read actions |
-| **Tables** | Reads and writes: `notifications` |
-| **Business rules** | Notification UI handles funds-activation types (`funds_access_requested`, `funds_access_approved`, `funds_access_rejected`, `community_lead_appointed`, `funds_access_revoked`) in addition to existing flows, and unknown types still fall through safely. Legacy promotion and admin-review payloads are still recognized so older notification rows remain tappable. Users can mark individual rows or the full list as read. |
-| **Navigation** | From the header bell on the Help tab. `new_visit` opens `/visits/[id]`; `service_reminder` opens `/services/[id]`; community approval, rejection, and removal route to `/community-select`; funds-requested and legacy promotion or admin-review notifications open platform approvals; funds approval, rejection, lead, and revocation notifications route to the Community tab. |
-| **Roles** | Personal notifications only |
-| **Real-time** | Supabase Realtime subscribes to INSERT events on the signed-in user's notifications, updates local state, and triggers a local native alert on mobile. |
+| **Purpose** | Account-level hub only — identity, reminders, submissions, sign-out |
+| **RPCs** | `get_my_due_soon_count()`, `get_my_recent_service_history(p_limit)` |
+| **Rules** | **No building-level content here** — community metadata and the residents directory belong to the Community tab. The settings card shows the community role and, when applicable, a separate fund-access badge (Treasurer or Collector) so fund permissions are explicit. A block picker appears only while blocks are active. |
+| **Navigation** | → `/profile/edit`, `/services`, `/network/my-posts`, `/login` after sign-out |
+
+### Edit profile — `app/profile/edit.tsx`
+
+Name updates apply directly. Email updates send a verification link to the new address before taking effect (`supabase.auth.updateUser` plus a `profiles` write). Empty names are rejected.
+
+### Personal service reminders — `app/services/*`
+
+**User-scoped, not community-scoped** — these queries never pass `communityId`.
+
+| Screen | Details |
+|--------|---------|
+| **List** (`index.tsx`) | Reads `get_my_upcoming_services()`. Pull-to-refresh; sorted by next due date and urgency. |
+| **Add** (`add.tsx`) | Required: `service_name`, `category`, `last_serviced_on`, `frequency_months`. Date cannot be in the future; frequency is 1–60 months. Choosing a category pre-fills the default frequency from `lib/serviceCategories.ts`. Linking a provider is optional; **the picker searches by provider name and phone number** (non-digits stripped from both sides before comparing). Provider options refresh on focus, so a provider added mid-flow appears on return. When no providers exist, the form offers a direct shortcut to add one. |
+| **Detail / edit** (`[id].tsx`) | Reads the row directly from `user_services` by ID (not through the list RPC). Mark-done is optimistic then re-reads from the database; RPC `mark_service_done(p_service_id, …)` supports optional provider, amount paid, and note, which land in `user_service_history`. Editing reuses the add validations, including provider remapping with name/phone search. Delete requires confirmation. The technician shortcut routes back to the Help tab Providers segment with a mapped category filter. |
+| **Surfaces** | `components/UpcomingServicesCard.tsx` sits above the Help content — its zero-state is a single-row inline banner (wrench emoji · title · body · inline "Add service" pill · dismiss) in one ~40 px row; the all-clear and has-due states use 8 px vertical / 12 px horizontal padding and 13 px titles. Profile shows a due-soon badge from `get_my_due_soon_count()`. `notify_due_services()` creates `service_reminder` notifications for reminders due within 7 days where `notified_at` is empty; the `check_due_services` Edge Function drives it daily. |
 
 ---
 
-## Personal Service Reminders
+## 8. Notifications
 
-### My Service Reminders (`app/services/index.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | List the signed-in user's upcoming service reminders |
-| **Tables** | Reads via RPC: `get_my_upcoming_services()` on `user_services` |
-| **Business rules** | Data is user-scoped rather than community-scoped. The screen supports pull-to-refresh and sorts reminders by next due date and urgency. |
-| **Navigation** | To `/services/[id]` and `/services/add` |
-| **Roles** | Any authenticated user |
-
-### Add Service Reminder (`app/services/add.tsx`)
+`app/notifications.tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Create a personal maintenance reminder for an appliance or recurring service |
-| **Tables** | Writes: `user_services`; reads community providers from `service_providers` for optional linking |
-| **Business rules** | Required: `service_name`, `category`, `last_serviced_on`, and `frequency_months`. Date cannot be in the future; frequency must be between 1 and 60 months. Category choice pre-fills the default reminder frequency from `lib/serviceCategories.ts`. Linking a provider is optional. The linked-provider dropdown supports search by provider name and phone number. Provider options refresh when the screen regains focus, so a newly added provider appears immediately after returning from the add-provider flow. When no providers are available, the form surfaces a direct shortcut to add a provider and return. |
-| **Integrations** | `@react-native-community/datetimepicker` |
-
-### Service Reminder Detail (`app/services/[id].tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | View urgency, edit reminder details, mark work completed, find a technician, or delete the reminder |
-| **Tables** | Reads directly from `user_services` by reminder ID; writes directly to `user_services`; RPC: `mark_service_done(p_service_id)` |
-| **Business rules** | Mark-done uses optimistic UI then refreshes from the database source of truth. Editing reuses add validations and supports mapping or remapping to any saved community provider from the picker list, including search by provider name and phone number. Provider options refresh when the screen regains focus, so newly added providers are available immediately after returning. The completion flow supports optional provider, amount-paid, and note capture before the reminder is rolled forward. Delete requires confirmation. The technician shortcut routes users back to the Providers segment of the Help screen with a mapped category filter. |
-
-### Home and Profile Surfaces
-
-| Surface | Details |
-|---------|---------|
-| **Home card** | `components/UpcomingServicesCard.tsx` appears above the main Help content. In the zero-service state, it renders as a compact single-row inline banner with the wrench emoji, title, body text, an inline "Add service" CTA button, and a dismiss button — all in one ~40px row (previously a multi-row card with a full-width CTA button). The all-clear state and has-due states are similarly compacted with reduced padding (8px vertical, 12px horizontal) and smaller text sizes (13px titles, 12px links). |
-| **Profile row** | `app/(tabs)/profile.tsx` shows a due-soon badge sourced from `get_my_due_soon_count()` and links into `/services`. |
-| **Notifications** | `notify_due_services()` creates `service_reminder` notifications when reminders are due within 7 days and `notified_at` is empty. The fallback scheduler is the `check_due_services` edge function. |
+| **Tables** | Reads/writes `notifications` |
+| **Rules** | Users mark individual rows or the whole list as read. Funds-activation types (`funds_access_requested`, `funds_access_approved`, `funds_access_rejected`, `community_lead_appointed`, `funds_access_revoked`) are handled alongside the core flows; legacy promotion and admin-review payloads are still recognized so old rows stay tappable; unknown types fall through safely. |
+| **Routing** | `new_visit` → `/visits/[id]` · `service_reminder` → `/services/[id]` · community approval/rejection/removal → `/community-select` · funds-requested and legacy promotion/admin-review → platform approvals · funds approval, rejection, lead appointment, revocation → Community tab |
+| **Real-time** | Supabase Realtime `INSERT` subscription on the signed-in user's rows; updates local state and fires a local native alert on mobile. |
 
 ---
 
-## Cross-Community (Backend Only)
+## 9. Role-based access matrix
 
-Cross-community backend foundations are live in the database: partnerships, groups, provider sharing, cross-community visit audiences, scoped fund metadata, announcements audiences, additive visibility helpers, and federation RPCs are now available for future product phases. The current app ships no user-facing cross-community UI yet, so existing screens and flows remain unchanged. See `docs/cross-community.md` for the full backend reference.
+*Lead* = `president` or `vice_president`. Platform admins hold lead-equivalent rights plus the console-only capabilities in [`platform-admin.md`](platform-admin.md).
 
----
-
-## My Community Network (MCN)
-
-### Network Hub (`app/(tabs)/network.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | A local business directory plus social sharing surface for borrow/free needs. |
-| **Tables** | Reads: `mcn_listings`, `mcn_products`, `mcn_business_categories`, `ratings`, `profiles`; writes: `mcn_posts` moderation actions |
-| **Business rules** | Business listings are community-scoped and searchable with a 300ms debounce. A horizontal category chip bar (`All` + lookup categories) filters listings by `category_id`; tapping the active chip toggles back to `All`. Inactive listings remain visible in the feed with an inactive badge, while active listings are sorted first. Listing cards show business summary only (image, owner, category badge); offerings and prices are shown only after opening listing details. The Remove listing action is the permanent delete path. |
-| **Navigation** | To `app/network/listing-add.tsx`, `app/network/listing/[id].tsx`, and owner manage routes |
-| **Roles** | All residents can view and add posts. Community leads can moderate (delete) any post. |
-
-### Add Post (`app/network/add.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Create a new business or borrow post. |
-| **Tables** | Writes: `mcn_posts` |
-| **Business rules** | Title is required (max 80 chars). Description is optional (max 280 chars). For Borrow & Share posts (`kind='borrow'`), contact info is mandatory; business-kind posts can still keep it optional. If a 10 digit number is extracted, it is normalized. |
-| **Navigation** | From `app/(tabs)/network.tsx`. Routes back on success. |
-| **Roles** | All residents can create posts. |
-
-### My Posts (`app/network/my-posts.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Management screen for a user's own active and closed MCN posts. |
-| **Tables** | Reads/Writes: `mcn_posts` |
-| **Business rules** | In default mode, users can view their own posts grouped by Active and Closed and can close/delete their own posts. When launched from the Network hub Borrow & Share card, the screen runs in borrow-only community-feed mode (local businesses hidden) and shows borrow posts from the whole community; close/delete actions remain only for the signed-in user's own posts. |
-| **Navigation** | From `app/(tabs)/profile.tsx`. The Borrow & Share card in `app/(tabs)/network.tsx` deep-links here in borrow-only community-feed mode. The floating add button creates a borrow post in borrow-only mode, otherwise it creates either a business listing (business segment) or borrow post (borrow segment). |
-
-### Add Listing (`app/network/listing-add.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Create a new local business listing. |
-| **Tables** | Reads: `mcn_business_categories`; writes: `mcn_listings` |
-| **Business rules** | Business name is required (max 80 chars). Business category is required and selected from the `mcn_business_categories` lookup table. Description is optional (max 280 chars). Contact phone is required and normalized to a 10-digit number. |
-| **Navigation** | From `app/(tabs)/network.tsx` (business segment FAB). Navigates to manage screen on success. |
-| **Roles** | All residents can create listings. |
-
-### Listing Detail & Order (`app/network/listing/[id].tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | View business profile details, offerings, contact details, and place or update orders. |
-| **Tables** | Reads: `mcn_listings`, `mcn_business_categories`, `mcn_products`, `mcn_orders`, `mcn_order_items`, `profiles` |
-| **Business rules** | Quantity increments are: `0.5` for kg/litre; `1` for piece/dozen/box/pack. Min quantity is 0. Cart displays line items and subtotals. Note is optional. Action button places a new order or updates an existing pending order (removes old items and inserts new). Direct Call and WhatsApp communication links. |
-| **Offerings UI** | The screen shows a category badge (emoji + name) and splits offerings by `item_type` into `Products` and `Services` sections. Each row shows name, optional description, availability state, and either `₹ amount / unit` or `Price on request` when `price` is `NULL`. |
-| **Navigation** | From listing card click. |
-| **Roles** | Any resident (except listing owner) can place orders. |
-
-### Manage Listing (`app/network/listing/manage/[id].tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Owner panel to toggle listing visibility, edit listing details, and manage products/services. |
-| **Tables** | Reads/Writes: `mcn_listings`, `mcn_business_categories`, `mcn_products`, `mcn_orders` |
-| **Business rules** | Owner can toggle listing active/paused. Listing details include editable business category. Offering modal supports `item_type` (`product` or `service`) and optional price. When price is blank, `NULL` is stored and shown as `Price on request` in UI. Deletion is restricted if the item has existing order-item references. |
-| **Navigation** | From owner listing card "Manage" link. |
-| **Roles** | Only the listing owner. |
-
-### Orders Received (`app/network/listing/orders/[id].tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | View and update orders placed against the business listing. |
-| **Tables** | Reads/Writes: `mcn_orders`, `mcn_order_items`, `profiles`, `mcn_products` |
-| **Business rules** | Orders grouped by status: Pending, Fulfilled, Cancelled. WhatsApp button includes pre-filled message with order items and total. Pending orders can be marked fulfilled or cancelled (requires confirmation popup). |
-| **Navigation** | From Manage Listing screen. |
-| **Roles** | Only the listing owner. |
-
-### Pre-Order Food (`app/network/drops/index.tsx`, `app/network/drops/add.tsx`, `app/network/drops/[id].tsx`, `app/network/drops/manage/[id].tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Enable food businesses and home chefs to post scheduled, time-gated pre-order food listings (for example weekend specials closing the previous evening) with cut-off deadlines. |
-| **Tables** | Reads/Writes: `mcn_preorder_drops`, `mcn_preorder_items`, `mcn_preorder_orders`, `mcn_preorder_order_items`, `mcn_listings`, `profiles` |
-| **Business rules** | Owners publish a pre-order drop specifying title, prep notes, delivery date, delivery time (selected from system time picker), cut-off date/time deadline, and items offered (name, unit, price, and optional `max_quantity` limit per item). Delivery time must be strictly later than the pre-order cut-off timestamp. Cut-off deadlines automatically block new resident orders when passed. Item creation allows setting an optional max item quantity (`max_quantity`) enforced during resident item selection. Overall drop order capacity setting has been removed in favor of item-level capacity limits. Residents place pre-orders before the deadline with flat number and contact phone. Residents can place multiple pre-orders within the same food drop while pre-orders remain open. Active (`confirmed`) orders can be edited or cancelled by the resident. Once an order is marked as `fulfilled` (delivered) by the host, it shows as `Delivered` for the resident and becomes immutable (cannot be edited or deleted). Residents retain the provision to place additional pre-orders while pre-orders are open. Pre-order food tiles show host identity (name plus flat number when available) and side-by-side close and delivery timing chips. The owner management dashboard (`app/network/drops/manage/[id].tsx`) automatically aggregates item totals across active pre-orders for kitchen preparation and provides a resident delivery roster categorized into active pre-orders, collapsible delivered/completed orders, and collapsible cancelled orders (with "Mark delivered" hidden on cancelled orders). Owners mark active orders as `fulfilled` upon delivery and mark the drop `completed`. |
-| **Navigation** | From MCN hub ("Pre-order Food & Community Business" tile), `/network/drops`, `/network/drops/add`, `/network/drops/[id]`, and `/network/drops/manage/[id]`. On web deploys, deep links for dynamic drop and manage routes are rewritten through query-param bridge paths to preserve refresh support. |
-| **Roles** | Anonymous users and residents can browse pre-order food listings. Login is required to place/cancel pre-orders or publish/manage drops. Drop creators can close orders early, manage orders, mark orders fulfilled, and complete drops. |
-
-### Schools Directory & Parent Report Card (`app/network/schools/index.tsx`, `app/network/schools/[id].tsx`, `app/network/schools/review.tsx`, `app/network/schools/add.tsx`, `app/network/schools/compare.tsx`)
-
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Verified directory of 50+ regional schools plus a structured Parent Report Card review system. |
-| **Tables** | Reads/Writes: `schools`, `school_reviews`, `profiles` |
-| **Business rules** | Schools catalog aggregates curated regional data and community-submitted schools. The Parent Report Card replaces flat 1-5 star reviews with 8 aspect dimensions (Academics, Teachers, Infrastructure, Sports & Activities, Safety & Hygiene, Transport, Value for Money, Child's Happiness) rated on an emoji scale (😟 😕 😐 🙂 🤩). Parents select their child's grade and can add optional 140-char per-aspect notes. Aggregate aspect averages are stored on the `schools` table via database trigger. School detail page renders an 8-axis spider/radar chart (`SchoolRadarChart`), aspect score breakdown, parent review cards (`SchoolReviewCard`), and a report card CTA button (`app/network/schools/review.tsx`). School listing cards display parent review counts and review badges. |
-| **Navigation** | From MCN hub ("Schools & Parent Corner" tile), `/network/schools`, `/network/schools/[id]`, `/network/schools/review`, `/network/schools/add`, and `/network/schools/compare`. |
-| **Roles** | All residents can view schools, submit/edit their own report card, compare schools, and add schools. Community leads can delete school listings. |
+| Capability | Resident | Lead | Treasurer | Collector |
+|-----------|----------|------|-----------|-----------|
+| **Providers & visits** |
+| View / search providers | ✅ | ✅ | — | — |
+| Add provider | ✅ | ✅ | — | — |
+| Rate, save, note a provider | ✅ | ✅ | — | — |
+| Report provider | ✅ | ✅ | — | — |
+| Delete provider | ❌ | ✅ | — | — |
+| Create visit | ✅ | ✅ | — | — |
+| Join / leave visit | ✅ | ✅ | — | — |
+| Change visit status / reschedule | creator only | creator only | — | — |
+| **Funds** |
+| View funds | ✅ | ✅ | ✅ | ✅ |
+| Create fund | ❌ | ✅ | — | — |
+| Assign treasurer | ❌ | ✅ | — | — |
+| Assign collectors | ❌ | ✅ | ✅ | — |
+| Add contribution | ❌ | ✅ | ✅ | ✅ |
+| Edit existing contribution | ❌ | ✅ | ✅ | ✅ |
+| Add expense | ❌ | ✅ | ✅ | ❌ |
+| Close / reopen fund | ❌ | ✅ | — | — |
+| **Community** |
+| View residents directory | ✅ | ✅ | — | — |
+| See resident phone numbers | ❌ | ✅ | — | — |
+| Remove non-lead resident | ❌ | ✅ | — | — |
+| Manage blocks / towers | ❌ | ✅ | — | — |
+| Manage emergency contacts | ❌ | ✅ | — | — |
+| Register as blood donor | ✅ | ✅ | — | — |
+| **MCN — business** |
+| View / search listings | ✅ | ✅ | — | — |
+| Create listing | ✅ | ✅ | — | — |
+| Manage listing (toggle, offerings, orders) | own only | own **or any** | — | — |
+| Delete listing | own only | own **or any** | — | — |
+| Place / update order | any but own | any but own | — | — |
+| **MCN — food drops** |
+| Browse drops | ✅ (also anonymous) | ✅ | — | — |
+| Publish drop | ✅ | ✅ | — | — |
+| Place / edit / cancel own pre-order | ✅ | ✅ | — | — |
+| Manage drop, mark fulfilled, complete | creator | creator | — | — |
+| Delete drop | own only | own **or any** | — | — |
+| **MCN — carpools** |
+| Browse rides | ✅ | ✅ | — | — |
+| Publish ride | ✅ | ✅ | — | — |
+| Request a seat | ✅ (not own) | ✅ (not own) | — | — |
+| Accept / reject requests | host | host | — | — |
+| Edit / delete ride | own only | own **or any** | — | — |
+| **MCN — parents & schools** |
+| View parent corner | ✅ | ✅ | — | — |
+| Add / edit child entry | own only | own **or any** | — | — |
+| Delete child entry | own only | own **or any** | — | — |
+| View / compare schools | ✅ | ✅ | — | — |
+| Add school | ✅ | ✅ | — | — |
+| Submit / edit report card | own only | own only | — | — |
+| Delete school listing | ❌ | ✅ | — | — |
+| **MCN — posts** |
+| View / add borrow post | ✅ | ✅ | — | — |
+| Close / delete post | own only | own **or any** | — | — |
+| **Personal** |
+| Service reminders | ✅ own | ✅ own | ✅ own | ✅ own |
+| Hire feedback (private) | ✅ own | ✅ own | — | — |
+| View own orders | ✅ | ✅ | — | — |
 
 ---
 
-## Removed Product Surface
+## 10. External integrations
 
-### Resident Marketplace
-
-The resident marketplace is not part of the current app. The business screens were removed from `app/`, the related marketplace tables were dropped in the `20260422010000_simplify_roles_and_remove_marketplace.sql` migration, and provider favorites and ratings are now single-target only.
-
----
-
-## Role-Based Access Matrix
-
-| Feature | Resident | Community Lead / Fund Admin | Treasurer | Collector |
-|---------|----------|-----------------------------|-----------|-----------|
-| View/search providers | Yes | Yes | - | - |
-| Add provider | Yes | Yes | - | - |
-| Rate or save provider | Yes | Yes | - | - |
-| Report provider | Yes | Yes | - | - |
-| Delete provider | No | Yes | - | - |
-| Create visit | Yes | Yes | - | - |
-| Join or leave visit | Yes | Yes | - | - |
-| View funds | Yes | Yes | Yes | Yes |
-| Create fund | No | Yes | - | - |
-| Manage treasurers | No | Yes | - | - |
-| Manage collectors | No | Yes | Yes | - |
-| Add contribution | No | Yes | Yes | Yes |
-| Add expense | No | Yes | Yes | No |
-| View personal service reminders | Yes | Yes | Yes | Yes |
-| View/Search MCN posts | Yes | Yes | - | - |
-| Add MCN post | Yes | Yes | - | - |
-| Edit/Close own MCN post | Yes | Yes | - | - |
-| Delete own MCN post | Yes | Yes | - | - |
-| Delete any MCN post | No | Yes | - | - |
-| View/Search business listings | Yes | Yes | - | - |
-| Filter listings by business category | Yes | Yes | - | - |
-| Create business listing (with category & cover photo) | Yes | Yes | - | - |
-| Edit/Toggle own listing active | Yes (own only) | Yes (own only) | - | - |
-| Add/Edit/Delete listing products & services (optional price, item type, photo) | Yes (own only) | Yes (own only) | - | - |
-| View orders received | Yes (own only) | Yes (own only) | - | - |
-| Update order status (fulfill/cancel) | Yes (own only) | Yes (own only) | - | - |
-| Place/Update order | Yes (not own) | Yes (not own) | - | - |
-| Remove any listing | No | Yes | - | - |
-| View own placed orders | Yes | Yes | - | - |
-| Cancel own pending order | Yes | Yes | - | - |
-
----
-
-## External Integrations Summary
-
-| Integration | Used By | How |
+| Integration | Used by | How |
 |-------------|---------|-----|
-| Google Sign-In | Login | `@react-native-google-signin/google-signin` with Supabase token exchange |
-| Supabase Auth | Login, signup, password reset | Email and password auth with persisted session |
-| Cloudinary | Business cover photos & product images | Direct unsigned HTTP upload to Cloudinary API via `expo-image-picker` |
+| Supabase Auth | Login, signup, password reset | Email/password with persisted AsyncStorage session |
+| Google Sign-In | Login | `@react-native-google-signin/google-signin` token exchange; dev build required |
 | Supabase Realtime | Notifications | `postgres_changes` INSERT subscription on `notifications` |
-| Expo Notifications | Notifications | Runtime permission request, Android channel setup, local alerts |
-| Phone dialer | Provider and visit detail | `Linking.openURL('tel:...')` |
-| WhatsApp | Provider and visit detail | `whatsapp://send` or `https://wa.me/` |
-| Native Share | Community code and provider detail | `Share.share()` |
-| DateTimePicker | Visit add and service reminder flows | `@react-native-community/datetimepicker` |
+| Edge Function `check_due_services` | Reminders | Daily call to `notify_due_services()`; scheduled in the Supabase dashboard at `30 3 * * *` (9 AM IST) |
+| Edge Function `fraud-check` | Add provider | Returns a verdict stored in `service_providers.fraud_status` and `fraud_verdicts` |
+| Cloudinary | Listing covers, product photos, drop images, expense receipts | Unsigned HTTP upload via `expo-image-picker` and `components/ImageUploader.tsx` |
+| Expo Notifications | Reminders, hire feedback | Permission request, Android channel, local scheduling |
+| Phone dialer | Providers, visits, SOS, listings, carpools, orders | `Linking.openURL('tel:...')` |
+| WhatsApp | Providers, listings, orders, carpools | `whatsapp://send` or `https://wa.me/` |
+| Native Share | Join code, providers, food drops, parent entries | `Share.share()` |
+| DateTimePicker | Visits, reminders, drops, carpools | `@react-native-community/datetimepicker` |
+
+---
+
+## 11. Removed product surface
+
+**Resident marketplace** — removed, not hidden. `app/business/*` is deleted and `resident_businesses`, `business_offerings`, `business_inquiries` were dropped in `20260422010000_simplify_roles_and_remove_marketplace.sql`. Provider favorites and ratings became single-target as a result. MCN replaced this surface. See [`disabled-features.md`](disabled-features.md).
+
+**Cross-community federation** — backend live, no UI. See [`cross-community.md`](cross-community.md).

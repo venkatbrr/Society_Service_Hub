@@ -934,78 +934,6 @@ export type Database = {
         }
         Relationships: []
       }
-      mcn_carpools: {
-        Row: {
-          available_seats: number
-          community_id: string
-          created_at: string
-          created_by: string
-          departure_time: string
-          end_point: string
-          id: string
-          notes: string | null
-          recurring_days: string[]
-          return_time: string | null
-          role_type: 'offering' | 'seeking'
-          start_point: string
-          status: 'active' | 'paused' | 'cancelled' | 'completed'
-          title: string
-          updated_at: string
-          vehicle_info: string | null
-        }
-        Insert: {
-          available_seats?: number
-          community_id: string
-          created_at?: string
-          created_by: string
-          departure_time: string
-          end_point: string
-          id?: string
-          notes?: string | null
-          recurring_days?: string[]
-          return_time?: string | null
-          role_type?: 'offering' | 'seeking'
-          start_point: string
-          status?: 'active' | 'paused' | 'cancelled' | 'completed'
-          title: string
-          updated_at?: string
-          vehicle_info?: string | null
-        }
-        Update: {
-          available_seats?: number
-          community_id?: string
-          created_at?: string
-          created_by?: string
-          departure_time?: string
-          end_point?: string
-          id?: string
-          notes?: string | null
-          recurring_days?: string[]
-          return_time?: string | null
-          role_type?: 'offering' | 'seeking'
-          start_point?: string
-          status?: 'active' | 'paused' | 'cancelled' | 'completed'
-          title?: string
-          updated_at?: string
-          vehicle_info?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "mcn_carpools_community_id_fkey"
-            columns: ["community_id"]
-            isOneToOne: false
-            referencedRelation: "communities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mcn_carpools_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       mcn_carpool_requests: {
         Row: {
           carpool_id: string
@@ -1018,7 +946,7 @@ export type Database = {
           rider_name: string
           rider_phone: string
           seats_requested: number
-          status: 'pending' | 'accepted' | 'rejected' | 'cancelled'
+          status: string
           updated_at: string
         }
         Insert: {
@@ -1032,7 +960,7 @@ export type Database = {
           rider_name: string
           rider_phone: string
           seats_requested?: number
-          status?: 'pending' | 'accepted' | 'rejected' | 'cancelled'
+          status?: string
           updated_at?: string
         }
         Update: {
@@ -1046,7 +974,7 @@ export type Database = {
           rider_name?: string
           rider_phone?: string
           seats_requested?: number
-          status?: 'pending' | 'accepted' | 'rejected' | 'cancelled'
+          status?: string
           updated_at?: string
         }
         Relationships: [
@@ -1070,7 +998,88 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
+        ]
+      }
+      mcn_carpools: {
+        Row: {
+          available_seats: number
+          community_id: string
+          contact_phone: string | null
+          created_at: string
+          created_by: string
+          departure_time: string
+          end_point: string
+          id: string
+          notes: string | null
+          price_per_seat: string | null
+          pricing_type: string
+          recurring_days: string[]
+          return_time: string | null
+          role_type: string
+          start_point: string
+          status: string
+          title: string
+          updated_at: string
+          vehicle_info: string | null
+        }
+        Insert: {
+          available_seats?: number
+          community_id: string
+          contact_phone?: string | null
+          created_at?: string
+          created_by: string
+          departure_time: string
+          end_point: string
+          id?: string
+          notes?: string | null
+          price_per_seat?: string | null
+          pricing_type?: string
+          recurring_days?: string[]
+          return_time?: string | null
+          role_type?: string
+          start_point: string
+          status?: string
+          title: string
+          updated_at?: string
+          vehicle_info?: string | null
+        }
+        Update: {
+          available_seats?: number
+          community_id?: string
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          departure_time?: string
+          end_point?: string
+          id?: string
+          notes?: string | null
+          price_per_seat?: string | null
+          pricing_type?: string
+          recurring_days?: string[]
+          return_time?: string | null
+          role_type?: string
+          start_point?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          vehicle_info?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_carpools_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_carpools_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       mcn_listings: {
@@ -1237,6 +1246,72 @@ export type Database = {
           },
         ]
       }
+      mcn_parent_corner: {
+        Row: {
+          board: string
+          community_id: string
+          contact_phone: string
+          created_at: string
+          flat_number: string
+          grade_class: string
+          id: string
+          institution_type: string
+          notes: string | null
+          parent_name: string
+          school_name: string
+          student_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          board: string
+          community_id: string
+          contact_phone: string
+          created_at?: string
+          flat_number: string
+          grade_class: string
+          id?: string
+          institution_type?: string
+          notes?: string | null
+          parent_name: string
+          school_name: string
+          student_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          board?: string
+          community_id?: string
+          contact_phone?: string
+          created_at?: string
+          flat_number?: string
+          grade_class?: string
+          id?: string
+          institution_type?: string
+          notes?: string | null
+          parent_name?: string
+          school_name?: string
+          student_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_parent_corner_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_parent_corner_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mcn_posts: {
         Row: {
           community_id: string
@@ -1287,6 +1362,235 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcn_preorder_drops: {
+        Row: {
+          community_id: string
+          created_at: string
+          created_by: string
+          cutoff_at: string
+          description: string | null
+          fulfillment_date: string
+          fulfillment_time: string
+          id: string
+          image_url: string | null
+          listing_id: string | null
+          max_orders: number | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          created_by: string
+          cutoff_at: string
+          description?: string | null
+          fulfillment_date: string
+          fulfillment_time: string
+          id?: string
+          image_url?: string | null
+          listing_id?: string | null
+          max_orders?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          created_by?: string
+          cutoff_at?: string
+          description?: string | null
+          fulfillment_date?: string
+          fulfillment_time?: string
+          id?: string
+          image_url?: string | null
+          listing_id?: string | null
+          max_orders?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_preorder_drops_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_preorder_drops_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_preorder_drops_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcn_preorder_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          drop_id: string
+          id: string
+          image_url: string | null
+          max_quantity: number | null
+          name: string
+          price: number
+          unit: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          drop_id: string
+          id?: string
+          image_url?: string | null
+          max_quantity?: number | null
+          name: string
+          price: number
+          unit?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          drop_id?: string
+          id?: string
+          image_url?: string | null
+          max_quantity?: number | null
+          name?: string
+          price?: number
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_preorder_items_drop_id_fkey"
+            columns: ["drop_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_preorder_drops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcn_preorder_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_name: string
+          order_id: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_name: string
+          order_id: string
+          quantity: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_name?: string
+          order_id?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_preorder_order_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_preorder_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_preorder_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_preorder_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcn_preorder_orders: {
+        Row: {
+          buyer_id: string
+          buyer_name: string
+          buyer_note: string | null
+          buyer_phone: string
+          community_id: string
+          created_at: string
+          drop_id: string
+          flat_number: string
+          id: string
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          buyer_name: string
+          buyer_note?: string | null
+          buyer_phone: string
+          community_id: string
+          created_at?: string
+          drop_id: string
+          flat_number: string
+          id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          buyer_name?: string
+          buyer_note?: string | null
+          buyer_phone?: string
+          community_id?: string
+          created_at?: string
+          drop_id?: string
+          flat_number?: string
+          id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_preorder_orders_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_preorder_orders_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_preorder_orders_drop_id_fkey"
+            columns: ["drop_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_preorder_drops"
             referencedColumns: ["id"]
           },
         ]
@@ -1729,8 +2033,114 @@ export type Database = {
           },
         ]
       }
+      school_reviews: {
+        Row: {
+          academics_comment: string | null
+          academics_score: number
+          child_grade: string
+          community_id: string
+          created_at: string
+          happiness_comment: string | null
+          happiness_score: number
+          id: string
+          infrastructure_comment: string | null
+          infrastructure_score: number
+          overall_comment: string | null
+          safety_comment: string | null
+          safety_score: number
+          school_id: string
+          sports_activities_comment: string | null
+          sports_activities_score: number
+          teachers_comment: string | null
+          teachers_score: number
+          transport_comment: string | null
+          transport_score: number
+          updated_at: string
+          user_id: string
+          value_comment: string | null
+          value_score: number
+        }
+        Insert: {
+          academics_comment?: string | null
+          academics_score: number
+          child_grade: string
+          community_id: string
+          created_at?: string
+          happiness_comment?: string | null
+          happiness_score: number
+          id?: string
+          infrastructure_comment?: string | null
+          infrastructure_score: number
+          overall_comment?: string | null
+          safety_comment?: string | null
+          safety_score: number
+          school_id: string
+          sports_activities_comment?: string | null
+          sports_activities_score: number
+          teachers_comment?: string | null
+          teachers_score: number
+          transport_comment?: string | null
+          transport_score: number
+          updated_at?: string
+          user_id: string
+          value_comment?: string | null
+          value_score: number
+        }
+        Update: {
+          academics_comment?: string | null
+          academics_score?: number
+          child_grade?: string
+          community_id?: string
+          created_at?: string
+          happiness_comment?: string | null
+          happiness_score?: number
+          id?: string
+          infrastructure_comment?: string | null
+          infrastructure_score?: number
+          overall_comment?: string | null
+          safety_comment?: string | null
+          safety_score?: number
+          school_id?: string
+          sports_activities_comment?: string | null
+          sports_activities_score?: number
+          teachers_comment?: string | null
+          teachers_score?: number
+          transport_comment?: string | null
+          transport_score?: number
+          updated_at?: string
+          user_id?: string
+          value_comment?: string | null
+          value_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_reviews_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schools: {
         Row: {
+          address: string | null
+          area_locality: string | null
+          avg_academics: number | null
+          avg_happiness: number | null
+          avg_infrastructure: number | null
+          avg_safety: number | null
+          avg_sports_activities: number | null
+          avg_teachers: number | null
+          avg_transport: number | null
+          avg_value: number | null
           community_id: string
           contact_phone: string | null
           created_at: string
@@ -1739,14 +2149,27 @@ export type Database = {
           distance: number
           facilities: string[]
           fee_range: string
+          google_maps_link: string | null
+          google_rating: string | null
           id: string
           level: string
           name: string
+          review_count: number | null
           syllabus: string
           updated_at: string
           website: string | null
         }
         Insert: {
+          address?: string | null
+          area_locality?: string | null
+          avg_academics?: number | null
+          avg_happiness?: number | null
+          avg_infrastructure?: number | null
+          avg_safety?: number | null
+          avg_sports_activities?: number | null
+          avg_teachers?: number | null
+          avg_transport?: number | null
+          avg_value?: number | null
           community_id: string
           contact_phone?: string | null
           created_at?: string
@@ -1755,14 +2178,27 @@ export type Database = {
           distance: number
           facilities?: string[]
           fee_range: string
+          google_maps_link?: string | null
+          google_rating?: string | null
           id?: string
           level: string
           name: string
+          review_count?: number | null
           syllabus: string
           updated_at?: string
           website?: string | null
         }
         Update: {
+          address?: string | null
+          area_locality?: string | null
+          avg_academics?: number | null
+          avg_happiness?: number | null
+          avg_infrastructure?: number | null
+          avg_safety?: number | null
+          avg_sports_activities?: number | null
+          avg_teachers?: number | null
+          avg_transport?: number | null
+          avg_value?: number | null
           community_id?: string
           contact_phone?: string | null
           created_at?: string
@@ -1771,9 +2207,12 @@ export type Database = {
           distance?: number
           facilities?: string[]
           fee_range?: string
+          google_maps_link?: string | null
+          google_rating?: string | null
           id?: string
           level?: string
           name?: string
+          review_count?: number | null
           syllabus?: string
           updated_at?: string
           website?: string | null
@@ -2205,8 +2644,27 @@ export type Database = {
         Args: { p_user_id?: string; p_visit_id: string }
         Returns: boolean
       }
+      check_mcn_drop_item_capacity: {
+        Args: {
+          p_drop_id: string
+          p_existing_order_id?: string
+          p_requested_qty: number
+        }
+        Returns: {
+          can_place: boolean
+          current_items: number
+          effective_current_items: number
+          max_items: number
+          projected_items: number
+          remaining_capacity: number
+        }[]
+      }
       community_lead_remove_resident: {
         Args: { p_reason?: string; p_target_profile_id: string }
+        Returns: undefined
+      }
+      delete_community_fund: {
+        Args: { p_event_id: string }
         Returns: undefined
       }
       generate_community_code: { Args: never; Returns: string }
@@ -2588,6 +3046,25 @@ export type Database = {
           rating_count: number
         }[]
       }
+      platform_get_community_businesses: {
+        Args: { p_community_id: string }
+        Returns: {
+          avg_rating: number
+          category_emoji: string
+          category_name: string
+          contact_phone: string
+          created_at: string
+          description: string
+          image_url: string
+          is_active: boolean
+          listing_id: string
+          name: string
+          owner_flat: string
+          owner_name: string
+          product_count: number
+          rating_count: number
+        }[]
+      }
       platform_get_community_dashboard: {
         Args: { p_community_id: string }
         Returns: {
@@ -2609,6 +3086,30 @@ export type Database = {
           visits_planned: number
         }[]
       }
+      platform_get_community_dashboard_v2: {
+        Args: { p_community_id?: string }
+        Returns: {
+          active_businesses: number
+          active_food_drops: number
+          dau_today: number
+          hires_past_30d: number
+          mau_30d: number
+          total_business_products: number
+          total_businesses: number
+          total_collected: number
+          total_food_drops: number
+          total_food_revenue: number
+          total_funds: number
+          total_hires: number
+          total_preorders: number
+          total_providers: number
+          total_residents: number
+          total_spent: number
+          visits_completed: number
+          visits_past_30d: number
+          visits_planned: number
+        }[]
+      }
       platform_get_community_funds: {
         Args: { p_community_id: string }
         Returns: {
@@ -2623,6 +3124,24 @@ export type Database = {
           is_closed: boolean
           title: string
           treasurers: Json
+        }[]
+      }
+      platform_get_community_preorders: {
+        Args: { p_community_id: string }
+        Returns: {
+          created_at: string
+          creator_flat: string
+          creator_name: string
+          cutoff_at: string
+          description: string
+          drop_id: string
+          fulfillment_date: string
+          fulfillment_time: string
+          image_url: string
+          orders_count: number
+          status: string
+          title: string
+          total_revenue: number
         }[]
       }
       platform_get_provider_details: {

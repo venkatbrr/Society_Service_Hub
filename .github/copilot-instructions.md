@@ -1,49 +1,72 @@
 # Copilot Instructions
 
-All project documentation lives in `docs/`. **Read these files before making changes:**
+Society Service Hub — a multi-tenant community app for gated residential societies. **Expo (React Native) + TypeScript + Supabase + expo-router**, targeting Android, iOS, and an installable PWA, plus a separate vanilla-JS admin console.
 
-- [docs/CLAUDE.md](../docs/CLAUDE.md) — Commands, conventions, key patterns
-- [docs/architecture.md](../docs/architecture.md) — Data flow, auth, database schema, state management, type system
-- [docs/features.md](../docs/features.md) — Every feature: screens, tables, business rules, roles, integrations
-- [docs/copilot-instructions.md](../docs/copilot-instructions.md) — Technical and functional specifications
-- [docs/verandah.md](../docs/verandah.md) — Verandah design system reference (tokens, palette, typography, component rules)
-- [docs/disabled-features.md](../docs/disabled-features.md) — Intentionally disabled features and re-enablement plan
+## Where the documentation is
 
-## Quick Reference
+Start with [`docs/README.md`](../docs/README.md) — it is the routing table that tells you which doc answers your question. Open only what your task needs.
 
-- **Stack**: Expo (React Native) + TypeScript + Supabase + expo-router
-- **Commands**: `npm start`, `npm run web`, `npx tsc --noEmit`
-- **Icons**: Only `Ionicons` from `@expo/vector-icons` for interactive controls
-- **Design System**: Verandah — light-mode-only, flat surfaces, no shadows/elevation/glassmorphism
-  - Colors: `constants/Colors.ts` (`Verandah` palette — surface `#FAF8F4`, card `#FFFFFF`, accent `#0F6E56`)
-  - Typography, spacing, radius: `constants/Verandah.ts` (`VerandahType`, `VerandahSpace`, `VerandahRadius`)
-  - Font weights: 400 and 500 only. Sentence case everywhere.
-  - Shared components: `BaseCard`, `Avatar`, `Rupees`, `EmptyState`
-- **Tabs**: 5 bottom tabs — Help, Saved, MCN (My Community Network), Community, Profile
-- **Multi-tenant**: All queries must filter by `communityId` from `useAuth()`
-- **Single-row queries**: Use `.maybeSingle()` not `.single()`
-- **Toast**: Use `react-native-toast-message` for user feedback
-- **Date inputs**: Always use `@react-native-community/datetimepicker`
-- **Categories**: Import from `constants/categories.ts` (providers/visits) and `lib/serviceCategories.ts` (personal reminders)
-- **Compact UI**: The Help tab uses WhatsApp chat-tile inspired density for provider and visit cards
+| File | Read it when |
+|------|-------------|
+| [`app-summary.md`](app-summary.md) | You need the whole-app picture: modules, roles, data model, routes |
+| [`docs/CLAUDE.md`](../docs/CLAUDE.md) | Always, before editing — commands, conventions, traps |
+| [`docs/features.md`](../docs/features.md) | Changing a screen's behavior |
+| [`docs/architecture.md`](../docs/architecture.md) | Touching schema, RLS, RPCs, auth, routing, or types |
+| [`docs/verandah.md`](../docs/verandah.md) | Writing any UI |
+| [`docs/platform-admin.md`](../docs/platform-admin.md) | Working on the web admin console |
+| [`docs/disabled-features.md`](../docs/disabled-features.md) | A feature seems missing |
+| [`docs/cross-community.md`](../docs/cross-community.md) | Touching federation objects |
 
-## Keeping Docs in Sync
+## Quick reference
 
-**When you modify code, update the corresponding documentation in `docs/`:**
+- **Commands**: `npm start` · `npm run web` · `npm run android` · `npx tsc --noEmit` (the only validation gate — no test framework exists)
+- **Tabs**: Help · Saved · MCN · Community · Profile
+- **Multi-tenant**: scope every community query by `communityId` from `useAuth()`.
+  Exceptions (user-scoped, never pass `communityId`): `user_services`, `user_service_history`, `hire_feedback`, `provider_public_rating_nudges`, `provider_personal_notes`, `favorites`.
+- **Roles**: `admin` (platform, no community) · `president` / `vice_president` (community leads) · `resident`. Fund roles are separate: `treasurer` / `collector`.
+  ⚠️ **`community_lead` is a dead legacy value.** Use `isCommunityLead` from `useAuth()`, or `public.is_community_lead(auth.uid())` in SQL.
+- **Single-row reads**: `.maybeSingle()`, never `.single()`.
+- **Icons**: `Ionicons` from `@expo/vector-icons` for every interactive control.
+- **Toasts**: `react-native-toast-message` for all user feedback.
+- **Confirmations**: platform-split — `window.confirm` on web, `Alert.alert` on native. RN `Alert` is a no-op on web.
+- **Dates**: always `@react-native-community/datetimepicker`; store visit dates as local `YYYY-MM-DD`.
+- **Search**: debounce 300 ms into a separate state and use *that* in fetch dependency arrays.
+- **Categories**: import from `constants/categories.ts` (providers/visits), `lib/serviceCategories.ts` (reminders), `constants/schoolReviewAspects.ts` (school reviews). Never define local category arrays.
+- **MCN routes**: adding one under `app/network/` also requires a parent mapping in `getImmediateParentRoute()` in `lib/navigation.ts`, or back navigation breaks.
+- **Generated types**: `lib/database.types.ts` is generated — never hand-edit it.
 
-- New or changed screens/features → update `docs/features.md`
-- Architecture changes (tables, RLS, context, routes, types) → update `docs/architecture.md`
-- New commands, conventions, or dependencies → update `docs/CLAUDE.md`
-- Disabled or re-enabled features → update `docs/disabled-features.md`
+## Design system — Verandah
 
-Treat doc updates as part of the implementation, not a follow-up task.
+Light-mode only, flat surfaces, **no shadows / elevation / glassmorphism**.
 
-## Deploying Database Changes
+- Colors: `constants/Colors.ts` (`Verandah` — surface `#FAF8F4`, card `#FFFFFF`, primary `#0F3732`, accent `#0F6E56`)
+- Type, spacing, radius, layout: `constants/Verandah.ts` (`VerandahType`, `VerandahSpace`, `VerandahRadius`, `VerandahLayout`)
+- Font weights: **400 and 500 only**. Sentence case everywhere. No raw hex in feature UI.
+- Shared components: `BaseCard`, `Avatar`, `Rupees`, `EmptyState`, `SearchBar`, `CategoryFilter`, `ImageUploader`
+- The Help tab uses compact WhatsApp chat-tile density — new cards there must match.
+- Web-specific rendering goes in a `.web.tsx` sibling, not a `Platform.OS` branch.
 
-When you create or modify migration files (`supabase/migrations/`), deploy them automatically:
+## Keeping docs in sync
 
-1. Run `npm run db:push` to apply migrations to Supabase
-2. Run `npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj` to regenerate `lib/database.types.ts`
-3. Verify no TypeScript errors with `npx tsc --noEmit`
+Docs are part of the change set, not a follow-up. Route each update to exactly **one** home:
 
-Do not leave database changes unapplied.
+- User-visible behavior → `docs/features.md`
+- Table / RLS / RPC / trigger / route / type / context → `docs/architecture.md`
+- Command / convention / dependency → `docs/CLAUDE.md`
+- Design token / shared component → `docs/verandah.md`
+- Admin console → `docs/platform-admin.md`
+- New module, tab, or role → also add a line to `.github/app-summary.md`
+- Feature disabled or re-enabled → `docs/disabled-features.md`
+- Anything touching federation → `docs/cross-community-changelog.md` (mandatory)
+
+Do not restate schema columns in `features.md` — `architecture.md` owns them.
+
+## Deploying database changes
+
+When you create or modify a file in `supabase/migrations/`, finish the loop yourself:
+
+1. `npm run db:push`
+2. `npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj`
+3. `npx tsc --noEmit`
+
+Write idempotent SQL, enable RLS with explicit policies on every new table, and end schema-changing migrations with `NOTIFY pgrst, 'reload schema';`.

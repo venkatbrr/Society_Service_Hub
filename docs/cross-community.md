@@ -154,7 +154,7 @@ The existing community-scoped `SELECT` policies on `service_providers`, `service
                                                        revoked ◄────────────┘
 ```
 
-- Only `community_lead` users can call lifecycle RPCs.
+- Only community leads can call lifecycle RPCs — that is, `president` or `vice_president`, resolved through `public.is_community_lead()`. (The `community_lead` role string is a dead legacy enum value; see [`architecture.md`](architecture.md) §3.)
 - The accepting lead must be on the *opposite* community from the initiator.
 - `paused` blocks new cross-community access immediately; previously-visible rows become invisible until the partnership is reactivated.
 - `revoked` is terminal for the row but a fresh request can be filed (the RPC uses `ON CONFLICT … DO UPDATE` to reset).
@@ -167,10 +167,10 @@ These RPCs already exist in the database. They are simply not called by any curr
 
 | RPC | Caller | Purpose |
 |-----|--------|---------|
-| `request_community_partnership(p_target_community_id, p_scope)` | community_lead | Create or reset a `pending` partnership and notify target leads. |
-| `accept_community_partnership(p_partnership_id)` | community_lead on target side | Move to `active` and notify the initiator. |
-| `set_partnership_status(p_partnership_id, p_status)` | community_lead on either side | Pause / unpause / revoke. |
-| `set_provider_visibility(p_provider_id, p_visibility, p_targets)` | provider creator OR community_lead of provider's community | Change `visibility` and replace `provider_shares` rows. |
+| `request_community_partnership(p_target_community_id, p_scope)` | community lead | Create or reset a `pending` partnership and notify target leads. |
+| `accept_community_partnership(p_partnership_id)` | community lead on target side | Move to `active` and notify the initiator. |
+| `set_partnership_status(p_partnership_id, p_status)` | community lead on either side | Pause / unpause / revoke. |
+| `set_provider_visibility(p_provider_id, p_visibility, p_targets)` | provider creator OR community lead of provider's community | Change `visibility` and replace `provider_shares` rows. |
 | `list_visible_providers(p_search, p_category, p_communities)` | any authenticated user | Read RPC for the future segmented control. Each row is tagged with `origin_community_id`, `origin_community_name`, `is_own_community`. Today returns only own-community providers because no other visibility has been set. |
 | `list_partner_communities()` | any authenticated user with a community | Returns active and pending partner communities. Today returns zero rows for everyone. |
 

@@ -48,7 +48,7 @@ interface CartItem {
 export default function ListingDetailScreen() {
   const { id: listingId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user, communityId, profile, refreshSession } = useAuth();
+  const { user, communityId, profile, refreshSession, isCommunityLead } = useAuth();
   const colors = Verandah;
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -303,7 +303,7 @@ export default function ListingDetailScreen() {
         options={buildMcnHeaderOptions({
           title: listing.name,
           onBack: handleGoBack,
-          headerRight: user?.id === listing.owner_id ? () => (
+          headerRight: user?.id === listing.owner_id || isCommunityLead ? () => (
             <TouchableOpacity
               onPress={() => router.push(`/network/listing/manage/${listing.id}` as any)}
               style={{

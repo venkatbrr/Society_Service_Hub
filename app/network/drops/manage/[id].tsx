@@ -255,6 +255,34 @@ export default function ManagePreorderDropScreen() {
   const fulfilledOrders = orders.filter((o) => o.status === 'fulfilled');
   const cancelledOrders = orders.filter((o) => o.status === 'cancelled');
 
+  const handleDeleteDrop = () => {
+    if (!drop) return;
+    const confirmDelete = async () => {
+      try {
+        const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
+        if (error) throw error;
+        Toast.show({ type: 'success', text1: 'Food drop deleted' });
+        router.replace('/network/drops');
+      } catch (err: any) {
+        Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
+      }
+    };
+
+    const title = 'Delete Food Drop?';
+    const message = `Are you sure you want to delete "${drop.title}"? All items and pre-orders will be deleted. This cannot be undone.`;
+
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm(`${title}\n${message}`)) {
+        void confirmDelete();
+      }
+    } else {
+      Alert.alert(title, message, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: confirmDelete },
+      ]);
+    }
+  };
+
   const handleBack = () => {
     goBackSmart(router, '/network/drops/manage/' + String(dropId || ''));
   };
@@ -304,6 +332,11 @@ export default function ManagePreorderDropScreen() {
                 <Text style={styles.completedBadgeText} numberOfLines={1}>Completed</Text>
               </View>
             )}
+
+            <TouchableOpacity style={[styles.closeBtn, { backgroundColor: '#FEE2E2', borderColor: '#F87171' }]} onPress={handleDeleteDrop}>
+              <Ionicons name="trash-outline" size={14} color="#DC2626" />
+              <Text style={[styles.closeBtnText, { color: '#DC2626' }]} numberOfLines={1}>Delete</Text>
+            </TouchableOpacity>
           </View>
         </View>
 

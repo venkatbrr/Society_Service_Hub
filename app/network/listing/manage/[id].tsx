@@ -48,7 +48,7 @@ interface Listing {
 export default function ManageListingScreen() {
   const { id: listingId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isCommunityLead } = useAuth();
   const colors = Verandah;
 
   const [listing, setListing] = useState<Listing | null>(null);
@@ -96,16 +96,16 @@ export default function ManageListingScreen() {
       setLoading(true);
       // Fetch listing details
       const { data: listingData, error: listingError } = await supabase
-        .from('mcn_business_listings')
-        .select('*, category:mcn_categories(*)')
+        .from('mcn_listings')
+        .select('*, category:mcn_business_categories(*)')
         .eq('id', listingId)
         .maybeSingle();
 
       if (listingError) throw listingError;
       if (!listingData) throw new Error('Listing not found');
-      
-      // Security check: ensure current user is owner
-      if (listingData.owner_id !== user.id) {
+
+      // Security check: ensure current user is owner or a community lead
+      if (listingData.owner_id !== user.id && !isCommunityLead) {
         Toast.show({ type: 'error', text1: 'Not authorized to manage this listing' });
         router.replace('/network/business' as any);
         return;
@@ -158,7 +158,7 @@ export default function ManageListingScreen() {
     } finally {
       setLoading(false);
     }
-  }, [listingId, user?.id]);
+  }, [listingId, user?.id, isCommunityLead]);
 
   useEffect(() => {
     fetchData();

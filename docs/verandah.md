@@ -13,7 +13,7 @@ This document is the canonical reference for the Verandah UI system used in Soci
 ## Token Sources
 
 - Color tokens: `constants/Colors.ts` (`Verandah`)
-- Type, spacing, radius tokens: `constants/Verandah.ts` (`VerandahType`, `VerandahSpace`, `VerandahRadius`)
+- Type, spacing, radius, layout tokens: `constants/Verandah.ts` (`VerandahType`, `VerandahSpace`, `VerandahRadius`, `VerandahLayout`)
 
 No production UI should define parallel visual token sets.
 
@@ -88,12 +88,39 @@ From `VerandahRadius`:
 - `pill`: 999
 - `frame`: 32
 
+## Layout Tokens
+
+From `VerandahLayout` — these differ by platform because web has no status bar:
+
+- `screenPaddingTop`: 16 on web, 60 on native
+- `mcnHeaderToContentGap`: 4
+
+Also exported from `constants/Verandah.ts`:
+
+- `getNetworkTileImageHeight()` → 108. Shared image height for network tiles (Pre-order Food, Community Business).
+- `format12HourTime(timeStr)` → converts `"13:00"` to `"01:00 pm"`. Use this rather than hand-rolling AM/PM formatting; it passes through strings that already carry am/pm.
+
 ## Component Rules
 
-- `BaseCard`: default wrapper for cards and grouped informational sections.
-- `Avatar`: use for all person entities (creators, residents, joiners, contributors).
-- `Rupees`: use for rupee amounts where feasible; avoid manual `Rs`/`₹` string formatting.
-- `EmptyState`: standard empty/list-zero rendering.
+Reuse these instead of building local variants:
+
+| Component | Use for |
+|-----------|---------|
+| `BaseCard` | Default wrapper for cards and grouped informational sections |
+| `Avatar` | All person entities — creators, residents, joiners, contributors |
+| `Rupees` | Rupee amounts; avoid manual `Rs`/`₹` string formatting |
+| `EmptyState` | Standard empty / list-zero rendering |
+| `SearchBar` | Any list search input (36 px tall on the Help tab) |
+| `CategoryFilter` | The two-level provider/visit category picker |
+| `HeaderBackButton` | Stack header back affordance |
+| `ImageUploader` | Any Cloudinary image upload |
+| `RatingStars` / `EmojiRating` | Provider star ratings / school aspect emoji scale |
+
+### Platform-specific variants
+
+Some components ship a `.web.tsx` sibling because their native rendering does not translate to the browser: `AppIcon`, `EmojiRating`, `HeaderBackButton`, `NetworkTileIcon`, `SchoolAspectIcon`, `SchoolRadarChart`, `ScoreSentimentIcon`, `MotionWrapper`.
+
+**Prefer adding a `.web.tsx` sibling over branching on `Platform.OS` inside a render tree.** Metro resolves the variant automatically.
 
 General constraints:
 

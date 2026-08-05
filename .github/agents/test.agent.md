@@ -1,7 +1,7 @@
 ---
 name: test
-description: End-to-end tester for Society Service Hub. Use when you want to verify features, UI alignment, or regressions across all screens. Invoke by sending "test" or a specific area e.g. "test providers", "test visits", "test mcn". Automatically hands off all failures to the bug_fix agent after the run.
-argument-hint: Area to test (e.g. "providers", "visits", "funds", "reminders", "notifications", "mcn", "sos") or "all" for a full regression run. Leave blank to test everything.
+description: End-to-end tester for Society Service Hub. Use when you want to verify features, UI alignment, or regressions across all screens. Invoke by sending "test" or a specific area e.g. "test providers", "test carpools", "test mcn". Automatically hands off all failures to the bug_fix agent after the run.
+argument-hint: Area to test (e.g. "providers", "visits", "funds", "reminders", "notifications", "mcn", "drops", "carpools", "parents", "schools", "sos") or "all" for a full regression run. Leave blank to test everything.
 tools: ['execute', 'read', 'search', 'web', 'todo', 'agent']
 agents: [bug_fix]
 ---
@@ -9,255 +9,287 @@ agents: [bug_fix]
 # Society Service Hub — Test Agent
 
 ## Purpose
-Automated end-to-end feature and UI alignment tester for the Society Service Hub app.
-When invoked, run the app on the connected emulator (or device), sign in with the test account, and methodically test every feature area requested. Report pass/fail with observed vs expected behaviour and flag any visual misalignment.
+Automated end-to-end feature and UI tester. Run the app, sign in with the test account, and methodically test the requested areas. Report pass/fail with observed vs expected behavior and flag visual misalignment.
 
-> ⚠️ **Security note**: Credentials below are for a local dev/test account only. Do NOT commit this file to a public repository.
+There is **no automated test suite** in this repo — this agent is the manual regression pass. `npx tsc --noEmit` is the only static gate.
 
-## Test Credentials
-- **Email**: ira@gmail.com
-- **Password**: 123456
+> ⚠️ **Security note**: the credentials below are a local dev/test account only. Do not publish this file to a public repository.
 
-## How to start the app
+## Test credentials
+- **Email**: `ira@gmail.com`
+- **Password**: `123456`
+
+## Starting the app
 ```bash
-npm run android
+npm run android     # native regression
+npm run web         # faster for layout and web-specific checks
 ```
-Wait for Metro to bundle and the app to launch on the emulator before beginning tests.
+Wait for Metro to bundle and the app to launch before starting.
+
+Test **both targets** for anything involving confirmations, pull-to-refresh, back navigation, or safe-area layout — these behave differently on web and native by design.
 
 ---
 
-## Test Plan
+## Test plan
 
-Run each section in order. For each check, record ✅ pass or ❌ fail with a brief note on what was observed.
-
----
+Record ✅ pass or ❌ fail per check with a note on what was observed.
 
 ### 1. Authentication
-- [ ] App launches and shows Login screen
-- [ ] Sign in with email ``ira@gmail.com`` / password ``123456``
-- [ ] Correct redirect to main tabs (not platform admin, not community-select)
-- [ ] User name and flat number visible on Profile tab
-- [ ] Sign out and sign back in — session restores correctly
+- [ ] Login screen appears on launch
+- [ ] Sign in with `ira@gmail.com` / `123456`
+- [ ] Redirect lands on the main tabs (not admin, not community-select)
+- [ ] Name and flat number visible on Profile
+- [ ] Sign out, sign back in — session restores
+- [ ] Deep link while signed out (e.g. `/network/drops/<id>` on web) returns to that route after login
 
----
+### 2. Help tab — Providers
+- [ ] Providers segment lists community providers, sorted by rating
+- [ ] Cards render as compact single-row tiles (avatar · name · inline meta · bookmark)
+- [ ] Tile shows category emoji, average rating, hire count; verified providers show a Verified pill
+- [ ] Search bar is 36 px and filters with a 300 ms debounce
+- [ ] Group chip row filters to all categories in that group; category chip row narrows further
+- [ ] Tapping a provider opens Provider Detail
+- [ ] Detail shows rating stars and contact buttons (phone, WhatsApp, share)
+- [ ] Toggling favorite updates the bookmark without a reload
+- [ ] Residents see "Report provider"; leads and platform admins see "Delete provider" instead
+- [ ] Personal note editor is present and private
+- [ ] Reviews list collapses to 3 with Load more / Show less
+- [ ] Add Provider: name, phone, category required; grouped category picker; category-specific detail fields appear
+- [ ] **Duplicate phone routes to the existing provider instead of creating a new row**
+- [ ] Saved provider appears in the list on return
 
-### 2. Help Tab — Providers Segment
-- [ ] "Providers" segment loads a list of community providers
-- [ ] Provider cards display as compact WhatsApp-style horizontal tiles (avatar · name · inline meta · bookmark)
-- [ ] Provider tile shows name, category emoji, average rating with star icon, hire count, and bookmark icon
-- [ ] Verified providers show a small "Verified" pill badge inline with the name
-- [ ] Search bar is compact (36px tall) and filters results with debounced (300ms) queries
-- [ ] Category group row and category chip row filter providers correctly (two-level grouped filter)
-- [ ] Selecting a group chip filters to all categories within that group
-- [ ] Tapping a provider opens Provider Detail screen
-- [ ] Provider Detail shows rating stars, contact buttons (phone, WhatsApp, share)
-- [ ] Toggling favorite on a provider updates the bookmark icon without reload
-- [ ] Report provider button is visible for residents (not leads/admins)
-- [ ] Community leads and platform admins see "Delete provider" instead of report
-- [ ] Personal note editor is visible on provider detail
-- [ ] Add Provider (+ FAB → add form)
-  - [ ] Name, phone, and category are required — form shows errors when missing
-  - [ ] Category picker uses two-level grouped layout
-  - [ ] Duplicate phone number routes to existing provider instead of creating a new one
-  - [ ] Category-specific detail fields appear correctly (e.g. Photography, Decoration, Electrician)
-  - [ ] Successful save returns to the list and provider appears in it
+### 3. Help tab — Service Visits
+- [ ] Upcoming / Past / Archived sub-tabs load
+- [ ] Visits render as a SectionList grouped by category with emoji, name, and count badge; busiest section first; empty categories hidden
+- [ ] Cards are compact (10 px padding, 30 px avatars)
+- [ ] Past/Archived rows never show an "upcoming" badge
+- [ ] Cancelled visits move to Past/Archived immediately
+- [ ] Creator sees status controls and reschedule; non-creator sees Join / Leave
+- [ ] Reschedule updates date/time and emits a community notification
+- [ ] Join modal pre-fills flat number from the profile
+- [ ] Add Visit: title, category, provider, date required; manual phone validated to 10 digits; date does not roll back a day
 
----
+### 4. Help tab — Maintenance banner
+- [ ] Zero-service state is a single-row inline banner (emoji · title · "Add service" pill · dismiss)
+- [ ] Has-due state shows compact reminder cards
+- [ ] All-clear state shows the compact all-tracked message
+- [ ] Dismiss persists via AsyncStorage
 
-### 3. Help Tab — Service Visits Segment
-- [ ] "Service Visits" segment loads Upcoming, Past (Recent), and Archived sub-tabs
-- [ ] Visits are grouped by category (SectionList) with section headers showing category emoji, name, and visit count badge
-- [ ] Visit cards are compact with reduced padding (10px), smaller avatars (30px), and smaller text
-- [ ] Past/Archived visits do not display an "upcoming" status badge even with stale status values
-- [ ] Search and category filter work within visits
-- [ ] Tapping a visit opens Visit Detail
-  - [ ] Creator sees status controls (mark in-progress, complete, cancel, reschedule)
-  - [ ] Reschedule action updates date/time and emits a community notification
-  - [ ] Non-creator sees Join / Leave button
-  - [ ] Joiner list is visible
-  - [ ] Join modal pre-fills flat number from profile
-- [ ] Add Visit (+ FAB)
-  - [ ] Title, category, provider, and date are required
-  - [ ] Category picker uses two-level grouped layout
-  - [ ] Existing provider can be selected or manual name entered
-  - [ ] Manual phone/WhatsApp validated to 10-digit mobile
-  - [ ] Saved visit appears in Upcoming list
+### 5. Saved tab
+- [ ] Saved providers appear
+- [ ] Unfavoriting removes the item immediately
+- [ ] Refreshes when returning from provider detail
 
----
+### 6. MCN hub
+- [ ] MCN is the 3rd tab with a people icon
+- [ ] Quick actions: My Orders, My Submissions
+- [ ] Four section cards render with live counts: Pre-order Food & Community Business, Community Carpooling, Parent Corner, Schools Catalog & Compare
+- [ ] Counts refresh on focus and on pull-to-refresh
+- [ ] Each card navigates to the right route
 
-### 4. Help Tab — Maintenance Banner (UpcomingServicesCard)
-- [ ] Zero-service state renders as compact single-row inline banner (wrench emoji · title · "Add service" pill · dismiss)
-- [ ] Has-due state shows compact reminder cards with reduced padding
-- [ ] All-clear state shows compact all-tracked message
-- [ ] Dismiss action persists via AsyncStorage
+### 7. MCN — Business listings
+- [ ] Listings grouped by category into collapsible sections; active before paused
+- [ ] Category chip bar filters; tapping the active chip returns to All
+- [ ] Inactive listings show an inactive badge
+- [ ] Search debounces 300 ms
+- [ ] Detail shows category badge and splits offerings into Products and Services
+- [ ] `NULL` price renders as "Price on request"
+- [ ] Quantity steppers use 0.5 for kg/litre and 1 for piece/box/pack/dozen
+- [ ] Placing an order works; re-ordering updates the existing pending order
+- [ ] Add Listing: name, category, contact phone required; category from `mcn_business_categories`
+- [ ] Manage (owner): toggle active/paused, add/edit/delete offerings with item type and optional price
+- [ ] **Manage is also reachable by a community lead**; a non-owner non-lead is redirected out
+- [ ] Deleting a product referenced by an order item is blocked
+- [ ] Orders Received grouped Pending / Fulfilled / Cancelled; WhatsApp message pre-fills items and total
 
----
+### 8. MCN — Pre-order food drops
+- [ ] Catalog tabs: Active / Closed / My drops
+- [ ] Cards show host name + flat, linked business, and close/delivery timing chips
+- [ ] **Signed-out browsing works** — open a drop link in a private window
+- [ ] Add drop: title, fulfillment date, fulfillment time, cutoff required
+- [ ] **Delivery time must be later than the cutoff** — earlier is rejected
+- [ ] Items accept unit, price, and optional max quantity
+- [ ] Ordering past the cutoff is blocked
+- [ ] A resident can place multiple orders while the drop is open
+- [ ] `confirmed` orders can be edited and cancelled by the buyer
+- [ ] Once marked fulfilled, the order shows Delivered and is immutable
+- [ ] Exceeding an item's max quantity is rejected (trigger-enforced — verify it fails even if the UI allows it)
+- [ ] Manage dashboard aggregates item totals and splits the roster into active / delivered / cancelled
+- [ ] "Mark delivered" is hidden on cancelled orders
+- [ ] **Creator and community lead can both delete a drop** from detail header and manage dashboard
+- [ ] Delete confirmation appears on **both** web (`window.confirm`) and native (`Alert.alert`)
 
-### 5. Favorites Tab (Saved)
-- [ ] Saved providers appear in the Favorites tab
-- [ ] Unfavoriting a provider removes it immediately from the list
-- [ ] Tab refreshes when returning from provider detail
+### 9. MCN — Carpools
+- [ ] Tabs: All / Offering / Seeking / My rides
+- [ ] Status badges: Active (green), Paused (amber), Cancelled (red)
+- [ ] Search matches title, start point, end point, and vehicle info
+- [ ] Add ride: title, start point, end point required; recurring days, seats, pricing type, price per seat, contact phone captured
+- [ ] Join request is offered only on `active` + `offering` rides, and not to the owner
+- [ ] Rider submits seats and note; host sees the request
+- [ ] Host can accept and reject pending requests
+- [ ] Owner can pause, cancel, and delete; **a community lead can also delete**
 
----
+### 10. MCN — Parent Corner
+- [ ] Directory lists entries with student, school, grade, parent, flat
+- [ ] Filters work: institution type, board, school
+- [ ] Sorting works: school, grade, flat, recent
+- [ ] Search debounces 300 ms
+- [ ] Add entry: student name, school name, class, parent name, flat, phone all required
+- [ ] Own entry can be edited and deleted; **a community lead can edit/delete any**
+- [ ] Call and share actions work
 
-### 6. MCN Tab (My Community Network)
-- [ ] MCN tab appears as 3rd tab in bottom navigation with "MCN" label and people icon
-- [ ] Business Listings
-  - [ ] Business listing cards show business name, owner, category badge, and image
-  - [ ] Category chip bar filters listings by category
-  - [ ] Inactive listings display an inactive badge
-  - [ ] Tapping a listing opens Listing Detail with offerings, contact details
-  - [ ] Listing Detail supports placing an order with quantity controls per offering
-  - [ ] "Price on request" displays when offering price is NULL
-- [ ] Add Listing
-  - [ ] Business name, category, and contact phone are required
-  - [ ] Category comes from `mcn_business_categories` lookup
-- [ ] Manage Listing (owner only)
-  - [ ] Toggle listing active/paused
-  - [ ] Add/edit/delete products and services with optional price and item type
-  - [ ] Orders received are grouped by status (Pending, Fulfilled, Cancelled)
-- [ ] Borrow & Share posts
-  - [ ] Borrow posts visible via the Borrow & Share card linking to my-posts in borrow-only mode
-  - [ ] Add borrow post requires title and contact info
-- [ ] My Posts
-  - [ ] User's own posts grouped by Active and Closed
-  - [ ] Close/delete actions available for own posts only
-- [ ] My Orders
-  - [ ] Own orders grouped by status
-  - [ ] Cancel own pending orders
+### 11. MCN — Schools & Parent Report Card
+- [ ] Catalog merges curated and community-submitted schools
+- [ ] Cards show syllabus, level, distance, fee range, review count
+- [ ] Selecting a 4th school for comparison is refused with an info toast
+- [ ] Compare view renders up to 3 schools side by side
+- [ ] Detail renders the 8-axis radar chart, aspect breakdown, and review cards
+- [ ] Report card: 8 aspects on the emoji scale, child grade, optional 140-char per-aspect notes, overall comment
+- [ ] Submitting updates the school's aggregate averages and review count
+- [ ] Add school: name, distance, fee range required; phone must be 10 digits
 
----
+### 12. MCN — Posts and orders
+- [ ] My Submissions groups own posts into Active and Closed with close/delete
+- [ ] Borrow-only community-feed mode shows all community borrow posts but limits close/delete to own rows
+- [ ] Add borrow post requires title and contact info
+- [ ] My Orders has Pre-order food and Business tabs, both scoped to the signed-in buyer
+- [ ] Pending business orders and confirmed pre-orders can be cancelled; fulfilled/cancelled are read-only
 
-### 7. Community Tab
-- [ ] Community tab shows funds summary/status card, residents shortcut, SOS shortcut, and community info
-- [ ] Community join code visible with Invite neighbors share action
-- [ ] Funds area shows correct activation state:
-  - [ ] CTA card when `funds_enabled = false` with no active request
-  - [ ] Pending review card when request is pending (with withdraw for requester)
-  - [ ] Rejected status with reason and retry option
-  - [ ] Active overview with income/expense/balance when funds enabled
-- [ ] Tapping funds card opens Fund Detail
-  - [ ] Transaction history visible
-  - [ ] Role badge shows (viewer/collector/treasurer)
-  - [ ] Treasurer can add income and expense transactions
-  - [ ] Community lead can close a fund to block further transactions
-- [ ] Add Fund button visible (community lead or above)
-- [ ] Residents shortcut navigates to directory
-- [ ] SOS shortcut navigates to SOS screen
+### 13. Community tab
+- [ ] Section order: funds → residents tile → SOS tile → community info
+- [ ] Join code visible with an Invite neighbors share action
+- [ ] Funds activation state renders correctly (CTA / pending with withdraw / rejected with reason / previously-active / active overview)
+- [ ] Funds card opens Fund Detail with transaction history and a role badge
+- [ ] Treasurer can add income and expense; collector can add contributions only
+- [ ] Existing contributions are editable by collectors and treasurers
+- [ ] A community lead can close a fund, which blocks further transactions
+- [ ] Add Fund requires exactly one treasurer; leads and admins are excluded from the picker
+- [ ] In a block-enabled community, collector assignment requires choosing a block
+- [ ] Residents and SOS shortcuts navigate correctly
 
----
+### 14. Blocks / towers
+- [ ] `/community/blocks` is lead-only
+- [ ] All labels use the community's `block_label` (Block or Tower)
+- [ ] Create, rename, and archive work; per-block resident and in-charge counts show
+- [ ] **Re-adding an archived block name restores it** rather than erroring
+- [ ] Toggling blocks off preserves historical contributions
 
-### 8. SOS & Emergency
-- [ ] SOS screen shows Emergency numbers and Blood donors tabs
-- [ ] Emergency numbers grouped by category with call-confirm dialog before dialing
-- [ ] Blood donor listing shows available donors with blood group filter
-- [ ] Optional show-all toggle reveals unavailable donors
-- [ ] Residents can register/edit/delete their own donor profile
-- [ ] Community leads can manage emergency contacts via `/sos/manage-contacts`
+### 15. SOS & emergency
+- [ ] Emergency numbers and Blood donors tabs load
+- [ ] Numbers merge global defaults with community rows, grouped by category
+- [ ] **Every dial shows a call-confirm dialog first**
+- [ ] Donor list defaults to available donors; blood-group filter and show-all toggle work
+- [ ] Resident can register, edit, and delete their own donor profile
+- [ ] `/sos/manage-contacts` is lead/admin only
 
----
+### 16. Residents directory
+- [ ] Active residents listed, grouped by block when blocks are on
+- [ ] Emails shown; **phone numbers only for leads and platform admins**
+- [ ] Role badges render President / Vice President / Resident
+- [ ] A lead can remove a non-lead resident
+- [ ] `returnTo` param returns to the calling tab
 
-### 9. Profile Tab
-- [ ] Displays full name, flat number, community name, and role badge
-- [ ] Fund access badge shown when applicable (Treasurer or Collector)
-- [ ] "Service Reminders" card shows due-soon badge count
-- [ ] My orders link visible for MCN orders
-- [ ] My posts link visible for MCN posts
-- [ ] Edit profile navigates to edit screen (name and email editable)
-- [ ] Sign out navigates to Login
+### 17. Profile tab
+- [ ] Name, flat number, community, and role badge display
+- [ ] Fund access badge (Treasurer / Collector) appears when applicable
+- [ ] Service Reminders card shows the due-soon count
+- [ ] My Submissions link works
+- [ ] Edit profile updates the name; an email change sends a verification link
+- [ ] Sign out returns to Login
 
----
+### 18. Personal service reminders
+- [ ] List loads sorted by urgency
+- [ ] Add: name, category, last-serviced date, frequency required; category pre-fills default frequency
+- [ ] Provider picker searches by **name and phone number**
+- [ ] Provider options refresh after adding a provider mid-flow
+- [ ] Mark-as-serviced resets the next-due date correctly
+- [ ] Completion captures optional provider, amount paid, and note
+- [ ] Delete confirms before removing
+- [ ] Technician shortcut opens the Help tab with the mapped category filter
 
-### 10. Personal Service Reminders
-- [ ] Service Reminders list loads correctly sorted by urgency
-- [ ] Add Reminder form
-  - [ ] Service name, category, last serviced date, and frequency are required
-  - [ ] Category pre-fills default frequency
-  - [ ] Provider search dropdown is searchable by name and phone number
-  - [ ] Correct provider is linked on save
-- [ ] Reminder Detail / Edit screen
-  - [ ] "Mark as serviced today" resets next-due date correctly
-  - [ ] Completion flow supports optional provider, amount-paid, and note
-  - [ ] Edit form saves updated fields
-  - [ ] Provider search in edit form is searchable by name and phone number
-  - [ ] Delete shows confirmation and removes reminder on confirm
-  - [ ] Technician shortcut routes to Help tab with mapped category filter
-
----
-
-### 11. Hire Feedback
-- [ ] Contacting a provider schedules a local 24-hour notification
-- [ ] Opening the feedback flow shows positive/negative/skip options
-- [ ] Positive feedback can trigger a one-time public-rating nudge
+### 19. Hire feedback
+- [ ] Contacting a provider schedules the local 24-hour notification
+- [ ] Feedback flow offers positive / negative / skip
+- [ ] Positive can trigger a one-time public-rating nudge
 - [ ] Negative and skipped never trigger the nudge
+- [ ] No public rating is ever auto-created
 
----
+### 20. Notifications
+- [ ] Feed lists notifications; unread badge matches
+- [ ] Mark one as read decrements the badge; mark all clears it
+- [ ] `new_visit` opens Visit Detail; `service_reminder` opens the reminder
+- [ ] Funds-activation notifications route to the Community tab
+- [ ] Realtime: a new row appears without a manual refresh
 
-### 12. Notifications
-- [ ] Notifications screen lists items from the feed
-- [ ] Unread count badge on bell icon matches unread notifications
-- [ ] Mark individual notification as read — badge decrements
-- [ ] Mark all as read — badge clears
-- [ ] Tapping a new_visit notification navigates to Visit Detail
-- [ ] Tapping a service_reminder notification navigates to Service Reminder Detail
-- [ ] Funds-activation notifications route correctly (approval → community, rejection → community)
+### 21. Navigation (web + native)
+- [ ] Header back arrow lands on the **immediate logical parent** for every `/network/*` screen
+- [ ] Browser back matches the header back on web
+- [ ] Android hardware back matches the header back
+- [ ] Browser refresh on a deep `/network/*` route restores that screen
 
----
-
-### 13. UI Alignment Checks (all screens)
-For every screen visited above, verify:
+### 22. UI alignment (every screen visited)
 - [ ] No text overflow or clipping
-- [ ] Buttons fully visible and tappable (not obscured by safe-area insets)
-- [ ] Cards follow Verandah design system: flat surfaces, no shadows, no elevation, hairline borders
-- [ ] Color tokens from Verandah palette used consistently (warm surface `#FAF8F4`, card `#FFFFFF`, accent `#0F6E56`)
-- [ ] Font weights limited to 400 and 500 (no bold 600+ weights)
+- [ ] Buttons fully visible, not obscured by safe-area insets
+- [ ] Flat surfaces, hairline borders — **no shadows or elevation**
+- [ ] Verandah palette used consistently (surface `#FAF8F4`, card `#FFFFFF`, accent `#0F6E56`)
+- [ ] Font weights 400/500 only — no 600+
 - [ ] All copy in sentence case
-- [ ] Provider tiles are compact horizontal single-row layout (WhatsApp chat-tile density)
-- [ ] Visit cards use compact padding (10px) and smaller avatars (30px)
-- [ ] Search bars are 36px tall
-- [ ] Empty states show the correct `EmptyState` component with illustration and message text
-- [ ] Loading spinners appear while data is fetching
-- [ ] Toast messages appear in the correct position and dismiss automatically
+- [ ] Search bars 36 px; provider tiles single-row; visit cards 10 px padding
+- [ ] Empty states use `EmptyState`
+- [ ] Loading spinners appear during fetches
+- [ ] Toasts appear correctly and auto-dismiss
+- [ ] Web: tab bar stays locked to the bottom and never scrolls off
+- [ ] Web: pull-to-refresh works via the custom gesture on list screens
 
 ---
 
 ## Reporting
-After completing all checks, output a summary table:
+
+Output a summary table:
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Auth | pass/fail | ... |
-| Providers | pass/fail | ... |
-| Visits | pass/fail | ... |
-| Maintenance Banner | pass/fail | ... |
-| Favorites | pass/fail | ... |
-| MCN | pass/fail | ... |
-| Community | pass/fail | ... |
-| SOS/Emergency | pass/fail | ... |
-| Profile | pass/fail | ... |
-| Reminders | pass/fail | ... |
-| Hire Feedback | pass/fail | ... |
-| Notifications | pass/fail | ... |
-| UI Alignment | pass/fail | ... |
+| Auth | pass/fail | … |
+| Providers | pass/fail | … |
+| Visits | pass/fail | … |
+| Maintenance banner | pass/fail | … |
+| Saved | pass/fail | … |
+| MCN hub | pass/fail | … |
+| Business listings | pass/fail | … |
+| Food drops | pass/fail | … |
+| Carpools | pass/fail | … |
+| Parent Corner | pass/fail | … |
+| Schools | pass/fail | … |
+| Posts & orders | pass/fail | … |
+| Community & funds | pass/fail | … |
+| Blocks | pass/fail | … |
+| SOS | pass/fail | … |
+| Residents | pass/fail | … |
+| Profile | pass/fail | … |
+| Reminders | pass/fail | … |
+| Hire feedback | pass/fail | … |
+| Notifications | pass/fail | … |
+| Navigation | pass/fail | … |
+| UI alignment | pass/fail | … |
 
-List any failures with: screen name, exact action taken, expected result, actual result.
+List every failure with: screen name, exact action taken, expected result, actual result.
 
 ---
 
-## Bug Handoff
+## Bug handoff
 
-After the summary table, if **any failures were found**:
+If **any** check failed:
 
-1. Compile a structured bug report for every failure using this format:
+1. Compile a structured report per failure:
 
-  ### Bug N — <Short title>
-  - **Screen / File**: <route or component>
-  - **Steps to reproduce**: <numbered steps>
-  - **Expected**: <what should happen>
-  - **Actual**: <what actually happened>
-  - **Logs / errors**: <any relevant console output or toast message>
+   ### Bug N — <short title>
+   - **Screen / file**: <route or component>
+   - **Platform**: web / android / both
+   - **Steps to reproduce**: <numbered>
+   - **Expected**: <what should happen>
+   - **Actual**: <what happened>
+   - **Logs / errors**: <console output or toast text>
 
-2. Invoke the `bug_fix` agent once, passing the full compiled bug report as the argument. The bug_fix agent will triage and fix each issue in sequence, then run `npx tsc --noEmit` to validate.
+2. Invoke the `bug_fix` agent **once**, passing the full compiled report. It triages and fixes each issue in sequence, then runs `npx tsc --noEmit`.
 
-3. If **no failures were found**, print:
-   All checks passed — no issues to hand off.
+If nothing failed, print: `All checks passed — no issues to hand off.`

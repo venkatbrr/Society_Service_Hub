@@ -61,7 +61,7 @@ interface DropDetails {
 export default function PreorderDropDetailScreen() {
   const { id: dropId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user, communityId, profile } = useAuth();
+  const { user, communityId, profile, isCommunityLead } = useAuth();
   const colors = Verandah;
 
   const [drop, setDrop] = useState<DropDetails | null>(null);
@@ -481,6 +481,7 @@ export default function PreorderDropDetailScreen() {
   }
 
   const isCreator = drop?.created_by === user?.id;
+  const canManageDrop = isCreator || isCommunityLead;
   const rawHostName = drop?.profiles?.full_name?.trim() || drop?.mcn_listings?.name?.trim() || 'Local Food Host';
   const hostName = rawHostName === 'Host' ? 'Local Food Host' : rawHostName;
   const hostFlat = drop?.profiles?.flat_number ? `Flat ${drop.profiles.flat_number}` : '';
@@ -497,6 +498,34 @@ export default function PreorderDropDetailScreen() {
     hour: '2-digit',
     minute: '2-digit',
   });
+
+  const handleDeleteDrop = () => {
+    if (!drop) return;
+    const confirmDelete = async () => {
+      try {
+        const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
+        if (error) throw error;
+        Toast.show({ type: 'success', text1: 'Food drop deleted' });
+        router.replace('/network/drops');
+      } catch (err: any) {
+        Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
+      }
+    };
+
+    const title = 'Delete Food Drop?';
+    const message = `Are you sure you want to delete "${drop.title}"? All items and pre-orders will be deleted. This cannot be undone.`;
+
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm(`${title}\n${message}`)) {
+        void confirmDelete();
+      }
+    } else {
+      Alert.alert(title, message, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: confirmDelete },
+      ]);
+    }
+  };
 
   const handleShareDrop = async () => {
     if (!drop) return;
@@ -552,20 +581,24 @@ export default function PreorderDropDetailScreen() {
           title: drop.title,
           onBack: handleBack,
           headerRight: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <TouchableOpacity onPress={handleShareDrop} style={{ padding: 4 }} hitSlop={8}>
                 <Ionicons name="share-outline" size={22} color={colors.accent} />
               </TouchableOpacity>
 
-              {isCreator ? (
-                <TouchableOpacity
-                  onPress={() => router.push(`/network/drops/manage/${drop.id}` as any)}
-                  style={{ marginRight: 4 }}
-                >
-                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.accent }}>
-                    Manage Dashboard
-                  </Text>
-                </TouchableOpacity>
+              {canManageDrop ? (
+                <>
+                  <TouchableOpacity
+                    onPress={() => router.push(`/network/drops/manage/${drop.id}` as any)}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: colors.accent }}>
+                      Dashboard
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={handleDeleteDrop} style={{ padding: 4 }} hitSlop={8}>
+                    <Ionicons name="trash-outline" size={20} color={colors.danger} />
+                  </TouchableOpacity>
+                </>
               ) : null}
             </View>
           ),

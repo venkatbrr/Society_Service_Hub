@@ -23,9 +23,11 @@ If classification is ambiguous, ask up to 2 concise clarifying questions before 
 ## Context Gathering
 Before delegation, collect only relevant context:
 1. Scan impacted files and symbols in the workspace.
-2. Pull applicable project rules from docs/ and copilot instructions.
+2. Pull applicable project rules. Start at `docs/README.md` — it routes you to the right doc so you do not load all of them.
 3. Capture reproduction steps (for bugs) or acceptance criteria (for features).
 4. Identify constraints: role/tenant scope, DB tables, routes, validation commands, and docs that must be updated.
+
+Role vocabulary for the handoff: `admin` (platform, no community) · `president` / `vice_president` (both are community leads, checked via `isCommunityLead`) · `resident`. Fund roles are separate: `treasurer`, `collector`. **`community_lead` is a dead legacy value — never specify it in a handoff.**
 
 ## Handoff Packet
 Pass a structured handoff to the selected agent using this exact template:
@@ -48,13 +50,18 @@ Acceptance Criteria:
 - <criterion 1>
 - <criterion 2>
 Validation Required:
-- npx tsc --noEmit
-- <additional checks if relevant>
+- npx tsc --noEmit        (the only static gate — no test framework exists)
+- <migration deploy + type regen if schema changed>
+- <manual verification steps if behavior is risky>
 Documentation Impact:
-- docs/features.md: <yes/no + why>
-- docs/architecture.md: <yes/no + why>
-- docs/CLAUDE.md: <yes/no + why>
+- docs/features.md: <yes/no + why>          # user-visible behavior
+- docs/architecture.md: <yes/no + why>      # schema, RLS, RPCs, routes, types
+- docs/CLAUDE.md: <yes/no + why>            # conventions, commands, traps
+- docs/verandah.md: <yes/no + why>          # design tokens, shared components
+- docs/platform-admin.md: <yes/no + why>    # admin console
+- .github/app-summary.md: <yes/no + why>    # new module, tab, or role
 - docs/disabled-features.md: <yes/no + why>
+- docs/cross-community-changelog.md: <mandatory if federation touched>
 Known Risks/Unknowns:
 - <item>
 ```
