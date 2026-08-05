@@ -539,9 +539,7 @@ export default function PreorderDropDetailScreen() {
       setSelectedImageUrl(null);
       return;
     }
-    const isClosedOrCompleted = drop?.status === 'closed' || drop?.status === 'completed';
-    const targetPath = isClosedOrCompleted ? '/network/drops?tab=closed' : '/network/drops';
-    router.replace(targetPath as any);
+    goBackSmart(router, `/network/drops/${dropId}`);
   };
 
   return (

@@ -27,10 +27,9 @@ import { supabase } from '../../../lib/supabase';
 
 export default function FoodDropsCatalogScreen() {
   const router = useRouter();
-  const { id: targetDropId, tab: initialTab } = useLocalSearchParams<{ id?: string; tab?: string }>();
+  const { tab: initialTab } = useLocalSearchParams<{ tab?: string }>();
   const { user, communityId } = useAuth();
   const colors = Verandah;
-  const redirectedRef = React.useRef<string | null>(null);
 
   const [drops, setDrops] = useState<PreorderDropItem[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'closed' | 'my_drops'>('active');
@@ -40,13 +39,6 @@ export default function FoodDropsCatalogScreen() {
       setActiveTab(initialTab as any);
     }
   }, [initialTab]);
-
-  useEffect(() => {
-    if (targetDropId && redirectedRef.current !== targetDropId) {
-      redirectedRef.current = targetDropId;
-      router.push(`/network/drops/${targetDropId}` as any);
-    }
-  }, [targetDropId, router]);
   const [myMetrics, setMyMetrics] = useState<{
     totalRevenue: number;
     completedRevenue: number;

@@ -7,6 +7,7 @@ import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../lib/mcnHeader';
+import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type McnCategory = { id: string; name: string; emoji: string; sort_order: number };
@@ -25,11 +26,7 @@ export default function AddListingScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleGoBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace('/network' as any);
+    goBackSmart(router, '/network/listing-add');
   };
 
   useEffect(() => {

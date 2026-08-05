@@ -10,6 +10,7 @@ import { Verandah } from '../../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
 import { useAuth } from '../../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
+import { goBackSmart } from '../../../../lib/navigation';
 import { supabase } from '../../../../lib/supabase';
 
 interface Product {
@@ -86,23 +87,17 @@ export default function ManageListingScreen() {
   }, [showListingModal]);
 
   const handleGoBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace('/network' as any);
+    goBackSmart(router, `/network/listing/manage/${listingId}`);
   };
 
   const fetchData = useCallback(async () => {
     if (!listingId || !user?.id) return;
     try {
-      // 1. Fetch listing details
+      setLoading(true);
+      // Fetch listing details
       const { data: listingData, error: listingError } = await supabase
-        .from('mcn_listings')
-        .select(`
-          id, name, description, contact_phone, category_id, image_url, is_active, owner_id,
-          category:mcn_business_categories(name, emoji)
-        `)
+        .from('mcn_business_listings')
+        .select('*, category:mcn_categories(*)')
         .eq('id', listingId)
         .maybeSingle();
 
@@ -112,7 +107,7 @@ export default function ManageListingScreen() {
       // Security check: ensure current user is owner
       if (listingData.owner_id !== user.id) {
         Toast.show({ type: 'error', text1: 'Not authorized to manage this listing' });
-        router.replace('/network' as any);
+        router.replace('/network/business' as any);
         return;
       }
 

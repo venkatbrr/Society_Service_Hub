@@ -12,6 +12,7 @@ import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
+import { goBackSmart } from '../../../lib/navigation';
 import { supabase } from '../../../lib/supabase';
 
 interface Product {
@@ -71,11 +72,7 @@ export default function ListingDetailScreen() {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   const handleGoBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace('/network' as any);
+    goBackSmart(router, `/network/listing/${listingId}`);
   };
 
   const fetchPublicReviews = useCallback(async () => {

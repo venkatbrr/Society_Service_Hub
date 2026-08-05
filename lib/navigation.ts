@@ -32,7 +32,7 @@ export function getImmediateParentRoute(pathname: string): string {
   const cleanPath = pathname.split('?')[0].split('#')[0].replace(/\/$/, '');
 
   // 1. Parent Corner sub-routes
-  if (cleanPath === '/network/parents/add' || cleanPath.startsWith('/network/parents/')) {
+  if (cleanPath === '/network/parents/add' || (cleanPath.startsWith('/network/parents/') && cleanPath !== '/network/parents')) {
     return '/network/parents';
   }
   if (cleanPath === '/network/parents') {
@@ -53,9 +53,12 @@ export function getImmediateParentRoute(pathname: string): string {
   }
 
   // 3. Food Drops sub-routes
+  if (cleanPath.startsWith('/network/drops/manage/')) {
+    const dropId = cleanPath.replace('/network/drops/manage/', '');
+    return `/network/drops/${dropId}`;
+  }
   if (
     cleanPath === '/network/drops/add' ||
-    cleanPath.startsWith('/network/drops/manage') ||
     (cleanPath.startsWith('/network/drops/') && cleanPath !== '/network/drops')
   ) {
     return '/network/drops';
@@ -75,18 +78,35 @@ export function getImmediateParentRoute(pathname: string): string {
     return '/(tabs)/network';
   }
 
-  // 5. General MCN sub-routes
+  // 5. Business Listings sub-routes
+  if (cleanPath.startsWith('/network/listing/manage/')) {
+    const listingId = cleanPath.replace('/network/listing/manage/', '');
+    return `/network/listing/${listingId}`;
+  }
+  if (cleanPath.startsWith('/network/listing/orders/')) {
+    const listingId = cleanPath.replace('/network/listing/orders/', '');
+    return `/network/listing/${listingId}`;
+  }
+  if (cleanPath.startsWith('/network/listing/') && cleanPath !== '/network/listing') {
+    return '/network/business';
+  }
+  if (cleanPath === '/network/listing-add') {
+    return '/network/business';
+  }
+  if (cleanPath === '/network/business') {
+    return '/(tabs)/network';
+  }
+
+  // 6. General MCN sub-routes
   if (
     cleanPath === '/network/my-orders' ||
     cleanPath === '/network/my-posts' ||
-    cleanPath === '/network/business' ||
-    cleanPath === '/network/add' ||
-    cleanPath === '/network/listing-add'
+    cleanPath === '/network/add'
   ) {
     return '/(tabs)/network';
   }
 
-  // 6. Service Reminders sub-routes
+  // 7. Service Reminders sub-routes
   if (cleanPath === '/services/add' || (cleanPath.startsWith('/services/') && cleanPath !== '/services')) {
     return '/services';
   }
@@ -150,24 +170,23 @@ export function useSyncedBackNavigation() {
 
         const previousRouteInStack = stack[stack.length - 1];
 
-        // If popping from a sub-route (e.g. /network/drops/[id]) and browser popped to root MCN (/network)
-        if (
-          poppedRoute &&
-          poppedRoute.startsWith('/network/') &&
-          poppedRoute !== '/network' &&
-          (currentWebPath === '/network' || currentWebPath === '/' || currentWebPath.startsWith('/(tabs)'))
-        ) {
-          let target = previousRouteInStack;
-          if (!target || target === '/network' || target === '/(tabs)/network') {
-            target = getImmediateParentRoute(poppedRoute);
+        if (poppedRoute && poppedRoute.startsWith('/network/') && poppedRoute !== '/network') {
+          let target = currentWebPath;
+
+          if (currentWebPath === '/network' || currentWebPath === '/' || currentWebPath.startsWith('/(tabs)')) {
+            target = previousRouteInStack && previousRouteInStack !== '/network' && previousRouteInStack !== '/(tabs)/network'
+              ? previousRouteInStack
+              : getImmediateParentRoute(poppedRoute);
           }
 
-          isNavigating = true;
-          router.replace(target as any);
+          if (target) {
+            isNavigating = true;
+            router.replace(target as any);
 
-          setTimeout(() => {
-            isNavigating = false;
-          }, 150);
+            setTimeout(() => {
+              isNavigating = false;
+            }, 150);
+          }
         }
       };
 
