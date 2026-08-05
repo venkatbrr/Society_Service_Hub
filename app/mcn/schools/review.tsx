@@ -59,7 +59,9 @@ export default function SubmitSchoolReviewScreen() {
   const [overallComment, setOverallComment] = useState<string>('');
 
   const handleGoBack = () => {
-    goBackSmart(router, '/network/schools/review');
+    // Pass schoolId so the parent resolves to the school being reviewed rather
+    // than the catalog root.
+    goBackSmart(router, `/mcn/schools/review${schoolId ? `?schoolId=${schoolId}` : ''}`);
   };
 
   useEffect(() => {

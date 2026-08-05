@@ -41,10 +41,14 @@ export default function FoodDropsCatalogScreen() {
     }
   }, [initialTab]);
 
+  // Share links use the `/mcn/drops?id=<uuid>` bridge form. Redirect with
+  // replace(), not push(), so the bridge URL does not keep its own history
+  // entry — otherwise browser-back lands on it and it immediately forwards to
+  // the detail screen again, trapping the user in a back loop.
   useEffect(() => {
     if (targetDropId && redirectedRef.current !== targetDropId) {
       redirectedRef.current = targetDropId;
-      router.push(`/network/drops/${targetDropId}` as any);
+      router.replace(`/mcn/drops/${targetDropId}` as any);
     }
   }, [targetDropId, router]);
   const [myMetrics, setMyMetrics] = useState<{
@@ -233,7 +237,7 @@ export default function FoodDropsCatalogScreen() {
   const webPullProps = useWebPullToRefresh(() => fetchDrops(true), refreshing);
 
   const handleBack = () => {
-    goBackSmart(router, '/network/drops');
+    goBackSmart(router, '/mcn/drops');
   };
 
   const requireLoginForAction = () => {
@@ -270,7 +274,9 @@ export default function FoodDropsCatalogScreen() {
 
         <TouchableOpacity
           style={styles.masterToggleBtn}
-          onPress={() => router.push('/network/business' as any)}
+          // Sibling tab of this screen, not a child: replace so repeated
+          // toggling does not pile up browser history entries.
+          onPress={() => router.replace('/mcn/business' as any)}
           activeOpacity={0.8}
         >
           <View style={styles.iconLabelRow}>
@@ -431,10 +437,10 @@ export default function FoodDropsCatalogScreen() {
                 <PreorderDropCard
                   drop={item}
                   isCreator={item.created_by === user?.id}
-                  onPress={() => router.push(`/network/drops/${item.id}` as any)}
+                  onPress={() => router.push(`/mcn/drops/${item.id}` as any)}
                   onManage={() => {
                     if (!requireLoginForAction()) return;
-                    router.push(`/network/drops/manage/${item.id}` as any);
+                    router.push(`/mcn/drops/manage/${item.id}` as any);
                   }}
                 />
               </View>
@@ -464,7 +470,7 @@ export default function FoodDropsCatalogScreen() {
       {user?.id ? (
         <TouchableOpacity
           style={styles.fab}
-          onPress={() => router.push('/network/drops/add' as any)}
+          onPress={() => router.push('/mcn/drops/add' as any)}
           activeOpacity={0.85}
         >
           <Ionicons name="add" size={24} color="#FFFFFF" />

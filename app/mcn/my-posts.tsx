@@ -234,7 +234,7 @@ export default function MyPostsScreen() {
   }
 
   const handleBack = () => {
-    goBackSmart(router, '/network/my-posts');
+    goBackSmart(router, '/mcn/my-posts');
   };
 
   return (
@@ -314,7 +314,7 @@ export default function MyPostsScreen() {
               <View style={styles.cardActions}>
                 <TouchableOpacity
                   style={styles.actionBtn}
-                  onPress={() => router.push(`/network/listing/manage/${item.id}` as any)}
+                  onPress={() => router.push(`/mcn/listing/manage/${item.id}` as any)}
                 >
                   <Ionicons name="pencil-outline" size={14} color={colors.primary} />
                   <Text style={[styles.actionText, { color: colors.primary }]}>Manage</Text>
@@ -322,7 +322,7 @@ export default function MyPostsScreen() {
                 <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
                 <TouchableOpacity
                   style={styles.actionBtn}
-                  onPress={() => router.push(`/network/listing/orders/${item.id}` as any)}
+                  onPress={() => router.push(`/mcn/listing/orders/${item.id}` as any)}
                 >
                   <Ionicons name="receipt-outline" size={14} color={colors.accent} />
                   <Text style={[styles.actionText, { color: colors.accent }]}>Orders</Text>
@@ -438,10 +438,10 @@ export default function MyPostsScreen() {
         activeOpacity={0.8}
         onPress={() => {
           if (borrowOnlyView || activeSegment === 'borrow') {
-            router.push('/network/add?kind=borrow&source=my-posts' as any);
+            router.push('/mcn/add?kind=borrow&source=my-posts' as any);
             return;
           }
-          router.push('/network/listing-add' as any);
+          router.push('/mcn/listing-add' as any);
         }}
       >
         <Ionicons name="add" size={28} color={colors.primaryFg} />

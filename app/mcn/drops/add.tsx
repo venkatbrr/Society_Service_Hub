@@ -435,7 +435,7 @@ export default function CreateOrEditFoodDropScreen() {
           text2: 'Neighbors can now place pre-orders before the cut-off.',
         });
 
-        router.replace(`/network/drops/${dropData.id}` as any);
+        router.replace(`/mcn/drops/${dropData.id}` as any);
       }
     } catch (err: any) {
       console.error(err);
@@ -458,7 +458,7 @@ export default function CreateOrEditFoodDropScreen() {
   }
 
   const handleBack = () => {
-    goBackSmart(router, '/network/drops/add');
+    goBackSmart(router, '/mcn/drops/add');
   };
 
   return (

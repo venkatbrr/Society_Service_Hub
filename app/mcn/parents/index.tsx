@@ -81,7 +81,7 @@ export default function ParentCornerScreen() {
   const webPullProps = useWebPullToRefresh(() => fetchEntries(true), refreshing);
 
   const handleBack = () => {
-    goBackSmart(router, '/network/parents');
+    goBackSmart(router, '/mcn/parents');
   };
 
   useEffect(() => {
@@ -287,7 +287,7 @@ export default function ParentCornerScreen() {
                 <TouchableOpacity
                   onPress={() =>
                     router.push({
-                      pathname: '/network/parents/add',
+                      pathname: '/mcn/parents/add',
                       params: { editId: item.id },
                     } as any)
                   }
@@ -375,7 +375,7 @@ export default function ParentCornerScreen() {
           onBack: handleBack,
           headerRight: () => (
             <TouchableOpacity
-              onPress={() => router.push('/network/parents/add' as any)}
+              onPress={() => router.push('/mcn/parents/add' as any)}
               style={styles.headerAddBtn}
             >
               <Ionicons name="add-circle" size={26} color={colors.primary} />
@@ -624,7 +624,7 @@ export default function ParentCornerScreen() {
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: colors.primary }]}
         activeOpacity={0.8}
-        onPress={() => router.push('/network/parents/add' as any)}
+        onPress={() => router.push('/mcn/parents/add' as any)}
       >
         <Ionicons name="add" size={28} color={colors.primaryFg} />
       </TouchableOpacity>

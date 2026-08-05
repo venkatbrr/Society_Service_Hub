@@ -27,7 +27,7 @@ Society Service Hub — a multi-tenant community app for gated residential socie
 - **`npx tsc --noEmit` is the only validation gate** — there is no test framework and no lint script.
 - **`lib/database.types.ts` is generated.** Never hand-edit it.
 - **`Alert.alert` is a no-op on web.** Confirmations must split on `Platform.OS` and use `window.confirm` on web.
-- **Adding a route under `app/network/`** also requires a parent mapping in `getImmediateParentRoute()` (`lib/navigation.ts`), or back navigation breaks.
+- **Adding a route under `app/mcn/`** also requires a parent mapping in `getImmediateParentRoute()` (`lib/navigation.ts`), or back navigation breaks.
 
 The full list is in [docs/CLAUDE.md](docs/CLAUDE.md) §9.
 

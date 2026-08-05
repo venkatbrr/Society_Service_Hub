@@ -40,7 +40,7 @@ Record ✅ pass or ❌ fail per check with a note on what was observed.
 - [ ] Redirect lands on the main tabs (not admin, not community-select)
 - [ ] Name and flat number visible on Profile
 - [ ] Sign out, sign back in — session restores
-- [ ] Deep link while signed out (e.g. `/network/drops/<id>` on web) returns to that route after login
+- [ ] Deep link while signed out (e.g. `/mcn/drops/<id>` on web) returns to that route after login
 
 ### 2. Help tab — Providers
 - [ ] Providers segment lists community providers, sorted by rating
@@ -222,10 +222,10 @@ Record ✅ pass or ❌ fail per check with a note on what was observed.
 - [ ] Realtime: a new row appears without a manual refresh
 
 ### 21. Navigation (web + native)
-- [ ] Header back arrow lands on the **immediate logical parent** for every `/network/*` screen
+- [ ] Header back arrow lands on the **immediate logical parent** for every `/mcn/*` screen
 - [ ] Browser back matches the header back on web
 - [ ] Android hardware back matches the header back
-- [ ] Browser refresh on a deep `/network/*` route restores that screen
+- [ ] Browser refresh on a deep `/mcn/*` route restores that screen
 
 ### 22. UI alignment (every screen visited)
 - [ ] No text overflow or clipping

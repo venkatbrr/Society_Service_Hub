@@ -114,7 +114,7 @@ export default function AddSchoolScreen() {
   };
 
   const handleBack = () => {
-    goBackSmart(router, '/network/schools/add');
+    goBackSmart(router, '/mcn/schools/add');
   };
 
   return (

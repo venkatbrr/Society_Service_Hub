@@ -506,7 +506,7 @@ export default function PreorderDropDetailScreen() {
         const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
         if (error) throw error;
         Toast.show({ type: 'success', text1: 'Food drop deleted' });
-        router.replace('/network/drops');
+        router.replace('/mcn/drops' as any);
       } catch (err: any) {
         Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
       }
@@ -531,8 +531,8 @@ export default function PreorderDropDetailScreen() {
     if (!drop) return;
     const shareUrl =
       Platform.OS === 'web' && typeof window !== 'undefined'
-        ? `${window.location.origin}/network/drops?id=${drop.id}`
-        : `https://society-service-hub.app/network/drops?id=${drop.id}`;
+        ? `${window.location.origin}/mcn/drops?id=${drop.id}`
+        : `https://society-service-hub.app/mcn/drops?id=${drop.id}`;
 
     const messageLines = [
       `🍲 *Food Drop: ${drop.title}*`,
@@ -568,7 +568,7 @@ export default function PreorderDropDetailScreen() {
       setSelectedImageUrl(null);
       return;
     }
-    goBackSmart(router, `/network/drops/${dropId}`);
+    goBackSmart(router, `/mcn/drops/${dropId}`);
   };
 
   return (
@@ -589,7 +589,7 @@ export default function PreorderDropDetailScreen() {
               {canManageDrop ? (
                 <>
                   <TouchableOpacity
-                    onPress={() => router.push(`/network/drops/manage/${drop.id}` as any)}
+                    onPress={() => router.push(`/mcn/drops/manage/${drop.id}` as any)}
                   >
                     <Text style={{ fontSize: 13, fontWeight: '600', color: colors.accent }}>
                       Dashboard
@@ -657,7 +657,7 @@ export default function PreorderDropDetailScreen() {
               <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                 <TouchableOpacity
                   style={styles.hostManageBtn}
-                  onPress={() => router.push(`/network/drops/manage/${drop.id}` as any)}
+                  onPress={() => router.push(`/mcn/drops/manage/${drop.id}` as any)}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.hostManageBtnText}>Open Manage Dashboard →</Text>
@@ -666,7 +666,7 @@ export default function PreorderDropDetailScreen() {
                 {isOpen ? (
                   <TouchableOpacity
                     style={[styles.hostManageBtn, { backgroundColor: '#FFFFFF', borderWidth: 0.5, borderColor: Verandah.accent }]}
-                    onPress={() => router.push(`/network/drops/add?dropId=${drop.id}` as any)}
+                    onPress={() => router.push(`/mcn/drops/add?dropId=${drop.id}` as any)}
                     activeOpacity={0.8}
                   >
                     <Text style={[styles.hostManageBtnText, { color: Verandah.accent }]}>✏️ Edit Drop</Text>

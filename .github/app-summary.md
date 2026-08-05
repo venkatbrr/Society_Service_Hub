@@ -114,7 +114,7 @@ Every resident belongs to exactly one community (`profiles.community_id`).
 ```text
 loading                                  -> full-screen spinner
 no session                               -> /login
-   exceptions (stay public): web "/" ; /network/drops and /network/drops/*
+   exceptions (stay public): web "/" ; /mcn/drops and /mcn/drops/*
 platform admin, web                      -> hard redirect to /admin/index.html
 platform admin, native                   -> /admin-redirect
 no community + active request            -> /community-request-submitted
@@ -150,24 +150,24 @@ A **hub of four section cards**, each with a live count, plus two quick-action b
 
 | Card | Route | Live count |
 |------|-------|-----------|
-| Pre-order Food & Community Business | `/network/drops` | open drops + active listings |
-| Community Carpooling | `/network/carpools` | active rides |
-| Parent Corner | `/network/parents` | children listed |
-| Schools Catalog & Compare | `/network/schools` | curated + community schools |
+| Pre-order Food & Community Business | `/mcn/drops` | open drops + active listings |
+| Community Carpooling | `/mcn/carpools` | active rides |
+| Parent Corner | `/mcn/parents` | children listed |
+| Schools Catalog & Compare | `/mcn/schools` | curated + community schools |
 
-**Business listings** (`/network/business`) — resident-run businesses with a cover photo, a category from the `mcn_business_categories` lookup, and offerings split into products vs services. Prices are nullable (`NULL` renders "Price on request"). Listings are grouped by category and collapsible; active sort ahead of paused. Residents place multi-item orders with quantity steppers (0.5 steps for kg/litre, 1 for piece/box/pack/dozen); owners see orders grouped Pending / Fulfilled / Cancelled and WhatsApp buyers with a pre-filled itemised message. Owner **or a community lead** can open the manage screen and delete the listing.
+**Business listings** (`/mcn/business`) — resident-run businesses with a cover photo, a category from the `mcn_business_categories` lookup, and offerings split into products vs services. Prices are nullable (`NULL` renders "Price on request"). Listings are grouped by category and collapsible; active sort ahead of paused. Residents place multi-item orders with quantity steppers (0.5 steps for kg/litre, 1 for piece/box/pack/dozen); owners see orders grouped Pending / Fulfilled / Cancelled and WhatsApp buyers with a pre-filled itemised message. Owner **or a community lead** can open the manage screen and delete the listing.
 
-**Pre-order food drops** (`/network/drops`) — time-gated group ordering for home chefs and food businesses. A drop has a fulfillment date + time window, a hard `cutoff_at` deadline, and line items with unit, price, and optional per-item `max_quantity` (enforced by a database trigger, not just UI). Catalog tabs: Active / Closed / My drops. Past the cutoff, new orders are blocked. Residents may place multiple orders while open and edit or cancel `confirmed` ones; once the host marks an order `fulfilled` it becomes immutable and shows as Delivered. The host dashboard (`/network/drops/manage/[id]`) aggregates item totals for kitchen prep and lists a delivery roster split into active, delivered, and cancelled. Drops are **publicly readable** so shared links work logged-out.
+**Pre-order food drops** (`/mcn/drops`) — time-gated group ordering for home chefs and food businesses. A drop has a fulfillment date + time window, a hard `cutoff_at` deadline, and line items with unit, price, and optional per-item `max_quantity` (enforced by a database trigger, not just UI). Catalog tabs: Active / Closed / My drops. Past the cutoff, new orders are blocked. Residents may place multiple orders while open and edit or cancel `confirmed` ones; once the host marks an order `fulfilled` it becomes immutable and shows as Delivered. The host dashboard (`/mcn/drops/manage/[id]`) aggregates item totals for kitchen prep and lists a delivery roster split into active, delivered, and cancelled. Drops are **publicly readable** so shared links work logged-out.
 
-**Carpooling** (`/network/carpools`) — ride sharing with `role_type` of `offering` or `seeking`. Fields: start/end point, departure and optional return time, recurring weekday array, available seats, vehicle info, `pricing_type` (`free`/`paid`) with `price_per_seat`, contact phone, notes. Tabs: All / Offering / Seeking / My rides. Riders on an `offering` ride submit a join request (`mcn_carpool_requests`) with seats and a note; the host accepts or rejects. Statuses: `active`, `paused`, `cancelled`, `completed`.
+**Carpooling** (`/mcn/carpools`) — ride sharing with `role_type` of `offering` or `seeking`. Fields: start/end point, departure and optional return time, recurring weekday array, available seats, vehicle info, `pricing_type` (`free`/`paid`) with `price_per_seat`, contact phone, notes. Tabs: All / Offering / Seeking / My rides. Riders on an `offering` ride submit a join request (`mcn_carpool_requests`) with seats and a note; the host accepts or rejects. Statuses: `active`, `paused`, `cancelled`, `completed`.
 
-**Parent Corner** (`/network/parents`) — an opt-in directory of residents' children for study groups and school-run coordination. Each entry carries student name, institution type (school / college / preschool), school name, board (CBSE, ICSE, State Board, IB, IGCSE, PU Board, University, Other), grade, parent name, flat, and phone. Filter by type, board, and school; sort by school, grade, flat, or recency.
+**Parent Corner** (`/mcn/parents`) — an opt-in directory of residents' children for study groups and school-run coordination. Each entry carries student name, institution type (school / college / preschool), school name, board (CBSE, ICSE, State Board, IB, IGCSE, PU Board, University, Other), grade, parent name, flat, and phone. Filter by type, board, and school; sort by school, grade, flat, or recency.
 
-**Schools catalog** (`/network/schools`) — a curated regional dataset (`data/westHyderabadSchools.ts`) merged with community-submitted schools. Each school carries syllabus, level, distance, fee range, facilities, and links. The **Parent Report Card** replaces star reviews with **8 emoji-scored dimensions** (Academics, Teachers, Infrastructure, Sports & Activities, Safety & Hygiene, Transport, Value for Money, Child's Happiness) on a 😟😕😐🙂🤩 scale, plus child grade, optional 140-char per-aspect notes, and an overall comment. Averages are maintained on `schools.avg_*` by trigger. Detail view renders an 8-axis radar chart; up to 3 schools can be compared side by side.
+**Schools catalog** (`/mcn/schools`) — a curated regional dataset (`data/westHyderabadSchools.ts`) merged with community-submitted schools. Each school carries syllabus, level, distance, fee range, facilities, and links. The **Parent Report Card** replaces star reviews with **8 emoji-scored dimensions** (Academics, Teachers, Infrastructure, Sports & Activities, Safety & Hygiene, Transport, Value for Money, Child's Happiness) on a 😟😕😐🙂🤩 scale, plus child grade, optional 140-char per-aspect notes, and an overall comment. Averages are maintained on `schools.avg_*` by trigger. Detail view renders an 8-axis radar chart; up to 3 schools can be compared side by side.
 
-**Borrow & Share** (`mcn_posts`, `/network/add`, `/network/my-posts`) — lightweight posts for borrowing or giving away items. Reached through My Submissions.
+**Borrow & Share** (`mcn_posts`, `/mcn/add`, `/mcn/my-posts`) — lightweight posts for borrowing or giving away items. Reached through My Submissions.
 
-**My Orders** (`/network/my-orders`) — the resident's own orders across two tabs: pre-order food and business listings.
+**My Orders** (`/mcn/my-orders`) — the resident's own orders across two tabs: pre-order food and business listings.
 
 ### 7.4 Community tab (`app/(tabs)/community.tsx`)
 
@@ -236,15 +236,15 @@ Hash-routed SPA with five pages — `#dashboard`, `#approvals`, `#communities`, 
 ### SOS
 `/sos` · `/sos/donor` · `/sos/manage-contacts`
 
-### MCN — `app/network/`
-`/network/business` · `/network/listing-add` · `/network/listing/[id]` · `/network/listing/manage/[id]` · `/network/listing/orders/[id]`
-`/network/drops` · `/network/drops/add` · `/network/drops/[id]` · `/network/drops/manage/[id]` · `/network/drops/manage/index`
-`/network/carpools` · `/network/carpools/add` · `/network/carpools/[id]`
-`/network/parents` · `/network/parents/add`
-`/network/schools` · `/network/schools/add` · `/network/schools/[id]` · `/network/schools/review` · `/network/schools/compare`
-`/network/add` · `/network/my-posts` · `/network/my-orders`
+### MCN — `app/mcn/`
+`/mcn/business` · `/mcn/listing-add` · `/mcn/listing/[id]` · `/mcn/listing/manage/[id]` · `/mcn/listing/orders/[id]`
+`/mcn/drops` · `/mcn/drops/add` · `/mcn/drops/[id]` · `/mcn/drops/manage/[id]` · `/mcn/drops/manage/index`
+`/mcn/carpools` · `/mcn/carpools/add` · `/mcn/carpools/[id]`
+`/mcn/parents` · `/mcn/parents/add`
+`/mcn/schools` · `/mcn/schools/add` · `/mcn/schools/[id]` · `/mcn/schools/review` · `/mcn/schools/compare`
+`/mcn/add` · `/mcn/my-posts` · `/mcn/my-orders`
 
-Back navigation for every `/network/*` route is resolved by `getImmediateParentRoute()` in `lib/navigation.ts`, so browser back, Android back, and in-app back all land on the same logical parent.
+Back navigation separates two concepts (see [`docs/architecture.md`](../docs/architecture.md) §9): the browser and Android hardware back buttons do **chronological** back, handled by expo-router itself; the in-app header arrow does **hierarchical up** via `goBackSmart()` and the parent map in `lib/navigation.ts`. Forward navigation is always `router.push()` so each screen owns exactly one history entry.
 
 ---
 

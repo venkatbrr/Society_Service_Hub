@@ -132,8 +132,8 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
 
     const shareUrl =
       Platform.OS === 'web' && typeof window !== 'undefined'
-        ? `${window.location.origin}/network/drops?id=${drop.id}`
-        : `https://society-service-hub.app/network/drops?id=${drop.id}`;
+        ? `${window.location.origin}/mcn/drops?id=${drop.id}`
+        : `https://society-service-hub.app/mcn/drops?id=${drop.id}`;
 
     const messageLines = [
       `🍲 *Food Drop: ${drop.title}*`,

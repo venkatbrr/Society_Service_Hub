@@ -26,7 +26,7 @@ export default function AddListingScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleGoBack = () => {
-    goBackSmart(router, '/network/listing-add');
+    goBackSmart(router, '/mcn/listing-add');
   };
 
   useEffect(() => {
@@ -100,7 +100,7 @@ export default function AddListingScreen() {
 
       Toast.show({ type: 'success', text1: 'Business listing created' });
       // Navigate to the manage screen for this listing
-      router.replace(`/network/listing/manage/${listing.id}` as any);
+      router.replace(`/mcn/listing/manage/${listing.id}` as any);
     } catch (error) {
       console.error(error);
       Toast.show({ type: 'error', text1: 'Failed to create business listing' });

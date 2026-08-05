@@ -45,7 +45,7 @@ Your mission: take a feature from request to working, validated, documented code
 
 **Images** — Cloudinary via `lib/cloudinary.ts` and `components/ImageUploader.tsx` (`expo-image-picker`). The Supabase `community-uploads` bucket is unused; do not write to it.
 
-## Adding a new route under `app/network/`
+## Adding a new route under `app/mcn/`
 Also add its parent mapping to `getImmediateParentRoute()` in `lib/navigation.ts`, or browser back, Android back, and the header arrow will all fall through to the MCN hub. Use `buildMcnHeaderOptions()` from `lib/mcnHeader.tsx` for the stack header and `goBackSmart()` for the back action.
 
 ## Adding a new table

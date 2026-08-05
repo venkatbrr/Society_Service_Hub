@@ -131,7 +131,7 @@ export default function AddCarpoolScreen() {
         text2: 'Your route is now visible to society residents.',
       });
 
-      router.replace('/network/carpools' as any);
+      router.replace('/mcn/carpools' as any);
     } catch (err: any) {
       console.error('Error creating carpool:', err);
       Toast.show({
@@ -145,7 +145,7 @@ export default function AddCarpoolScreen() {
   };
 
   const handleBack = () => {
-    goBackSmart(router, '/network/carpools/add');
+    goBackSmart(router, '/mcn/carpools/add');
   };
 
   return (

@@ -65,7 +65,7 @@ export default function SchoolsCatalogScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const handleBack = () => {
-    goBackSmart(router, '/network/schools');
+    goBackSmart(router, '/mcn/schools');
   };
 
   const webPullProps = useWebPullToRefresh(() => fetchCustomSchools(true), refreshing);
@@ -216,7 +216,7 @@ export default function SchoolsCatalogScreen() {
         <View style={styles.cardHeader}>
           <TouchableOpacity
             style={{ flex: 1 }}
-            onPress={() => router.push(`/network/schools/${school.id}` as any)}
+            onPress={() => router.push(`/mcn/schools/${school.id}` as any)}
             activeOpacity={0.7}
           >
             <Text style={[styles.schoolName, { color: colors.textPrimary }]}>{school.name}</Text>
@@ -301,7 +301,7 @@ export default function SchoolsCatalogScreen() {
 
           <TouchableOpacity
             style={[styles.detailsBtn, { backgroundColor: colors.cardMuted }]}
-            onPress={() => router.push(`/network/schools/${school.id}` as any)}
+            onPress={() => router.push(`/mcn/schools/${school.id}` as any)}
           >
             <Text style={[styles.detailsBtnText, { color: colors.primary }]}>Details</Text>
           </TouchableOpacity>
@@ -318,7 +318,7 @@ export default function SchoolsCatalogScreen() {
           onBack: handleBack,
           headerRight: () => (
             <TouchableOpacity
-              onPress={() => router.push('/network/schools/add' as any)}
+              onPress={() => router.push('/mcn/schools/add' as any)}
               style={{
                 backgroundColor: colors.primary,
                 paddingHorizontal: 12,
@@ -471,7 +471,7 @@ export default function SchoolsCatalogScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() =>
-                router.push(`/network/schools/compare?ids=${selectedSchoolIds.join(',')}` as any)
+                router.push(`/mcn/schools/compare?ids=${selectedSchoolIds.join(',')}` as any)
               }
               style={[styles.compareBtn, { backgroundColor: colors.primary }]}
             >

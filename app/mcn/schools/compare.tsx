@@ -107,7 +107,7 @@ export default function CompareSchoolsScreen() {
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: 'Compare schools',
-          onBack: () => goBackSmart(router, '/network/schools/compare'),
+          onBack: () => goBackSmart(router, '/mcn/schools/compare'),
         })}
       />
 

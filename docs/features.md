@@ -153,9 +153,9 @@ Required: title, category, provider context, date. Categories use the same two-l
 | **Purpose** | Landing screen for the resident-to-resident economy |
 | **Tables** | Count-only reads: `mcn_listings`, `mcn_preorder_drops`, `mcn_carpools`, `mcn_parent_corner`, `schools`, `mcn_posts` |
 | **Rules** | Two quick actions (My Orders, My Submissions) above four section cards, each showing a live count fetched in a single `Promise.all`. The schools count adds curated `WEST_HYDERABAD_SCHOOLS` to community rows. Counts refresh on focus and on pull-to-refresh. |
-| **Cards** | Pre-order Food & Community Business → `/network/drops` (open drops + active listings) · Community Carpooling → `/network/carpools` (active rides) · Parent Corner → `/network/parents` (children listed) · Schools Catalog & Compare → `/network/schools` (schools cataloged) |
+| **Cards** | Pre-order Food & Community Business → `/mcn/drops` (open drops + active listings) · Community Carpooling → `/mcn/carpools` (active rides) · Parent Corner → `/mcn/parents` (children listed) · Schools Catalog & Compare → `/mcn/schools` (schools cataloged) |
 
-### 4.2 Business listings — `app/network/business.tsx`
+### 4.2 Business listings — `app/mcn/business.tsx`
 
 | Aspect | Details |
 |--------|---------|
@@ -164,11 +164,11 @@ Required: title, category, provider context, date. Categories use the same two-l
 | **Rules** | Community-scoped with 300 ms debounced name search. A horizontal category chip bar filters by `category_id`; tapping the active chip returns to All. Listings are grouped by category into collapsible sections, with active listings sorted ahead of paused ones and inactive listings kept visible behind an inactive badge. Cards show summary only (image, owner, category badge) — offerings and prices appear after opening the listing. |
 | **Roles** | All residents view and create. Owner or lead can manage and delete. |
 
-### Add listing — `app/network/listing-add.tsx`
+### Add listing — `app/mcn/listing-add.tsx`
 
 Business name required (max 80). Category required, from the `mcn_business_categories` lookup. Description optional (max 280). Contact phone required, normalized to 10 digits. Navigates to the manage screen on success.
 
-### Listing detail & order — `app/network/listing/[id].tsx`
+### Listing detail & order — `app/mcn/listing/[id].tsx`
 
 | Aspect | Details |
 |--------|---------|
@@ -176,18 +176,18 @@ Business name required (max 80). Category required, from the `mcn_business_categ
 | **Rules** | Offerings split by `item_type` into Products and Services, each row showing name, optional description, availability, and either `₹ amount / unit` or **"Price on request"** when `price IS NULL`. Quantity steps are **0.5 for kg/litre and 1 for piece/dozen/box/pack**, minimum 0. The cart shows line items and a subtotal; the note is optional. The action button either places a new order or updates an existing pending order (deletes old items, inserts new). Direct Call and WhatsApp links. |
 | **Roles** | Any resident except the owner can order. Owner **or lead** sees the Manage action in the header. |
 
-### Manage listing — `app/network/listing/manage/[id].tsx`
+### Manage listing — `app/mcn/listing/manage/[id].tsx`
 
 | Aspect | Details |
 |--------|---------|
 | **Rules** | Toggle listing active/paused, edit details including category, and manage offerings. The offering modal supports `item_type` (`product`/`service`) and an optional price — blank stores `NULL` and renders as "Price on request". Deleting a product is blocked when order items reference it. The whole listing can be permanently deleted. |
-| **Roles** | **Owner or lead.** The screen enforces this itself: a non-owner, non-lead is toasted and redirected to `/network/business`. |
+| **Roles** | **Owner or lead.** The screen enforces this itself: a non-owner, non-lead is toasted and redirected to `/mcn/business`. |
 
-### Orders received — `app/network/listing/orders/[id].tsx`
+### Orders received — `app/mcn/listing/orders/[id].tsx`
 
 Orders grouped Pending / Fulfilled / Cancelled. The WhatsApp button pre-fills a message with items and total. Pending orders can be marked fulfilled or cancelled behind a confirmation. Owner only.
 
-### 4.3 Pre-order food drops — `app/network/drops/*`
+### 4.3 Pre-order food drops — `app/mcn/drops/*`
 
 Routes: `index` (catalog) · `add` · `[id]` (detail + ordering) · `manage/[id]` (host dashboard) · `manage/index`
 
@@ -201,7 +201,7 @@ Routes: `index` (catalog) · `add` · `[id]` (detail + ordering) · `manage/[id]
 | **Host dashboard** | Aggregates item totals across active pre-orders for kitchen prep, and shows a delivery roster split into active pre-orders, collapsible delivered orders, and collapsible cancelled orders (with Mark delivered hidden on cancelled). The host marks orders fulfilled and finally marks the drop `completed`. |
 | **Roles** | **Anonymous users can browse** — drops are publicly readable so shared links work logged-out. Login is required to order or publish. The creator manages the drop. **Creator, lead, or platform admin can permanently delete** a drop and its items/orders, from either the detail header or the manage dashboard; deletion confirms via `window.confirm` on web and `Alert.alert` on native. |
 
-### 4.4 Carpooling — `app/network/carpools/*`
+### 4.4 Carpooling — `app/mcn/carpools/*`
 
 Routes: `index` (list) · `add` · `[id]` (detail + requests)
 
@@ -214,7 +214,7 @@ Routes: `index` (list) · `add` · `[id]` (detail + requests)
 | **Request rules** | Only rides that are `active` **and** `offering` accept join requests, and only from non-owners. A rider submits name, phone, flat number, seats, and an optional note; one open request per rider per ride. The host sees all non-cancelled requests and accepts or rejects pending ones. Statuses: `pending`, `accepted`, `rejected`, `cancelled`. |
 | **Roles** | Any resident creates rides and requests seats. **Creator or lead** can edit, change status, and delete. |
 
-### 4.5 Parent Corner — `app/network/parents/*`
+### 4.5 Parent Corner — `app/mcn/parents/*`
 
 Routes: `index` (directory) · `add` (create/edit)
 
@@ -225,7 +225,7 @@ Routes: `index` (directory) · `add` (create/edit)
 | **Rules** | Required on save: student name, school/college name, class/grade, parent name, flat number, contact phone. Institution type is `school`, `college`, or `preschool`. Board choices: CBSE, ICSE, State Board, IB, IGCSE, PU Board, University, Other. The directory offers 300 ms debounced search, filters by institution type / board / school (the school list is derived from existing entries), and sorting by school, grade, flat, or recency. Call and share actions are available per entry. If the table has not been deployed, `isSupabaseSchemaError` renders a "feature not available" state instead of an error toast. |
 | **Roles** | Residents manage their own entries. **Owner or lead** can edit or delete any entry. |
 
-### 4.6 Schools catalog & parent report card — `app/network/schools/*`
+### 4.6 Schools catalog & parent report card — `app/mcn/schools/*`
 
 Routes: `index` · `[id]` · `review` · `add` · `compare`
 
@@ -233,13 +233,13 @@ Routes: `index` · `[id]` · `review` · `add` · `compare`
 |--------|---------|
 | **Purpose** | Regional school directory plus a structured parent review system |
 | **Tables** | `schools`, `school_reviews`, `profiles`; curated data from `data/westHyderabadSchools.ts` |
-| **Catalog rules** | Merges ~50 curated regional schools with community-submitted ones. Cards show syllabus, level, distance, fee range, parent review count, and review badges. Up to **3 schools** can be selected for side-by-side comparison at `/network/schools/compare?ids=a,b,c`; selecting a fourth is refused with an info toast. |
+| **Catalog rules** | Merges ~50 curated regional schools with community-submitted ones. Cards show syllabus, level, distance, fee range, parent review count, and review badges. Up to **3 schools** can be selected for side-by-side comparison at `/mcn/schools/compare?ids=a,b,c`; selecting a fourth is refused with an info toast. |
 | **Report card rules** | Replaces flat 1–5 stars with **8 aspect dimensions** — Academics, Teachers, Infrastructure, Sports & Activities, Safety & Hygiene, Transport, Value for Money, Child's Happiness — scored on an emoji scale (😟 😕 😐 🙂 🤩) defined in `constants/schoolReviewAspects.ts`. Parents pick their child's grade and may add optional 140-char per-aspect notes plus an overall comment. Aggregates are written to `schools.avg_*` and `review_count` by a database trigger. Reviews accept text school IDs so curated (non-UUID) schools can be reviewed. |
 | **Detail view** | 8-axis radar chart (`SchoolRadarChart`), aspect score breakdown, parent review cards (`SchoolReviewCard`), and a report-card CTA |
 | **Add school rules** | Required: name, distance (≥0), fee range. Phone, when supplied, must be 10 digits. |
 | **Roles** | All residents view, compare, add schools, and submit or edit **their own** report card. Leads can delete school listings. |
 
-### 4.7 Borrow & share posts — `app/network/add.tsx`, `app/network/my-posts.tsx`
+### 4.7 Borrow & share posts — `app/mcn/add.tsx`, `app/mcn/my-posts.tsx`
 
 | Aspect | Details |
 |--------|---------|
@@ -247,7 +247,7 @@ Routes: `index` · `[id]` · `review` · `add` · `compare`
 | **Rules** | Title required (max 80), description optional (max 280). For `kind = 'borrow'` contact info is mandatory; business-kind posts keep it optional. A detected 10-digit number is normalized. My Posts groups the user's own posts into Active and Closed with close/delete actions. Launched from the hub's Borrow & Share entry, the screen runs in borrow-only community-feed mode: it shows the whole community's borrow posts, but close and delete stay limited to the signed-in user's own rows. |
 | **Roles** | Any resident posts. **Author or lead** can delete. |
 
-### 4.8 My orders — `app/network/my-orders.tsx`
+### 4.8 My orders — `app/mcn/my-orders.tsx`
 
 | Aspect | Details |
 |--------|---------|
@@ -354,7 +354,7 @@ Title required. **Exactly one treasurer must be selected** (leads and platform a
 | **Purpose** | Account-level hub only — identity, reminders, submissions, sign-out |
 | **RPCs** | `get_my_due_soon_count()`, `get_my_recent_service_history(p_limit)` |
 | **Rules** | **No building-level content here** — community metadata and the residents directory belong to the Community tab. The settings card shows the community role and, when applicable, a separate fund-access badge (Treasurer or Collector) so fund permissions are explicit. A block picker appears only while blocks are active. |
-| **Navigation** | → `/profile/edit`, `/services`, `/network/my-posts`, `/login` after sign-out |
+| **Navigation** | → `/profile/edit`, `/services`, `/mcn/my-posts`, `/login` after sign-out |
 
 ### Edit profile — `app/profile/edit.tsx`
 

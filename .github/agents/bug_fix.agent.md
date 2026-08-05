@@ -56,7 +56,7 @@ Your mission: find root cause fast, implement the smallest safe fix, validate, a
 2. `Alert.alert` used for a web confirmation — it is a **no-op on web**. Split on `Platform.OS` and use `window.confirm`.
 3. Reading `fundsEnabled` on first render — `AuthContext` loads it in a second, non-blocking phase.
 4. `.single()` throwing on a legitimately absent row.
-5. A new `app/network/*` route without a parent mapping in `getImmediateParentRoute()` (`lib/navigation.ts`) — back navigation falls through to the MCN hub.
+5. A new `app/mcn/*` route without a parent mapping in `getImmediateParentRoute()` (`lib/navigation.ts`) — back navigation falls through to the MCN hub.
 6. Missing `communityId` filter returning an empty list under RLS rather than an error.
 7. Capacity or role-cap logic added only in the UI while a database trigger already enforces (or rejects) it.
 8. `RefreshControl` used on web, where it is a no-op — use `useWebPullToRefresh`.

@@ -72,7 +72,7 @@ export default function ListingDetailScreen() {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   const handleGoBack = () => {
-    goBackSmart(router, `/network/listing/${listingId}`);
+    goBackSmart(router, `/mcn/listing/${listingId}`);
   };
 
   const fetchPublicReviews = useCallback(async () => {
@@ -305,7 +305,7 @@ export default function ListingDetailScreen() {
           onBack: handleGoBack,
           headerRight: user?.id === listing.owner_id || isCommunityLead ? () => (
             <TouchableOpacity
-              onPress={() => router.push(`/network/listing/manage/${listing.id}` as any)}
+              onPress={() => router.push(`/mcn/listing/manage/${listing.id}` as any)}
               style={{
                 backgroundColor: colors.primary,
                 paddingHorizontal: 12,

@@ -87,7 +87,7 @@ export default function ManageListingScreen() {
   }, [showListingModal]);
 
   const handleGoBack = () => {
-    goBackSmart(router, `/network/listing/manage/${listingId}`);
+    goBackSmart(router, `/mcn/listing/manage/${listingId}`);
   };
 
   const fetchData = useCallback(async () => {
@@ -107,7 +107,7 @@ export default function ManageListingScreen() {
       // Security check: ensure current user is owner or a community lead
       if (listingData.owner_id !== user.id && !isCommunityLead) {
         Toast.show({ type: 'error', text1: 'Not authorized to manage this listing' });
-        router.replace('/network/business' as any);
+        router.replace('/mcn/business' as any);
         return;
       }
 
@@ -401,7 +401,7 @@ export default function ManageListingScreen() {
 
         if (error) throw error;
         Toast.show({ type: 'success', text1: 'Listing deleted' });
-        router.replace('/network/business' as any);
+        router.replace('/mcn/business' as any);
       } catch (error: any) {
         console.error(error);
         Toast.show({ type: 'error', text1: 'Failed to delete listing' });

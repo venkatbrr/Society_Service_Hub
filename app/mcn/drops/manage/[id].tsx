@@ -262,7 +262,7 @@ export default function ManagePreorderDropScreen() {
         const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
         if (error) throw error;
         Toast.show({ type: 'success', text1: 'Food drop deleted' });
-        router.replace('/network/drops');
+        router.replace('/mcn/drops' as any);
       } catch (err: any) {
         Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
       }
@@ -284,7 +284,7 @@ export default function ManagePreorderDropScreen() {
   };
 
   const handleBack = () => {
-    goBackSmart(router, '/network/drops/manage/' + String(dropId || ''));
+    goBackSmart(router, '/mcn/drops/manage/' + String(dropId || ''));
   };
 
   return (
@@ -308,7 +308,7 @@ export default function ManagePreorderDropScreen() {
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={styles.editDropBtn}
-              onPress={() => router.push(`/network/drops/add?dropId=${drop.id}` as any)}
+              onPress={() => router.push(`/mcn/drops/add?dropId=${drop.id}` as any)}
             >
               <Ionicons name="create-outline" size={14} color={Verandah.accent} />
               <Text style={styles.editDropBtnText} numberOfLines={1}>Edit drop</Text>

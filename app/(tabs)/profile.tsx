@@ -233,7 +233,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push('/network/my-posts' as any)}
+          onPress={() => router.push('/mcn/my-posts' as any)}
           style={styles.adminCard}
           activeOpacity={0.82}
         >

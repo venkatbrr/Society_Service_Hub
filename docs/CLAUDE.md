@@ -71,9 +71,17 @@ There is no lint script and no test suite. `npx tsc --noEmit` must pass before y
 | School review aspects | `constants/schoolReviewAspects.ts` | 8 aspects, emoji scale, grade options |
 | SOS vocabulary | `constants/sos.ts` | Blood groups, emergency categories |
 
-### MCN navigation
+### Navigation
 
-`lib/navigation.ts` owns back behavior for `/network/*`. **When you add a route under `app/network/`, add its parent mapping to `getImmediateParentRoute()`** — otherwise browser back, Android back, and the header arrow all fall through to the MCN hub. Header back buttons call `goBackSmart(router, path)`, and MCN stack headers are built with `buildMcnHeaderOptions()` from `lib/mcnHeader.tsx`.
+`lib/navigation.ts` owns back behavior for `/mcn/*` and `/services/*`. Full model: [`architecture.md`](architecture.md) §9.
+
+- **Forward navigation is always `router.push()`.** Each screen must own exactly one browser history entry.
+- **Never use `router.replace()` for back navigation.** Replace overwrites the current entry rather than popping it, which makes browser-back skip a level and kills the forward button. Header back buttons call `goBackSmart(router, path)`, which pops with `router.back()` when it can and only replaces on a cross-branch jump or deep-link entry.
+- **Do use `router.replace()`** for post-save redirects, redirect bridges (`/mcn/drops?id=…`, `/mcn/drops/manage`), and sibling-tab toggles (drops ⇄ business). A bridge that uses `push()` creates an infinite back loop.
+- **Never intercept `popstate`.** expo-router already rebuilds state from the URL; racing it with a manual `router.replace()` is what previously corrupted browser back.
+- **Never let two route files resolve to the same URL.** React Navigation forbids it and expo-router fails silently, corrupting browser history at the boundary. The MCN hub tab owns `/network`, so its sub-routes live at `app/mcn/` → `/mcn/*`. A tab screen and a route directory cannot share a name. See [`architecture.md`](architecture.md) §9.
+- **When you add a route under `app/mcn/`, add its parent mapping to `getImmediateParentRoute()`** — otherwise the header arrow falls through to the MCN hub.
+- MCN stack headers come from `buildMcnHeaderOptions()` in `lib/mcnHeader.tsx`.
 
 ### Platform quirks
 
@@ -186,7 +194,11 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Assuming `fundsEnabled` is correct on first render | `AuthContext` loads it in a second, non-blocking phase. |
 | `Alert.alert` for a web confirmation | No-op on web. Split on `Platform.OS`. |
 | `.single()` on a possibly-absent row | Throws. Use `.maybeSingle()`. |
-| Adding an `app/network/*` route without a parent mapping | Back navigation falls through to the MCN hub. |
+| Adding an `app/mcn/*` route without a parent mapping | Header back falls through to the MCN hub. |
+| Two routes resolving to one URL (e.g. a tab screen and a same-named directory) | expo-router does not error; browser history silently breaks at that boundary. Keep `/network` (tab) and `/mcn/*` (stack) distinct. |
+| Using `router.replace()` to go back | Overwrites the history entry instead of popping it — browser-back then skips a level and forward breaks. Use `goBackSmart()`. |
+| Intercepting `popstate` to "fix" browser back | Races expo-router's own handler. Don't. |
+| `router.push()` on a redirect bridge (`?id=` style) | Browser-back lands on the bridge, which forwards again — infinite loop. Use `replace()`. |
 | Enforcing capacity only in the UI | Drop item capacity and fund role caps are trigger-enforced; UI-only checks will be bypassed. |
 | Writing to the `community-uploads` bucket | Unused. Images go to Cloudinary via `lib/cloudinary.ts`. |
 | Expecting `notifications` rows for hire feedback | It is a purely local `expo-notifications` schedule, not a table row. |

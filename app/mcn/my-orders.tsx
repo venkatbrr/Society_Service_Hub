@@ -232,7 +232,7 @@ export default function MyOrdersScreen() {
   };
 
   const handleBack = () => {
-    goBackSmart(router, '/network/my-orders');
+    goBackSmart(router, '/mcn/my-orders');
   };
 
   // Render Pre-Order Card
@@ -327,7 +327,7 @@ export default function MyOrdersScreen() {
         {/* Action Row */}
         <View style={styles.actionRow}>
           <TouchableOpacity
-            onPress={() => router.push(`/network/drops/${order.drop_id}` as any)}
+            onPress={() => router.push(`/mcn/drops/${order.drop_id}` as any)}
             style={[styles.actionBtn, { borderColor: colors.accent, backgroundColor: '#F0FDF4' }]}
           >
             <Ionicons name="eye-outline" size={16} color={colors.accent} />

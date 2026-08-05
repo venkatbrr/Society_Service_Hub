@@ -61,7 +61,7 @@ isLoading                                    → full-screen ActivityIndicator
 !session                                     → /login
     public exceptions (no redirect):
       • web pathname === "/"                 (Vercel rewrites to landing.html)
-      • /network/drops and /network/drops/*   (public food-drop links)
+      • /mcn/drops and /mcn/drops/*   (public food-drop links)
 isPlatformAdmin && web && !/admin*           → window.location.replace('/admin/index.html')
 isPlatformAdmin && native                    → /admin-redirect
 !communityId && activeCommunityRequest       → /community-request-submitted
@@ -389,15 +389,45 @@ Web push is not implemented — see [`archive/pwa-web-push-notifications-plan.md
 
 Help · Saved · MCN · Community · Profile. `Ionicons` with filled/outline variants. Tab bar height is 70 px on web and `58 + safeAreaBottom` on native; web forces `insets.bottom = 0` so the bar cannot be pushed off-screen.
 
-### Deterministic back navigation (`lib/navigation.ts`)
+### Route-collision rule (read before adding any route)
 
-MCN has deep nesting, so back behavior is explicit rather than stack-based:
+**No two route files may resolve to the same URL pattern.** React Navigation treats this as a hard error — `getStateFromPath` throws *"Found conflicting screens with the same pattern"* — and expo-router only survives it by deleting that guard. The ambiguity does not fail loudly; it silently corrupts browser history at the boundary between the colliding subtrees.
 
-- `getImmediateParentRoute(pathname)` maps every `/network/*` route (plus `/services/*`) to its logical parent — e.g. `/network/drops/manage/:id` → `/network/drops/:id` → `/network/drops` → `/(tabs)/network`.
-- `goBackSmart(router, path)` is what header back buttons call. It uses `router.replace()`, not `router.back()`.
-- `useSyncedBackNavigation()` runs in the root layout and binds browser `popstate` (web) and `hardwareBackPress` (Android) to the same mapping, backed by a `sessionStorage` route stack capped at 20 entries.
+This is exactly what broke MCN browser-back. `app/(tabs)/network.tsx` (the hub tab) and the old `app/network/` directory both claimed `/network`. Any navigation crossing that boundary — hub → `/network/drops` → a detail screen — lost its middle history entry, so browser-back skipped straight to the hub. Screens that never crossed it (`/network/business` → `/network/listing/:id`) worked fine, which is what made the bug look arbitrary.
 
-**When you add a `/network/*` route, add its parent mapping to `getImmediateParentRoute()`** or back navigation will fall through to the MCN hub.
+**The fix:** the MCN sub-route tree lives at `app/mcn/` → `/mcn/*`, while the hub tab keeps `/network`. A tab screen and a route directory cannot share a name.
+
+> **Known remaining collision:** `app/index.tsx` and `app/(tabs)/index.tsx` both claim `/`. `app/index.tsx` exists only to bounce web visitors to `/landing.html` and native to `/login`. It has not caused a reported bug, but it is the same class of defect. Resolving it means either moving the Help tab off `/` or handling the landing redirect outside the router — a product decision, not a mechanical fix.
+
+To check for collisions after adding routes, build the linking config and run `getStateFromPath` over your new URLs; a collision throws with both conflicting screen names.
+
+### Back navigation (`lib/navigation.ts`)
+
+The app distinguishes **two different meanings of "back"**, and conflating them is what previously broke browser history.
+
+| Concept | Trigger | Meaning | Who implements it |
+|---------|---------|---------|-------------------|
+| **Chronological back** | Browser back button, Android hardware back | "the screen I was on before" | expo-router / React Navigation — **we do not intercept it** |
+| **Hierarchical up** | The in-app header back arrow | "the logical parent of this screen" | `goBackSmart()` |
+
+**The invariant everything depends on:** forward navigation always uses `router.push()`, so each screen owns exactly one browser history entry. Back navigation must therefore **pop** that entry (`router.back()`), never replace it.
+
+`router.replace()` overwrites the current history entry instead of removing it. Using it for back navigation leaves the browser's back stack one level shallower than the visual depth — so the next browser-back skips a level — and destroys the forward button. Reserve `replace()` for:
+- post-save redirects (so back does not return to a submitted form),
+- redirect bridges such as `/mcn/drops?id=…` and `/mcn/drops/manage` (so the bridge URL keeps no history entry of its own — with `push()` these create an infinite back loop),
+- sibling-tab toggles like drops ⇄ business, which are one logical level and must not stack entries.
+
+**API**
+
+- `getImmediateParentRoute(path)` — maps every `/mcn/*` route (plus `/services/*`) to its logical parent, e.g. `/mcn/drops/manage/:id` → `/mcn/drops/:id` → `/mcn/drops` → `/network`. Accepts an optional query string because a few parents are context-dependent: `/mcn/schools/review?schoolId=X` → that school, and `/mcn/add?source=my-posts` → My Submissions.
+- `goBackSmart(router, path)` — what header back buttons call. Pops with `router.back()` when the previous tracked route already **is** the logical parent (the common case, keeping history and forward in sync); otherwise falls back to `router.replace(parent)` for a cross-branch jump or a deep-link entry with nothing to pop.
+- `normalizeRoute(route)` — canonical form for comparisons: strips query, hash, trailing slash, and expo-router group segments so `/(tabs)/network` and `/network` compare equal.
+- `getPreviousRoute()` — the previous entry in the tracked stack.
+- `useSyncedBackNavigation()` — runs in the root layout. Maintains the tracked stack and adds **one** Android guard: when `canGoBack()` is false (deep link into a nested screen), hardware back walks up the hierarchy instead of exiting the app. It deliberately does **not** listen to `popstate`.
+
+**Tracked stack** — a `sessionStorage` array (in-memory on native), capped at 25 entries, reconciled on every pathname change by a **truncate-or-push** rule: if the route is already in the stack the user moved back, so truncate to that index; otherwise push. This self-heals. The earlier implementation pushed unconditionally, so back navigations *grew* the stack and its contents stopped matching real history after the first back press.
+
+**When you add a `/mcn/*` route, add its parent mapping to `getImmediateParentRoute()`**, or back navigation falls through to the MCN hub.
 
 ### Shared MCN header
 
@@ -408,8 +438,8 @@ MCN has deep nesting, so back behavior is explicit rather than stack-based:
 - Help tab preserves `segment` and `visitTab` through params on drill-in/return
 - `/residents?returnTo=community|profile`
 - `/funds/add-transaction?event_id=…&type=income|expense`
-- `/network/drops?id=…&tab=active|closed|my_drops` — the `id` form redirects into the drop detail (web deep-link bridge)
-- `/network/schools/compare?ids=a,b,c` — max 3
+- `/mcn/drops?id=…&tab=active|closed|my_drops` — the `id` form redirects into the drop detail (web deep-link bridge)
+- `/mcn/schools/compare?ids=a,b,c` — max 3
 
 ### Platform admin console routing
 
@@ -464,7 +494,7 @@ type AssignmentRole = Tables<'fund_roles'>['role']  // 'treasurer' | 'collector'
 type FundAccessRole = 'admin' | AssignmentRole | 'resident'
 ```
 
-Screen-local enriched types are declared next to their screen (for example `ParentCornerItem` in `app/network/parents/index.tsx`, `PreorderDropItem` in `components/PreorderDropCard.tsx`).
+Screen-local enriched types are declared next to their screen (for example `ParentCornerItem` in `app/mcn/parents/index.tsx`, `PreorderDropItem` in `components/PreorderDropCard.tsx`).
 
 Strict mode is on; `@/*` maps to the project root.
 
@@ -497,7 +527,7 @@ getRestrictionHint(role)
 
 | Helper | Use |
 |--------|-----|
-| `isSupabaseSchemaError(error)` | Generic missing-table/column detection — lets a screen render a "feature not deployed" state instead of a crash (see `app/network/parents/index.tsx`) |
+| `isSupabaseSchemaError(error)` | Generic missing-table/column detection — lets a screen render a "feature not deployed" state instead of a crash (see `app/mcn/parents/index.tsx`) |
 | `isMissingFundSchemaError(error)` / `getMissingFundSchemaMessage()` | Funds-specific schema gaps |
 | `isMissingOnboardingSchemaError(error)` / `getMissingOnboardingSchemaMessage()` | Onboarding-specific schema gaps |
 

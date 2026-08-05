@@ -57,7 +57,7 @@ export default function AddParentCornerScreen() {
   const [initialLoading, setInitialLoading] = useState(!!editId);
 
   const handleBack = () => {
-    goBackSmart(router, '/network/parents/add');
+    goBackSmart(router, '/mcn/parents/add');
   };
 
   // Auto-fill user profile info if creating new entry
@@ -188,7 +188,7 @@ export default function AddParentCornerScreen() {
         Toast.show({ type: 'success', text1: 'Child details added to Parent Corner!' });
       }
 
-      router.replace('/network/parents' as any);
+      router.replace('/mcn/parents' as any);
     } catch (err: any) {
       console.error('Error saving parent corner record:', err);
       Toast.show({ type: 'error', text1: err.message || 'Failed to save details' });

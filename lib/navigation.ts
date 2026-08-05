@@ -2,212 +2,249 @@ import { usePathname, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { BackHandler, Platform } from 'react-native';
 
-const HISTORY_STORAGE_KEY = 'ssh_mcn_navigation_stack';
+/**
+ * Navigation model
+ * ================
+ *
+ * There are two different, both-valid meanings of "back", and this module keeps
+ * them separate:
+ *
+ *   1. CHRONOLOGICAL back — the browser back button and the Android hardware
+ *      back button. This means "the screen I was on before". expo-router and
+ *      React Navigation already implement this correctly, so we do NOT intercept
+ *      it. We only step in when there is nothing to pop (deep link / fresh tab),
+ *      where the alternative would be leaving the app.
+ *
+ *   2. HIERARCHICAL up — the header back arrow inside the app. This means "the
+ *      logical parent of this screen", which is not always where the user came
+ *      from (e.g. My Orders -> drop detail; the parent is the drops catalog).
+ *      `goBackSmart()` implements this.
+ *
+ * The invariant that makes both work:
+ *
+ *   Forward navigation always uses router.push(), so every screen owns exactly
+ *   one browser history entry. Back navigation must therefore POP that entry
+ *   (router.back()), never replace it.
+ *
+ *   router.replace() overwrites the current history entry rather than removing
+ *   it, which leaves the browser's back stack one level shallower than the
+ *   visual navigation depth and destroys the forward button. Using replace() for
+ *   back navigation is what previously made browser-back skip straight to the
+ *   MCN hub. We now only replace() when jumping across branches or when there is
+ *   genuinely no history to pop.
+ */
 
-function getSessionStack(): string[] {
-  if (typeof window === 'undefined') return [];
+const STACK_STORAGE_KEY = 'ssh_navigation_stack';
+const MAX_TRACKED_ROUTES = 25;
+
+/** Native has no sessionStorage; an in-memory stack is enough there. */
+let memoryStack: string[] = [];
+
+const canUseSessionStorage = () =>
+  Platform.OS === 'web' && typeof window !== 'undefined' && typeof sessionStorage !== 'undefined';
+
+/**
+ * Canonical form of a route for identity comparisons.
+ *
+ * Strips the query string, the hash, any trailing slash, and expo-router group
+ * segments. Groups matter because `/(tabs)/network` and `/network` are the same
+ * screen: the group never appears in `window.location.pathname`, but our route
+ * literals include it.
+ */
+export function normalizeRoute(route: string): string {
+  if (!route) return '';
+  const withoutQuery = route.split('?')[0].split('#')[0];
+  const withoutGroups = withoutQuery.replace(/\/\([^)]*\)/g, '');
+  const trimmed = withoutGroups.replace(/\/+$/, '');
+  return trimmed || '/';
+}
+
+function readStack(): string[] {
+  if (!canUseSessionStorage()) return memoryStack;
   try {
-    const raw = sessionStorage.getItem(HISTORY_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const raw = sessionStorage.getItem(STACK_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
-function setSessionStack(stack: string[]) {
-  if (typeof window === 'undefined') return;
+function writeStack(stack: string[]) {
+  const capped = stack.slice(-MAX_TRACKED_ROUTES);
+  memoryStack = capped;
+  if (!canUseSessionStorage()) return;
   try {
-    sessionStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(stack.slice(-20)));
+    sessionStorage.setItem(STACK_STORAGE_KEY, JSON.stringify(capped));
   } catch {
-    // Ignore storage quota
+    // Ignore quota / private-mode failures — the in-memory copy still works.
   }
 }
 
 /**
- * Deterministic mapping of every sub-route to its immediate parent route.
- * This ensures that browser back buttons, hardware back buttons, and in-app
- * back arrows always navigate to the exact immediate parent screen.
+ * Reconcile the tracked stack with the route we just landed on.
+ *
+ * If the route is already in the stack the user moved BACK (or jumped sideways
+ * to an ancestor), so we truncate to that position. Otherwise it is a forward
+ * navigation and we push.
+ *
+ * This truncate-or-push rule is what keeps the stack self-healing. The previous
+ * implementation pushed unconditionally, so every back navigation *grew* the
+ * stack and its contents stopped corresponding to real history after the first
+ * back press.
+ */
+function syncNavigationStack(pathname: string): string[] {
+  const route = normalizeRoute(pathname);
+  if (!route) return readStack();
+
+  const stack = readStack();
+  const existingIndex = stack.lastIndexOf(route);
+
+  const next = existingIndex >= 0 ? stack.slice(0, existingIndex + 1) : [...stack, route];
+
+  writeStack(next);
+  return next;
+}
+
+/** The route the user was on immediately before the current one, if we know it. */
+export function getPreviousRoute(): string | null {
+  const stack = readStack();
+  return stack.length >= 2 ? stack[stack.length - 2] : null;
+}
+
+/**
+ * Deterministic mapping of every sub-route to its immediate logical parent.
+ *
+ * Accepts a full path, optionally including a query string, because a few
+ * screens have a context-dependent parent (a school report card belongs to the
+ * school it reviews; a borrow post opened from My Submissions belongs there).
  */
 export function getImmediateParentRoute(pathname: string): string {
-  const cleanPath = pathname.split('?')[0].split('#')[0].replace(/\/$/, '');
+  const cleanPath = normalizeRoute(pathname);
+  const query = pathname.includes('?') ? pathname.slice(pathname.indexOf('?') + 1) : '';
+  const params = new URLSearchParams(query);
 
-  // 1. Parent Corner sub-routes
-  if (cleanPath === '/network/parents/add' || (cleanPath.startsWith('/network/parents/') && cleanPath !== '/network/parents')) {
-    return '/network/parents';
-  }
-  if (cleanPath === '/network/parents') {
-    return '/(tabs)/network';
-  }
+  // 1. Parent Corner
+  if (cleanPath.startsWith('/mcn/parents/')) return '/mcn/parents';
+  if (cleanPath === '/mcn/parents') return '/network';
 
-  // 2. Schools sub-routes
-  if (
-    cleanPath === '/network/schools/add' ||
-    cleanPath === '/network/schools/compare' ||
-    cleanPath === '/network/schools/review' ||
-    (cleanPath.startsWith('/network/schools/') && cleanPath !== '/network/schools')
-  ) {
-    return '/network/schools';
+  // 2. Schools
+  if (cleanPath === '/mcn/schools/review') {
+    // A report card is written against one school — go back to that school.
+    const schoolId = params.get('schoolId');
+    return schoolId ? `/mcn/schools/${schoolId}` : '/mcn/schools';
   }
-  if (cleanPath === '/network/schools') {
-    return '/(tabs)/network';
-  }
+  if (cleanPath.startsWith('/mcn/schools/')) return '/mcn/schools';
+  if (cleanPath === '/mcn/schools') return '/network';
 
-  // 3. Food Drops sub-routes
-  if (cleanPath.startsWith('/network/drops/manage/')) {
-    const dropId = cleanPath.replace('/network/drops/manage/', '');
-    return `/network/drops/${dropId}`;
+  // 3. Food drops
+  if (cleanPath.startsWith('/mcn/drops/manage/')) {
+    const dropId = cleanPath.replace('/mcn/drops/manage/', '');
+    return dropId ? `/mcn/drops/${dropId}` : '/mcn/drops';
   }
-  if (
-    cleanPath === '/network/drops/add' ||
-    (cleanPath.startsWith('/network/drops/') && cleanPath !== '/network/drops')
-  ) {
-    return '/network/drops';
-  }
-  if (cleanPath === '/network/drops') {
-    return '/(tabs)/network';
-  }
+  if (cleanPath === '/mcn/drops/manage') return '/mcn/drops';
+  if (cleanPath.startsWith('/mcn/drops/')) return '/mcn/drops';
+  if (cleanPath === '/mcn/drops') return '/network';
 
-  // 4. Carpools sub-routes
-  if (
-    cleanPath === '/network/carpools/add' ||
-    (cleanPath.startsWith('/network/carpools/') && cleanPath !== '/network/carpools')
-  ) {
-    return '/network/carpools';
-  }
-  if (cleanPath === '/network/carpools') {
-    return '/(tabs)/network';
-  }
+  // 4. Carpools
+  if (cleanPath.startsWith('/mcn/carpools/')) return '/mcn/carpools';
+  if (cleanPath === '/mcn/carpools') return '/network';
 
-  // 5. Business Listings sub-routes
-  if (cleanPath.startsWith('/network/listing/manage/')) {
-    const listingId = cleanPath.replace('/network/listing/manage/', '');
-    return `/network/listing/${listingId}`;
+  // 5. Business listings
+  if (cleanPath.startsWith('/mcn/listing/manage/')) {
+    const listingId = cleanPath.replace('/mcn/listing/manage/', '');
+    return listingId ? `/mcn/listing/${listingId}` : '/mcn/business';
   }
-  if (cleanPath.startsWith('/network/listing/orders/')) {
-    const listingId = cleanPath.replace('/network/listing/orders/', '');
-    return `/network/listing/${listingId}`;
+  if (cleanPath.startsWith('/mcn/listing/orders/')) {
+    const listingId = cleanPath.replace('/mcn/listing/orders/', '');
+    return listingId ? `/mcn/listing/${listingId}` : '/mcn/business';
   }
-  if (cleanPath.startsWith('/network/listing/') && cleanPath !== '/network/listing') {
-    return '/network/business';
-  }
-  if (cleanPath === '/network/listing-add') {
-    return '/network/business';
-  }
-  if (cleanPath === '/network/business') {
-    return '/(tabs)/network';
-  }
+  if (cleanPath.startsWith('/mcn/listing/')) return '/mcn/business';
+  if (cleanPath === '/mcn/listing-add') return '/mcn/business';
+  // Business listings and food drops are sibling tabs of one hub card, not
+  // parent and child — both go up to the MCN hub.
+  if (cleanPath === '/mcn/business') return '/network';
 
-  // 6. General MCN sub-routes
-  if (
-    cleanPath === '/network/my-orders' ||
-    cleanPath === '/network/my-posts' ||
-    cleanPath === '/network/add'
-  ) {
-    return '/(tabs)/network';
+  // 6. General MCN
+  if (cleanPath === '/mcn/add') {
+    // The post composer is reachable from the hub and from My Submissions.
+    return params.get('source') === 'my-posts' ? '/mcn/my-posts' : '/network';
   }
+  if (cleanPath === '/mcn/my-orders' || cleanPath === '/mcn/my-posts') return '/network';
 
-  // 7. Service Reminders sub-routes
-  if (cleanPath === '/services/add' || (cleanPath.startsWith('/services/') && cleanPath !== '/services')) {
-    return '/services';
-  }
-  if (cleanPath === '/services') {
-    return '/(tabs)/profile';
-  }
+  // 7. Personal service reminders
+  if (cleanPath.startsWith('/services/')) return '/services';
+  if (cleanPath === '/services') return '/profile';
 
-  // Default fallback
-  return '/(tabs)/network';
+  // Default: the MCN hub.
+  return '/network';
 }
 
 /**
- * Reusable smart backward navigation function.
- * Use this in header back buttons or screen back handlers.
+ * Hierarchical "up" navigation for header back buttons.
+ *
+ * Pops the history entry when the previous screen already IS the logical parent
+ * (the overwhelmingly common case), which keeps browser history, the forward
+ * button, and app state in sync. Falls back to replace() only when the parent is
+ * somewhere else in the hierarchy, or when there is no history to pop because
+ * the screen was opened from a deep link or a fresh tab.
  */
 export function goBackSmart(router: ReturnType<typeof useRouter>, currentPath: string) {
   const parent = getImmediateParentRoute(currentPath);
+  const normalizedParent = normalizeRoute(parent);
+  const previousRoute = getPreviousRoute();
+
+  const canPop = typeof router.canGoBack === 'function' ? router.canGoBack() : false;
+
+  if (canPop && previousRoute && previousRoute === normalizedParent) {
+    router.back();
+    return;
+  }
+
+  // Cross-branch jump or deep-link entry: replace so we do not leave a dangling
+  // forward entry pointing at the screen the user just dismissed.
   router.replace(parent as any);
 }
 
 /**
- * Global hook to keep browser back button and mobile hardware back button
- * in 100% sync with the logical nested hierarchy of the app.
+ * Keeps the tracked route stack current, and stops Android hardware back from
+ * dropping the user out of the app when they deep-linked into a nested screen.
+ *
+ * Deliberately does NOT intercept the browser's popstate event. expo-router
+ * already rebuilds navigation state from the URL on popstate; the previous
+ * implementation raced it with its own router.replace() call, which is what
+ * corrupted browser back navigation.
  */
 export function useSyncedBackNavigation() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // 1. Maintain in-memory and sessionStorage route stack
   useEffect(() => {
-    if (!pathname || Platform.OS !== 'web' || typeof window === 'undefined') return;
-
-    const currentFull = window.location.pathname + window.location.search;
-    const stack = getSessionStack();
-
-    // If returning to root MCN tab, reset stack
-    if (currentFull === '/network' || currentFull === '/(tabs)/network') {
-      setSessionStack(['/(tabs)/network']);
-    } else {
-      if (stack.length === 0 || stack[stack.length - 1] !== currentFull) {
-        stack.push(currentFull);
-        setSessionStack(stack);
-      }
-    }
+    if (!pathname) return;
+    syncNavigationStack(pathname);
   }, [pathname]);
 
-  // 2. Handle Browser Back (popstate) and Android Back Button
   useEffect(() => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      let isNavigating = false;
+    if (Platform.OS !== 'android' || !pathname) return;
 
-      const handlePopState = (e: PopStateEvent) => {
-        if (isNavigating) return;
-
-        const stack = getSessionStack();
-        const currentWebPath = window.location.pathname.split('?')[0].split('#')[0];
-
-        // Pop current top screen
-        const poppedRoute = stack.pop();
-        setSessionStack(stack);
-
-        const previousRouteInStack = stack[stack.length - 1];
-
-        if (poppedRoute && poppedRoute.startsWith('/network/') && poppedRoute !== '/network') {
-          let target = currentWebPath;
-
-          if (currentWebPath === '/network' || currentWebPath === '/' || currentWebPath.startsWith('/(tabs)')) {
-            target = previousRouteInStack && previousRouteInStack !== '/network' && previousRouteInStack !== '/(tabs)/network'
-              ? previousRouteInStack
-              : getImmediateParentRoute(poppedRoute);
-          }
-
-          if (target) {
-            isNavigating = true;
-            router.replace(target as any);
-
-            setTimeout(() => {
-              isNavigating = false;
-            }, 150);
-          }
-        }
-      };
-
-      window.addEventListener('popstate', handlePopState);
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-      };
-    }
-
-    if (Platform.OS === 'android') {
-      const onBackPress = () => {
-        if (pathname.startsWith('/network/') || pathname === '/network') {
-          const parent = getImmediateParentRoute(pathname);
-          router.replace(parent as any);
-          return true;
-        }
+    const onBackPress = () => {
+      // Let React Navigation pop normally whenever it has somewhere to pop to.
+      if (typeof router.canGoBack === 'function' && router.canGoBack()) {
         return false;
-      };
+      }
 
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => subscription.remove();
-    }
+      // Nothing to pop: the user deep-linked straight into a nested screen.
+      // Walk up the hierarchy instead of exiting the app.
+      const parent = getImmediateParentRoute(pathname);
+      if (parent && normalizeRoute(parent) !== normalizeRoute(pathname)) {
+        router.replace(parent as any);
+        return true;
+      }
+
+      return false;
+    };
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => subscription.remove();
   }, [router, pathname]);
 }

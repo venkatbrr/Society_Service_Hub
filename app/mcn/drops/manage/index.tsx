@@ -9,11 +9,11 @@ export default function ManageDropRedirectScreen() {
 
   useEffect(() => {
     if (id) {
-      router.replace(`/network/drops/manage/${id}` as any);
+      router.replace(`/mcn/drops/manage/${id}` as any);
       return;
     }
 
-    router.replace('/network/drops' as any);
+    router.replace('/mcn/drops' as any);
   }, [id, router]);
 
   return (

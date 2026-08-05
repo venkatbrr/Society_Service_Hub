@@ -136,7 +136,7 @@ export default function CarpoolListScreen() {
   };
 
   const handleBack = () => {
-    goBackSmart(router, '/network/carpools');
+    goBackSmart(router, '/mcn/carpools');
   };
 
   return (
@@ -255,7 +255,7 @@ export default function CarpoolListScreen() {
               <BaseCard
                 padding={10}
                 style={styles.card}
-                onPress={() => router.push(`/network/carpools/${item.id}` as any)}
+                onPress={() => router.push(`/mcn/carpools/${item.id}` as any)}
               >
                 {/* Header Row */}
                 <View style={styles.cardHeaderRow}>
@@ -390,7 +390,7 @@ export default function CarpoolListScreen() {
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: colors.primary }]}
         activeOpacity={0.8}
-        onPress={() => router.push('/network/carpools/add' as any)}
+        onPress={() => router.push('/mcn/carpools/add' as any)}
       >
         <Ionicons name="add" size={24} color={colors.primaryFg} />
         <Text style={[styles.fabText, { color: colors.primaryFg }]}>Offer / Request</Text>

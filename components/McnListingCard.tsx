@@ -62,8 +62,8 @@ export const McnListingCard = React.memo(({
 
     const shareUrl =
       Platform.OS === 'web' && typeof window !== 'undefined'
-        ? `${window.location.origin}/network/listing/${listing.id}`
-        : `https://society-service-hub.app/network/listing/${listing.id}`;
+        ? `${window.location.origin}/mcn/listing/${listing.id}`
+        : `https://society-service-hub.app/mcn/listing/${listing.id}`;
 
     const messageLines = [
       `🏪 *Community Business: ${listing.name}*`,

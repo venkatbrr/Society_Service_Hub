@@ -69,8 +69,8 @@ function RootLayoutNav() {
     const inAuthGroup = segments[0] === 'login';
     const isWebRootPath = Platform.OS === 'web' && pathname === '/';
     const isPublicFoodDropRoute =
-      pathname === '/network/drops' ||
-      pathname.startsWith('/network/drops/');
+      pathname === '/mcn/drops' ||
+      pathname.startsWith('/mcn/drops/');
     const currentRoute = String(segments[0] ?? '');
     const isOnTabsRoute = currentRoute === '(tabs)';
     const isOnAdminRedirect = currentRoute === 'admin-redirect';

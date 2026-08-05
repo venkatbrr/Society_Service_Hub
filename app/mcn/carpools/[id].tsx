@@ -145,7 +145,7 @@ export default function CarpoolDetailScreen() {
         const { error } = await supabase.from('mcn_carpools').delete().eq('id', carpool.id);
         if (error) throw error;
         Toast.show({ type: 'success', text1: 'Carpool deleted' });
-        router.replace('/network/carpools' as any);
+        router.replace('/mcn/carpools' as any);
       } catch (err: any) {
         console.error('Delete error:', err);
         Toast.show({ type: 'error', text1: 'Failed to delete carpool', text2: err.message });
@@ -261,7 +261,7 @@ export default function CarpoolDetailScreen() {
   };
 
   const handleBack = () => {
-    goBackSmart(router, '/network/carpools/' + String(id || ''));
+    goBackSmart(router, '/mcn/carpools/' + String(id || ''));
   };
 
   if (loading || !carpool) {

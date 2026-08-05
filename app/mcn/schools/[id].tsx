@@ -55,7 +55,7 @@ export default function SchoolDetailScreen() {
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   const handleGoBack = () => {
-    goBackSmart(router, '/network/schools/' + String(schoolId || ''));
+    goBackSmart(router, '/mcn/schools/' + String(schoolId || ''));
   };
 
   const fetchSchoolDetails = useCallback(async () => {
@@ -434,7 +434,7 @@ export default function SchoolDetailScreen() {
           {/* Write / Edit Review CTA */}
           <TouchableOpacity
             style={styles.reviewCtaBtn}
-            onPress={() => router.push(`/network/schools/review?schoolId=${school.id}` as any)}
+            onPress={() => router.push(`/mcn/schools/review?schoolId=${school.id}` as any)}
             activeOpacity={0.8}
           >
             <Ionicons name="clipboard-outline" size={18} color="#FFFFFF" />
@@ -454,7 +454,7 @@ export default function SchoolDetailScreen() {
                   key={item.id}
                   review={item}
                   isOwnReview={item.user_id === user?.id}
-                  onEdit={() => router.push(`/network/schools/review?schoolId=${school.id}` as any)}
+                  onEdit={() => router.push(`/mcn/schools/review?schoolId=${school.id}` as any)}
                 />
               ))}
 

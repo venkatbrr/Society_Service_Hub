@@ -113,7 +113,7 @@ export default function NetworkScreen() {
       <View style={styles.quickActionsRow}>
         <TouchableOpacity
           style={[styles.quickActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-          onPress={() => router.push('/network/my-orders' as any)}
+          onPress={() => router.push('/mcn/my-orders' as any)}
           activeOpacity={0.8}
         >
           <Ionicons name="bag-handle-outline" size={18} color={colors.primary} style={{ marginRight: 6 }} />
@@ -122,7 +122,7 @@ export default function NetworkScreen() {
 
         <TouchableOpacity
           style={[styles.quickActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-          onPress={() => router.push('/network/my-posts' as any)}
+          onPress={() => router.push('/mcn/my-posts' as any)}
           activeOpacity={0.8}
         >
           <Ionicons name="documents-outline" size={18} color={colors.accent} style={{ marginRight: 6 }} />
@@ -148,7 +148,7 @@ export default function NetworkScreen() {
         {/* Merged Food Drops & Community Business Section Card */}
         <BaseCard
           padding={14}
-          onPress={() => router.push('/network/drops' as any)}
+          onPress={() => router.push('/mcn/drops' as any)}
           style={styles.sectionCard}
         >
           <View style={styles.cardHeaderRow}>
@@ -173,7 +173,7 @@ export default function NetworkScreen() {
         {/* 2. Carpooling Section Card */}
         <BaseCard
           padding={14}
-          onPress={() => router.push('/network/carpools' as any)}
+          onPress={() => router.push('/mcn/carpools' as any)}
           style={styles.sectionCard}
         >
           <View style={styles.cardHeaderRow}>
@@ -198,7 +198,7 @@ export default function NetworkScreen() {
         {/* 2. Parent Corner Section Card */}
         <BaseCard
           padding={14}
-          onPress={() => router.push('/network/parents' as any)}
+          onPress={() => router.push('/mcn/parents' as any)}
           style={styles.sectionCard}
         >
           <View style={styles.cardHeaderRow}>
@@ -223,7 +223,7 @@ export default function NetworkScreen() {
         {/* 3. School Catalog Section Card */}
         <BaseCard
           padding={14}
-          onPress={() => router.push('/network/schools' as any)}
+          onPress={() => router.push('/mcn/schools' as any)}
           style={styles.sectionCard}
         >
           <View style={styles.cardHeaderRow}>

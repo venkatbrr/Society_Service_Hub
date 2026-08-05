@@ -24,6 +24,7 @@ import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../lib/mcnHeader';
+import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type McnCategory = { id: string; name: string; emoji: string; sort_order: number };
@@ -197,7 +198,7 @@ export default function BusinessListingsScreen() {
   };
 
   const handleBack = () => {
-    router.replace('/(tabs)/network' as any);
+    goBackSmart(router, '/mcn/business');
   };
 
   return (
@@ -213,7 +214,9 @@ export default function BusinessListingsScreen() {
       <View style={styles.masterToggleRow}>
         <TouchableOpacity
           style={styles.masterToggleBtn}
-          onPress={() => router.push('/network/drops' as any)}
+          // Sibling tab of this screen, not a child: replace so repeated
+          // toggling does not pile up browser history entries.
+          onPress={() => router.replace('/mcn/drops' as any)}
           activeOpacity={0.8}
         >
           <View style={styles.iconLabelRow}>
@@ -372,8 +375,8 @@ export default function BusinessListingsScreen() {
                         listing={listing}
                         currentUserId={user?.id || ''}
                         isCommunityLead={isCommunityLead}
-                        onPress={(id) => router.push(`/network/listing/${id}` as any)}
-                        onManage={(id) => router.push(`/network/listing/manage/${id}` as any)}
+                        onPress={(id) => router.push(`/mcn/listing/${id}` as any)}
+                        onManage={(id) => router.push(`/mcn/listing/manage/${id}` as any)}
                         onRemove={handleRemoveListing}
                       />
                     ))}
@@ -395,7 +398,7 @@ export default function BusinessListingsScreen() {
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: colors.primary }]}
         activeOpacity={0.8}
-        onPress={() => router.push('/network/listing-add' as any)}
+        onPress={() => router.push('/mcn/listing-add' as any)}
       >
         <Ionicons name="add" size={28} color={colors.primaryFg} />
       </TouchableOpacity>

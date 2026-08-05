@@ -32,7 +32,7 @@ Start with [`docs/README.md`](../docs/README.md) — it is the routing table tha
 - **Dates**: always `@react-native-community/datetimepicker`; store visit dates as local `YYYY-MM-DD`.
 - **Search**: debounce 300 ms into a separate state and use *that* in fetch dependency arrays.
 - **Categories**: import from `constants/categories.ts` (providers/visits), `lib/serviceCategories.ts` (reminders), `constants/schoolReviewAspects.ts` (school reviews). Never define local category arrays.
-- **MCN routes**: adding one under `app/network/` also requires a parent mapping in `getImmediateParentRoute()` in `lib/navigation.ts`, or back navigation breaks.
+- **Navigation**: forward is always `router.push()`. **Never `router.replace()` to go back** — it overwrites the history entry instead of popping it, so browser-back skips a level and forward breaks. Header back calls `goBackSmart()`. Never intercept `popstate`. Adding a route under `app/mcn/` also requires a parent mapping in `getImmediateParentRoute()` (`lib/navigation.ts`).
 - **Generated types**: `lib/database.types.ts` is generated — never hand-edit it.
 
 ## Design system — Verandah

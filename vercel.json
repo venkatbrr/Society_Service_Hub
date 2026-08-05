@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/network/:path+",
+      "destination": "/mcn/:path+",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/",
