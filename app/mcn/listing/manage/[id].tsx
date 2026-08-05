@@ -451,17 +451,19 @@ export default function ManageListingScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Inline Business Details Editor */}
-        <View style={[styles.card, { borderColor: colors.border, padding: 14 }]}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 10 }]}>Edit Business Details</Text>
-          
+        <View style={[styles.card, { borderColor: colors.border, padding: 12 }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 6 }]}>Edit Business Details</Text>
+
           <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Cover Image</Text>
-          <ImageUploader
-            currentImageUrl={editListingImageUrl}
-            onImageUploaded={setEditListingImageUrl}
-            onImageRemoved={() => setEditListingImageUrl(null)}
-            subfolder="listings"
-            placeholder="Add or change cover photo (optional)"
-          />
+          <View style={{ marginBottom: -10 }}>
+            <ImageUploader
+              currentImageUrl={editListingImageUrl}
+              onImageUploaded={setEditListingImageUrl}
+              onImageRemoved={() => setEditListingImageUrl(null)}
+              subfolder="listings"
+              placeholder="Add or change cover photo (optional)"
+            />
+          </View>
 
           <View style={styles.field}>
             <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Business name <Text style={{ color: colors.danger }}>*</Text></Text>
@@ -1139,12 +1141,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   field: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   fieldLabel: {
     fontSize: 13,
     fontWeight: '500',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   input: {
     borderWidth: 1,
@@ -1170,10 +1172,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: VerandahRadius.md,
     paddingHorizontal: 10,
-    paddingVertical: 10,
-    minHeight: 54,
+    paddingVertical: 8,
+    minHeight: 46,
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   categoryChipText: {
     ...VerandahType.caption,
@@ -1229,7 +1231,7 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 48,
+    height: 52,
   },
   modalSecondaryBtnText: {
     fontSize: 14,
@@ -1240,7 +1242,7 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 48,
+    height: 52,
   },
   modalPrimaryBtnText: {
     fontSize: 14,
