@@ -53,6 +53,8 @@ export default function ManagePreorderDropScreen() {
   const [items, setItems] = useState<DropItem[]>([]);
   const [orders, setOrders] = useState<DropOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDeliveredSection, setShowDeliveredSection] = useState(true);
+  const [showCancelledSection, setShowCancelledSection] = useState(false);
 
   const fetchDropManagerData = useCallback(async () => {
     if (!dropId) return;
@@ -72,7 +74,15 @@ export default function ManagePreorderDropScreen() {
         .from('mcn_preorder_items')
         .select('*')
         .eq('drop_id', dropId);
-      setItems(itemsData || []);
+
+      const uniqueItemsMap = new Map<string, any>();
+      (itemsData || []).forEach((row: any) => {
+        const key = `${row.name?.trim().toLowerCase()}_${row.unit}_${row.price}`;
+        if (!uniqueItemsMap.has(key)) {
+          uniqueItemsMap.set(key, row);
+        }
+      });
+      setItems(Array.from(uniqueItemsMap.values()));
 
       // 3. Fetch all pre-orders for this drop
       const { data: ordersData, error: ordersErr } = await supabase
@@ -241,6 +251,10 @@ export default function ManagePreorderDropScreen() {
   const isCutoffPassed = now >= cutoffDate;
   const isOpen = drop.status === 'open' && !isCutoffPassed;
 
+  const confirmedOrders = orders.filter((o) => o.status === 'confirmed');
+  const fulfilledOrders = orders.filter((o) => o.status === 'fulfilled');
+  const cancelledOrders = orders.filter((o) => o.status === 'cancelled');
+
   const handleBack = () => {
     goBackSmart(router, '/network/drops/manage/' + String(dropId || ''));
   };
@@ -296,13 +310,13 @@ export default function ManagePreorderDropScreen() {
         {/* Financial & Order Metric Cards */}
         <View style={styles.metricsRow}>
           <View style={styles.metricCard}>
-            <Text style={styles.metricVal}>{orders.length}</Text>
-            <Text style={styles.metricLabel}>Total Orders</Text>
+            <Text style={styles.metricVal}>{confirmedOrders.length}</Text>
+            <Text style={styles.metricLabel}>Pending Delivery</Text>
           </View>
 
           <View style={styles.metricCard}>
-            <Text style={styles.metricVal}>{totalItemsCount}</Text>
-            <Text style={styles.metricLabel}>Items Ordered</Text>
+            <Text style={styles.metricVal}>{fulfilledOrders.length}</Text>
+            <Text style={styles.metricLabel}>Delivered</Text>
           </View>
 
           <View style={styles.metricCard}>
@@ -315,11 +329,11 @@ export default function ManagePreorderDropScreen() {
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>👩‍🍳 Kitchen Prep Aggregation Summary</Text>
           <Text style={styles.sectionSub}>
-            Total items needed for cooking / preparation across all pre-orders:
+            Total items needed for cooking / preparation across all active pre-orders:
           </Text>
 
           {Object.keys(itemPrepAggregates).length === 0 ? (
-            <Text style={styles.emptyText}>No pre-orders placed yet.</Text>
+            <Text style={styles.emptyText}>No active pre-orders placed yet.</Text>
           ) : (
             <View style={styles.prepGrid}>
               {Object.entries(itemPrepAggregates).map(([itemName, count]) => (
@@ -332,86 +346,219 @@ export default function ManagePreorderDropScreen() {
           )}
         </View>
 
-        {/* Resident Delivery Roster Section */}
+        {/* Active Resident Pre-Orders Section */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>📍 Resident Delivery Roster ({orders.length})</Text>
+          <Text style={styles.sectionTitle}>📍 Active Pre-Orders ({confirmedOrders.length})</Text>
           <Text style={styles.sectionSub}>
-            Deliver to residents by flat number. Mark fulfilled upon delivery.
+            Deliver to residents by flat number. Click "Mark delivered" when handed over.
           </Text>
 
-          {orders.length === 0 ? (
-            <Text style={styles.emptyText}>No resident pre-orders yet.</Text>
+          {confirmedOrders.length === 0 ? (
+            <Text style={styles.emptyText}>No active pre-orders pending delivery.</Text>
           ) : (
-            orders.map((order) => {
-              const isFulfilled = order.status === 'fulfilled';
-              return (
-                <View key={order.id} style={[styles.orderCard, isFulfilled && styles.orderCardFulfilled]}>
-                  {/* Order Header */}
-                  <View style={styles.orderHeader}>
-                    <View style={styles.flatBadge}>
-                      <Text style={styles.flatBadgeText}>Flat {order.flat_number}</Text>
-                    </View>
-
-                    <Text style={styles.orderBuyerName}>{order.buyer_name}</Text>
-
-                    <View style={styles.contactActions}>
-                      <TouchableOpacity
-                        style={styles.iconCircle}
-                        onPress={() => handleCall(order.buyer_phone)}
-                      >
-                        <Ionicons name="call-outline" size={16} color={colors.accent} />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.iconCircle}
-                        onPress={() => handleWhatsApp(order.buyer_phone, order.flat_number)}
-                      >
-                        <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
-                      </TouchableOpacity>
-                    </View>
+            confirmedOrders.map((order) => (
+              <View key={order.id} style={styles.orderCard}>
+                {/* Order Header */}
+                <View style={styles.orderHeader}>
+                  <View style={styles.flatBadge}>
+                    <Text style={styles.flatBadgeText}>Flat {order.flat_number}</Text>
                   </View>
 
-                  {/* Order Items */}
-                  <View style={styles.orderItemsBox}>
-                    {(order.mcn_preorder_order_items || []).map((line) => (
-                      <View key={line.id} style={styles.lineRow}>
-                        <Text style={styles.lineText}>
-                          {line.quantity}x {line.item_name}
-                        </Text>
-                        <Rupees amount={line.quantity * line.unit_price} size="sm" />
-                      </View>
-                    ))}
+                  <Text style={styles.orderBuyerName}>{order.buyer_name}</Text>
 
-                    {order.buyer_note ? (
-                      <Text style={styles.buyerNote}>Note: "{order.buyer_note}"</Text>
-                    ) : null}
-                  </View>
-
-                  {/* Order Footer & Action */}
-                  <View style={styles.orderFooter}>
-                    <View style={styles.orderTotalWrap}>
-                      <Text style={styles.totalLabel}>Collect on Delivery:</Text>
-                      <Rupees amount={order.total_amount} size="md" tone="in" />
-                    </View>
-
+                  <View style={styles.contactActions}>
                     <TouchableOpacity
-                      style={[styles.fulfillmentBtn, isFulfilled && styles.fulfillmentBtnDone]}
-                      onPress={() => handleToggleFulfillment(order.id, order.status)}
+                      style={styles.iconCircle}
+                      onPress={() => handleCall(order.buyer_phone)}
                     >
-                      <Ionicons
-                        name={isFulfilled ? "checkmark-circle" : "checkmark-circle-outline"}
-                        size={15}
-                        color={isFulfilled ? "#059669" : colors.accent}
-                      />
-                      <Text style={[styles.fulfillmentBtnText, isFulfilled && styles.fulfillmentBtnTextDone]}>
-                        {isFulfilled ? 'Delivered' : 'Mark delivered'}
-                      </Text>
+                      <Ionicons name="call-outline" size={16} color={colors.accent} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.iconCircle}
+                      onPress={() => handleWhatsApp(order.buyer_phone, order.flat_number)}
+                    >
+                      <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
                     </TouchableOpacity>
                   </View>
                 </View>
-              );
-            })
+
+                {/* Order Items */}
+                <View style={styles.orderItemsBox}>
+                  {(order.mcn_preorder_order_items || []).map((line) => (
+                    <View key={line.id} style={styles.lineRow}>
+                      <Text style={styles.lineText}>
+                        {line.quantity}x {line.item_name}
+                      </Text>
+                      <Rupees amount={line.quantity * line.unit_price} size="sm" />
+                    </View>
+                  ))}
+
+                  {order.buyer_note ? (
+                    <Text style={styles.buyerNote}>Note: "{order.buyer_note}"</Text>
+                  ) : null}
+                </View>
+
+                {/* Order Footer & Action */}
+                <View style={styles.orderFooter}>
+                  <View style={styles.orderTotalWrap}>
+                    <Text style={styles.totalLabel}>Collect on Delivery:</Text>
+                    <Rupees amount={order.total_amount} size="md" tone="in" />
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.fulfillmentBtn}
+                    onPress={() => handleToggleFulfillment(order.id, order.status)}
+                  >
+                    <Ionicons
+                      name="checkmark-circle-outline"
+                      size={15}
+                      color="#FFFFFF"
+                    />
+                    <Text style={styles.fulfillmentBtnText}>Mark delivered</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))
           )}
         </View>
+
+        {/* Delivered / Completed Orders Section (Collapsible) */}
+        {fulfilledOrders.length > 0 ? (
+          <View style={styles.sectionCard}>
+            <TouchableOpacity
+              style={styles.collapsibleHeader}
+              onPress={() => setShowDeliveredSection(!showDeliveredSection)}
+              activeOpacity={0.7}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                <Ionicons name="checkmark-circle" size={18} color="#059669" />
+                <Text style={styles.sectionTitle}>Delivered & Completed Orders ({fulfilledOrders.length})</Text>
+              </View>
+              <Ionicons
+                name={showDeliveredSection ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+
+            {showDeliveredSection ? (
+              <View style={{ marginTop: 8 }}>
+                {fulfilledOrders.map((order) => (
+                  <View key={order.id} style={[styles.orderCard, styles.orderCardFulfilled]}>
+                    <View style={styles.orderHeader}>
+                      <View style={[styles.flatBadge, { backgroundColor: '#DCFCE7' }]}>
+                        <Text style={[styles.flatBadgeText, { color: '#059669' }]}>Flat {order.flat_number}</Text>
+                      </View>
+                      <Text style={styles.orderBuyerName}>{order.buyer_name}</Text>
+                      <View style={styles.contactActions}>
+                        <TouchableOpacity style={styles.iconCircle} onPress={() => handleCall(order.buyer_phone)}>
+                          <Ionicons name="call-outline" size={16} color={colors.accent} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.iconCircle} onPress={() => handleWhatsApp(order.buyer_phone, order.flat_number)}>
+                          <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    <View style={styles.orderItemsBox}>
+                      {(order.mcn_preorder_order_items || []).map((line) => (
+                        <View key={line.id} style={styles.lineRow}>
+                          <Text style={styles.lineText}>{line.quantity}x {line.item_name}</Text>
+                          <Rupees amount={line.quantity * line.unit_price} size="sm" />
+                        </View>
+                      ))}
+                      {order.buyer_note ? <Text style={styles.buyerNote}>Note: "{order.buyer_note}"</Text> : null}
+                    </View>
+
+                    <View style={styles.orderFooter}>
+                      <View style={styles.orderTotalWrap}>
+                        <Text style={styles.totalLabel}>Total Collected:</Text>
+                        <Rupees amount={order.total_amount} size="md" tone="in" />
+                      </View>
+
+                      <TouchableOpacity
+                        style={[styles.fulfillmentBtn, styles.fulfillmentBtnDone]}
+                        onPress={() => handleToggleFulfillment(order.id, order.status)}
+                      >
+                        <Ionicons name="checkmark-circle" size={15} color="#059669" />
+                        <Text style={[styles.fulfillmentBtnText, styles.fulfillmentBtnTextDone]}>Delivered</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        {/* Cancelled Orders Section (Collapsible) */}
+        {cancelledOrders.length > 0 ? (
+          <View style={styles.sectionCard}>
+            <TouchableOpacity
+              style={styles.collapsibleHeader}
+              onPress={() => setShowCancelledSection(!showCancelledSection)}
+              activeOpacity={0.7}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+                  Cancelled Orders ({cancelledOrders.length})
+                </Text>
+              </View>
+              <Ionicons
+                name={showCancelledSection ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+
+            {showCancelledSection ? (
+              <View style={{ marginTop: 8 }}>
+                {cancelledOrders.map((order) => (
+                  <View key={order.id} style={[styles.orderCard, styles.orderCardCancelled]}>
+                    <View style={styles.orderHeader}>
+                      <View style={[styles.flatBadge, { backgroundColor: '#F3F4F6' }]}>
+                        <Text style={[styles.flatBadgeText, { color: '#6B7280' }]}>Flat {order.flat_number}</Text>
+                      </View>
+                      <Text style={[styles.orderBuyerName, { color: colors.textSecondary }]}>{order.buyer_name}</Text>
+                      <View style={styles.contactActions}>
+                        <TouchableOpacity style={styles.iconCircle} onPress={() => handleCall(order.buyer_phone)}>
+                          <Ionicons name="call-outline" size={16} color={colors.textSecondary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.iconCircle} onPress={() => handleWhatsApp(order.buyer_phone, order.flat_number)}>
+                          <Ionicons name="logo-whatsapp" size={16} color="#9CA3AF" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    <View style={[styles.orderItemsBox, { backgroundColor: '#F3F4F6' }]}>
+                      {(order.mcn_preorder_order_items || []).map((line) => (
+                        <View key={line.id} style={styles.lineRow}>
+                          <Text style={[styles.lineText, { color: colors.textSecondary }]}>
+                            {line.quantity}x {line.item_name}
+                          </Text>
+                          <Rupees amount={line.quantity * line.unit_price} size="sm" />
+                        </View>
+                      ))}
+                      {order.buyer_note ? <Text style={styles.buyerNote}>Note: "{order.buyer_note}"</Text> : null}
+                    </View>
+
+                    <View style={styles.orderFooter}>
+                      <View style={styles.orderTotalWrap}>
+                        <Text style={styles.totalLabel}>Cancelled Order:</Text>
+                        <Rupees amount={order.total_amount} size="md" tone="in" />
+                      </View>
+
+                      <View style={styles.cancelledBadgePill}>
+                        <Text style={styles.cancelledBadgePillText}>Cancelled</Text>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -427,31 +574,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scrollContent: {
-    padding: 20,
-    paddingBottom: 60,
+    padding: 10,
+    paddingBottom: 30,
   },
   headerCard: {
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
-    padding: 16,
-    marginBottom: 14,
+    padding: 8,
+    marginBottom: 6,
   },
   dropTitle: {
     ...VerandahType.title,
-    fontSize: 18,
+    fontSize: 15,
     color: Verandah.textPrimary,
-    marginBottom: 4,
+    marginBottom: 1,
   },
   dropSub: {
-    fontSize: 12,
+    fontSize: 11,
     color: Verandah.textSecondary,
-    marginBottom: 12,
+    marginBottom: 6,
   },
   headerActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
     flexWrap: 'nowrap',
     alignItems: 'center',
   },
@@ -459,13 +606,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#EEF2FF',
     borderWidth: 0.5,
     borderColor: '#C7D2FE',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: VerandahRadius.pill,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 4,
     flex: 1,
     minWidth: 0,
   },
@@ -478,13 +625,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
     borderWidth: 0.5,
     borderColor: '#F59E0B',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: VerandahRadius.pill,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 4,
     flex: 1,
     minWidth: 0,
   },
@@ -497,13 +644,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#D1FAE5',
     borderWidth: 0.5,
     borderColor: '#10B981',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: VerandahRadius.pill,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 4,
     flex: 1,
     minWidth: 0,
   },
@@ -514,12 +661,12 @@ const styles = StyleSheet.create({
   },
   completedBadge: {
     backgroundColor: '#F3F4F6',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: VerandahRadius.pill,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     flex: 1,
     minWidth: 0,
     justifyContent: 'center',
@@ -531,8 +678,8 @@ const styles = StyleSheet.create({
   },
   metricsRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
+    gap: 6,
+    marginBottom: 6,
   },
   metricCard: {
     flex: 1,
@@ -540,69 +687,69 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
-    padding: 12,
+    padding: 6,
     alignItems: 'center',
   },
   metricVal: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '700',
     color: Verandah.textPrimary,
   },
   metricRevenueVal: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     color: Verandah.accent,
   },
   metricLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: Verandah.textSecondary,
-    marginTop: 2,
+    marginTop: 1,
   },
   sectionCard: {
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
-    padding: 16,
-    marginBottom: 16,
+    padding: 8,
+    marginBottom: 6,
   },
   sectionTitle: {
     ...VerandahType.title,
-    fontSize: 15,
+    fontSize: 14,
     color: Verandah.textPrimary,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   sectionSub: {
-    fontSize: 12,
+    fontSize: 11,
     color: Verandah.textSecondary,
-    marginBottom: 12,
+    marginBottom: 4,
   },
   emptyText: {
-    fontSize: 13,
+    fontSize: 12,
     color: Verandah.textMuted,
     fontStyle: 'italic',
   },
   prepGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   prepCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F3F4F6',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    gap: 4,
   },
   prepCount: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: Verandah.accent,
   },
   prepItemName: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
     color: Verandah.textPrimary,
   },
@@ -610,9 +757,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 0.5,
     borderColor: '#E5E7EB',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 8,
   },
   orderCardFulfilled: {
     backgroundColor: '#F9FAFB',
@@ -622,48 +769,48 @@ const styles = StyleSheet.create({
   orderHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   flatBadge: {
     backgroundColor: '#EEF2FF',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginRight: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 6,
   },
   flatBadgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: Verandah.accent,
   },
   orderBuyerName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: Verandah.textPrimary,
     flex: 1,
   },
   contactActions: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 4,
   },
   iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
   orderItemsBox: {
     backgroundColor: '#F9FAFB',
-    padding: 8,
+    padding: 6,
     borderRadius: 6,
-    marginBottom: 10,
+    marginBottom: 6,
   },
   lineRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: 2,
+    marginVertical: 1,
   },
   lineText: {
     fontSize: 12,
@@ -678,15 +825,15 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontStyle: 'italic',
     color: Verandah.textSecondary,
-    marginTop: 4,
+    marginTop: 2,
   },
   orderFooter: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     justifyContent: 'space-between',
     borderTopWidth: 0.5,
     borderTopColor: '#E5E7EB',
-    paddingTop: 8,
+    paddingTop: 4,
   },
   orderTotalWrap: {
     flex: 1,
@@ -723,5 +870,26 @@ const styles = StyleSheet.create({
   },
   fulfillmentBtnTextDone: {
     color: '#059669',
+  },
+  collapsibleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  orderCardCancelled: {
+    backgroundColor: '#F9FAFB',
+    borderColor: '#E5E7EB',
+    opacity: 0.75,
+  },
+  cancelledBadgePill: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  cancelledBadgePillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6B7280',
   },
 });

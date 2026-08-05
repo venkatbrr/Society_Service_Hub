@@ -46,10 +46,7 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
               </View>
             )}
           </View>
-          <Text style={styles.date}>Created {createdLabel}</Text>
-        </View>
-        <View style={styles.rolePill}>
-          <Text style={styles.roleText}>{formatRole(currentRole)}</Text>
+          <Text style={styles.date}>Created {createdLabel}{treasurerNames.length > 0 ? ` · Treasurer: ${treasurerNames[0]}` : ''}</Text>
         </View>
       </View>
 

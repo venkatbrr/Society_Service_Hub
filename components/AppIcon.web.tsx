@@ -66,5 +66,5 @@ const MAP: Record<AppIconName, IconCmp> = {
 
 export function AppIcon({ name, size = 16, color }: AppIconProps) {
   const Icon = MAP[name];
-  return <Icon size={size} color={color || 'currentColor'} aria-hidden="true" />;
+  return <Icon size={size} color={color || 'currentColor'} aria-hidden={true} />;
 }

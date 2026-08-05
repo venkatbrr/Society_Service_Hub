@@ -29,5 +29,5 @@ interface SchoolAspectIconProps {
 
 export function SchoolAspectIcon({ aspectKey, size = 16 }: SchoolAspectIconProps) {
   const Icon = ICON_BY_ASPECT[aspectKey];
-  return <Icon size={size} color="currentColor" aria-hidden="true" />;
+  return <Icon size={size} color="currentColor" aria-hidden={true} />;
 }

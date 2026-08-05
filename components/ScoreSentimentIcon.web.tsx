@@ -23,5 +23,5 @@ interface ScoreSentimentIconProps {
 
 export function ScoreSentimentIcon({ score, size = 14 }: ScoreSentimentIconProps) {
   const Icon = iconForScore(score);
-  return <Icon size={size} color="currentColor" aria-hidden="true" />;
+  return <Icon size={size} color="currentColor" aria-hidden={true} />;
 }

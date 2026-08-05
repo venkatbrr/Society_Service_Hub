@@ -507,7 +507,7 @@ Representative enriched types used in screens include:
 Constants:
 
 ```typescript
-MAX_TREASURERS = 2
+MAX_TREASURERS = 1
 MIN_TREASURERS = 1
 MAX_COLLECTORS = 6
 ```

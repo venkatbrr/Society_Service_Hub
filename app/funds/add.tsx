@@ -55,7 +55,13 @@ export default function AddFundScreen() {
 
         if (error) throw error;
 
-        const assignableMembers = (data ?? []).filter((member) => member.app_role !== 'admin');
+        const assignableMembers = (data ?? []).filter(
+          (member) =>
+            member.id !== user?.id &&
+            member.app_role !== 'admin' &&
+            member.app_role !== 'president' &&
+            member.app_role !== 'vice_president'
+        );
         setMembers(assignableMembers);
       } catch (error: any) {
         Toast.show({ type: 'error', text1: 'Error', text2: error.message });
@@ -89,19 +95,9 @@ export default function AddFundScreen() {
   const toggleTreasurer = (memberId: string) => {
     setSelectedTreasurers((current) => {
       if (current.includes(memberId)) {
-        return current.filter((id) => id !== memberId);
+        return [];
       }
-
-      if (current.length >= MAX_TREASURERS) {
-        Toast.show({
-          type: 'error',
-          text1: 'Treasurer limit reached',
-          text2: `You can assign up to ${MAX_TREASURERS} treasurers per fund.`,
-        });
-        return current;
-      }
-
-      return [...current, memberId];
+      return [memberId];
     });
   };
 
@@ -112,7 +108,7 @@ export default function AddFundScreen() {
     }
 
     if (selectedTreasurers.length === 0) {
-      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Assign at least 1 treasurer.' });
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Assign a treasurer.' });
       return;
     }
 
@@ -166,7 +162,7 @@ export default function AddFundScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Create fund</Text>
           <Text style={styles.subtitle}>
-            Define the fund first, then assign 1 or 2 treasurers who will manage collections and expenses.
+            Define the fund first, then assign 1 treasurer who will manage collections and expenses.
           </Text>
         </View>
 
@@ -198,13 +194,13 @@ export default function AddFundScreen() {
 
           <View style={styles.inputGroup}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.label}>Assign treasurers</Text>
+              <Text style={styles.label}>Assign treasurer</Text>
               <Text style={styles.counter}>
                 {selectedTreasurers.length}/{MAX_TREASURERS}
               </Text>
             </View>
             <Text style={styles.helperText}>
-              Treasurers can manage expenses and assign collectors.
+              The treasurer can manage expenses and assign collectors.
             </Text>
 
             {isFetchingMembers ? (
@@ -263,7 +259,7 @@ export default function AddFundScreen() {
             )}
 
             <Text style={styles.selectionSummary}>
-              {selectedNames ? `Selected: ${selectedNames}` : 'Select 1 or 2 treasurers before creating the fund.'}
+              {selectedNames ? `Selected: ${selectedNames}` : 'Select a treasurer before creating the fund.'}
             </Text>
           </View>
         </View>
@@ -289,12 +285,12 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.surface,
   },
   scrollContent: {
-    padding: VerandahSpace.xl,
+    padding: 16,
     paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 120,
+    paddingBottom: 80,
   },
   header: {
-    marginBottom: VerandahSpace.xl,
+    marginBottom: 12,
   },
   title: {
     ...VerandahType.display,
@@ -303,45 +299,45 @@ const styles = StyleSheet.create({
   subtitle: {
     ...VerandahType.body,
     color: Verandah.textSecondary,
-    marginTop: 4,
+    marginTop: 2,
   },
   form: {
-    padding: VerandahSpace.lg,
+    padding: 12,
     borderRadius: VerandahRadius.lg,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     backgroundColor: Verandah.card,
   },
   inputGroup: {
-    marginBottom: VerandahSpace.lg,
+    marginBottom: 12,
   },
   label: {
     ...VerandahType.captionBold,
     color: Verandah.textTertiary,
-    marginBottom: 8,
+    marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   input: {
     ...VerandahType.body,
     color: Verandah.textPrimary,
-    height: 48,
+    height: 42,
     borderWidth: 0.5,
     borderRadius: VerandahRadius.md,
     borderColor: Verandah.borderStrong,
     backgroundColor: Verandah.card,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
   },
   textArea: {
     ...VerandahType.body,
     color: Verandah.textPrimary,
-    height: 120,
+    height: 76,
     borderWidth: 0.5,
     borderRadius: VerandahRadius.md,
     borderColor: Verandah.borderStrong,
     backgroundColor: Verandah.card,
-    paddingHorizontal: 14,
-    paddingTop: 12,
+    paddingHorizontal: 12,
+    paddingTop: 8,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -355,10 +351,10 @@ const styles = StyleSheet.create({
   helperText: {
     ...VerandahType.caption,
     color: Verandah.textSecondary,
-    marginBottom: 14,
+    marginBottom: 8,
   },
   memberLoader: {
-    marginVertical: 20,
+    marginVertical: 12,
   },
   memberRow: {
     flexDirection: 'row',
@@ -367,9 +363,9 @@ const styles = StyleSheet.create({
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
     backgroundColor: Verandah.card,
-    padding: 12,
-    marginBottom: 10,
-    gap: 12,
+    padding: 8,
+    marginBottom: 6,
+    gap: 10,
   },
   memberRowSelected: {
     borderColor: Verandah.accent,
@@ -389,18 +385,18 @@ const styles = StyleSheet.create({
   memberMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 1,
   },
   searchInput: {
     ...VerandahType.body,
     color: Verandah.textPrimary,
-    height: 44,
+    height: 38,
     borderWidth: 0.5,
     borderRadius: VerandahRadius.md,
     borderColor: Verandah.borderStrong,
     backgroundColor: Verandah.card,
-    paddingHorizontal: 12,
-    marginBottom: 12,
+    paddingHorizontal: 10,
+    marginBottom: 8,
   },
   selector: {
     width: 22,
@@ -417,7 +413,7 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.accent,
   },
   selectionSummary: {
-    marginTop: 8,
+    marginTop: 4,
     ...VerandahType.caption,
     color: Verandah.textSecondary,
   },
@@ -426,22 +422,22 @@ const styles = StyleSheet.create({
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.md,
     backgroundColor: Verandah.cardMuted,
-    padding: 16,
+    padding: 12,
   },
   emptyStateText: {
     ...VerandahType.caption,
     color: Verandah.textSecondary,
   },
   footer: {
-    paddingHorizontal: VerandahSpace.xl,
-    paddingVertical: VerandahSpace.md,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderTopWidth: 0.5,
     borderTopColor: Verandah.border,
     backgroundColor: Verandah.surface,
   },
   saveButton: {
-    height: 50,
-    borderRadius: 14,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: Verandah.primary,
     justifyContent: 'center',
     alignItems: 'center',

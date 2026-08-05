@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart } from '../../../lib/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
@@ -150,102 +150,111 @@ export default function CreateOrEditFoodDropScreen() {
   }, [dropId]);
 
   // Load existing drop data if in Edit Mode
-  useEffect(() => {
-    async function loadExistingDrop() {
-      if (!dropId) return;
-      setLoadingDrop(true);
-      try {
-        const { data: dropData, error: dropErr } = await supabase
-          .from('mcn_preorder_drops')
-          .select('*')
-          .eq('id', dropId)
-          .maybeSingle();
+  const fetchDropForEdit = useCallback(async () => {
+    if (!dropId) return;
+    setLoadingDrop(true);
+    try {
+      const { data: dropData, error: dropErr } = await supabase
+        .from('mcn_preorder_drops')
+        .select('*')
+        .eq('id', dropId)
+        .maybeSingle();
 
-        if (dropErr) throw dropErr;
+      if (dropErr) throw dropErr;
 
-        if (dropData) {
-          if (dropData.status === 'completed' || dropData.status === 'closed') {
-            Toast.show({
-              type: 'error',
-              text1: 'Drop cannot be edited',
-              text2: 'Completed or closed food drops cannot be edited.',
-            });
-            router.back();
-            return;
-          }
-
-          setTitle(dropData.title || '');
-          setDescription(dropData.description || '');
-          setImageUrl(dropData.image_url || null);
-          setFulfillmentDate(dropData.fulfillment_date || '');
-          setFulfillmentTime(normalizeFulfillmentTime(dropData.fulfillment_time || '13:00'));
-
-
-          if (dropData.cutoff_at) {
-            const cutoffObj = new Date(dropData.cutoff_at);
-            setCutoffDate(cutoffObj.toISOString().split('T')[0]);
-            const hours = String(cutoffObj.getHours()).padStart(2, '0');
-            const mins = String(cutoffObj.getMinutes()).padStart(2, '0');
-            setCutoffTime(`${hours}:${mins}`);
-          }
+      if (dropData) {
+        if (dropData.status === 'completed' || dropData.status === 'closed') {
+          Toast.show({
+            type: 'error',
+            text1: 'Drop cannot be edited',
+            text2: 'Completed or closed food drops cannot be edited.',
+          });
+          router.back();
+          return;
         }
 
-        // Load items
-        const { data: itemsData, error: itemsErr } = await supabase
-          .from('mcn_preorder_items')
-          .select('*')
-          .eq('drop_id', dropId);
+        setTitle(dropData.title || '');
+        setDescription(dropData.description || '');
+        setImageUrl(dropData.image_url || null);
+        setFulfillmentDate(dropData.fulfillment_date || '');
+        setFulfillmentTime(normalizeFulfillmentTime(dropData.fulfillment_time || '13:00'));
 
-        if (itemsErr) throw itemsErr;
-
-        if (itemsData && itemsData.length > 0) {
-          setItems(
-            itemsData.map((item: any) => ({
-              id: item.id,
-              name: item.name,
-              unit: item.unit || 'piece',
-              price: String(item.price),
-              description: item.description || '',
-              image_url: item.image_url || null,
-              max_quantity: item.max_quantity ? String(item.max_quantity) : '',
-            }))
-          );
+        if (dropData.cutoff_at) {
+          const cutoffObj = new Date(dropData.cutoff_at);
+          setCutoffDate(cutoffObj.toISOString().split('T')[0]);
+          const hours = String(cutoffObj.getHours()).padStart(2, '0');
+          const mins = String(cutoffObj.getMinutes()).padStart(2, '0');
+          setCutoffTime(`${hours}:${mins}`);
         }
-      } catch (err) {
-        console.error('Error loading drop for editing:', err);
-        Toast.show({ type: 'error', text1: 'Failed to load drop for editing' });
-      } finally {
-        setLoadingDrop(false);
       }
-    }
 
-    loadExistingDrop();
-  }, [dropId]);
+      // Load items
+      const { data: itemsData, error: itemsErr } = await supabase
+        .from('mcn_preorder_items')
+        .select('*')
+        .eq('drop_id', dropId);
+
+      if (itemsErr) throw itemsErr;
+
+      if (itemsData && itemsData.length > 0) {
+        // Deduplicate items by signature when loading into edit form
+        const uniqueItemsMap = new Map<string, any>();
+        itemsData.forEach((item: any) => {
+          const key = `${item.name?.trim().toLowerCase()}_${item.unit}_${item.price}`;
+          if (!uniqueItemsMap.has(key)) {
+            uniqueItemsMap.set(key, item);
+          }
+        });
+        const itemsToLoad = Array.from(uniqueItemsMap.values());
+
+        setItems(
+          itemsToLoad.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            unit: item.unit || 'piece',
+            price: String(item.price),
+            description: item.description || '',
+            image_url: item.image_url || null,
+            max_quantity: item.max_quantity ? String(item.max_quantity) : '',
+          }))
+        );
+      }
+    } catch (err) {
+      console.error('Error loading drop for editing:', err);
+      Toast.show({ type: 'error', text1: 'Failed to load drop for editing' });
+    } finally {
+      setLoadingDrop(false);
+    }
+  }, [dropId, router]);
+
+  useEffect(() => {
+    fetchDropForEdit();
+  }, [fetchDropForEdit]);
 
   const handleAddItem = () => {
     setItems((prev) => [
       ...prev,
-      { id: Date.now().toString(), name: '', unit: 'piece', price: '', description: '', image_url: null, max_quantity: '' },
+      { id: String(Date.now()), name: '', unit: 'piece', price: '', description: '', image_url: null, max_quantity: '' },
     ]);
   };
 
   const handleRemoveItem = (id: string) => {
     if (items.length <= 1) {
-      Toast.show({ type: 'info', text1: 'Drop must have at least one item' });
+      Toast.show({ type: 'error', text1: 'At least one menu item is required' });
       return;
     }
     setItems((prev) => prev.filter((i) => i.id !== id));
   };
 
-  const handleItemChange = (id: string, field: keyof ItemForm, val: any) => {
+  const handleItemChange = (id: string, field: keyof ItemForm, value: any) => {
     setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: val } : item))
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
     );
   };
 
   const handleSubmit = async () => {
     if (!user?.id || !communityId) {
-      Toast.show({ type: 'error', text1: 'Authentication required' });
+      Toast.show({ type: 'error', text1: 'Missing community / user authentication' });
       return;
     }
 
@@ -254,99 +263,125 @@ export default function CreateOrEditFoodDropScreen() {
       return;
     }
 
-    if (!fulfillmentDate.trim()) {
-      Toast.show({ type: 'error', text1: 'Please specify fulfillment date' });
+    if (!fulfillmentDate || !fulfillmentTime) {
+      Toast.show({ type: 'error', text1: 'Please set delivery date & time' });
       return;
     }
 
-    if (!fulfillmentTime.trim()) {
-      Toast.show({ type: 'error', text1: 'Please specify delivery time' });
+    if (!cutoffDate || !cutoffTime) {
+      Toast.show({ type: 'error', text1: 'Please set pre-order cut-off date & time' });
       return;
     }
 
-    if (!cutoffDate.trim() || !cutoffTime.trim()) {
-      Toast.show({ type: 'error', text1: 'Please specify pre-order cut-off date & time' });
+    const cutoffAtObj = new Date(`${cutoffDate}T${cutoffTime}:00`);
+    const fulfillAtObj = new Date(`${fulfillmentDate}T${fulfillmentTime}:00`);
+
+    if (isNaN(cutoffAtObj.getTime())) {
+      Toast.show({ type: 'error', text1: 'Invalid cut-off deadline timestamp' });
       return;
     }
 
-    // Validate items
-    const validItems = items.filter((i) => i.name.trim() !== '' && parseFloat(i.price) > 0);
+    if (isNaN(fulfillAtObj.getTime())) {
+      Toast.show({ type: 'error', text1: 'Invalid delivery time timestamp' });
+      return;
+    }
+
+    if (fulfillAtObj <= cutoffAtObj) {
+      Toast.show({
+        type: 'error',
+        text1: 'Delivery time must be after cut-off deadline',
+        text2: 'Pre-orders must close before delivery begins.',
+      });
+      return;
+    }
+
+    // Validate Items
+    const validItems = items.filter((i) => i.name.trim() && i.price.trim());
     if (validItems.length === 0) {
       Toast.show({
         type: 'error',
-        text1: 'Add at least one item with a valid name and price',
+        text1: 'Add at least one complete item',
+        text2: 'Each item requires a name and a valid price.',
       });
       return;
     }
 
-    // Construct cutoff ISO timestamp
-    const cutoffDateTimeStr = `${cutoffDate.trim()}T${cutoffTime.trim()}:00`;
-    const cutoffAtObj = new Date(cutoffDateTimeStr);
-    const fulfillmentDateTimeStr = `${fulfillmentDate.trim()}T${fulfillmentTime.trim()}:00`;
-    const fulfillmentAtObj = new Date(fulfillmentDateTimeStr);
-
-    if (isNaN(cutoffAtObj.getTime())) {
-      Toast.show({ type: 'error', text1: 'Invalid cut-off date or time format' });
-      return;
-    }
-
-    if (isNaN(fulfillmentAtObj.getTime())) {
-      Toast.show({ type: 'error', text1: 'Invalid delivery date or time format' });
-      return;
-    }
-
-    if (fulfillmentAtObj.getTime() <= cutoffAtObj.getTime()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Delivery time must be after cut-off time',
-        text2: 'Choose a delivery date/time greater than pre-order cut-off.',
-      });
-      return;
+    for (const item of validItems) {
+      const p = parseFloat(item.price);
+      if (isNaN(p) || p <= 0) {
+        Toast.show({
+          type: 'error',
+          text1: `Invalid price for "${item.name}"`,
+          text2: 'Price must be a positive number.',
+        });
+        return;
+      }
     }
 
     setSubmitting(true);
     try {
       if (isEditMode && dropId) {
         // --- EDIT MODE ---
-        // 1. Update drop
+        // 1. Update drop details
         const { error: updateErr } = await supabase
           .from('mcn_preorder_drops')
           .update({
-            listing_id: null,
             title: title.trim(),
             description: description.trim() || null,
             image_url: imageUrl,
             fulfillment_date: fulfillmentDate.trim(),
             fulfillment_time: fulfillmentTime.trim(),
             cutoff_at: cutoffAtObj.toISOString(),
-
             updated_at: new Date().toISOString(),
           })
           .eq('id', dropId);
 
         if (updateErr) throw updateErr;
 
-        // 2. Refresh items: delete existing and re-insert
-        await supabase
+        // 2. Refresh items: Upsert existing items and delete unused ones safely
+        const { data: existingDbItems } = await supabase
           .from('mcn_preorder_items')
-          .delete()
+          .select('id')
           .eq('drop_id', dropId);
 
-        const itemsPayload = validItems.map((item) => ({
-          drop_id: dropId,
-          name: item.name.trim(),
-          unit: item.unit,
-          price: parseFloat(item.price),
-          description: item.description.trim() || null,
-          image_url: item.image_url || null,
-          max_quantity: item.max_quantity ? parseInt(item.max_quantity, 10) : null,
-        }));
+        const existingDbIds = (existingDbItems || []).map((i: any) => i.id);
+        const currentFormIds = validItems.map((i) => i.id).filter((id) => existingDbIds.includes(id));
+        const idsToDelete = existingDbIds.filter((id: string) => !currentFormIds.includes(id));
 
-        const { error: itemsErr } = await supabase
-          .from('mcn_preorder_items')
-          .insert(itemsPayload);
+        // Delete removed items if not referenced by orders
+        if (idsToDelete.length > 0) {
+          for (const delId of idsToDelete) {
+            await supabase
+              .from('mcn_preorder_items')
+              .delete()
+              .eq('id', delId);
+          }
+        }
 
-        if (itemsErr) throw itemsErr;
+        // Upsert current items
+        for (const item of validItems) {
+          const isExisting = existingDbIds.includes(item.id);
+          const itemPayload: any = {
+            drop_id: dropId,
+            name: item.name.trim(),
+            unit: item.unit,
+            price: parseFloat(item.price),
+            description: item.description.trim() || null,
+            image_url: item.image_url || null,
+            max_quantity: item.max_quantity ? parseInt(String(item.max_quantity), 10) : null,
+          };
+
+          if (isExisting) {
+            itemPayload.id = item.id;
+            await supabase
+              .from('mcn_preorder_items')
+              .upsert(itemPayload);
+          } else {
+            await supabase
+              .from('mcn_preorder_items')
+              .insert(itemPayload);
+          }
+        }
 
         Toast.show({
           type: 'success',

@@ -4,7 +4,7 @@ export type AppRole = Tables<'profiles'>['app_role'];
 export type AssignmentRole = Tables<'fund_roles'>['role'];
 export type FundAccessRole = 'admin' | AssignmentRole | 'resident';
 
-export const MAX_TREASURERS = 2;
+export const MAX_TREASURERS = 1;
 export const MIN_TREASURERS = 1;
 export const MAX_COLLECTORS = 6;
 
@@ -82,15 +82,15 @@ export function formatRoleForFundContext(role: FundAccessRole | AssignmentRole, 
 
 export function getRestrictionHint(role: FundAccessRole) {
   if (role === 'collector') {
-    return 'Collectors can add contributions, but only treasurers can add expenses.';
+    return 'Collectors can add contributions, but only the treasurer can add expenses.';
   }
 
   if (role === 'resident') {
-    return 'Residents can view every entry, while collectors add contributions and treasurers handle expenses.';
+    return 'Residents can view every entry, while collectors add contributions and the treasurer handles expenses.';
   }
 
   if (role === 'admin') {
-    return 'Admins can create funds, manage treasurers, and log every transaction.';
+    return 'Admins can create funds, assign 1 treasurer per fund, and log every transaction.';
   }
 
   return 'Treasurers can manage collectors, contributions, and expenses for this fund.';

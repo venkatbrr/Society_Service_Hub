@@ -141,7 +141,7 @@ export function FundsList() {
         </View>
         <Text style={styles.emptyCopy}> 
           {canCreate
-            ? 'Create your first fund and assign 1 or 2 treasurers to keep everything transparent.'
+            ? 'Create your first fund and assign a treasurer to keep everything transparent.'
             : 'Once the admin creates a fund, you will be able to review every contribution and expense here.'}
         </Text>
       </BaseCard>

@@ -51,7 +51,7 @@ export const EmojiRating: React.FC<EmojiRatingProps> = ({
               ]}
             >
               <View style={readonly && !isSelected ? styles.iconDimmed : undefined}>
-                <Icon size={size} color="currentColor" aria-hidden="true" />
+                <Icon size={size} color="currentColor" aria-hidden={true} />
               </View>
             </TouchableOpacity>
           );

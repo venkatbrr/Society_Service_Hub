@@ -4,7 +4,7 @@ import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 
 interface McnOrderStatusBadgeProps {
-  status: 'pending' | 'fulfilled' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'fulfilled' | 'cancelled' | string;
 }
 
 export const McnOrderStatusBadge = React.memo(({ status }: McnOrderStatusBadgeProps) => {
@@ -12,8 +12,10 @@ export const McnOrderStatusBadge = React.memo(({ status }: McnOrderStatusBadgePr
     switch (status) {
       case 'pending':
         return { bg: Verandah.cautionSoft, text: Verandah.caution, label: 'Pending' };
+      case 'confirmed':
+        return { bg: '#EFF6FF', text: '#2563EB', label: 'Confirmed' };
       case 'fulfilled':
-        return { bg: Verandah.accentSoft, text: Verandah.accent, label: 'Fulfilled' };
+        return { bg: '#ECFDF5', text: '#059669', label: 'Delivered' };
       case 'cancelled':
         return { bg: Verandah.dangerSoft, text: Verandah.danger, label: 'Cancelled' };
       default:

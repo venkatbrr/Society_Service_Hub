@@ -185,7 +185,44 @@ export default function FundDetailScreen() {
   const balance = income - expense;
   const treasurers = (fund.fund_roles ?? []).filter((assignment) => assignment.role === 'treasurer');
   const collectors = (fund.fund_roles ?? []).filter((assignment) => assignment.role === 'collector');
-  const visibleMembers = members.filter((member) => member.app_role !== 'admin');
+  const handleDeleteFund = async () => {
+    if (!fund) return;
+    const confirmDelete = async () => {
+      try {
+        const { error: rpcError } = await supabase.rpc('delete_community_fund', { p_event_id: fund.id });
+        if (rpcError) {
+          const { error } = await supabase.from('events').delete().eq('id', fund.id);
+          if (error) throw error;
+        }
+        Toast.show({ type: 'success', text1: 'Fund deleted successfully' });
+        router.replace('/funds');
+      } catch (err: any) {
+        Toast.show({ type: 'error', text1: 'Error deleting fund', text2: err.message });
+      }
+    };
+
+    const title = 'Delete fund';
+    const message = `Are you sure you want to delete "${fund.title}"? All transactions and role assignments will be deleted. This cannot be undone.`;
+
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm(`${title}\n${message}`)) {
+        void confirmDelete();
+      }
+    } else {
+      Alert.alert(title, message, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: confirmDelete },
+      ]);
+    }
+  };
+
+  const visibleMembers = members.filter(
+    (member) =>
+      member.id !== user?.id &&
+      member.app_role !== 'admin' &&
+      member.app_role !== 'president' &&
+      member.app_role !== 'vice_president'
+  );
   const paidByMemberId = new Map(
     incomeTransactions
       .filter((transaction) => transaction.contributor_user_id)
@@ -216,12 +253,41 @@ export default function FundDetailScreen() {
       return;
     }
 
-    if (role === 'treasurer' && treasurers.length >= MAX_TREASURERS) {
-      Toast.show({
-        type: 'error',
-        text1: 'Treasurer limit reached',
-        text2: `Each fund can have only ${MAX_TREASURERS} treasurers.`,
-      });
+    if (role === 'treasurer') {
+      try {
+        setSavingRoleId(targetUserId);
+        if (treasurers.length > 0) {
+          const { error: updateErr } = await supabase
+            .from('fund_roles')
+            .update({
+              user_id: targetUserId,
+              assigned_by: user.id,
+            })
+            .eq('id', treasurers[0].id);
+
+          if (updateErr) throw updateErr;
+        } else {
+          const { error: insError } = await supabase.from('fund_roles').insert({
+            event_id: fund.id,
+            user_id: targetUserId,
+            role: 'treasurer',
+            assigned_by: user.id,
+          });
+
+          if (insError) throw insError;
+        }
+
+        Toast.show({
+          type: 'success',
+          text1: 'Treasurer updated',
+          text2: `${profileNames.get(targetUserId) ?? 'Resident'} is now the treasurer.`,
+        });
+        await fetchFundDetail();
+      } catch (error: any) {
+        Toast.show({ type: 'error', text1: 'Error updating treasurer', text2: error.message });
+      } finally {
+        setSavingRoleId(null);
+      }
       return;
     }
 
@@ -274,15 +340,6 @@ export default function FundDetailScreen() {
   };
 
   const handleRemoveRole = async (assignment: Tables<'fund_roles'>) => {
-    if (assignment.role === 'treasurer' && treasurers.length <= MIN_TREASURERS) {
-      Toast.show({
-        type: 'error',
-        text1: 'Cannot remove treasurer',
-        text2: 'A fund must always have at least 1 treasurer.',
-      });
-      return;
-    }
-
     const removeNow = async () => {
       try {
         setSavingRoleId(assignment.id);
@@ -302,6 +359,23 @@ export default function FundDetailScreen() {
         setSavingRoleId(null);
       }
     };
+
+    if (assignment.role === 'treasurer') {
+      const assigneeName = profileNames.get(assignment.user_id) ?? 'Resident';
+      const title = 'Remove treasurer?';
+      const message = `Remove ${assigneeName} as treasurer? You will need to assign another resident as treasurer.`;
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined' && window.confirm(`${title}\n${message}`)) {
+          removeNow();
+        }
+      } else {
+        Alert.alert(title, message, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Remove', style: 'destructive', onPress: removeNow },
+        ]);
+      }
+      return;
+    }
 
     if (assignment.role === 'collector') {
       const assigneeName = profileNames.get(assignment.user_id) ?? 'Resident';
@@ -344,17 +418,25 @@ export default function FundDetailScreen() {
           ) : null}
 
           {(appRole === 'president' || appRole === 'vice_president') && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface2, padding: 12, borderRadius: 12, marginBottom: 12 }}>
-              <View>
+            <View style={{ backgroundColor: colors.surface2, padding: 12, borderRadius: 12, marginBottom: 12, gap: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Text style={{ fontSize: 15, fontWeight: '500', color: colors.text }}>
                   {fund.is_closed ? 'Fund closed' : 'Fund open'}
                 </Text>
+                <Switch
+                  value={!fund.is_closed}
+                  onValueChange={handleToggleFundStatus}
+                  trackColor={{ false: Verandah.border, true: Verandah.primary }}
+                />
               </View>
-              <Switch
-                value={!fund.is_closed}
-                onValueChange={handleToggleFundStatus}
-                trackColor={{ false: Verandah.border, true: Verandah.primary }}
-              />
+              <TouchableOpacity
+                onPress={handleDeleteFund}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: 8, backgroundColor: Verandah.dangerSoft }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="trash-outline" size={16} color={Verandah.danger} />
+                <Text style={{ fontSize: 13, fontWeight: '600', color: Verandah.danger }}>Delete fund</Text>
+              </TouchableOpacity>
             </View>
           )}
 
@@ -443,12 +525,12 @@ export default function FundDetailScreen() {
         {permissions.canManageTreasurers ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Manage Treasurers</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Manage Treasurer</Text>
               <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>
                 {treasurers.length}/{MAX_TREASURERS}
               </Text>
             </View>
-            <Text style={[styles.helperText, { color: colors.textMuted }]}>Keep at least 1 treasurer active on every fund.</Text>
+            <Text style={[styles.helperText, { color: colors.textMuted }]}>Keep 1 active treasurer on this fund to manage expenses and collectors.</Text>
 
             {treasurers.map((assignment) => (
               <View key={assignment.id} style={styles.roleRow}>
@@ -457,22 +539,14 @@ export default function FundDetailScreen() {
                   <Text style={[styles.roleMeta, { color: colors.textMuted }]}>Treasurer</Text>
                 </View>
                 <TouchableOpacity
-                  style={[
-                    styles.roleAction,
-                    { backgroundColor: treasurers.length <= MIN_TREASURERS ? colors.surface2 : Verandah.dangerSoft },
-                  ]}
-                  disabled={treasurers.length <= MIN_TREASURERS || savingRoleId === assignment.id}
+                  style={[styles.roleAction, { backgroundColor: Verandah.dangerSoft }]}
+                  disabled={savingRoleId === assignment.id}
                   onPress={() => handleRemoveRole(assignment)}
                 >
                   {savingRoleId === assignment.id ? (
                     <ActivityIndicator size="small" color={colors.accent} />
                   ) : (
-                    <Text
-                      style={[
-                        styles.roleActionText,
-                        { color: treasurers.length <= MIN_TREASURERS ? colors.textMuted : colors.accent },
-                      ]}
-                    >
+                    <Text style={[styles.roleActionText, { color: colors.accent }]}>
                       Remove
                     </Text>
                   )}
@@ -518,19 +592,14 @@ export default function FundDetailScreen() {
                       </View>
                       <TouchableOpacity
                         style={[styles.roleAction, { backgroundColor: Verandah.accentSoft }]}
-                        disabled={savingRoleId === member.id || treasurers.length >= MAX_TREASURERS}
+                        disabled={savingRoleId === member.id}
                         onPress={() => handleAssignRole(member.id, 'treasurer')}
                       >
                         {savingRoleId === member.id ? (
                           <ActivityIndicator size="small" color={Verandah.accent} />
                         ) : (
-                          <Text
-                            style={[
-                              styles.roleActionText,
-                              { color: treasurers.length >= MAX_TREASURERS ? colors.textMuted : Verandah.accent },
-                            ]}
-                          >
-                            Add
+                          <Text style={[styles.roleActionText, { color: Verandah.accent }]}>
+                            {treasurers.length > 0 ? 'Replace' : 'Set Treasurer'}
                           </Text>
                         )}
                       </TouchableOpacity>

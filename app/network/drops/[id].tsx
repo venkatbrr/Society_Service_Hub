@@ -74,8 +74,8 @@ export default function PreorderDropDetailScreen() {
   const [flatNumber, setFlatNumber] = useState('');
   const [buyerNote, setBuyerNote] = useState('');
 
-  const [existingOrder, setExistingOrder] = useState<any | null>(null);
-  const [existingItems, setExistingItems] = useState<any[]>([]);
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -128,27 +128,39 @@ export default function PreorderDropDetailScreen() {
         .eq('drop_id', dropId);
 
       if (itemsErr) throw itemsErr;
-      setItems(itemsData as DropItem[]);
 
-      // 3. Fetch existing order by current user
+      // Deduplicate items by signature to prevent duplicate entries from showing
+      const uniqueItemsMap = new Map<string, DropItem>();
+      (itemsData || []).forEach((row: any) => {
+        const key = `${row.name?.trim().toLowerCase()}_${row.unit}_${row.price}`;
+        if (!uniqueItemsMap.has(key)) {
+          uniqueItemsMap.set(key, row as DropItem);
+        }
+      });
+      setItems(Array.from(uniqueItemsMap.values()));
+
+      // 3. Fetch all existing orders for this drop by current user
       if (user?.id) {
-        const { data: orderData } = await supabase
+        const { data: ordersData, error: ordersErr } = await supabase
           .from('mcn_preorder_orders')
           .select('*, mcn_preorder_order_items(*)')
           .eq('drop_id', dropId)
           .eq('buyer_id', user.id)
-          .maybeSingle();
+          .order('created_at', { ascending: false });
 
-        if (orderData) {
-          setExistingOrder(orderData);
-          setExistingItems(orderData.mcn_preorder_order_items || []);
+        if (!ordersErr && ordersData) {
+          setUserOrders(ordersData);
 
-          // Seed quantities from existing order
-          const qMap: Record<string, number> = {};
-          (orderData.mcn_preorder_order_items || []).forEach((row: any) => {
-            qMap[row.item_id] = row.quantity;
-          });
-          setQuantities(qMap);
+          // Verify if currently editing order is still valid and confirmed
+          if (editingOrderId) {
+            const activeOrd = ordersData.find((o) => o.id === editingOrderId && o.status === 'confirmed');
+            if (!activeOrd) {
+              setEditingOrderId(null);
+              setQuantities({});
+            }
+          }
+        } else {
+          setUserOrders([]);
         }
       }
     } catch (err) {
@@ -157,7 +169,7 @@ export default function PreorderDropDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [dropId, user?.id]);
+  }, [dropId, user?.id, editingOrderId]);
 
   useEffect(() => {
     fetchDropDetails();
@@ -186,6 +198,34 @@ export default function PreorderDropDetailScreen() {
       
       return { ...prev, [itemId]: updated };
     });
+  };
+
+  const handleStartEditOrder = (order: any) => {
+    if (order.status !== 'confirmed') {
+      Toast.show({ type: 'info', text1: 'Delivered or cancelled orders cannot be edited' });
+      return;
+    }
+    setEditingOrderId(order.id);
+    const qMap: Record<string, number> = {};
+    (order.mcn_preorder_order_items || []).forEach((row: any) => {
+      qMap[row.item_id] = row.quantity;
+    });
+    setQuantities(qMap);
+    if (order.buyer_name) setBuyerName(order.buyer_name);
+    if (order.buyer_phone) setBuyerPhone(order.buyer_phone);
+    if (order.flat_number) setFlatNumber(order.flat_number);
+    if (order.buyer_note) setBuyerNote(order.buyer_note);
+    Toast.show({ type: 'info', text1: 'Editing active pre-order items' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingOrderId(null);
+    setQuantities({});
+    if (profile) {
+      if (profile.full_name) setBuyerName(profile.full_name);
+      if (profile.flat_number) setFlatNumber(profile.flat_number);
+    }
+    setBuyerNote('');
   };
 
   // Subtotal Calculation
@@ -247,7 +287,7 @@ export default function PreorderDropDetailScreen() {
         {
           p_drop_id: dropId,
           p_requested_qty: selectedItemsQty,
-          p_existing_order_id: existingOrder?.id || null,
+          p_existing_order_id: editingOrderId || null,
         }
       );
 
@@ -281,60 +321,98 @@ export default function PreorderDropDetailScreen() {
 
     setSubmitting(true);
     try {
-      // Delete existing order if updating
-      if (existingOrder) {
-        await supabase
+      if (editingOrderId) {
+        // Update active pre-order
+        const { error: orderErr } = await supabase
           .from('mcn_preorder_orders')
+          .update({
+            buyer_name: buyerName.trim() || profile?.full_name || 'Resident',
+            buyer_phone: buyerPhone.trim(),
+            flat_number: flatNumber.trim().toUpperCase(),
+            buyer_note: buyerNote.trim() || null,
+            total_amount: subtotal,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingOrderId)
+          .eq('buyer_id', user.id);
+
+        if (orderErr) throw orderErr;
+
+        // Delete existing items for this order and insert updated items
+        await supabase
+          .from('mcn_preorder_order_items')
           .delete()
-          .eq('id', existingOrder.id);
+          .eq('order_id', editingOrderId);
+
+        const lineItemsPayload = selectedItems.map((item) => ({
+          order_id: editingOrderId,
+          item_id: item.id,
+          item_name: item.name,
+          quantity: quantities[item.id],
+          unit_price: item.price,
+        }));
+
+        const { error: lineItemsErr } = await supabase
+          .from('mcn_preorder_order_items')
+          .insert(lineItemsPayload);
+
+        if (lineItemsErr) throw lineItemsErr;
+
+        Toast.show({
+          type: 'success',
+          text1: 'Pre-order updated successfully! 🎉',
+          text2: 'Your updated food choices have been saved.',
+        });
+      } else {
+        // Insert new pre-order
+        const { data: orderData, error: orderErr } = await supabase
+          .from('mcn_preorder_orders')
+          .insert({
+            drop_id: dropId,
+            community_id: drop?.community_id || communityId || '',
+            buyer_id: user.id,
+            buyer_name: buyerName.trim() || profile?.full_name || 'Resident',
+            buyer_phone: buyerPhone.trim(),
+            flat_number: flatNumber.trim().toUpperCase(),
+            buyer_note: buyerNote.trim() || null,
+            total_amount: subtotal,
+            status: 'confirmed',
+          })
+          .select()
+          .single();
+
+        if (orderErr) throw orderErr;
+
+        const lineItemsPayload = selectedItems.map((item) => ({
+          order_id: orderData.id,
+          item_id: item.id,
+          item_name: item.name,
+          quantity: quantities[item.id],
+          unit_price: item.price,
+        }));
+
+        const { error: lineItemsErr } = await supabase
+          .from('mcn_preorder_order_items')
+          .insert(lineItemsPayload);
+
+        if (lineItemsErr) throw lineItemsErr;
+
+        Toast.show({
+          type: 'success',
+          text1: 'Pre-order placed successfully! 🎉',
+          text2: 'Your food host will deliver to your flat at the scheduled time.',
+        });
       }
 
-      // Insert pre-order
-      const { data: orderData, error: orderErr } = await supabase
-        .from('mcn_preorder_orders')
-        .insert({
-          drop_id: dropId,
-          community_id: drop?.community_id || communityId || '',
-          buyer_id: user.id,
-          buyer_name: buyerName.trim() || profile?.full_name || 'Resident',
-          buyer_phone: buyerPhone.trim(),
-          flat_number: flatNumber.trim().toUpperCase(),
-          buyer_note: buyerNote.trim() || null,
-          total_amount: subtotal,
-          status: 'confirmed',
-        })
-        .select()
-        .single();
-
-      if (orderErr) throw orderErr;
-
-      // Insert order items
-      const lineItemsPayload = selectedItems.map((item) => ({
-        order_id: orderData.id,
-        item_id: item.id,
-        item_name: item.name,
-        quantity: quantities[item.id],
-        unit_price: item.price,
-      }));
-
-      const { error: lineItemsErr } = await supabase
-        .from('mcn_preorder_order_items')
-        .insert(lineItemsPayload);
-
-      if (lineItemsErr) throw lineItemsErr;
-
-      Toast.show({
-        type: 'success',
-        text1: 'Pre-order placed successfully! 🎉',
-        text2: 'Your food host will deliver to your flat at the scheduled time.',
-      });
-
+      setEditingOrderId(null);
+      setQuantities({});
+      setBuyerNote('');
       fetchDropDetails();
     } catch (err: any) {
       console.error(err);
       Toast.show({
         type: 'error',
-        text1: 'Failed to place pre-order',
+        text1: editingOrderId ? 'Failed to update pre-order' : 'Failed to place pre-order',
         text2: err.message,
       });
     } finally {
@@ -342,19 +420,22 @@ export default function PreorderDropDetailScreen() {
     }
   };
 
-  const handleCancelOrder = async () => {
-    if (!existingOrder) return;
-
+  const handleCancelOrder = async (targetOrderId: string) => {
     const doCancel = async () => {
       try {
         const { error } = await supabase
           .from('mcn_preorder_orders')
-          .delete()
-          .eq('id', existingOrder.id);
+          .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+          .eq('id', targetOrderId)
+          .eq('buyer_id', user?.id);
+
         if (error) throw error;
         Toast.show({ type: 'success', text1: 'Pre-order cancelled' });
-        setExistingOrder(null);
-        setQuantities({});
+        if (editingOrderId === targetOrderId) {
+          setEditingOrderId(null);
+          setQuantities({});
+        }
+        fetchDropDetails();
       } catch (err) {
         console.error(err);
         Toast.show({ type: 'error', text1: 'Failed to cancel pre-order' });
@@ -362,13 +443,13 @@ export default function PreorderDropDetailScreen() {
     };
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      if (window.confirm('Cancel Pre-Order?\n\nAre you sure you want to cancel your pre-order for this drop?')) {
+      if (window.confirm('Cancel Pre-Order?\n\nAre you sure you want to cancel this pre-order?')) {
         doCancel();
       }
     } else {
       Alert.alert(
         'Cancel Pre-Order',
-        'Are you sure you want to cancel your pre-order for this drop?',
+        'Are you sure you want to cancel this pre-order?',
         [
           { text: 'No', style: 'cancel' },
           { text: 'Cancel Order', style: 'destructive', onPress: doCancel },
@@ -565,50 +646,121 @@ export default function PreorderDropDetailScreen() {
           </View>
         ) : null}
 
-        {/* Existing Order Status Card */}
-        {existingOrder ? (
-          <View style={styles.existingOrderBox}>
-            <View style={styles.existingHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                {existingOrder.status === 'fulfilled' ? (
-                  <Ionicons name="checkmark-circle" size={18} color="#059669" />
-                ) : null}
-                <Text style={styles.existingTitle}>
-                  {existingOrder.status === 'fulfilled'
-                    ? 'Pre-Order Delivered & Fulfilled'
-                    : '📦 Your Pre-Order is Confirmed'}
-                </Text>
-              </View>
-              <Text style={styles.existingStatusText}>
-                {existingOrder.status.toUpperCase()}
-              </Text>
-            </View>
+        {/* Existing User Orders Status Cards */}
+        {userOrders.length > 0 && !isCreator ? (
+          <View style={{ marginBottom: 8 }}>
+            <Text style={styles.sectionHeader}>Your Orders for this Drop</Text>
+            {userOrders.map((ord: any, index: number) => {
+              const isFulfilled = ord.status === 'fulfilled';
+              const isCancelled = ord.status === 'cancelled';
+              const isConfirmed = ord.status === 'confirmed';
+              const orderItems = ord.mcn_preorder_order_items || [];
 
-            {existingItems.map((item: any) => (
-              <View key={item.id} style={styles.existingItemRow}>
-                <Text style={styles.existingItemName}>
-                  {item.quantity}x {item.item_name}
-                </Text>
-                <Rupees amount={item.quantity * item.unit_price} size="sm" />
-              </View>
-            ))}
+              return (
+                <View
+                  key={ord.id}
+                  style={[
+                    styles.existingOrderBox,
+                    isFulfilled && { backgroundColor: '#F0FDF4', borderColor: '#059669' },
+                    isCancelled && { backgroundColor: '#F9FAFB', borderColor: '#D1D5DB' },
+                  ]}
+                >
+                  <View style={styles.existingHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={styles.orderLabelText}>Order #{userOrders.length - index}</Text>
+                      {isFulfilled ? (
+                        <View style={styles.fulfilledBadgeInline}>
+                          <Ionicons name="checkmark-circle" size={14} color="#059669" />
+                          <Text style={styles.fulfilledBadgeText}>Delivered</Text>
+                        </View>
+                      ) : isConfirmed ? (
+                        <View style={styles.confirmedBadgeInline}>
+                          <Ionicons name="time-outline" size={14} color="#2563EB" />
+                          <Text style={styles.confirmedBadgeText}>Confirmed</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.cancelledBadgeInline}>
+                          <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+                        </View>
+                      )}
+                    </View>
 
-            <View style={styles.existingTotalRow}>
-              <Text style={styles.existingTotalLabel}>Total Amount (Pay on Delivery):</Text>
-              <Rupees amount={existingOrder.total_amount} size="md" tone="in" />
-            </View>
+                    <Text style={styles.existingDateText}>
+                      {new Date(ord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </View>
 
-            {isOpen && existingOrder.status === 'confirmed' ? (
-              <TouchableOpacity style={styles.cancelBtn} onPress={handleCancelOrder}>
-                <Text style={styles.cancelBtnText}>Cancel Pre-Order</Text>
-              </TouchableOpacity>
-            ) : null}
+                  {orderItems.map((item: any) => (
+                    <View key={item.id} style={styles.existingItemRow}>
+                      <Text style={styles.existingItemName}>
+                        {item.quantity}x {item.item_name}
+                      </Text>
+                      <Rupees amount={item.quantity * item.unit_price} size="sm" />
+                    </View>
+                  ))}
+
+                  <View style={styles.existingTotalRow}>
+                    <Text style={styles.existingTotalLabel}>
+                      {isFulfilled ? 'Total Paid / Due:' : 'Total Amount (Pay on Delivery):'}
+                    </Text>
+                    <Rupees amount={ord.total_amount} size="md" tone="in" />
+                  </View>
+
+                  {isFulfilled ? (
+                    <View style={styles.deliveredNoticeBox}>
+                      <Ionicons name="checkmark-circle-outline" size={16} color="#059669" />
+                      <Text style={styles.deliveredNoticeText}>
+                        Food marked as delivered by host. Enjoy your meal!
+                      </Text>
+                    </View>
+                  ) : isConfirmed && isOpen ? (
+                    <View style={styles.orderActionRow}>
+                      <TouchableOpacity
+                        style={[
+                          styles.editOrderBtn,
+                          editingOrderId === ord.id && styles.editingOrderBtnActive,
+                        ]}
+                        onPress={() => handleStartEditOrder(ord)}
+                      >
+                        <Ionicons
+                          name="pencil"
+                          size={14}
+                          color={editingOrderId === ord.id ? '#FFFFFF' : colors.accent}
+                        />
+                        <Text
+                          style={[
+                            styles.editOrderBtnText,
+                            editingOrderId === ord.id && { color: '#FFFFFF' },
+                          ]}
+                        >
+                          {editingOrderId === ord.id ? 'Currently Editing' : 'Update / Edit Items'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.cancelOrderBtn}
+                        onPress={() => handleCancelOrder(ord.id)}
+                      >
+                        <Ionicons name="trash-outline" size={14} color={Verandah.danger} />
+                        <Text style={styles.cancelOrderBtnText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
           </View>
         ) : null}
 
-        {/* Menu Items Picker */}
+        {/* Menu Items Picker Header & Items */}
         <Text style={styles.sectionHeader}>
-          {isCreator ? 'Items Offered in Your Drop' : 'Select Pre-Order Items'}
+          {isCreator
+            ? 'Items Offered in Your Drop'
+            : editingOrderId
+            ? 'Update Selected Items'
+            : userOrders.length > 0
+            ? 'Select Items for New Pre-Order'
+            : 'Select Pre-Order Items'}
         </Text>
 
         {items.map((item) => {
@@ -661,6 +813,20 @@ export default function PreorderDropDetailScreen() {
         {/* Resident Order Form (if open and not creator) */}
         {isOpen && !isCreator && user?.id ? (
           <View style={styles.formSection}>
+            {editingOrderId ? (
+              <View style={styles.editingModeBanner}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.editingBannerTitle}>✏️ Updating Active Pre-Order</Text>
+                  <Text style={styles.editingBannerSub}>
+                    Modify item quantities above and click Update Pre-Order below to save.
+                  </Text>
+                </View>
+                <TouchableOpacity style={styles.cancelEditBtn} onPress={handleCancelEdit}>
+                  <Text style={styles.cancelEditBtnText}>+ Place New Order</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
             <Text style={styles.sectionHeader}>Delivery Information</Text>
 
             <Text style={styles.subLabel}>Your Full Name *</Text>
@@ -723,7 +889,11 @@ export default function PreorderDropDetailScreen() {
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <Text style={styles.submitBtnText}>
-                  {existingOrder ? 'Update Pre-Order' : 'Submit Pre-Order'}
+                  {editingOrderId
+                    ? 'Update Pre-Order'
+                    : userOrders.length > 0
+                    ? 'Place Additional Pre-Order'
+                    : 'Submit Pre-Order'}
                 </Text>
               )}
             </TouchableOpacity>
@@ -785,8 +955,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scrollContent: {
-    padding: 20,
-    paddingBottom: 60,
+    padding: 10,
+    paddingBottom: 30,
   },
   hostCard: {
     flexDirection: 'row',
@@ -795,31 +965,31 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
-    padding: 16,
-    marginBottom: 14,
+    padding: 8,
+    marginBottom: 8,
   },
   hostMeta: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 10,
   },
   hostTitle: {
     ...VerandahType.title,
-    fontSize: 16,
+    fontSize: 15,
     color: Verandah.textPrimary,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   hostSub: {
-    fontSize: 12,
+    fontSize: 11,
     color: Verandah.textSecondary,
   },
   statusBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 8,
     borderRadius: 8,
     borderWidth: 0.5,
-    marginBottom: 14,
-    gap: 10,
+    marginBottom: 8,
+    gap: 8,
   },
   bannerOpen: {
     backgroundColor: '#FEF3C7',
@@ -830,41 +1000,41 @@ const styles = StyleSheet.create({
     borderColor: '#D1D5DB',
   },
   bannerIcon: {
-    fontSize: 20,
+    fontSize: 18,
   },
   bannerMainText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: Verandah.textPrimary,
   },
   bannerSubText: {
-    fontSize: 11,
+    fontSize: 10,
     color: Verandah.textSecondary,
     marginTop: 1,
   },
   description: {
     ...VerandahType.body,
-    fontSize: 13,
+    fontSize: 12,
     color: Verandah.textSecondary,
-    lineHeight: 18,
-    marginBottom: 16,
+    lineHeight: 16,
+    marginBottom: 8,
   },
   existingOrderBox: {
     backgroundColor: '#EEF2FF',
     borderWidth: 1,
     borderColor: Verandah.accent,
     borderRadius: VerandahRadius.lg,
-    padding: 14,
-    marginBottom: 20,
+    padding: 8,
+    marginBottom: 8,
   },
   existingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 4,
   },
   existingTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: Verandah.accent,
   },
@@ -876,7 +1046,7 @@ const styles = StyleSheet.create({
   existingItemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: 2,
+    marginVertical: 1,
   },
   existingItemName: {
     fontSize: 12,
@@ -892,21 +1062,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderTopWidth: 0.5,
     borderTopColor: '#C7D2FE',
-    marginTop: 8,
-    paddingTop: 6,
+    marginTop: 4,
+    paddingTop: 4,
   },
   existingTotalLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: Verandah.textPrimary,
   },
   existingTotalVal: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: Verandah.accent,
   },
   cancelBtn: {
-    marginTop: 10,
+    marginTop: 6,
     alignSelf: 'flex-start',
   },
   cancelBtnText: {
@@ -914,11 +1084,148 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Verandah.danger,
   },
+  orderLabelText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Verandah.textPrimary,
+  },
+  fulfilledBadgeInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  fulfilledBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#059669',
+  },
+  confirmedBadgeInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  confirmedBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#2563EB',
+  },
+  cancelledBadgeInline: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  cancelledBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  existingDateText: {
+    fontSize: 10,
+    color: Verandah.textTertiary,
+  },
+  deliveredNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F0FDF4',
+    padding: 6,
+    borderRadius: 6,
+    marginTop: 4,
+  },
+  deliveredNoticeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#059669',
+    flex: 1,
+  },
+  orderActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 6,
+    paddingTop: 4,
+    borderTopWidth: 0.5,
+    borderTopColor: '#C7D2FE',
+  },
+  editOrderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: Verandah.accent,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  editingOrderBtnActive: {
+    backgroundColor: Verandah.accent,
+  },
+  editOrderBtnText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Verandah.accent,
+  },
+  cancelOrderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  cancelOrderBtnText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Verandah.danger,
+  },
+  editingModeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#93C5FD',
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 8,
+  },
+  editingBannerTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1E40AF',
+  },
+  editingBannerSub: {
+    fontSize: 10,
+    color: '#1E3A8A',
+    marginTop: 1,
+  },
+  cancelEditBtn: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#2563EB',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginLeft: 6,
+  },
+  cancelEditBtnText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#2563EB',
+  },
   sectionHeader: {
     ...VerandahType.sectionLabel,
     color: Verandah.textPrimary,
-    marginBottom: 10,
-    marginTop: 8,
+    marginBottom: 4,
+    marginTop: 4,
   },
   itemRow: {
     flexDirection: 'row',
@@ -928,45 +1235,45 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.md,
-    padding: 12,
-    marginBottom: 10,
+    padding: 8,
+    marginBottom: 6,
   },
   itemName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: Verandah.textPrimary,
   },
   itemDesc: {
     fontSize: 11,
     color: Verandah.textSecondary,
-    marginTop: 2,
+    marginTop: 1,
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 2,
   },
   itemPrice: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: Verandah.textPrimary,
   },
   itemUnit: {
-    fontSize: 11,
+    fontSize: 10,
     color: Verandah.textSecondary,
   },
   counterRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: '#F3F4F6',
     borderRadius: VerandahRadius.pill,
-    padding: 4,
+    padding: 3,
   },
   counterBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -977,46 +1284,46 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   counterBtnText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: Verandah.textPrimary,
   },
   counterVal: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: Verandah.textPrimary,
-    minWidth: 16,
+    minWidth: 14,
     textAlign: 'center',
   },
   formSection: {
-    marginTop: 16,
+    marginTop: 8,
   },
   subLabel: {
     fontSize: 11,
     fontWeight: '500',
     color: Verandah.textSecondary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   input: {
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     fontSize: 13,
     color: Verandah.textPrimary,
   },
   multiline: {
-    minHeight: 48,
+    minHeight: 44,
   },
   summaryBox: {
     backgroundColor: '#F9FAFB',
     borderWidth: 0.5,
     borderColor: '#E5E7EB',
     borderRadius: 8,
-    padding: 12,
-    marginVertical: 14,
+    padding: 8,
+    marginVertical: 8,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -1024,50 +1331,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summaryLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: Verandah.textPrimary,
   },
   summaryVal: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: Verandah.accent,
   },
   paymentNote: {
-    fontSize: 11,
+    fontSize: 10,
     color: Verandah.textSecondary,
-    marginTop: 4,
+    marginTop: 2,
   },
   loginPromptCard: {
-    marginTop: 14,
+    marginTop: 10,
     backgroundColor: '#F9FAFB',
     borderWidth: 0.5,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
-    padding: 14,
-    gap: 8,
+    padding: 10,
+    gap: 6,
   },
   loginPromptTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: Verandah.textPrimary,
   },
   loginPromptSub: {
-    fontSize: 12,
+    fontSize: 11,
     color: Verandah.textSecondary,
-    lineHeight: 18,
+    lineHeight: 16,
   },
   loginPromptBtn: {
     alignSelf: 'flex-start',
     marginTop: 2,
     backgroundColor: Verandah.accent,
     borderRadius: VerandahRadius.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   loginPromptBtnText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   hostNoticeBox: {
@@ -1077,27 +1384,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#C7D2FE',
     borderRadius: VerandahRadius.lg,
-    padding: 14,
-    marginBottom: 16,
-    gap: 10,
+    padding: 10,
+    marginBottom: 8,
+    gap: 8,
   },
   hostNoticeTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: Verandah.accent,
     marginBottom: 2,
   },
   hostNoticeSub: {
-    fontSize: 12,
+    fontSize: 11,
     color: Verandah.textSecondary,
-    lineHeight: 17,
-    marginBottom: 8,
+    lineHeight: 15,
+    marginBottom: 6,
   },
   hostManageBtn: {
     alignSelf: 'flex-start',
     backgroundColor: Verandah.accent,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: VerandahRadius.pill,
   },
   hostManageBtnText: {
@@ -1107,7 +1414,7 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     backgroundColor: Verandah.accent,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: VerandahRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1117,14 +1424,14 @@ const styles = StyleSheet.create({
   },
   submitBtnText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
   },
   heroImageWrap: {
-    height: 180,
+    height: 140,
     borderRadius: VerandahRadius.lg,
     overflow: 'hidden',
-    marginBottom: 14,
+    marginBottom: 8,
   },
   heroImage: {
     width: '100%',

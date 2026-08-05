@@ -650,34 +650,34 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: '100%',
-    height: 130,
+    height: 105,
     borderRadius: VerandahRadius.md,
-    marginBottom: 10,
+    marginBottom: 6,
   },
   productThumb: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: VerandahRadius.md,
-    marginRight: 10,
+    marginRight: 8,
   },
   ownerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   ownerInfo: {
     flex: 1,
-    marginLeft: 10,
+    marginLeft: 8,
   },
   ownerName: {
     ...VerandahType.bodyBold,
   },
   ownerFlat: {
     ...VerandahType.caption,
-    marginTop: 2,
+    marginTop: 1,
   },
   categoryBadge: {
-    marginTop: 4,
+    marginTop: 2,
     alignSelf: 'flex-start',
     borderRadius: VerandahRadius.pill,
     backgroundColor: Verandah.cardMuted,
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   descriptionSection: {
-    marginBottom: 10,
+    marginBottom: 6,
   },
   description: {
     ...VerandahType.body,
@@ -709,18 +709,18 @@ const styles = StyleSheet.create({
   divider: {
     height: 0.5,
     backgroundColor: Verandah.border,
-    marginVertical: 10,
+    marginVertical: 6,
   },
   sectionTitle: {
     ...VerandahType.title,
-    fontSize: 16,
-    marginBottom: 16,
+    fontSize: 15,
+    marginBottom: 8,
   },
   offeringsSection: {
-    marginBottom: 18,
+    marginBottom: 10,
   },
   productsList: {
-    gap: 12,
+    gap: 8,
   },
   emptyProducts: {
     ...VerandahType.body,
@@ -730,7 +730,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderBottomWidth: 0.5,
   },
   productUnavailable: {
@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
   },
   productLeft: {
     flex: 1,
-    marginRight: 16,
+    marginRight: 12,
   },
   productName: {
     ...VerandahType.bodyBold,
@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 4,
   },
   priceOnRequestText: {
     ...VerandahType.caption,
@@ -785,12 +785,12 @@ const styles = StyleSheet.create({
     ...VerandahType.caption,
   },
   detailsCard: {
-    padding: 16,
+    padding: 10,
     borderRadius: VerandahRadius.lg,
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
     borderColor: Verandah.border,
-    marginBottom: 16,
+    marginBottom: 10,
   },
   viewerOverlay: {
     flex: 1,
