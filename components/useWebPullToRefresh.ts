@@ -1,6 +1,17 @@
 import { useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
+// Nested scrollable lists swallow the touch before it ever reaches the
+// document body, so the browser's own native pull-to-refresh never engages on
+// this app — this hook is the only pull-to-refresh a web user gets. A normal
+// pull (past REFRESH_THRESHOLD) only refetches the current screen's data. A
+// longer, deliberate pull (past HARD_RELOAD_THRESHOLD) does a real
+// `window.location.reload()`, which is what actually picks up a new deployed
+// build — something the in-app data refresh can never do.
+export const REFRESH_THRESHOLD = 65;
+export const HARD_RELOAD_THRESHOLD = 115;
+const MAX_PULL_DISTANCE = 140;
+
 export function useWebPullToRefresh(onRefresh: () => void | Promise<void>, isRefreshing?: boolean) {
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
@@ -61,7 +72,7 @@ export function useWebPullToRefresh(onRefresh: () => void | Promise<void>, isRef
       const dist = touch.clientY - touchStartRef.current;
       if (dist > 0 && scrollOffsetRef.current <= 5) {
         // Logarithmic resistance math for natural spring feel
-        const dampenedDist = Math.min(Math.pow(dist, 0.85) * 2.2, 120);
+        const dampenedDist = Math.min(Math.pow(dist, 0.85) * 2.2, MAX_PULL_DISTANCE);
         setPullDistance(dampenedDist);
       } else {
         setPullDistance(0);
@@ -71,8 +82,15 @@ export function useWebPullToRefresh(onRefresh: () => void | Promise<void>, isRef
 
   const handleTouchEnd = async () => {
     if (touchStartRef.current !== null && isPullAllowedRef.current) {
-      if (pullDistance >= 65) {
-        setPullDistance(65);
+      if (pullDistance >= HARD_RELOAD_THRESHOLD) {
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
+        return;
+      }
+
+      if (pullDistance >= REFRESH_THRESHOLD) {
+        setPullDistance(REFRESH_THRESHOLD);
         try {
           await onRefresh();
         } finally {

@@ -176,6 +176,15 @@ export function getImmediateParentRoute(pathname: string): string {
   if (cleanPath.startsWith('/services/')) return '/services';
   if (cleanPath === '/services') return '/profile';
 
+  // 8. Community funds
+  if (cleanPath === '/funds/add-transaction') {
+    const eventId = params.get('event_id');
+    return eventId ? `/funds/${eventId}` : '/funds';
+  }
+  if (cleanPath === '/funds/add') return '/funds';
+  if (cleanPath.startsWith('/funds/')) return '/funds';
+  if (cleanPath === '/funds') return '/community';
+
   // Default: the MCN hub.
   return '/network';
 }

@@ -12,6 +12,7 @@ import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
 import { VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type FundsOverview = {
@@ -71,7 +72,7 @@ export default function FundsHomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerRow}>
-          <HeaderBackButton onPress={() => router.back()} color={Verandah.primary} style={styles.iconButton} />
+          <HeaderBackButton onPress={() => goBackSmart(router, '/funds')} color={Verandah.primary} style={styles.iconButton} />
           <Text style={styles.headerTitle}>Community funds</Text>
           <View style={{ width: 36 }} />
         </View>

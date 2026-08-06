@@ -43,6 +43,7 @@ interface Listing {
   image_url: string | null;
   is_active: boolean;
   owner_id: string;
+  flagged_for_review_at: string | null;
 }
 
 export default function ManageListingScreen() {
@@ -175,20 +176,26 @@ export default function ManageListingScreen() {
   const handleToggleActive = async (value: boolean) => {
     if (!listing) return;
     try {
+      // Reactivating clears the "hidden for review" flag — a lead has looked
+      // at it (or the owner fixed it) and chosen to bring it back.
       const { error } = await supabase
         .from('mcn_listings')
-        .update({ is_active: value })
+        .update({ is_active: value, flagged_for_review_at: value ? null : listing.flagged_for_review_at })
         .eq('id', listing.id);
 
       if (error) throw error;
-      setListing(prev => prev ? { ...prev, is_active: value } : null);
+      setListing(prev =>
+        prev ? { ...prev, is_active: value, flagged_for_review_at: value ? null : prev.flagged_for_review_at } : null
+      );
       Toast.show({
         type: 'success',
         text1: value ? 'Listing is now active' : 'Listing is now paused',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      Toast.show({ type: 'error', text1: 'Failed to update status' });
+      // The max-active-listings trigger raises a clean, resident-facing
+      // message (e.g. "you can have at most 5 active listings") — show it.
+      Toast.show({ type: 'error', text1: 'Failed to update status', text2: error?.message });
     }
   };
 
@@ -255,9 +262,16 @@ export default function ManageListingScreen() {
       Toast.show({ type: 'success', text1: 'Listing updated successfully' });
       setShowListingModal(false);
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      Toast.show({ type: 'error', text1: 'Failed to update listing details' });
+      const isDuplicateCategory = error?.code === '23505' || error?.code === 'unique_violation';
+      Toast.show({
+        type: 'error',
+        text1: isDuplicateCategory ? 'One listing per category' : 'Failed to update listing details',
+        text2: isDuplicateCategory
+          ? 'You already have another business listed under this category.'
+          : undefined,
+      });
     } finally {
       setSavingListing(false);
     }
@@ -552,6 +566,19 @@ export default function ManageListingScreen() {
             )}
           </TouchableOpacity>
         </View>
+
+        {listing.flagged_for_review_at ? (
+          <View style={[styles.toggleRow, { borderColor: colors.danger, backgroundColor: colors.dangerSoft, marginBottom: 10 }]}>
+            <Ionicons name="alert-circle" size={18} color={colors.danger} style={{ marginRight: 8 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.toggleLabel, { color: colors.danger }]}>Hidden pending review</Text>
+              <Text style={[styles.toggleDesc, { color: colors.textSecondary }]}>
+                Multiple residents reported this listing, so it was automatically hidden. A community lead or
+                platform admin can turn it back on below once reviewed.
+              </Text>
+            </View>
+          </View>
+        ) : null}
 
         {/* Listing Active Toggle */}
         <View style={[styles.toggleRow, { borderColor: colors.border, backgroundColor: colors.card }]}>

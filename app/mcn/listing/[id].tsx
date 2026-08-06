@@ -71,6 +71,21 @@ export default function ListingDetailScreen() {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
+  // Report state
+  const [hasReported, setHasReported] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedReportReason, setSelectedReportReason] = useState<string | null>(null);
+  const [reportDetails, setReportDetails] = useState('');
+  const [isReporting, setIsReporting] = useState(false);
+
+  const REPORT_REASONS = [
+    { key: 'wrong_info', label: 'Wrong info' },
+    { key: 'spam', label: 'Spam' },
+    { key: 'inappropriate', label: 'Inappropriate' },
+    { key: 'unavailable', label: 'No longer available' },
+    { key: 'other', label: 'Other' },
+  ];
+
   const handleGoBack = () => {
     goBackSmart(router, `/mcn/listing/${listingId}`);
   };
@@ -193,6 +208,15 @@ export default function ListingDetailScreen() {
 
       // 5. Fetch public reviews
       await fetchPublicReviews();
+
+      // 6. Has the current user already reported this listing?
+      const { data: reportData } = await supabase
+        .from('mcn_listing_reports')
+        .select('id')
+        .eq('listing_id', listingId)
+        .eq('reported_by', user.id)
+        .maybeSingle();
+      setHasReported(!!reportData);
     } catch (error) {
       console.error(error);
       Toast.show({ type: 'error', text1: 'Error loading business details' });
@@ -200,6 +224,47 @@ export default function ListingDetailScreen() {
       setLoading(false);
     }
   }, [listingId, user?.id, profile?.phone_number, fetchPublicReviews]);
+
+  const handleSubmitReport = async () => {
+    if (!listingId || !user || !selectedReportReason) return;
+    setIsReporting(true);
+    try {
+      const detailsValue = selectedReportReason === 'other' ? reportDetails.trim() : null;
+      if (selectedReportReason === 'other' && !detailsValue) {
+        Toast.show({ type: 'error', text1: 'Details required', text2: 'Please explain the issue.' });
+        setIsReporting(false);
+        return;
+      }
+
+      const { error } = await supabase.from('mcn_listing_reports').insert({
+        listing_id: listingId,
+        reported_by: user.id,
+        reason: selectedReportReason,
+        details: detailsValue,
+      });
+
+      if (error) {
+        if (error.code === '23505') {
+          setHasReported(true);
+          Toast.show({ type: 'info', text1: 'Already reported', text2: 'You have already reported this listing.' });
+          setShowReportModal(false);
+        } else {
+          throw error;
+        }
+      } else {
+        setHasReported(true);
+        Toast.show({ type: 'success', text1: 'Report submitted', text2: 'Community leads will review this listing.' });
+        setShowReportModal(false);
+        setSelectedReportReason(null);
+        setReportDetails('');
+      }
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      Toast.show({ type: 'error', text1: 'Failed to submit report' });
+    } finally {
+      setIsReporting(false);
+    }
+  };
 
   useEffect(() => {
     fetchListingData();
@@ -383,6 +448,20 @@ export default function ListingDetailScreen() {
             {listing.description}
           </Text>
         </View>
+      ) : null}
+
+      {user?.id !== listing.owner_id ? (
+        <TouchableOpacity
+          style={styles.reportLink}
+          onPress={() => (hasReported ? undefined : setShowReportModal(true))}
+          disabled={hasReported}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="flag-outline" size={13} color={hasReported ? colors.textMuted : colors.textTertiary} />
+          <Text style={[styles.reportLinkText, { color: hasReported ? colors.textMuted : colors.textTertiary }]}>
+            {hasReported ? 'Reported' : 'Report this listing'}
+          </Text>
+        </TouchableOpacity>
       ) : null}
 
       <View style={styles.divider} />
@@ -624,6 +703,70 @@ export default function ListingDetailScreen() {
               contentFit="contain"
               transition={200}
             />
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal
+        visible={showReportModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReportModal(false)}
+      >
+        <Pressable style={styles.reportOverlay} onPress={() => setShowReportModal(false)}>
+          <Pressable style={[styles.reportCard, { backgroundColor: colors.card }]} onPress={(e) => e.stopPropagation()}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Report this listing</Text>
+            <View style={styles.reportReasonList}>
+              {REPORT_REASONS.map((reason) => {
+                const isSelected = selectedReportReason === reason.key;
+                return (
+                  <TouchableOpacity
+                    key={reason.key}
+                    style={[
+                      styles.reportReasonChip,
+                      { borderColor: colors.border },
+                      isSelected && { borderColor: colors.danger, backgroundColor: colors.dangerSoft },
+                    ]}
+                    onPress={() => setSelectedReportReason(reason.key)}
+                  >
+                    <Text style={[styles.reportReasonText, { color: isSelected ? colors.danger : colors.textSecondary }]}>
+                      {reason.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {selectedReportReason === 'other' ? (
+              <TextInput
+                style={[styles.reviewInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surface, marginTop: 10, minHeight: 60 }]}
+                placeholder="Briefly explain the issue"
+                placeholderTextColor={colors.textMuted}
+                value={reportDetails}
+                onChangeText={setReportDetails}
+                multiline
+              />
+            ) : null}
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+              <TouchableOpacity
+                style={[styles.reportCancelBtn, { borderColor: colors.border }]}
+                onPress={() => setShowReportModal(false)}
+              >
+                <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '500' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.reportSubmitBtn, { backgroundColor: selectedReportReason ? colors.danger : colors.cardMuted }]}
+                onPress={handleSubmitReport}
+                disabled={!selectedReportReason || isReporting}
+              >
+                {isReporting ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={{ color: selectedReportReason ? '#FFFFFF' : colors.textMuted, fontSize: 14, fontWeight: '600' }}>
+                    Submit report
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </Pressable>
         </Pressable>
       </Modal>
@@ -893,5 +1036,60 @@ const styles = StyleSheet.create({
   headerBackBtn: {
     marginLeft: 2,
     padding: 6,
+  },
+  reportLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    marginBottom: 6,
+  },
+  reportLinkText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  reportOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  reportCard: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: VerandahRadius.lg,
+    padding: 16,
+  },
+  reportReasonList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+  },
+  reportReasonChip: {
+    borderWidth: 1,
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  reportReasonText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  reportCancelBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: VerandahRadius.pill,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reportSubmitBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: VerandahRadius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

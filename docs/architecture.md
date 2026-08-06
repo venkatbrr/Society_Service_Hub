@@ -117,16 +117,20 @@ Session persistence uses an **AsyncStorage** adapter, not SecureStore (Android c
 
 ### App roles — `profiles.app_role`, enum `app_role_type`
 
-Enum values: `admin` · `community_admin` *(legacy)* · `resident` · `community_lead` *(legacy)* · `president` · `vice_president`
+Enum values: `admin` · `resident` · `president` · `vice_president`
 
-Migration `20260616000001_migrate_roles_and_functions.sql` moved every `community_lead` and `community_admin` row to `president` and redefined `public.is_community_lead()` to test for `president` or `vice_president`. The legacy values remain in the enum only because Postgres enum values cannot be dropped.
+Migration `20260616000001_migrate_roles_and_functions.sql` moved every `community_lead` and `community_admin` row to `president` and redefined `public.is_community_lead()` to test for `president` or `vice_president`. Those two legacy values were physically removed from the enum on 2026-08-22 by `20260822000200_drop_legacy_app_role_enum_values.sql` (rename type → recreate → recast column → drop old), after `20260822000000` repointed the last 7 RLS policies and 5 functions that still compared against the dead `community_lead` literal.
 
 ```typescript
 isPlatformAdmin = appRole === 'admin'                              // or hardcoded platform-admin email
 isCommunityLead = (appRole === 'president' || appRole === 'vice_president') && !!communityId
 ```
 
-> **Do not write `app_role === 'community_lead'`.** Use `isCommunityLead` from `useAuth()` in TypeScript and `public.is_community_lead(auth.uid())` in SQL. President and vice-president have identical permissions; the distinction is presentational only.
+> President and vice-president have identical permissions; the distinction is presentational only. Use `isCommunityLead` from `useAuth()` in TypeScript and `public.is_community_lead(auth.uid())` in SQL — never compare `app_role` to a role literal directly.
+
+**Platform admin outranks both.** `admin` (with `community_id IS NULL`) has ultimate powers across every community — everything a president/VP can do and more. Grant it in RLS with `public.is_platform_admin(auth.uid())`.
+
+> ⚠️ **`public.is_admin()` is a misnomer** — it is only an alias that calls `is_community_lead()`, so it grants a platform admin *nothing*. A policy reading `is_community_lead() OR is_admin()` has a duplicated clause and no admin override. Always use `is_platform_admin()` for the platform-admin escape hatch.
 
 Constraints: `admin` must have `community_id = NULL`. `president`/`vice_president` are only meaningful where `communities.funds_enabled = true` — funds activation is what promotes a resident to `president`.
 
@@ -135,6 +139,8 @@ Constraints: `admin` must have `community_id = NULL`. `president`/`vice_presiden
 Per fund, independent of app role: `treasurer` (max 1, min 1) · `collector` (max 6, optionally block-scoped via `block_id`) · `resident` (implicit view-only fallback).
 
 Resolution goes through `lib/fundRoles.ts` — see §12. `is_funds_enabled(community_id)` gates every funds RPC and trigger.
+
+`list_eligible_contributors_for_collector(p_event_id)` (redefined in migration `20260816000000`) returns `resident`, `president`, and `vice_president` profiles — a lead can record a contribution for themselves, not just other residents. A block-scoped collector (`fund_roles.block_id` set) only sees profiles in that block; a collector with no block, the treasurer, and leads see the whole community.
 
 ---
 
@@ -188,10 +194,17 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 | Table | Key columns |
 |-------|-------------|
 | `mcn_business_categories` | `name`, `emoji`, `sort_order` — global lookup |
-| `mcn_listings` | `name`, `description`, `contact_phone`, `image_url` (Cloudinary), `category_id`, `owner_id`, `is_active` |
+| `mcn_listings` | `name`, `description`, `contact_phone`, `image_url` (Cloudinary), `category_id`, `owner_id`, `is_active`, `flagged_for_review_at` (set when auto-hidden by reports) |
 | `mcn_products` | `listing_id`, `name`, `description`, `unit`, `price` (**nullable** = "Price on request"), `item_type` (`product`/`service`), `image_url`, `is_available`, `sort_order` |
 | `mcn_orders` | `listing_id`, `buyer_id`, `buyer_phone`, `buyer_note`, `status` (`pending`/`fulfilled`/`cancelled`) |
 | `mcn_order_items` | `order_id`, `product_id`, `quantity`, `unit_price` |
+| `mcn_listing_reports` | `listing_id`, `reported_by`, `reason`, `details`, `status`, `reviewed_by` — one report per user/listing, mirrors `provider_reports` |
+
+**Anti-spam triggers on `mcn_listings`** (migrations `20260819000000`, `20260821000000`, `20260821000200`), enforced server-side, not just in the UI:
+- One listing per `(owner_id, category_id)` — blocks both insert and edit.
+- Max 5 listings per owner with `is_active = true` at once.
+- Max 1 new listing per owner per rolling 24 hours.
+- `mcn_listing_reports` insert trigger auto-sets `is_active = false` and `flagged_for_review_at = now()` once a listing collects 3 pending reports, and notifies leads (`notifications.type = 'listing_auto_hidden'`, or `'listing_reported'` below the threshold). A separate trigger then blocks the *owner* from flipping `is_active` back to true while `flagged_for_review_at` is set — only a lead or platform admin can clear it (by reactivating from the existing Manage listing screen, which nulls the flag).
 
 ### 4.6 MCN — pre-order food drops
 
@@ -202,7 +215,11 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 | `mcn_preorder_orders` | `drop_id`, `buyer_id`, `buyer_name`, `buyer_phone`, `flat_number`, `buyer_note`, `total_amount`, `status` (`confirmed`/`fulfilled`/`cancelled`) |
 | `mcn_preorder_order_items` | `order_id`, `item_id`, `item_name`, `quantity` (numeric — supports 0.5), `unit_price` |
 
-Per-item capacity is enforced server-side by `check_mcn_drop_item_capacity()` plus a trigger (migrations `20260803000000`, `20260804000000`), not only in the UI.
+Drop-wide total item capacity (`mcn_preorder_drops.max_orders`) is enforced server-side by `check_mcn_drop_item_capacity()` plus a trigger (migrations `20260803000000`, `20260804000000`), not only in the UI.
+
+Per-item capacity (`mcn_preorder_items.max_quantity`) is a separate, smaller cap: the total quantity of *that one item* across every buyer's orders combined, not a per-order allowance. It is enforced by `check_mcn_drop_item_quantity_capacity()` (pre-flight check) and `get_mcn_drop_item_availability()` (remaining-stock display), backed by triggers on `mcn_preorder_order_items` and `mcn_preorder_orders` (migration `20260816000000`).
+
+**Anti-spam cap on concurrent open drops** (migration `20260821000100`): a host can have at most 3 drops with `status = 'open'` and `cutoff_at` in the future at the same time, enforced by a trigger on `mcn_preorder_drops`. Unlike business listings, drops have no "one per type" rule — hosting a new drop every week is the intended pattern; this only stops flooding the Open Pre-orders tab with many drops at once.
 
 ### 4.7 MCN — carpools
 
@@ -215,7 +232,7 @@ Per-item capacity is enforced server-side by `check_mcn_drop_item_capacity()` pl
 
 | Table | Key columns |
 |-------|-------------|
-| `mcn_parent_corner` | `student_name`, `institution_type` (`school`/`college`/`preschool`), `school_name`, `board`, `grade_class`, `parent_name`, `flat_number`, `contact_phone`, `notes` |
+| `mcn_parent_corner` | `student_name`, `institution_type` (`school`/`college`/`preschool`), `school_name`, `board`, `grade_class`, `parent_name`, `flat_number`, `contact_phone`, `intents` (`TEXT[]`, GIN-indexed — structured tags: `carpool`, `study_group`, `homework_help`, `school_info`, `activities`, `playdate`, `other`), `notes` |
 | `schools` | `name`, `level`, `syllabus`, `distance`, `fee_range`, `facilities` (`TEXT[]`), `area_locality`, `address`, `contact_phone`, `website`, `google_maps_link`, `google_rating`, plus trigger-maintained `avg_academics`, `avg_teachers`, `avg_infrastructure`, `avg_sports_activities`, `avg_safety`, `avg_transport`, `avg_value`, `avg_happiness`, `review_count` |
 | `school_reviews` | `school_id` (accepts text IDs for curated schools), `child_grade`, eight `*_score` columns, eight optional `*_comment` columns, `overall_comment` |
 | `mcn_posts` | `kind` (`business`/`borrow`), `title`, `description`, `contact_hint`, `is_available` |
@@ -262,7 +279,7 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 ### Predicates
 
-`is_admin(p_user_id?)` · `is_platform_admin(p_user_id?)` · `is_community_lead(p_user_id?)` *(president or vice_president, `removed_at IS NULL`)* · `is_user_approved(p_user_id?)` · `is_funds_enabled(p_community_id)` · `is_blocks_enabled(p_community_id)` · `get_user_community_id()` · `get_my_block_id()`
+`is_admin(p_user_id?)` *(⚠️ alias for `is_community_lead` — NOT a platform-admin check)* · `is_platform_admin(p_user_id?)` *(`app_role = 'admin'` and `community_id IS NULL`)* · `is_community_lead(p_user_id?)` *(president or vice_president, `removed_at IS NULL`)* · `is_user_approved(p_user_id?)` · `is_funds_enabled(p_community_id)` · `is_blocks_enabled(p_community_id)` · `get_user_community_id()` · `get_my_block_id()`
 
 ### Providers and visits
 
@@ -282,7 +299,7 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 ### MCN
 
-`check_mcn_drop_item_capacity(...)` — validates remaining capacity for a drop item before an order is accepted.
+`check_mcn_drop_item_capacity(...)` — validates a drop's total `max_orders` cap before an order is accepted. `check_mcn_drop_item_quantity_capacity(...)` — same idea, scoped to one item's `max_quantity` shared across every buyer. `get_mcn_drop_item_availability(p_drop_id)` — remaining stock per item, for display.
 
 ### Platform admin console
 
@@ -344,8 +361,10 @@ RLS is enabled on every active table.
 | `mcn_parent_corner`, `mcn_posts` | Community read; owner or lead writes |
 | `schools`, `school_reviews` | Community read; author writes own review |
 
-**Uniform MCN delete rule** (migration `20260814000000_mcn_deletion_permissions.sql`): `mcn_preorder_drops`, `mcn_listings`, `mcn_carpools`, `mcn_parent_corner`, and `mcn_posts` all allow DELETE when
-`owner = auth.uid() OR public.is_community_lead(auth.uid()) OR public.is_admin(auth.uid())`.
+**Uniform MCN owner-or-lead rule** — `mcn_preorder_drops`, `mcn_listings`, `mcn_carpools`, `mcn_parent_corner`, and `mcn_posts` allow the write when
+`owner = auth.uid() OR public.is_community_lead(auth.uid()) OR public.is_platform_admin(auth.uid())`.
+
+Applies to DELETE (`20260814000000`, corrected to `is_platform_admin` in `20260822000100`) and to UPDATE (`20260822000000`, which also repointed `schools_update`/`schools_delete` and `school_reviews_delete`). The original DELETE rule used `is_admin()`, which is only an alias for `is_community_lead()` and therefore gave the platform admin no override at all.
 
 Pending or removed users are blocked from community content even when a stale `community_id` remains on the profile.
 
@@ -385,9 +404,9 @@ Web push is not implemented — see [`archive/pwa-web-push-notifications-plan.md
 
 ## 9. Navigation architecture
 
-### Tabs (`app/(tabs)/_layout.tsx`)
+### Tabs (`app/(tabs)/_layout.tsx`) and the global bottom nav
 
-Help · Saved · MCN · Community · Profile. `Ionicons` with filled/outline variants. Tab bar height is 70 px on web and `58 + safeAreaBottom` on native; web forces `insets.bottom = 0` so the bar cannot be pushed off-screen.
+Help · Saved · MCN · Community · Profile. The `Tabs` navigator in `(tabs)/_layout.tsx` still owns routing between the five tab screens, but its own bar is hidden (`tabBarStyle: { display: 'none' }`) — expo-router only renders a `Tabs` bar for screens inside that group, so it would disappear on every non-tab route (`/funds`, `/mcn/*`, `/services`, `/sos`, ...). The bar users actually see is `components/GlobalBottomNav.tsx`, rendered once as a flex sibling to the root `<Stack>` in `app/_layout.tsx` so it stays visible on every screen. It derives the active tab from `usePathname()` (e.g. `/funds*`, `/sos`, `/residents` all highlight Community) and pushes to the five tab-root routes on tap. It renders only once `session`, `communityId`, and `!isLoading` are all true — hidden pre-login and pre-community-selection. Height is 52 px on web / `46 + safeAreaBottom` on native (smaller than the old per-tab bar).
 
 ### Route-collision rule (read before adding any route)
 
@@ -419,7 +438,7 @@ The app distinguishes **two different meanings of "back"**, and conflating them 
 
 **API**
 
-- `getImmediateParentRoute(path)` — maps every `/mcn/*` route (plus `/services/*`) to its logical parent, e.g. `/mcn/drops/manage/:id` → `/mcn/drops/:id` → `/mcn/drops` → `/network`. Accepts an optional query string because a few parents are context-dependent: `/mcn/schools/review?schoolId=X` → that school, and `/mcn/add?source=my-posts` → My Submissions.
+- `getImmediateParentRoute(path)` — maps every `/mcn/*` route (plus `/services/*` and `/funds/*`) to its logical parent, e.g. `/mcn/drops/manage/:id` → `/mcn/drops/:id` → `/mcn/drops` → `/network`, or `/funds/add-transaction?event_id=X` → `/funds/X` → `/funds` → `/community`. Accepts an optional query string because a few parents are context-dependent: `/mcn/schools/review?schoolId=X` → that school, `/mcn/add?source=my-posts` → My Submissions, and `/funds/add-transaction?event_id=X` → that fund.
 - `goBackSmart(router, path)` — what header back buttons call. Pops with `router.back()` when the previous tracked route already **is** the logical parent (the common case, keeping history and forward in sync); otherwise falls back to `router.replace(parent)` for a cross-branch jump or a deep-link entry with nothing to pop.
 - `normalizeRoute(route)` — canonical form for comparisons: strips query, hash, trailing slash, and expo-router group segments so `/(tabs)/network` and `/network` compare equal.
 - `getPreviousRoute()` — the previous entry in the tracked stack.
@@ -427,7 +446,7 @@ The app distinguishes **two different meanings of "back"**, and conflating them 
 
 **Tracked stack** — a `sessionStorage` array (in-memory on native), capped at 25 entries, reconciled on every pathname change by a **truncate-or-push** rule: if the route is already in the stack the user moved back, so truncate to that index; otherwise push. This self-heals. The earlier implementation pushed unconditionally, so back navigations *grew* the stack and its contents stopped matching real history after the first back press.
 
-**When you add a `/mcn/*` route, add its parent mapping to `getImmediateParentRoute()`**, or back navigation falls through to the MCN hub.
+**When you add a `/mcn/*` or `/funds/*` route, add its parent mapping to `getImmediateParentRoute()`**, or back navigation falls through to the MCN hub. `app/funds/*` screens call `goBackSmart(router, path)` from their header back button the same way MCN screens do — plain `router.back()` silently does nothing on a deep-linked or freshly-loaded fund screen with no history to pop.
 
 ### Shared MCN header
 
@@ -486,7 +505,7 @@ Query-scoping notes: the Help tab scopes `provider_hires` to `communityId`, and 
 
 ## 11. Type system
 
-`lib/database.types.ts` is generated — **never hand-edit it**. It exports `Tables<T>`, `InsertTables<T>`, `UpdateTables<T>`, `Enums<T>`, plus a few enriched app types (`ProviderWithInteraction`, `VisitWithJoinerData`).
+`lib/database.types.ts` is generated — **never hand-edit the generated portion**. It exports `Tables<T>`, `InsertTables<T>`, `UpdateTables<T>`, `Enums<T>`, plus a hand-maintained block of enriched app types appended at the very end of the file (`ProviderWithInteraction`, `VisitWithJoinerData`, `VisitJoinerWithProfile`). `npx supabase gen types` overwrites the **entire file**, deleting that block — re-add it every time you regenerate (CLAUDE.md §6). If a screen import from `database.types.ts` breaks right after a regen, this is why.
 
 ```typescript
 type AppRole = Tables<'profiles'>['app_role']       // Enums<'app_role_type'>
@@ -514,7 +533,7 @@ getFundPermissions(role)                             // → { canCreateFund, can
                                                      //     canManageCollectors, canAddContribution, canAddExpense }
 formatRole(role) / formatRoleForFundContext(role, assignment)
 isFundsEnabled(community) / isBlockScopedAssignment(assignment)
-getRestrictionHint(role)
+getRoleAccessSummary(role)                           // one-line "what can I do" summary shown on the fund detail screen
 ```
 
 `getEffectiveFundRole()` resolves `admin`, `president`, and `vice_president` to fund-admin level. The database remains the real authority through RLS plus `fund_role_guard` and `event_transaction_guard`.

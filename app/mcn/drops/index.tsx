@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart } from '../../../lib/navigation';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     FlatList,
@@ -34,6 +34,8 @@ export default function FoodDropsCatalogScreen() {
 
   const [drops, setDrops] = useState<PreorderDropItem[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'closed' | 'my_drops'>('active');
+  const [preparingCollapsed, setPreparingCollapsed] = useState(false);
+  const [completedCollapsed, setCompletedCollapsed] = useState(false);
 
   useEffect(() => {
     if (initialTab && (initialTab === 'active' || initialTab === 'closed' || initialTab === 'my_drops')) {
@@ -236,6 +238,49 @@ export default function FoodDropsCatalogScreen() {
 
   const webPullProps = useWebPullToRefresh(() => fetchDrops(true), refreshing);
 
+  const listRows = useMemo(() => {
+    if (activeTab !== 'closed') {
+      return drops.map((drop) => ({ type: 'drop' as const, drop }));
+    }
+
+    const isDeliveryPassed = (d: PreorderDropItem): boolean => {
+      if (d.status === 'completed' || d.status === 'cancelled') return true;
+      if (!d.fulfillment_date) return false;
+      const timeStr = d.fulfillment_time || '23:59';
+      const fulfillDateTime = new Date(`${d.fulfillment_date}T${timeStr}:00`);
+      const now = new Date();
+      if (isNaN(fulfillDateTime.getTime())) {
+        const fulfillDateOnly = new Date(`${d.fulfillment_date}T23:59:59`);
+        return now > fulfillDateOnly;
+      }
+      return now > fulfillDateTime;
+    };
+
+    const preparing = drops.filter((d) => !isDeliveryPassed(d));
+    const completed = drops.filter((d) => isDeliveryPassed(d));
+
+    const rows: (
+      | { type: 'header'; section: 'preparing' | 'completed'; count: number }
+      | { type: 'drop'; drop: PreorderDropItem }
+    )[] = [];
+
+    if (preparing.length > 0) {
+      rows.push({ type: 'header', section: 'preparing', count: preparing.length });
+      if (!preparingCollapsed) {
+        preparing.forEach((drop) => rows.push({ type: 'drop', drop }));
+      }
+    }
+
+    if (completed.length > 0) {
+      rows.push({ type: 'header', section: 'completed', count: completed.length });
+      if (!completedCollapsed) {
+        completed.forEach((drop) => rows.push({ type: 'drop', drop }));
+      }
+    }
+
+    return rows;
+  }, [drops, activeTab, preparingCollapsed, completedCollapsed]);
+
   const handleBack = () => {
     goBackSmart(router, '/mcn/drops');
   };
@@ -371,8 +416,8 @@ export default function FoodDropsCatalogScreen() {
       ) : (
         <FlatList
           {...webPullProps.pullProps}
-          data={drops}
-          keyExtractor={(item) => item.id}
+          data={listRows}
+          keyExtractor={(row) => (row.type === 'header' ? `header-${row.section}` : row.drop.id)}
           contentContainerStyle={
             drops.length === 0 ? styles.emptyList : styles.listContent
           }
@@ -386,64 +431,51 @@ export default function FoodDropsCatalogScreen() {
           ListHeaderComponent={
             <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
           }
-          renderItem={({ item, index }) => {
-            const isItemDeliveryPassed = (d: PreorderDropItem): boolean => {
-              if (d.status === 'completed' || d.status === 'cancelled') return true;
-              if (!d.fulfillment_date) return false;
-              const timeStr = d.fulfillment_time || '23:59';
-              const fulfillDateTime = new Date(`${d.fulfillment_date}T${timeStr}:00`);
-              const now = new Date();
-              if (isNaN(fulfillDateTime.getTime())) {
-                const fulfillDateOnly = new Date(`${d.fulfillment_date}T23:59:59`);
-                return now > fulfillDateOnly;
-              }
-              return now > fulfillDateTime;
-            };
+          renderItem={({ item: row }) => {
+            if (row.type === 'header') {
+              const isPreparing = row.section === 'preparing';
+              const collapsed = isPreparing ? preparingCollapsed : completedCollapsed;
+              const toggle = () =>
+                isPreparing
+                  ? setPreparingCollapsed((v) => !v)
+                  : setCompletedCollapsed((v) => !v);
 
-            const firstPreparingIdx = drops.findIndex(
-              (d) => d.status !== 'completed' && d.status !== 'cancelled' && !isItemDeliveryPassed(d)
-            );
-            const isFirstPreparing =
-              activeTab === 'closed' &&
-              firstPreparingIdx !== -1 &&
-              index === firstPreparingIdx;
-
-            const firstCompletedIdx = drops.findIndex(
-              (d) => d.status === 'completed' || d.status === 'cancelled' || isItemDeliveryPassed(d)
-            );
-            const isFirstCompleted =
-              activeTab === 'closed' &&
-              firstCompletedIdx !== -1 &&
-              index === firstCompletedIdx;
-
-            return (
-              <View>
-                {isFirstPreparing ? (
-                  <View style={styles.sectionHeaderPreparing}>
-                    <View style={styles.iconLabelRow}>
+              return (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={toggle}
+                  style={isPreparing ? styles.sectionHeaderPreparing : styles.sectionHeaderCompleted}
+                >
+                  <View style={[styles.iconLabelRow, { flex: 1 }]}>
+                    {isPreparing ? (
                       <AppIcon name="chef" size={14} />
-                      <Text style={styles.sectionHeaderTextPreparing}>Kitchen Preparing</Text>
-                    </View>
+                    ) : (
+                      <Ionicons name="checkmark-circle" size={16} color="#059669" />
+                    )}
+                    <Text style={isPreparing ? styles.sectionHeaderTextPreparing : styles.sectionHeaderTextCompleted}>
+                      {isPreparing ? 'Kitchen Preparing' : 'Past Completed & Delivered Drops'} ({row.count})
+                    </Text>
                   </View>
-                ) : null}
+                  <Ionicons
+                    name={collapsed ? 'chevron-down' : 'chevron-up'}
+                    size={16}
+                    color={isPreparing ? '#92400E' : '#065F46'}
+                  />
+                </TouchableOpacity>
+              );
+            }
 
-                {isFirstCompleted ? (
-                  <View style={styles.sectionHeaderCompleted}>
-                    <Ionicons name="checkmark-circle" size={16} color="#059669" />
-                    <Text style={styles.sectionHeaderTextCompleted}>Past Completed & Delivered Drops</Text>
-                  </View>
-                ) : null}
-
-                <PreorderDropCard
-                  drop={item}
-                  isCreator={item.created_by === user?.id}
-                  onPress={() => router.push(`/mcn/drops/${item.id}` as any)}
-                  onManage={() => {
-                    if (!requireLoginForAction()) return;
-                    router.push(`/mcn/drops/manage/${item.id}` as any);
-                  }}
-                />
-              </View>
+            const item = row.drop;
+            return (
+              <PreorderDropCard
+                drop={item}
+                isCreator={item.created_by === user?.id}
+                onPress={() => router.push(`/mcn/drops/${item.id}` as any)}
+                onManage={() => {
+                  if (!requireLoginForAction()) return;
+                  router.push(`/mcn/drops/manage/${item.id}` as any);
+                }}
+              />
             );
           }}
           ListEmptyComponent={
@@ -582,6 +614,7 @@ const styles = StyleSheet.create({
     borderColor: '#FDE68A',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   sectionHeaderTextPreparing: {
     fontSize: 12,
@@ -599,7 +632,7 @@ const styles = StyleSheet.create({
     borderColor: '#A7F3D0',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'space-between',
   },
   sectionHeaderTextCompleted: {
     fontSize: 12,

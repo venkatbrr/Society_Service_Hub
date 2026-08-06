@@ -32,7 +32,7 @@ There is no lint script and no test suite. `npx tsc --noEmit` must pass before y
 
 1. **Scope every community query by `communityId`** from `useAuth()`. RLS enforces it server-side too, but a missing client filter still leaks nothing and breaks everything — it silently returns empty sets under RLS.
    *Exceptions (user-scoped, never pass `communityId`)*: `user_services`, `user_service_history`, `hire_feedback`, `provider_public_rating_nudges`, `provider_personal_notes`, `favorites`.
-2. **Never test `app_role === 'community_lead'`.** That value is dead (migrated to `president` on 2026-06-16). Use `isCommunityLead` from `useAuth()`, or `public.is_community_lead(auth.uid())` in SQL. `president` and `vice_president` have identical powers.
+2. **Never compare `app_role` to a role literal.** The only community roles are `president` and `vice_president`, and they have identical powers. Use `isCommunityLead` from `useAuth()`, or `public.is_community_lead(auth.uid())` in SQL. (`community_lead`/`community_admin` were removed from the enum entirely on 2026-08-22.) For the platform-admin override use `public.is_platform_admin()` — **not** `is_admin()`, which is only an alias for `is_community_lead()`.
 3. **Never hand-edit `lib/database.types.ts`.** Regenerate it.
 4. **Use `.maybeSingle()`, not `.single()`**, for single-row reads. `.single()` throws when zero rows match.
 5. **Deploy migrations in the same change set** — see §6.
@@ -87,7 +87,9 @@ There is no lint script and no test suite. `npx tsc --noEmit` must pass before y
 
 - **Web viewport** — `html`, `body`, `#root` are `height: 100%` and `#root` is `display: flex` in `app/+html.tsx`. Changing this pushes the tab bar off-screen.
 - **Web focus outlines** — reset via `input:focus, textarea:focus, select:focus { outline: none; }` in `app/+html.tsx`.
-- **Web pull-to-refresh** — `RefreshControl` is a native no-op, so scrollable lists use `useWebPullToRefresh` + `WebPullIndicator`.
+- **Web pull-to-refresh** — `RefreshControl` is a native no-op, so scrollable lists use `useWebPullToRefresh` + `WebPullIndicator`. Nested scroll containers mean the browser's own native pull-to-refresh never fires, so the hook also has a second, longer-pull tier (`HARD_RELOAD_THRESHOLD`) that runs a real `window.location.reload()` — the only way a web user gets a true browser refresh (e.g. to pick up a new deployed build) rather than just an in-app data refetch.
+- **Global bottom nav** — the visible tab bar is `components/GlobalBottomNav.tsx`, rendered once in `app/_layout.tsx`, not `(tabs)/_layout.tsx`'s own `Tabs` bar (hidden via `tabBarStyle: { display: 'none' }`). This is what makes the bar show up on non-tab routes like `/funds/*` and `/mcn/*`. Add new tab-adjacent routes to its `TABS[].isActive` matcher so the right tab highlights.
+- **Vercel serverless functions** (`api/*.ts`) — excluded from `tsconfig.json` like `supabase/functions`, since they run in a separate Node runtime Vercel builds independently. Used for things a client-rendered SPA can't do itself, e.g. `api/share-drop.ts` serves per-drop Open Graph tags to link-preview crawlers (WhatsApp, etc.) since the app's static `index.html` has no per-page meta tags.
 - **Service worker** — registration checks `document.readyState` for `complete`/`interactive` so it still runs when the bundle loads late.
 - **Platform-specific components** — add a `.web.tsx` sibling rather than branching on `Platform.OS` inside a render tree.
 - **Android dev networking** — keep `android.usesCleartextTraffic = true` so dev builds can load Metro over HTTP.
@@ -133,7 +135,7 @@ Schema, RPC index, triggers, and RLS: [`architecture.md`](architecture.md) §4�
 - Write idempotent SQL: `CREATE TABLE IF NOT EXISTS`, `DROP POLICY IF EXISTS` before `CREATE POLICY`, `ADD COLUMN IF NOT EXISTS`.
 - End schema-changing migrations with `NOTIFY pgrst, 'reload schema';` so PostgREST picks up the change.
 - Every new table needs `ALTER TABLE … ENABLE ROW LEVEL SECURITY` plus explicit select/insert/update/delete policies. Community-scoped tables compare against `get_user_community_id()`.
-- New MCN tables should follow the uniform delete rule: `owner = auth.uid() OR public.is_community_lead(auth.uid()) OR public.is_admin(auth.uid())`.
+- New MCN tables should follow the uniform delete rule: `owner = auth.uid() OR public.is_community_lead(auth.uid()) OR public.is_platform_admin(auth.uid())`. Use `is_platform_admin()`, never `is_admin()` — the latter is only an alias for `is_community_lead()` and grants the platform admin nothing.
 - Enforce real invariants (capacity caps, role caps, block scoping) with triggers, not UI checks alone.
 
 ### Cross-community conventions
@@ -152,7 +154,8 @@ When you create or modify a file in `supabase/migrations/`, complete the loop yo
 
 1. `npm run db:push`
 2. `npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj`
-3. `npx tsc --noEmit`
+3. **Re-add the hand-maintained enriched types block** (`ProviderWithInteraction`, `VisitWithJoinerData`, `VisitJoinerWithProfile`) at the bottom of `lib/database.types.ts` — step 2 overwrites the whole file, wiping it. See §11 and the comment above that block.
+4. `npx tsc --noEmit`
 
 Do not leave a migration unapplied or types unregenerated. Deployment is part of the implementation, not a follow-up.
 
@@ -190,11 +193,13 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 
 | Trap | Reality |
 |------|---------|
-| `app_role === 'community_lead'` | Dead value. Use `isCommunityLead`. |
+| `app_role === 'community_lead'` | Value no longer exists — removed from the enum on 2026-08-22. Use `isCommunityLead`. |
+| `public.is_admin()` granting platform-admin access in RLS | It is only an alias for `is_community_lead()`. Use `is_platform_admin()` for the platform-admin override. |
 | Assuming `fundsEnabled` is correct on first render | `AuthContext` loads it in a second, non-blocking phase. |
 | `Alert.alert` for a web confirmation | No-op on web. Split on `Platform.OS`. |
 | `.single()` on a possibly-absent row | Throws. Use `.maybeSingle()`. |
-| Adding an `app/mcn/*` route without a parent mapping | Header back falls through to the MCN hub. |
+| Adding an `app/mcn/*` or `app/funds/*` route without a parent mapping, or using plain `router.back()` in its header | Falls through to the MCN hub, or silently does nothing on a deep-linked/fresh-loaded screen with no history to pop. Add the mapping to `getImmediateParentRoute()` and call `goBackSmart()`. |
+| Treating a food drop item's `max_quantity` as per-order | It is a total shared across every buyer's orders combined — enforced server-side, not just capped in the quantity stepper. |
 | Two routes resolving to one URL (e.g. a tab screen and a same-named directory) | expo-router does not error; browser history silently breaks at that boundary. Keep `/network` (tab) and `/mcn/*` (stack) distinct. |
 | Using `router.replace()` to go back | Overwrites the history entry instead of popping it — browser-back then skips a level and forward breaks. Use `goBackSmart()`. |
 | Intercepting `popstate` to "fix" browser back | Races expo-router's own handler. Don't. |

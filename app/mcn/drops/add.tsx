@@ -788,7 +788,7 @@ export default function CreateOrEditFoodDropScreen() {
 
               <View style={[styles.row, { marginTop: 8 }]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.subLabel}>Max Quantity (Optional)</Text>
+                  <Text style={styles.subLabel}>Max quantity — total for all orders combined (optional)</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="No limit"
@@ -797,6 +797,9 @@ export default function CreateOrEditFoodDropScreen() {
                     onChangeText={(txt) => handleItemChange(item.id, 'max_quantity', txt)}
                     keyboardType="numeric"
                   />
+                  <Text style={styles.hintText}>
+                    This is the total you can prepare, shared across every resident's order — not a per-order limit.
+                  </Text>
                 </View>
               </View>
             </View>
@@ -851,6 +854,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: Verandah.textSecondary,
     marginBottom: 2,
+  },
+  hintText: {
+    fontSize: 10,
+    color: Verandah.textMuted,
+    marginTop: 3,
+    lineHeight: 13,
   },
   input: {
     backgroundColor: Verandah.card,

@@ -23,7 +23,7 @@ import { APP_EMOJIS } from '../../constants/emojis';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
-import { formatRole, getEffectiveFundRole, getFundPermissions } from '../../lib/fundRoles';
+import { formatRoleForFundContext, getEffectiveFundRole, getFundPermissions } from '../../lib/fundRoles';
 import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
@@ -450,7 +450,7 @@ export default function AddTransactionScreen() {
                 : type === 'income' ? 'Record contribution' : 'Record expense'}
             </Text>
             <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-              {fund.title} - You are a {formatRole(fundRole)}
+              {fund.title} - You are a {formatRoleForFundContext(fundRole, undefined, appRole)}
             </Text>
           </View>
         </View>

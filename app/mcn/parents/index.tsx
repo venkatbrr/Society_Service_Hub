@@ -44,6 +44,7 @@ export interface ParentCornerItem {
   parent_name: string;
   flat_number: string;
   contact_phone: string;
+  intents: string[];
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -59,6 +60,28 @@ const INSTITUTION_TYPES = [
 ];
 
 const BOARD_OPTIONS = ['All', 'CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University', 'Other'];
+
+const INTENT_LABELS: Record<string, string> = {
+  carpool: 'Carpooling',
+  study_group: 'Study Group',
+  homework_help: 'Homework Help',
+  school_info: 'School Info & Updates',
+  activities: 'Sports / Activities Buddy',
+  playdate: 'Playdate / Hangout',
+  other: 'Other',
+};
+
+const INTENT_ICONS: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
+  carpool: 'car-outline',
+  study_group: 'people-outline',
+  homework_help: 'pencil-outline',
+  school_info: 'megaphone-outline',
+  activities: 'football-outline',
+  playdate: 'happy-outline',
+  other: 'ellipsis-horizontal-outline',
+};
+
+const INTENT_FILTER_OPTIONS = [{ id: 'all', label: 'All' }, ...Object.entries(INTENT_LABELS).map(([id, label]) => ({ id, label }))];
 
 export default function ParentCornerScreen() {
   const router = useRouter();
@@ -76,6 +99,7 @@ export default function ParentCornerScreen() {
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedBoard, setSelectedBoard] = useState<string>('All');
   const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
+  const [selectedIntent, setSelectedIntent] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('school');
 
   const webPullProps = useWebPullToRefresh(() => fetchEntries(true), refreshing);
@@ -172,6 +196,11 @@ export default function ParentCornerScreen() {
       list = list.filter((item) => item.school_name.toLowerCase() === selectedSchool.toLowerCase());
     }
 
+    // Intent Filter
+    if (selectedIntent !== 'all') {
+      list = list.filter((item) => (item.intents || []).includes(selectedIntent));
+    }
+
     // Sorting
     list.sort((a, b) => {
       if (sortBy === 'school') {
@@ -191,7 +220,7 @@ export default function ParentCornerScreen() {
     });
 
     return list;
-  }, [entries, debouncedSearch, selectedType, selectedBoard, selectedSchool, sortBy]);
+  }, [entries, debouncedSearch, selectedType, selectedBoard, selectedSchool, selectedIntent, sortBy]);
 
   useEffect(() => {
     fetchEntries();
@@ -327,6 +356,20 @@ export default function ParentCornerScreen() {
           <Ionicons name="home-outline" size={14} color={colors.textMuted} style={{ marginRight: 4 }} />
           <Text style={[styles.parentText, { color: colors.textSecondary }]}>Flat {item.flat_number}</Text>
         </View>
+
+        {/* Intent Tags (Carpool / Study group / etc.) */}
+        {item.intents && item.intents.length > 0 ? (
+          <View style={styles.intentRow}>
+            {item.intents.map((id) => (
+              <View key={id} style={[styles.intentBadge, { backgroundColor: colors.accentSoft }]}>
+                {INTENT_ICONS[id] ? (
+                  <Ionicons name={INTENT_ICONS[id]} size={11} color={colors.accent} style={{ marginRight: 3 }} />
+                ) : null}
+                <Text style={[styles.intentBadgeText, { color: colors.accent }]}>{INTENT_LABELS[id] || id}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
         {/* Optional Notes (Carpool / Study group) */}
         {item.notes ? (
@@ -475,6 +518,41 @@ export default function ParentCornerScreen() {
                   ]}
                 >
                   {b}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Filter Row 3: Looking For / Intent */}
+      <View style={styles.filterSection}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsScrollContainer}
+        >
+          <Text style={[styles.filterLabel, { color: colors.textMuted }]}>Looking for:</Text>
+          {INTENT_FILTER_OPTIONS.map((opt) => {
+            const isActive = selectedIntent === opt.id;
+            return (
+              <TouchableOpacity
+                key={opt.id}
+                style={[
+                  styles.filterChipSm,
+                  { borderColor: colors.border, backgroundColor: colors.card },
+                  isActive && { borderColor: colors.primary, backgroundColor: colors.accentSoft },
+                ]}
+                onPress={() => setSelectedIntent(opt.id)}
+              >
+                <Text
+                  style={[
+                    styles.chipTextSm,
+                    { color: colors.textSecondary },
+                    isActive && { color: colors.primary, fontWeight: '500' },
+                  ]}
+                >
+                  {opt.label}
                 </Text>
               </TouchableOpacity>
             );
@@ -814,6 +892,23 @@ const styles = StyleSheet.create({
   },
   flatDot: {
     marginHorizontal: 6,
+  },
+  intentRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
+  },
+  intentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: VerandahRadius.pill,
+  },
+  intentBadgeText: {
+    ...VerandahType.captionBold,
+    fontSize: 11,
   },
   notesBox: {
     flexDirection: 'row',

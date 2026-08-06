@@ -64,14 +64,16 @@ Platform admins are deliberately **excluded from the mobile app**: on web they a
 
 | Role | Meaning | Derived flag |
 |------|---------|--------------|
-| `admin` | Platform admin. Must have `community_id = NULL`. | `isPlatformAdmin` |
+| `admin` | Platform admin. Must have `community_id = NULL`. Ultimate powers across all communities. | `isPlatformAdmin` |
 | `president` | Primary community lead | `isCommunityLead` |
 | `vice_president` | Secondary community lead, same powers | `isCommunityLead` |
 | `resident` | Default member | — |
-| `community_lead` | **Legacy.** Migrated to `president` on 2026-06-16. Still in the enum for historical rows; no live code grants it. | — |
-| `community_admin` | **Legacy.** Migrated to `president`. Dead. | — |
 
-> **Critical for agents:** "community lead" is a *concept*, not a role string. Check `isCommunityLead` from `useAuth()` in app code, or `public.is_community_lead(auth.uid())` in SQL. Never compare `app_role === 'community_lead'` — that string is dead.
+These four are the entire enum. `community_lead` and `community_admin` were migrated to `president` on 2026-06-16 and physically dropped from `app_role_type` on 2026-08-22 (`20260822000200`).
+
+> **Critical for agents:** "community lead" is a *concept*, not a role string. Check `isCommunityLead` from `useAuth()` in app code, or `public.is_community_lead(auth.uid())` in SQL. Never compare `app_role` to a role literal.
+>
+> For the platform-admin override in SQL use `public.is_platform_admin()` — **not** `public.is_admin()`, which is only an alias for `is_community_lead()` and grants an admin nothing.
 
 `isPlatformAdmin` = `app_role === 'admin'` (or the hardcoded platform-admin email).
 `isCommunityLead` = `(app_role === 'president' || app_role === 'vice_president') && !!communityId`.

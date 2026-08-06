@@ -101,9 +101,18 @@ export default function AddListingScreen() {
       Toast.show({ type: 'success', text1: 'Business listing created' });
       // Navigate to the manage screen for this listing
       router.replace(`/mcn/listing/manage/${listing.id}` as any);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      Toast.show({ type: 'error', text1: 'Failed to create business listing' });
+      const isDuplicateCategory = error?.code === '23505' || error?.code === 'unique_violation';
+      Toast.show({
+        type: 'error',
+        text1: isDuplicateCategory ? 'One listing per category' : 'Failed to create business listing',
+        text2: isDuplicateCategory
+          ? 'You already have a business listed under this category. Edit that listing instead of creating another.'
+          // The max-active-listings and 1-per-day triggers already raise a
+          // clean, resident-facing message — surface it instead of a generic one.
+          : error?.message,
+      });
     } finally {
       setIsSubmitting(false);
     }

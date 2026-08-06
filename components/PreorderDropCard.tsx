@@ -178,7 +178,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <TouchableOpacity style={styles.shareHeaderBtn} onPress={handleShare} hitSlop={8}>
-              <Ionicons name="share-outline" size={16} color={Verandah.accent} />
+              <Ionicons name="share-outline" size={16} color="#FFFFFF" />
               <Text style={styles.shareHeaderText}>Share</Text>
             </TouchableOpacity>
           </View>
@@ -279,19 +279,17 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   shareHeaderBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: VerandahRadius.pill,
-    borderWidth: 0.5,
-    borderColor: Verandah.border,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Verandah.accent,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
   shareHeaderText: {
     ...VerandahType.captionBold,
-    color: Verandah.accent,
+    color: '#FFFFFF',
     fontSize: 11,
   },
   manageBadgeBtn: {

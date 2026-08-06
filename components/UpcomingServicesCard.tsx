@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -11,8 +10,6 @@ import {
 } from '../lib/serviceCategories';
 import { supabase } from '../lib/supabase';
 import { UrgencyBadge } from './UrgencyBadge';
-
-const DISMISS_KEY = 'serviceReminderHomePromptDismissed';
 
 interface UpcomingService {
   id: string;
@@ -29,16 +26,9 @@ export function UpcomingServicesCard() {
   const [state, setState] = useState<'loading' | 'zero' | 'all-on-track' | 'has-due'>('loading');
   const [urgentServices, setUrgentServices] = useState<UpcomingService[]>([]);
   const [totalCount, setTotalCount] = useState(0);
-  const [dismissed, setDismissed] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
-
-    // Check dismissal first
-    const dismissedValue = await AsyncStorage.getItem(`${DISMISS_KEY}:${user.id}`);
-    if (dismissedValue === 'true') {
-      setDismissed(true);
-    }
 
     try {
       const { data, error } = await supabase.rpc('get_my_upcoming_services');
@@ -70,17 +60,9 @@ export function UpcomingServicesCard() {
     loadData();
   }, [loadData]);
 
-  const handleDismiss = async () => {
-    if (!user) return;
-    await AsyncStorage.setItem(`${DISMISS_KEY}:${user.id}`, 'true');
-    setDismissed(true);
-  };
-
-  // State: zero + dismissed → hide card entirely
   if (state === 'loading') return null;
-  if (state === 'zero' && dismissed) return null;
 
-  // State: zero services, not dismissed
+  // State: zero services
   if (state === 'zero') {
     return (
       <View style={styles.card}>
@@ -98,9 +80,6 @@ export function UpcomingServicesCard() {
             activeOpacity={0.85}
           >
             <Text style={styles.zeroCtaTextCompact}>Add service</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleDismiss} style={styles.dismissBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={styles.dismissText}>✕</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -177,8 +156,6 @@ const styles = StyleSheet.create({
   zeroContent: { flex: 1 },
   zeroTitle: { fontSize: 13, fontWeight: '500', color: Verandah.textPrimary },
   zeroBody: { fontSize: 11, color: Verandah.textSecondary, marginTop: 1 },
-  dismissBtn: { padding: 4, marginLeft: 2 },
-  dismissText: { color: Verandah.textMuted, fontSize: 14 },
   zeroCtaCompact: { borderRadius: VerandahRadius.sm, paddingVertical: 5, paddingHorizontal: 10, backgroundColor: Verandah.primary },
   zeroCtaTextCompact: { fontSize: 12, fontWeight: '500', color: Verandah.primaryFg },
   // All on track

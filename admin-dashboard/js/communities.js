@@ -4,7 +4,6 @@ const CommunitiesPage = {
   selectedCommunityId: null,
   residents: [],
   communityBlocks: [],
-  fundCollectors: [],
   communityFunds: [],
   searchTerm: '',
 
@@ -63,7 +62,7 @@ const CommunitiesPage = {
       (profileRows || []).forEach(p => {
         if (p.community_id && countsMap[p.community_id]) {
           countsMap[p.community_id].active++;
-          if (p.app_role === 'president' || p.app_role === 'vice_president' || p.app_role === 'community_lead') {
+          if (p.app_role === 'president' || p.app_role === 'vice_president') {
             countsMap[p.community_id].leads++;
           }
         }
@@ -162,100 +161,65 @@ const CommunitiesPage = {
         this.communityBlocks = [];
       }
 
-      // 3. Fetch collectors if funds are enabled
+      // 3. Fetch community funds via platform admin RPC. Each fund row
+      // already carries its own treasurers[] and collectors[] (fund-scoped),
+      // so no separate fund_roles query is needed.
+      // (This is a cross-community read that RLS blocks for direct table
+      // queries, since fund_roles/events are scoped to community members
+      // only. The RPC is SECURITY DEFINER and gated on is_platform_admin.)
       if (community.funds_enabled) {
-        const { data: eventsData } = await supabase
-          .from('events')
-          .select('id, title')
-          .eq('community_id', communityId);
-
-        const eventIds = (eventsData || []).map(e => e.id);
-        const eventTitleMap = new Map((eventsData || []).map(e => [e.id, e.title]));
-
-        if (eventIds.length > 0) {
-          const { data: collectorsData } = await supabase
-            .from('fund_roles')
-            .select('id, event_id, user_id, block_id')
-            .eq('role', 'collector')
-            .in('event_id', eventIds);
-
-          this.fundCollectors = (collectorsData || []).map(c => ({
-            id: c.id,
-            event_id: c.event_id,
-            user_id: c.user_id,
-            block_id: c.block_id,
-            fund_title: eventTitleMap.get(c.event_id) ?? null,
-          }));
-        } else {
-          this.fundCollectors = [];
-        }
-
-        // 4. Fetch community funds via platform admin RPC
-        const { data: fundsData } = await supabase.rpc('platform_get_community_funds', { p_community_id: communityId });
+        const { data: fundsData, error: fundsError } = await supabase.rpc('platform_get_community_funds', { p_community_id: communityId });
+        if (fundsError) throw fundsError;
         this.communityFunds = fundsData || [];
       } else {
-        this.fundCollectors = [];
         this.communityFunds = [];
       }
 
-      // 5. Fetch Pre-Order Food Drops & Statistics for Community directly
-      const { data: dropsData } = await supabase
-        .from('mcn_preorder_drops')
-        .select('*, profiles:created_by(full_name, flat_number), mcn_preorder_orders(id, total_amount, status)')
-        .eq('community_id', communityId)
-        .order('created_at', { ascending: false });
+      // 4. Fetch Pre-Order Food Drops & Statistics via platform admin RPC.
+      // (Direct mcn_preorder_orders reads are RLS-scoped to the buyer or
+      // drop host, so a platform admin querying the table directly always
+      // sees zero orders/revenue.)
+      const { data: dropsData, error: dropsError } = await supabase.rpc('platform_get_community_preorders', { p_community_id: communityId });
+      if (dropsError) throw dropsError;
 
-      this.communityPreorders = (dropsData || []).map(d => {
-        const hostProfile = this.residents.find(r => r.id === d.created_by) || d.profiles;
-        const creatorName = hostProfile?.full_name || 'Resident Host';
-        const creatorFlat = hostProfile?.flat_number || '';
-        const orders = d.mcn_preorder_orders || [];
-        const confirmedOrders = orders.filter(o => o.status !== 'cancelled');
-        const ordersCount = confirmedOrders.length;
-        const totalRevenue = confirmedOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+      this.communityPreorders = (dropsData || []).map(d => ({
+        drop_id: d.drop_id,
+        title: d.title,
+        description: d.description,
+        fulfillment_date: d.fulfillment_date,
+        fulfillment_time: d.fulfillment_time,
+        cutoff_at: d.cutoff_at,
+        status: d.status,
+        creator_name: d.creator_name || 'Resident Host',
+        creator_flat: d.creator_flat || '',
+        orders_count: Number(d.orders_count || 0),
+        total_revenue: Number(d.total_revenue || 0),
+        image_url: d.image_url,
+        created_at: d.created_at
+      }));
 
-        return {
-          drop_id: d.id,
-          title: d.title,
-          description: d.description,
-          fulfillment_date: d.fulfillment_date,
-          fulfillment_time: d.fulfillment_time,
-          cutoff_at: d.cutoff_at,
-          status: d.status,
-          creator_name: creatorName,
-          creator_flat: creatorFlat,
-          orders_count: ordersCount,
-          total_revenue: totalRevenue,
-          image_url: d.image_url,
-          created_at: d.created_at
-        };
-      });
+      // 5. Fetch Business Listings & Statistics via platform admin RPC.
+      // (mcn_listings is RLS-scoped to community members, so a direct
+      // table query returns nothing for a platform admin.)
+      const { data: bizData, error: bizError } = await supabase.rpc('platform_get_community_businesses', { p_community_id: communityId });
+      if (bizError) throw bizError;
 
-      // 6. Fetch Business Listings & Statistics for Community directly
-      const { data: bizData } = await supabase
-        .from('mcn_listings')
-        .select('*, profiles:owner_id(full_name, flat_number), mcn_business_categories(name, emoji)')
-        .eq('community_id', communityId)
-        .order('created_at', { ascending: false });
-
-      this.communityBusinesses = (bizData || []).map(b => {
-        const ownerProfile = this.residents.find(r => r.id === b.owner_id) || b.profiles;
-        return {
-          listing_id: b.id,
-          name: b.name,
-          description: b.description,
-          category_name: b.mcn_business_categories?.name || 'General',
-          category_emoji: b.mcn_business_categories?.emoji || '🏪',
-          owner_name: ownerProfile?.full_name || 'Resident Owner',
-          owner_flat: ownerProfile?.flat_number || '',
-          contact_phone: b.contact_phone,
-          is_active: b.is_active,
-          avg_rating: b.avg_rating || 0,
-          rating_count: b.rating_count || 0,
-          image_url: b.image_url,
-          created_at: b.created_at
-        };
-      });
+      this.communityBusinesses = (bizData || []).map(b => ({
+        listing_id: b.listing_id,
+        name: b.name,
+        description: b.description,
+        category_name: b.category_name || 'General',
+        category_emoji: b.category_emoji || '🏪',
+        owner_name: b.owner_name || 'Resident Owner',
+        owner_flat: b.owner_flat || '',
+        contact_phone: b.contact_phone,
+        is_active: b.is_active,
+        product_count: Number(b.product_count || 0),
+        avg_rating: Number(b.avg_rating || 0),
+        rating_count: Number(b.rating_count || 0),
+        image_url: b.image_url,
+        created_at: b.created_at
+      }));
 
       this.renderCommunityDetailView(community);
     } catch (err) {
@@ -273,7 +237,7 @@ const CommunitiesPage = {
     
     // Filter active residents and active leads
     const activeResidents = this.residents.filter(r => !r.removed_at);
-    const activeLeads = activeResidents.filter(r => r.app_role === 'president' || r.app_role === 'vice_president' || r.app_role === 'community_lead');
+    const activeLeads = activeResidents.filter(r => r.app_role === 'president' || r.app_role === 'vice_president');
     const nonLeadResidents = activeResidents.filter(r => r.app_role === 'resident');
 
     // Build Leads list display
@@ -318,28 +282,68 @@ const CommunitiesPage = {
       }
     }
 
-    // Build block in-charges list
+    // Build fund roles list, grouped per fund: treasurer(s) + block collectors.
     let collectorsHtml = '';
     if (community.funds_enabled) {
-      if (this.fundCollectors.length > 0) {
-        this.fundCollectors.forEach(fc => {
-          const resident = this.residents.find(r => r.id === fc.user_id);
-          const residentName = resident?.full_name ?? 'Resident';
-          const residentFlat = resident?.flat_number ? ` (Flat ${resident.flat_number})` : '';
-          const blockObj = this.communityBlocks.find(b => b.id === fc.block_id);
-          const blockName = blockObj ? blockObj.name : 'All Blocks';
+      if (this.communityFunds.length > 0) {
+        this.communityFunds.forEach(fund => {
+          const treasurers = fund.treasurers || [];
+          const collectors = fund.collectors || [];
+
+          const treasurersHtml = treasurers.length > 0
+            ? treasurers.map(t => `
+                <div style="padding: 4px 0; font-size: 0.85rem;">
+                  <strong>${t.full_name || 'Resident'}</strong>
+                  <span class="text-3" style="font-size: 0.8rem;"> · ${t.email || 'No email'}</span>
+                </div>
+              `).join('')
+            : '<div class="text-3" style="font-size: 0.85rem; padding: 4px 0;">No treasurer assigned.</div>';
+
+          const currentTreasurerIds = new Set(treasurers.map(t => t.user_id));
+          let treasurerReassignOptions = '<option value="">Select resident...</option>';
+          nonLeadResidents
+            .filter(r => !currentTreasurerIds.has(r.id))
+            .forEach(r => {
+              treasurerReassignOptions += `<option value="${r.id}">${r.full_name || 'Resident'} (${r.flat_number || 'No flat'})</option>`;
+            });
+
+          const collectorsListHtml = collectors.length > 0
+            ? collectors.map(c => {
+                const resident = this.residents.find(r => r.id === c.user_id);
+                const residentFlat = resident?.flat_number ? ` (Flat ${resident.flat_number})` : '';
+                return `
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
+                    <div style="font-size: 0.85rem;">
+                      <strong>${c.full_name || 'Resident'}${residentFlat}</strong>
+                      <span class="text-3" style="font-size: 0.8rem;"> · Block: ${c.block_name || 'All Blocks'}</span>
+                    </div>
+                    <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.75rem; color: var(--danger);" onclick="CommunitiesPage.removeBlockInCharge('${fund.id}', '${c.user_id}')">Remove</button>
+                  </div>
+                `;
+              }).join('')
+            : '<div class="text-3" style="font-size: 0.85rem; padding: 4px 0;">No collectors assigned.</div>';
+
           collectorsHtml += `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border);">
-              <div>
-                <strong>${residentName}${residentFlat}</strong><br>
-                <span class="text-3" style="font-size: 0.8rem;">Block: <strong>${blockName}</strong> · Fund: ${fc.fund_title || 'N/A'}</span>
+            <div style="padding: 10px 0; border-bottom: 1px solid var(--border);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="color: var(--primary); font-size: 0.9rem;">${fund.title}</strong>
+                ${fund.is_closed ? '<span class="badge-pill badge-rejected" style="font-size: 0.65rem; padding: 1px 6px;">Closed</span>' : '<span class="badge-pill badge-approved" style="font-size: 0.65rem; padding: 1px 6px;">Active</span>'}
               </div>
-              <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; color: var(--danger);" onclick="CommunitiesPage.removeBlockInCharge('${fc.event_id}', '${fc.user_id}')">Remove</button>
+              <div class="text-3" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.02em; margin-top: 4px;">Treasurer</div>
+              ${treasurersHtml}
+              <div style="display: flex; gap: 6px; margin-top: 4px;">
+                <select class="form-control" id="treasurer-select-${fund.id}" style="font-size: 0.8rem; padding: 4px 6px; flex: 1;">
+                  ${treasurerReassignOptions}
+                </select>
+                <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="CommunitiesPage.setFundTreasurer('${fund.id}')">${treasurers.length > 0 ? 'Replace' : 'Assign'}</button>
+              </div>
+              <div class="text-3" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.02em; margin-top: 6px;">Block Collectors</div>
+              ${collectorsListHtml}
             </div>
           `;
         });
       } else {
-        collectorsHtml = '<p class="text-3">No collectors assigned to blocks.</p>';
+        collectorsHtml = '<p class="text-3">No funds found.</p>';
       }
     }
 
@@ -415,7 +419,7 @@ const CommunitiesPage = {
     let activeBizCount = 0;
 
     if (businessesList.length === 0) {
-      businessesTableRows = '<tr><td colspan="5" class="text-3" style="text-align: center; padding: 16px;">No resident business listings created in this community yet.</td></tr>';
+      businessesTableRows = '<tr><td colspan="6" class="text-3" style="text-align: center; padding: 16px;">No resident business listings created in this community yet.</td></tr>';
     } else {
       businessesList.forEach(biz => {
         if (biz.is_active) activeBizCount++;
@@ -438,6 +442,7 @@ const CommunitiesPage = {
               ${biz.contact_phone || 'N/A'}
               ${waLink ? `<a href="${waLink}" target="_blank" style="margin-left: 6px; text-decoration: none;" title="Chat on WhatsApp">💬</a>` : ''}
             </td>
+            <td>${biz.product_count || 0}</td>
             <td>⭐ ${Number(biz.avg_rating || 0).toFixed(1)} (${biz.rating_count || 0})</td>
             <td>${statusBadge}</td>
           </tr>
@@ -466,9 +471,8 @@ const CommunitiesPage = {
           ? '<span class="badge-pill badge-rejected">Removed</span>'
           : '<span class="badge-pill badge-approved">Active</span>';
           
-        const roleDisplay = r.app_role === 'president' ? 'President' 
-          : r.app_role === 'vice_president' ? 'Vice President' 
-          : r.app_role === 'community_lead' ? 'Community Lead'
+        const roleDisplay = r.app_role === 'president' ? 'President'
+          : r.app_role === 'vice_president' ? 'Vice President'
           : 'Resident';
 
         residentsTableRows += `
@@ -604,11 +608,12 @@ const CommunitiesPage = {
             ` : `<p class="text-3">Turn on blocks/towers to manage collection scopes.</p>`}
           </div>
 
-          <!-- Block In-Charges -->
+          <!-- Fund Roles (Treasurers & Block In-Charges), grouped per fund -->
           ${community.funds_enabled ? `
             <div class="section-card" style="margin-bottom: 0;">
-              <h2>Block In-Charges (Fund Collectors)</h2>
-              <div style="margin-top: 12px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; background: var(--surface);">
+              <h2>Fund Roles</h2>
+              <p class="text-3" style="font-size: 0.8rem; margin-top: 4px; margin-bottom: 4px;">Treasurer and block in-charges (collectors) for each fund.</p>
+              <div style="margin-top: 8px; max-height: 320px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; background: var(--surface);">
                 ${collectorsHtml}
               </div>
             </div>
@@ -667,6 +672,7 @@ const CommunitiesPage = {
                     <th>Business Name & Owner</th>
                     <th>Category</th>
                     <th>Contact Phone</th>
+                    <th>Products</th>
                     <th>Rating</th>
                     <th>Status</th>
                   </tr>
@@ -808,7 +814,7 @@ const CommunitiesPage = {
   },
 
   async demoteLead(residentId) {
-    const activeLeads = this.residents.filter(r => !r.removed_at && (r.app_role === 'president' || r.app_role === 'vice_president' || r.app_role === 'community_lead'));
+    const activeLeads = this.residents.filter(r => !r.removed_at && (r.app_role === 'president' || r.app_role === 'vice_president'));
     if (activeLeads.length <= 1) {
       alert('Cannot remove the only community lead in this community.');
       return;
@@ -844,12 +850,33 @@ const CommunitiesPage = {
     }
   },
 
+  async setFundTreasurer(eventId) {
+    const select = document.getElementById(`treasurer-select-${eventId}`);
+    const residentId = select?.value;
+    if (!residentId) {
+      alert('Please select a resident to assign as treasurer');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.rpc('platform_set_fund_treasurer', {
+        p_event_id: eventId,
+        p_target_user_id: residentId
+      });
+      if (error) throw error;
+      await this.load();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to set treasurer: ' + err.message);
+    }
+  },
+
   async confirmRemoveResident(residentId) {
     const resident = this.residents.find(r => r.id === residentId);
     if (!resident) return;
 
-    const leadCount = this.residents.filter(r => !r.removed_at && (r.app_role === 'president' || r.app_role === 'vice_president' || r.app_role === 'community_lead')).length;
-    const isLead = resident.app_role === 'president' || resident.app_role === 'vice_president' || resident.app_role === 'community_lead';
+    const leadCount = this.residents.filter(r => !r.removed_at && (r.app_role === 'president' || r.app_role === 'vice_president')).length;
+    const isLead = resident.app_role === 'president' || resident.app_role === 'vice_president';
     
     if (isLead && leadCount <= 1) {
       alert('Cannot remove the last community lead from the community.');
@@ -938,9 +965,8 @@ const CommunitiesPage = {
 
       title.textContent = data.full_name || 'Resident Profile';
 
-      const roleDisplay = data.app_role === 'president' ? 'President' 
-        : data.app_role === 'vice_president' ? 'Vice President' 
-        : data.app_role === 'community_lead' ? 'Community Lead'
+      const roleDisplay = data.app_role === 'president' ? 'President'
+        : data.app_role === 'vice_president' ? 'Vice President'
         : 'Resident';
 
       const statusHtml = data.removed_at 

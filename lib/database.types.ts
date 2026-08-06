@@ -1082,6 +1082,57 @@ export type Database = {
           },
         ]
       }
+      mcn_listing_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          listing_id: string
+          reason: string
+          reported_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          listing_id: string
+          reason: string
+          reported_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          listing_id?: string
+          reason?: string
+          reported_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_listing_reports_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_listing_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mcn_listings: {
         Row: {
           category_id: string | null
@@ -1089,6 +1140,7 @@ export type Database = {
           contact_phone: string | null
           created_at: string
           description: string | null
+          flagged_for_review_at: string | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -1102,6 +1154,7 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
+          flagged_for_review_at?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -1115,6 +1168,7 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
+          flagged_for_review_at?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -1256,6 +1310,7 @@ export type Database = {
           grade_class: string
           id: string
           institution_type: string
+          intents: string[]
           notes: string | null
           parent_name: string
           school_name: string
@@ -1272,6 +1327,7 @@ export type Database = {
           grade_class: string
           id?: string
           institution_type?: string
+          intents?: string[]
           notes?: string | null
           parent_name: string
           school_name: string
@@ -1288,6 +1344,7 @@ export type Database = {
           grade_class?: string
           id?: string
           institution_type?: string
+          intents?: string[]
           notes?: string | null
           parent_name?: string
           school_name?: string
@@ -2659,6 +2716,21 @@ export type Database = {
           remaining_capacity: number
         }[]
       }
+      check_mcn_drop_item_quantity_capacity: {
+        Args: {
+          p_existing_order_id?: string
+          p_item_id: string
+          p_requested_qty: number
+        }
+        Returns: {
+          can_place: boolean
+          current_quantity: number
+          effective_current_quantity: number
+          max_quantity: number
+          projected_quantity: number
+          remaining_capacity: number
+        }[]
+      }
       community_lead_remove_resident: {
         Args: { p_reason?: string; p_target_profile_id: string }
         Returns: undefined
@@ -2734,6 +2806,15 @@ export type Database = {
           rejection_reason: string
           request_id: string
           status: string
+        }[]
+      }
+      get_mcn_drop_item_availability: {
+        Args: { p_drop_id: string }
+        Returns: {
+          item_id: string
+          max_quantity: number
+          remaining_quantity: number
+          sold_quantity: number
         }[]
       }
       get_my_block_id: { Args: never; Returns: string }
@@ -3196,6 +3277,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_set_fund_treasurer: {
+        Args: { p_event_id: string; p_target_user_id: string }
+        Returns: undefined
+      }
       platform_soft_remove_resident: {
         Args: { p_reason?: string; p_target_profile_id: string }
         Returns: undefined
@@ -3365,13 +3450,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role_type:
-        | "admin"
-        | "community_admin"
-        | "resident"
-        | "community_lead"
-        | "president"
-        | "vice_president"
+      app_role_type: "admin" | "resident" | "president" | "vice_president"
       approval_status_type: "pending" | "approved" | "rejected"
       community_request_status_type:
         | "pending"
@@ -3505,14 +3584,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role_type: [
-        "admin",
-        "community_admin",
-        "resident",
-        "community_lead",
-        "president",
-        "vice_president",
-      ],
+      app_role_type: ["admin", "resident", "president", "vice_president"],
       approval_status_type: ["pending", "approved", "rejected"],
       community_request_status_type: [
         "pending",

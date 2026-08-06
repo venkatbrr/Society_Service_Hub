@@ -33,8 +33,9 @@ import {
     formatRoleForFundContext,
     getEffectiveFundRole,
     getFundPermissions,
-    getRestrictionHint,
+    getRoleAccessSummary,
 } from '../../lib/fundRoles';
+import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
@@ -119,7 +120,7 @@ export default function FundDetailScreen() {
         text1: 'Error',
         text2: isMissingFundSchemaError(error) ? getMissingFundSchemaMessage() : 'Fund not found',
       });
-      router.back();
+      goBackSmart(router, `/funds/${id as string}`);
     } finally {
       setLoading(false);
     }
@@ -240,13 +241,7 @@ export default function FundDetailScreen() {
     treasurers: treasurers.map((assignment) => profileNames.get(assignment.user_id) ?? 'Resident').join(', '),
     collectors: collectors.map((assignment) => profileNames.get(assignment.user_id) ?? 'Resident').join(', '),
   };
-  const addContributionHint =
-    fundRole === 'resident'
-      ? 'Only collectors and treasurers can add contributions.'
-      : 'You can record a contribution and mark a resident as paid.';
-  const addExpenseHint = permissions.canAddExpense
-    ? 'Only treasurers should record expenses so the audit trail stays clean.'
-    : 'Only treasurers can add expenses.';
+  const roleAccessSummary = getRoleAccessSummary(fundRole);
 
   const handleAssignRole = async (targetUserId: string, role: Tables<'fund_roles'>['role']) => {
     if (!user?.id) {
@@ -406,7 +401,7 @@ export default function FundDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={[styles.header, { backgroundColor: colors.background }]}>
           <View style={styles.headerRow}>
-            <HeaderBackButton onPress={() => router.back()} color={Verandah.primary} style={styles.iconButton} />
+            <HeaderBackButton onPress={() => goBackSmart(router, `/funds/${fund.id}`)} color={Verandah.primary} style={styles.iconButton} />
             <View style={styles.headerTextContainer}>
               <Text style={styles.fundTitle}>{fund.title}</Text>
               <Text style={styles.headerLabel}>Fund Transparency</Text>
@@ -447,7 +442,7 @@ export default function FundDetailScreen() {
           )}
 
           <View style={styles.roleSummaryCard}>
-            <Text style={styles.roleSummaryTitle}>You are a {formatRoleForFundContext(fundRole)}</Text>
+            <Text style={styles.roleSummaryTitle}>You are a {formatRoleForFundContext(fundRole, undefined, appRole)}</Text>
             <Text style={styles.roleSummaryText}>Treasurers: {roleSummary.treasurers || 'Not assigned yet'}</Text>
             <Text style={styles.roleSummaryText}>Collectors: {roleSummary.collectors || 'None assigned'}</Text>
           </View>
@@ -475,9 +470,7 @@ export default function FundDetailScreen() {
             <Text style={[styles.accessTitle, { color: colors.text }]}>Role Access</Text>
             <Text style={styles.accessIcon}>{APP_EMOJIS.admin}</Text>
           </View>
-          <Text style={[styles.accessText, { color: colors.textMuted }]}>{getRestrictionHint(fundRole)}</Text>
-          <Text style={[styles.accessText, { color: colors.textMuted }]}>{addContributionHint}</Text>
-          <Text style={[styles.accessText, { color: colors.textMuted }]}>{addExpenseHint}</Text>
+          <Text style={[styles.accessText, { color: colors.textMuted }]}>{roleAccessSummary}</Text>
         </View>
 
         <View style={styles.actionsCard}>

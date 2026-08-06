@@ -56,7 +56,7 @@ Your mission: keep documentation accurate against the **code**, not against othe
 ## Current repo facts (verify before trusting — these drift)
 
 - **5 tabs**: Help, Saved, MCN, Community, Profile
-- **Roles**: `admin` · `president` / `vice_president` (both → `isCommunityLead`) · `resident`. `community_lead` and `community_admin` remain in the enum only because Postgres cannot drop enum values.
+- **Roles**: `admin` · `president` / `vice_president` (both → `isCommunityLead`) · `resident`. That is the complete enum — `community_lead` and `community_admin` were dropped from it on 2026-08-22.
 - **MCN modules**: business listings, pre-order food drops, carpools, parent corner, schools catalog + parent report cards, borrow-and-share posts, my orders
 - **MCN tables**: `mcn_listings`, `mcn_products`, `mcn_orders`, `mcn_order_items`, `mcn_business_categories`, `mcn_preorder_drops`, `mcn_preorder_items`, `mcn_preorder_orders`, `mcn_preorder_order_items`, `mcn_carpools`, `mcn_carpool_requests`, `mcn_parent_corner`, `mcn_posts`, `schools`, `school_reviews`
 - **SOS tables**: `blood_donors`, `emergency_contacts`

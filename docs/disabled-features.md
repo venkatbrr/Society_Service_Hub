@@ -39,7 +39,7 @@ Behavior that is intentionally off, cut, or postponed. If a feature seems missin
 
 - **Status**: Removed
 - **Details**: The old `community_admin_requests` flow and its approval RPCs are gone. Community leadership is now granted through funds-access approval, which promotes a designated resident to `president`.
-- **Residue**: `community_admin` and `community_lead` remain in the `app_role_type` enum because Postgres cannot drop enum values. No live code assigns them; all rows were migrated to `president` in `20260616000001_migrate_roles_and_functions.sql`.
+- **Residue**: none. All rows were migrated to `president` in `20260616000001_migrate_roles_and_functions.sql`, and the `community_admin`/`community_lead` values were physically removed from the `app_role_type` enum on 2026-08-22 by `20260822000200_drop_legacy_app_role_enum_values.sql` (type swap, since Postgres has no `ALTER TYPE … DROP VALUE`). The enum is now exactly `admin · resident · president · vice_president`.
 
 ### 5. Community pulse line on the Community tab
 

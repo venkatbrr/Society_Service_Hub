@@ -32,10 +32,11 @@ admin-dashboard/
 
 | Role | Rule |
 |------|------|
-| `admin` | Platform admin. **Must have `profiles.community_id = NULL`.** |
+| `admin` | Platform admin. **Must have `profiles.community_id = NULL`.** Ultimate powers across every community — everything a president/VP can do and more. |
 | `president` / `vice_president` | Community leads. Identical powers; the distinction is presentational. |
 | `resident` | Default member |
-| `community_lead`, `community_admin` | **Legacy.** Migrated to `president` in `20260616000001`. Console code still renders them defensively for historical rows, but nothing assigns them. |
+
+These four are the complete enum. `community_lead` and `community_admin` were physically dropped from `app_role_type` on 2026-08-22 (`20260822000200`); the console no longer renders them.
 
 Notes:
 

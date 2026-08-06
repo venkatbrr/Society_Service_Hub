@@ -53,7 +53,8 @@ export default function NetworkScreen() {
             .from('mcn_preorder_drops')
             .select('id', { count: 'exact', head: true })
             .eq('community_id', communityId)
-            .eq('status', 'open'),
+            .eq('status', 'open')
+            .gt('cutoff_at', new Date().toISOString()),
           supabase
             .from('mcn_carpools')
             .select('id', { count: 'exact', head: true })

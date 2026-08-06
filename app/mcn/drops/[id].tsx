@@ -80,6 +80,10 @@ export default function PreorderDropDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [itemAvailability, setItemAvailability] = useState<
+    Record<string, { remaining: number | null; sold: number }>
+  >({});
+  const [editingOriginalQuantities, setEditingOriginalQuantities] = useState<Record<string, number>>({});
 
   const fetchDropDetails = useCallback(async () => {
     if (!dropId) return;
@@ -139,6 +143,19 @@ export default function PreorderDropDetailScreen() {
       });
       setItems(Array.from(uniqueItemsMap.values()));
 
+      // 2b. Fetch shared capacity already sold per item (across every buyer)
+      const { data: availabilityData } = await supabase.rpc('get_mcn_drop_item_availability', {
+        p_drop_id: dropId,
+      });
+      const availabilityMap: Record<string, { remaining: number | null; sold: number }> = {};
+      (availabilityData || []).forEach((row: any) => {
+        availabilityMap[row.item_id] = {
+          remaining: row.remaining_quantity === null ? null : Number(row.remaining_quantity),
+          sold: Number(row.sold_quantity || 0),
+        };
+      });
+      setItemAvailability(availabilityMap);
+
       // 3. Fetch all existing orders for this drop by current user
       if (user?.id) {
         const { data: ordersData, error: ordersErr } = await supabase
@@ -183,19 +200,35 @@ export default function PreorderDropDetailScreen() {
     }
   }, [profile]);
 
+  // max_quantity is a cap shared across every buyer's orders, not a per-order
+  // allowance — so "how many more can this buyer add" must account for what
+  // has already been sold to everyone else (see get_mcn_drop_item_availability).
+  const getEffectiveRemaining = useCallback(
+    (itemId: string): number | null => {
+      const avail = itemAvailability[itemId];
+      if (!avail || avail.remaining === null) return null;
+      const selfPrior = editingOrderId ? editingOriginalQuantities[itemId] || 0 : 0;
+      return avail.remaining + selfPrior;
+    },
+    [itemAvailability, editingOrderId, editingOriginalQuantities]
+  );
+
   const handleQtyChange = (itemId: string, delta: number) => {
-    const item = items.find((i) => i.id === itemId);
-    const maxQty = item?.max_quantity;
+    const remaining = getEffectiveRemaining(itemId);
 
     setQuantities((prev) => {
       const current = prev[itemId] || 0;
       let updated = Math.max(0, current + delta);
-      
-      if (maxQty !== undefined && maxQty !== null && updated > maxQty) {
-        updated = maxQty;
-        Toast.show({ type: 'info', text1: 'Maximum item capacity reached' });
+
+      if (remaining !== null && updated > remaining) {
+        updated = remaining;
+        Toast.show({
+          type: 'info',
+          text1: 'Shared capacity reached',
+          text2: 'This item is capped across all residents’ orders, not just yours.',
+        });
       }
-      
+
       return { ...prev, [itemId]: updated };
     });
   };
@@ -211,6 +244,7 @@ export default function PreorderDropDetailScreen() {
       qMap[row.item_id] = row.quantity;
     });
     setQuantities(qMap);
+    setEditingOriginalQuantities(qMap);
     if (order.buyer_name) setBuyerName(order.buyer_name);
     if (order.buyer_phone) setBuyerPhone(order.buyer_phone);
     if (order.flat_number) setFlatNumber(order.flat_number);
@@ -221,6 +255,7 @@ export default function PreorderDropDetailScreen() {
   const handleCancelEdit = () => {
     setEditingOrderId(null);
     setQuantities({});
+    setEditingOriginalQuantities({});
     if (profile) {
       if (profile.full_name) setBuyerName(profile.full_name);
       if (profile.flat_number) setFlatNumber(profile.flat_number);
@@ -304,6 +339,36 @@ export default function PreorderDropDetailScreen() {
           type: 'error',
           text1: 'Item limit reached',
           text2: `This drop is capped at ${maxItems} total items. Remaining capacity: ${remaining}.`,
+        });
+        return;
+      }
+    }
+
+    // Per-item shared capacity — max_quantity is a total across every buyer's
+    // orders, so re-validate against the live server total right before saving.
+    for (const item of selectedItems) {
+      if (item.max_quantity === undefined || item.max_quantity === null) continue;
+
+      const { data: itemCapacityData, error: itemCapacityErr } = await supabase.rpc(
+        'check_mcn_drop_item_quantity_capacity',
+        {
+          p_item_id: item.id,
+          p_requested_qty: quantities[item.id] || 0,
+          p_existing_order_id: editingOrderId || null,
+        }
+      );
+
+      if (itemCapacityErr) {
+        Toast.show({ type: 'error', text1: 'Could not validate item capacity' });
+        return;
+      }
+
+      const itemCapacity = Array.isArray(itemCapacityData) ? itemCapacityData[0] : itemCapacityData;
+      if (itemCapacity && !itemCapacity.can_place) {
+        Toast.show({
+          type: 'error',
+          text1: `${item.name} — capacity reached`,
+          text2: `Only ${Number(itemCapacity.remaining_capacity || 0)} left of ${item.max_quantity} total, shared across all residents.`,
         });
         return;
       }
@@ -406,6 +471,7 @@ export default function PreorderDropDetailScreen() {
 
       setEditingOrderId(null);
       setQuantities({});
+      setEditingOriginalQuantities({});
       setBuyerNote('');
       fetchDropDetails();
     } catch (err: any) {
@@ -434,6 +500,7 @@ export default function PreorderDropDetailScreen() {
         if (editingOrderId === targetOrderId) {
           setEditingOrderId(null);
           setQuantities({});
+          setEditingOriginalQuantities({});
         }
         fetchDropDetails();
       } catch (err) {
@@ -529,10 +596,14 @@ export default function PreorderDropDetailScreen() {
 
   const handleShareDrop = async () => {
     if (!drop) return;
+    // Route the share link through the OG-preview endpoint (see api/share-drop.ts)
+    // so WhatsApp/Facebook/etc. crawlers can fetch this drop's title, description,
+    // and photo and render a real link-preview card — a bare app URL has no
+    // server-rendered meta tags for them to read.
     const shareUrl =
       Platform.OS === 'web' && typeof window !== 'undefined'
-        ? `${window.location.origin}/mcn/drops?id=${drop.id}`
-        : `https://society-service-hub.app/mcn/drops?id=${drop.id}`;
+        ? `${window.location.origin}/api/share-drop?id=${drop.id}`
+        : `https://society-service-hub.app/api/share-drop?id=${drop.id}`;
 
     const messageLines = [
       `🍲 *Food Drop: ${drop.title}*`,
@@ -540,15 +611,10 @@ export default function PreorderDropDetailScreen() {
       ``,
       `📅 Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
       `⏰ Pre-Orders Close: ${cutoffFormatted}`,
+      ``,
+      `🔗 View Menu & Place Pre-Order:`,
+      shareUrl,
     ];
-
-    if (drop.image_url) {
-      messageLines.push(`🖼️ Photo: ${drop.image_url}`);
-    }
-
-    messageLines.push(``);
-    messageLines.push(`🔗 View Menu & Place Pre-Order:`);
-    messageLines.push(shareUrl);
 
     const message = messageLines.join('\n');
 
@@ -580,28 +646,17 @@ export default function PreorderDropDetailScreen() {
         options={buildMcnHeaderOptions({
           title: drop.title,
           onBack: handleBack,
-          headerRight: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <TouchableOpacity onPress={handleShareDrop} style={{ padding: 4 }} hitSlop={8}>
-                <Ionicons name="share-outline" size={22} color={colors.accent} />
-              </TouchableOpacity>
-
-              {canManageDrop ? (
-                <>
-                  <TouchableOpacity
-                    onPress={() => router.push(`/mcn/drops/manage/${drop.id}` as any)}
-                  >
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: colors.accent }}>
-                      Dashboard
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={handleDeleteDrop} style={{ padding: 4 }} hitSlop={8}>
-                    <Ionicons name="trash-outline" size={20} color={colors.danger} />
-                  </TouchableOpacity>
-                </>
-              ) : null}
-            </View>
-          ),
+          headerRight: canManageDrop && !isCreator
+            ? () => (
+                <TouchableOpacity
+                  onPress={() => router.push(`/mcn/drops/manage/${drop.id}` as any)}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.accent }}>
+                    Dashboard
+                  </Text>
+                </TouchableOpacity>
+              )
+            : undefined,
         })}
       />
 
@@ -626,6 +681,10 @@ export default function PreorderDropDetailScreen() {
               Hosted by {hostName} {hostFlat ? `(${hostFlat})` : ''}
             </Text>
           </View>
+          <TouchableOpacity style={styles.shareBtn} onPress={handleShareDrop} activeOpacity={0.8}>
+            <Ionicons name="share-social-outline" size={15} color="#FFFFFF" />
+            <Text style={styles.shareBtnText}>Share</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Schedule & Cut-off Banner */}
@@ -816,6 +875,16 @@ export default function PreorderDropDetailScreen() {
                   <Rupees amount={item.price} size="sm" />
                   <Text style={styles.itemUnit}> / {item.unit}</Text>
                 </View>
+                {item.max_quantity != null ? (
+                  <Text style={styles.itemCapText}>
+                    {(() => {
+                      const remaining = getEffectiveRemaining(item.id);
+                      return remaining !== null
+                        ? `${remaining} of ${item.max_quantity} left — shared across all orders`
+                        : `Limited to ${item.max_quantity} total, shared across all orders`;
+                    })()}
+                  </Text>
+                ) : null}
               </View>
 
               {/* Quantity Counter (Only for residents, not the host) */}
@@ -840,6 +909,17 @@ export default function PreorderDropDetailScreen() {
             </View>
           );
         })}
+
+        {canManageDrop ? (
+          <TouchableOpacity
+            style={styles.hostDeleteBtn}
+            onPress={handleDeleteDrop}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="trash-outline" size={13} color={colors.danger} />
+            <Text style={styles.hostDeleteBtnText}>Delete Drop</Text>
+          </TouchableOpacity>
+        ) : null}
 
         {/* Resident Order Form (if open and not creator) */}
         {isOpen && !isCreator && user?.id ? (
@@ -1012,6 +1092,20 @@ const styles = StyleSheet.create({
   hostSub: {
     fontSize: 11,
     color: Verandah.textSecondary,
+  },
+  shareBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Verandah.accent,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: VerandahRadius.pill,
+  },
+  shareBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   statusBanner: {
     flexDirection: 'row',
@@ -1293,6 +1387,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Verandah.textSecondary,
   },
+  itemCapText: {
+    fontSize: 10,
+    color: Verandah.caution,
+    marginTop: 2,
+  },
   counterRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1442,6 +1541,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  hostDeleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0.5,
+    borderColor: Verandah.danger,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: VerandahRadius.pill,
+  },
+  hostDeleteBtnText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Verandah.danger,
   },
   submitBtn: {
     backgroundColor: Verandah.accent,

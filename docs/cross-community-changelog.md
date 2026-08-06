@@ -6,6 +6,24 @@
 
 ---
 
+## 2026-08-22 — `request_community_partnership` notified nobody (dead role literal)
+
+**Migrations:** `supabase/migrations/20260822000000_repoint_dead_community_lead_checks.sql`, `supabase/migrations/20260822000200_drop_legacy_app_role_enum_values.sql`
+
+**Federation object touched:** `request_community_partnership` RPC.
+
+**Bug:** the RPC's closing `INSERT INTO notifications … SELECT … WHERE p.app_role = 'community_lead'::app_role_type` still targeted the legacy role value. Since `20260616000001` migrated every such row to `president`, that predicate matched zero rows — so **`partnership_request` notifications were silently delivered to nobody**. The RPC's own entry guard (`is_community_lead(auth.uid())`) was already correct, so callers saw success and a partnership row was created; only the notification fan-out was dead.
+
+**Fix:** recipient selection now targets `president` / `vice_president` and additionally filters `removed_at IS NULL` (the old predicate did not, so a removed lead could have been notified). No signature, argument, or return change; no schema change to any federation table.
+
+**Enum change:** `community_lead` and `community_admin` were physically removed from `app_role_type` (type swap — Postgres has no `ALTER TYPE … DROP VALUE`). The enum is now exactly `admin · resident · president · vice_president`. Federation objects referencing the type in function bodies re-resolve at runtime and were unaffected; no federation table has a column of this type.
+
+**Backfill / coordination:** none required. Zero rows held either legacy value at migration time. `partnership_request` notifications missed while the predicate was dead are not recoverable, but no UI calls this RPC yet (federation remains backend-only), so no user-visible notification was actually lost.
+
+**Docs touched:** `docs/architecture.md` (role enum, helper list, uniform MCN rule), `docs/CLAUDE.md` (non-negotiable #2, MCN delete rule, traps table), `docs/platform-admin.md` (role table), `docs/disabled-features.md` (residue note), root `CLAUDE.md`, this changelog.
+
+---
+
 ## 2026-05-07 — Phase 0: Backend Foundation (no UI)
 
 **Migration:** `supabase/migrations/20260507000000_cross_community_foundation.sql`

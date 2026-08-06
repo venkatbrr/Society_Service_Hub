@@ -60,12 +60,23 @@ export function isBlockScopedAssignment(assignment: FundRoleAssignmentLike) {
   return assignment?.role === 'collector' && !!assignment?.block_id;
 }
 
-export function formatRoleForFundContext(role: FundAccessRole | AssignmentRole, assignment?: FundRoleAssignmentLike) {
+export function formatRoleForFundContext(
+  role: FundAccessRole | AssignmentRole,
+  assignment?: FundRoleAssignmentLike,
+  appRole?: AppRole | null
+) {
   if (!role) {
     return 'Resident';
   }
 
   if (role === 'admin') {
+    // Three app roles collapse into the 'admin' fund capacity (see
+    // getEffectiveFundRole). Show the person's actual role rather than a
+    // fourth invented label — what they can do is already spelled out by
+    // getRoleAccessSummary right below it in the UI.
+    if (appRole === 'president') return 'President';
+    if (appRole === 'vice_president') return 'Vice President';
+    if (appRole === 'admin') return 'Platform admin';
     return 'Fund admin';
   }
 
@@ -80,18 +91,19 @@ export function formatRoleForFundContext(role: FundAccessRole | AssignmentRole, 
   return 'Resident';
 }
 
-export function getRestrictionHint(role: FundAccessRole) {
+/** One short, plain-language line describing what the caller can do with this fund. */
+export function getRoleAccessSummary(role: FundAccessRole) {
   if (role === 'collector') {
-    return 'Collectors can add contributions, but only the treasurer can add expenses.';
+    return 'You can add contributions. Only the treasurer adds expenses.';
   }
 
   if (role === 'resident') {
-    return 'Residents can view every entry, while collectors add contributions and the treasurer handles expenses.';
+    return 'View only — the treasurer and collectors manage this fund.';
   }
 
   if (role === 'admin') {
-    return 'Admins can create funds, assign 1 treasurer per fund, and log every transaction.';
+    return 'Full access — contributions, expenses, and role management.';
   }
 
-  return 'Treasurers can manage collectors, contributions, and expenses for this fund.';
+  return 'You can add contributions, add expenses, and manage collectors.';
 }

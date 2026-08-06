@@ -22,7 +22,8 @@ Society Service Hub — a multi-tenant community app for gated residential socie
 
 ## Critical facts that are easy to get wrong
 
-- **`app_role === 'community_lead'` is dead.** That value was migrated to `president` on 2026-06-16. Use `isCommunityLead` from `useAuth()`, or `public.is_community_lead(auth.uid())` in SQL. `president` and `vice_president` have identical powers.
+- **`community_lead` / `community_admin` no longer exist.** Rows were migrated to `president` on 2026-06-16 and the values were dropped from the `app_role_type` enum on 2026-08-22. The enum is exactly `admin · resident · president · vice_president`. Use `isCommunityLead` from `useAuth()`, or `public.is_community_lead(auth.uid())` in SQL. `president` and `vice_president` have identical powers.
+- **`public.is_admin()` is NOT a platform-admin check** — it is only an alias for `is_community_lead()`. For the platform-admin override (ultimate powers across all communities) use `public.is_platform_admin(auth.uid())`.
 - **Scope community queries by `communityId`** from `useAuth()`. Exceptions (user-scoped, never community-filtered): `user_services`, `user_service_history`, `hire_feedback`, `provider_public_rating_nudges`, `provider_personal_notes`, `favorites`.
 - **`npx tsc --noEmit` is the only validation gate** — there is no test framework and no lint script.
 - **`lib/database.types.ts` is generated.** Never hand-edit it.

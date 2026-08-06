@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { ActivityIndicator, LogBox, Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
+import { GlobalBottomNav } from '../components/GlobalBottomNav';
 import { WebDesktopFrame } from '../components/WebDesktopFrame';
 import { Verandah } from '../constants/Colors';
 import { AuthProvider, useAuth } from '../context/AuthContext';
@@ -186,13 +187,16 @@ function RootLayoutNav() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: Verandah.surface },
-        animation: 'slide_from_right',
-      }}
-    />
+    <View style={{ flex: 1 }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: Verandah.surface },
+          animation: 'slide_from_right',
+        }}
+      />
+      <GlobalBottomNav />
+    </View>
   );
 }
 
