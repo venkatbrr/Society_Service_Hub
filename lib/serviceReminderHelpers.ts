@@ -81,3 +81,20 @@ export const serializeNotesAndImages = (
   const combined = [cleanNotes, tags].filter(Boolean).join('\n');
   return combined || null;
 };
+
+/**
+ * Converts image drafts into a clean array of up to 3 valid ReminderImage objects for the jsonb column.
+ */
+export const toImagesJson = (drafts: ReminderImageDraft[]): ReminderImage[] => {
+  return drafts
+    .filter(
+      (item): item is ReminderImageDraft & { url: string } =>
+        !!item.url && item.title.trim().length > 0
+    )
+    .slice(0, 3)
+    .map((item) => ({
+      title: item.title.trim(),
+      url: item.url.trim(),
+    }));
+};
+

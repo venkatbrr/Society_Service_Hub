@@ -1,20 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
-import { goBackSmart } from '../../../lib/navigation';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../../components/BaseCard';
 import { EmptyState } from '../../../components/EmptyState';
+import { Rupees } from '../../../components/Rupees';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../../components/WebPullIndicator';
 import { Verandah } from '../../../constants/Colors';
@@ -22,6 +23,7 @@ import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants
 import { useAuth } from '../../../context/AuthContext';
 import { Tables } from '../../../lib/database.types';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
+import { goBackSmart } from '../../../lib/navigation';
 import { supabase } from '../../../lib/supabase';
 
 type Carpool = Tables<'mcn_carpools'> & {
@@ -30,6 +32,7 @@ type Carpool = Tables<'mcn_carpools'> & {
     flat_number: string | null;
     phone_number: string | null;
   } | null;
+  is_joined?: boolean;
 };
 
 type FilterTab = 'all' | 'offering' | 'seeking' | 'my';
@@ -41,48 +44,111 @@ export default function CarpoolListScreen() {
 
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [carpools, setCarpools] = useState<Carpool[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Debounce search input by 300ms per CLAUDE.md conventions
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery.trim().toLowerCase());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   const fetchCarpools = useCallback(
     async (isRefresh = false) => {
       if (!communityId) return;
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
+      setLoadError(null);
 
       try {
-        let query = supabase
-          .from('mcn_carpools')
-          .select(`
-            *,
-            creator_profile:profiles!mcn_carpools_created_by_fkey (
-              full_name,
-              flat_number,
-              phone_number
-            )
-          `)
-          .eq('community_id', communityId)
-          .order('created_at', { ascending: false });
+        if (activeTab === 'my' && user) {
+          // Fetch rides created by user OR joined by user
+          const [createdRes, reqRes] = await Promise.all([
+            supabase
+              .from('mcn_carpools')
+              .select(`
+                *,
+                creator_profile:profiles!mcn_carpools_created_by_fkey (
+                  full_name,
+                  flat_number,
+                  phone_number
+                )
+              `)
+              .eq('community_id', communityId)
+              .eq('created_by', user.id)
+              .order('created_at', { ascending: false }),
+            supabase
+              .from('mcn_carpool_requests')
+              .select('carpool_id, status')
+              .eq('rider_id', user.id)
+              .in('status', ['pending', 'accepted']),
+          ]);
 
-        if (activeTab === 'offering') {
-          query = query.eq('role_type', 'offering').eq('status', 'active');
-        } else if (activeTab === 'seeking') {
-          query = query.eq('role_type', 'seeking').eq('status', 'active');
-        } else if (activeTab === 'my') {
-          if (user) {
-            query = query.eq('created_by', user.id);
+          if (createdRes.error) throw createdRes.error;
+          if (reqRes.error) throw reqRes.error;
+
+          const createdRides = (createdRes.data as Carpool[]) || [];
+          const joinedCarpoolIds = (reqRes.data || [])
+            .map((r) => r.carpool_id)
+            .filter((id) => !createdRides.some((c) => c.id === id));
+
+          let joinedRides: Carpool[] = [];
+          if (joinedCarpoolIds.length > 0) {
+            const { data: joinedData, error: joinedErr } = await supabase
+              .from('mcn_carpools')
+              .select(`
+                *,
+                creator_profile:profiles!mcn_carpools_created_by_fkey (
+                  full_name,
+                  flat_number,
+                  phone_number
+                )
+              `)
+              .eq('community_id', communityId)
+              .in('id', joinedCarpoolIds)
+              .order('created_at', { ascending: false });
+
+            if (joinedErr) throw joinedErr;
+            joinedRides = ((joinedData as Carpool[]) || []).map((r) => ({ ...r, is_joined: true }));
           }
-        } else {
-          // 'all' shows active and paused
-          query = query.in('status', ['active', 'paused']);
-        }
 
-        const { data, error } = await query;
-        if (error) throw error;
-        setCarpools((data as Carpool[]) || []);
-      } catch (err) {
+          setCarpools([...createdRides, ...joinedRides]);
+        } else {
+          let query = supabase
+            .from('mcn_carpools')
+            .select(`
+              *,
+              creator_profile:profiles!mcn_carpools_created_by_fkey (
+                full_name,
+                flat_number,
+                phone_number
+              )
+            `)
+            .eq('community_id', communityId)
+            .order('created_at', { ascending: false });
+
+          if (activeTab === 'offering') {
+            query = query.eq('role_type', 'offering').eq('status', 'active');
+          } else if (activeTab === 'seeking') {
+            query = query.eq('role_type', 'seeking').eq('status', 'active');
+          } else {
+            // 'all' shows active and paused
+            query = query.in('status', ['active', 'paused']);
+          }
+
+          const { data, error } = await query;
+          if (error) throw error;
+          setCarpools((data as Carpool[]) || []);
+        }
+      } catch (err: any) {
         console.error('Error fetching carpools:', err);
+        setLoadError(err?.message || 'Could not load rides.');
+        Toast.show({ type: 'error', text1: 'Could not load rides', text2: err?.message });
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -99,14 +165,17 @@ export default function CarpoolListScreen() {
 
   const webPullProps = useWebPullToRefresh(() => fetchCarpools(true), refreshing);
 
+  // Search covers title, start_point, end_point, vehicle_info, notes, and host name
   const filteredCarpools = carpools.filter((item) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
+    if (!debouncedQuery) return true;
+    const q = debouncedQuery;
     return (
       item.title.toLowerCase().includes(q) ||
       item.start_point.toLowerCase().includes(q) ||
       item.end_point.toLowerCase().includes(q) ||
-      (item.vehicle_info && item.vehicle_info.toLowerCase().includes(q))
+      (item.vehicle_info && item.vehicle_info.toLowerCase().includes(q)) ||
+      (item.notes && item.notes.toLowerCase().includes(q)) ||
+      (item.creator_profile?.full_name && item.creator_profile.full_name.toLowerCase().includes(q))
     );
   });
 
@@ -114,20 +183,26 @@ export default function CarpoolListScreen() {
     switch (status) {
       case 'active':
         return (
-          <View style={[styles.badge, { backgroundColor: '#D1FAE5' }]}>
-            <Text style={[styles.badgeText, { color: '#059669' }]}>Active</Text>
+          <View style={[styles.badge, { backgroundColor: colors.accentSoft }]}>
+            <Text style={[styles.badgeText, { color: colors.accent }]}>Active</Text>
           </View>
         );
       case 'paused':
         return (
-          <View style={[styles.badge, { backgroundColor: '#FEF3C7' }]}>
-            <Text style={[styles.badgeText, { color: '#D97706' }]}>Paused</Text>
+          <View style={[styles.badge, { backgroundColor: colors.cautionSoft }]}>
+            <Text style={[styles.badgeText, { color: colors.caution }]}>Paused</Text>
           </View>
         );
       case 'cancelled':
         return (
-          <View style={[styles.badge, { backgroundColor: '#FEE2E2' }]}>
-            <Text style={[styles.badgeText, { color: '#DC2626' }]}>Cancelled</Text>
+          <View style={[styles.badge, { backgroundColor: colors.dangerSoft }]}>
+            <Text style={[styles.badgeText, { color: colors.danger }]}>Cancelled</Text>
+          </View>
+        );
+      case 'completed':
+        return (
+          <View style={[styles.badge, { backgroundColor: colors.cardMuted }]}>
+            <Text style={[styles.badgeText, { color: colors.textSecondary }]}>Completed</Text>
           </View>
         );
       default:
@@ -143,7 +218,7 @@ export default function CarpoolListScreen() {
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
-          title: 'Community Carpooling',
+          title: 'Community carpooling',
           onBack: handleBack,
         })}
       />
@@ -160,7 +235,7 @@ export default function CarpoolListScreen() {
         <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
-          placeholder="Search by city, outstation destination or office location..."
+          placeholder="Search by city, outstation destination, route, notes..."
           placeholderTextColor={colors.textTertiary}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -180,7 +255,7 @@ export default function CarpoolListScreen() {
           activeOpacity={0.8}
         >
           <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>
-            All Rides
+            All rides
           </Text>
         </TouchableOpacity>
 
@@ -190,7 +265,7 @@ export default function CarpoolListScreen() {
           activeOpacity={0.8}
         >
           <Text style={[styles.tabText, activeTab === 'offering' && styles.tabTextActive]}>
-            Offering Seat
+            Offering seats
           </Text>
         </TouchableOpacity>
 
@@ -200,7 +275,7 @@ export default function CarpoolListScreen() {
           activeOpacity={0.8}
         >
           <Text style={[styles.tabText, activeTab === 'seeking' && styles.tabTextActive]}>
-            Seeking Ride
+            Seeking ride
           </Text>
         </TouchableOpacity>
 
@@ -210,7 +285,7 @@ export default function CarpoolListScreen() {
           activeOpacity={0.8}
         >
           <Text style={[styles.tabText, activeTab === 'my' && styles.tabTextActive]}>
-            My Carpools
+            My carpools
           </Text>
         </TouchableOpacity>
       </View>
@@ -241,16 +316,27 @@ export default function CarpoolListScreen() {
           ListEmptyComponent={
             <EmptyState
               icon="car-sport-outline"
-              title="No carpools found"
+              title={loadError ? 'Could not load rides' : 'No carpools found'}
               message={
-                searchQuery
+                loadError
+                  ? 'Something went wrong while fetching carpools. Please try again.'
+                  : debouncedQuery
                   ? 'No routes match your search keyword.'
                   : 'Be the first resident to offer or request a carpool in your society!'
               }
+              actionLabel={loadError ? 'Retry' : undefined}
+              onAction={loadError ? () => fetchCarpools(true) : undefined}
             />
           }
           renderItem={({ item }) => {
             const isOwner = user?.id === item.created_by;
+            const isJoined = item.is_joined;
+
+            const unitPrice =
+              item.pricing_type === 'paid'
+                ? item.price_per_seat_amount ?? parseFloat(item.price_per_seat?.replace(/[^0-9.]/g, '') || '0')
+                : 0;
+
             return (
               <BaseCard
                 padding={10}
@@ -264,44 +350,58 @@ export default function CarpoolListScreen() {
                       styles.roleBadge,
                       {
                         backgroundColor:
-                          item.role_type === 'offering' ? colors.primary + '18' : '#DBEAFE',
+                          item.role_type === 'offering' ? colors.accentSoft : colors.cardMuted,
                       },
                     ]}
                   >
                     <Ionicons
                       name={item.role_type === 'offering' ? 'car-outline' : 'person-outline'}
                       size={14}
-                      color={item.role_type === 'offering' ? colors.primary : '#1D4ED8'}
+                      color={item.role_type === 'offering' ? colors.accent : colors.textPrimary}
                     />
                     <Text
                       style={[
                         styles.roleBadgeText,
-                        { color: item.role_type === 'offering' ? colors.primary : '#1D4ED8' },
+                        { color: item.role_type === 'offering' ? colors.accent : colors.textPrimary },
                       ]}
                     >
-                      {item.role_type === 'offering' ? 'Offering Seats' : 'Seeking Ride'}
+                      {item.role_type === 'offering' ? 'Offering seats' : 'Seeking ride'}
                     </Text>
                   </View>
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    {(item as any).pricing_type === 'paid' ? (
-                      <View style={[styles.badge, { backgroundColor: '#FEF3C7' }]}>
-                        <Text style={[styles.badgeText, { color: '#D97706' }]}>
-                          {(item as any).price_per_seat || 'Paid'}
-                        </Text>
-                      </View>
-                    ) : (
-                      <View style={[styles.badge, { backgroundColor: '#D1FAE5' }]}>
-                        <Text style={[styles.badgeText, { color: '#059669' }]}>
-                          Free Ride
+                    {item.role_type === 'offering' && (
+                      item.pricing_type === 'paid' ? (
+                        <View style={[styles.badge, { backgroundColor: colors.cardMuted }]}>
+                          {unitPrice > 0 ? (
+                            <Rupees amount={unitPrice} size="sm" tone="in" />
+                          ) : (
+                            <Text style={[styles.badgeText, { color: colors.accent }]}>Paid</Text>
+                          )}
+                        </View>
+                      ) : (
+                        <View style={[styles.badge, { backgroundColor: colors.accentSoft }]}>
+                          <Text style={[styles.badgeText, { color: colors.accent }]}>
+                            Free ride
+                          </Text>
+                        </View>
+                      )
+                    )}
+
+                    {renderStatusBadge(item.status)}
+
+                    {isOwner && (
+                      <View style={[styles.badge, { backgroundColor: colors.cardMuted }]}>
+                        <Text style={[styles.badgeText, { color: colors.textSecondary }]}>
+                          Mine
                         </Text>
                       </View>
                     )}
-                    {renderStatusBadge(item.status)}
-                    {isOwner && (
-                      <View style={[styles.badge, { backgroundColor: colors.borderStrong }]}>
-                        <Text style={[styles.badgeText, { color: colors.textSecondary }]}>
-                          Mine
+
+                    {isJoined && (
+                      <View style={[styles.badge, { backgroundColor: colors.accentSoft }]}>
+                        <Text style={[styles.badgeText, { color: colors.accent }]}>
+                          Joined
                         </Text>
                       </View>
                     )}
@@ -316,7 +416,7 @@ export default function CarpoolListScreen() {
                 {/* Route Flow */}
                 <View style={styles.routeContainer}>
                   <View style={styles.routePointRow}>
-                    <View style={[styles.dotCircle, { backgroundColor: '#10B981' }]} />
+                    <View style={[styles.dotCircle, { backgroundColor: colors.accent }]} />
                     <Text style={[styles.routeLabel, { color: colors.textTertiary }]}>From:</Text>
                     <Text style={[styles.routeValue, { color: colors.textPrimary }]} numberOfLines={1}>
                       {item.start_point}
@@ -326,7 +426,7 @@ export default function CarpoolListScreen() {
                   <View style={styles.routeLine} />
 
                   <View style={styles.routePointRow}>
-                    <View style={[styles.dotCircle, { backgroundColor: '#EF4444' }]} />
+                    <View style={[styles.dotCircle, { backgroundColor: colors.danger }]} />
                     <Text style={[styles.routeLabel, { color: colors.textTertiary }]}>To:</Text>
                     <Text style={[styles.routeValue, { color: colors.textPrimary }]} numberOfLines={1}>
                       {item.end_point}
@@ -339,6 +439,7 @@ export default function CarpoolListScreen() {
                   <View style={styles.metaItem}>
                     <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
                     <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                      {item.trip_date ? `${new Date(item.trip_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · ` : ''}
                       {item.departure_time}
                       {item.return_time ? ` (Return: ${item.return_time})` : ''}
                     </Text>
@@ -348,13 +449,13 @@ export default function CarpoolListScreen() {
                     <Ionicons name="people-outline" size={14} color={colors.textSecondary} />
                     <Text style={[styles.metaText, { color: colors.textSecondary }]}>
                       {item.available_seats} {item.available_seats === 1 ? 'seat' : 'seats'}{' '}
-                      {item.role_type === 'offering' ? 'avail' : 'needed'}
+                      {item.role_type === 'offering' ? 'capacity' : 'needed'}
                     </Text>
                   </View>
                 </View>
 
                 {/* Days tags */}
-                {item.recurring_days && item.recurring_days.length > 0 && (
+                {!item.trip_date && item.recurring_days && item.recurring_days.length > 0 && (
                   <View style={styles.daysRow}>
                     {item.recurring_days.map((day) => (
                       <View key={day} style={[styles.dayChip, { backgroundColor: colors.cardMuted }]}>
@@ -393,7 +494,7 @@ export default function CarpoolListScreen() {
         onPress={() => router.push('/mcn/carpools/add' as any)}
       >
         <Ionicons name="add" size={24} color={colors.primaryFg} />
-        <Text style={[styles.fabText, { color: colors.primaryFg }]}>Offer / Request</Text>
+        <Text style={[styles.fabText, { color: colors.primaryFg }]}>Offer / request</Text>
       </TouchableOpacity>
     </View>
   );
@@ -458,8 +559,8 @@ const styles = StyleSheet.create({
     color: Verandah.textSecondary,
   },
   tabTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: Verandah.primaryFg,
+    fontWeight: '500',
   },
   loaderWrap: {
     flex: 1,
@@ -494,9 +595,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   roleBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontSize: 11,
+    fontWeight: '500',
   },
   badge: {
     paddingHorizontal: 6,
@@ -505,7 +605,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   cardTitle: {
     ...VerandahType.title,
@@ -543,7 +643,7 @@ const styles = StyleSheet.create({
   },
   routeValue: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
     flex: 1,
   },
   metaRow: {
@@ -576,7 +676,7 @@ const styles = StyleSheet.create({
   },
   dayChipText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   footerRow: {
     flexDirection: 'row',
@@ -589,7 +689,7 @@ const styles = StyleSheet.create({
   },
   viewDetailsLink: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   fab: {
     position: 'absolute',
@@ -601,14 +701,11 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderStrong,
   },
   fabText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });

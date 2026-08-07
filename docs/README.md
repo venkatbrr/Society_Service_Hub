@@ -44,6 +44,7 @@
 | [`verandah.md`](verandah.md) | Design system: tokens, palette, type scale, component rules | Any design-token or shared-component change |
 | [`platform-admin.md`](platform-admin.md) | Web admin console: pages, RPCs, setup, verification | Any admin-console or platform RPC change |
 | [`disabled-features.md`](disabled-features.md) | Intentionally disabled/removed/deferred behavior | Any feature disabled or re-enabled |
+| [`fixes/`](fixes/) | Audits, implementation briefs, and verified fixes for edge cases | Created per deep-review pass |
 
 ### Federation — backend live, UI deferred
 

@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -509,6 +509,9 @@ export type Database = {
           event_id: string
           id: string
           image_url: string | null
+          sponsor_name: string | null
+          sponsor_note: string | null
+          sponsor_phone: string | null
           title: string | null
           type: string
         }
@@ -522,6 +525,9 @@ export type Database = {
           event_id: string
           id?: string
           image_url?: string | null
+          sponsor_name?: string | null
+          sponsor_note?: string | null
+          sponsor_phone?: string | null
           title?: string | null
           type: string
         }
@@ -535,6 +541,9 @@ export type Database = {
           event_id?: string
           id?: string
           image_url?: string | null
+          sponsor_name?: string | null
+          sponsor_note?: string | null
+          sponsor_phone?: string | null
           title?: string | null
           type?: string
         }
@@ -1013,6 +1022,7 @@ export type Database = {
           id: string
           notes: string | null
           price_per_seat: string | null
+          price_per_seat_amount: number | null
           pricing_type: string
           recurring_days: string[]
           return_time: string | null
@@ -1020,6 +1030,7 @@ export type Database = {
           start_point: string
           status: string
           title: string
+          trip_date: string | null
           updated_at: string
           vehicle_info: string | null
         }
@@ -1034,6 +1045,7 @@ export type Database = {
           id?: string
           notes?: string | null
           price_per_seat?: string | null
+          price_per_seat_amount?: number | null
           pricing_type?: string
           recurring_days?: string[]
           return_time?: string | null
@@ -1041,6 +1053,7 @@ export type Database = {
           start_point: string
           status?: string
           title: string
+          trip_date?: string | null
           updated_at?: string
           vehicle_info?: string | null
         }
@@ -1055,6 +1068,7 @@ export type Database = {
           id?: string
           notes?: string | null
           price_per_seat?: string | null
+          price_per_seat_amount?: number | null
           pricing_type?: string
           recurring_days?: string[]
           return_time?: string | null
@@ -1062,6 +1076,7 @@ export type Database = {
           start_point?: string
           status?: string
           title?: string
+          trip_date?: string | null
           updated_at?: string
           vehicle_info?: string | null
         }
@@ -2548,10 +2563,12 @@ export type Database = {
           created_at: string
           frequency_months: number
           id: string
+          images: Json
           last_serviced_on: string
           next_due_on: string
           notes: string | null
           notified_at: string | null
+          notify_count: number
           provider_id: string | null
           service_name: string
           updated_at: string
@@ -2563,10 +2580,12 @@ export type Database = {
           created_at?: string
           frequency_months: number
           id?: string
+          images?: Json
           last_serviced_on: string
           next_due_on: string
           notes?: string | null
           notified_at?: string | null
+          notify_count?: number
           provider_id?: string | null
           service_name: string
           updated_at?: string
@@ -2578,10 +2597,12 @@ export type Database = {
           created_at?: string
           frequency_months?: number
           id?: string
+          images?: Json
           last_serviced_on?: string
           next_due_on?: string
           notes?: string | null
           notified_at?: string | null
+          notify_count?: number
           provider_id?: string | null
           service_name?: string
           updated_at?: string
@@ -2808,6 +2829,22 @@ export type Database = {
           status: string
         }[]
       }
+      get_mcn_carpool_passengers: {
+        Args: { p_carpool_id: string }
+        Returns: {
+          passenger_flat: string
+          passenger_name: string
+          seats: number
+        }[]
+      }
+      get_mcn_carpool_seats: {
+        Args: { p_carpool_id: string }
+        Returns: {
+          booked_seats: number
+          remaining_seats: number
+          total_seats: number
+        }[]
+      }
       get_mcn_drop_item_availability: {
         Args: { p_drop_id: string }
         Returns: {
@@ -2863,6 +2900,7 @@ export type Database = {
           days_until_due: number
           frequency_months: number
           id: string
+          images: Json
           last_serviced_on: string
           next_due_on: string
           notes: string
@@ -3000,62 +3038,49 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      mark_service_done:
-        | {
-            Args: { p_service_id: string }
-            Returns: {
-              category: string
-              community_id: string | null
-              created_at: string
-              frequency_months: number
-              id: string
-              last_serviced_on: string
-              next_due_on: string
-              notes: string | null
-              notified_at: string | null
-              provider_id: string | null
-              service_name: string
-              updated_at: string
-              user_id: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "user_services"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              p_cost_paid?: number
-              p_note?: string
-              p_provider_id?: string
-              p_service_id: string
-            }
-            Returns: {
-              category: string
-              community_id: string | null
-              created_at: string
-              frequency_months: number
-              id: string
-              last_serviced_on: string
-              next_due_on: string
-              notes: string | null
-              notified_at: string | null
-              provider_id: string | null
-              service_name: string
-              updated_at: string
-              user_id: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "user_services"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      mark_service_done: {
+        Args: {
+          p_cost_paid?: number
+          p_note?: string
+          p_provider_id?: string
+          p_service_id: string
+        }
+        Returns: {
+          category: string
+          community_id: string | null
+          created_at: string
+          frequency_months: number
+          id: string
+          images: Json
+          last_serviced_on: string
+          next_due_on: string
+          notes: string | null
+          notified_at: string | null
+          notify_count: number
+          provider_id: string | null
+          service_name: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_services"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       normalize_indian_mobile: { Args: { p_value: string }; Returns: string }
       notify_due_services: { Args: never; Returns: number }
+      place_mcn_order: {
+        Args: {
+          p_buyer_note?: string
+          p_buyer_phone: string
+          p_items: Json
+          p_listing_id: string
+          p_order_id?: string
+        }
+        Returns: string
+      }
       place_mcn_preorder: {
         Args: {
           p_buyer_name: string
@@ -3456,6 +3481,7 @@ export type Database = {
         }
         Returns: string
       }
+      today_ist: { Args: never; Returns: string }
       withdraw_funds_access_request: {
         Args: { p_request_id: string }
         Returns: undefined

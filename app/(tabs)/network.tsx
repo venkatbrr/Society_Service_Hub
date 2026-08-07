@@ -221,7 +221,7 @@ export default function NetworkScreen() {
           </Text>
         </BaseCard>
 
-        {/* 3. School Catalog Section Card */}
+        {/* 4. Schools Catalog Section Card */}
         <BaseCard
           padding={14}
           onPress={() => router.push('/mcn/schools' as any)}
@@ -246,7 +246,30 @@ export default function NetworkScreen() {
           </Text>
         </BaseCard>
 
-
+        {/* 5. Borrow & Share Section Card */}
+        <BaseCard
+          padding={14}
+          onPress={() => router.push('/mcn/my-posts?segment=borrow' as any)}
+          style={styles.sectionCard}
+        >
+          <View style={styles.cardHeaderRow}>
+            <View style={[styles.iconCircle, { backgroundColor: '#EDE9FE' }]}>
+              <NetworkTileIcon kind="borrow" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                Borrow & Share
+              </Text>
+              <Text style={[styles.badgeText, { color: '#7C3AED' }]}>
+                {postCount ?? 0} {postCount === 1 ? 'active borrow post' : 'active borrow posts'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            Borrow tools, ladders, board games, travel gear & books from neighbors in your society!
+          </Text>
+        </BaseCard>
 
         <View style={{ height: 40 }} />
       </ScrollView>

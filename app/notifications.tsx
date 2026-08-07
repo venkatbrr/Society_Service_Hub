@@ -55,8 +55,13 @@ export default function NotificationsScreen() {
         return 'close-circle';
       case 'community_lead_appointed':
         return 'ribbon';
-      case 'funds_access_revoked':
-        return 'ban';
+      case 'carpool_request':
+      case 'carpool_request_accepted':
+      case 'carpool_request_rejected':
+      case 'carpool_request_cancelled':
+      case 'carpool_cancelled':
+      case 'carpool_paused':
+        return 'car-outline';
       default:
         return 'notifications';
     }
@@ -66,6 +71,19 @@ export default function NotificationsScreen() {
     await markAsRead(notification.id);
 
     // Navigate based on type
+    if (
+      (notification.type === 'carpool_request' ||
+       notification.type === 'carpool_request_accepted' ||
+       notification.type === 'carpool_request_rejected' ||
+       notification.type === 'carpool_request_cancelled' ||
+       notification.type === 'carpool_cancelled' ||
+       notification.type === 'carpool_paused') &&
+      notification.data?.carpool_id
+    ) {
+      router.push(`/mcn/carpools/${notification.data.carpool_id}` as any);
+      return;
+    }
+
     if (notification.type === 'new_visit' && notification.data?.visit_id) {
       router.push(`/visits/${notification.data.visit_id}`);
       return;

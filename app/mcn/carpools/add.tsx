@@ -1,41 +1,67 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
-import { goBackSmart } from '../../../lib/navigation';
-import React, { useState } from 'react';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { DateField, formatLocalDateForDb } from '../../../components/DateField';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius } from '../../../constants/Verandah';
+import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
+import { goBackSmart } from '../../../lib/navigation';
+import { isValidIndianMobile, normalizeIndianMobile } from '../../../lib/phone';
 import { supabase } from '../../../lib/supabase';
 
 const ALL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
 const HOURS_12 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
 const MINUTES_12 = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
 
+function parseTimeString(timeStr?: string | null): { hour: string; minute: string; ampm: 'AM' | 'PM' } | null {
+  if (!timeStr) return null;
+  const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return null;
+  const h = parseInt(match[1], 10);
+  const m = parseInt(match[2], 10);
+  const ampm = match[3].toUpperCase() as 'AM' | 'PM';
+  if (h < 1 || h > 12 || m < 0 || m > 59) return null;
+  return {
+    hour: String(h).padStart(2, '0'),
+    minute: String(m).padStart(2, '0'),
+    ampm,
+  };
+}
+
 export default function AddCarpoolScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const isEditing = Boolean(id);
+
   const { user, profile, communityId } = useAuth();
   const colors = Verandah;
 
   const [roleType, setRoleType] = useState<'offering' | 'seeking'>('offering');
+  const [scheduleType, setScheduleType] = useState<'recurring' | 'one_off'>('recurring');
+  const [tripDate, setTripDate] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d;
+  });
+
   const [title, setTitle] = useState('');
   const [contactPhone, setContactPhone] = useState(profile?.phone_number || '');
   const [startPoint, setStartPoint] = useState('');
   const [endPoint, setEndPoint] = useState('');
-  
+
   // 12-Hour AM/PM Time States
   const [depHour, setDepHour] = useState('08');
   const [depMinute, setDepMinute] = useState('30');
@@ -45,13 +71,104 @@ export default function AddCarpoolScreen() {
   const [retMinute, setRetMinute] = useState('00');
   const [retAmpm, setRetAmpm] = useState<'AM' | 'PM'>('PM');
   const [hasReturnTime, setHasReturnTime] = useState(false);
+
   const [selectedDays, setSelectedDays] = useState<string[]>(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
   const [availableSeats, setAvailableSeats] = useState(2);
   const [pricingType, setPricingType] = useState<'free' | 'paid'>('free');
   const [pricePerSeat, setPricePerSeat] = useState('');
   const [vehicleInfo, setVehicleInfo] = useState('');
   const [notes, setNotes] = useState('');
+  const [loadingInitial, setLoadingInitial] = useState(isEditing);
   const [submitting, setSubmitting] = useState(false);
+
+  // Profile prefill backfill when profile resolves in phase 2
+  useEffect(() => {
+    if (profile?.phone_number && !contactPhone) {
+      setContactPhone(profile.phone_number);
+    }
+  }, [profile]);
+
+  // Load existing carpool if editing
+  useEffect(() => {
+    if (!id || !communityId) return;
+
+    let mounted = true;
+    const loadCarpool = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('mcn_carpools')
+          .select('*')
+          .eq('id', id)
+          .eq('community_id', communityId)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!data) {
+          Toast.show({ type: 'error', text1: 'Ride not found' });
+          router.replace('/mcn/carpools' as any);
+          return;
+        }
+
+        if (mounted) {
+          setRoleType(data.role_type as 'offering' | 'seeking');
+          setTitle(data.title);
+          setContactPhone(data.contact_phone || '');
+          setStartPoint(data.start_point);
+          setEndPoint(data.end_point);
+          setAvailableSeats(data.available_seats);
+          setVehicleInfo(data.vehicle_info || '');
+          setNotes(data.notes || '');
+          setPricingType(data.pricing_type as 'free' | 'paid');
+
+          if (data.price_per_seat_amount) {
+            setPricePerSeat(String(data.price_per_seat_amount));
+          } else if (data.price_per_seat) {
+            setPricePerSeat(data.price_per_seat.replace(/[^0-9.]/g, ''));
+          }
+
+          if (data.trip_date) {
+            setScheduleType('one_off');
+            const [y, m, d] = data.trip_date.split('-').map(Number);
+            if (y && m && d) {
+              setTripDate(new Date(y, m - 1, d));
+            }
+          } else {
+            setScheduleType('recurring');
+            if (data.recurring_days && data.recurring_days.length > 0) {
+              setSelectedDays(data.recurring_days);
+            }
+          }
+
+          const parsedDep = parseTimeString(data.departure_time);
+          if (parsedDep) {
+            setDepHour(parsedDep.hour);
+            setDepMinute(parsedDep.minute);
+            setDepAmpm(parsedDep.ampm);
+          }
+
+          if (data.return_time) {
+            setHasReturnTime(true);
+            const parsedRet = parseTimeString(data.return_time);
+            if (parsedRet) {
+              setRetHour(parsedRet.hour);
+              setRetMinute(parsedRet.minute);
+              setRetAmpm(parsedRet.ampm);
+            }
+          }
+        }
+      } catch (err: any) {
+        console.error('Error fetching carpool for edit:', err);
+        Toast.show({ type: 'error', text1: 'Failed to load ride details' });
+      } finally {
+        if (mounted) setLoadingInitial(false);
+      }
+    };
+
+    loadCarpool();
+    return () => {
+      mounted = false;
+    };
+  }, [id, communityId]);
 
   const toggleDay = (day: string) => {
     if (selectedDays.includes(day)) {
@@ -73,25 +190,49 @@ export default function AddCarpoolScreen() {
 
   const validateForm = () => {
     if (!title.trim()) {
-      Toast.show({ type: 'error', text1: 'Missing Title', text2: 'Please enter a title for your carpool route.' });
+      Toast.show({ type: 'error', text1: 'Missing title', text2: 'Please enter a summary title for your route.' });
       return false;
     }
     if (!startPoint.trim()) {
-      Toast.show({ type: 'error', text1: 'Missing Start Point', text2: 'Please enter a pickup location / start point.' });
+      Toast.show({ type: 'error', text1: 'Missing start point', text2: 'Please enter a pickup location.' });
       return false;
     }
     if (!endPoint.trim()) {
-      Toast.show({ type: 'error', text1: 'Missing End Point', text2: 'Please enter a destination / end point.' });
+      Toast.show({ type: 'error', text1: 'Missing destination', text2: 'Please enter a destination.' });
       return false;
     }
-    if (!contactPhone.trim() || contactPhone.trim().replace(/[^0-9]/g, '').length < 10) {
+
+    const cleanPhone = normalizeIndianMobile(contactPhone);
+    if (!cleanPhone || !isValidIndianMobile(cleanPhone)) {
       Toast.show({
         type: 'error',
-        text1: 'Invalid Phone Number',
-        text2: 'Please enter a valid 10-digit phone number for WhatsApp & calls.',
+        text1: 'Invalid phone number',
+        text2: 'Please enter a valid 10-digit Indian phone number.',
       });
       return false;
     }
+
+    if (scheduleType === 'recurring' && selectedDays.length === 0) {
+      Toast.show({
+        type: 'error',
+        text1: 'No recurring days selected',
+        text2: 'Please select at least one day or switch to one-off trip.',
+      });
+      return false;
+    }
+
+    if (roleType === 'offering' && pricingType === 'paid') {
+      const priceNum = parseFloat(pricePerSeat.replace(/[^0-9.]/g, ''));
+      if (isNaN(priceNum) || priceNum <= 0) {
+        Toast.show({
+          type: 'error',
+          text1: 'Invalid price per seat',
+          text2: 'Please enter a positive numeric contribution amount.',
+        });
+        return false;
+      }
+    }
+
     return true;
   };
 
@@ -104,40 +245,75 @@ export default function AddCarpoolScreen() {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from('mcn_carpools').insert({
+      const cleanPhone = normalizeIndianMobile(contactPhone) || contactPhone.trim();
+      const depTimeFormatted = `${depHour}:${depMinute} ${depAmpm}`;
+      const retTimeFormatted = hasReturnTime ? `${retHour}:${retMinute} ${retAmpm}` : null;
+      const tripDateFormatted = scheduleType === 'one_off' ? formatLocalDateForDb(tripDate) : null;
+      const recurringDaysFormatted = scheduleType === 'recurring' ? selectedDays : [];
+
+      const numericPrice =
+        roleType === 'offering' && pricingType === 'paid'
+          ? parseFloat(pricePerSeat.replace(/[^0-9.]/g, '')) || null
+          : null;
+      const priceString =
+        roleType === 'offering'
+          ? pricingType === 'paid'
+            ? numericPrice
+              ? `₹${numericPrice}`
+              : 'Paid'
+            : 'Free'
+          : 'Free';
+
+      const payload = {
         community_id: communityId,
-        created_by: user.id,
         role_type: roleType,
         title: title.trim(),
-        contact_phone: contactPhone.trim(),
+        contact_phone: cleanPhone,
         start_point: startPoint.trim(),
         end_point: endPoint.trim(),
-        departure_time: `${depHour}:${depMinute} ${depAmpm}`,
-        return_time: hasReturnTime ? `${retHour}:${retMinute} ${retAmpm}` : null,
-        recurring_days: selectedDays,
+        departure_time: depTimeFormatted,
+        return_time: retTimeFormatted,
+        trip_date: tripDateFormatted,
+        recurring_days: recurringDaysFormatted,
         available_seats: availableSeats,
-        pricing_type: pricingType,
-        price_per_seat: pricingType === 'paid' ? (pricePerSeat.trim() ? (pricePerSeat.trim().startsWith('₹') ? pricePerSeat.trim() : `₹${pricePerSeat.trim()}`) : 'Paid') : 'Free',
-        vehicle_info: vehicleInfo.trim() || null,
+        pricing_type: roleType === 'offering' ? pricingType : 'free',
+        price_per_seat: priceString,
+        price_per_seat_amount: numericPrice,
+        vehicle_info: roleType === 'offering' ? vehicleInfo.trim() || null : null,
         notes: notes.trim() || null,
         status: 'active',
-      });
+      };
 
-      if (error) throw error;
+      if (isEditing && id) {
+        const { error } = await supabase.from('mcn_carpools').update(payload).eq('id', id);
+        if (error) throw error;
 
-      Toast.show({
-        type: 'success',
-        text1: roleType === 'offering' ? 'Carpool Offered!' : 'Carpool Request Posted!',
-        text2: 'Your route is now visible to society residents.',
-      });
+        Toast.show({
+          type: 'success',
+          text1: 'Ride updated',
+          text2: 'Your route updates are now live.',
+        });
+        router.replace(`/mcn/carpools/${id}` as any);
+      } else {
+        const { error } = await supabase.from('mcn_carpools').insert({
+          ...payload,
+          created_by: user.id,
+        });
+        if (error) throw error;
 
-      router.replace('/mcn/carpools' as any);
+        Toast.show({
+          type: 'success',
+          text1: roleType === 'offering' ? 'Ride offered' : 'Ride request posted',
+          text2: 'Your route is now visible to society residents.',
+        });
+        router.replace('/mcn/carpools' as any);
+      }
     } catch (err: any) {
-      console.error('Error creating carpool:', err);
+      console.error('Error saving carpool:', err);
       Toast.show({
         type: 'error',
-        text1: 'Post Failed',
-        text2: err.message || 'Failed to publish carpool listing.',
+        text1: isEditing ? 'Update failed' : 'Publish failed',
+        text2: err.message || 'Failed to save carpool listing.',
       });
     } finally {
       setSubmitting(false);
@@ -145,64 +321,99 @@ export default function AddCarpoolScreen() {
   };
 
   const handleBack = () => {
-    goBackSmart(router, '/mcn/carpools/add');
+    if (isEditing && id) {
+      goBackSmart(router, `/mcn/carpools/${id}`);
+    } else {
+      goBackSmart(router, '/mcn/carpools');
+    }
   };
+
+  if (loadingInitial) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.surface }]}>
+        <Stack.Screen options={buildMcnHeaderOptions({ title: 'Loading...', onBack: handleBack })} />
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  const pageTitle = isEditing
+    ? 'Edit ride'
+    : roleType === 'offering'
+    ? 'Offer a ride'
+    : 'Request a ride';
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.container, { backgroundColor: colors.surface }]}
     >
-      <Stack.Screen
-        options={buildMcnHeaderOptions({
-          title: roleType === 'offering' ? 'Offer a Carpool Ride' : 'Request a Carpool Ride',
-          onBack: handleBack,
-        })}
-      />
+      <Stack.Screen options={buildMcnHeaderOptions({ title: pageTitle, onBack: handleBack })} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Toggle Mode Segment */}
-        <View style={styles.roleToggleContainer}>
-          <TouchableOpacity
-            style={[styles.roleBtn, roleType === 'offering' && styles.roleBtnActive]}
-            onPress={() => setRoleType('offering')}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name="car-outline"
-              size={18}
-              color={roleType === 'offering' ? colors.primary : colors.textMuted}
-            />
-            <Text style={[styles.roleBtnText, roleType === 'offering' && styles.roleBtnTextActive]}>
-              I'm Offering Seats
-            </Text>
-          </TouchableOpacity>
+        {/* Toggle Mode Segment (Only for create mode) */}
+        {!isEditing && (
+          <View style={styles.roleToggleContainer}>
+            <TouchableOpacity
+              style={[
+                styles.roleBtn,
+                roleType === 'offering' && { backgroundColor: colors.card, borderColor: colors.borderStrong },
+              ]}
+              onPress={() => setRoleType('offering')}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="car-outline"
+                size={18}
+                color={roleType === 'offering' ? colors.primary : colors.textMuted}
+              />
+              <Text
+                style={[
+                  styles.roleBtnText,
+                  { color: roleType === 'offering' ? colors.primary : colors.textSecondary },
+                ]}
+              >
+                Offering seats
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.roleBtn, roleType === 'seeking' && styles.roleBtnActive]}
-            onPress={() => setRoleType('seeking')}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name="person-outline"
-              size={18}
-              color={roleType === 'seeking' ? colors.accent : colors.textMuted}
-            />
-            <Text style={[styles.roleBtnText, roleType === 'seeking' && styles.roleBtnTextActive]}>
-              I Need a Ride
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={[
+                styles.roleBtn,
+                roleType === 'seeking' && { backgroundColor: colors.card, borderColor: colors.borderStrong },
+              ]}
+              onPress={() => setRoleType('seeking')}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="person-outline"
+                size={18}
+                color={roleType === 'seeking' ? colors.accent : colors.textMuted}
+              />
+              <Text
+                style={[
+                  styles.roleBtnText,
+                  { color: roleType === 'seeking' ? colors.accent : colors.textSecondary },
+                ]}
+              >
+                Need a ride
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Title */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>Route Title / Summary *</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Route title / summary *</Text>
           <TextInput
-            style={[styles.input, { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card }]}
+            style={[
+              styles.input,
+              { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card },
+            ]}
             placeholder={
               roleType === 'offering'
-                ? 'e.g. Daily Ride to Mindspace / Weekend Trip to Vijayawada'
-                : 'e.g. Need Ride to Mindspace / Outstation to Bengaluru'
+                ? 'e.g. Daily ride to Mindspace / Weekend trip to Vijayawada'
+                : 'e.g. Need ride to Mindspace / Outstation to Bengaluru'
             }
             placeholderTextColor={colors.textTertiary}
             value={title}
@@ -213,23 +424,30 @@ export default function AddCarpoolScreen() {
         {/* Contact Phone Number */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.textSecondary }]}>
-            Contact Phone Number (For WhatsApp & Calls) *
+            Contact phone number (for WhatsApp & calls) *
           </Text>
           <TextInput
-            style={[styles.input, { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card }]}
+            style={[
+              styles.input,
+              { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card },
+            ]}
             placeholder="e.g. 9876543210"
             placeholderTextColor={colors.textTertiary}
             value={contactPhone}
             onChangeText={setContactPhone}
             keyboardType="phone-pad"
+            maxLength={10}
           />
         </View>
 
         {/* Start & End Points */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>Start Point / Pickup Location *</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Start point / pickup location *</Text>
           <TextInput
-            style={[styles.input, { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card }]}
+            style={[
+              styles.input,
+              { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card },
+            ]}
             placeholder="e.g. Tower 4 / Main Gate / Block B"
             placeholderTextColor={colors.textTertiary}
             value={startPoint}
@@ -238,9 +456,12 @@ export default function AddCarpoolScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>End Point / Destination *</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Destination / drop point *</Text>
           <TextInput
-            style={[styles.input, { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card }]}
+            style={[
+              styles.input,
+              { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card },
+            ]}
             placeholder="e.g. Mindspace / Vijayawada / Bengaluru / Gachibowli"
             placeholderTextColor={colors.textTertiary}
             value={endPoint}
@@ -248,255 +469,433 @@ export default function AddCarpoolScreen() {
           />
         </View>
 
-        {/* Timings */}
+        {/* Schedule Type (Recurring vs One-off) */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>Departure & Return Timings (12-Hour AM/PM) *</Text>
-
-          <View style={styles.rowInputs}>
-            {/* Departure Time */}
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textMuted, marginBottom: 4 }}>
-                Departure Time *
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Trip schedule *</Text>
+          <View style={styles.roleToggleContainer}>
+            <TouchableOpacity
+              style={[
+                styles.roleBtn,
+                scheduleType === 'recurring' && { backgroundColor: colors.card, borderColor: colors.borderStrong },
+              ]}
+              onPress={() => setScheduleType('recurring')}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="repeat-outline"
+                size={16}
+                color={scheduleType === 'recurring' ? colors.primary : colors.textMuted}
+              />
+              <Text
+                style={[
+                  styles.roleBtnText,
+                  { color: scheduleType === 'recurring' ? colors.primary : colors.textSecondary },
+                ]}
+              >
+                Recurring commute
               </Text>
-              
-              <View style={styles.time12PickerRow}>
-                {Platform.OS === 'web' ? (
-                  <select
-                    value={depHour}
-                    onChange={(e) => setDepHour(e.target.value)}
-                    style={{
-                      height: 44,
-                      borderRadius: 8,
-                      border: `0.5px solid ${colors.borderStrong}`,
-                      backgroundColor: colors.card,
-                      color: colors.textPrimary,
-                      padding: '0 6px',
-                      fontSize: 14,
-                      fontWeight: '600',
-                      outline: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {HOURS_12.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <TextInput
-                    style={[styles.input12, { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card }]}
-                    value={depHour}
-                    onChangeText={(val) => setDepHour(val.slice(0, 2))}
-                    keyboardType="number-pad"
-                    maxLength={2}
-                  />
-                )}
+            </TouchableOpacity>
 
-                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>:</Text>
+            <TouchableOpacity
+              style={[
+                styles.roleBtn,
+                scheduleType === 'one_off' && { backgroundColor: colors.card, borderColor: colors.borderStrong },
+              ]}
+              onPress={() => setScheduleType('one_off')}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="calendar-outline"
+                size={16}
+                color={scheduleType === 'one_off' ? colors.accent : colors.textMuted}
+              />
+              <Text
+                style={[
+                  styles.roleBtnText,
+                  { color: scheduleType === 'one_off' ? colors.accent : colors.textSecondary },
+                ]}
+              >
+                One-off / outstation
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-                {Platform.OS === 'web' ? (
-                  <select
-                    value={depMinute}
-                    onChange={(e) => setDepMinute(e.target.value)}
-                    style={{
-                      height: 44,
-                      borderRadius: 8,
-                      border: `0.5px solid ${colors.borderStrong}`,
-                      backgroundColor: colors.card,
-                      color: colors.textPrimary,
-                      padding: '0 6px',
-                      fontSize: 14,
-                      fontWeight: '600',
-                      outline: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {MINUTES_12.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <TextInput
-                    style={[styles.input12, { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card }]}
-                    value={depMinute}
-                    onChangeText={(val) => setDepMinute(val.slice(0, 2))}
-                    keyboardType="number-pad"
-                    maxLength={2}
-                  />
-                )}
-
-                {/* AM / PM Segment Toggle */}
-                <View style={styles.ampmToggleWrap}>
-                  <TouchableOpacity
-                    style={[styles.ampmSegment, depAmpm === 'AM' && styles.ampmSegmentActive]}
-                    onPress={() => setDepAmpm('AM')}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.ampmText, depAmpm === 'AM' && styles.ampmTextActive]}>AM</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.ampmSegment, depAmpm === 'PM' && styles.ampmSegmentActive]}
-                    onPress={() => setDepAmpm('PM')}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.ampmText, depAmpm === 'PM' && styles.ampmTextActive]}>PM</Text>
-                  </TouchableOpacity>
-                </View>
+        {/* One-off Date Picker */}
+        {scheduleType === 'one_off' ? (
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Trip date *</Text>
+            <DateField
+              value={tripDate}
+              onChange={setTripDate}
+              minimumDate={new Date()}
+            />
+          </View>
+        ) : (
+          /* Recurring Days */
+          <View style={styles.inputGroup}>
+            <View style={styles.labelRow}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Recurring days *</Text>
+              <View style={styles.presetRow}>
+                <TouchableOpacity onPress={() => selectPreset('weekdays')}>
+                  <Text style={[styles.presetLink, { color: colors.accent }]}>Weekdays</Text>
+                </TouchableOpacity>
+                <Text style={{ color: colors.textTertiary }}>·</Text>
+                <TouchableOpacity onPress={() => selectPreset('daily')}>
+                  <Text style={[styles.presetLink, { color: colors.accent }]}>Daily</Text>
+                </TouchableOpacity>
+                <Text style={{ color: colors.textTertiary }}>·</Text>
+                <TouchableOpacity onPress={() => selectPreset('clear')}>
+                  <Text style={[styles.presetLink, { color: colors.danger }]}>Clear</Text>
+                </TouchableOpacity>
               </View>
             </View>
 
-            {/* Return Time (Optional) */}
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textMuted }}>
-                  Return Time (Optional)
-                </Text>
-                <TouchableOpacity onPress={() => setHasReturnTime(!hasReturnTime)}>
-                  <Text style={{ fontSize: 11, fontWeight: '600', color: hasReturnTime ? colors.accent : colors.textMuted }}>
-                    {hasReturnTime ? 'Remove' : '+ Add'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {hasReturnTime ? (
-                <View style={styles.time12PickerRow}>
-                  {Platform.OS === 'web' ? (
-                    <select
-                      value={retHour}
-                      onChange={(e) => setRetHour(e.target.value)}
-                      style={{
-                        height: 44,
-                        borderRadius: 8,
-                        border: `0.5px solid ${colors.borderStrong}`,
-                        backgroundColor: colors.card,
-                        color: colors.textPrimary,
-                        padding: '0 6px',
-                        fontSize: 14,
-                        fontWeight: '600',
-                        outline: 'none',
-                        cursor: 'pointer',
-                      }}
+            <View style={styles.daysRow}>
+              {ALL_DAYS.map((day) => {
+                const isSelected = selectedDays.includes(day);
+                return (
+                  <TouchableOpacity
+                    key={day}
+                    style={[
+                      styles.dayChip,
+                      {
+                        backgroundColor: isSelected ? colors.primary : colors.cardMuted,
+                        borderColor: isSelected ? colors.primary : colors.border,
+                      },
+                    ]}
+                    onPress={() => toggleDay(day)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.dayChipText,
+                        { color: isSelected ? colors.primaryFg : colors.textSecondary },
+                      ]}
                     >
-                      {HOURS_12.map((h) => (
-                        <option key={h} value={h}>{h}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <TextInput
-                      style={[styles.input12, { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card }]}
-                      value={retHour}
-                      onChangeText={(val) => setRetHour(val.slice(0, 2))}
-                      keyboardType="number-pad"
-                      maxLength={2}
-                    />
-                  )}
+                      {day}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
 
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>:</Text>
-
-                  {Platform.OS === 'web' ? (
-                    <select
-                      value={retMinute}
-                      onChange={(e) => setRetMinute(e.target.value)}
-                      style={{
-                        height: 44,
-                        borderRadius: 8,
-                        border: `0.5px solid ${colors.borderStrong}`,
-                        backgroundColor: colors.card,
-                        color: colors.textPrimary,
-                        padding: '0 6px',
-                        fontSize: 14,
-                        fontWeight: '600',
-                        outline: 'none',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {MINUTES_12.map((m) => (
-                        <option key={m} value={m}>{m}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <TextInput
-                      style={[styles.input12, { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card }]}
-                      value={retMinute}
-                      onChangeText={(val) => setRetMinute(val.slice(0, 2))}
-                      keyboardType="number-pad"
-                      maxLength={2}
-                    />
-                  )}
-
-                  {/* AM / PM Segment Toggle */}
-                  <View style={styles.ampmToggleWrap}>
-                    <TouchableOpacity
-                      style={[styles.ampmSegment, retAmpm === 'AM' && styles.ampmSegmentActive]}
-                      onPress={() => setRetAmpm('AM')}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={[styles.ampmText, retAmpm === 'AM' && styles.ampmTextActive]}>AM</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.ampmSegment, retAmpm === 'PM' && styles.ampmSegmentActive]}
-                      onPress={() => setRetAmpm('PM')}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={[styles.ampmText, retAmpm === 'PM' && styles.ampmTextActive]}>PM</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.input, { justifyContent: 'center', backgroundColor: colors.cardMuted, borderColor: colors.border, height: 44 }]}
-                  onPress={() => setHasReturnTime(true)}
+        {/* Departure Time */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Departure time *</Text>
+          <View style={styles.timeRow}>
+            {/* Hour */}
+            <View style={styles.timeSegment}>
+              {Platform.OS === 'web' ? (
+                <select
+                  value={depHour}
+                  onChange={(e) => setDepHour(e.target.value)}
+                  style={{
+                    height: 44,
+                    borderRadius: VerandahRadius.md,
+                    border: `0.5px solid ${colors.borderStrong}`,
+                    backgroundColor: colors.card,
+                    color: colors.textPrimary,
+                    padding: '0 8px',
+                    fontSize: 14,
+                    fontWeight: '500',
+                  }}
                 >
-                  <Text style={{ color: colors.textMuted, fontSize: 13 }}>+ Add return time</Text>
-                </TouchableOpacity>
+                  {HOURS_12.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <TextInput
+                  style={[
+                    styles.timeInput,
+                    { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card },
+                  ]}
+                  value={depHour}
+                  onChangeText={(val) => {
+                    const clean = val.replace(/\D/g, '').slice(0, 2);
+                    setDepHour(clean);
+                  }}
+                  onBlur={() => {
+                    const num = parseInt(depHour || '8', 10);
+                    const clamped = Math.max(1, Math.min(12, isNaN(num) ? 8 : num));
+                    setDepHour(String(clamped).padStart(2, '0'));
+                  }}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                />
               )}
+              <Text style={[styles.timeUnitLabel, { color: colors.textTertiary }]}>Hour</Text>
+            </View>
+
+            <Text style={[styles.timeColon, { color: colors.textPrimary }]}>:</Text>
+
+            {/* Minute */}
+            <View style={styles.timeSegment}>
+              {Platform.OS === 'web' ? (
+                <select
+                  value={depMinute}
+                  onChange={(e) => setDepMinute(e.target.value)}
+                  style={{
+                    height: 44,
+                    borderRadius: VerandahRadius.md,
+                    border: `0.5px solid ${colors.borderStrong}`,
+                    backgroundColor: colors.card,
+                    color: colors.textPrimary,
+                    padding: '0 8px',
+                    fontSize: 14,
+                    fontWeight: '500',
+                  }}
+                >
+                  {MINUTES_12.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <TextInput
+                  style={[
+                    styles.timeInput,
+                    { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card },
+                  ]}
+                  value={depMinute}
+                  onChangeText={(val) => {
+                    const clean = val.replace(/\D/g, '').slice(0, 2);
+                    setDepMinute(clean);
+                  }}
+                  onBlur={() => {
+                    const num = parseInt(depMinute || '0', 10);
+                    const clamped = Math.max(0, Math.min(59, isNaN(num) ? 0 : num));
+                    setDepMinute(String(clamped).padStart(2, '0'));
+                  }}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                />
+              )}
+              <Text style={[styles.timeUnitLabel, { color: colors.textTertiary }]}>Minute</Text>
+            </View>
+
+            {/* AM/PM */}
+            <View style={styles.ampmToggle}>
+              <TouchableOpacity
+                style={[
+                  styles.ampmBtn,
+                  depAmpm === 'AM' && { backgroundColor: colors.primary, borderColor: colors.primary },
+                ]}
+                onPress={() => setDepAmpm('AM')}
+              >
+                <Text
+                  style={[
+                    styles.ampmText,
+                    { color: depAmpm === 'AM' ? colors.primaryFg : colors.textSecondary },
+                  ]}
+                >
+                  AM
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.ampmBtn,
+                  depAmpm === 'PM' && { backgroundColor: colors.primary, borderColor: colors.primary },
+                ]}
+                onPress={() => setDepAmpm('PM')}
+              >
+                <Text
+                  style={[
+                    styles.ampmText,
+                    { color: depAmpm === 'PM' ? colors.primaryFg : colors.textSecondary },
+                  ]}
+                >
+                  PM
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
 
-        {/* Recurring Days */}
+        {/* Return Time (Optional) */}
         <View style={styles.inputGroup}>
-          <View style={styles.labelRow}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Recurring Days</Text>
-            <View style={styles.presetLinks}>
-              <TouchableOpacity onPress={() => selectPreset('weekdays')}>
-                <Text style={[styles.presetText, { color: colors.accent }]}>Weekdays</Text>
-              </TouchableOpacity>
-              <Text style={{ color: colors.textMuted }}>·</Text>
-              <TouchableOpacity onPress={() => selectPreset('daily')}>
-                <Text style={[styles.presetText, { color: colors.accent }]}>Daily</Text>
-              </TouchableOpacity>
-              <Text style={{ color: colors.textMuted }}>·</Text>
-              <TouchableOpacity onPress={() => selectPreset('clear')}>
-                <Text style={[styles.presetText, { color: colors.danger }]}>Clear</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setHasReturnTime(!hasReturnTime)}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={hasReturnTime ? 'checkbox' : 'square-outline'}
+              size={20}
+              color={hasReturnTime ? colors.primary : colors.textTertiary}
+            />
+            <Text style={[styles.checkboxLabel, { color: colors.textPrimary }]}>Specify return time (round trip)</Text>
+          </TouchableOpacity>
 
-          <View style={styles.daysContainer}>
-            {ALL_DAYS.map((day) => {
-              const isSelected = selectedDays.includes(day);
+          {hasReturnTime && (
+            <View style={[styles.timeRow, { marginTop: 8 }]}>
+              {/* Return Hour */}
+              <View style={styles.timeSegment}>
+                {Platform.OS === 'web' ? (
+                  <select
+                    value={retHour}
+                    onChange={(e) => setRetHour(e.target.value)}
+                    style={{
+                      height: 44,
+                      borderRadius: VerandahRadius.md,
+                      border: `0.5px solid ${colors.borderStrong}`,
+                      backgroundColor: colors.card,
+                      color: colors.textPrimary,
+                      padding: '0 8px',
+                      fontSize: 14,
+                      fontWeight: '500',
+                    }}
+                  >
+                    {HOURS_12.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <TextInput
+                    style={[
+                      styles.timeInput,
+                      { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card },
+                    ]}
+                    value={retHour}
+                    onChangeText={(val) => {
+                      const clean = val.replace(/\D/g, '').slice(0, 2);
+                      setRetHour(clean);
+                    }}
+                    onBlur={() => {
+                      const num = parseInt(retHour || '6', 10);
+                      const clamped = Math.max(1, Math.min(12, isNaN(num) ? 6 : num));
+                      setRetHour(String(clamped).padStart(2, '0'));
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                  />
+                )}
+                <Text style={[styles.timeUnitLabel, { color: colors.textTertiary }]}>Hour</Text>
+              </View>
+
+              <Text style={[styles.timeColon, { color: colors.textPrimary }]}>:</Text>
+
+              {/* Return Minute */}
+              <View style={styles.timeSegment}>
+                {Platform.OS === 'web' ? (
+                  <select
+                    value={retMinute}
+                    onChange={(e) => setRetMinute(e.target.value)}
+                    style={{
+                      height: 44,
+                      borderRadius: VerandahRadius.md,
+                      border: `0.5px solid ${colors.borderStrong}`,
+                      backgroundColor: colors.card,
+                      color: colors.textPrimary,
+                      padding: '0 8px',
+                      fontSize: 14,
+                      fontWeight: '500',
+                    }}
+                  >
+                    {MINUTES_12.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <TextInput
+                    style={[
+                      styles.timeInput,
+                      { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card },
+                    ]}
+                    value={retMinute}
+                    onChangeText={(val) => {
+                      const clean = val.replace(/\D/g, '').slice(0, 2);
+                      setRetMinute(clean);
+                    }}
+                    onBlur={() => {
+                      const num = parseInt(retMinute || '0', 10);
+                      const clamped = Math.max(0, Math.min(59, isNaN(num) ? 0 : num));
+                      setRetMinute(String(clamped).padStart(2, '0'));
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                  />
+                )}
+                <Text style={[styles.timeUnitLabel, { color: colors.textTertiary }]}>Minute</Text>
+              </View>
+
+              {/* Return AM/PM */}
+              <View style={styles.ampmToggle}>
+                <TouchableOpacity
+                  style={[
+                    styles.ampmBtn,
+                    retAmpm === 'AM' && { backgroundColor: colors.primary, borderColor: colors.primary },
+                  ]}
+                  onPress={() => setRetAmpm('AM')}
+                >
+                  <Text
+                    style={[
+                      styles.ampmText,
+                      { color: retAmpm === 'AM' ? colors.primaryFg : colors.textSecondary },
+                    ]}
+                  >
+                    AM
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.ampmBtn,
+                    retAmpm === 'PM' && { backgroundColor: colors.primary, borderColor: colors.primary },
+                  ]}
+                  onPress={() => setRetAmpm('PM')}
+                >
+                  <Text
+                    style={[
+                      styles.ampmText,
+                      { color: retAmpm === 'PM' ? colors.primaryFg : colors.textSecondary },
+                    ]}
+                  >
+                    PM
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Seats (Capacity for Offering, Seats Needed for Seeking) */}
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>
+            {roleType === 'offering' ? 'Vehicle capacity (seats available) *' : 'Seats needed *'}
+          </Text>
+          <View style={styles.seatCounterRow}>
+            {[1, 2, 3, 4, 5, 6].map((num) => {
+              const isSelected = availableSeats === num;
               return (
                 <TouchableOpacity
-                  key={day}
+                  key={num}
                   style={[
-                    styles.dayChip,
+                    styles.seatChip,
                     {
-                      backgroundColor: isSelected ? colors.primary : colors.cardMuted,
-                      borderColor: isSelected ? colors.primary : colors.border,
+                      backgroundColor: isSelected ? colors.primary : colors.card,
+                      borderColor: isSelected ? colors.primary : colors.borderStrong,
                     },
                   ]}
-                  onPress={() => toggleDay(day)}
+                  onPress={() => setAvailableSeats(num)}
                   activeOpacity={0.7}
                 >
                   <Text
                     style={[
-                      styles.dayChipText,
-                      { color: isSelected ? colors.primaryFg : colors.textSecondary },
+                      styles.seatChipText,
+                      { color: isSelected ? colors.primaryFg : colors.textPrimary },
                     ]}
                   >
-                    {day}
+                    {num}
                   </Text>
                 </TouchableOpacity>
               );
@@ -504,105 +903,94 @@ export default function AddCarpoolScreen() {
           </View>
         </View>
 
-        {/* Seats Counter */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>
-            {roleType === 'offering' ? 'Seats Available' : 'Seats Needed'}
-          </Text>
-          <View style={styles.seatsRow}>
-            <TouchableOpacity
-              style={[styles.counterBtn, { borderColor: colors.borderStrong, backgroundColor: colors.card }]}
-              onPress={() => setAvailableSeats(Math.max(1, availableSeats - 1))}
-            >
-              <Ionicons name="remove" size={20} color={colors.textPrimary} />
-            </TouchableOpacity>
-            <Text style={[styles.seatCountText, { color: colors.textPrimary }]}>
-              {availableSeats}
-            </Text>
-            <TouchableOpacity
-              style={[styles.counterBtn, { borderColor: colors.borderStrong, backgroundColor: colors.card }]}
-              onPress={() => setAvailableSeats(Math.min(6, availableSeats + 1))}
-            >
-              <Ionicons name="add" size={20} color={colors.textPrimary} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Pricing Options */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>Ride Pricing / Cost Option</Text>
-          <View style={styles.pricingToggleRow}>
-            <TouchableOpacity
-              style={[
-                styles.pricingBtn,
-                pricingType === 'free' && styles.pricingBtnActiveFree,
-              ]}
-              onPress={() => {
-                setPricingType('free');
-                setPricePerSeat('');
-              }}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="gift-outline"
-                size={16}
-                color={pricingType === 'free' ? '#059669' : colors.textMuted}
-              />
-              <Text
-                style={[
-                  styles.pricingBtnText,
-                  pricingType === 'free' && { color: '#059669', fontWeight: '700' },
-                ]}
-              >
-                Free Ride (No Charge)
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.pricingBtn,
-                pricingType === 'paid' && styles.pricingBtnActivePaid,
-              ]}
-              onPress={() => setPricingType('paid')}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="cash-outline"
-                size={16}
-                color={pricingType === 'paid' ? colors.accent : colors.textMuted}
-              />
-              <Text
-                style={[
-                  styles.pricingBtnText,
-                  pricingType === 'paid' && { color: colors.accent, fontWeight: '700' },
-                ]}
-              >
-                Paid / Cost Sharing
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {pricingType === 'paid' && (
-            <View style={{ marginTop: 8 }}>
-              <TextInput
-                style={[styles.input, { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card }]}
-                placeholder="e.g. 50 / seat or 100 / day"
-                placeholderTextColor={colors.textTertiary}
-                value={pricePerSeat}
-                onChangeText={setPricePerSeat}
-                keyboardType="numeric"
-              />
-            </View>
-          )}
-        </View>
-
-        {/* Vehicle Info (Only for offering) */}
+        {/* Pricing / Cost Sharing (ONLY for Offering) */}
         {roleType === 'offering' && (
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Vehicle Details (Optional)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Pricing & cost sharing *</Text>
+            <View style={styles.roleToggleContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.roleBtn,
+                  pricingType === 'free' && { backgroundColor: colors.card, borderColor: colors.borderStrong },
+                ]}
+                onPress={() => {
+                  setPricingType('free');
+                  setPricePerSeat('');
+                }}
+              >
+                <Ionicons
+                  name="gift-outline"
+                  size={16}
+                  color={pricingType === 'free' ? colors.accent : colors.textMuted}
+                />
+                <Text
+                  style={[
+                    styles.roleBtnText,
+                    { color: pricingType === 'free' ? colors.accent : colors.textSecondary },
+                  ]}
+                >
+                  Free ride
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.roleBtn,
+                  pricingType === 'paid' && { backgroundColor: colors.card, borderColor: colors.borderStrong },
+                ]}
+                onPress={() => setPricingType('paid')}
+              >
+                <Ionicons
+                  name="cash-outline"
+                  size={16}
+                  color={pricingType === 'paid' ? colors.primary : colors.textMuted}
+                />
+                <Text
+                  style={[
+                    styles.roleBtnText,
+                    { color: pricingType === 'paid' ? colors.primary : colors.textSecondary },
+                  ]}
+                >
+                  Share cost
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {pricingType === 'paid' && (
+              <View style={[styles.priceInputRow, { marginTop: 8 }]}>
+                <Text style={[styles.rupeeSymbol, { color: colors.textPrimary }]}>₹</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      flex: 1,
+                      color: colors.textPrimary,
+                      borderColor: colors.borderStrong,
+                      backgroundColor: colors.card,
+                    },
+                  ]}
+                  placeholder="e.g. 50"
+                  placeholderTextColor={colors.textTertiary}
+                  value={pricePerSeat}
+                  onChangeText={(val) => setPricePerSeat(val.replace(/[^0-9.]/g, ''))}
+                  keyboardType="numeric"
+                />
+                <Text style={[styles.perSeatLabel, { color: colors.textSecondary }]}>per seat</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Vehicle Info (ONLY for Offering) */}
+        {roleType === 'offering' && (
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Vehicle details (optional)</Text>
             <TextInput
-              style={[styles.input, { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card }]}
-              placeholder="e.g. White Honda City (TS 09 AB 1234) or EV Bike"
+              style={[
+                styles.input,
+                { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card },
+              ]}
+              placeholder="e.g. White Honda City / TS09 EX 1234"
               placeholderTextColor={colors.textTertiary}
               value={vehicleInfo}
               onChangeText={setVehicleInfo}
@@ -610,16 +998,15 @@ export default function AddCarpoolScreen() {
           </View>
         )}
 
-        {/* Notes / Rules */}
+        {/* Additional Notes */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>Notes / Ride Preferences (Optional)</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Notes & preferences (optional)</Text>
           <TextInput
             style={[
-              styles.input,
-              styles.textArea,
+              styles.inputArea,
               { color: colors.textPrimary, borderColor: colors.borderStrong, backgroundColor: colors.card },
             ]}
-            placeholder="e.g. AC ride, non-smoking, split fuel charges ~ ₹50/day"
+            placeholder="e.g. Non-smoking ride, AC on, luggage space available, flexible return time..."
             placeholderTextColor={colors.textTertiary}
             value={notes}
             onChangeText={setNotes}
@@ -628,9 +1015,13 @@ export default function AddCarpoolScreen() {
           />
         </View>
 
-        {/* Submit Button */}
+        {/* Submit CTA */}
         <TouchableOpacity
-          style={[styles.submitBtn, { backgroundColor: colors.primary }]}
+          style={[
+            styles.submitBtn,
+            { backgroundColor: colors.primary },
+            submitting && { opacity: 0.7 },
+          ]}
           onPress={handleSubmit}
           disabled={submitting}
           activeOpacity={0.8}
@@ -639,7 +1030,11 @@ export default function AddCarpoolScreen() {
             <ActivityIndicator color={colors.primaryFg} />
           ) : (
             <Text style={[styles.submitBtnText, { color: colors.primaryFg }]}>
-              {roleType === 'offering' ? 'Publish Ride Offer' : 'Publish Ride Request'}
+              {isEditing
+                ? 'Save changes'
+                : roleType === 'offering'
+                ? 'Publish ride offer'
+                : 'Post ride request'}
             </Text>
           )}
         </TouchableOpacity>
@@ -652,210 +1047,186 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   scrollContent: {
-    paddingHorizontal: 14,
-    paddingTop: 0,
-    paddingBottom: 24,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 60,
     gap: 12,
   },
   roleToggleContainer: {
     flexDirection: 'row',
     backgroundColor: Verandah.cardMuted,
-    borderRadius: VerandahRadius.xl,
-    padding: 4,
-    marginBottom: 8,
+    borderRadius: VerandahRadius.md,
+    padding: 2,
+    gap: 2,
   },
   roleBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: VerandahRadius.lg,
+    paddingVertical: 8,
+    borderRadius: VerandahRadius.sm,
     gap: 6,
-  },
-  roleBtnActive: {
-    backgroundColor: Verandah.card,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 0.5,
+    borderColor: 'transparent',
   },
   roleBtnText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
-    color: Verandah.textMuted,
-  },
-  roleBtnTextActive: {
-    color: Verandah.textPrimary,
-    fontWeight: '600',
   },
   inputGroup: {
-    gap: 6,
+    gap: 4,
   },
-  rowInputs: {
-    flexDirection: 'row',
-    gap: 12,
+  label: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   labelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginLeft: 2,
-  },
-  presetLinks: {
+  presetRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  presetText: {
+  presetLink: {
     fontSize: 12,
     fontWeight: '500',
   },
   input: {
-    height: 50,
+    height: 44,
     borderWidth: 0.5,
     borderRadius: VerandahRadius.md,
-    paddingHorizontal: 14,
-    fontSize: 15,
+    paddingHorizontal: 12,
+    fontSize: 14,
   },
-  textArea: {
-    height: 80,
-    paddingTop: 12,
+  inputArea: {
+    minHeight: 70,
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
     textAlignVertical: 'top',
   },
-  daysContainer: {
+  daysRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
     marginTop: 4,
   },
   dayChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: VerandahRadius.sm,
     borderWidth: 0.5,
   },
   dayChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  seatsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    marginTop: 4,
-  },
-  counterBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 0.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  seatCountText: {
-    fontSize: 20,
-    fontWeight: '700',
-    minWidth: 24,
-    textAlign: 'center',
-  },
-  pricingToggleRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
-  pricingBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 46,
-    borderRadius: VerandahRadius.md,
-    borderWidth: 0.5,
-    borderColor: Verandah.borderStrong,
-    backgroundColor: Verandah.card,
-    gap: 6,
-  },
-  pricingBtnActiveFree: {
-    backgroundColor: '#D1FAE5',
-    borderColor: '#059669',
-  },
-  pricingBtnActivePaid: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#D97706',
-  },
-  pricingBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
-    color: Verandah.textSecondary,
   },
-  timeBtn: {
-    height: 50,
-    borderWidth: 0.5,
-    borderRadius: VerandahRadius.md,
+  timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
     gap: 8,
   },
-  timeBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  time12PickerRow: {
-    flexDirection: 'row',
+  timeSegment: {
     alignItems: 'center',
-    gap: 4,
+    width: 60,
   },
-  input12: {
+  timeInput: {
+    width: 60,
     height: 44,
-    width: 44,
     borderWidth: 0.5,
-    borderRadius: VerandahRadius.sm,
+    borderRadius: VerandahRadius.md,
     textAlign: 'center',
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '500',
   },
-  ampmToggleWrap: {
+  timeUnitLabel: {
+    fontSize: 10,
+    marginTop: 2,
+  },
+  timeColon: {
+    fontSize: 18,
+    fontWeight: '500',
+    marginBottom: 12,
+  },
+  ampmToggle: {
     flexDirection: 'row',
     backgroundColor: Verandah.cardMuted,
-    borderRadius: VerandahRadius.md,
-    padding: 2,
-    marginLeft: 4,
-  },
-  ampmSegment: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
     borderRadius: VerandahRadius.sm,
+    padding: 2,
+    marginLeft: 8,
+    marginBottom: 12,
   },
-  ampmSegmentActive: {
-    backgroundColor: Verandah.primary,
+  ampmBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: VerandahRadius.sm,
+    borderWidth: 0.5,
+    borderColor: 'transparent',
   },
   ampmText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Verandah.textMuted,
+    fontSize: 12,
+    fontWeight: '500',
   },
-  ampmTextActive: {
-    color: Verandah.primaryFg,
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  checkboxLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  seatCounterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  seatChip: {
+    flex: 1,
+    height: 40,
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  seatChipText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  priceInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rupeeSymbol: {
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  perSeatLabel: {
+    fontSize: 13,
   },
   submitBtn: {
-    height: 54,
-    borderRadius: VerandahRadius.xl,
+    height: 48,
+    borderRadius: VerandahRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 12,
   },
   submitBtnText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '500',
   },
 });
-

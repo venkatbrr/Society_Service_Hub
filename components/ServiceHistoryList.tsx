@@ -1,4 +1,3 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -16,6 +15,8 @@ import { Verandah } from '../constants/Colors';
 import { supabase } from '../lib/supabase';
 import { ProviderSelector } from './ProviderSelector';
 import { Rupees } from './Rupees';
+import { DateField, formatLocalDateForDb } from './DateField';
+
 
 type HistoryRow = {
   id: string;
@@ -152,7 +153,7 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
       return;
     }
 
-    const servicedOnValue = editDate.toISOString().split('T')[0];
+    const servicedOnValue = formatLocalDateForDb(editDate);
     const previous = history;
     const optimisticProviderName = editProvider?.name ?? null;
 
@@ -267,29 +268,11 @@ export function ServiceHistoryList({ serviceId, communityId, refreshToken = 0 }:
 
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalBody}>
               <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Serviced on</Text>
-              <TouchableOpacity
-                style={[styles.input, styles.dateInput, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}
-                onPress={() => setShowDatePicker(true)}
-                activeOpacity={0.82}
-              >
-                <Text style={{ color: colors.text, fontSize: 14 }}>
-                  {editDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </Text>
-                <Text style={{ color: colors.textMuted }}>📅</Text>
-              </TouchableOpacity>
-
-              {showDatePicker ? (
-                <DateTimePicker
-                  value={editDate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  maximumDate={new Date()}
-                  onChange={(_, date) => {
-                    setShowDatePicker(Platform.OS === 'ios');
-                    if (date) setEditDate(date);
-                  }}
-                />
-              ) : null}
+              <DateField
+                value={editDate}
+                onChange={setEditDate}
+                maximumDate={new Date()}
+              />
 
               <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Provider (optional)</Text>
               <ProviderSelector

@@ -174,20 +174,20 @@ Business name required (max 80). Category required, from the `mcn_business_categ
 
 | Aspect | Details |
 |--------|---------|
-| **Tables** | `mcn_listings`, `mcn_business_categories`, `mcn_products`, `mcn_orders`, `mcn_order_items`, `profiles` |
-| **Rules** | Offerings split by `item_type` into Products and Services, each row showing name, optional description, availability, and either `₹ amount / unit` or **"Price on request"** when `price IS NULL`. Quantity steps are **0.5 for kg/litre and 1 for piece/dozen/box/pack**, minimum 0. The cart shows line items and a subtotal; the note is optional. The action button either places a new order or updates an existing pending order (deletes old items, inserts new). Direct Call and WhatsApp links. |
+| **Tables / RPCs** | `mcn_listings`, `mcn_business_categories`, `mcn_products`, `mcn_orders`, `mcn_order_items`, `profiles`; RPC `place_mcn_order(p_listing_id, p_items, p_buyer_phone, p_buyer_note, p_order_id)` |
+| **Rules** | Offerings split by `item_type` into Products and Services, each row showing name, optional description, availability, and either `₹ amount / unit` or **"Price on request"** when `price IS NULL`. Quantity steps are **0.5 for kg/litre and 1 for piece/dozen/box/pack**, minimum 0. For non-owners, selecting items shows a floating Cart Bar with subtotal and Review & Order CTA. Placing/editing an order is atomic via `place_mcn_order()` in a single transaction under immutability triggers. Direct Call and WhatsApp actions (via `buildWhatsAppUrl`). |
 | **Roles** | Any resident except the owner can order. Owner **or lead** sees the Manage action in the header. |
 
 ### Manage listing — `app/mcn/listing/manage/[id].tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Rules** | Toggle listing active/paused, edit details including category, and manage offerings. The offering modal supports `item_type` (`product`/`service`) and an optional price — blank stores `NULL` and renders as "Price on request". Deleting a product is blocked when order items reference it. The whole listing can be permanently deleted. |
+| **Rules** | Toggle listing active/paused, edit details including category, and manage offerings. The offering modal supports `item_type` (`product`/`service`) and an optional price — blank stores `NULL` and renders as "Price on request". Deleting a product or a whole listing with orders in history is gracefully blocked with a prompt to pause instead (SQLSTATE 23503 handling). |
 | **Roles** | **Owner or lead.** The screen enforces this itself: a non-owner, non-lead is toasted and redirected to `/mcn/business`. |
 
 ### Orders received — `app/mcn/listing/orders/[id].tsx`
 
-Orders grouped Pending / Fulfilled / Cancelled. The WhatsApp button pre-fills a message with items and total. Pending orders can be marked fulfilled or cancelled behind a confirmation. Owner only.
+Orders grouped Pending / Fulfilled / Cancelled. Auto-refreshes on focus. The WhatsApp button pre-fills a message with items and total via `buildWhatsAppUrl`. Pending orders can be marked fulfilled or cancelled behind `confirmAction`. Owner only.
 
 ### 4.3 Pre-order food drops — `app/mcn/drops/*`
 
@@ -207,16 +207,17 @@ Routes: `index` (catalog) · `add` · `[id]` (detail + ordering) · `manage/[id]
 
 ### 4.4 Carpooling — `app/mcn/carpools/*`
 
-Routes: `index` (list) · `add` · `[id]` (detail + requests)
+Routes: `index` (list) · `add` (create/edit via `?id=...`) · `[id]` (detail + requests)
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Neighbor ride sharing: daily commutes, school runs, intercity and outstation trips |
-| **Tables** | `mcn_carpools`, `mcn_carpool_requests`, `profiles` |
-| **List rules** | Tabs: All (active + paused) / Offering / Seeking / My rides, newest first. Client-side search across title, start point, end point, and vehicle info. Status badges: Active (green), Paused (amber), Cancelled (red). |
-| **Publish rules** | Required: title, start point, end point. Also captured: `role_type` (`offering` or `seeking`), departure time, optional return time, recurring weekdays from Mon–Sun, available seats (≥1), vehicle info, `pricing_type` (`free`/`paid`) with `price_per_seat`, contact phone (backfilled from the profile when absent), and notes. |
-| **Request rules** | Only rides that are `active` **and** `offering` accept join requests, and only from non-owners. A rider submits name, phone, flat number, seats, and an optional note; one open request per rider per ride. The host sees all non-cancelled requests and accepts or rejects pending ones. Statuses: `pending`, `accepted`, `rejected`, `cancelled`. |
-| **Roles** | Any resident creates rides and requests seats. **Creator or lead** can edit, change status, and delete. |
+| **Purpose** | Neighbor ride sharing: daily office commutes, weekend intercity travel & outstation trips |
+| **Tables / RPCs** | `mcn_carpools`, `mcn_carpool_requests`, `profiles`; RPCs `get_mcn_carpool_seats(p_carpool_id)`, `get_mcn_carpool_passengers(p_carpool_id)` |
+| **List rules** | Tabs: All (active + paused) / Offering / Seeking / My carpools (both created and joined). Search covers title, start point, destination, vehicle, notes, and host name (debounced 300 ms). Status badges: Active (teal), Paused (amber), Completed (grey), Cancelled (soft red). |
+| **Publish rules** | Required: title, start point, end point, contact phone (validated via `lib/phone.ts`). Schedule choices: **recurring weekdays** (Mon–Sun chips) or **one-off calendar date** (`trip_date DATE` via `DateField`). Departure time is 12-hour AM/PM with optional return time. For offering rides: available vehicle capacity (1–6 seats, immutable after publish), vehicle info, and pricing (`free` or numeric `price_per_seat_amount` rendered via `Rupees`). Pricing and vehicle blocks are hidden for seeking posts. |
+| **Request & seat rules** | Only active offering rides accept join requests from non-owners. A rider submits name, phone (validated Indian mobile), flat number (e.g. A101), seats requested, and optional note. One open request per rider per ride (enforced by partial unique index `mcn_carpool_requests_one_open_idx`). Host accepts/declines. Seat capacity and valid transitions are trigger-enforced (`check_mcn_carpool_request_validity`, `enforce_mcn_carpool_request_transition`). Remaining seats are dynamically derived, never mutated on the carpool row. Declined riders can re-apply if plans change. Confirmed co-passengers roster is displayed to the society via `get_mcn_carpool_passengers` without exposing rider phone numbers. |
+| **Notifications & cascade** | Notifications sent on request created (host notified), status changes (rider notified of accept/decline; host notified if rider cancels), and ride cancellation/pause (all confirmed passengers notified). Cancelling a ride cascades to cancel its active requests. |
+| **Roles & controls** | Any resident creates rides and requests seats. **Creator or lead** can pause, resume, cancel, mark completed, or delete any ride (both offering and seeking). **Creator or lead** can edit ride details via `/mcn/carpools/add?id=...`. |
 
 ### 4.5 Parent Corner — `app/mcn/parents/*`
 
@@ -373,10 +374,10 @@ Name updates apply directly. Email updates send a verification link to the new a
 
 | Screen | Details |
 |--------|---------|
-| **List** (`index.tsx`) | Reads `get_my_upcoming_services()`. Pull-to-refresh; sorted by next due date and urgency. |
-| **Add** (`add.tsx`) | Required: `service_name`, `category`, `last_serviced_on`, `frequency_months`. Date cannot be in the future; frequency is 1–60 months. Choosing a category pre-fills the default frequency from `lib/serviceCategories.ts`. Linking a provider is optional; **the picker searches by provider name and phone number** (non-digits stripped from both sides before comparing). Provider options refresh on focus, so a provider added mid-flow appears on return. When no providers exist, the form offers a direct shortcut to add one. |
-| **Detail / edit** (`[id].tsx`) | Reads the row directly from `user_services` by ID (not through the list RPC). Mark-done is optimistic then re-reads from the database; RPC `mark_service_done(p_service_id, …)` supports optional provider, amount paid, and note, which land in `user_service_history`. Editing reuses the add validations, including provider remapping with name/phone search. Delete requires confirmation. The technician shortcut routes back to the Help tab Providers segment with a mapped category filter. |
-| **Surfaces** | `components/UpcomingServicesCard.tsx` sits above the Help content — its zero-state is a single-row inline banner (wrench emoji · title · body · inline "Add service" pill) in one ~40 px row, and is not dismissible; the all-clear and has-due states use 8 px vertical / 12 px horizontal padding and 13 px titles. Profile shows a due-soon badge from `get_my_due_soon_count()`. `notify_due_services()` creates `service_reminder` notifications for reminders due within 7 days where `notified_at` is empty; the `check_due_services` Edge Function drives it daily. |
+| **List** (`index.tsx`) | Reads `get_my_upcoming_services()`. Refreshes on screen focus (`useFocusEffect`); sorted by next due date and urgency. |
+| **Add** (`add.tsx`) | Required: `service_name`, `category`, `last_serviced_on`, `frequency_months`. Date cannot be in the future; frequency is 1–60 months. Cross-platform date picking via `DateField` (`<input type="date">` on web). Notes capped at 500 characters with live counter. Images stored as `images` JSONB array (up to 3 images with titles). Choosing a category pre-fills default frequency. Provider picker searches by name/phone. Saves via `goBackSmart`. |
+| **Detail / edit** (`[id].tsx`) | Reads the row directly from `user_services` by ID. Honest mark-done (no fake optimistic badge flash); single 4-arg RPC `mark_service_done(p_service_id, p_provider_id, p_cost_paid, p_note)` logs to `user_service_history` and resets notification count. Editing preserves provider link even if provider list is filtered or fails loading (`providerLinkUnresolved`). History edits automatically reconcile `user_services.last_serviced_on` via DB trigger. Technician button routes to Help tab Providers segment with category filter. |
+| **Surfaces** | `components/UpcomingServicesCard.tsx` sits on the Help tab (refreshes on focus; "Find tech" routes to Help tab provider segment). Profile shows badge count and "{N} due or overdue" label from `get_my_due_soon_count()`. `notify_due_services()` creates `service_reminder` notifications on a repeating cadence (at most 1 per 6.5 days, capped at 5 per cycle) driven daily by `check_due_services` Edge Function. |
 
 ---
 

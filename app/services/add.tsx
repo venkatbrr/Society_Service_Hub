@@ -1,4 +1,3 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -14,6 +13,7 @@ import {
     View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { DateField, formatLocalDateForDb } from '../../components/DateField';
 import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahType } from '../../constants/Verandah';
@@ -28,7 +28,7 @@ import {
     SERVICE_CATEGORY_LABELS,
     ServiceCategory,
 } from '../../lib/serviceCategories';
-import { serializeNotesAndImages } from '../../lib/serviceReminderHelpers';
+import { toImagesJson } from '../../lib/serviceReminderHelpers';
 import { supabase } from '../../lib/supabase';
 
 type ReminderImage = {
@@ -198,24 +198,13 @@ export default function AddServiceScreen() {
 
     setLoading(true);
     try {
-      // Format date as YYYY-MM-DD
-      const yyyy = lastServicedOn.getFullYear();
-      const mm = String(lastServicedOn.getMonth() + 1).padStart(2, '0');
-      const dd = String(lastServicedOn.getDate()).padStart(2, '0');
-      const dateStr = `${yyyy}-${mm}-${dd}`;
+      const dateStr = formatLocalDateForDb(lastServicedOn);
 
       const nextDueDate = new Date(lastServicedOn);
       nextDueDate.setMonth(nextDueDate.getMonth() + freq);
-      const nextYyyy = nextDueDate.getFullYear();
-      const nextMm = String(nextDueDate.getMonth() + 1).padStart(2, '0');
-      const nextDd = String(nextDueDate.getDate()).padStart(2, '0');
-      const nextDueOn = `${nextYyyy}-${nextMm}-${nextDd}`;
+      const nextDueOn = formatLocalDateForDb(nextDueDate);
 
-      const notesText = serializeNotesAndImages(notes, reminderImageDrafts);
-      const validImages = reminderImageDrafts.filter(
-        (item): item is ReminderImageDraft & { url: string } => !!item.url && item.title.trim().length > 0
-      );
-      const firstImageUrl = validImages[0]?.url ?? null;
+      const imagesJson = toImagesJson(reminderImageDrafts);
 
       const insertPayload: any = {
         user_id: user.id,
@@ -224,26 +213,24 @@ export default function AddServiceScreen() {
         category,
         last_serviced_on: dateStr,
         frequency_months: freq,
-        next_due_on: nextDueOn, // DB trigger will overwrite
-        notes: notesText || null,
+        next_due_on: nextDueOn,
+        notes: notes.trim() || null,
+        images: imagesJson,
         provider_id: selectedProvider?.id ?? null,
-        image_url: firstImageUrl,
       };
 
-      let { error } = await supabase.from('user_services').insert(insertPayload);
-
-      if (error && 'image_url' in insertPayload) {
-        delete insertPayload.image_url;
-        const fallback = await supabase.from('user_services').insert(insertPayload);
-        error = fallback.error;
-      }
+      const { error } = await supabase.from('user_services').insert(insertPayload);
 
       if (error) throw error;
 
       Toast.show({ type: 'success', text1: 'Service reminder added' });
-      router.back();
+      goBackSmart(router, '/services/add');
     } catch (err: any) {
-      Toast.show({ type: 'error', text1: 'Error', text2: err.message ?? 'Failed to save' });
+      console.error('Failed to add service reminder:', err);
+      const userMessage = err?.message?.includes('user_services_notes_check')
+        ? 'Notes cannot exceed 500 characters.'
+        : err?.message ?? 'Failed to save service reminder';
+      Toast.show({ type: 'error', text1: 'Error', text2: userMessage });
     } finally {
       setLoading(false);
     }
@@ -325,27 +312,11 @@ export default function AddServiceScreen() {
 
         {/* Last Serviced On */}
         <Text style={[styles.label, { color: colors.textMuted }]}>Last serviced on *</Text>
-        <TouchableOpacity
-          style={[styles.input, styles.dateInput, { backgroundColor: colors.card, borderColor: colors.border }]}
-          onPress={() => setShowDatePicker(true)}
-          activeOpacity={0.8}
-        >
-          <Text style={{ color: colors.text, fontSize: 15, fontWeight: '500' }}>{formattedDate}</Text>
-          <Ionicons name="calendar-outline" size={18} color={colors.textMuted} />
-        </TouchableOpacity>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={lastServicedOn}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            maximumDate={new Date()}
-            onChange={(_, date) => {
-              setShowDatePicker(Platform.OS === 'ios');
-              if (date) setLastServicedOn(date);
-            }}
-          />
-        )}
+        <DateField
+          value={lastServicedOn}
+          onChange={setLastServicedOn}
+          maximumDate={new Date()}
+        />
 
         {/* Frequency */}
         <Text style={[styles.label, { color: colors.textMuted }]}>Frequency (months) *</Text>
@@ -555,6 +526,9 @@ export default function AddServiceScreen() {
           textAlignVertical="top"
           returnKeyType="done"
         />
+        <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 4, textAlign: 'right' }}>
+          {500 - notes.length} characters remaining
+        </Text>
 
         {/* Submit */}
         <TouchableOpacity

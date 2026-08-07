@@ -240,6 +240,10 @@ Per-item capacity (`mcn_preorder_items.max_quantity`) is a separate, smaller cap
 
 **Orders are placed and edited through `place_mcn_preorder()` only** (migration `20260824000000`) — never by writing `mcn_preorder_orders` and `mcn_preorder_order_items` from the client. The client previously inserted the order row, then the line items, as two round trips; when the cap trigger rejected the second call the first was already committed, leaving a `confirmed` order with a `total_amount`, no line items, and a phantom contribution to the host's Est. Revenue. Every over-cap attempt minted one. The RPC does the whole thing in one transaction under a `FOR UPDATE` lock on the drop and each item, re-checks both caps, and derives `unit_price` and `total_amount` from `mcn_preorder_items` rather than trusting the client. Cancelling an order is still a direct `status` update.
 
+Migration `20260824000000` fixed the app's code path but left the database open: `mcn_preorder_orders` still had a permissive INSERT policy, so anything that was not the RPC — a **stale client bundle**, a direct PostgREST call — could still commit a bare order row and have its line items rejected a round trip later. Migration `20260826000000` closes it two ways: a **deferred** constraint trigger (`trg_mcn_order_has_items`) requires ≥ 1 line item at commit, so a two-round-trip client now fails its *first* commit instead of orphaning; and INSERT is revoked (`WITH CHECK (false)`) on both tables, making placement RPC-only.
+
+**Diagnosing one of these rows:** the RPC inserts the order with `total_amount = 0` and writes the real total only after every line is in. An item-less order carrying a **non-zero** total therefore had its total supplied by a client — it did not come from `place_mcn_preorder`.
+
 **All four pre-order capacity triggers must stay `SECURITY DEFINER`** (migration `20260823000000`). They were originally invoker-rights, so the `SUM(quantity)` they compare against the cap ran under the buyer's own RLS and counted only that buyer's orders — every other resident's quantity was invisible and both caps could be overshot. The pre-flight RPCs were always `SECURITY DEFINER`, which is why the caps looked correct until a second buyer ordered.
 
 `mcn_preorder_order_items` also needs UPDATE and DELETE policies (buyer's own `confirmed` order), added in the same migration. Editing a pre-order deletes the old lines and re-inserts them; with SELECT/INSERT policies only, the delete silently matched zero rows while the insert succeeded, so the order kept both the old and new line and its displayed items no longer matched `total_amount`. The `(order_id, item_id)` unique index makes that failure mode loud instead of silent.
@@ -250,8 +254,17 @@ Per-item capacity (`mcn_preorder_items.max_quantity`) is a separate, smaller cap
 
 | Table | Key columns |
 |-------|-------------|
-| `mcn_carpools` | `title`, `role_type` (`offering`/`seeking`), `start_point`, `end_point`, `departure_time`, `return_time`, `recurring_days` (`TEXT[]`), `available_seats`, `vehicle_info`, `pricing_type` (`free`/`paid`), `price_per_seat`, `contact_phone`, `notes`, `status` (`active`/`paused`/`cancelled`/`completed`) |
-| `mcn_carpool_requests` | `carpool_id`, `rider_id`, `rider_name`, `rider_phone`, `flat_number`, `seats_requested`, `note`, `status` (`pending`/`accepted`/`rejected`/`cancelled`) |
+| `mcn_carpools` | `title`, `role_type` (`offering`/`seeking`), `start_point`, `end_point`, `departure_time`, `return_time`, `trip_date` (`DATE`, nullable — non-null for one-off/outstation trips, null for recurring), `recurring_days` (`TEXT[]`), `available_seats` (immutable capacity 1–6), `vehicle_info`, `pricing_type` (`free`/`paid`), `price_per_seat` (legacy display string), `price_per_seat_amount` (`NUMERIC(10,2)`), `contact_phone`, `notes`, `status` (`active`/`paused`/`cancelled`/`completed`) |
+| `mcn_carpool_requests` | `carpool_id`, `community_id`, `rider_id`, `rider_name`, `rider_phone`, `flat_number`, `seats_requested`, `note`, `status` (`pending`/`accepted`/`rejected`/`cancelled`). Unique partial index `mcn_carpool_requests_one_open_idx` on `(carpool_id, rider_id)` where `status IN ('pending', 'accepted')`. |
+
+**Carpool capacity & transition invariants** (migrations `20260828000000`, `20260828000100`, `20260829000000`):
+- `available_seats` is published vehicle capacity and is **never adjusted directly by the client**.
+- Live occupancy and remaining seats are dynamically computed via `get_mcn_carpool_seats(p_carpool_id)`.
+- `check_mcn_carpool_request_validity()` is a `SECURITY DEFINER` trigger that validates offering role, active status, cross-community match, requester identity (`rider_id <> created_by`), and verifies remaining seat capacity before allowing `accepted` requests.
+- `enforce_mcn_carpool_request_transition()` ensures column-level authorization: riders can only edit pending requests or cancel their own; hosts (and leads/admins) can only transition pending requests to accepted/rejected/cancelled.
+- `enforce_mcn_carpool_immutables()` prevents reassigning `created_by` or `community_id`, and prevents lowering capacity below seats already confirmed.
+- Cancelling a ride (`status = 'cancelled'`) cascades to cancel all pending and accepted requests and triggers notifications via `handle_mcn_carpool_status_changed()`.
+- Public passenger roster is retrieved via `get_mcn_carpool_passengers(p_carpool_id)` without exposing phone numbers.
 
 ### 4.8 MCN — parents, schools, social
 
@@ -266,11 +279,18 @@ Per-item capacity (`mcn_preorder_items.max_quantity`) is a separate, smaller cap
 
 | Table | Key columns | Scope |
 |-------|-------------|-------|
-| `user_services` | `service_name`, `category`, `last_serviced_on`, `frequency_months`, `next_due_on` (computed), `notified_at`, `provider_id`, `notes` | **User** |
+| `user_services` | `service_name`, `category`, `last_serviced_on`, `frequency_months`, `next_due_on` (computed), `images` (JSONB array), `notified_at`, `notify_count` (smallint), `provider_id`, `notes` | **User** |
 | `user_service_history` | `service_id`, `serviced_on`, `provider_id`, `provider_name_snapshot`, `cost_paid`, `note` | **User** |
 | `blood_donors` | `blood_group`, `contact_phone`, `is_available`, `note` — one per user per community | Community |
 | `emergency_contacts` | `name`, `phone`, `category`, `description`, `is_active`, `sort_order`; `community_id IS NULL` = global default | Community + global |
 | `notifications` | `user_id`, `type`, `title`, `body`, `data` (JSONB), `is_read` | **User** |
+
+**Service reminder backend logic** (migration `20260827000000`):
+- `public.today_ist()` computes local Indian Standard Time date (`(now() AT TIME ZONE 'Asia/Kolkata')::date`).
+- Date validation constraints (`last_serviced_on <= CURRENT_DATE`) are trigger-enforced using `today_ist()` (`user_services_compute_fields` and `user_service_history_validate`).
+- `user_service_history_sync_parent` trigger automatically updates `user_services.last_serviced_on = MAX(serviced_on)` whenever history rows are inserted, updated, or deleted.
+- `notify_due_services()` enforces repeating notification cadence (at most 1 per rolling 6.5 days, capped at 5 pings per 6-month cycle).
+- `mark_service_done` is standardized to a single 4-arg RPC (`p_service_id`, `p_provider_id`, `p_cost_paid`, `p_note`) and resets `notified_at` and `notify_count`. `get_my_upcoming_services` returns `images` JSONB array.
 
 ### 4.10 Federation (backend only, no UI)
 
@@ -326,6 +346,11 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 `place_mcn_preorder(p_drop_id, p_items, p_buyer_name, p_buyer_phone, p_flat_number, p_buyer_note, p_order_id)` — **the only supported way to place or edit a pre-order.** `p_items` is `[{"item_id": uuid, "quantity": numeric}]`, aggregated by item so a repeated id cannot bypass the cap; a non-null `p_order_id` edits that order (its existing lines are cleared first, so the buyer's own prior quantity is excluded from the cap sums rather than double-counted). Returns the order id. `check_mcn_drop_item_capacity(...)` — validates a drop's total `max_orders` cap. `check_mcn_drop_item_quantity_capacity(...)` — same idea, scoped to one item's `max_quantity` shared across every buyer. `get_mcn_drop_item_availability(p_drop_id)` — remaining stock per item, for display; the drop screen re-reads it on focus because another resident's order makes it stale.
 
+`place_mcn_order(p_listing_id, p_items, p_buyer_phone, p_buyer_note, p_order_id)` — **the atomic way to place or edit a business listing order.** Inserts/updates `mcn_orders` and `mcn_order_items` in a single transaction under `enforce_mcn_order_immutable_fields` trigger, ensuring consistency and preventing owner self-orders.
+
+`get_mcn_carpool_seats(p_carpool_id)` — returns `(total_seats INT, booked_seats INT, remaining_seats INT)` dynamically derived from accepted requests.
+`get_mcn_carpool_passengers(p_carpool_id)` — returns `(passenger_name TEXT, passenger_flat TEXT, seats INT)` for society co-passenger roster visibility (excludes phone numbers).
+
 ### Platform admin console
 
 `platform_get_community_dashboard(...)` · `platform_get_community_dashboard_v2(...)` · `platform_get_community_funds(...)` · `platform_get_community_businesses(...)` · `platform_get_community_preorders(...)` · `platform_get_resident_details(...)` · `platform_approve_funds_access_request(p_request_id, p_lead_user_id)` · `platform_reject_funds_access_request(...)` · `platform_revoke_funds_access(...)` · `platform_set_community_lead(...)` · `platform_remove_community_lead(...)` · `platform_set_fund_treasurer(p_event_id, p_target_user_id)` · `platform_set_blocks_enabled(...)` · `platform_set_block_label(...)` · `platform_add_community_block(...)` · `platform_archive_community_block(...)` · `platform_assign_block_in_charge(...)` · `platform_remove_block_in_charge(...)`
@@ -364,10 +389,20 @@ All are `SECURITY DEFINER` and raise unless `is_platform_admin(auth.uid())`. **T
 | `enforce_mcn_item_max_quantity_trigger` | `mcn_preorder_order_items` | AFTER INS/UPD | Reject orders exceeding `mcn_preorder_items.max_quantity`. `SECURITY DEFINER` |
 | `enforce_mcn_item_max_quantity_order_trigger` | `mcn_preorder_orders` | AFTER UPD OF `status` | Re-check item caps when an order returns to a counted status. `SECURITY DEFINER` |
 | `enforce_mcn_drop_capacity_trigger` | `mcn_preorder_order_items` | AFTER INS/UPD | Reject orders exceeding `mcn_preorder_drops.max_orders`. `SECURITY DEFINER` |
+| `trg_mcn_order_has_items` | `mcn_preorder_orders` | AFTER INS, **DEFERRED** | At commit, an order must have ≥ 1 line item — kills the item-less orphan at the source. `SECURITY DEFINER` |
 | `enforce_mcn_drop_capacity_order_trigger` | `mcn_preorder_orders` | AFTER UPD OF `status` | Re-check the drop cap on status change. `SECURITY DEFINER` |
 | `enforce_mcn_item_max_quantity_floor` | `mcn_preorder_items` | BEFORE UPDATE | Reject lowering `max_quantity` below what is already pre-ordered |
+| `trg_mcn_preorder_order_immutable_fields` | `mcn_preorder_orders` | BEFORE UPDATE | Enforces total amount and ownership immutability outside `place_mcn_preorder()` RPC |
+| `trg_mcn_order_immutable_fields` | `mcn_orders` | BEFORE UPDATE | Enforces buyer, listing, and community immutability outside `place_mcn_order()` RPC |
+| `mcn_carpool_request_validity` | `mcn_carpool_requests` | BEFORE INS/UPD | Validates role, active status, community scope, requester identity, and remaining seat capacity. `SECURITY DEFINER` |
+| `mcn_carpool_request_transition` | `mcn_carpool_requests` | BEFORE UPDATE | Enforces column-level authorization and legal status transitions. `SECURITY DEFINER` |
+| `mcn_carpools_immutables` | `mcn_carpools` | BEFORE UPDATE | Prevents mutating `created_by` or `community_id`, and prevents lowering capacity below confirmed seats. `SECURITY DEFINER` |
+| `on_mcn_carpool_request_created` | `mcn_carpool_requests` | AFTER INSERT | Emits `carpool_request` notification to host |
+| `on_mcn_carpool_request_status` | `mcn_carpool_requests` | AFTER UPDATE | Emits `carpool_request_accepted` / `_rejected` / `_cancelled` notifications |
+| `on_mcn_carpool_status` | `mcn_carpools` | AFTER UPDATE | Emits `carpool_cancelled` / `carpool_paused` to confirmed passengers and cascades request cancellations |
 | `prevent_mcn_item_delete_with_orders` | `mcn_preorder_items` | BEFORE DELETE | Reject removing an item residents have pre-ordered. Skipped when the parent drop is itself being deleted, so whole-drop deletion still cascades |
 | `*_updated_at` triggers | `provider_personal_notes`, `blood_donors`, `emergency_contacts`, `mcn_carpools`, `mcn_carpool_requests`, `mcn_parent_corner`, and other MCN tables | BEFORE UPDATE | Refresh `updated_at` |
+
 
 ---
 

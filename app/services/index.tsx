@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -29,7 +30,11 @@ export default function ServicesListScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchServices = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       const { data, error } = await supabase.rpc('get_my_upcoming_services');
       if (error) throw error;
@@ -42,9 +47,11 @@ export default function ServicesListScreen() {
     }
   }, [user]);
 
-  useEffect(() => {
-    fetchServices();
-  }, [fetchServices]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchServices();
+    }, [fetchServices])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);

@@ -1,10 +1,12 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import {
+    mapServiceCategoryToProviderCategory,
     SERVICE_CATEGORY_EMOJI,
     ServiceCategory,
 } from '../lib/serviceCategories';
@@ -56,9 +58,11 @@ export function UpcomingServicesCard() {
     }
   }, [user]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   if (state === 'loading') return null;
 
@@ -119,7 +123,17 @@ export function UpcomingServicesCard() {
               <UrgencyBadge daysUntilDue={s.days_until_due} />
             </View>
             <TouchableOpacity
-              onPress={() => router.push({ pathname: '/services/[id]', params: { id: s.id } })}
+              onPress={() =>
+                router.push({
+                  pathname: '/(tabs)/',
+                  params: {
+                    segment: 'providers',
+                    filterCategory: mapServiceCategoryToProviderCategory(
+                      s.category as ServiceCategory
+                    ),
+                  },
+                } as any)
+              }
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
             >
               <Text style={styles.findTech}>Find tech</Text>

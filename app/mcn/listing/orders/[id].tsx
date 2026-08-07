@@ -1,15 +1,26 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState, useCallback } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../../components/Avatar';
 import { Rupees } from '../../../../components/Rupees';
-import { McnOrderStatusBadge } from '../../../../components/McnOrderStatusBadge';
 import { Verandah } from '../../../../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../../../../constants/Verandah';
+import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
 import { useAuth } from '../../../../context/AuthContext';
+import { confirmAction } from '../../../../lib/confirm';
+import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
+import { goBackSmart } from '../../../../lib/navigation';
+import { buildWhatsAppUrl } from '../../../../lib/phone';
 import { supabase } from '../../../../lib/supabase';
 
 interface OrderItem {
@@ -44,6 +55,7 @@ export default function OrdersReceivedScreen() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
     if (!listingId) return;
@@ -62,47 +74,60 @@ export default function OrdersReceivedScreen() {
 
       if (error) throw error;
       setOrders((data || []) as unknown as Order[]);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      Toast.show({ type: 'error', text1: 'Failed to load orders' });
+      Toast.show({ type: 'error', text1: 'Failed to load orders', text2: error?.message });
     } finally {
       setLoading(false);
     }
   }, [listingId]);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchOrders();
+    }, [fetchOrders])
+  );
 
   const handleUpdateStatus = async (orderId: string, newStatus: 'fulfilled' | 'cancelled') => {
+    if (updatingOrderId) return;
+    setUpdatingOrderId(orderId);
+
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('mcn_orders')
         .update({ status: newStatus })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .eq('status', 'pending')
+        .select('id')
+        .maybeSingle();
 
       if (error) throw error;
-      Toast.show({ type: 'success', text1: `Order marked as ${newStatus}` });
+      if (!data) {
+        Toast.show({
+          type: 'info',
+          text1: 'Nothing to update',
+          text2: 'This order was already updated or cancelled.',
+        });
+      } else {
+        Toast.show({ type: 'success', text1: `Order marked as ${newStatus}` });
+      }
       fetchOrders();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      Toast.show({ type: 'error', text1: 'Failed to update order status' });
+      Toast.show({ type: 'error', text1: 'Failed to update order status', text2: error?.message });
+    } finally {
+      setUpdatingOrderId(null);
     }
   };
 
   const confirmCancel = (orderId: string) => {
-    Alert.alert(
-      'Cancel order',
-      'Are you sure you want to cancel this order?',
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Yes, cancel',
-          style: 'destructive',
-          onPress: () => handleUpdateStatus(orderId, 'cancelled'),
-        },
-      ]
-    );
+    confirmAction({
+      title: 'Cancel order',
+      message: 'Are you sure you want to cancel this order?',
+      confirmLabel: 'Yes, cancel',
+      destructive: true,
+      onConfirm: () => handleUpdateStatus(orderId, 'cancelled'),
+    });
   };
 
   const handleCall = (phone: string | null) => {
@@ -111,24 +136,35 @@ export default function OrdersReceivedScreen() {
   };
 
   const handleWhatsApp = (buyerName: string, phone: string | null, items: OrderItem[]) => {
-    if (!phone) return;
     const productLines = items
-      .map(item => `- ${item.mcn_products?.name || 'Item'} x ${item.quantity} ${item.mcn_products?.unit || ''}`)
+      .map(
+        (item) =>
+          `- ${item.mcn_products?.name || 'Item'} x ${item.quantity} ${item.mcn_products?.unit || ''}`
+      )
       .join('\n');
-    const total = items.reduce((sum, item) => sum + Number(item.unit_price) * Number(item.quantity), 0);
-    const text = encodeURIComponent(
-      `Hi ${buyerName}, thanks for your order on Society Service Hub!\n${productLines}\nTotal: ₹${total.toFixed(0)}`
+    const total = items.reduce(
+      (sum, item) => sum + Number(item.unit_price) * Number(item.quantity),
+      0
     );
-    Linking.openURL(`whatsapp://send?phone=91${phone}&text=${text}`);
+    const text = `Hi ${buyerName}, thanks for your order on Society Service Hub!\n${productLines}\nTotal: ₹${total.toFixed(0)}`;
+    const url = buildWhatsAppUrl(phone, text);
+    if (url) {
+      Linking.openURL(url);
+    } else {
+      Toast.show({ type: 'error', text1: 'Invalid phone number for WhatsApp' });
+    }
   };
 
-  // Grouping
-  const pendingOrders = orders.filter(o => o.status === 'pending');
-  const fulfilledOrders = orders.filter(o => o.status === 'fulfilled');
-  const cancelledOrders = orders.filter(o => o.status === 'cancelled');
+  const pendingOrders = orders.filter((o) => o.status === 'pending');
+  const fulfilledOrders = orders.filter((o) => o.status === 'fulfilled');
+  const cancelledOrders = orders.filter((o) => o.status === 'cancelled');
 
   const pendingCount = pendingOrders.length;
   const headerTitle = `Orders (${pendingCount} pending)`;
+
+  const handleBack = () => {
+    goBackSmart(router, '/mcn/my-posts');
+  };
 
   const renderOrderRow = (order: Order) => {
     const total = order.mcn_order_items.reduce(
@@ -138,6 +174,7 @@ export default function OrdersReceivedScreen() {
     const buyerName = order.profiles?.full_name || 'Resident';
     const flatNo = order.profiles?.flat_number ? `Flat ${order.profiles.flat_number}` : 'Resident';
     const buyerPhone = order.buyer_phone || order.profiles?.phone_number;
+    const isBusy = updatingOrderId === order.id;
 
     return (
       <View key={order.id} style={[styles.orderCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
@@ -171,7 +208,7 @@ export default function OrdersReceivedScreen() {
             return (
               <View key={idx} style={styles.itemRow}>
                 <Text style={[styles.itemName, { color: colors.textSecondary }]}>
-                  {item.mcn_products?.name || 'Deleted product'} <Text style={{ color: colors.textTertiary }}>×</Text> {item.quantity} {item.mcn_products?.unit}
+                  {item.mcn_products?.name || 'Item'} <Text style={{ color: colors.textTertiary }}>×</Text> {item.quantity} {item.mcn_products?.unit}
                 </Text>
                 <Rupees amount={subtotal} size="sm" />
               </View>
@@ -197,6 +234,7 @@ export default function OrdersReceivedScreen() {
           <View style={styles.actionRow}>
             <TouchableOpacity
               onPress={() => confirmCancel(order.id)}
+              disabled={isBusy}
               style={[styles.cancelBtn, { borderColor: colors.danger }]}
             >
               <Ionicons name="close-circle-outline" size={16} color={colors.danger} />
@@ -204,10 +242,17 @@ export default function OrdersReceivedScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleUpdateStatus(order.id, 'fulfilled')}
+              disabled={isBusy}
               style={[styles.fulfillBtn, { backgroundColor: colors.primary }]}
             >
-              <Ionicons name="checkmark-circle-outline" size={16} color={colors.primaryFg} />
-              <Text style={[styles.fulfillBtnText, { color: colors.primaryFg }]}>Mark fulfilled</Text>
+              {isBusy ? (
+                <ActivityIndicator size="small" color={colors.primaryFg} />
+              ) : (
+                <>
+                  <Ionicons name="checkmark-circle-outline" size={16} color={colors.primaryFg} />
+                  <Text style={[styles.fulfillBtnText, { color: colors.primaryFg }]}>Mark fulfilled</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -215,49 +260,50 @@ export default function OrdersReceivedScreen() {
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loaderWrap}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
-      <Stack.Screen options={{ title: headerTitle }} />
+      <Stack.Screen
+        options={buildMcnHeaderOptions({
+          title: headerTitle,
+          onBack: handleBack,
+        })}
+      />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {pendingOrders.length > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.caution }]}>Pending</Text>
-            {pendingOrders.map(renderOrderRow)}
-          </View>
-        )}
+      {loading ? (
+        <View style={styles.loaderWrap}>
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {pendingOrders.length > 0 && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.caution }]}>Pending</Text>
+              {pendingOrders.map(renderOrderRow)}
+            </View>
+          )}
 
-        {fulfilledOrders.length > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.accent }]}>Fulfilled</Text>
-            {fulfilledOrders.map(renderOrderRow)}
-          </View>
-        )}
+          {fulfilledOrders.length > 0 && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.accent }]}>Fulfilled</Text>
+              {fulfilledOrders.map(renderOrderRow)}
+            </View>
+          )}
 
-        {cancelledOrders.length > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.danger }]}>Cancelled</Text>
-            {cancelledOrders.map(renderOrderRow)}
-          </View>
-        )}
+          {cancelledOrders.length > 0 && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.danger }]}>Cancelled</Text>
+              {cancelledOrders.map(renderOrderRow)}
+            </View>
+          )}
 
-        {orders.length === 0 && (
-          <View style={styles.emptyWrap}>
-            <Ionicons name="receipt-outline" size={48} color={colors.textMuted} />
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              No orders placed for this listing yet.
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+          {orders.length === 0 && (
+            <View style={styles.emptyWrap}>
+              <Ionicons name="receipt-outline" size={48} color={colors.textMuted} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No orders received yet.</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -268,32 +314,33 @@ const styles = StyleSheet.create({
   },
   loaderWrap: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContent: {
-    padding: 24,
-    paddingBottom: 80,
+    padding: 16,
+    paddingBottom: 40,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionTitle: {
     ...VerandahType.captionBold,
-    letterSpacing: 1,
+    fontSize: 14,
+    marginBottom: 8,
     textTransform: 'uppercase',
-    marginBottom: 12,
+    letterSpacing: 0.5,
   },
   orderCard: {
-    borderWidth: 0.5,
-    borderRadius: VerandahRadius.lg,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: VerandahRadius.md,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 12,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   headerInfo: {
     flex: 1,
@@ -301,10 +348,11 @@ const styles = StyleSheet.create({
   },
   buyerName: {
     ...VerandahType.bodyBold,
+    fontSize: 15,
   },
   buyerFlat: {
     ...VerandahType.caption,
-    marginTop: 2,
+    fontSize: 12,
   },
   contactActions: {
     flexDirection: 'row',
@@ -315,29 +363,29 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   noContact: {
     ...VerandahType.caption,
+    fontSize: 11,
   },
   itemsList: {
-    marginBottom: 12,
-    gap: 6,
+    marginVertical: 6,
   },
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 3,
   },
   itemName: {
-    ...VerandahType.caption,
-    flex: 1,
-    marginRight: 8,
+    ...VerandahType.body,
+    fontSize: 13,
   },
   rowDivider: {
-    height: 0.5,
-    marginBottom: 10,
+    height: 1,
+    marginVertical: 8,
   },
   totalRow: {
     flexDirection: 'row',
@@ -345,60 +393,63 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   totalLabel: {
-    ...VerandahType.captionBold,
+    ...VerandahType.bodyBold,
+    fontSize: 14,
   },
   noteContainer: {
-    marginTop: 12,
-    padding: 10,
+    padding: 8,
     borderRadius: VerandahRadius.sm,
+    marginTop: 8,
   },
   noteLabel: {
-    ...VerandahType.micro,
-    fontWeight: '500',
-    marginBottom: 2,
+    ...VerandahType.captionBold,
+    fontSize: 11,
   },
   noteText: {
-    ...VerandahType.caption,
+    ...VerandahType.body,
+    fontSize: 12,
+    marginTop: 2,
     fontStyle: 'italic',
   },
   actionRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
+    gap: 10,
+    marginTop: 12,
   },
   cancelBtn: {
     flex: 1,
     flexDirection: 'row',
-    borderWidth: 1,
-    borderRadius: VerandahRadius.pill,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: VerandahRadius.sm,
+    borderWidth: 1,
     gap: 6,
-    height: 40,
   },
   cancelBtnText: {
-    ...VerandahType.captionBold,
+    ...VerandahType.bodyBold,
+    fontSize: 13,
   },
   fulfillBtn: {
-    flex: 1.2,
+    flex: 1,
     flexDirection: 'row',
-    borderRadius: VerandahRadius.pill,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: VerandahRadius.sm,
     gap: 6,
-    height: 40,
   },
   fulfillBtnText: {
-    ...VerandahType.captionBold,
+    ...VerandahType.bodyBold,
+    fontSize: 13,
   },
   emptyWrap: {
-    paddingTop: 80,
+    paddingTop: 60,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
+    gap: 10,
   },
   emptyText: {
     ...VerandahType.body,
-    textAlign: 'center',
+    fontSize: 14,
   },
 });

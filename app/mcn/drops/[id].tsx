@@ -24,6 +24,7 @@ import { Verandah } from '../../../constants/Colors';
 import { format12HourTime, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
+import { confirmAction } from '../../../lib/confirm';
 import { supabase } from '../../../lib/supabase';
 
 interface DropItem {
@@ -407,42 +408,45 @@ export default function PreorderDropDetailScreen() {
   };
 
   const handleCancelOrder = async (targetOrderId: string) => {
-    const doCancel = async () => {
-      try {
-        const { error } = await supabase
-          .from('mcn_preorder_orders')
-          .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-          .eq('id', targetOrderId)
-          .eq('buyer_id', user?.id);
+    confirmAction({
+      title: 'Cancel pre-order?',
+      message: 'Are you sure you want to cancel your food pre-order?',
+      confirmLabel: 'Yes, cancel',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          const { data, error } = await supabase
+            .from('mcn_preorder_orders')
+            .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+            .eq('id', targetOrderId)
+            .eq('buyer_id', user?.id)
+            .eq('status', 'confirmed')
+            .select('id')
+            .maybeSingle();
 
-        if (error) throw error;
-        Toast.show({ type: 'success', text1: 'Pre-order cancelled' });
-        if (editingOrderId === targetOrderId) {
-          setEditingOrderId(null);
-          setQuantities({});
-          setEditingOriginalQuantities({});
+          if (error) throw error;
+          if (!data) {
+            Toast.show({
+              type: 'info',
+              text1: 'Nothing to cancel',
+              text2: 'This pre-order was already delivered or cancelled.',
+            });
+          } else {
+            Toast.show({ type: 'success', text1: 'Pre-order cancelled' });
+          }
+
+          if (editingOrderId === targetOrderId) {
+            setEditingOrderId(null);
+            setQuantities({});
+            setEditingOriginalQuantities({});
+          }
+          fetchDropDetails();
+        } catch (err: any) {
+          console.error(err);
+          Toast.show({ type: 'error', text1: 'Failed to cancel pre-order', text2: err?.message });
         }
-        fetchDropDetails();
-      } catch (err) {
-        console.error(err);
-        Toast.show({ type: 'error', text1: 'Failed to cancel pre-order' });
-      }
-    };
-
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      if (window.confirm('Cancel Pre-Order?\n\nAre you sure you want to cancel this pre-order?')) {
-        doCancel();
-      }
-    } else {
-      Alert.alert(
-        'Cancel Pre-Order',
-        'Are you sure you want to cancel this pre-order?',
-        [
-          { text: 'No', style: 'cancel' },
-          { text: 'Cancel Order', style: 'destructive', onPress: doCancel },
-        ]
-      );
-    }
+      },
+    });
   };
 
   if (loading) {

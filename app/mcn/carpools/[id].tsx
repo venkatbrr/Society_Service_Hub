@@ -1,29 +1,33 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { goBackSmart } from '../../../lib/navigation';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Linking,
-    Modal,
-    Platform,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Linking,
+  Modal,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../../components/BaseCard';
+import { EmptyState } from '../../../components/EmptyState';
+import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { Tables } from '../../../lib/database.types';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
+import { goBackSmart } from '../../../lib/navigation';
+import { isValidIndianMobile, normalizeIndianMobile } from '../../../lib/phone';
 import { supabase } from '../../../lib/supabase';
 
 type Carpool = Tables<'mcn_carpools'> & {
@@ -36,6 +40,18 @@ type Carpool = Tables<'mcn_carpools'> & {
 
 type CarpoolRequest = Tables<'mcn_carpool_requests'>;
 
+type Passenger = {
+  passenger_name: string;
+  passenger_flat: string;
+  seats: number;
+};
+
+type SeatAvailability = {
+  total_seats: number;
+  booked_seats: number;
+  remaining_seats: number;
+};
+
 export default function CarpoolDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -44,9 +60,13 @@ export default function CarpoolDetailScreen() {
 
   const [carpool, setCarpool] = useState<Carpool | null>(null);
   const [requests, setRequests] = useState<CarpoolRequest[]>([]);
+  const [passengers, setPassengers] = useState<Passenger[]>([]);
+  const [seats, setSeats] = useState<SeatAvailability | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+  const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
 
   // Join Modal State
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -57,43 +77,81 @@ export default function CarpoolDetailScreen() {
   const [riderNote, setRiderNote] = useState('');
   const [submittingRequest, setSubmittingRequest] = useState(false);
 
+  // Profile prefill backfill when profile resolves asynchronously
+  useEffect(() => {
+    if (profile) {
+      if (!riderName && profile.full_name) setRiderName(profile.full_name);
+      if (!riderPhone && profile.phone_number) setRiderPhone(profile.phone_number);
+      if (!flatNumber && profile.flat_number) setFlatNumber(profile.flat_number);
+    }
+  }, [profile]);
+
   const isOwner = carpool?.created_by === user?.id;
-  const myExistingRequest = requests.find((r) => r.rider_id === user?.id && r.status !== 'cancelled');
+
+  const myOpenRequest = requests.find(
+    (r) => r.rider_id === user?.id && (r.status === 'pending' || r.status === 'accepted')
+  );
+  const myLastDeclined = requests.find((r) => r.rider_id === user?.id && r.status === 'rejected');
 
   const fetchDetails = useCallback(
     async (isRefresh = false) => {
-      if (!id) return;
+      if (!id || !communityId) return;
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
 
       try {
-        const { data: carpoolData, error: carpoolErr } = await supabase
-          .from('mcn_carpools')
-          .select(`
-            *,
-            creator_profile:profiles!mcn_carpools_created_by_fkey (
-              full_name,
-              flat_number,
-              phone_number
-            )
-          `)
-          .eq('id', id)
-          .single();
+        const [carpoolRes, reqRes, seatRes, passRes] = await Promise.all([
+          supabase
+            .from('mcn_carpools')
+            .select(`
+              *,
+              creator_profile:profiles!mcn_carpools_created_by_fkey (
+                full_name,
+                flat_number,
+                phone_number
+              )
+            `)
+            .eq('id', id)
+            .eq('community_id', communityId)
+            .maybeSingle(),
+          supabase
+            .from('mcn_carpool_requests')
+            .select('*')
+            .eq('carpool_id', id)
+            .order('created_at', { ascending: false }),
+          supabase.rpc('get_mcn_carpool_seats', { p_carpool_id: id }),
+          supabase.rpc('get_mcn_carpool_passengers', { p_carpool_id: id }),
+        ]);
 
-        if (carpoolErr) throw carpoolErr;
-        setCarpool(carpoolData as Carpool);
-
-        // Fetch join requests for this carpool
-        const { data: reqData, error: reqErr } = await supabase
-          .from('mcn_carpool_requests')
-          .select('*')
-          .eq('carpool_id', id)
-          .order('created_at', { ascending: false });
-
-        if (!reqErr) {
-          setRequests((reqData as CarpoolRequest[]) || []);
+        if (carpoolRes.error) throw carpoolRes.error;
+        if (!carpoolRes.data) {
+          setNotFound(true);
+          return;
         }
-      } catch (err) {
+
+        setCarpool(carpoolRes.data as Carpool);
+        setNotFound(false);
+
+        if (reqRes.error) {
+          console.error('Error fetching carpool requests:', reqRes.error);
+          Toast.show({ type: 'error', text1: 'Could not load join requests' });
+        } else {
+          setRequests((reqRes.data as CarpoolRequest[]) || []);
+        }
+
+        if (seatRes.data && (seatRes.data as any[]).length > 0) {
+          const s = (seatRes.data as any[])[0];
+          setSeats({
+            total_seats: s.total_seats ?? carpoolRes.data.available_seats,
+            booked_seats: s.booked_seats ?? 0,
+            remaining_seats: s.remaining_seats ?? carpoolRes.data.available_seats,
+          });
+        }
+
+        if (passRes.data) {
+          setPassengers(passRes.data as Passenger[]);
+        }
+      } catch (err: any) {
         console.error('Error loading carpool details:', err);
         Toast.show({ type: 'error', text1: 'Failed to load carpool details' });
       } finally {
@@ -101,7 +159,7 @@ export default function CarpoolDetailScreen() {
         setRefreshing(false);
       }
     },
-    [id]
+    [id, communityId]
   );
 
   useFocusEffect(
@@ -110,7 +168,7 @@ export default function CarpoolDetailScreen() {
     }, [fetchDetails])
   );
 
-  const handleUpdateStatus = async (newStatus: 'active' | 'paused' | 'cancelled') => {
+  const handleUpdateStatus = async (newStatus: 'active' | 'paused' | 'cancelled' | 'completed') => {
     if (!carpool) return;
     setActionLoading(true);
     try {
@@ -121,16 +179,21 @@ export default function CarpoolDetailScreen() {
 
       if (error) throw error;
 
-      let msg = 'Carpool status updated';
-      if (newStatus === 'paused') msg = 'Carpool paused successfully';
-      if (newStatus === 'active') msg = 'Carpool resumed!';
-      if (newStatus === 'cancelled') msg = 'Carpool cancelled';
+      let msg = 'Ride status updated';
+      if (newStatus === 'paused') msg = 'Ride paused';
+      if (newStatus === 'active') msg = 'Ride resumed';
+      if (newStatus === 'cancelled') msg = 'Ride cancelled';
+      if (newStatus === 'completed') msg = 'Trip marked as completed';
 
       Toast.show({ type: 'success', text1: msg });
-      fetchDetails();
+      await fetchDetails();
     } catch (err: any) {
       console.error(err);
-      Toast.show({ type: 'error', text1: 'Failed to update status' });
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to update status',
+        text2: err?.message || undefined,
+      });
     } finally {
       setActionLoading(false);
     }
@@ -144,22 +207,22 @@ export default function CarpoolDetailScreen() {
       try {
         const { error } = await supabase.from('mcn_carpools').delete().eq('id', carpool.id);
         if (error) throw error;
-        Toast.show({ type: 'success', text1: 'Carpool deleted' });
+        Toast.show({ type: 'success', text1: 'Ride deleted' });
         router.replace('/mcn/carpools' as any);
       } catch (err: any) {
         console.error('Delete error:', err);
-        Toast.show({ type: 'error', text1: 'Failed to delete carpool', text2: err.message });
+        Toast.show({ type: 'error', text1: 'Failed to delete ride', text2: err.message });
       } finally {
         setActionLoading(false);
       }
     };
 
     if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.confirm('Delete Carpool?\nThis action cannot be undone.')) {
+      if (typeof window !== 'undefined' && window.confirm('Delete this ride post?\nThis action cannot be undone.')) {
         performDelete();
       }
     } else {
-      Alert.alert('Delete Carpool?', 'This action cannot be undone.', [
+      Alert.alert('Delete ride post?', 'This action cannot be undone.', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: performDelete },
       ]);
@@ -168,8 +231,25 @@ export default function CarpoolDetailScreen() {
 
   const handleSendRequest = async () => {
     if (!user || !communityId || !carpool) return;
-    if (!riderName.trim() || !riderPhone.trim() || !flatNumber.trim()) {
-      Toast.show({ type: 'error', text1: 'Missing Details', text2: 'Please fill name, phone and flat number.' });
+
+    const cleanName = riderName.trim();
+    const cleanPhone = normalizeIndianMobile(riderPhone);
+    const cleanFlat = flatNumber.trim().replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+    if (!cleanName) {
+      Toast.show({ type: 'error', text1: 'Missing details', text2: 'Please enter your full name.' });
+      return;
+    }
+    if (!cleanPhone || !isValidIndianMobile(cleanPhone)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid phone number',
+        text2: 'Please enter a valid 10-digit Indian mobile number.',
+      });
+      return;
+    }
+    if (!cleanFlat) {
+      Toast.show({ type: 'error', text1: 'Missing details', text2: 'Please enter your flat number (e.g. A101).' });
       return;
     }
 
@@ -179,9 +259,9 @@ export default function CarpoolDetailScreen() {
         carpool_id: carpool.id,
         community_id: communityId,
         rider_id: user.id,
-        rider_name: riderName.trim(),
-        rider_phone: riderPhone.trim(),
-        flat_number: flatNumber.trim(),
+        rider_name: cleanName,
+        rider_phone: cleanPhone,
+        flat_number: cleanFlat,
         seats_requested: seatsRequested,
         note: riderNote.trim() || null,
         status: 'pending',
@@ -191,24 +271,28 @@ export default function CarpoolDetailScreen() {
 
       Toast.show({
         type: 'success',
-        text1: 'Request Sent!',
-        text2: 'The host has been notified of your carpool request.',
+        text1: 'Request sent',
+        text2: 'The host has been notified of your request.',
       });
       setShowJoinModal(false);
-      fetchDetails();
+      setRiderNote('');
+      await fetchDetails();
     } catch (err: any) {
       console.error(err);
-      Toast.show({ type: 'error', text1: 'Failed to send request', text2: err.message });
+      Toast.show({ type: 'error', text1: 'Failed to send request', text2: err?.message });
     } finally {
       setSubmittingRequest(false);
     }
   };
 
-  const handleUpdateRequestStatus = async (requestId: string, newStatus: 'accepted' | 'rejected' | 'cancelled') => {
-    try {
-      const targetReq = requests.find((r) => r.id === requestId);
-      const prevStatus = targetReq?.status;
+  const handleUpdateRequestStatus = async (
+    requestId: string,
+    newStatus: 'accepted' | 'rejected' | 'cancelled'
+  ) => {
+    if (pendingRequestId) return;
+    setPendingRequestId(requestId);
 
+    try {
       const { error } = await supabase
         .from('mcn_carpool_requests')
         .update({ status: newStatus })
@@ -216,28 +300,25 @@ export default function CarpoolDetailScreen() {
 
       if (error) throw error;
 
-      if (carpool) {
-        let seatAdjustment = 0;
-        if (newStatus === 'accepted' && prevStatus !== 'accepted') {
-          seatAdjustment = -Math.abs(targetReq?.seats_requested || 1);
-        } else if (prevStatus === 'accepted' && newStatus !== 'accepted') {
-          seatAdjustment = Math.abs(targetReq?.seats_requested || 1);
-        }
-
-        if (seatAdjustment !== 0) {
-          const newSeats = Math.max(0, carpool.available_seats + seatAdjustment);
-          await supabase
-            .from('mcn_carpools')
-            .update({ available_seats: newSeats })
-            .eq('id', carpool.id);
-        }
-      }
-
-      Toast.show({ type: 'success', text1: `Request ${newStatus}` });
-      fetchDetails();
-    } catch (err) {
+      Toast.show({
+        type: 'success',
+        text1:
+          newStatus === 'accepted'
+            ? 'Request accepted'
+            : newStatus === 'rejected'
+            ? 'Request declined'
+            : 'Request cancelled',
+      });
+      await fetchDetails();
+    } catch (err: any) {
       console.error(err);
-      Toast.show({ type: 'error', text1: 'Failed to update request' });
+      Toast.show({
+        type: 'error',
+        text1: 'Could not update request',
+        text2: err?.message || undefined,
+      });
+    } finally {
+      setPendingRequestId(null);
     }
   };
 
@@ -246,7 +327,8 @@ export default function CarpoolDetailScreen() {
       Toast.show({ type: 'error', text1: 'No phone number available' });
       return;
     }
-    Linking.openURL(`tel:${phone}`);
+    const clean = normalizeIndianMobile(phone) || phone.replace(/\D/g, '');
+    Linking.openURL(`tel:${clean}`);
   };
 
   const handleWhatsAppHost = (phone?: string | null) => {
@@ -254,24 +336,48 @@ export default function CarpoolDetailScreen() {
       Toast.show({ type: 'error', text1: 'No phone number available' });
       return;
     }
-    const cleanPhone = phone.replace(/[^0-9]/g, '');
-    const formattedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-    const msg = encodeURIComponent(`Hi, I saw your carpool route "${carpool?.title || 'Ride'}" on Society Hub.`);
-    Linking.openURL(`https://wa.me/${formattedPhone}?text=${msg}`);
+    const clean = normalizeIndianMobile(phone) || phone.replace(/\D/g, '');
+    const formatted = clean.length === 10 ? `91${clean}` : clean;
+    const msg = encodeURIComponent(`Hi, I saw your ride post "${carpool?.title || 'Ride'}" on Society Hub.`);
+    Linking.openURL(`https://wa.me/${formatted}?text=${msg}`);
   };
 
   const handleBack = () => {
-    goBackSmart(router, '/mcn/carpools/' + String(id || ''));
+    goBackSmart(router, '/mcn/carpools');
   };
 
-  if (loading || !carpool) {
+  if (loading) {
     return (
       <View style={[styles.center, { backgroundColor: colors.surface }]}>
-        <Stack.Screen options={{ title: 'Carpool Details' }} />
+        <Stack.Screen options={buildMcnHeaderOptions({ title: 'Ride details', onBack: handleBack })} />
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
+
+  if (notFound || !carpool) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.surface }]}>
+        <Stack.Screen options={buildMcnHeaderOptions({ title: 'Ride not found', onBack: handleBack })} />
+        <EmptyState
+          icon="car-sport-outline"
+          title="Ride not found"
+          message="This ride may have been removed by the host, or it belongs to another community."
+          actionLabel="Back to all rides"
+          onAction={() => router.replace('/mcn/carpools' as any)}
+        />
+      </View>
+    );
+  }
+
+  const effectiveRemaining = seats?.remaining_seats ?? carpool.available_seats;
+  const effectiveTotal = seats?.total_seats ?? carpool.available_seats;
+  const isFull = effectiveRemaining === 0;
+
+  const unitPrice =
+    carpool.pricing_type === 'paid'
+      ? (carpool.price_per_seat_amount ?? (parseFloat(carpool.price_per_seat?.replace(/[^0-9.]/g, '') || '0') || 0))
+      : 0;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -279,6 +385,18 @@ export default function CarpoolDetailScreen() {
         options={buildMcnHeaderOptions({
           title: carpool.title,
           onBack: handleBack,
+          headerRight:
+            isOwner || isCommunityLead
+              ? () => (
+                  <TouchableOpacity
+                    onPress={() => router.push(`/mcn/carpools/add?id=${carpool.id}` as any)}
+                    style={styles.headerEditBtn}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="pencil-outline" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                )
+              : undefined,
         })}
       />
 
@@ -294,31 +412,64 @@ export default function CarpoolDetailScreen() {
             <View
               style={[
                 styles.roleBadge,
-                { backgroundColor: carpool.role_type === 'offering' ? colors.primary + '18' : '#DBEAFE' },
+                {
+                  backgroundColor:
+                    carpool.role_type === 'offering' ? colors.accentSoft : colors.cardMuted,
+                },
               ]}
             >
               <Ionicons
                 name={carpool.role_type === 'offering' ? 'car-outline' : 'person-outline'}
                 size={14}
-                color={carpool.role_type === 'offering' ? colors.primary : '#1D4ED8'}
+                color={carpool.role_type === 'offering' ? colors.accent : colors.textPrimary}
               />
               <Text
                 style={[
                   styles.roleBadgeText,
-                  { color: carpool.role_type === 'offering' ? colors.primary : '#1D4ED8' },
+                  { color: carpool.role_type === 'offering' ? colors.accent : colors.textPrimary },
                 ]}
               >
-                {carpool.role_type === 'offering' ? 'Offering Ride' : 'Seeking Ride'}
+                {carpool.role_type === 'offering' ? 'Offering ride' : 'Seeking ride'}
               </Text>
             </View>
 
-            <View style={[styles.statusBadge, {
-              backgroundColor: carpool.status === 'active' ? '#D1FAE5' : carpool.status === 'paused' ? '#FEF3C7' : '#FEE2E2'
-            }]}>
-              <Text style={[styles.statusText, {
-                color: carpool.status === 'active' ? '#059669' : carpool.status === 'paused' ? '#D97706' : '#DC2626'
-              }]}>
-                {carpool.status.toUpperCase()}
+            <View
+              style={[
+                styles.statusBadge,
+                {
+                  backgroundColor:
+                    carpool.status === 'active'
+                      ? colors.accentSoft
+                      : carpool.status === 'paused'
+                      ? colors.cautionSoft
+                      : carpool.status === 'completed'
+                      ? colors.cardMuted
+                      : colors.dangerSoft,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusText,
+                  {
+                    color:
+                      carpool.status === 'active'
+                        ? colors.accent
+                        : carpool.status === 'paused'
+                        ? colors.caution
+                        : carpool.status === 'completed'
+                        ? colors.textSecondary
+                        : colors.danger,
+                  },
+                ]}
+              >
+                {carpool.status === 'active'
+                  ? 'Active'
+                  : carpool.status === 'paused'
+                  ? 'Paused'
+                  : carpool.status === 'completed'
+                  ? 'Completed'
+                  : 'Cancelled'}
               </Text>
             </View>
           </View>
@@ -328,7 +479,7 @@ export default function CarpoolDetailScreen() {
           {/* Route Box */}
           <View style={styles.routeContainer}>
             <View style={styles.routePointRow}>
-              <View style={[styles.dotCircle, { backgroundColor: '#10B981' }]} />
+              <View style={[styles.dotCircle, { backgroundColor: colors.accent }]} />
               <Text style={[styles.routeLabel, { color: colors.textTertiary }]}>Pickup / Start:</Text>
               <Text style={[styles.routeValue, { color: colors.textPrimary }]}>{carpool.start_point}</Text>
             </View>
@@ -336,14 +487,31 @@ export default function CarpoolDetailScreen() {
             <View style={styles.routeLine} />
 
             <View style={styles.routePointRow}>
-              <View style={[styles.dotCircle, { backgroundColor: '#EF4444' }]} />
-              <Text style={[styles.routeLabel, { color: colors.textTertiary }]}>Destination / End:</Text>
+              <View style={[styles.dotCircle, { backgroundColor: colors.danger }]} />
+              <Text style={[styles.routeLabel, { color: colors.textTertiary }]}>Destination:</Text>
               <Text style={[styles.routeValue, { color: colors.textPrimary }]}>{carpool.end_point}</Text>
             </View>
           </View>
 
           {/* Timings & Seats */}
           <View style={[styles.infoGrid, { borderColor: colors.border }]}>
+            {/* Trip Date or Recurring indicator */}
+            {carpool.trip_date ? (
+              <View style={styles.gridItem}>
+                <Ionicons name="calendar-outline" size={18} color={colors.accent} />
+                <View>
+                  <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>Date</Text>
+                  <Text style={[styles.gridValue, { color: colors.textPrimary }]}>
+                    {new Date(carpool.trip_date + 'T00:00:00').toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
             <View style={styles.gridItem}>
               <Ionicons name="time-outline" size={18} color={colors.primary} />
               <View>
@@ -356,7 +524,7 @@ export default function CarpoolDetailScreen() {
               <View style={styles.gridItem}>
                 <Ionicons name="swap-horizontal-outline" size={18} color={colors.accent} />
                 <View>
-                  <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>Return Time</Text>
+                  <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>Return time</Text>
                   <Text style={[styles.gridValue, { color: colors.textPrimary }]}>{carpool.return_time}</Text>
                 </View>
               </View>
@@ -365,24 +533,58 @@ export default function CarpoolDetailScreen() {
             <View style={styles.gridItem}>
               <Ionicons name="people-outline" size={18} color={colors.textSecondary} />
               <View>
-                <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>Capacity</Text>
-                <Text style={[styles.gridValue, { color: colors.textPrimary }]}>
-                  {carpool.available_seats} {carpool.available_seats === 1 ? 'seat' : 'seats'}
+                <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>
+                  {carpool.role_type === 'offering' ? 'Capacity' : 'Seats needed'}
+                </Text>
+                <Text
+                  style={[
+                    styles.gridValue,
+                    {
+                      color:
+                        carpool.role_type === 'offering' && isFull
+                          ? colors.danger
+                          : colors.textPrimary,
+                    },
+                  ]}
+                >
+                  {carpool.role_type === 'offering'
+                    ? isFull
+                      ? 'Ride full'
+                      : `${effectiveRemaining} of ${effectiveTotal} seats left`
+                    : `${carpool.available_seats} ${carpool.available_seats === 1 ? 'seat' : 'seats'}`}
                 </Text>
               </View>
             </View>
 
-            <View style={styles.gridItem}>
-              <Ionicons name="cash-outline" size={18} color={(carpool as any).pricing_type === 'paid' ? colors.accent : '#059669'} />
-              <View>
-                <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>Ride Cost</Text>
-                <Text style={[styles.gridValue, { color: (carpool as any).pricing_type === 'paid' ? colors.accent : '#059669' }]}>
-                  {(carpool as any).pricing_type === 'paid' ? ((carpool as any).price_per_seat || 'Paid') : 'Free Ride'}
-                </Text>
+            {/* Cost row - Only shown for offering rides */}
+            {carpool.role_type === 'offering' && (
+              <View style={styles.gridItem}>
+                <Ionicons
+                  name="cash-outline"
+                  size={18}
+                  color={carpool.pricing_type === 'paid' ? colors.accent : colors.accent}
+                />
+                <View>
+                  <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>Ride cost</Text>
+                  {carpool.pricing_type === 'paid' ? (
+                    unitPrice > 0 ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Rupees amount={unitPrice} size="sm" tone="in" />
+                        <Text style={[styles.gridValue, { color: colors.textPrimary, marginLeft: 2 }]}>
+                          / seat
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text style={[styles.gridValue, { color: colors.accent }]}>Paid</Text>
+                    )
+                  ) : (
+                    <Text style={[styles.gridValue, { color: colors.accent }]}>Free ride</Text>
+                  )}
+                </View>
               </View>
-            </View>
+            )}
 
-            {carpool.vehicle_info ? (
+            {carpool.role_type === 'offering' && carpool.vehicle_info ? (
               <View style={styles.gridItem}>
                 <Ionicons name="car-sport-outline" size={18} color={colors.textSecondary} />
                 <View>
@@ -394,13 +596,13 @@ export default function CarpoolDetailScreen() {
           </View>
 
           {/* Recurring Schedule */}
-          {carpool.recurring_days && carpool.recurring_days.length > 0 && (
+          {!carpool.trip_date && carpool.recurring_days && carpool.recurring_days.length > 0 && (
             <View style={styles.sectionBlock}>
               <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>RECURRING DAYS</Text>
               <View style={styles.daysRow}>
                 {carpool.recurring_days.map((day) => (
-                  <View key={day} style={[styles.dayBadge, { backgroundColor: colors.primary + '18' }]}>
-                    <Text style={[styles.dayBadgeText, { color: colors.primary }]}>{day}</Text>
+                  <View key={day} style={[styles.dayBadge, { backgroundColor: colors.accentSoft }]}>
+                    <Text style={[styles.dayBadgeText, { color: colors.accent }]}>{day}</Text>
                   </View>
                 ))}
               </View>
@@ -416,106 +618,121 @@ export default function CarpoolDetailScreen() {
           ) : null}
 
           {/* Creator Profile & Contact Card */}
-          {carpool && (
-            <View style={[styles.hostCard, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}>
-              <Ionicons name="person-circle-outline" size={38} color={colors.primary} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.hostName, { color: colors.textPrimary }]}>
-                  {carpool.creator_profile?.full_name || 'Resident Host'}
-                </Text>
+          <View style={[styles.hostCard, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}>
+            <Ionicons name="person-circle-outline" size={38} color={colors.primary} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.hostName, { color: colors.textPrimary }]}>
+                {carpool.creator_profile?.full_name || 'Resident'}
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
                 <Text style={[styles.hostFlat, { color: colors.textSecondary }]}>
-                  Flat: {carpool.creator_profile?.flat_number || 'N/A'}
-                  {((carpool as any).contact_phone || carpool.creator_profile?.phone_number)
-                    ? ` · 📞 ${(carpool as any).contact_phone || carpool.creator_profile?.phone_number}`
-                    : ''}
+                  Flat {carpool.creator_profile?.flat_number || 'N/A'}
                 </Text>
+                {(carpool.contact_phone || carpool.creator_profile?.phone_number) ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                    <Text style={[styles.hostFlat, { color: colors.textTertiary }]}>·</Text>
+                    <Ionicons name="call-outline" size={12} color={colors.textTertiary} />
+                    <Text style={[styles.hostFlat, { color: colors.textSecondary }]}>
+                      {carpool.contact_phone || carpool.creator_profile?.phone_number}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
-
-              {(carpool.role_type === 'seeking' || !isOwner) && ((carpool as any).contact_phone || carpool.creator_profile?.phone_number) && (
-                <View style={styles.contactRow}>
-                  <TouchableOpacity
-                    style={[styles.iconBtn, { backgroundColor: '#D1FAE5' }]}
-                    onPress={() => handleCallHost((carpool as any).contact_phone || carpool.creator_profile?.phone_number)}
-                  >
-                    <Ionicons name="call-outline" size={18} color="#059669" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.iconBtn, { backgroundColor: '#DCFCE7' }]}
-                    onPress={() => handleWhatsAppHost((carpool as any).contact_phone || carpool.creator_profile?.phone_number)}
-                  >
-                    <Ionicons name="logo-whatsapp" size={18} color="#16A34A" />
-                  </TouchableOpacity>
-                </View>
-              )}
             </View>
-          )}
+
+            {(carpool.contact_phone || carpool.creator_profile?.phone_number) ? (
+              <View style={styles.contactRow}>
+                <TouchableOpacity
+                  style={[styles.iconBtn, { backgroundColor: colors.accentSoft }]}
+                  onPress={() => handleCallHost(carpool.contact_phone || carpool.creator_profile?.phone_number)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="call-outline" size={18} color={colors.accent} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.iconBtn, { backgroundColor: colors.accentSoft }]}
+                  onPress={() => handleWhatsAppHost(carpool.contact_phone || carpool.creator_profile?.phone_number)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="logo-whatsapp" size={18} color={colors.accent} />
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </View>
         </BaseCard>
 
         {/* Public Confirmed Co-Passengers Section */}
-        {carpool.role_type === 'offering' && (() => {
-          const acceptedRequests = requests.filter((r) => r.status === 'accepted');
-          if (acceptedRequests.length === 0) return null;
-          return (
-            <BaseCard padding={12} style={styles.card}>
-              <Text style={[styles.controlHeader, { color: colors.textPrimary, marginBottom: 8 }]}>
-                Confirmed Co-Passengers ({acceptedRequests.length})
-              </Text>
-              {acceptedRequests.map((req) => (
-                <View key={req.id} style={[styles.reqCard, { borderColor: colors.border, marginBottom: 6 }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary }}>
-                      {req.rider_name} (Flat {req.flat_number})
+        {carpool.role_type === 'offering' && passengers.length > 0 && (
+          <BaseCard padding={12} style={styles.card}>
+            <Text style={[styles.controlHeader, { color: colors.textPrimary, marginBottom: 8 }]}>
+              Confirmed co-passengers ({passengers.length})
+            </Text>
+            {passengers.map((p, idx) => (
+              <View key={idx} style={[styles.reqCard, { borderColor: colors.border, marginBottom: 6 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 14, fontWeight: '500', color: colors.textPrimary }}>
+                    {p.passenger_name} (Flat {p.passenger_flat})
+                  </Text>
+                  <View style={{ backgroundColor: colors.accentSoft, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '500', color: colors.accent }}>
+                      {p.seats} {p.seats === 1 ? 'seat' : 'seats'}
                     </Text>
-                    <View style={{ backgroundColor: '#D1FAE5', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#059669' }}>
-                        {req.seats_requested} {req.seats_requested === 1 ? 'SEAT' : 'SEATS'}
-                      </Text>
-                    </View>
                   </View>
                 </View>
-              ))}
-            </BaseCard>
-          );
-        })()}
+              </View>
+            ))}
+          </BaseCard>
+        )}
 
-        {/* Host Control Panel - Only for offering rides */}
-        {carpool.role_type === 'offering' && (isOwner || isCommunityLead) && (
+        {/* Host Controls - Available to owner and community leads for ALL rides (offering and seeking) */}
+        {(isOwner || isCommunityLead) && (
           <BaseCard padding={12} style={styles.card}>
-            <Text style={[styles.controlHeader, { color: colors.textPrimary }]}>Host Controls</Text>
+            <Text style={[styles.controlHeader, { color: colors.textPrimary }]}>Host controls</Text>
             <View style={styles.hostActionsRow}>
               {carpool.status === 'active' ? (
                 <TouchableOpacity
-                  style={[styles.actionButton, { backgroundColor: '#FEF3C7' }]}
+                  style={[styles.actionButton, { backgroundColor: colors.cautionSoft }]}
                   onPress={() => handleUpdateStatus('paused')}
                   disabled={actionLoading}
                 >
-                  <Ionicons name="pause-circle-outline" size={18} color="#D97706" />
-                  <Text style={[styles.actionButtonText, { color: '#D97706' }]}>Pause Trip</Text>
+                  <Ionicons name="pause-circle-outline" size={18} color={colors.caution} />
+                  <Text style={[styles.actionButtonText, { color: colors.caution }]}>Pause</Text>
                 </TouchableOpacity>
-              ) : (
+              ) : carpool.status === 'paused' ? (
                 <TouchableOpacity
-                  style={[styles.actionButton, { backgroundColor: '#D1FAE5' }]}
+                  style={[styles.actionButton, { backgroundColor: colors.accentSoft }]}
                   onPress={() => handleUpdateStatus('active')}
                   disabled={actionLoading}
                 >
-                  <Ionicons name="play-circle-outline" size={18} color="#059669" />
-                  <Text style={[styles.actionButtonText, { color: '#059669' }]}>Resume Trip</Text>
+                  <Ionicons name="play-circle-outline" size={18} color={colors.accent} />
+                  <Text style={[styles.actionButtonText, { color: colors.accent }]}>Resume</Text>
                 </TouchableOpacity>
-              )}
+              ) : null}
 
-              {carpool.status !== 'cancelled' && (
+              {carpool.status !== 'cancelled' && carpool.status !== 'completed' && (
                 <TouchableOpacity
-                  style={[styles.actionButton, { backgroundColor: '#FEE2E2' }]}
+                  style={[styles.actionButton, { backgroundColor: colors.dangerSoft }]}
                   onPress={() => handleUpdateStatus('cancelled')}
                   disabled={actionLoading}
                 >
-                  <Ionicons name="close-circle-outline" size={18} color="#DC2626" />
-                  <Text style={[styles.actionButtonText, { color: '#DC2626' }]}>Cancel Trip</Text>
+                  <Ionicons name="close-circle-outline" size={18} color={colors.danger} />
+                  <Text style={[styles.actionButtonText, { color: colors.danger }]}>Cancel</Text>
+                </TouchableOpacity>
+              )}
+
+              {carpool.status === 'active' && (
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: colors.cardMuted }]}
+                  onPress={() => handleUpdateStatus('completed')}
+                  disabled={actionLoading}
+                >
+                  <Ionicons name="checkmark-done-circle-outline" size={18} color={colors.textPrimary} />
+                  <Text style={[styles.actionButtonText, { color: colors.textPrimary }]}>Complete</Text>
                 </TouchableOpacity>
               )}
 
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.borderStrong }]}
+                style={[styles.actionButton, { backgroundColor: colors.dangerSoft }]}
                 onPress={handleDeleteCarpool}
                 disabled={actionLoading}
               >
@@ -527,13 +744,13 @@ export default function CarpoolDetailScreen() {
         )}
 
         {/* Requests Section for Host */}
-        {isOwner && (() => {
+        {isOwner && carpool.role_type === 'offering' && (() => {
           const hostRequests = requests.filter((r) => r.status !== 'cancelled');
           return (
             <BaseCard padding={12} style={styles.card}>
               <View style={styles.headerBetween}>
                 <Text style={[styles.controlHeader, { color: colors.textPrimary }]}>
-                  Join Requests ({hostRequests.length})
+                  Join requests ({hostRequests.length})
                 </Text>
               </View>
 
@@ -543,85 +760,158 @@ export default function CarpoolDetailScreen() {
                 </Text>
               ) : (
                 hostRequests.map((req) => (
-                <View key={req.id} style={[styles.reqCard, { borderColor: colors.border }]}>
-                  <View style={styles.reqHeader}>
-                    <Text style={[styles.reqName, { color: colors.textPrimary }]}>
-                      {req.rider_name} ({req.flat_number})
-                    </Text>
-                    <View style={[styles.reqStatusBadge, {
-                      backgroundColor: req.status === 'accepted' ? '#D1FAE5' : req.status === 'pending' ? '#FEF3C7' : '#FEE2E2'
-                    }]}>
-                      <Text style={{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', color: req.status === 'accepted' ? '#059669' : req.status === 'pending' ? '#D97706' : '#DC2626' }}>
-                        {req.status}
+                  <View key={req.id} style={[styles.reqCard, { borderColor: colors.border }]}>
+                    <View style={styles.reqHeader}>
+                      <Text style={[styles.reqName, { color: colors.textPrimary }]}>
+                        {req.rider_name} (Flat {req.flat_number})
                       </Text>
+                      <View
+                        style={[
+                          styles.reqStatusBadge,
+                          {
+                            backgroundColor:
+                              req.status === 'accepted'
+                                ? colors.accentSoft
+                                : req.status === 'pending'
+                                ? colors.cautionSoft
+                                : colors.dangerSoft,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 10,
+                            fontWeight: '500',
+                            color:
+                              req.status === 'accepted'
+                                ? colors.accent
+                                : req.status === 'pending'
+                                ? colors.caution
+                                : colors.danger,
+                          }}
+                        >
+                          {req.status === 'accepted'
+                            ? 'Accepted'
+                            : req.status === 'pending'
+                            ? 'Pending'
+                            : 'Declined'}
+                        </Text>
+                      </View>
                     </View>
+
+                    <Text style={[styles.reqDetail, { color: colors.textSecondary }]}>
+                      Seats: {req.seats_requested} · Phone: {req.rider_phone}
+                    </Text>
+                    {req.note ? (
+                      <Text style={[styles.reqNote, { color: colors.textTertiary }]}>"{req.note}"</Text>
+                    ) : null}
+
+                    {req.status === 'pending' && (
+                      <View style={styles.reqActions}>
+                        <TouchableOpacity
+                          style={[
+                            styles.smallBtn,
+                            { backgroundColor: colors.primary },
+                            pendingRequestId !== null && { opacity: 0.6 },
+                          ]}
+                          onPress={() => handleUpdateRequestStatus(req.id, 'accepted')}
+                          disabled={pendingRequestId !== null}
+                        >
+                          <Text style={[styles.smallBtnText, { color: colors.primaryFg }]}>Accept</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.smallBtn,
+                            { backgroundColor: colors.dangerSoft },
+                            pendingRequestId !== null && { opacity: 0.6 },
+                          ]}
+                          onPress={() => handleUpdateRequestStatus(req.id, 'rejected')}
+                          disabled={pendingRequestId !== null}
+                        >
+                          <Text style={[styles.smallBtnText, { color: colors.danger }]}>Decline</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
+                ))
+              )}
+            </BaseCard>
+          );
+        })()}
 
-                  <Text style={[styles.reqDetail, { color: colors.textSecondary }]}>
-                    Seats Requested: {req.seats_requested} · Phone: {req.rider_phone}
-                  </Text>
-                  {req.note ? (
-                    <Text style={[styles.reqNote, { color: colors.textTertiary }]}>"{req.note}"</Text>
-                  ) : null}
-
-                  {req.status === 'pending' && (
-                    <View style={styles.reqActions}>
-                      <TouchableOpacity
-                        style={[styles.smallBtn, { backgroundColor: colors.primary }]}
-                        onPress={() => handleUpdateRequestStatus(req.id, 'accepted')}
-                      >
-                        <Text style={[styles.smallBtnText, { color: colors.primaryFg }]}>Accept</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.smallBtn, { backgroundColor: colors.dangerSoft }]}
-                        onPress={() => handleUpdateRequestStatus(req.id, 'rejected')}
-                      >
-                        <Text style={[styles.smallBtnText, { color: colors.danger }]}>Reject</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
-              ))
-            )}
-          </BaseCard>
-        ); })()}
-
-        {/* Rider Booking Card (Non-Owner View) */}
-        {!isOwner && carpool.status === 'active' && carpool.role_type === 'offering' && (
+        {/* Rider Booking Card (Non-Owner & Non-Lead View) */}
+        {!isOwner && !isCommunityLead && carpool.status === 'active' && carpool.role_type === 'offering' && (
           <BaseCard padding={12} style={styles.card}>
-            {myExistingRequest ? (
+            {myOpenRequest ? (
               <View style={{ gap: 8 }}>
                 <View style={styles.headerBetween}>
-                  <Text style={[styles.controlHeader, { color: colors.textPrimary }]}>Your Booking Status</Text>
-                  <View style={[styles.reqStatusBadge, {
-                    backgroundColor: myExistingRequest.status === 'accepted' ? '#D1FAE5' : myExistingRequest.status === 'pending' ? '#FEF3C7' : '#FEE2E2'
-                  }]}>
-                    <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', color: myExistingRequest.status === 'accepted' ? '#059669' : myExistingRequest.status === 'pending' ? '#D97706' : '#DC2626' }}>
-                      {myExistingRequest.status}
+                  <Text style={[styles.controlHeader, { color: colors.textPrimary }]}>Your booking status</Text>
+                  <View
+                    style={[
+                      styles.reqStatusBadge,
+                      {
+                        backgroundColor:
+                          myOpenRequest.status === 'accepted' ? colors.accentSoft : colors.cautionSoft,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: '500',
+                        color:
+                          myOpenRequest.status === 'accepted' ? colors.accent : colors.caution,
+                      }}
+                    >
+                      {myOpenRequest.status === 'accepted' ? 'Confirmed' : 'Pending host review'}
                     </Text>
                   </View>
                 </View>
 
                 <Text style={[styles.reqDetail, { color: colors.textSecondary }]}>
-                  Requested {myExistingRequest.seats_requested} seat(s) on this route.
+                  Requested {myOpenRequest.seats_requested} {myOpenRequest.seats_requested === 1 ? 'seat' : 'seats'} on this route.
                 </Text>
 
                 <TouchableOpacity
-                  style={[styles.cancelReqBtn, { borderColor: colors.danger }]}
-                  onPress={() => handleUpdateRequestStatus(myExistingRequest.id, 'cancelled')}
+                  style={[
+                    styles.cancelReqBtn,
+                    { borderColor: colors.danger },
+                    pendingRequestId !== null && { opacity: 0.6 },
+                  ]}
+                  onPress={() => handleUpdateRequestStatus(myOpenRequest.id, 'cancelled')}
+                  disabled={pendingRequestId !== null}
                 >
-                  <Text style={[styles.cancelReqText, { color: colors.danger }]}>Cancel My Request</Text>
+                  <Text style={[styles.cancelReqText, { color: colors.danger }]}>Cancel my request</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <View style={{ gap: 10 }}>
+                {myLastDeclined && (
+                  <Text style={[styles.declinedNotice, { color: colors.textTertiary }]}>
+                    The host was unable to accept an earlier request. You may apply again if plans changed.
+                  </Text>
+                )}
+
                 <TouchableOpacity
-                  style={[styles.joinBtn, { backgroundColor: colors.primary }]}
+                  style={[
+                    styles.joinBtn,
+                    { backgroundColor: isFull ? colors.cardMuted : colors.primary },
+                  ]}
                   onPress={() => setShowJoinModal(true)}
+                  disabled={isFull}
                 >
-                  <Ionicons name="car-sport" size={20} color={colors.primaryFg} />
-                  <Text style={[styles.joinBtnText, { color: colors.primaryFg }]}>
-                    Request to Join Carpool (App Booking)
+                  <Ionicons
+                    name="car-sport"
+                    size={20}
+                    color={isFull ? colors.textMuted : colors.primaryFg}
+                  />
+                  <Text
+                    style={[
+                      styles.joinBtnText,
+                      { color: isFull ? colors.textMuted : colors.primaryFg },
+                    ]}
+                  >
+                    {isFull ? 'Ride is full' : 'Request to join ride'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -631,11 +921,16 @@ export default function CarpoolDetailScreen() {
       </ScrollView>
 
       {/* Join Request Modal */}
-      <Modal visible={showJoinModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+      <Modal
+        visible={showJoinModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowJoinModal(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowJoinModal(false)}>
+          <Pressable style={[styles.modalContent, { backgroundColor: colors.card }]} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Request Carpool Seat</Text>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Request carpool seat</Text>
               <TouchableOpacity onPress={() => setShowJoinModal(false)}>
                 <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
@@ -643,38 +938,44 @@ export default function CarpoolDetailScreen() {
 
             <ScrollView contentContainerStyle={{ gap: 14 }}>
               <View style={styles.modalInputGroup}>
-                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Your Full Name</Text>
+                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Your full name *</Text>
                 <TextInput
                   style={[styles.modalInput, { color: colors.textPrimary, borderColor: colors.borderStrong }]}
                   value={riderName}
                   onChangeText={setRiderName}
                   placeholder="Enter name"
+                  placeholderTextColor={colors.textTertiary}
                 />
               </View>
 
               <View style={styles.modalInputGroup}>
-                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Flat / Unit Number</Text>
+                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Flat / Unit number *</Text>
                 <TextInput
                   style={[styles.modalInput, { color: colors.textPrimary, borderColor: colors.borderStrong }]}
                   value={flatNumber}
                   onChangeText={setFlatNumber}
-                  placeholder="e.g. Tower 2 - 402"
+                  onBlur={() => setFlatNumber((prev) => prev.trim().replace(/[^a-zA-Z0-9]/g, '').toUpperCase())}
+                  placeholder="e.g. A101"
+                  placeholderTextColor={colors.textTertiary}
+                  autoCapitalize="characters"
                 />
               </View>
 
               <View style={styles.modalInputGroup}>
-                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Phone Number</Text>
+                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Phone number (for host to coordinate) *</Text>
                 <TextInput
                   style={[styles.modalInput, { color: colors.textPrimary, borderColor: colors.borderStrong }]}
                   value={riderPhone}
                   onChangeText={setRiderPhone}
                   keyboardType="phone-pad"
-                  placeholder="Enter phone"
+                  placeholder="e.g. 9876543210"
+                  placeholderTextColor={colors.textTertiary}
+                  maxLength={10}
                 />
               </View>
 
               <View style={styles.modalInputGroup}>
-                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Seats Requested</Text>
+                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Seats requested</Text>
                 <View style={styles.counterRow}>
                   <TouchableOpacity
                     style={[styles.modalCounterBtn, { borderColor: colors.borderStrong }]}
@@ -685,20 +986,34 @@ export default function CarpoolDetailScreen() {
                   <Text style={[styles.modalCounterText, { color: colors.textPrimary }]}>{seatsRequested}</Text>
                   <TouchableOpacity
                     style={[styles.modalCounterBtn, { borderColor: colors.borderStrong }]}
-                    onPress={() => setSeatsRequested(Math.min(carpool.available_seats, seatsRequested + 1))}
+                    onPress={() => setSeatsRequested(Math.min(Math.max(1, effectiveRemaining), seatsRequested + 1))}
+                    disabled={seatsRequested >= effectiveRemaining}
                   >
-                    <Ionicons name="add" size={18} color={colors.textPrimary} />
+                    <Ionicons
+                      name="add"
+                      size={18}
+                      color={seatsRequested >= effectiveRemaining ? colors.textMuted : colors.textPrimary}
+                    />
                   </TouchableOpacity>
                 </View>
               </View>
 
+              {/* Estimated Total Calculation */}
+              {carpool.pricing_type === 'paid' && unitPrice > 0 && (
+                <View style={[styles.costPreview, { backgroundColor: colors.cardMuted }]}>
+                  <Text style={[styles.costPreviewLabel, { color: colors.textSecondary }]}>Total ride contribution:</Text>
+                  <Rupees amount={unitPrice * seatsRequested} size="md" tone="in" />
+                </View>
+              )}
+
               <View style={styles.modalInputGroup}>
-                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Note for Host (Optional)</Text>
+                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Note for host (optional)</Text>
                 <TextInput
                   style={[styles.modalInput, { color: colors.textPrimary, borderColor: colors.borderStrong }]}
                   value={riderNote}
                   onChangeText={setRiderNote}
                   placeholder="e.g. Need pickup at Main Gate around 8:25 AM"
+                  placeholderTextColor={colors.textTertiary}
                 />
               </View>
 
@@ -710,12 +1025,12 @@ export default function CarpoolDetailScreen() {
                 {submittingRequest ? (
                   <ActivityIndicator color={colors.primaryFg} />
                 ) : (
-                  <Text style={[styles.submitReqText, { color: colors.primaryFg }]}>Send Request</Text>
+                  <Text style={[styles.submitReqText, { color: colors.primaryFg }]}>Send request</Text>
                 )}
               </TouchableOpacity>
             </ScrollView>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </View>
   );
@@ -725,22 +1040,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  topHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    gap: 12,
-  },
-  backBtn: {
-    padding: 4,
-    borderRadius: VerandahRadius.pill,
-  },
-  headerTitle: {
-    ...VerandahType.title,
-    fontSize: 18,
-    flex: 1,
+  headerEditBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   center: {
     flex: 1,
@@ -771,18 +1073,17 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   roleBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontSize: 11,
+    fontWeight: '500',
   },
   statusBadge: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: VerandahRadius.pill,
   },
   statusText: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '500',
   },
   title: {
     ...VerandahType.display,
@@ -820,7 +1121,7 @@ const styles = StyleSheet.create({
   },
   routeValue: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     flex: 1,
   },
   infoGrid: {
@@ -844,15 +1145,13 @@ const styles = StyleSheet.create({
   },
   gridValue: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   sectionBlock: {
-    marginBottom: 14,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    ...VerandahType.sectionLabel,
     marginBottom: 6,
   },
   daysRow: {
@@ -867,11 +1166,11 @@ const styles = StyleSheet.create({
   },
   dayBadgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   notesText: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
   hostCard: {
     flexDirection: 'row',
@@ -884,7 +1183,7 @@ const styles = StyleSheet.create({
   },
   hostName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   hostFlat: {
     fontSize: 12,
@@ -901,39 +1200,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   controlHeader: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
+    fontSize: 15,
+    fontWeight: '500',
+    marginBottom: 8,
   },
   hostActionsRow: {
     flexDirection: 'row',
     gap: 8,
+    flexWrap: 'wrap',
   },
   actionButton: {
     flex: 1,
+    minWidth: '28%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: VerandahRadius.md,
     gap: 4,
   },
   actionButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '500',
   },
   headerBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   emptyReqText: {
     fontSize: 13,
-    fontStyle: 'italic',
   },
   reqCard: {
-    padding: 12,
+    padding: 10,
     borderWidth: 0.5,
     borderRadius: VerandahRadius.md,
     marginBottom: 8,
@@ -945,8 +1245,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   reqName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '500',
   },
   reqStatusBadge: {
     paddingHorizontal: 6,
@@ -954,7 +1254,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   reqDetail: {
-    fontSize: 13,
+    fontSize: 12,
   },
   reqNote: {
     fontSize: 12,
@@ -968,45 +1268,50 @@ const styles = StyleSheet.create({
   },
   smallBtn: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: VerandahRadius.sm,
   },
   smallBtnText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   joinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 50,
+    height: 48,
     borderRadius: VerandahRadius.lg,
     gap: 8,
   },
   joinBtnText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  declinedNotice: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginBottom: 4,
   },
   cancelReqBtn: {
     borderWidth: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: VerandahRadius.md,
     alignItems: 'center',
   },
   cancelReqText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    maxHeight: '80%',
+    maxHeight: '85%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1015,19 +1320,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '500',
   },
   modalInputGroup: {
-    gap: 6,
+    gap: 4,
   },
   modalLabel: {
     fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontWeight: '500',
   },
   modalInput: {
-    height: 46,
+    height: 44,
     borderWidth: 0.5,
     borderRadius: VerandahRadius.md,
     paddingHorizontal: 12,
@@ -1047,18 +1351,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalCounterText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  costPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderRadius: VerandahRadius.md,
+  },
+  costPreviewLabel: {
+    fontSize: 13,
   },
   submitReqBtn: {
-    height: 50,
+    height: 48,
     borderRadius: VerandahRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 8,
+    marginBottom: 16,
   },
   submitReqText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });

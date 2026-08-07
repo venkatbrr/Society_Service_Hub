@@ -114,6 +114,7 @@ Reuse these instead of building local variants:
 | `CategoryFilter` | The two-level provider/visit category picker |
 | `HeaderBackButton` | Stack header back affordance |
 | `ImageUploader` | Any Cloudinary image upload |
+| `DateField` | Cross-platform date picker (`input[type=date]` on web, `DateTimePicker` modal on native) |
 | `RatingStars` / `EmojiRating` | Provider star ratings / school aspect emoji scale |
 
 ### Platform-specific variants

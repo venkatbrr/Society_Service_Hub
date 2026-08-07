@@ -202,6 +202,8 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | `public.is_admin()` granting platform-admin access in RLS | It is only an alias for `is_community_lead()`. Use `is_platform_admin()` for the platform-admin override. |
 | Assuming `fundsEnabled` is correct on first render | `AuthContext` loads it in a second, non-blocking phase. |
 | `Alert.alert` for a web confirmation | No-op on web. Split on `Platform.OS`. |
+| `@react-native-community/datetimepicker` on web | Renders `null` on web. Every date field must branch on `Platform.OS === 'web'` or use `components/DateField.tsx`. |
+| Adding a column to a `RETURNS TABLE` function signature | Changing the return signature fails with type mismatch; you must `DROP FUNCTION` before `CREATE FUNCTION`. |
 | `.single()` on a possibly-absent row | Throws. Use `.maybeSingle()`. |
 | Adding an `app/mcn/*` or `app/funds/*` route without a parent mapping, or using plain `router.back()` in its header | Falls through to the MCN hub, or silently does nothing on a deep-linked/fresh-loaded screen with no history to pop. Add the mapping to `getImmediateParentRoute()` and call `goBackSmart()`. |
 | Treating a food drop item's `max_quantity` as per-order | It is a total shared across every buyer's orders combined — enforced server-side, not just capped in the quantity stepper. |
@@ -224,3 +226,10 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Expecting `npx supabase gen types` to preserve the file | It overwrites everything, wiping the hand-maintained `ProviderWithInteraction` / `VisitWithJoinerData` / `VisitJoinerWithProfile` block at the bottom. Re-append it every time — see §6. |
 | Calling an `is_platform_admin()`-gated RPC via `supabase db query --linked` | That connection is not an authenticated admin user, so the function raises. Replicate its inner query to test instead. |
 | Assuming a fund's treasurer/collectors are community-wide | They are **per-fund** rows in `fund_roles`. A community with three funds has three independent treasurers. |
+| Mutating `mcn_carpools.available_seats` from the client | Capacity is fixed at publish time and trigger-enforced. Live seat availability is derived from `get_mcn_carpool_seats(UUID)` RPC. |
+| Cascading ride cancellation firing request-transition triggers | Trigger `enforce_mcn_carpool_request_transition` must permit lead and admin actions and legal `accepted -> cancelled` cascades. |
+| Calling `Alert.alert` for confirmation on web | `Alert.alert` is a no-op on web. Always use `confirmAction` from `lib/confirm.ts`. |
+| Using `whatsapp://` URL scheme directly | `whatsapp://` fails on web/PWA. Always use `buildWhatsAppUrl` from `lib/phone.ts`. |
+| Placing or updating business orders / pre-orders via direct table writes | Mutating money or ownership outside the atomic RPCs trips `enforce_mcn_order_immutable_fields` / `enforce_mcn_preorder_order_immutable_fields`. Always call `place_mcn_order()` or `place_mcn_preorder()`. |
+
+

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../components/Avatar';
@@ -141,7 +142,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const refreshAllProfileData = async () => {
+  const refreshAllProfileData = useCallback(async () => {
     await refreshSession();
     if (user) {
       try {
@@ -153,7 +154,13 @@ export default function ProfileScreen() {
         setRecentServices((data ?? []) as any);
       } catch {}
     }
-  };
+  }, [user, refreshSession]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshAllProfileData();
+    }, [refreshAllProfileData])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -218,7 +225,7 @@ export default function ProfileScreen() {
           <View style={styles.adminContent}>
             <Text style={styles.adminTitle}>Service reminders</Text>
             {dueSoonCount > 0 ? (
-              <Text style={[styles.adminCopy, { color: Verandah.caution }]}>{dueSoonCount} due this week</Text>
+              <Text style={[styles.adminCopy, { color: Verandah.caution }]}>{dueSoonCount} due or overdue</Text>
             ) : (
               <Text style={styles.adminCopy}>Track appliances &amp; maintenance</Text>
             )}

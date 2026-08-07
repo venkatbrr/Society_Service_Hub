@@ -413,12 +413,22 @@ export default function ManageListingScreen() {
           .delete()
           .eq('id', listing.id);
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === '23503') {
+            Toast.show({
+              type: 'error',
+              text1: 'Cannot delete this business',
+              text2: 'It has orders in its history. Pause it instead.',
+            });
+            return;
+          }
+          throw error;
+        }
         Toast.show({ type: 'success', text1: 'Listing deleted' });
         router.replace('/mcn/business' as any);
       } catch (error: any) {
         console.error(error);
-        Toast.show({ type: 'error', text1: 'Failed to delete listing' });
+        Toast.show({ type: 'error', text1: 'Failed to delete listing', text2: error?.message });
       }
     };
 

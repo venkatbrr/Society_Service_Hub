@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -18,6 +17,7 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { DateField, formatLocalDateForDb } from '../../components/DateField';
 import { ImageUploader } from '../../components/ImageUploader';
 import { ProviderSelector } from '../../components/ProviderSelector';
 import { ServiceHistoryList } from '../../components/ServiceHistoryList';
@@ -39,7 +39,7 @@ import {
     parseNotesAndImages,
     ReminderImage,
     ReminderImageDraft,
-    serializeNotesAndImages,
+    toImagesJson,
 } from '../../lib/serviceReminderHelpers';
 import { supabase } from '../../lib/supabase';
 
@@ -80,6 +80,7 @@ type UserServiceRow = {
   frequency_months: number;
   next_due_on: string;
   notes: string | null;
+  images?: any;
   provider_id: string | null;
 };
 
@@ -159,7 +160,16 @@ export default function ServiceDetailScreen() {
         const msPerDay = 1000 * 60 * 60 * 24;
         const daysUntilDue = Math.round((dueDate.getTime() - today.getTime()) / msPerDay);
 
-        const { cleanNotes, images } = parseNotesAndImages(serviceRow.notes, (serviceRow as any).image_url);
+        let cleanNotes = serviceRow.notes || '';
+        let images: ReminderImage[] = [];
+
+        if (Array.isArray(serviceRow.images) && serviceRow.images.length > 0) {
+          images = serviceRow.images as ReminderImage[];
+        } else {
+          const parsed = parseNotesAndImages(serviceRow.notes, (serviceRow as any).image_url);
+          cleanNotes = parsed.cleanNotes;
+          images = parsed.images;
+        }
 
         setService({
           ...serviceRow,
@@ -232,19 +242,27 @@ export default function ServiceDetailScreen() {
     }, [communityId])
   );
 
+  const [providerLinkUnresolved, setProviderLinkUnresolved] = useState(false);
+
   useEffect(() => {
     if (!service?.provider_id) {
       setSelectedProvider(null);
       setMarkDoneProvider(null);
+      setProviderLinkUnresolved(false);
       return;
     }
+
+    if (providersLoading) return;
 
     const linkedProvider = providers.find((provider) => provider.id === service.provider_id) ?? null;
     if (linkedProvider) {
       setSelectedProvider(linkedProvider);
       setMarkDoneProvider(linkedProvider);
+      setProviderLinkUnresolved(false);
+    } else {
+      setProviderLinkUnresolved(true);
     }
-  }, [providers, service?.provider_id]);
+  }, [providers, providersLoading, service?.provider_id]);
 
   const suggestedProviderCategory = editCategory ? mapServiceCategoryToProviderCategory(editCategory) : null;
   const providerOptions = useMemo(() => {
@@ -264,58 +282,38 @@ export default function ServiceDetailScreen() {
     setShowMarkDoneSheet(true);
   };
 
-  const submitMarkDone = async (skipDetails: boolean) => {
+  const submitMarkDone = async () => {
     if (!service) return;
 
     const noteValue = markDoneNote.trim();
     const costValue = markDoneCost.trim();
     const parsedCost = costValue.length ? Number(costValue) : null;
 
-    if (!skipDetails && costValue.length && (parsedCost === null || Number.isNaN(parsedCost) || parsedCost < 0)) {
+    if (costValue.length && (parsedCost === null || Number.isNaN(parsedCost) || parsedCost < 0)) {
       Toast.show({ type: 'error', text1: 'Invalid cost', text2: 'Enter a valid non-negative amount.' });
       return;
     }
 
-    const prevService = service;
-    const today = new Date().toISOString().split('T')[0];
-
     setMarking(true);
     setMarkDoneSubmitting(true);
 
-    setService((s) =>
-      s
-        ? {
-            ...s,
-            last_serviced_on: today,
-            days_until_due: s.frequency_months * 30,
-          }
-        : s
-    );
-
     try {
-      if (skipDetails) {
-        const { error } = await supabase.rpc('mark_service_done', {
-          p_service_id: service.id,
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.rpc('mark_service_done', {
-          p_service_id: service.id,
-          p_provider_id: markDoneProvider?.id ?? null,
-          p_cost_paid: parsedCost,
-          p_note: noteValue.length ? noteValue.slice(0, 280) : null,
-        });
-        if (error) throw error;
-      }
+      const { error } = await supabase.rpc('mark_service_done', {
+        p_service_id: service.id,
+        p_provider_id: markDoneProvider?.id ?? null,
+        p_cost_paid: parsedCost,
+        p_note: noteValue.length ? noteValue.slice(0, 280) : null,
+      });
+      if (error) throw error;
 
       setShowMarkDoneSheet(false);
       setMarkDoneCost('');
       setMarkDoneNote('');
       setHistoryRefreshToken((v) => v + 1);
       Toast.show({ type: 'success', text1: 'Service logged' });
-      fetchService();
+      await fetchService();
     } catch (err: any) {
-      setService(prevService);
+      console.error('Failed to mark service done:', err);
       Toast.show({ type: 'error', text1: 'Error', text2: err.message ?? 'Failed to mark service.' });
     } finally {
       setMarking(false);
@@ -374,55 +372,40 @@ export default function ServiceDetailScreen() {
 
     setSaving(true);
     try {
-      const yyyy = editLastServiced.getFullYear();
-      const mm = String(editLastServiced.getMonth() + 1).padStart(2, '0');
-      const dd = String(editLastServiced.getDate()).padStart(2, '0');
-      const dateStr = `${yyyy}-${mm}-${dd}`;
+      const dateStr = formatLocalDateForDb(editLastServiced);
 
       const nextDueDate = new Date(editLastServiced);
       nextDueDate.setMonth(nextDueDate.getMonth() + freq);
-      const nextYyyy = nextDueDate.getFullYear();
-      const nextMm = String(nextDueDate.getMonth() + 1).padStart(2, '0');
-      const nextDd = String(nextDueDate.getDate()).padStart(2, '0');
-      const nextDueStr = `${nextYyyy}-${nextMm}-${nextDd}`;
+      const nextDueStr = formatLocalDateForDb(nextDueDate);
 
-      const notesText = serializeNotesAndImages(editNotes, reminderImageDrafts);
-      const validImages = reminderImageDrafts.filter(
-        (item): item is ReminderImageDraft & { url: string } => !!item.url && item.title.trim().length > 0
-      );
-      const firstImageUrl = validImages[0]?.url ?? null;
+      const imagesJson = toImagesJson(reminderImageDrafts);
 
       const updatePayload: any = {
         service_name: editName.trim(),
         category: editCategory,
         last_serviced_on: dateStr,
         frequency_months: freq,
-        notes: notesText,
-        provider_id: selectedProvider?.id ?? null,
+        notes: editNotes.trim() || null,
+        images: imagesJson,
+        provider_id: selectedProvider?.id ?? (providerLinkUnresolved ? service.provider_id : null),
         next_due_on: nextDueStr,
-        image_url: firstImageUrl,
       };
 
-      let { error } = await supabase
+      const { error } = await supabase
         .from('user_services')
         .update(updatePayload)
         .eq('id', service.id);
-
-      if (error && 'image_url' in updatePayload) {
-        delete updatePayload.image_url;
-        const fallback = await supabase
-          .from('user_services')
-          .update(updatePayload)
-          .eq('id', service.id);
-        error = fallback.error;
-      }
 
       if (error) throw error;
       Toast.show({ type: 'success', text1: 'Service updated' });
       setEditOpen(false);
       fetchService();
     } catch (err: any) {
-      Toast.show({ type: 'error', text1: 'Error', text2: err.message });
+      console.error('Failed to update service:', err);
+      const userMessage = err?.message?.includes('user_services_notes_check')
+        ? 'Notes cannot exceed 500 characters.'
+        : err?.message ?? 'Failed to update service';
+      Toast.show({ type: 'error', text1: 'Error', text2: userMessage });
     } finally {
       setSaving(false);
     }
@@ -627,25 +610,11 @@ export default function ServiceDetailScreen() {
             </View>
 
             <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Last serviced on</Text>
-            <TouchableOpacity
-              style={[styles.input, styles.dateRow, { backgroundColor: colors.surface2, borderColor: colors.border }]}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={{ color: colors.text, fontSize: 14, fontWeight: '500' }}>{formattedEditDate}</Text>
-              <Ionicons name="calendar-outline" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={editLastServiced}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                maximumDate={new Date()}
-                onChange={(_, date) => {
-                  setShowDatePicker(Platform.OS === 'ios');
-                  if (date) setEditLastServiced(date);
-                }}
-              />
-            )}
+            <DateField
+              value={editLastServiced}
+              onChange={setEditLastServiced}
+              maximumDate={new Date()}
+            />
 
             <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Frequency (months)</Text>
             <TextInput
@@ -936,7 +905,7 @@ export default function ServiceDetailScreen() {
 
               <TouchableOpacity
                 style={[styles.primaryBtn, markDoneSubmitting && { opacity: 0.7 }]}
-                onPress={() => submitMarkDone(false)}
+                onPress={() => submitMarkDone()}
                 disabled={markDoneSubmitting}
                 activeOpacity={0.85}
               >
