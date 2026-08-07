@@ -137,6 +137,11 @@ Schema, RPC index, triggers, and RLS: [`architecture.md`](architecture.md) §4�
 - Every new table needs `ALTER TABLE … ENABLE ROW LEVEL SECURITY` plus explicit select/insert/update/delete policies. Community-scoped tables compare against `get_user_community_id()`.
 - New MCN tables should follow the uniform delete rule: `owner = auth.uid() OR public.is_community_lead(auth.uid()) OR public.is_platform_admin(auth.uid())`. Use `is_platform_admin()`, never `is_admin()` — the latter is only an alias for `is_community_lead()` and grants the platform admin nothing.
 - Enforce real invariants (capacity caps, role caps, block scoping) with triggers, not UI checks alone.
+- **A platform admin has no RLS grant on community-scoped tables.** `is_platform_admin()` requires `community_id IS NULL`, so any policy keyed on `get_user_community_id()` matches nothing for them. Anything the admin console needs must go through a `platform_*` `SECURITY DEFINER` RPC — a direct table read returns `[]` with no error.
+- **Editing an already-applied migration file does nothing.** `supabase db push` tracks migrations by **filename**, not content, and reports "up to date". Either add a new migration, or apply the corrected SQL directly with `npx supabase db query --linked -f <file>` (safe for `CREATE OR REPLACE FUNCTION`, which is idempotent).
+- **Check the migration timestamp isn't already taken** before naming a file — concurrent sessions collide. `npx supabase migration list --linked` shows local-vs-remote; a row with an empty `remote` is unapplied.
+- **`RETURNS TABLE` OUT parameters shadow column names.** A function declaring `RETURNS TABLE(listing_id UUID, …)` cannot use a bare `listing_id` in its body — Postgres cannot tell the OUT param from the column and raises *"column reference … is ambiguous"* at call time, not creation time. Always alias the table and qualify (`mp.listing_id = l.id`).
+- **Dropping an enum value requires a type swap** — Postgres has no `ALTER TYPE … DROP VALUE`. Rename the old type, create the new one, recast the column with `USING col::TEXT::newtype`, then drop the old. Every hard dependency must be cleared first: column defaults, function **signatures** (`RETURNS TABLE(... enum ...)`), RLS policies referencing the column, and **triggers whose `WHEN` clause names the column**. Function *bodies* are re-resolved at runtime and need no change. Worked example: `20260822000200`.
 
 ### Cross-community conventions
 
@@ -208,3 +213,11 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Writing to the `community-uploads` bucket | Unused. Images go to Cloudinary via `lib/cloudinary.ts`. |
 | Expecting `notifications` rows for hire feedback | It is a purely local `expo-notifications` schedule, not a table row. |
 | Testing Google Sign-In in Expo Go | Requires a dev build. |
+| Reading a community table directly from the admin console | A platform admin has no RLS grant there — returns `[]` with **no error**, so the page renders plausible zeroes. Use a `platform_*` `SECURITY DEFINER` RPC. |
+| Destructuring only `data` from a Supabase call | A silent failure then looks like real empty data. Always check `error` too. |
+| Editing `admin-dashboard/js/*` and expecting the change to show | It is source only. `node build-admin.js` copies it to `dist/admin/` and the **committed, actually-served** `public/admin/`. Rebuild and hard-refresh. |
+| Editing an already-applied migration file | `db push` tracks by filename, not content — it reports "up to date" and your fix never lands. Add a new migration or apply directly with `db query -f`. |
+| A bare column name inside a `RETURNS TABLE` function whose OUT param shares that name | Raises *"column reference is ambiguous"* at **call** time, not creation time. Alias the table and qualify the column. |
+| Expecting `npx supabase gen types` to preserve the file | It overwrites everything, wiping the hand-maintained `ProviderWithInteraction` / `VisitWithJoinerData` / `VisitJoinerWithProfile` block at the bottom. Re-append it every time — see §6. |
+| Calling an `is_platform_admin()`-gated RPC via `supabase db query --linked` | That connection is not an authenticated admin user, so the function raises. Replicate its inner query to test instead. |
+| Assuming a fund's treasurer/collectors are community-wide | They are **per-fund** rows in `fund_roles`. A community with three funds has three independent treasurers. |

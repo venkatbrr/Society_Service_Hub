@@ -138,7 +138,13 @@ Constraints: `admin` must have `community_id = NULL`. `president`/`vice_presiden
 
 Per fund, independent of app role: `treasurer` (max 1, min 1) · `collector` (max 6, optionally block-scoped via `block_id`) · `resident` (implicit view-only fallback).
 
+**These grants are per fund, not per community** — a community with three funds has three independent treasurers and three independent collector sets. Any UI listing them must group by fund.
+
 Resolution goes through `lib/fundRoles.ts` — see §12. `is_funds_enabled(community_id)` gates every funds RPC and trigger.
+
+`getEffectiveFundRole(appRole, assignments, userId)` collapses app roles `admin`, `president`, and `vice_president` into a single internal fund capacity `'admin'`. Because three distinct app roles share one capacity, **never render that capacity directly as a role name** — `formatRoleForFundContext(fundRole, assignment, appRole)` takes the app role as a third argument so the banner reads "President" / "Vice President" / "Platform admin" rather than an invented "Fund admin". Capability wording belongs in `getRoleAccessSummary()` instead.
+
+**Who can change a treasurer:** community leads and admins go through `fund_roles` RLS (`20260813000000`). Those policies are keyed on `get_user_community_id()` and therefore never match a platform admin, who instead uses `platform_set_fund_treasurer()` (§5).
 
 `list_eligible_contributors_for_collector(p_event_id)` (redefined in migration `20260816000000`) returns `resident`, `president`, and `vice_president` profiles — a lead can record a contribution for themselves, not just other residents. A block-scoped collector (`fund_roles.block_id` set) only sees profiles in that block; a collector with no block, the treasurer, and leads see the whole community.
 
@@ -303,7 +309,15 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 ### Platform admin console
 
-`platform_get_community_dashboard(...)` · `platform_get_community_funds(...)` · `platform_get_community_businesses(...)` · `platform_get_community_preorders(...)` · `platform_get_resident_details(...)` · `platform_approve_funds_access_request(p_request_id, p_lead_user_id)` · `platform_reject_funds_access_request(...)` · `platform_revoke_funds_access(...)` · `platform_set_community_lead(...)` · `platform_remove_community_lead(...)` · `platform_set_blocks_enabled(...)` · `platform_set_block_label(...)` · `platform_add_community_block(...)` · `platform_archive_community_block(...)` · `platform_assign_block_in_charge(...)` · `platform_remove_block_in_charge(...)`
+`platform_get_community_dashboard(...)` · `platform_get_community_dashboard_v2(...)` · `platform_get_community_funds(...)` · `platform_get_community_businesses(...)` · `platform_get_community_preorders(...)` · `platform_get_resident_details(...)` · `platform_approve_funds_access_request(p_request_id, p_lead_user_id)` · `platform_reject_funds_access_request(...)` · `platform_revoke_funds_access(...)` · `platform_set_community_lead(...)` · `platform_remove_community_lead(...)` · `platform_set_fund_treasurer(p_event_id, p_target_user_id)` · `platform_set_blocks_enabled(...)` · `platform_set_block_label(...)` · `platform_add_community_block(...)` · `platform_archive_community_block(...)` · `platform_assign_block_in_charge(...)` · `platform_remove_block_in_charge(...)`
+
+All are `SECURITY DEFINER` and raise unless `is_platform_admin(auth.uid())`. **They exist because a platform admin has no RLS grant on community-scoped tables** — `is_platform_admin()` requires `community_id IS NULL`, so every policy keyed on `get_user_community_id()` matches nothing for them. A direct `supabase.from('<table>')` read from the admin console therefore returns `[]` silently rather than erroring. See [`platform-admin.md`](platform-admin.md) §1a.
+
+`platform_set_fund_treasurer(p_event_id, p_target_user_id)` *(added `20260820000000`)* — assigns or replaces a fund's treasurer. Deletes the existing `fund_roles` treasurer row and inserts the new one in one transaction, keeping the one-treasurer-per-fund invariant in `validate_fund_role_change` satisfied. Rejects a target who is removed, in another community, or holds `admin`/`president`/`vice_president`. Community leads manage their own funds' treasurers through `fund_roles` RLS instead; those policies key on `get_user_community_id()` and never apply to a platform admin.
+
+**Counting convention** — `orders_count` / `total_preorders` / `total_food_revenue` all **exclude `cancelled` orders**, matching what the resident-facing "My Pre-order Food Performance" panel shows. Corrected in `20260817000000`; before that the counts included cancelled rows while revenue did not.
+
+`platform_get_community_businesses` reads listing ratings from the shared **`public.ratings`** table filtered by `listing_id` (the same table used for provider ratings) — there is no separate `mcn_listing_ratings` table. It referenced that nonexistent table, and used a bare `listing_id` that collided with its own `RETURNS TABLE` OUT parameter, until `20260818000000`. Both faults only surfaced at call time, which is why they survived unnoticed until the console started calling the function.
 
 ### Federation (no UI)
 
@@ -359,7 +373,7 @@ RLS is enabled on every active table.
 | `mcn_carpools` | Community read; creator or lead writes |
 | `mcn_carpool_requests` | Rider or ride host read; rider inserts; either side updates |
 | `mcn_parent_corner`, `mcn_posts` | Community read; owner or lead writes |
-| `schools`, `school_reviews` | Community read; author writes own review |
+| `schools`, `school_reviews` | Community read; author writes own review. Leads and platform admins may also edit/delete any row (`20260822000000`). |
 
 **Uniform MCN owner-or-lead rule** — `mcn_preorder_drops`, `mcn_listings`, `mcn_carpools`, `mcn_parent_corner`, and `mcn_posts` allow the write when
 `owner = auth.uid() OR public.is_community_lead(auth.uid()) OR public.is_platform_admin(auth.uid())`.
@@ -367,6 +381,30 @@ RLS is enabled on every active table.
 Applies to DELETE (`20260814000000`, corrected to `is_platform_admin` in `20260822000100`) and to UPDATE (`20260822000000`, which also repointed `schools_update`/`schools_delete` and `school_reviews_delete`). The original DELETE rule used `is_admin()`, which is only an alias for `is_community_lead()` and therefore gave the platform admin no override at all.
 
 Pending or removed users are blocked from community content even when a stale `community_id` remains on the profile.
+
+### The 2026-08-22 role cleanup — what to know
+
+Migration `20260616000001` renamed the roles but left **12 call sites still comparing against the literal `'community_lead'`**. Since no row could hold that value anymore, each was permanently `FALSE` — failing open in some places and closed in others, all silently. Three migrations closed this out:
+
+| Migration | What it did |
+|-----------|-------------|
+| `20260822000000` | Repointed all 12 dead checks — 7 RLS policies (`schools_update/delete`, `school_reviews_delete`, `mcn_posts_update`, `mcn_carpools_update`, `mcn_parent_corner_update`, `mcn_preorder_drops_update`) and 5 functions (`platform_soft_remove_resident`, `community_lead_remove_resident`, `validate_event_transaction`, `handle_provider_report_notification`, `request_community_partnership`) |
+| `20260822000100` | Replaced the `is_admin()` alias with `is_platform_admin()` on the 5 MCN delete policies, giving the platform admin a real override |
+| `20260822000200` | Dropped `community_lead` / `community_admin` from `app_role_type` via type swap |
+
+**Behavior that was broken and is now restored:**
+
+- Presidents/VPs could not edit schools, posts, carpools, parent-corner entries, or others' food drops, and could not delete school reviews.
+- `platform_soft_remove_resident`'s "cannot remove the only community lead" guard never fired — a platform admin could strand a community with **no lead at all**.
+- `community_lead_remove_resident`'s guard never fired — one president could remove another.
+- `validate_event_transaction` blocked a president/VP with no `fund_roles` row from recording a contribution.
+- `provider_reported` and `partnership_request` notifications selected recipients on the dead value and **delivered to nobody**.
+
+**Deliberately not changed:** the `events` / `fund_roles` policies named "Admins and community leads can …". They are gated on `community_id = get_user_community_id()`, which is `NULL` for a platform admin, so no role clause can make them pass. Platform admins act on those through `SECURITY DEFINER` `platform_*` RPCs by design.
+
+**Enum swap mechanics** (reusable recipe — Postgres has no `ALTER TYPE … DROP VALUE`): drop dependent function signatures and the column default, drop any trigger whose `WHEN` clause names the column (`profile_audit_log_on_profiles` does), `ALTER TYPE … RENAME`, `CREATE TYPE` fresh, `ALTER COLUMN … TYPE … USING col::TEXT::newtype`, restore default, `DROP TYPE …_old`, then recreate the function and trigger. Function *bodies* re-resolve at runtime and need no edit. The whole migration runs in one transaction, so a missed dependency rolls back cleanly rather than leaving a half-swapped type.
+
+`profile_audit_log.old_value` / `new_value` are `TEXT` and still contain historical `'community_lead'` strings. That is intentional — it is an audit log of what actually happened.
 
 ### Funds activation lifecycle
 
@@ -390,7 +428,11 @@ Pending or removed users are blocked from community content even when a stale `c
 
 On arrival: prepend to local state → increment `unreadCount` → schedule a local device notification on iOS/Android.
 
-**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `funds_access_revoked`
+**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `community_lead_removed` · `funds_access_revoked` · `new_community_request` · `provider_reported`
+
+> `community_lead_appointed` / `community_lead_removed` are notification **type strings**, unrelated to the removed `community_lead` role value.
+>
+> **Lead fan-out notifications must select recipients via `president`/`vice_president`.** `provider_reported` (`handle_provider_report_notification`) and `partnership_request` (`request_community_partnership`) both selected on the dead `community_lead` role and silently delivered to zero recipients until `20260822000000`. Any new "notify the leads" query should filter `app_role IN ('president','vice_president') AND removed_at IS NULL`.
 
 **Reserved (federation, unemitted)**: `partnership_request` · `partnership_accepted`
 

@@ -86,11 +86,17 @@ These four are the entire enum. `community_lead` and `community_admin` were migr
 | `collector` | Record contributions only; optionally scoped to one block |
 | `resident` | View-only fallback (implicit, not stored) |
 
-Resolved through `lib/fundRoles.ts` — always use `getEffectiveFundRole()` and `getFundPermissions()`, never ad-hoc checks. Community leads and platform admins resolve to treasurer-level.
+Resolved through `lib/fundRoles.ts` — always use `getEffectiveFundRole()` and `getFundPermissions()`, never ad-hoc checks. `getEffectiveFundRole()` collapses app roles `admin`, `president`, and `vice_president` into one internal fund capacity `'admin'` (treasurer-level or better).
+
+Because three app roles share that one capacity, **user-facing labels must name the actual person's role**, not the capacity — `formatRoleForFundContext(fundRole, assignment, appRole)` returns President / Vice President / Platform admin accordingly. What they can do is stated separately by `getRoleAccessSummary()`.
+
+These roles are **per fund**: a community with three funds has three independent treasurers.
 
 ### Who can delete what (MCN)
 
-Since migration `20260814000000_mcn_deletion_permissions.sql`, deletion of **any** MCN entity is allowed for the **creator/owner OR a community lead OR a platform admin**, enforced by RLS on `mcn_preorder_drops`, `mcn_listings`, `mcn_carpools`, `mcn_parent_corner`, and `mcn_posts`.
+Deletion of **any** MCN entity is allowed for the **creator/owner OR a community lead OR a platform admin**, enforced by RLS on `mcn_preorder_drops`, `mcn_listings`, `mcn_carpools`, `mcn_parent_corner`, and `mcn_posts` (`20260814000000`, corrected in `20260822000100`). The same rule now covers **UPDATE** on those tables plus `schools` and `school_reviews` (`20260822000000`).
+
+> The original delete rule spelled the admin clause `public.is_admin()`, which is only an **alias for `is_community_lead()`** — so platform admins had no override at all until `20260822000100`. Always use `public.is_platform_admin()`.
 
 ---
 
@@ -211,7 +217,16 @@ Residents join instantly by code — there is **no resident approval queue**. Cr
 
 ### 7.7 Platform admin console (`admin-dashboard/`)
 
-Hash-routed SPA with five pages — `#dashboard`, `#approvals`, `#communities`, `#providers`, `#funds-requests`. Covers community metrics and charts, community-creation approvals with block seeding, community/lead/block/resident management, provider moderation, and funds-activation decisions. See [`docs/platform-admin.md`](../docs/platform-admin.md).
+Hash-routed SPA with five pages — `#dashboard`, `#approvals`, `#communities`, `#providers`, `#funds-requests`. Covers community metrics and charts, community-creation approvals with block seeding, community/lead/block/resident management, provider moderation, and funds-activation decisions.
+
+`#communities` detail additionally shows **Fund Roles** (one card per fund, each with its own treasurer and block collectors, plus treasurer assign/replace), **Pre-Order Food Drops & Statistics**, and **Businesses Available in Community**.
+
+Two rules govern all console work:
+
+1. **Read community data only through `platform_*` `SECURITY DEFINER` RPCs.** A platform admin has no RLS grant on community-scoped tables (`is_platform_admin()` requires `community_id IS NULL`), so a direct table read returns `[]` with no error and the page renders silent zeroes.
+2. **`admin-dashboard/` is source.** `node build-admin.js` copies it to `dist/admin/` and the committed, actually-served `public/admin/`. Editing source alone ships nothing.
+
+See [`docs/platform-admin.md`](../docs/platform-admin.md).
 
 ---
 
@@ -280,7 +295,11 @@ Column-level detail lives in [`docs/architecture.md`](../docs/architecture.md) �
 
 `NotificationContext` loads the latest 50 rows for the signed-in user, subscribes to Realtime `INSERT` on `notifications`, requests native permission, and fires a local alert on mobile.
 
-**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `funds_access_revoked`
+**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `community_lead_removed` · `funds_access_revoked` · `new_community_request` · `provider_reported`
+
+> `community_lead_appointed` / `community_lead_removed` are notification **type strings**, not role values — they survive the `community_lead` role removal untouched.
+>
+> `provider_reported` fans out to the community's leads. Its recipient query targeted the dead `community_lead` role until `20260822000000`, so between the June role migration and 2026-08-22 it **delivered to nobody**. Same class of bug fixed at the same time in `request_community_partnership`.
 
 **Reserved for federation** (backend exists, nothing emits them yet): `partnership_request` · `partnership_accepted`
 

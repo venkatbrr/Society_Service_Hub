@@ -26,6 +26,28 @@ admin-dashboard/
 
 **Platform admins cannot use the mobile app.** On web the root layout hard-redirects them to `/admin/index.html`; on native they land on `/admin-redirect`, which explains the console is web-only.
 
+> ### ⚠️ `admin-dashboard/` is source, not what gets served
+>
+> `node build-admin.js` copies it to **`dist/admin/`** *and* **`public/admin/`**. `dist/` is gitignored, but **`public/admin/` is committed and is what actually ships**. Editing `admin-dashboard/js/*.js` alone changes nothing a user sees — you must run `node build-admin.js` (or `npm run build`) and commit the `public/admin/` copy in the same change set.
+>
+> A local static server pointed at the repo root serves the *built* copy too, so a source-only edit will look like "my fix didn't work" even on localhost. Hard-refresh after rebuilding — the console is plain `<script src>` with no cache busting.
+
+---
+
+## 1a. Data access rules — the console's single biggest trap
+
+**A platform admin has no RLS grant on community-scoped tables.** `is_platform_admin()` is `app_role = 'admin' AND community_id IS NULL`, so every policy keyed on `get_user_community_id()` evaluates against `NULL` and matches nothing. Tables like `fund_roles`, `mcn_preorder_orders`, and `mcn_listings` are additionally scoped to the owner/buyer/host.
+
+The failure mode is silent: PostgREST returns `[]` with **no error**, so the console renders a perfectly healthy-looking page full of zeroes.
+
+> **Rule: the console must read community data through a `platform_*` `SECURITY DEFINER` RPC — never a direct `supabase.from('<table>')` query.** Those RPCs bypass RLS and gate on `is_platform_admin()` internally.
+
+This exact bug produced three simultaneous wrong readings on `#communities` (empty Block In-Charges, ₹0 sales despite completed orders, 0 businesses despite live listings), all fixed on 2026-08-06 by routing through `platform_get_community_funds`, `platform_get_community_preorders`, and `platform_get_community_businesses`.
+
+Corollary: **always check `error` on an RPC call.** The original code destructured only `data`, so when a query did fail the console degraded to zeroes instead of surfacing the problem.
+
+Direct `supabase.from(...)` reads are still fine for tables a platform admin genuinely owns policies on — `communities`, `profiles`, `community_requests`, `funds_access_requests`.
+
 ---
 
 ## 2. Role model
@@ -67,8 +89,27 @@ Notes:
 
 | Aspect | Details |
 |--------|---------|
-| **RPCs** | `list_community_blocks`, `platform_get_community_funds`, `platform_get_resident_details`, `platform_soft_remove_resident`, `platform_set_community_lead`, `platform_remove_community_lead`, `platform_set_blocks_enabled`, `platform_set_block_label`, `platform_add_community_block`, `platform_archive_community_block`, `platform_remove_block_in_charge`, `platform_revoke_funds_access`, `set_audit_actor` |
-| **Behavior** | Lists communities with membership and lead counts. Detail view covers funds status with a revoke action, appointing or removing a lead as **President or VP**, block list management including the Block/Tower label toggle, block in-charge removal across funds, and resident inspection. Removals are **soft deletes**: they set `removed_at`/`removed_by`, reset the role to `resident`, and preserve last-lead protection. |
+| **Direct table reads** | `communities`, `profiles` only |
+| **RPCs** | `list_community_blocks`, `platform_get_community_funds`, `platform_get_community_preorders`, `platform_get_community_businesses`, `platform_get_resident_details`, `platform_soft_remove_resident`, `platform_set_community_lead`, `platform_remove_community_lead`, `platform_set_fund_treasurer`, `platform_set_blocks_enabled`, `platform_set_block_label`, `platform_add_community_block`, `platform_archive_community_block`, `platform_remove_block_in_charge`, `platform_revoke_funds_access`, `set_audit_actor` |
+| **Behavior** | Lists communities with membership and lead counts. Detail view is described panel-by-panel below. Removals are **soft deletes**: they set `removed_at`/`removed_by`, reset the role to `resident`, and preserve last-lead protection. |
+
+**Detail view panels**
+
+| Panel | What it shows / does |
+|-------|----------------------|
+| Community info | Name, join code, type, area, pincode, created date |
+| Community Leads | Active `president` / `vice_president` with a **Demote** action. Blocked from demoting the last remaining lead. |
+| Funds Activation | Status, per-fund balance cards (click → fund modal with financial summary, treasurer, collectors, contributions), and **Revoke Funds Access** |
+| Community Lead Management | Appoint any active plain resident as **President** or **VP**. `platform_set_community_lead` auto-demotes the current holder of that role first, so appointing is also how you *replace*. Shown only when funds are enabled. |
+| Blocks / Towers | Enable toggle, Block/Tower label switch, add/archive blocks |
+| **Fund Roles** | **One card per fund**, each listing that fund's **Treasurer** and its **Block Collectors** (name, flat, block scope). Collectors have a Remove action; the treasurer has an **Assign / Replace** picker. Grouped per fund because both roles are fund-scoped, not community-scoped — a community with three funds has three independent treasurers. |
+| Pre-Order Food Drops & Statistics | Per-drop table (title, host, fulfillment date/time, status, orders, revenue) with totals and a ₹ sales badge |
+| Businesses Available in Community | Per-listing table (name, owner, category, phone with WhatsApp link, product count, rating, active status) |
+| Residents Directory | Searchable table; row opens a resident modal with activity counts and a remove action |
+
+**Treasurer management.** `platform_set_fund_treasurer(p_event_id, p_target_user_id)` assigns or replaces a fund's treasurer in one transaction — it deletes the existing treasurer row before inserting the new one, which is what keeps the "at most 1 treasurer per fund" trigger (`validate_fund_role_change`) satisfied mid-statement. It rejects a target who is removed, belongs to another community, or is an `admin`/`president`/`vice_president`, mirroring the eligibility rule the mobile fund-creation screen already applies.
+
+Community leads can manage their own funds' treasurers directly through `fund_roles` RLS, but those policies key on `get_user_community_id()` and therefore never apply to a platform admin — hence the dedicated RPC.
 
 ### `#providers` — provider moderation
 
@@ -111,6 +152,9 @@ For the full deployed path: `npm run build` then `npm run preview`, and visit `/
 7. **Resident removal** — sets `removed_at` and `removed_by` and resets the role.
 8. **Provider moderation** — `#providers` loads reports and reviews; deletion removes the provider.
 9. **Audit** — audited profile changes create `profile_audit_log` rows.
+10. **No silent zeroes** — on a community with real activity, `#communities` detail shows non-zero Block In-Charges, pre-order sales, and business listings. All three reading zero at once is the RLS symptom described in §1a, not an empty community.
+11. **Fund Roles grouping** — a community with more than one fund renders one card per fund, each with its own treasurer and collectors.
+12. **Treasurer replace** — picking a resident and clicking Replace swaps the treasurer without tripping the one-treasurer-per-fund trigger.
 
 ---
 
@@ -122,7 +166,21 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj
 npx tsc --noEmit
 ```
 
-Note that `npx tsc --noEmit` does **not** cover `admin-dashboard/` — it is plain JavaScript with no type checking. Console changes must be verified by running the console.
+Note that `npx tsc --noEmit` does **not** cover `admin-dashboard/` — it is plain JavaScript with no type checking. Console changes must be verified by running the console. `node --check admin-dashboard/js/<file>.js` catches syntax errors but nothing semantic.
+
+After any console edit:
+
+```bash
+node --check admin-dashboard/js/communities.js   # syntax only
+node build-admin.js                              # REQUIRED — see §1
+diff admin-dashboard/js/communities.js public/admin/js/communities.js   # must be identical
+```
+
+To confirm an RPC returns what you expect without going through the browser, query it directly — but note a `SECURITY DEFINER` function gated on `is_platform_admin()` will **raise** under `supabase db query --linked` (that connection is not an authenticated admin user). Replicate the function's inner query instead:
+
+```bash
+npx supabase db query --linked "select ..."   # replicate the body, not the RPC call
+```
 
 ---
 

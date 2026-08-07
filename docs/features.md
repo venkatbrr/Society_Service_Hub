@@ -336,6 +336,7 @@ Title required. **Exactly one treasurer must be selected** (leads and platform a
 |--------|---------|
 | **Tables** | `events`, `event_transactions`, `fund_roles`, `profiles` |
 | **Rules** | Treasurers manage collectors and all transactions; collectors add contributions only; residents are view-only. Leads are treated as treasurer-level. **Exactly one treasurer per fund** (enforced by migration `20260813000000` and `fund_role_guard`). In block-enabled communities, assigning a collector requires choosing a block — there is no all-residents option in that flow. The screen shows a Contributions list (income with contributor details) and a separate Expense list. Leads can mark a fund **closed** (`is_closed`), blocking further transactions and edits. If funds are inactive, stale links render a safe inactive state instead of loading ledger actions. |
+| **Role banner** | The "You are a …" line shows the viewer's **actual role** — President, Vice President, Platform admin, Treasurer, Block in-charge, Collector, or Resident. `getEffectiveFundRole()` collapses `admin`/`president`/`vice_president` into one internal `'admin'` fund capacity, so `formatRoleForFundContext()` takes `appRole` as a third argument to name the person correctly rather than showing a generic "Fund admin". What they can *do* is stated separately by the Role Access card underneath (`getRoleAccessSummary`). Same banner on the Add transaction screen. |
 | **Navigation** | → `/funds/add-transaction?event_id=…&type=income\|expense` |
 
 ### Add transaction — `app/funds/add-transaction.tsx`
