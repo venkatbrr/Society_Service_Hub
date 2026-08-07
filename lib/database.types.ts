@@ -3056,6 +3056,18 @@ export type Database = {
           }
       normalize_indian_mobile: { Args: { p_value: string }; Returns: string }
       notify_due_services: { Args: never; Returns: number }
+      place_mcn_preorder: {
+        Args: {
+          p_buyer_name: string
+          p_buyer_note?: string
+          p_buyer_phone: string
+          p_drop_id: string
+          p_flat_number: string
+          p_items: Json
+          p_order_id?: string
+        }
+        Returns: string
+      }
       platform_add_community_block: {
         Args: { p_community_id: string; p_name: string }
         Returns: {
@@ -3595,6 +3607,7 @@ export const Constants = {
     },
   },
 } as const
+
 
 export type ProviderWithInteraction = Tables<'service_providers'> & {
   is_favorite?: boolean

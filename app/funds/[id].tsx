@@ -706,6 +706,10 @@ export default function FundDetailScreen() {
             <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>{incomeTransactions.length} entries</Text>
           </View>
           {incomeTransactions.map((transaction) => {
+            // A sponsor row has no contributor profile — the payer's name lives
+            // on the row itself, and only a lead may edit it (20260825000000).
+            const sponsorName = ((transaction as any).sponsor_name as string | null) ?? null;
+            const canEditRow = sponsorName ? permissions.canManageTreasurers : permissions.canAddContribution;
             const RowContent = (
               <>
                 <View style={[styles.avatar, { backgroundColor: Verandah.accentSoft }]}>
@@ -714,22 +718,28 @@ export default function FundDetailScreen() {
                 <View style={styles.transMain}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={[styles.transName, { color: colors.text }]}>
-                      {transaction.contributor_user_id
-                        ? profileNames.get(transaction.contributor_user_id) ?? 'Resident'
-                        : transaction.title || 'Contribution'}
+                      {sponsorName ??
+                        (transaction.contributor_user_id
+                          ? profileNames.get(transaction.contributor_user_id) ?? 'Resident'
+                          : transaction.title || 'Contribution')}
                     </Text>
-                    {permissions.canAddContribution && (
+                    {canEditRow && (
                       <Ionicons name="pencil" size={13} color={colors.textMuted} />
                     )}
                   </View>
                   <Text style={[styles.transDate, { color: colors.textMuted }]}>
                     {(() => {
+                      const dateText = new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
+
+                      if (sponsorName) {
+                        return `Outside sponsor · ${dateText}`;
+                      }
+
                       if (!transaction.contributor_user_id) {
-                        return new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
+                        return dateText;
                       }
 
                       const flat = profileFlats.get(transaction.contributor_user_id);
-                      const dateText = new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
                       return flat ? `Flat ${flat} · ${dateText}` : dateText;
                     })()}
                   </Text>
@@ -738,7 +748,7 @@ export default function FundDetailScreen() {
               </>
             );
 
-            if (permissions.canAddContribution) {
+            if (canEditRow) {
               return (
                 <TouchableOpacity
                   key={transaction.id}

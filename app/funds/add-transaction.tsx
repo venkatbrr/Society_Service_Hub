@@ -23,7 +23,16 @@ import { APP_EMOJIS } from '../../constants/emojis';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
-import { formatRoleForFundContext, getEffectiveFundRole, getFundPermissions } from '../../lib/fundRoles';
+import {
+    MAX_SPONSOR_NAME_LENGTH,
+    MAX_SPONSOR_NOTE_LENGTH,
+    MAX_SPONSOR_PHONE_LENGTH,
+    MAX_TRANSACTION_AMOUNT,
+    MAX_TRANSACTION_AMOUNT_LABEL,
+    formatRoleForFundContext,
+    getEffectiveFundRole,
+    getFundPermissions,
+} from '../../lib/fundRoles';
 import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
@@ -99,6 +108,12 @@ export default function AddTransactionScreen() {
   const [showBlockPrompt, setShowBlockPrompt] = useState(false);
   const [selectedMyBlock, setSelectedMyBlock] = useState<string | null>(myBlockId ?? null);
   const [searchMember, setSearchMember] = useState('');
+  // A contribution names its payer: either a community member or an outside
+  // sponsor. Sponsors are the lead's call — see migration 20260825000000.
+  const [payerMode, setPayerMode] = useState<'member' | 'sponsor'>('member');
+  const [sponsorName, setSponsorName] = useState('');
+  const [sponsorPhone, setSponsorPhone] = useState('');
+  const [sponsorNote, setSponsorNote] = useState('');
 
   useEffect(() => {
     const loadContext = async () => {
@@ -152,7 +167,17 @@ export default function AddTransactionScreen() {
           setNotes(cleanNotes);
           setImageUrl(url);
           if (existingTx.type === 'income') {
-            setSelectedMemberId(existingTx.contributor_user_id);
+            const existingSponsorName = ((existingTx as any).sponsor_name as string | null) ?? null;
+            if (existingSponsorName) {
+              setPayerMode('sponsor');
+              setSponsorName(existingSponsorName);
+              setSponsorPhone(((existingTx as any).sponsor_phone as string | null) ?? '');
+              setSponsorNote(((existingTx as any).sponsor_note as string | null) ?? '');
+              setSelectedMemberId(null);
+            } else {
+              setPayerMode('member');
+              setSelectedMemberId(existingTx.contributor_user_id);
+            }
           }
         } else {
           const paidMemberIdsSet = new Set(
@@ -195,6 +220,9 @@ export default function AddTransactionScreen() {
   }, [appRole, fund, user?.id]);
 
   const permissions = useMemo(() => getFundPermissions(fundRole), [fundRole]);
+  // Only the fund-admin capacity (president / vice president / platform admin)
+  // may bring in money from outside the community.
+  const canRecordSponsor = permissions.canManageTreasurers;
   const paidMemberIds = useMemo(
     () =>
       new Set(
@@ -229,13 +257,14 @@ export default function AddTransactionScreen() {
     if (
       !isFetchingContext &&
       type === 'income' &&
+      payerMode === 'member' &&
       fund?.community?.blocks_enabled &&
       !myBlockId &&
       permissions.canAddContribution
     ) {
       setShowBlockPrompt(true);
     }
-  }, [fund?.community?.blocks_enabled, isFetchingContext, myBlockId, permissions.canAddContribution, type]);
+  }, [fund?.community?.blocks_enabled, isFetchingContext, myBlockId, payerMode, permissions.canAddContribution, type]);
 
   const handleChangeType = (nextType: 'income' | 'expense') => {
     if (transaction_id) return;
@@ -253,6 +282,13 @@ export default function AddTransactionScreen() {
     setType(nextType);
     setTitle('');
     setNotes('');
+
+    if (nextType === 'expense') {
+      setPayerMode('member');
+      setSponsorName('');
+      setSponsorPhone('');
+      setSponsorNote('');
+    }
   };
 
   const handleDelete = () => {
@@ -301,8 +337,29 @@ export default function AddTransactionScreen() {
   };
 
   const handleSave = async () => {
-    if (!amount.trim() || isNaN(Number(amount)) || Number(amount) <= 0) {
+    const amountValue = Number(amount);
+    if (!amount.trim() || isNaN(amountValue) || amountValue <= 0) {
       Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please enter a valid amount' });
+      return;
+    }
+
+    if (amountValue > MAX_TRANSACTION_AMOUNT) {
+      Toast.show({
+        type: 'error',
+        text1: 'Amount too large',
+        text2: `A single entry cannot exceed ₹${MAX_TRANSACTION_AMOUNT_LABEL}.`,
+      });
+      return;
+    }
+
+    // Read the decimals off the typed text — multiplying by 100 and comparing
+    // to a rounded value misfires on ordinary values like 100.10.
+    if ((amount.trim().split('.')[1] ?? '').length > 2) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Amount can have at most 2 decimal places.',
+      });
       return;
     }
 
@@ -316,7 +373,23 @@ export default function AddTransactionScreen() {
       return;
     }
 
-    if (type === 'income') {
+    if (type === 'income' && payerMode === 'sponsor') {
+      if (!canRecordSponsor) {
+        Toast.show({
+          type: 'error',
+          text1: 'Access denied',
+          text2: 'Only the president or vice president can record a sponsor contribution.',
+        });
+        return;
+      }
+
+      if (!sponsorName.trim()) {
+        Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Sponsor name is required.' });
+        return;
+      }
+    }
+
+    if (type === 'income' && payerMode === 'member') {
       if (!selectedMemberId) {
         Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Select a resident to mark as paid.' });
         return;
@@ -336,6 +409,8 @@ export default function AddTransactionScreen() {
     setIsLoading(true);
     try {
       const memberName = members.find((member) => member.user_id === selectedMemberId)?.full_name?.trim() || 'Resident';
+      const isSponsorContribution = type === 'income' && payerMode === 'sponsor';
+      const payerName = isSponsorContribution ? sponsorName.trim() : memberName;
       let notesText = notes.trim();
       if (type === 'expense' && imageUrl) {
         notesText = notesText ? `${notesText}\n[Receipt: ${imageUrl}]` : `[Receipt: ${imageUrl}]`;
@@ -345,21 +420,27 @@ export default function AddTransactionScreen() {
         type === 'income'
           ? {
               event_id: event_id as string,
-              amount: Number(amount),
+              amount: amountValue,
               type,
-              title: memberName,
+              title: payerName,
               description: notes.trim() || null,
-              category: 'Contribution',
-              contributor_user_id: selectedMemberId,
+              category: isSponsorContribution ? 'Sponsor contribution' : 'Contribution',
+              contributor_user_id: isSponsorContribution ? null : selectedMemberId,
+              sponsor_name: isSponsorContribution ? sponsorName.trim() : null,
+              sponsor_phone: isSponsorContribution ? sponsorPhone.trim() || null : null,
+              sponsor_note: isSponsorContribution ? sponsorNote.trim() || null : null,
             }
           : {
               event_id: event_id as string,
-              amount: Number(amount),
+              amount: amountValue,
               type,
               title: title.trim(),
               description: notesText || null,
               category: 'Expense',
               contributor_user_id: null,
+              sponsor_name: null,
+              sponsor_phone: null,
+              sponsor_note: null,
             };
 
       if (imageUrl) {
@@ -385,7 +466,7 @@ export default function AddTransactionScreen() {
         text1: transaction_id
           ? type === 'income' ? 'Contribution updated' : 'Expense updated'
           : type === 'income' ? 'Contribution added' : 'Expense added',
-        text2: type === 'income' ? `${memberName} status updated.` : 'The fund ledger was updated successfully.',
+        text2: type === 'income' ? `${payerName} status updated.` : 'The fund ledger was updated successfully.',
       });
       router.back();
     } catch (error: any) {
@@ -485,9 +566,11 @@ export default function AddTransactionScreen() {
               {transaction_id
                 ? 'You are editing this transaction. You can modify the amount, title, and notes.'
                 : type === 'income'
-                  ? permissions.canAddContribution
-                    ? 'Select a resident, add the received amount, and they will appear as paid in the fund.'
-                    : 'Only collectors or treasurers can add contributions.'
+                  ? payerMode === 'sponsor'
+                    ? 'Recording money from outside the community. Name the sponsor so the entry stays traceable.'
+                    : permissions.canAddContribution
+                      ? 'Select a resident, add the received amount, and they will appear as paid in the fund.'
+                      : 'Only collectors or treasurers can add contributions.'
                   : permissions.canAddExpense
                     ? 'Add the expense name, amount, and optional note for transparent bookkeeping.'
                     : 'Only treasurers can add expenses.'}
@@ -508,8 +591,66 @@ export default function AddTransactionScreen() {
 
           {type === 'income' ? (
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Select resident</Text>
-              {transaction_id ? (
+              {canRecordSponsor && !transaction_id ? (
+                <View style={[styles.tabContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <TouchableOpacity
+                    style={[styles.tab, payerMode === 'member' ? styles.tabActiveIncome : {}]}
+                    onPress={() => setPayerMode('member')}
+                  >
+                    <Text style={[styles.tabText, { color: payerMode === 'member' ? colors.primary : colors.textMuted }]}>
+                      Community member
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.tab, payerMode === 'sponsor' ? styles.tabActiveIncome : {}]}
+                    onPress={() => setPayerMode('sponsor')}
+                  >
+                    <Text style={[styles.tabText, { color: payerMode === 'sponsor' ? colors.primary : colors.textMuted }]}>
+                      Outside sponsor
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+
+              <Text style={[styles.label, { color: colors.text }]}>
+                {payerMode === 'sponsor' ? 'Sponsor name' : 'Select resident'}
+              </Text>
+              {payerMode === 'sponsor' ? (
+                <>
+                  <TextInput
+                    style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                    placeholder="e.g. Sharma Electricals"
+                    placeholderTextColor={colors.textMuted}
+                    value={sponsorName}
+                    onChangeText={setSponsorName}
+                    maxLength={MAX_SPONSOR_NAME_LENGTH}
+                  />
+
+                  <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>Sponsor phone (optional)</Text>
+                  <TextInput
+                    style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                    placeholder="Contact number"
+                    placeholderTextColor={colors.textMuted}
+                    value={sponsorPhone}
+                    onChangeText={setSponsorPhone}
+                    keyboardType="phone-pad"
+                    maxLength={MAX_SPONSOR_PHONE_LENGTH}
+                  />
+
+                  <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>Sponsor note (optional)</Text>
+                  <TextInput
+                    style={[styles.textArea, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                    placeholder="Organisation, cheque number, or reference"
+                    placeholderTextColor={colors.textMuted}
+                    value={sponsorNote}
+                    onChangeText={setSponsorNote}
+                    multiline
+                    numberOfLines={2}
+                    textAlignVertical="top"
+                    maxLength={MAX_SPONSOR_NOTE_LENGTH}
+                  />
+                </>
+              ) : transaction_id ? (
                 (() => {
                   const member = members.find((m) => m.user_id === selectedMemberId);
                   if (!member) {

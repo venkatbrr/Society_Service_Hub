@@ -316,6 +316,22 @@ export default function CreateOrEditFoodDropScreen() {
         });
         return;
       }
+
+      // Max quantity is optional, but a blank-or-valid rule is the only safe
+      // one: 0 would publish an item nobody can ever order, and a non-numeric
+      // entry reaches the insert as NaN.
+      const rawCap = String(item.max_quantity ?? '').trim();
+      if (rawCap) {
+        const cap = Number(rawCap);
+        if (!Number.isInteger(cap) || cap <= 0) {
+          Toast.show({
+            type: 'error',
+            text1: `Invalid max quantity for "${item.name}"`,
+            text2: 'Leave it blank for no limit, or enter a whole number above zero.',
+          });
+          return;
+        }
+      }
     }
 
     setSubmitting(true);
@@ -348,13 +364,17 @@ export default function CreateOrEditFoodDropScreen() {
         const currentFormIds = validItems.map((i) => i.id).filter((id) => existingDbIds.includes(id));
         const idsToDelete = existingDbIds.filter((id: string) => !currentFormIds.includes(id));
 
-        // Delete removed items if not referenced by orders
+        // Removing an item residents have already pre-ordered is refused by
+        // prevent_mcn_item_delete_with_orders. Surface that instead of
+        // reporting success on a change the database rejected.
         if (idsToDelete.length > 0) {
           for (const delId of idsToDelete) {
-            await supabase
+            const { error: delErr } = await supabase
               .from('mcn_preorder_items')
               .delete()
               .eq('id', delId);
+
+            if (delErr) throw delErr;
           }
         }
 
@@ -371,15 +391,22 @@ export default function CreateOrEditFoodDropScreen() {
             max_quantity: item.max_quantity ? parseInt(String(item.max_quantity), 10) : null,
           };
 
+          // Lowering max_quantity below what is already pre-ordered is refused
+          // by enforce_mcn_item_max_quantity_floor — that error must reach the
+          // host rather than being swallowed under a success toast.
           if (isExisting) {
             itemPayload.id = item.id;
-            await supabase
+            const { error: upsertErr } = await supabase
               .from('mcn_preorder_items')
               .upsert(itemPayload);
+
+            if (upsertErr) throw upsertErr;
           } else {
-            await supabase
+            const { error: insertErr } = await supabase
               .from('mcn_preorder_items')
               .insert(itemPayload);
+
+            if (insertErr) throw insertErr;
           }
         }
 

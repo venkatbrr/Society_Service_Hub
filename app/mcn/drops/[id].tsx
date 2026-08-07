@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -61,7 +61,7 @@ interface DropDetails {
 export default function PreorderDropDetailScreen() {
   const { id: dropId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user, communityId, profile, isCommunityLead } = useAuth();
+  const { user, profile, isCommunityLead } = useAuth();
   const colors = Verandah;
 
   const [drop, setDrop] = useState<DropDetails | null>(null);
@@ -192,6 +192,31 @@ export default function PreorderDropDetailScreen() {
     fetchDropDetails();
   }, [fetchDropDetails]);
 
+  // Remaining stock is shared across every resident, so it goes stale as soon as
+  // someone else orders. Re-read just the availability whenever this screen is
+  // focused, without disturbing the rest of the page state.
+  const refreshAvailability = useCallback(async () => {
+    if (!dropId) return;
+    const { data, error } = await supabase.rpc('get_mcn_drop_item_availability', {
+      p_drop_id: dropId,
+    });
+    if (error) return;
+    const availabilityMap: Record<string, { remaining: number | null; sold: number }> = {};
+    (data || []).forEach((row: any) => {
+      availabilityMap[row.item_id] = {
+        remaining: row.remaining_quantity === null ? null : Number(row.remaining_quantity),
+        sold: Number(row.sold_quantity || 0),
+      };
+    });
+    setItemAvailability(availabilityMap);
+  }, [dropId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshAvailability();
+    }, [refreshAvailability])
+  );
+
   // Pre-fill resident info from profile
   useEffect(() => {
     if (profile) {
@@ -263,7 +288,8 @@ export default function PreorderDropDetailScreen() {
     setBuyerNote('');
   };
 
-  // Subtotal Calculation
+  // Display only — place_mcn_preorder prices the order from the item table and
+  // writes the authoritative total_amount itself.
   const subtotal = items.reduce((acc, item) => {
     const qty = quantities[item.id] || 0;
     return acc + qty * item.price;
@@ -314,66 +340,6 @@ export default function PreorderDropDetailScreen() {
       return;
     }
 
-    const selectedItemsQty = selectedItems.reduce((sum, item) => sum + (quantities[item.id] || 0), 0);
-
-    if (drop?.max_orders) {
-      const { data: capacityData, error: capacityErr } = await supabase.rpc(
-        'check_mcn_drop_item_capacity',
-        {
-          p_drop_id: dropId,
-          p_requested_qty: selectedItemsQty,
-          p_existing_order_id: editingOrderId || null,
-        }
-      );
-
-      if (capacityErr) {
-        Toast.show({ type: 'error', text1: 'Could not validate available item capacity' });
-        return;
-      }
-
-      const capacity = Array.isArray(capacityData) ? capacityData[0] : capacityData;
-      if (capacity && !capacity.can_place) {
-        const maxItems = Number(capacity.max_items || drop.max_orders || 0);
-        const remaining = Number(capacity.remaining_capacity || 0);
-        Toast.show({
-          type: 'error',
-          text1: 'Item limit reached',
-          text2: `This drop is capped at ${maxItems} total items. Remaining capacity: ${remaining}.`,
-        });
-        return;
-      }
-    }
-
-    // Per-item shared capacity — max_quantity is a total across every buyer's
-    // orders, so re-validate against the live server total right before saving.
-    for (const item of selectedItems) {
-      if (item.max_quantity === undefined || item.max_quantity === null) continue;
-
-      const { data: itemCapacityData, error: itemCapacityErr } = await supabase.rpc(
-        'check_mcn_drop_item_quantity_capacity',
-        {
-          p_item_id: item.id,
-          p_requested_qty: quantities[item.id] || 0,
-          p_existing_order_id: editingOrderId || null,
-        }
-      );
-
-      if (itemCapacityErr) {
-        Toast.show({ type: 'error', text1: 'Could not validate item capacity' });
-        return;
-      }
-
-      const itemCapacity = Array.isArray(itemCapacityData) ? itemCapacityData[0] : itemCapacityData;
-      if (itemCapacity && !itemCapacity.can_place) {
-        Toast.show({
-          type: 'error',
-          text1: `${item.name} — capacity reached`,
-          text2: `Only ${Number(itemCapacity.remaining_capacity || 0)} left of ${item.max_quantity} total, shared across all residents.`,
-        });
-        return;
-      }
-    }
-
     if (!flatNumber.trim()) {
       Toast.show({ type: 'error', text1: 'Please enter your flat / house number' });
       return;
@@ -386,88 +352,39 @@ export default function PreorderDropDetailScreen() {
 
     setSubmitting(true);
     try {
-      if (editingOrderId) {
-        // Update active pre-order
-        const { error: orderErr } = await supabase
-          .from('mcn_preorder_orders')
-          .update({
-            buyer_name: buyerName.trim() || profile?.full_name || 'Resident',
-            buyer_phone: buyerPhone.trim(),
-            flat_number: flatNumber.trim().toUpperCase(),
-            buyer_note: buyerNote.trim() || null,
-            total_amount: subtotal,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', editingOrderId)
-          .eq('buyer_id', user.id);
-
-        if (orderErr) throw orderErr;
-
-        // Delete existing items for this order and insert updated items
-        await supabase
-          .from('mcn_preorder_order_items')
-          .delete()
-          .eq('order_id', editingOrderId);
-
-        const lineItemsPayload = selectedItems.map((item) => ({
-          order_id: editingOrderId,
+      // One transaction on the server: it re-checks every cap under a row lock,
+      // prices the lines from the item table, and writes the order plus its line
+      // items together. Placing these as two client round trips is what used to
+      // leave a "confirmed" order with a total and no items behind whenever the
+      // cap rejected the second call.
+      const { error: rpcErr } = await supabase.rpc('place_mcn_preorder', {
+        p_drop_id: dropId,
+        p_items: selectedItems.map((item) => ({
           item_id: item.id,
-          item_name: item.name,
           quantity: quantities[item.id],
-          unit_price: item.price,
-        }));
+        })),
+        p_buyer_name: buyerName.trim() || profile?.full_name || 'Resident',
+        p_buyer_phone: buyerPhone.trim(),
+        p_flat_number: flatNumber.trim().toUpperCase(),
+        p_buyer_note: buyerNote.trim() || null,
+        p_order_id: editingOrderId || null,
+      });
 
-        const { error: lineItemsErr } = await supabase
-          .from('mcn_preorder_order_items')
-          .insert(lineItemsPayload);
+      if (rpcErr) throw rpcErr;
 
-        if (lineItemsErr) throw lineItemsErr;
-
-        Toast.show({
-          type: 'success',
-          text1: 'Pre-order updated successfully! 🎉',
-          text2: 'Your updated food choices have been saved.',
-        });
-      } else {
-        // Insert new pre-order
-        const { data: orderData, error: orderErr } = await supabase
-          .from('mcn_preorder_orders')
-          .insert({
-            drop_id: dropId,
-            community_id: drop?.community_id || communityId || '',
-            buyer_id: user.id,
-            buyer_name: buyerName.trim() || profile?.full_name || 'Resident',
-            buyer_phone: buyerPhone.trim(),
-            flat_number: flatNumber.trim().toUpperCase(),
-            buyer_note: buyerNote.trim() || null,
-            total_amount: subtotal,
-            status: 'confirmed',
-          })
-          .select()
-          .single();
-
-        if (orderErr) throw orderErr;
-
-        const lineItemsPayload = selectedItems.map((item) => ({
-          order_id: orderData.id,
-          item_id: item.id,
-          item_name: item.name,
-          quantity: quantities[item.id],
-          unit_price: item.price,
-        }));
-
-        const { error: lineItemsErr } = await supabase
-          .from('mcn_preorder_order_items')
-          .insert(lineItemsPayload);
-
-        if (lineItemsErr) throw lineItemsErr;
-
-        Toast.show({
-          type: 'success',
-          text1: 'Pre-order placed successfully! 🎉',
-          text2: 'Your food host will deliver to your flat at the scheduled time.',
-        });
-      }
+      Toast.show(
+        editingOrderId
+          ? {
+              type: 'success',
+              text1: 'Pre-order updated successfully! 🎉',
+              text2: 'Your updated food choices have been saved.',
+            }
+          : {
+              type: 'success',
+              text1: 'Pre-order placed successfully! 🎉',
+              text2: 'Your food host will deliver to your flat at the scheduled time.',
+            }
+      );
 
       setEditingOrderId(null);
       setQuantities({});
@@ -481,6 +398,9 @@ export default function PreorderDropDetailScreen() {
         text1: editingOrderId ? 'Failed to update pre-order' : 'Failed to place pre-order',
         text2: err.message,
       });
+      // Availability is read once on load, so a rejection usually means another
+      // resident consumed the capacity — re-sync so the steppers clamp correctly.
+      fetchDropDetails();
     } finally {
       setSubmitting(false);
     }
@@ -855,6 +775,9 @@ export default function PreorderDropDetailScreen() {
 
         {items.map((item) => {
           const qty = quantities[item.id] || 0;
+          const remaining = getEffectiveRemaining(item.id);
+          const soldOut = remaining !== null && remaining <= 0;
+          const atLimit = remaining !== null && qty >= remaining;
           return (
             <View key={item.id} style={styles.itemRow}>
               {item.image_url ? (
@@ -876,13 +799,12 @@ export default function PreorderDropDetailScreen() {
                   <Text style={styles.itemUnit}> / {item.unit}</Text>
                 </View>
                 {item.max_quantity != null ? (
-                  <Text style={styles.itemCapText}>
-                    {(() => {
-                      const remaining = getEffectiveRemaining(item.id);
-                      return remaining !== null
-                        ? `${remaining} of ${item.max_quantity} left — shared across all orders`
-                        : `Limited to ${item.max_quantity} total, shared across all orders`;
-                    })()}
+                  <Text style={[styles.itemCapText, soldOut ? styles.itemCapTextOut : null]}>
+                    {remaining === null
+                      ? `Limited to ${item.max_quantity} in total, shared across all residents`
+                      : soldOut
+                      ? `Sold out — all ${item.max_quantity} claimed`
+                      : `${remaining} of ${item.max_quantity} left — shared across all residents`}
                   </Text>
                 ) : null}
               </View>
@@ -899,8 +821,9 @@ export default function PreorderDropDetailScreen() {
                   </TouchableOpacity>
                   <Text style={styles.counterVal}>{qty}</Text>
                   <TouchableOpacity
-                    style={styles.counterBtn}
+                    style={[styles.counterBtn, atLimit && styles.counterBtnDisabled]}
                     onPress={() => handleQtyChange(item.id, 1)}
+                    disabled={atLimit}
                   >
                     <Text style={styles.counterBtnText}>+</Text>
                   </TouchableOpacity>
@@ -1391,6 +1314,9 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Verandah.caution,
     marginTop: 2,
+  },
+  itemCapTextOut: {
+    color: Verandah.danger,
   },
   counterRow: {
     flexDirection: 'row',

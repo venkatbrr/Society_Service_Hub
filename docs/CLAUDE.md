@@ -210,6 +210,9 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Intercepting `popstate` to "fix" browser back | Races expo-router's own handler. Don't. |
 | `router.push()` on a redirect bridge (`?id=` style) | Browser-back lands on the bridge, which forwards again — infinite loop. Use `replace()`. |
 | Enforcing capacity only in the UI | Drop item capacity and fund role caps are trigger-enforced; UI-only checks will be bypassed. |
+| Writing a constraint-enforcing trigger without `SECURITY DEFINER` | Its own `SELECT`s run under the *caller's* RLS, so any aggregate over other users' rows silently under-counts and the constraint never fires. Cost the food-drop caps their cross-buyer enforcement — see `20260823000000`. |
+| A table with only SELECT/INSERT policies that the app also deletes from | RLS makes the delete match zero rows and **return success**. A delete-then-insert edit flow then duplicates rows instead of replacing them. Check the `error` *and* give the table a DELETE policy. |
+| Writing a parent row and its children in two client round trips when a trigger can reject the children | The parent is already committed, so the rejection leaves an orphan — a "confirmed" pre-order with a total and no items. Anything a constraint can veto must be written in one transaction, i.e. a `SECURITY DEFINER` RPC. Pre-orders go through `place_mcn_preorder()`. |
 | Writing to the `community-uploads` bucket | Unused. Images go to Cloudinary via `lib/cloudinary.ts`. |
 | Expecting `notifications` rows for hire feedback | It is a purely local `expo-notifications` schedule, not a table row. |
 | Testing Google Sign-In in Expo Go | Requires a dev build. |

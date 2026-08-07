@@ -148,6 +148,19 @@ Resolution goes through `lib/fundRoles.ts` — see §12. `is_funds_enabled(commu
 
 `list_eligible_contributors_for_collector(p_event_id)` (redefined in migration `20260816000000`) returns `resident`, `president`, and `vice_president` profiles — a lead can record a contribution for themselves, not just other residents. A block-scoped collector (`fund_roles.block_id` set) only sees profiles in that block; a collector with no block, the treasurer, and leads see the whole community.
 
+### Who paid — member vs outside sponsor
+
+Every income row names its payer, and there are exactly two ways to do that (migration `20260825000000`, enforced by the `event_transactions_payer_shape` check and `event_transaction_guard`):
+
+- **Member** — `contributor_user_id` set, sponsor columns null. Recordable by a collector, treasurer, or lead. `unique_income_contribution_per_member` gives each member **exactly one contribution row per fund** — deliberately, so a fund reads as a paid/unpaid roll rather than a running account. Correcting an amount means editing that row.
+- **Outside sponsor** — `sponsor_name` set (required, ≤ 80 chars), `contributor_user_id` null, with optional `sponsor_phone` and `sponsor_note`. **Only a president / vice president / platform admin** may record one; a treasurer or collector attempting it is rejected by the trigger. Sponsors sit outside the unique index, so the same sponsor may contribute more than once.
+
+There is no third case: an income row with neither payer is rejected, so **money can never be recorded anonymously**.
+
+`amount` carries a money shape rather than a bare `> 0` check: the trigger rounds to 2 decimal places and rejects anything above **10,00,000 per transaction**, with `event_transactions_amount_bounds` as a direct-SQL backstop. Both constraints are `NOT VALID`, so rows predating the migration are grandfathered rather than rewritten.
+
+Block scoping and the "assigned fund members only" rule apply on **UPDATE as well as INSERT**. They were previously wrapped in `IF TG_OP = 'INSERT'`, which let a block in-charge insert a contribution for their own block and then repoint `contributor_user_id` at another block's resident.
+
 ---
 
 ## 4. Database schema
@@ -190,7 +203,7 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 | Table | Key columns |
 |-------|-------------|
 | `events` | A fund. `title`, `description`, `event_date`, `goal_amount`, `is_closed`, `fund_scope`, `group_id`, `partnership_id` |
-| `event_transactions` | `event_id`, `type` (`income`/`expense`), `amount`, `title`, `description`, `category`, `contributor_user_id` (income only), `image_url` |
+| `event_transactions` | `event_id`, `type` (`income`/`expense`), `amount`, `title`, `description`, `category`, `contributor_user_id` (member income only), `sponsor_name` / `sponsor_phone` / `sponsor_note` (outside-sponsor income only), `image_url` |
 | `fund_roles` | `event_id`, `user_id`, `role`, `block_id` (nullable = whole community), `assigned_by` |
 | `funds_access_requests` | `community_id`, `requested_by`, `contact_name`, `contact_phone`, `purpose`, `designated_lead_id`, `status`, `rejection_reason`, `decided_by`, `decided_at` |
 | `funds_access_revocations` | Platform-admin revocation audit trail |
@@ -219,11 +232,17 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 | `mcn_preorder_drops` | `title`, `description`, `image_url`, `listing_id` (nullable), `created_by`, `fulfillment_date`, `fulfillment_time`, `cutoff_at`, `max_orders`, `status` (`open`/`closed`/`completed`/`cancelled`) |
 | `mcn_preorder_items` | `drop_id`, `name`, `description`, `unit` (`piece`/`kg`/`box`/`pack`/`portion`/`litre`), `price`, `max_quantity`, `image_url` |
 | `mcn_preorder_orders` | `drop_id`, `buyer_id`, `buyer_name`, `buyer_phone`, `flat_number`, `buyer_note`, `total_amount`, `status` (`confirmed`/`fulfilled`/`cancelled`) |
-| `mcn_preorder_order_items` | `order_id`, `item_id`, `item_name`, `quantity` (numeric — supports 0.5), `unit_price` |
+| `mcn_preorder_order_items` | `order_id`, `item_id`, `item_name`, `quantity` (numeric — supports 0.5), `unit_price`. Unique on `(order_id, item_id)` — one line per item per order |
 
 Drop-wide total item capacity (`mcn_preorder_drops.max_orders`) is enforced server-side by `check_mcn_drop_item_capacity()` plus a trigger (migrations `20260803000000`, `20260804000000`), not only in the UI.
 
 Per-item capacity (`mcn_preorder_items.max_quantity`) is a separate, smaller cap: the total quantity of *that one item* across every buyer's orders combined, not a per-order allowance. It is enforced by `check_mcn_drop_item_quantity_capacity()` (pre-flight check) and `get_mcn_drop_item_availability()` (remaining-stock display), backed by triggers on `mcn_preorder_order_items` and `mcn_preorder_orders` (migration `20260816000000`).
+
+**Orders are placed and edited through `place_mcn_preorder()` only** (migration `20260824000000`) — never by writing `mcn_preorder_orders` and `mcn_preorder_order_items` from the client. The client previously inserted the order row, then the line items, as two round trips; when the cap trigger rejected the second call the first was already committed, leaving a `confirmed` order with a `total_amount`, no line items, and a phantom contribution to the host's Est. Revenue. Every over-cap attempt minted one. The RPC does the whole thing in one transaction under a `FOR UPDATE` lock on the drop and each item, re-checks both caps, and derives `unit_price` and `total_amount` from `mcn_preorder_items` rather than trusting the client. Cancelling an order is still a direct `status` update.
+
+**All four pre-order capacity triggers must stay `SECURITY DEFINER`** (migration `20260823000000`). They were originally invoker-rights, so the `SUM(quantity)` they compare against the cap ran under the buyer's own RLS and counted only that buyer's orders — every other resident's quantity was invisible and both caps could be overshot. The pre-flight RPCs were always `SECURITY DEFINER`, which is why the caps looked correct until a second buyer ordered.
+
+`mcn_preorder_order_items` also needs UPDATE and DELETE policies (buyer's own `confirmed` order), added in the same migration. Editing a pre-order deletes the old lines and re-inserts them; with SELECT/INSERT policies only, the delete silently matched zero rows while the insert succeeded, so the order kept both the old and new line and its displayed items no longer matched `total_amount`. The `(order_id, item_id)` unique index makes that failure mode loud instead of silent.
 
 **Anti-spam cap on concurrent open drops** (migration `20260821000100`): a host can have at most 3 drops with `status = 'open'` and `cutoff_at` in the future at the same time, enforced by a trigger on `mcn_preorder_drops`. Unlike business listings, drops have no "one per type" rule — hosting a new drop every week is the intended pattern; this only stops flooding the Open Pre-orders tab with many drops at once.
 
@@ -305,7 +324,7 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 ### MCN
 
-`check_mcn_drop_item_capacity(...)` — validates a drop's total `max_orders` cap before an order is accepted. `check_mcn_drop_item_quantity_capacity(...)` — same idea, scoped to one item's `max_quantity` shared across every buyer. `get_mcn_drop_item_availability(p_drop_id)` — remaining stock per item, for display.
+`place_mcn_preorder(p_drop_id, p_items, p_buyer_name, p_buyer_phone, p_flat_number, p_buyer_note, p_order_id)` — **the only supported way to place or edit a pre-order.** `p_items` is `[{"item_id": uuid, "quantity": numeric}]`, aggregated by item so a repeated id cannot bypass the cap; a non-null `p_order_id` edits that order (its existing lines are cleared first, so the buyer's own prior quantity is excluded from the cap sums rather than double-counted). Returns the order id. `check_mcn_drop_item_capacity(...)` — validates a drop's total `max_orders` cap. `check_mcn_drop_item_quantity_capacity(...)` — same idea, scoped to one item's `max_quantity` shared across every buyer. `get_mcn_drop_item_availability(p_drop_id)` — remaining stock per item, for display; the drop screen re-reads it on focus because another resident's order makes it stale.
 
 ### Platform admin console
 
@@ -338,11 +357,16 @@ All are `SECURITY DEFINER` and raise unless `is_platform_admin(auth.uid())`. **T
 | `on_service_visit_rescheduled` | `service_visits` | UPDATE of date/slot | Emit `visit_rescheduled` notifications |
 | `user_services_compute_fields_trigger` | `user_services` | BEFORE INS/UPD | Recompute `next_due_on`, clear `notified_at` |
 | `fund_role_guard` | `fund_roles` | INS/UPD/DEL | Funds-enabled gate, treasurer cap (1), collector caps (global + per block) |
-| `event_transaction_guard` | `event_transactions` | INS/UPD | Funds-enabled gate, block-scope check for block in-charges |
+| `event_transaction_guard` | `event_transactions` | INS/UPD | Funds-enabled gate, amount rounding + bounds, payer resolution (member vs sponsor), block-scope check for block in-charges |
 | `profile_block_guard` | `profiles` | BEFORE INS/UPD | `block_id` must belong to the same community |
 | `fund_role_block_guard` | `fund_roles` | BEFORE INS/UPD | `block_id` must belong to the fund's community |
 | school-review aggregate trigger | `school_reviews` | INS/UPD/DEL | Recompute `schools.avg_*` and `review_count` |
-| drop item capacity trigger | `mcn_preorder_order_items` | BEFORE INSERT | Reject orders exceeding `mcn_preorder_items.max_quantity` |
+| `enforce_mcn_item_max_quantity_trigger` | `mcn_preorder_order_items` | AFTER INS/UPD | Reject orders exceeding `mcn_preorder_items.max_quantity`. `SECURITY DEFINER` |
+| `enforce_mcn_item_max_quantity_order_trigger` | `mcn_preorder_orders` | AFTER UPD OF `status` | Re-check item caps when an order returns to a counted status. `SECURITY DEFINER` |
+| `enforce_mcn_drop_capacity_trigger` | `mcn_preorder_order_items` | AFTER INS/UPD | Reject orders exceeding `mcn_preorder_drops.max_orders`. `SECURITY DEFINER` |
+| `enforce_mcn_drop_capacity_order_trigger` | `mcn_preorder_orders` | AFTER UPD OF `status` | Re-check the drop cap on status change. `SECURITY DEFINER` |
+| `enforce_mcn_item_max_quantity_floor` | `mcn_preorder_items` | BEFORE UPDATE | Reject lowering `max_quantity` below what is already pre-ordered |
+| `prevent_mcn_item_delete_with_orders` | `mcn_preorder_items` | BEFORE DELETE | Reject removing an item residents have pre-ordered. Skipped when the parent drop is itself being deleted, so whole-drop deletion still cascades |
 | `*_updated_at` triggers | `provider_personal_notes`, `blood_donors`, `emergency_contacts`, `mcn_carpools`, `mcn_carpool_requests`, `mcn_parent_corner`, and other MCN tables | BEFORE UPDATE | Refresh `updated_at` |
 
 ---

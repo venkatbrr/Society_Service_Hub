@@ -42,6 +42,7 @@ interface DropItem {
   name: string;
   unit: string;
   price: number;
+  max_quantity?: number | null;
 }
 
 export default function ManagePreorderDropScreen() {
@@ -119,6 +120,30 @@ export default function ManagePreorderDropScreen() {
       });
     }
   });
+
+  // max_quantity is optional at drop creation, so only some items carry a cap.
+  // Order lines snapshot item_name, so caps are matched back by name.
+  const capByItemName = new Map<string, number>();
+  items.forEach((item) => {
+    if (item.max_quantity != null) {
+      capByItemName.set(item.name.trim().toLowerCase(), item.max_quantity);
+    }
+  });
+
+  const orderedItemKeys = new Set(Object.keys(itemPrepAggregates).map((n) => n.trim().toLowerCase()));
+
+  // Every ordered item, plus any capped item with no orders yet — the host still
+  // needs to see how much of that cap is left.
+  const prepRows: { name: string; count: number; cap: number | null }[] = [
+    ...Object.entries(itemPrepAggregates).map(([name, count]) => ({
+      name,
+      count,
+      cap: capByItemName.get(name.trim().toLowerCase()) ?? null,
+    })),
+    ...items
+      .filter((item) => item.max_quantity != null && !orderedItemKeys.has(item.name.trim().toLowerCase()))
+      .map((item) => ({ name: item.name, count: 0, cap: item.max_quantity as number })),
+  ];
 
   const handleToggleFulfillment = async (orderId: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'fulfilled' ? 'confirmed' : 'fulfilled';
@@ -365,16 +390,24 @@ export default function ManagePreorderDropScreen() {
             Total items needed for cooking / preparation across all active pre-orders:
           </Text>
 
-          {Object.keys(itemPrepAggregates).length === 0 ? (
+          {prepRows.length === 0 ? (
             <Text style={styles.emptyText}>No active pre-orders placed yet.</Text>
           ) : (
             <View style={styles.prepGrid}>
-              {Object.entries(itemPrepAggregates).map(([itemName, count]) => (
-                <View key={itemName} style={styles.prepCard}>
-                  <Text style={styles.prepCount}>{count}x</Text>
-                  <Text style={styles.prepItemName}>{itemName}</Text>
-                </View>
-              ))}
+              {prepRows.map((row, idx) => {
+                const isFull = row.cap != null && row.count >= row.cap;
+                return (
+                  <View key={`${row.name}_${idx}`} style={[styles.prepCard, isFull ? styles.prepCardFull : null]}>
+                    <Text style={styles.prepCount}>{row.count}x</Text>
+                    <Text style={styles.prepItemName}>{row.name}</Text>
+                    {row.cap != null ? (
+                      <Text style={[styles.prepCapText, isFull ? styles.prepCapTextFull : null]}>
+                        {isFull ? `max ${row.cap} · full` : `of ${row.cap} max`}
+                      </Text>
+                    ) : null}
+                  </View>
+                );
+              })}
             </View>
           )}
         </View>
@@ -785,6 +818,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: Verandah.textPrimary,
+  },
+  prepCardFull: {
+    backgroundColor: '#FEE2E2',
+  },
+  prepCapText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: Verandah.textSecondary,
+  },
+  prepCapTextFull: {
+    color: '#DC2626',
   },
   orderCard: {
     backgroundColor: '#FFFFFF',

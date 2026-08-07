@@ -8,6 +8,17 @@ export const MAX_TREASURERS = 1;
 export const MIN_TREASURERS = 1;
 export const MAX_COLLECTORS = 6;
 
+/**
+ * Ledger limits mirrored from migration 20260825000000. The database is the
+ * authority — these exist so the form can say what is wrong before the round
+ * trip, not so the client can decide.
+ */
+export const MAX_TRANSACTION_AMOUNT = 1000000;
+export const MAX_TRANSACTION_AMOUNT_LABEL = '10,00,000';
+export const MAX_SPONSOR_NAME_LENGTH = 80;
+export const MAX_SPONSOR_PHONE_LENGTH = 20;
+export const MAX_SPONSOR_NOTE_LENGTH = 280;
+
 type CommunityLike = {
   funds_enabled?: boolean | null;
   blocks_enabled?: boolean | null;
