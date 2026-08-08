@@ -181,12 +181,12 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 
 | Table | Key columns | Scope |
 |-------|-------------|-------|
-| `service_providers` | `name`, `phone`, `category`, `description`, `details` (JSONB, category-specific), `flat_block`, `avg_rating`, `rating_count`, `is_verified`, `is_trending`, `fraud_status`, `visibility`, `shared_by_community_id`, `created_by` | Community |
+| `service_providers` | `name` (2-80), `phone`, `category`, `description` (≤1000), `details` (JSONB), `flat_block`, `avg_rating`, `rating_count`, `is_verified` (RPC locked), `is_trending`, `fraud_status` (`pass`/`queued_low`/`hidden`/`blocked`), `visibility`, `shared_by_community_id`, `created_by` | Community |
 | `favorites` | Saved providers | User |
-| `ratings` | 1–5 rating + review text, one per user/provider | Community read, owner write |
-| `provider_hires` | Contact/hire log; drives the 24 h feedback reminder | Community |
-| `provider_reports` | `reason`, `details`, `reported_by`, `status`, `reviewed_by` — one report per user/provider | Community |
-| `provider_personal_notes` | Private per-resident note, one per user/provider pair | **User** |
+| `ratings` | 1–5 rating + `review_text` (≤1000), one per user/provider | Community read, owner write |
+| `provider_hires` | Contact/hire log; `contact_date` generated column with unique index `(user_id, provider_id, contact_date)` | Community |
+| `provider_reports` | `reason` (wrong_info/spam/inappropriate/unavailable/other), `status` (pending/reviewed/dismissed), `details` (≤500), `reported_by`, `reviewed_by`, `reviewed_at` | Community |
+| `provider_personal_notes` | Private per-resident note (≤1000), one per user/provider pair | **User** |
 | `provider_public_rating_nudges` | One-time nudge memory per user/provider | **User** |
 | `hire_feedback` | `signal` (`positive`/`negative`/`skipped`), `note`, per `hire_id` | **User** |
 | `fraud_verdicts` | `entity_type`, `entity_id`, `action`, `triggered_rules` (JSONB), `flag_count`, `hard_block_triggered`, `input_snapshot`, `summary` | Platform |

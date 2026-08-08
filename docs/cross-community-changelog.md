@@ -4,6 +4,14 @@
 >
 > **Format:** newest entries on top. Each entry includes the date, the change in one line, the migration file (if any), the touched docs, and any backfill / coordination notes.
 
+## 2026-09-02 — Provider write guards, moderation RPC, report resolution, and contact deduplication
+
+**Migrations (Unapplied per Decision D1):** `20260902000000_provider_write_and_visibility_guards.sql` (M1), `20260902000100_rating_scope_and_fraud_visibility.sql` (M2), `20260902000200_report_and_text_bounds.sql` (M3), `20260902000300_platform_admin_provider_moderation.sql` (M4), `20260902000400_dedupe_provider_contacts.sql` (M5).
+
+**Objects touched:** `service_providers` (column-level UPDATE permissions, `fraud_status` RLS visibility filter, `is_verified` locked to RPC), `ratings` (community RLS scope, delete policy, fraud status filter), `provider_reports` (text length & enum CHECK constraints), `provider_hires` (generated `contact_date` column, unique index `provider_hires_user_provider_day_uniq`), `set_provider_moderation_state` (new SECURITY DEFINER RPC), `platform_get_provider_details` & `platform_get_all_providers` (extended with fraud status, verification, report counts, and review text).
+
+**Edge function & client changes:** `fraud-check` Edge Function source updated (R-R6 severity downgraded to FLAG; profanity, contact info, and creation velocity rules added to `evaluateProviderRules`). Client fraud handler updated to fail open to `QUEUE_LOW_PRIORITY` with `unavailable: true`. Provider detail screen updated with Overview & Details section (Decision D6), contact requirement notice before review submission (Decision D4), public report banner threshold of 2 (Decision D3), report resolution controls for leads/admins, and report button hidden on foreign providers. Admin console updated with HTML escaping helper `esc()`, event listeners, moderation toggles, report resolution controls, and review text rendering.
+
 ---
 
 ## 2026-08-31 — Visit RPCs became federation-aware while closing an anonymous read leak
