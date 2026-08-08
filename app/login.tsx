@@ -110,11 +110,14 @@ export default function LoginScreen() {
             visibilityTime: 4000
           });
         } else {
+          // No session means Supabase is holding the account until the email is
+          // confirmed ("Confirm email" is ON). Signing in will fail until then,
+          // so send them to their inbox rather than back to the sign-in form.
           Toast.show({
             type: 'success',
-            text1: 'Account Created',
-            text2: 'Sign up successful! You can now try to sign in with your email.',
-            visibilityTime: 8000
+            text1: 'Check your email',
+            text2: `We sent a confirmation link to ${email.trim()}. Click it, then sign in.`,
+            visibilityTime: 10000
           });
           // After a short delay, switch to sign-in mode for them
           setTimeout(() => setMode('signIn'), 2500);

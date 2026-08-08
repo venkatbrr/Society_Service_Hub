@@ -6,15 +6,26 @@ Behavior that is intentionally off, cut, or postponed. If a feature seems missin
 
 ## Disabled
 
-### 1. Email verification
+### 1. Email verification — ✅ RE-ENABLED 2026-08-08
 
-- **Status**: Disabled
-- **Details**: New users are not blocked on email confirmation before using the app.
-- **Operational requirement**: Supabase Auth → "Confirm email" must stay **OFF** for the implemented flow to work.
-- **Reason**: Lower-friction onboarding during pilot usage.
-- **To re-enable**: update the auth flow and messaging in `app/login.tsx`, and handle the unconfirmed-session state in `AuthContext` before turning the Supabase setting back on.
+- **Status**: **Enabled.** Supabase Auth → "Confirm email" is **ON**. New email/password users must click a confirmation link before their first sign-in.
+- **Google sign-in is unaffected** — OAuth emails arrive pre-verified, so no confirmation is sent and no email is required.
+- **Existing users unaffected** — all 18 accounts predating the change were already confirmed.
 
-> Note: email *changes* from `app/profile/edit.tsx` **do** require verification — Supabase sends a confirmation link to the new address before it takes effect. Only signup verification is disabled.
+**Client handling.** `app/login.tsx` already branched on `data.session` being absent, so enabling the setting did not break signup. Both user-facing messages were wrong for this flow, however, and were corrected in the same change:
+
+| Where | Was | Now |
+|---|---|---|
+| `app/login.tsx` post-signup toast | "Sign up successful! You can now try to sign in with your email." | "Check your email — we sent a confirmation link to `<address>`. Click it, then sign in." |
+| `lib/auth.ts` `'Email not confirmed'` | "Account setup incomplete. If you just signed up, please try signing in again." | "Please confirm your email first. Check your inbox for the confirmation link we sent you." |
+
+The old strings were written for the period when confirmation was off, where an unconfirmed session was an anomaly that retrying might clear. With confirmation on it is the normal path, and "try signing in again" is a dead end that loops forever.
+
+⚠️ **Operational dependency — custom SMTP.** Auth emails currently send through Supabase's built-in service, which is rate-limited to a few per hour and is documented as development-only. With confirmation on, an unsent email means a user who cannot sign in and gets no explanation. **Configure SMTP (Project Settings → Authentication → SMTP Settings) before real signup volume.** Password-reset emails already depend on this same path.
+
+- **To disable again**: turn "Confirm email" OFF in Supabase. The client messaging above stays correct either way, since it only appears when a session is genuinely absent.
+
+> Note: email *changes* from `app/profile/edit.tsx` have always required verification — Supabase sends a confirmation link to the new address before it takes effect.
 
 ### 2. Password strength constraints
 

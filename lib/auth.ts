@@ -66,7 +66,7 @@ export const getAuthErrorMessage = (error: AuthError) => {
     case 'User already registered':
       return 'An account with this email already exists.';
     case 'Email not confirmed':
-      return 'Account setup incomplete. If you just signed up, please try signing in again.';
+      return 'Please confirm your email first. Check your inbox for the confirmation link we sent you.';
     case 'Signup disabled':
       return 'Signups are currently disabled.';
     default:
