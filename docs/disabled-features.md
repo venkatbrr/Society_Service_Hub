@@ -16,6 +16,24 @@ Behavior that is intentionally off, cut, or postponed. If a feature seems missin
 
 > Note: email *changes* from `app/profile/edit.tsx` **do** require verification — Supabase sends a confirmation link to the new address before it takes effect. Only signup verification is disabled.
 
+### 1b. Email/password sign-in — UI hidden 2026-08-08
+
+- **Status**: **Hidden in the UI, fully working underneath.** Google is the only onboarding path residents see.
+- **Flag**: [`constants/authFlags.ts`](../constants/authFlags.ts) → `EMAIL_AUTH_UI_ENABLED = false`. Flip to `true` to restore; nothing else needs changing.
+- **Not removed**: `signUpWithEmail`, `signInWithEmail`, `resetPassword` and `getAuthErrorMessage` in `lib/auth.ts` are untouched, and the **Email provider stays enabled in Supabase**. Existing password accounts still work; the API still accepts them.
+
+**Why.** Google accounts arrive pre-verified, so no confirmation email is sent. That removes the dependency on Supabase's rate-limited built-in SMTP (§1), along with password resets, password-strength decisions, and forgotten-password support — a large maintenance surface for a side project.
+
+**What changed:**
+
+| File | Change |
+|---|---|
+| `app/login.tsx` | Tab toggle, all form fields, submit button, divider and forgot-password link render only when the flag is on. Subtitle becomes "Sign in with Google to continue." |
+| `app/login.tsx` | The sign-up form's Terms checkbox is now unreachable, so a "By continuing you agree to our Terms and Privacy Policy" line sits under the Google button — otherwise there is no consent moment at all. |
+| `app/forgot-password.tsx` | Still routable by deep link, so it redirects to `/login` when the flag is off. |
+
+⚠️ **Before flipping the flag back on**, note that one account —`thewooru@gmail.com`, a platform admin — had an email-only identity at the time of this change. It is protected regardless: `is_platform_admin()` carries a break-glass branch on that exact address, and `handle_new_user()` auto-promotes it, so signing in with Google under the same address still resolves to platform admin.
+
 ### 2. Password strength constraints
 
 - **Status**: Simplified

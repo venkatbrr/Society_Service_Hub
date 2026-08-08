@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { HeaderBackButton } from '../components/HeaderBackButton';
+import { EMAIL_AUTH_UI_ENABLED } from '../constants/authFlags';
 import { Verandah } from '../constants/Colors';
 import { VerandahLayout, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, resetPassword } from '../lib/auth';
@@ -13,6 +14,13 @@ export default function ForgotPasswordScreen() {
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // No UI links here while the email auth surface is hidden, but the route is
+  // still deep-linkable. Send anyone who lands on it back to sign-in rather
+  // than offering a reset for a password they were never asked to create.
+  useEffect(() => {
+    if (!EMAIL_AUTH_UI_ENABLED) router.replace('/login');
+  }, [router]);
 
   const handleReset = async () => {
     if (!email.trim() || !email.includes('@')) {
