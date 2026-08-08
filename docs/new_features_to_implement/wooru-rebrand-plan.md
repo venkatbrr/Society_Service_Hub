@@ -562,10 +562,23 @@ The task was "add `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`". `vercel env ls` returned 
 1. **Created with `--no-sensitive`.** Vercel's CLI now defaults to *Sensitive*, which is write-only — unreadable afterwards even via `vercel env pull`. Every one of these is an `EXPO_PUBLIC_*` value inlined into the browser bundle, so it is public by construction; marking it secret buys nothing and costs the ability to audit it. Recreated as readable and verified by readback.
 2. **Preview scope points at *prod*.** The two-environment plan wants Preview pointing at preprod — but preprod does not exist yet, so the choice was between previews that hit prod and previews that fail to build. Pre-launch, with no real users, working previews win. ⚠️ **Repoint Preview to preprod the moment it exists** — that is the whole safety property of that plan.
 
-### 11.2 Two more brand leaks found in Vercel
+### 11.2 Vercel naming — already clean, no action needed
 
-- **Account/team slug is `societyservicehub-6292`.** It appears in every preview URL: `wooru-<hash>-societyservicehub-6292.vercel.app`. Rename under Vercel account settings if preview URLs are shared with anyone.
-- **Last production URL was `commloom-society-service-hub.vercel.app`** — a stale alias from before the project rename. It should be replaced by `wooru.vercel.app` on the next production deploy; confirm after deploying.
+An earlier draft of this section claimed the account slug `societyservicehub-6292` appears in preview URLs and needed renaming. **That was wrong**, and it is recorded here so nobody acts on it.
+
+Verified 2026-08-08:
+
+| Thing | Value | Status |
+|---|---|---|
+| Team name / slug | `wooru` | ✅ already renamed |
+| Project name | `wooru` | ✅ already renamed |
+| Personal account username | `societyservicehub-6292` | Cosmetic only — no project lives under it |
+
+A Vercel deployment URL is `<project>-<hash>-<team-slug>.vercel.app`. The slug is the **team** slug, not the personal username, and the team is already `wooru`. Next deploy will be `wooru-<hash>-wooru.vercel.app`.
+
+Historical URLs like `commloom-9dp7cm4p1-society-service-hub.vercel.app` show what the names were *at deploy time*. Vercel deployment URLs are immutable per deployment, so old ones keep the old names permanently. They are unlinked and unguessable without the hash — a record of the past, not a live leak. `vercel remove commloom --safe` prunes them if desired.
+
+**Optional tidiness only:** rename the personal username at `vercel.com/account/general`; prune old `commloom-*` deployments.
 
 ### Group B — native ⏸️ DEFERRED (decided 2026-08-08)
 
