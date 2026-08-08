@@ -1,4 +1,14 @@
 // Providers Page Controller
+const esc = (str) => {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 const ProvidersPage = {
   communities: [],
   selectedCommunityId: null,
@@ -73,7 +83,7 @@ const ProvidersPage = {
       if (error) throw error;
 
       if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-3" style="text-align: center; padding: 24px;">No service providers found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-3" style="text-align: center; padding: 24px;">No service providers found.</td></tr>';
         return;
       }
 
@@ -85,17 +95,32 @@ const ProvidersPage = {
           ? `⭐ ${parseFloat(sp.avg_rating).toFixed(1)} <span class="text-3">(${sp.rating_count})</span>` 
           : '<span class="text-3">No ratings</span>';
 
+        const statusClass = sp.fraud_status === 'hidden' ? 'badge-rejected' : sp.fraud_status === 'queued_low' ? 'badge-pending' : 'badge-approved';
+        const statusBadge = `<span class="badge-pill ${statusClass}">${esc(sp.fraud_status || 'pass')}</span>`;
+        const verifiedBadge = sp.is_verified ? `<span class="badge-pill badge-approved" style="margin-left: 4px;">Verified</span>` : '';
+
         tr.innerHTML = `
-          <td style="font-weight: 500;">${sp.name}</td>
-          <td><span class="badge-pill badge-muted">${sp.category}</span></td>
-          <td>${sp.phone}</td>
-          <td>${sp.community_name}</td>
+          <td style="font-weight: 500;">${esc(sp.name)} ${verifiedBadge}</td>
+          <td><span class="badge-pill badge-muted">${esc(sp.category)}</span></td>
+          <td>${esc(sp.phone)}</td>
+          <td>${esc(sp.community_name)}</td>
           <td>${ratingDisplay}</td>
+          <td>${statusBadge}</td>
           <td>
-            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="event.stopPropagation(); ProvidersPage.viewDetails('${sp.id}')">Inspect</button>
-            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem; color: var(--danger);" onclick="event.stopPropagation(); ProvidersPage.confirmDelete('${sp.id}', '${sp.name}')">Delete</button>
+            <button class="btn btn-secondary btn-inspect" style="padding: 4px 8px; font-size: 0.8rem;" data-id="${esc(sp.id)}">Inspect</button>
+            <button class="btn btn-secondary btn-delete" style="padding: 4px 8px; font-size: 0.8rem; color: var(--danger);" data-id="${esc(sp.id)}" data-name="${esc(sp.name)}">Delete</button>
           </td>
         `;
+
+        tr.querySelector('.btn-inspect').addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.viewDetails(sp.id);
+        });
+
+        tr.querySelector('.btn-delete').addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.confirmDelete(sp.id, sp.name);
+        });
 
         tr.addEventListener('click', () => {
           this.viewDetails(sp.id);
@@ -105,7 +130,7 @@ const ProvidersPage = {
       });
     } catch (err) {
       console.error('Error fetching providers:', err);
-      tbody.innerHTML = '<tr><td colspan="6" class="alert alert-danger">Error loading provider database.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="alert alert-danger">Error loading provider database.</td></tr>';
     } finally {
       loadingEl.classList.add('hidden');
     }
@@ -122,32 +147,43 @@ const ProvidersPage = {
     infoContainer.innerHTML = '';
 
     try {
-      const { data, error } = await supabase.rpc('platform_get_provider_details', {
+      const { data: rawData, error } = await supabase.rpc('platform_get_provider_details', {
         p_provider_id: providerId
       });
 
       if (error) throw error;
-      if (!data) {
+      if (!rawData || !rawData.provider) {
         infoContainer.innerHTML = '<div class="alert alert-danger">Provider not found.</div>';
         return;
       }
 
+      const p = rawData.provider;
+      const reports = rawData.reports || [];
+      const reviews = rawData.reviews || [];
+      const hiresCount = rawData.hires_count || 0;
+
       // Render reports list
       let reportsHtml = '';
-      const reports = data.reports || [];
       if (reports.length > 0) {
         reports.forEach(r => {
           const statusClass = r.status === 'pending' ? 'badge-pending' : r.status === 'reviewed' ? 'badge-approved' : 'badge-muted';
+          const isPending = r.status === 'pending';
           reportsHtml += `
             <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; background-color: var(--surface);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span class="badge-pill ${statusClass}" style="text-transform: uppercase; font-size: 0.75rem;">${r.status}</span>
+                <span class="badge-pill ${statusClass}" style="text-transform: uppercase; font-size: 0.75rem;">${esc(r.status)}</span>
                 <span class="text-3" style="font-size: 0.8rem;">${new Date(r.created_at).toLocaleDateString()}</span>
               </div>
-              <p style="font-weight: 500; margin-bottom: 4px;">Reason: ${r.reason.replace('_', ' ')}</p>
-              ${r.details ? `<p class="text-2" style="font-size: 0.85rem; margin-bottom: 8px;">"${r.details}"</p>` : ''}
-              <div class="text-3" style="font-size: 0.8rem; border-top: 1px solid rgba(0,0,0,0.04); padding-top: 6px;">
-                Reported by: ${r.user_name || 'Resident'} (${r.user_email || 'No email'})
+              <p style="font-weight: 500; margin-bottom: 4px;">Reason: ${esc(r.reason.replace('_', ' '))}</p>
+              ${r.details ? `<p class="text-2" style="font-size: 0.85rem; margin-bottom: 8px;">"${esc(r.details)}"</p>` : ''}
+              <div class="text-3" style="font-size: 0.8rem; border-top: 1px solid rgba(0,0,0,0.04); padding-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Reported by: ${esc(r.user_name || 'Resident')} (${esc(r.user_email || 'No email')})</span>
+                ${isPending ? `
+                  <span>
+                    <button class="btn btn-secondary btn-resolve-report" style="padding: 2px 6px; font-size: 0.75rem;" data-report-id="${esc(r.report_id)}" data-status="reviewed">Mark reviewed</button>
+                    <button class="btn btn-secondary btn-resolve-report" style="padding: 2px 6px; font-size: 0.75rem;" data-report-id="${esc(r.report_id)}" data-status="dismissed">Dismiss</button>
+                  </span>
+                ` : ''}
               </div>
             </div>
           `;
@@ -158,17 +194,24 @@ const ProvidersPage = {
 
       // Render reviews list
       let reviewsHtml = '';
-      const reviews = data.reviews || [];
       if (reviews.length > 0) {
         reviews.forEach(rv => {
+          const statusBadge = rv.fraud_status && rv.fraud_status !== 'pass'
+            ? `<span class="badge-pill badge-pending" style="margin-left: 6px; font-size: 0.7rem;">${esc(rv.fraud_status)}</span>`
+            : '';
+
           reviewsHtml += `
             <div style="border-bottom: 1px solid var(--border); padding: 12px 0;">
               <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <span style="color: var(--caution); font-weight: 500;">${'⭐'.repeat(rv.rating)}</span>
+                <div>
+                  <span style="color: var(--caution); font-weight: 500;">${'⭐'.repeat(rv.rating)}</span>
+                  ${statusBadge}
+                </div>
                 <span class="text-3" style="font-size: 0.8rem;">${new Date(rv.created_at).toLocaleDateString()}</span>
               </div>
+              ${rv.review_text ? `<p class="text-2" style="font-size: 0.9rem; margin-bottom: 6px;">"${esc(rv.review_text)}"</p>` : ''}
               <div class="text-3" style="font-size: 0.85rem;">
-                By: <strong>${rv.user_name || 'Resident'}</strong> (${rv.flat_number || 'No flat'})
+                By: <strong>${esc(rv.user_name || 'Resident')}</strong> (${esc(rv.flat_number || 'No flat')})
               </div>
             </div>
           `;
@@ -177,22 +220,40 @@ const ProvidersPage = {
         reviewsHtml = '<p class="text-3">No public ratings/reviews recorded.</p>';
       }
 
+      const isHidden = p.fraud_status === 'hidden' || p.visibility === 'hidden';
+      const isVerified = p.is_verified === true;
+
       infoContainer.innerHTML = `
         <div class="detail-layout">
           <!-- Sidebar column -->
           <div class="detail-sidebar">
             <div class="section-card">
               <div class="section-card-header" style="margin-bottom: 12px;">
-                <h2 style="font-size: 1.5rem; margin-bottom: 0;">${data.name}</h2>
-                <span class="badge-pill badge-active">${data.category}</span>
+                <h2 style="font-size: 1.5rem; margin-bottom: 0;">${esc(p.name)}</h2>
+                <span class="badge-pill badge-active">${esc(p.category)}</span>
               </div>
               
               <div style="font-size: 0.9rem; line-height: 1.8; border-top: 1px solid var(--border); padding-top: 16px;">
-                <strong>Contact Number:</strong> ${data.phone}<br>
-                <strong>Community:</strong> ${data.community_name}<br>
-                <strong>Flat / Block:</strong> ${data.flat_block || 'N/A'}<br>
-                <strong>Added on:</strong> ${new Date(data.created_at).toLocaleDateString()}<br>
-                <strong>Description:</strong> ${data.description || 'No description provided.'}
+                <strong>Contact Number:</strong> ${esc(p.phone)}<br>
+                <strong>Community:</strong> ${esc(p.community_name)}<br>
+                <strong>Flat / Block:</strong> ${esc(p.flat_block || 'N/A')}<br>
+                <strong>Added on:</strong> ${new Date(p.created_at).toLocaleDateString()}<br>
+                <strong>Fraud Status:</strong> <span class="badge-pill ${isHidden ? 'badge-rejected' : 'badge-approved'}">${esc(p.fraud_status || 'pass')}</span><br>
+                <strong>Verification:</strong> <span class="badge-pill ${isVerified ? 'badge-approved' : 'badge-muted'}">${isVerified ? 'Verified' : 'Unverified'}</span><br>
+                <strong>Description:</strong> ${esc(p.description || 'No description provided.')}
+              </div>
+            </div>
+
+            <!-- Moderation Controls -->
+            <div class="section-card">
+              <h2>Moderation Controls</h2>
+              <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button class="btn btn-secondary btn-block btn-toggle-visibility">
+                  ${isHidden ? 'Unhide Provider' : 'Hide Provider'}
+                </button>
+                <button class="btn btn-secondary btn-block btn-toggle-verify">
+                  ${isVerified ? 'Unverify' : 'Mark Verified'}
+                </button>
               </div>
             </div>
 
@@ -200,14 +261,14 @@ const ProvidersPage = {
             <div class="section-card">
               <h2>Rating Summary</h2>
               <div style="display: flex; align-items: center; gap: 16px; margin-top: 16px; margin-bottom: 12px;">
-                <div style="font-size: 2.5rem; font-weight: bold; color: var(--primary);">${parseFloat(data.avg_rating || 0).toFixed(1)}</div>
+                <div style="font-size: 2.5rem; font-weight: bold; color: var(--primary);">${parseFloat(p.avg_rating || 0).toFixed(1)}</div>
                 <div>
-                  <div style="color: var(--caution); font-size: 1.1rem;">${'⭐'.repeat(Math.round(data.avg_rating || 0)) || '☆'}</div>
-                  <div class="text-3" style="font-size: 0.85rem;">Based on ${data.rating_count || 0} rating${data.rating_count !== 1 ? 's' : ''}</div>
+                  <div style="color: var(--caution); font-size: 1.1rem;">${'⭐'.repeat(Math.round(p.avg_rating || 0)) || '☆'}</div>
+                  <div class="text-3" style="font-size: 0.85rem;">Based on ${p.rating_count || 0} rating${p.rating_count !== 1 ? 's' : ''}</div>
                 </div>
               </div>
               <div style="border-top: 1px solid var(--border); padding-top: 12px; font-size: 0.85rem;">
-                👥 <strong>${data.hires_count || 0}</strong> residents have contacted this provider
+                👥 <strong>${hiresCount}</strong> residents have contacted this provider
               </div>
             </div>
 
@@ -215,7 +276,7 @@ const ProvidersPage = {
             <div class="section-card">
               <h2>Danger Zone</h2>
               <p class="text-3" style="font-size: 0.8rem; margin-top: 4px; margin-bottom: 16px;">Permanently remove this service provider from the system. This cannot be undone.</p>
-              <button class="btn btn-danger btn-block" onclick="ProvidersPage.confirmDelete('${data.id}', '${data.name}')">
+              <button class="btn btn-danger btn-block btn-confirm-delete">
                 Delete Provider Profile
               </button>
             </div>
@@ -244,11 +305,77 @@ const ProvidersPage = {
           </div>
         </div>
       `;
+
+      // Bind Moderation listeners
+      infoContainer.querySelector('.btn-toggle-visibility')?.addEventListener('click', async () => {
+        const nextStatus = isHidden ? 'pass' : 'hidden';
+        await this.setModerationState(providerId, nextStatus, isVerified);
+      });
+
+      infoContainer.querySelector('.btn-toggle-verify')?.addEventListener('click', async () => {
+        await this.setModerationState(providerId, p.fraud_status || 'pass', !isVerified);
+      });
+
+      infoContainer.querySelector('.btn-confirm-delete')?.addEventListener('click', () => {
+        this.confirmDelete(p.id, p.name);
+      });
+
+      // Bind Report resolution listeners
+      infoContainer.querySelectorAll('.btn-resolve-report').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const reportId = e.target.getAttribute('data-report-id');
+          const newStatus = e.target.getAttribute('data-status');
+          await this.resolveReport(reportId, newStatus);
+        });
+      });
+
     } catch (err) {
       console.error('Error loading provider details:', err);
       infoContainer.innerHTML = '<div class="alert alert-danger">Error loading provider details.</div>';
     } finally {
       loadingEl.classList.add('hidden');
+    }
+  },
+
+  async setModerationState(providerId, fraudStatus, isVerified) {
+    try {
+      const { error } = await supabase.rpc('set_provider_moderation_state', {
+        p_provider_id: providerId,
+        p_fraud_status: fraudStatus,
+        p_is_verified: isVerified
+      });
+
+      if (error) throw error;
+      await this.loadProviderDetail(providerId);
+    } catch (err) {
+      console.error('Error setting moderation state:', err);
+      alert('Failed to update provider status: ' + err.message);
+    }
+  },
+
+  async resolveReport(reportId, newStatus) {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+
+      const { data, error } = await supabase
+        .from('provider_reports')
+        .update({
+          status: newStatus,
+          reviewed_by: userId,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', reportId)
+        .select('id');
+
+      if (error || !data || data.length !== 1) {
+        throw error || new Error('Update failed');
+      }
+
+      await this.loadProviderDetail(this.selectedProviderId);
+    } catch (err) {
+      console.error('Error resolving report:', err);
+      alert('Failed to update report status: ' + (err.message || 'Unknown error'));
     }
   },
 

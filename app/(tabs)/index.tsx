@@ -180,17 +180,23 @@ export default function HomeScreen() {
           .select('provider_id')
           .eq('user_id', user?.id as string),
         supabase.from('provider_hires')
-          .select('provider_id')
-          .eq('community_id', communityId)
+          .select('provider_id, user_id')
       ]);
 
       if (providersResult.error) throw providersResult.error;
       if (favoritesResult.error) throw favoritesResult.error;
 
-      const hireCounts: Record<string, number> = {};
-      if (!isMissingRelationError(hiresResult.error)) {
-        (hiresResult.data ?? []).forEach(h => {
-          hireCounts[h.provider_id] = (hireCounts[h.provider_id] || 0) + 1;
+      const userSetPerProvider: Record<string, Set<string>> = {};
+      if (hiresResult.error && !isMissingRelationError(hiresResult.error)) {
+        console.warn('Failed to load hire counts:', hiresResult.error.message);
+      } else if (hiresResult.data) {
+        hiresResult.data.forEach((h: any) => {
+          if (h.provider_id && h.user_id) {
+            if (!userSetPerProvider[h.provider_id]) {
+              userSetPerProvider[h.provider_id] = new Set();
+            }
+            userSetPerProvider[h.provider_id].add(h.user_id);
+          }
         });
       }
 
@@ -205,7 +211,7 @@ export default function HomeScreen() {
         .map((provider: any) => ({
           ...provider,
           is_favorite: favoriteIds.has(provider.id),
-          hire_count: hireCounts[provider.id] || 0
+          hire_count: userSetPerProvider[provider.id]?.size || 0
         }));
 
       setProviders(mergedData);
