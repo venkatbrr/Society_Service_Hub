@@ -526,6 +526,37 @@ Steps 6 and 7 are deliberately interleaved: the admin-email migration is the sin
 
 ---
 
+## 12. Completion status — 2026-08-08
+
+### Live and verified
+
+| Item | Evidence |
+|---|---|
+| `https://wooru.in` | HTTP 200, valid TLS, `<title>Wooru</title>` |
+| `https://www.wooru.in` | HTTP 308 -> `https://wooru.in/` (apex canonical, decision **E**) |
+| DNS | GoDaddy: `A @ -> 76.76.21.21`, `CNAME www -> cname.vercel-dns.com.`; nameservers left at GoDaddy per Vercel option (a) |
+| Admin console | Supabase URL and Google client ID substituted at build time; zero `__PLACEHOLDER__` remaining in the live bundle |
+| Share previews | `og:url` = `https://wooru.in/mcn/drops?id=...` after the env-var redeploy |
+| Platform admin migration | Applied to prod; both admins verified `is_platform_admin = true` |
+| Cloudinary | Preset `wooruin`, asset folder `wooru`; both upload paths tested live |
+| Vercel env | 6 vars x 2 scopes, non-sensitive, verified by readback |
+
+### Still open
+
+| Priority | Item |
+|---|---|
+| **BLOCKER** | **Google OAuth consent screen is in `Testing` status.** Only listed test users can sign in; capped at 100; refresh tokens expire after 7 days. Fix: Google Auth Platform -> **Audience** -> **Publish app**. No verification review is needed, since only basic scopes (email/profile/openid) are used and no logo is uploaded. |
+| High | Supabase Auth **Site URL** -> `https://wooru.in` (it drives `{{ .SiteURL }}` in password-reset and confirmation emails) |
+| High | **No privacy policy or terms pages exist.** `/privacy` and `/terms` return 200 only because the SPA catch-all serves `index.html` for every path. Required under India’s DPDP Act given the app stores names, phone numbers and flat numbers. |
+| Medium | Google Branding: App name is `wooru` (lowercase) - should be `Wooru`; set Application home page to `https://wooru.in` |
+| Low | Google support email still `societyservicehub@gmail.com` - needs `thewooru@gmail.com` added under IAM before it appears in the dropdown |
+| Low | Prune `http://localhost:*/**` and the two redundant localhost entries from the Supabase redirect allow-list. **Keep `http://localhost:8081/**`** or local dev breaks. |
+| Cleanup | Four 1x1 test PNGs in Cloudinary: `xasvpb0nk3oinelatwdl`, `fwq7mdeyl7iz8awipyuh`, `wooru/testsub/hgolrxw9cwhnjlckd8be`, `wooru/testsub/lgfps6cy4y62phxdglvr` |
+| Deferred | Vercel **Preview** scope points at prod. Repoint to preprod the moment it exists - see [`two-environment-setup-plan.md`](two-environment-setup-plan.md). |
+| Deferred | Native/Android (Group B) - no app planned; renames already in `app.json` |
+
+---
+
 ## 11. Go-live runbook — the 8 remaining items
 
 Everything in the repo is done and committed as `bcbd5d0` on branch `rebrand/wooru`. All 8 remaining items live in external dashboards.
