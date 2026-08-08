@@ -535,27 +535,61 @@ Everything in the repo is done and committed as `bcbd5d0` on branch `rebrand/woo
 | # | Item | Verify |
 |---|---|---|
 | ~~**1**~~ | ✅ **DONE 2026-08-08** — `20260901000000_rebrand_platform_admin_email.sql` applied to prod | Verified: migration recorded; both functions contain `thewooru@gmail.com` and **zero** `societyservicehub` occurrences; both admins return `is_platform_admin = true` |
-| **2** | **Vercel → Settings → Environment Variables:** add `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` at **Production** scope | Trigger a deploy; the build should succeed |
+| ~~**2**~~ | ✅ **DONE 2026-08-08** — see §11.1. Turned out to be far bigger than "add one variable". | Verified by `vercel env pull`: all 6 read back correct, no trailing whitespace |
 | **3** | **Google Cloud → Branding:** App name → `Wooru`, support email, logo, home page, privacy/terms | Start a Google sign-in; the consent dialog should say Wooru |
 
-🔴 **#2 is more urgent than it looks.** `build-admin.js` now exits 1 without that variable, so **every Vercel build fails until it is set** — including the preview build for `rebrand/wooru` the moment that branch is pushed. Do #2 *before* pushing the branch.
+### 11.1 ⚠️ Vercel had **zero** environment variables
 
-### Group B — native, strictly ordered
+The task was "add `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`". `vercel env ls` returned **nothing at all** — not one variable had ever been set.
 
-Each step depends on the one before it. Doing these out of order produces confusing failures rather than clear ones.
+**Why the site worked anyway:** `.env` was committed to git, so every build read its configuration straight from the repo. Commit `d8bab61` untracked it (correctly — two-environment plan §4.1). From that commit onward **the next deploy would have shipped with no configuration**: an undefined Supabase URL in the bundle, and `build-admin.js` exiting 1. That breakage was latent and unrelated to the rebrand.
 
-| Order | # | Item | Why this position |
-|---|---|---|---|
-| B1 | **5** | **expo.dev → rename project slug to `wooru`** (keep the `projectId`) | `eas build` compares `app.json`'s slug against the server's. Nothing native works until this matches. |
-| B2 | **4** | **Google Cloud → Clients → new Android client** for `in.wooru.app` + keystore SHA-1 | Must exist before you test native sign-in, or it fails with an opaque error |
-| B3 | **6** | `npx expo prebuild --clean` | Regenerates `/android`, currently built against `com.gatebond.app` |
-| B4 | — | `eas build --profile preview --platform android`, install, then test **Google Sign-In** and a **password-reset deep link** | The deep link exercises `wooru://`, which is why `wooru://**` had to be in the allow-list |
+**Set at both Production and Preview scope:**
 
-Get the keystore SHA-1 with:
+| Variable | Value |
+|---|---|
+| `EXPO_PUBLIC_SUPABASE_URL` | `https://mbzvcaoulawdugfearmj.supabase.co` |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | `sb_publishable_…` |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | `39089637830-…` |
+| `EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME` | `xetj8taj` |
+| `EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | `society_hub_unsigned` — old preset, changes with §11 Group C |
+| `EXPO_PUBLIC_SITE_URL` | `https://wooru.vercel.app` — **becomes `https://wooru.in` at Group D cutover** |
 
-```bash
-eas credentials
-```
+`EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` deliberately **not** set — its `.env` value is the literal placeholder `your-ios-client-id.apps.googleusercontent.com`.
+
+**Two deliberate choices worth revisiting:**
+
+1. **Created with `--no-sensitive`.** Vercel's CLI now defaults to *Sensitive*, which is write-only — unreadable afterwards even via `vercel env pull`. Every one of these is an `EXPO_PUBLIC_*` value inlined into the browser bundle, so it is public by construction; marking it secret buys nothing and costs the ability to audit it. Recreated as readable and verified by readback.
+2. **Preview scope points at *prod*.** The two-environment plan wants Preview pointing at preprod — but preprod does not exist yet, so the choice was between previews that hit prod and previews that fail to build. Pre-launch, with no real users, working previews win. ⚠️ **Repoint Preview to preprod the moment it exists** — that is the whole safety property of that plan.
+
+### 11.2 Two more brand leaks found in Vercel
+
+- **Account/team slug is `societyservicehub-6292`.** It appears in every preview URL: `wooru-<hash>-societyservicehub-6292.vercel.app`. Rename under Vercel account settings if preview URLs are shared with anyone.
+- **Last production URL was `commloom-society-service-hub.vercel.app`** — a stale alias from before the project rename. It should be replaced by `wooru.vercel.app` on the next production deploy; confirm after deploying.
+
+### Group B — native ⏸️ DEFERRED (decided 2026-08-08)
+
+**There is no Android app and none will be published for now.** The rename is done in code and that is all that was required:
+
+| Already done | Value |
+|---|---|
+| `app.json` `android.package` | `in.wooru.app` |
+| `app.json` `ios.bundleIdentifier` | `in.wooru.app` (pinned; was unset) |
+| `app.json` `scheme` | `wooru` |
+| `lib/auth.ts` reset redirect | `wooru://reset-password` |
+
+**Nothing else is mandatory.** Web is unaffected by every item below — `getSiteUrl()` reads `window.location.origin` on web, and the `wooru://` deep link is simply unused without a native build.
+
+**Deferred until the first native build is actually wanted** — do them in this order then, because each depends on the one before:
+
+| Order | # | Item |
+|---|---|---|
+| B1 | 5 | expo.dev → rename project slug to `wooru` (keep the `projectId`) — `eas build` fails on a slug mismatch until this matches |
+| B2 | 4 | Google Cloud → new Android client for `in.wooru.app` + keystore SHA-1 (`eas credentials`) |
+| B3 | 6 | `npx expo prebuild --clean` — `/android` on disk is still built against `com.gatebond.app` |
+| B4 | — | `eas build --profile preview --platform android`; test Google Sign-In and the password-reset deep link |
+
+Also deferred, and only relevant to native: `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` and `app.json`'s `iosUrlScheme` are both still literal placeholders — iOS Google Sign-In has never been configured. Log it in [`disabled-features.md`](../disabled-features.md) if iOS stays out of scope.
 
 ### Group C — Cloudinary, order matters within it
 
