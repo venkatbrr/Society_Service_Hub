@@ -4,6 +4,7 @@ import React from 'react';
 import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { format12HourTime, getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
+import { cloudinaryUrl } from '../lib/cloudinary';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
@@ -185,7 +186,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
         {/* Cover Photo */}
         {drop.image_url ? (
           <View style={styles.coverImageWrap}>
-            <Image source={{ uri: drop.image_url }} style={styles.coverImage} contentFit="cover" transition={200} />
+            <Image source={{ uri: cloudinaryUrl(drop.image_url) }} style={styles.coverImage} contentFit="cover" transition={200} />
           </View>
         ) : null}
 

@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius } from '../constants/Verandah';
 import { getAvatarTint } from '../lib/avatarTint';
+import { cloudinaryUrl } from '../lib/cloudinary';
 
 type Props = {
   name: string;
@@ -21,7 +22,7 @@ export const Avatar = React.memo(({ name, url, size = 36, shape = 'circle' }: Pr
   if (url) {
     return (
       <Image
-        source={{ uri: url }}
+        source={{ uri: cloudinaryUrl(url, { width: size * 3, height: size * 3, crop: 'fill' }) }}
         style={{
           width: size,
           height: size,

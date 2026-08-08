@@ -24,6 +24,7 @@ import { Verandah } from '../../../constants/Colors';
 import { format12HourTime, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
+import { cloudinaryUrl } from '../../../lib/cloudinary';
 import { confirmAction } from '../../../lib/confirm';
 import { siteUrl } from '../../../lib/siteUrl';
 import { supabase } from '../../../lib/supabase';
@@ -590,7 +591,7 @@ export default function PreorderDropDetailScreen() {
             onPress={() => setSelectedImageUrl(drop.image_url || null)}
             activeOpacity={0.9}
           >
-            <Image source={{ uri: drop.image_url }} style={styles.heroImage} contentFit="cover" transition={200} />
+            <Image source={{ uri: cloudinaryUrl(drop.image_url) }} style={styles.heroImage} contentFit="cover" transition={200} />
           </TouchableOpacity>
         ) : null}
 
@@ -787,7 +788,12 @@ export default function PreorderDropDetailScreen() {
                   onPress={() => setSelectedImageUrl(item.image_url || null)}
                   activeOpacity={0.8}
                 >
-                  <Image source={{ uri: item.image_url }} style={styles.itemThumb} contentFit="cover" transition={200} />
+                  <Image
+                    source={{ uri: cloudinaryUrl(item.image_url, { width: 144, height: 144, crop: 'fill' }) }}
+                    style={styles.itemThumb}
+                    contentFit="cover"
+                    transition={200}
+                  />
                 </TouchableOpacity>
               ) : null}
 
@@ -967,7 +973,7 @@ export default function PreorderDropDetailScreen() {
         >
           {selectedImageUrl ? (
             <Image
-              source={{ uri: selectedImageUrl }}
+              source={{ uri: cloudinaryUrl(selectedImageUrl) }}
               style={styles.modalImage}
               contentFit="contain"
             />

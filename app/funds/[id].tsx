@@ -24,6 +24,7 @@ import { Verandah } from '../../constants/Colors';
 import { APP_EMOJIS } from '../../constants/emojis';
 import { VerandahLayout, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { cloudinaryUrl } from '../../lib/cloudinary';
 import { Tables } from '../../lib/database.types';
 import {
     MAX_COLLECTORS,
@@ -909,7 +910,7 @@ export default function FundDetailScreen() {
                         activeOpacity={0.9}
                       >
                         <Image
-                          source={{ uri: receiptUrl }}
+                          source={{ uri: cloudinaryUrl(receiptUrl) }}
                           style={{ width: '100%', height: 180, borderRadius: 12, backgroundColor: colors.surface2 }}
                           contentFit="contain"
                         />

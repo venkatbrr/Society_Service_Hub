@@ -18,6 +18,19 @@ Findings are tagged **[live]** (reproduced or read out of the running project, o
 
 **Result: 23 findings — 4 blocking, 11 high, 8 minor.**
 
+**Decisions taken (2026-08-08).** Eight open questions in this plan were resolved by the product owner before handover. They are binding — do not re-litigate them, and do not substitute a "better" option:
+
+| # | Question | Decision |
+|---|---|---|
+| D1 | How do migrations reach the database, given there is no preprod? | **The agent writes migrations and runs pre-flight `SELECT`s. The agent never runs `db:push`.** The product owner applies. See [rule 3](#read-this-first--rules-for-the-implementing-agent). |
+| D2 | M5 — contact dedupe | **Option A.** Generated `contact_date` + unique index on `(user_id, provider_id, contact_date)`, and every read becomes `COUNT(DISTINCT user_id)`. |
+| D3 | Public report banner threshold | **2 independent unresolved reports.** Leads and platform admins see the first one immediately. |
+| D4 | R-R6 severity | **Downgrade `HARD_BLOCK` → `FLAG`**, paired with the precondition copy in [C2 §6](#c2--appprovideridtsx). |
+| D5 | `is_verified` | **Keep the column, lock it down.** Only `set_provider_moderation_state` may set it; a lead verifies from the moderation UI. |
+| D6 | `description` / `details` (finding #18) | **Render them** on the provider detail screen, using the six orphaned styles already in the file. |
+| D7 | Handover scope | **Tranche 1 + Tranche 2** (22 of 23 findings). **F1 is not delegated** — the product owner deploys the Edge Function. |
+| D8 | Handover prompt | Included as [PART 3 — HANDOVER](#part-3--handover) below. |
+
 ---
 
 ## READ THIS FIRST — rules for the implementing agent
@@ -26,20 +39,30 @@ Findings are tagged **[live]** (reproduced or read out of the running project, o
 
 2. **`npx tsc --noEmit` will not catch a single finding in this document.** Every issue here type-checks perfectly today; they are grant, RLS, platform-deployment, and data-shape defects. The [VERIFICATION](#verification) checklist is the only gate that matters.
 
-3. **After touching `supabase/migrations/`, finish the loop yourself** (`docs/CLAUDE.md` §6):
+3. **DO NOT APPLY MIGRATIONS. This overrides `docs/CLAUDE.md` §6 for this change set only (decision D1).**
+
+   `docs/CLAUDE.md` §6 tells you to finish the deployment loop yourself, preprod first. **You cannot, and you must not improvise around it.** The preprod project does not exist — every `:preprod` script is a literal placeholder:
+
    ```
-   npm run db:push:preprod        # preprod ALWAYS first
-   npm run types:preprod
-   # then RE-APPEND the hand-maintained enriched-types block at the bottom of
-   # lib/database.types.ts (ProviderWithInteraction / VisitWithJoinerData /
-   # VisitJoinerWithProfile) — types:* redirects over the whole file.
-   npx tsc --noEmit
-   # after merge to main: npm run db:push:prod && npm run types:prod
+   db:push:preprod   = npx supabase link --project-ref PREPROD_REF_TODO && supabase db push --linked
+   types:preprod     = npx supabase gen types typescript --project-id PREPROD_REF_TODO > lib/database.types.ts
+   fn:deploy:preprod = npx supabase functions deploy --project-ref PREPROD_REF_TODO
    ```
+
+   These fail loudly by design. **When they fail, stop. Do not substitute `db:push:prod`, `types:prod`, `fn:deploy:prod`, `supabase db query`, `supabase migration up`, or the MCP `apply_migration` tool.** Prod is the live project: **171 providers, 18 real users, one live community.** This plan revokes a table-wide grant and rewrites five RLS policies; none of it has ever been executed anywhere.
+
+   What you do instead:
+
+   - Write the migration files into `supabase/migrations/` and leave them **unapplied**.
+   - Run every pre-flight `SELECT` in this document **read-only** (MCP `execute_sql` is fine for reads) and paste the actual counts into your summary. If one returns a non-zero violation count, report it and stop — do not "fix" live data to make an `ALTER` succeed.
+   - Types cannot be regenerated until the migrations are applied, so any client change referencing a new column will not type-check yet. Name those files explicitly in your summary. **Do not hand-edit `lib/database.types.ts`** to silence the error (`docs/CLAUDE.md` §2.3).
+   - Everything not depending on the migrations must still type-check. `npx tsc --noEmit` passes on `main` today — do not regress it.
+
+   The product owner then runs `db:push:prod`, `types:prod`, **re-appends the hand-maintained enriched-types block** (`ProviderWithInteraction` / `VisitWithJoinerData` / `VisitJoinerWithProfile`) that `types:*` overwrites, and re-runs `npx tsc --noEmit`.
 
 4. **The SQL in this document is a specification, not tested code.** It was written against the live catalogue but has never been executed. Read it before you run it.
 
-5. **F1 is a platform action, not a code change.** `npm run fn:deploy:prod` changes live enforcement behaviour for every resident the moment it lands. Do it **after** M3 and C2, or the first thing residents experience is legitimate reviews being hard-blocked (see finding #1's *"what deploying it today would do"*).
+5. **F1 is not yours (decision D7).** `npm run fn:deploy:prod` changes live enforcement for every resident the instant it lands. Do not run it, do not call `supabase functions deploy` directly, and do not treat finding #1 as closeable by this change set. You **may** edit [`supabase/functions/fraud-check/index.ts`](../../supabase/functions/fraud-check/index.ts) per [F1 §2/§3](#f1--deploy-the-fraud-check-function-issue-1) — add the provider-side spam rules, downgrade R-R6 to `FLAG` per D4 — and leave it undeployed for the product owner to ship.
 
 6. **Migration timestamps.** The last applied migration is `20260901000000_rebrand_platform_admin_email.sql`. This plan uses `20260902000000`, `20260902000100`, `20260902000200`. Re-check with `npx supabase migration list --linked` before you write the files — concurrent sessions collide.
 
@@ -650,7 +673,9 @@ CREATE POLICY "Users can view providers in their community"
 
 Note the lead/admin branch here is a deliberate widening so M4's moderation screen can see hidden rows; pair it with `community_id = get_user_community_id()` as written, per the §9 trap about `is_community_lead()` without a tenant predicate.
 
-**§4 — Give leads and platform admins a moderation UPDATE path (issue 9).** Column-level, via a `SECURITY DEFINER` RPC rather than a broad policy, so `is_verified` and `fraud_status` stay unwritable from the client:
+**§4 — Give leads and platform admins a moderation UPDATE path (issues 2, 9).** Column-level, via a `SECURITY DEFINER` RPC rather than a broad policy, so `is_verified` and `fraud_status` stay unwritable from the client.
+
+**Decision D5: `is_verified` is kept, not dropped.** This RPC becomes the only thing on the platform that can set it, which is what turns the badge from "someone claimed it" into "a lead vouched for this provider". The lead-facing control is [C4 §3](#c4--admin-dashboardjsprovidersjs). Do not drop the column — federation's `list_visible_*` RPC selects it (`20260507000000`), and it is now the anchor for a real verification workflow rather than a forgeable flag.
 
 ```sql
 CREATE OR REPLACE FUNCTION public.set_provider_moderation_state(
@@ -845,7 +870,9 @@ For `platform_get_all_providers`, add `fraud_status` and a `report_count` so the
 
 ## M5 — Dedupe provider contacts (issue 12)
 
-Make `provider_hires` mean "this household contacted this provider", not "this button was tapped". Two options; take the first.
+Make `provider_hires` mean "this household contacted this provider", not "this button was tapped".
+
+**Decision D2: Option A.** (Option B — reads-only — was considered and rejected because it leaves R-R6 a one-tap gate. It is recorded at the end of this section for context only; **do not implement it**.)
 
 **Option A — one row per (user, provider, day).** Preserves repeat-contact history without letting one afternoon inflate the count:
 
@@ -866,9 +893,9 @@ SELECT user_id, provider_id, (created_at AT TIME ZONE 'Asia/Kolkata')::date d, c
 FROM provider_hires GROUP BY 1,2,3 HAVING count(*) > 1;
 ```
 
-**Option B** — leave the table alone and switch every read to `COUNT(DISTINCT user_id)`. Cheaper, fixes the label, and does **not** fix the R-R6 gate, since one tap still creates the qualifying row. If you take B, R-R6 must be strengthened separately (F1 §2).
-
 `logHire()` must then tolerate a `23505` unique violation as success rather than surfacing it — see C2 §5.
+
+*Rejected alternative, for the record: Option B left `provider_hires` alone and only changed reads to `COUNT(DISTINCT user_id)`. It fixes the misleading label but not the gate, since one tap still creates the qualifying row. **Not chosen — do not implement.***
 
 ## C1 — `lib/fraudCheck.ts`
 
@@ -882,14 +909,14 @@ Also fix the `QUEUE_LOW_PRIORITY` copy at [lines 133-138](../../lib/fraudCheck.t
 
 ## C2 — `app/provider/[id].tsx`
 
-1. **Filter reports by status and add a threshold (issue 6).** `fetchAllReports` gets `.eq('status', 'pending')` — or better, fetch `status` and render only unresolved ones. Gate the banner on a threshold rather than `> 0`; two independent reporters is a defensible minimum. Keep the pre-threshold count visible to `isCommunityLead || isPlatformAdmin` so moderators still see the first report.
+1. **Filter reports by status and add a threshold (issue 6).** `fetchAllReports` fetches `status` and renders only unresolved (`pending`) reports. **Decision D3: the public banner appears at 2 or more unresolved reports**, not `> 0`. Below the threshold — and at every count — `isCommunityLead || isPlatformAdmin` still sees the full list, so a moderator can act on the very first report. Count distinct reports, not distinct reasons: two people reporting `spam` is two, one person reporting `spam` is one and stays private.
 2. **Add report resolution for leads (issue 5).** When `canDelete`, render each pending report with **Mark reviewed** / **Dismiss** writing `status`, `reviewed_by = user.id`, `reviewed_at = now()` through the existing UPDATE policy. Check `error` and assert `data?.length === 1` — chain `.select('id')`, per the §9 trap about zero-row updates returning success.
 3. **`maxLength` on every text input (issue 14)**, matching the M3 constraints exactly: report details 500, review text 1000, personal note 1000. Show a character counter on the two long ones. Surface the DB message instead of swallowing it at [line 428](../../app/provider/[id].tsx#L428).
 4. **Let every reason carry details (issue 16).** Render the details input for all reasons; keep it required only for `other`. Drop the `selectedReason === 'other' ? … : null` discard at [line 491](../../app/provider/[id].tsx#L491), and clear `reportDetails` when the reason changes so nothing is submitted under a reason the reporter did not intend it for.
 5. **`logHire` (issue 12).** Treat `23505` as success (the day's contact is already recorded) and do not increment local state or schedule a second feedback notification in that case. Change the header pill and stat tile to read the distinct-household count.
 6. **Explain the review precondition (issue 12 / #1).** Before F1 ships, the Rate card must say a review needs a prior contact, and disable Submit with that reason when `hire_count` for *this user* is 0 — currently the screen fetches only the provider-wide count ([lines 132-134](../../app/provider/[id].tsx#L132-L134)), so add a user-scoped one. Blocking after the fact with *"Blocked by R-R6"* is not an acceptable first experience.
 7. **Hide the Report button on a provider outside the caller's community (issue 17)** — compare `provider.community_id` with `communityId` from `useAuth()`.
-8. **Render `description` and `details` (issue 18)**, or delete the inputs and the six orphaned styles. Rendering is the better call: the data exists, the taxonomy exists, and the styles were clearly written for it. Do not restate the schema in `features.md` when you document it — `architecture.md` owns columns (`docs/CLAUDE.md` §7).
+8. **Render `description` and `details` (issue 18). Decision D6 — build it, do not delete the inputs.** Use the six orphaned styles already in the file (`detailsMetaSection`, `detailMeta`, `detailMetaLabel`, `detailMetaValue`, `moneyMetaRow`, `detailMetaSuffix`, [lines 1169-1196](../../app/provider/[id].tsx#L1169-L1196)) — they were written for exactly this block. Drive the labels and ordering off [`constants/providerDetails.ts`](../../constants/providerDetails.ts) rather than hardcoding keys, so a category gaining a field does not need a screen edit, and skip any key absent from the JSONB. Verandah rules apply (`docs/CLAUDE.md` §4): tokens only, sentence case, no `textTransform: 'uppercase'` outside `sectionLabel`, no weights ≥ 600. Currency goes through `components/Rupees.tsx` — and note prior finding 18 in [`done/providers-and-visits-review.md`](done/providers-and-visits-review.md), where `Rupees` rendered `300-500` as `₹3,00,500`; that fix lives at the call site, so pass a parsed number or render the raw string, never a digit-stripped concatenation. Document the *behaviour* in `features.md` and leave the columns to `architecture.md` (`docs/CLAUDE.md` §7).
 9. **Bound the reads (issue 21).** `.limit(50)` on reviews with real paging behind **Load more**; skip `fetchAllReports` entirely when the caller is not a lead and the provider has no reports.
 
 ## C3 — the three list read paths
@@ -913,13 +940,13 @@ Also fix the `QUEUE_LOW_PRIORITY` copy at [lines 133-138](../../lib/fraudCheck.t
 
 ## F1 — Deploy the fraud-check function (issue 1)
 
-**Last.** After M1–M5 and C1–C5 are merged and verified.
+**Not delegated (decision D7). The product owner runs the deploy.** The agent's part is §2 and §3 below — source edits to [`supabase/functions/fraud-check/index.ts`](../../supabase/functions/fraud-check/index.ts), left undeployed.
 
-1. `npm run fn:deploy:preprod`, exercise every rule against preprod, **then** `npm run fn:deploy:prod`.
-2. **Before deploying, strengthen the two provider-side gaps that no database constraint covers (issue 13):** apply the profanity blocklist and the URL/phone/email patterns to provider `name` and `description` (both already implemented for reviews, [lines 247-273](../../supabase/functions/fraud-check/index.ts#L247-L273) — lift them into `evaluateProviderRules`), and add a per-user creation-velocity FLAG. Leave R-P1 alone; it is redundant but harmless.
-3. **Re-examine R-R6's severity.** With M5 Option A it is a real signal; with Option B it costs one tap. Either way, `HARD_BLOCK` on a rule the resident cannot see coming is the wrong default — consider `FLAG` plus the C2 §6 precondition copy, so an honest resident who called from the share message is not silently refused.
-4. **Decide what `hidden` means now that #9 is fixed** and write it down in `features.md`: who sees a hidden provider (author + leads + admins, per M1 §3), who can restore it, and how a resident is told.
-5. `check_due_services` is deployed by the same command. Confirm the reminder sweep's own preconditions before shipping it, or file it separately — it is not this change set's to validate.
+1. **[Product owner]** Deploy only after M1–M5 and C1–C5 are merged and the SQL has been applied. `npm run fn:deploy:preprod` requires the preprod project to exist; until it does, this is a direct `fn:deploy:prod` against live and should be done at a quiet hour with the rollback understood — redeploying the previous function version, or deleting the function, restores today's always-PASS behaviour.
+2. **[Agent] Close the provider-side gaps first (issue 13).** `evaluateProviderRules` currently contains one rule. Lift the profanity blocklist and the URL/phone/email patterns out of `evaluateReviewRules` ([lines 247-273](../../supabase/functions/fraud-check/index.ts#L247-L273)) into a shared helper and apply them to provider `name` and `description`, and add a per-user creation-velocity `FLAG`. Leave R-P1 alone — redundant against the client pre-check and the phone trigger, but harmless.
+3. **[Agent] Downgrade R-R6 to `FLAG` (decision D4).** Change its `severity` from `'HARD_BLOCK'` to `'FLAG'` in [`index.ts:206-215`](../../supabase/functions/fraud-check/index.ts#L206-L215). This is load-bearing for D2: with M5 Option A a hire row means a real distinct-day contact, so R-R6 remains a genuine signal — it just routes to moderation instead of refusing at the door. **This only works if C2 §6 ships in the same change set**; the resident must be told a contact is expected *before* they type, not flagged silently afterwards. Note the knock-on: `FLAG` alone yields `QUEUE_LOW_PRIORITY` (visible), but combined with two other flags it reaches `HIDE_PENDING_REVIEW` — which is now genuinely hidden after M2 §3, so the moderation queue in C4 §3 must exist before this is meaningful.
+4. **[Product owner] Write down what `hidden` means** now that #9 is fixed: who sees a hidden provider (author + leads + admins, per M1 §3), who can restore it, and how the resident is told. `features.md`.
+5. **[Product owner]** `supabase functions deploy` with no function name deploys **everything in `supabase/functions/`**, which includes `check_due_services`. That function is also undeployed and belongs to the reminders feature, not this one — deploy `fraud-check` by name, or validate the reminder sweep's preconditions first.
 
 ---
 
@@ -927,27 +954,36 @@ Also fix the `QUEUE_LOW_PRIORITY` copy at [lines 133-138](../../lib/fraudCheck.t
 
 `npx tsc --noEmit` catches none of this. Every step below is manual.
 
-**Database — run each as a read-only query after `db:push:preprod`.**
+**Who runs what.** Under decision D1 the agent never applies migrations, so most of this list cannot run until the product owner has pushed. Each step is tagged:
 
-1. **Grants narrowed (M1 §1).** `information_schema.column_privileges` for `service_providers` / `authenticated` / `UPDATE` returns **only** `name, phone, category, description, flat_block, details, updated_at`. `anon` returns no `UPDATE` and no `INSERT` rows at all.
-2. **Column writes rejected.** As a resident who created a provider, `PATCH …?id=eq.<theirs>` with `{"is_verified":true}` → **403 / permission denied for column**. Repeat for `fraud_status`, `avg_rating`, `visibility`, `community_id`. All five must fail. Then `PATCH {"description":"…"}` → **200**, or you have over-revoked.
-3. **Cross-community rating blocked (M2 §1).** As resident of community A, `POST /rest/v1/ratings` with a provider id from community B → **403**. Same call with an own-community provider → **201**.
-4. **Flagged reviews excluded (M2 §3).** Pre-flight `SELECT count(*) FROM ratings WHERE COALESCE(fraud_status,'pass') NOT IN ('pass','queued_low')` (expected 0 on 2026-08-08 — re-run it). Then manually set one rating to `'hidden'` **in preprod only**, confirm `service_providers.rating_count` drops by one, confirm the row disappears from another resident's Community Reviews, and confirm it is still visible to its own author and to a president.
-5. **Review deletable (M2 §2).** Resident deletes own review → gone, `avg_rating` recomputes. President deletes another resident's review on an own-community provider → succeeds. President attempts one on a **foreign**-community provider → matches zero rows; confirm the client reports failure rather than success (chain `.select('id')`).
-6. **Hidden provider unreachable (M1 §3).** Set one provider `fraud_status='hidden'` in preprod. As an ordinary resident: absent from the Help tab, absent from Saved, absent from the visit picker, **and `/provider/<id>` shows the not-available state** — that last one is the case that has never worked. As its author, and as a president: still visible.
-7. **Un-hide works (M1 §4).** President calls `set_provider_moderation_state(<id>, 'pass', null)` → provider returns to the directory. An ordinary resident calling it → **exception**. A president calling it for a **foreign**-community provider → **exception**.
-8. **Report lifecycle (C2 §2, C4 §3).** File a report → `status='pending'`, lead gets the notification, notification routes to the provider. Lead taps **Dismiss** → `status='dismissed'`, `reviewed_by` and `reviewed_at` populated, and **the public banner no longer shows it**. An ordinary resident attempting the same update → zero rows.
-9. **Fresh signup can still add a provider (M1 §2).** Create a brand-new account, join a community, add a provider immediately. This is the exact regression `20260607194000` was written to fix — if it fails, `is_user_approved()` is stricter than assumed and you need a different guard, not a reverted one.
-10. **Text bounds (M3).** 81-character name → rejected client-side with a clear message, and rejected by the DB if forced. 1001-character personal note → **blocked before the provider row is inserted**, no orphan created. 501-character report details → rejected.
-11. **Contact dedupe (M5).** Tap **Call** three times and **WhatsApp** twice on the same provider in one day → `provider_hires` gains **one** row, the pill reads **contacted 1 time**, and exactly **one** feedback notification is scheduled on native.
+- **[agent]** — runnable now, read-only or client-side. Do these before handing work back.
+- **[owner]** — needs the migrations applied first, or a session/device the agent does not have (president, platform admin, fresh signup, a native build).
+
+An agent that reports "verified" against an unapplied migration has verified nothing. If a step is `[owner]`, say so in your summary and leave it unchecked — do not approximate it.
+
+**Database — read-only queries, run after the migrations are applied.**
+
+0. **[agent] Pre-flight counts, before anything is applied.** Run the M3 pre-flight `SELECT` and the M5 duplicate-hires `SELECT` read-only and paste both results. All-zero is the expected answer and the precondition for the `ALTER`s and the unique index succeeding. A non-zero row is a stop-and-report, not a data cleanup.
+
+1. **[owner] Grants narrowed (M1 §1).** `information_schema.column_privileges` for `service_providers` / `authenticated` / `UPDATE` returns **only** `name, phone, category, description, flat_block, details, updated_at`. `anon` returns no `UPDATE` and no `INSERT` rows at all.
+2. **[owner] Column writes rejected.** As a resident who created a provider, `PATCH …?id=eq.<theirs>` with `{"is_verified":true}` → **403 / permission denied for column**. Repeat for `fraud_status`, `avg_rating`, `visibility`, `community_id`. All five must fail. Then `PATCH {"description":"…"}` → **200**, or you have over-revoked.
+3. **[owner] Cross-community rating blocked (M2 §1).** As resident of community A, `POST /rest/v1/ratings` with a provider id from community B → **403**. Same call with an own-community provider → **201**.
+4. **[owner] Flagged reviews excluded (M2 §3).** Pre-flight `SELECT count(*) FROM ratings WHERE COALESCE(fraud_status,'pass') NOT IN ('pass','queued_low')` (expected 0 on 2026-08-08 — re-run it). Then manually set one rating to `'hidden'` — on prod this is a live edit, so note the rating id and set it back to `'pass'` when done — and confirm `service_providers.rating_count` drops by one, confirm the row disappears from another resident's Community Reviews, and confirm it is still visible to its own author and to a president.
+5. **[owner] Review deletable (M2 §2).** Resident deletes own review → gone, `avg_rating` recomputes. President deletes another resident's review on an own-community provider → succeeds. President attempts one on a **foreign**-community provider → matches zero rows; confirm the client reports failure rather than success (chain `.select('id')`).
+6. **[owner] Hidden provider unreachable (M1 §3).** Set one provider `fraud_status='hidden'` — again a live edit; pick a low-traffic provider and restore it afterwards via `set_provider_moderation_state`, which doubles as step 7. As an ordinary resident: absent from the Help tab, absent from Saved, absent from the visit picker, **and `/provider/<id>` shows the not-available state** — that last one is the case that has never worked. As its author, and as a president: still visible.
+7. **[owner] Un-hide works (M1 §4).** President calls `set_provider_moderation_state(<id>, 'pass', null)` → provider returns to the directory. An ordinary resident calling it → **exception**. A president calling it for a **foreign**-community provider → **exception**.
+8. **[owner] Report lifecycle (C2 §2, C4 §3).** File a report → `status='pending'`, lead gets the notification, notification routes to the provider. Lead taps **Dismiss** → `status='dismissed'`, `reviewed_by` and `reviewed_at` populated, and **the public banner no longer shows it**. An ordinary resident attempting the same update → zero rows.
+9. **[owner] Fresh signup can still add a provider (M1 §2).** Create a brand-new account, join a community, add a provider immediately. This is the exact regression `20260607194000` was written to fix — if it fails, `is_user_approved()` is stricter than assumed and you need a different guard, not a reverted one.
+10. **[owner] Text bounds (M3).** 81-character name → rejected client-side with a clear message, and rejected by the DB if forced. 1001-character personal note → **blocked before the provider row is inserted**, no orphan created. 501-character report details → rejected.
+11. **[owner, native build] Contact dedupe (M5).** Tap **Call** three times and **WhatsApp** twice on the same provider in one day → `provider_hires` gains **one** row, the pill reads **contacted 1 time**, and exactly **one** feedback notification is scheduled on native.
 
 **Client / platform.**
 
-12. **Contact count on the Help tab (C3 §1).** Cards show the real number, matching the detail screen for the same provider. Break the query on purpose (rename a column in the select) and confirm an error now surfaces instead of rendering zeros.
-13. **Admin console XSS (C4 §1-2).** File a report in preprod with details `<img src=x onerror=alert(1)>`; open the provider in the console. The text must render **as text**. Create a provider named `O'Brien "The Sparky" <b>` and confirm the list row, the Inspect panel, and **the Delete button** all work.
-14. **Admin moderation data (M4).** Review text, `fraud_status`, `is_verified`, and reviewer community all render. Hide/Unhide and the Verified toggle both round-trip.
-15. **F1 (last).** With the function deployed to preprod: a review from a resident with no prior contact behaves as decided in F1 §3 (and the Rate card said so **before** they typed); a copy-pasted review trips R-R4; an ALL-CAPS review trips R-R8; a provider named with a blocklist word trips the new provider-side rule; and **`fraud_verdicts` gains one row per submission** — that count going from 0 to non-zero is the single check that proves finding #1 is closed.
-16. **Fail-open is observable (C1).** Point the client at a non-existent function name. Submission still succeeds, the row lands as `queued_low`, and the failure is logged somewhere a human will see it — not just `console.warn`.
+12. **[owner] Contact count on the Help tab (C3 §1).** Cards show the real number, matching the detail screen for the same provider. Break the query on purpose (rename a column in the select) and confirm an error now surfaces instead of rendering zeros.
+13. **[agent, partly] Admin console XSS (C4 §1-2).** The escaping is statically checkable, and the agent must confirm no data-carrying `${…}` remains unescaped in `admin-dashboard/js/providers.js` and that no inline `onclick` interpolates a value. The live half is [owner]: file a report with details `<img src=x onerror=alert(1)>`; open the provider in the console. The text must render **as text**. Create a provider named `O'Brien "The Sparky" <b>` and confirm the list row, the Inspect panel, and **the Delete button** all work.
+14. **[owner] Admin moderation data (M4).** Review text, `fraud_status`, `is_verified`, and reviewer community all render. Hide/Unhide and the Verified toggle both round-trip.
+15. **[owner] F1 (last).** With the function deployed: a review from a resident with no prior contact is **flagged, not refused** (decision D4) (and the Rate card said so **before** they typed); a copy-pasted review trips R-R4; an ALL-CAPS review trips R-R8; a provider named with a blocklist word trips the new provider-side rule; and **`fraud_verdicts` gains one row per submission** — that count going from 0 to non-zero is the single check that proves finding #1 is closed.
+16. **[owner] Fail-open is observable (C1).** Point the client at a non-existent function name. Submission still succeeds, the row lands as `queued_low`, and the failure is logged somewhere a human will see it — not just `console.warn`.
 
 ---
 
@@ -957,13 +993,75 @@ Same change set, one owning file each (`docs/CLAUDE.md` §7).
 
 | File | Change |
 |---|---|
-| [`features.md`](../features.md) | Rewrite the fraud sentences in §Providers (currently line 108 and the integrations row at 473): state what the fraud check actually gates, what `hidden` means for a resident vs. author vs. lead, and the new review precondition copy. Add the report lifecycle (threshold for the public banner, who can dismiss, that a report cannot be withdrawn) and the new text limits as *behaviour*, not column names. |
+| [`features.md`](../features.md) | Rewrite the fraud sentences in §Providers (currently line 108 and the integrations row at 473): state what the fraud check actually gates, what `hidden` means for a resident vs. author vs. lead, and the new review precondition copy. Add the report lifecycle — **the public banner needs 2 unresolved reports (D3)**, moderators see the first, who can dismiss, and that a report cannot be withdrawn. Add the new text limits, **that a lead can now mark a provider Verified (D5)**, and **that `description` and the category details are now shown on the provider screen (D6)** — as *behaviour*, not column names. |
 | [`architecture.md`](../architecture.md) | The revised `service_providers` / `ratings` / `provider_reports` policies and grants; the new `set_provider_moderation_state` RPC; the extended `platform_get_provider_details` / `platform_get_all_providers` payloads; `update_provider_rating()` gaining `SECURITY DEFINER` + a `fraud_status` predicate; the `provider_hires` dedupe index and generated column; the new `CHECK` constraints. **Also record that `is_user_approved()` does not test `removed_at` and depends on removal nulling `community_id`** (#15) — that coupling is currently undocumented and load-bearing. |
 | [`CLAUDE.md`](../CLAUDE.md) §9 | Four new traps: (a) *"An Edge Function in `supabase/functions/` is not deployed until `fn:deploy` runs — `list_edge_functions` returned `[]` on 2026-08-08 while two functions sat in the repo. A client that treats invoke failure as a pass will hide this indefinitely."* (b) *"A table-level `GRANT UPDATE` plus an ownership-only RLS policy lets the owner write every column, including trust flags and trigger-owned aggregates. Grant per column."* (c) *"`get_user_community_id()` falls back to JWT metadata when `profiles.community_id` is NULL, so it is not a substitute for `is_user_approved()` — a removed resident with a live token still resolves to their old community."* (d) *"`admin-dashboard/` has no framework escaping. Every `innerHTML` interpolation of resident-supplied text is stored XSS against the highest-privilege session on the platform."* |
 | [`platform-admin.md`](../platform-admin.md) | The new provider moderation controls, the extended payloads, and the escaping requirement for any new console panel. |
 | [`cross-community-changelog.md`](../cross-community-changelog.md) | **Mandatory.** Two entries: `visibility` becomes lead/admin-writable only (M1 §1), and provider ratings are now pinned to the caller's own community (M2 §1) — with the note that rating a partner community's provider is deliberately unresolved. |
 | [`.github/app-summary.md`](../../.github/app-summary.md) | Fix line 145 (*"delete **instead of** report"* — the code renders both) and the fraud-check description. Note at line 290 that neither Edge Function is deployed, until F1 lands. |
 | [`disabled-features.md`](../disabled-features.md) | Until F1 ships, the fraud/spam pipeline is **effectively disabled in production**. It belongs here, with the deploy command as the re-enablement note. |
+
+---
+
+# PART 3 — HANDOVER
+
+Decision D7: **Tranche 1 and Tranche 2 are delegated. F1 is not.** Run the tranches as two separate change sets with a review between them — not one prompt. Tranche 1 touches no SQL and can start immediately; Tranche 2 needs D1's write-but-don't-apply discipline.
+
+## Tranche 1 — client only, zero database risk
+
+**Findings closed:** 7 (admin XSS), 10 (always-zero contact count), 14 client half, 16, 19, 21, 22.
+**Sections:** C4 §1, §2, §4 · C3 §1, §3 · C2 §3, §4, §9 · C5 §2 · the doc updates for #22.
+
+Nothing here depends on a migration, so `npx tsc --noEmit` **must pass clean** at the end — it does on `main` today. C4 §1/§2 alone closes the stored XSS, which is the reason this tranche goes first.
+
+**Prompt:**
+
+> Read `docs/fixes/provider-rules-and-moderation-review.md` in full, then `CLAUDE.md` and `docs/CLAUDE.md`.
+>
+> Implement **Tranche 1 only**: C4 §1, §2, §4; C3 §1, §3; C2 §3, §4, §9; C5 §2; and the `.github/app-summary.md` corrections in finding #22.
+>
+> Hard constraints:
+> - **Touch no file under `supabase/`.** Write no migration. Run no `db:push`, no `supabase db query`, no MCP `apply_migration`, no `functions deploy`. Read-only SQL via MCP `execute_sql` is allowed for confirming a finding.
+> - Do not hand-edit `lib/database.types.ts`.
+> - `npx tsc --noEmit` must pass clean when you finish. It passes on `main` now — do not regress it.
+> - After editing `admin-dashboard/js/*`, run `node build-admin.js`.
+> - Verandah rules (`docs/CLAUDE.md` §4) apply to every UI change.
+>
+> Report back with: the diff summary, the `tsc` result, and verification step 13's static half (confirm no data-carrying `${…}` remains unescaped in `admin-dashboard/js/providers.js` and no inline `onclick` interpolates a value).
+
+## Tranche 2 — migrations authored, not applied
+
+**Findings closed:** 1 (source only), 2, 3, 4, 5, 6, 8, 9, 11, 12, 13 (source only), 14, 15, 17, 18, 20, 23.
+**Sections:** M1–M5 · C1 · C2 §1, §2, §5, §6, §7, §8 · C3 §2 · C4 §3 · C5 §1, §3 · F1 §2, §3 (source edits only) · all remaining doc updates.
+
+**Prompt:**
+
+> Read `docs/fixes/provider-rules-and-moderation-review.md` in full — especially the **Decisions taken** table and rules 3, 5, 7 and 8 of READ THIS FIRST — then `CLAUDE.md` and `docs/CLAUDE.md`.
+>
+> Implement **Tranche 2**: M1–M5, C1, C2 §1/§2/§5/§6/§7/§8, C3 §2, C4 §3, C5 §1/§3, F1 §2/§3, and the DOCUMENTATION UPDATES table.
+>
+> The eight decisions in the table are **binding**. In particular: the report banner threshold is **2** (D3), R-R6 becomes **`FLAG`** (D4), `is_verified` is **kept and locked down**, not dropped (D5), and `description`/`details` are **rendered**, not deleted (D6). M5 is **Option A**; Option B is explicitly rejected.
+>
+> Hard constraints:
+> - **Write the migration files and leave them unapplied.** No `db:push`, no `db:push:prod`, no `supabase db query`, no `supabase migration up`, no MCP `apply_migration`. The `:preprod` scripts are `PREPROD_REF_TODO` placeholders and will fail — when they do, **stop; do not substitute the prod script.** Prod is live: 171 providers, 18 real users.
+> - Run every pre-flight `SELECT` in the document **read-only** and paste the actual counts. A non-zero violation count is a stop-and-report — do not modify live data to make an `ALTER` succeed.
+> - Do not hand-edit `lib/database.types.ts`. Types cannot be regenerated until I apply the migrations, so any client change referencing a new column will not type-check yet — **list those files explicitly** instead of working around it.
+> - Do not deploy or run the fraud-check Edge Function. Edit its source per F1 §2/§3 and leave it undeployed.
+> - Federation objects listed in rule 8 must survive intact, and `cross-community-changelog.md` gets an entry in this change set.
+> - Check `error` on every Supabase call, and chain `.select('id')` on writes whose success you assert (`docs/CLAUDE.md` §9).
+>
+> Report back with: the diff summary; the pre-flight counts; which files do not type-check pending my `types:prod` run and why; and which VERIFICATION steps you ran versus which are `[owner]`.
+
+## After Tranche 2 comes back — the product owner's sequence
+
+1. Review the migration SQL by hand. It has never been executed anywhere.
+2. `npm run db:push:prod` → `npm run types:prod` → **re-append the enriched-types block** (`ProviderWithInteraction` / `VisitWithJoinerData` / `VisitJoinerWithProfile`) → `npx tsc --noEmit`.
+3. Work VERIFICATION steps 1–14. Steps 4 and 6 mutate live rows — note the ids and restore them.
+4. Only then F1 §1: deploy `fraud-check` **by name** (a bare `functions deploy` also ships the undeployed `check_due_services`), and confirm step 15 — `fraud_verdicts` going from 0 to non-zero is the single check that proves finding #1 is closed.
+
+## What no agent can verify
+
+Steps 9 (fresh signup), 11 (native notification scheduling), 6–8 and 14 (president and platform-admin sessions), 12–13 live halves (hard-refreshed admin console). Budget for doing these yourself. **An agent reporting "verified" against an unapplied migration has verified nothing** — treat any such claim as a red flag rather than a result.
 
 ---
 

@@ -100,3 +100,50 @@ export async function uploadToCloudinary(
   const data: CloudinaryUploadResult = await response.json();
   return data.secure_url;
 }
+
+export interface CloudinaryTransform {
+  /** Target width in pixels. Defaults to 800 — plenty for a phone hero image. */
+  width?: number;
+  /** Target height in pixels. Only needed for cropping modes like `fill`. */
+  height?: number;
+  /** Cloudinary crop mode. Defaults to `scale` (resize only, never crops). */
+  crop?: 'scale' | 'fit' | 'limit' | 'fill' | 'thumb';
+  /** Defaults to `auto` — Cloudinary picks the smallest quality with no visible loss. */
+  quality?: string | number;
+}
+
+/** Every Cloudinary delivery URL has this before the transformation segment. */
+const DELIVERY_MARKER = '/image/upload/';
+
+/**
+ * Add delivery transformations to a Cloudinary image URL.
+ *
+ * Equivalent to `cloudinary.image(id, { transformation: [{ quality: 'auto' },
+ * { width: 800, crop: 'scale' }] })`, but built as a plain URL because the app
+ * stores `secure_url` in the database and renders it with `expo-image`.
+ *
+ * Anything that is not a Cloudinary delivery URL (a `file://` preview from the
+ * image picker, a Google OAuth avatar, a bundled asset) is returned untouched.
+ */
+export function cloudinaryUrl(url: string, transform: CloudinaryTransform = {}): string {
+  const markerIndex = url.indexOf(DELIVERY_MARKER);
+  if (markerIndex === -1) return url;
+
+  const { width = 800, height, crop = 'scale', quality = 'auto' } = transform;
+
+  const params: string[] = [];
+  if (width) params.push(`w_${Math.round(width)}`);
+  if (height) params.push(`h_${Math.round(height)}`);
+  if (width || height) params.push(`c_${crop}`);
+  if (quality) params.push(`q_${quality}`);
+  if (!params.length) return url;
+
+  const insertAt = markerIndex + DELIVERY_MARKER.length;
+  const rest = url.slice(insertAt);
+  const segment = params.join(',');
+
+  // Idempotent: re-transforming an already-transformed URL is a no-op.
+  if (rest.startsWith(`${segment}/`)) return url;
+
+  return `${url.slice(0, insertAt)}${segment}/${rest}`;
+}

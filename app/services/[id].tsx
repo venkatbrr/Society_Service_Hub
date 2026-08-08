@@ -34,6 +34,7 @@ import {
     SERVICE_CATEGORY_LABELS,
     ServiceCategory,
 } from '../../lib/serviceCategories';
+import { cloudinaryUrl } from '../../lib/cloudinary';
 import { goBackSmart } from '../../lib/navigation';
 import {
     parseNotesAndImages,
@@ -515,7 +516,7 @@ export default function ServiceDetailScreen() {
                   activeOpacity={0.88}
                 >
                   <Image
-                    source={{ uri: img.url }}
+                    source={{ uri: cloudinaryUrl(img.url) }}
                     style={{ width: '100%', height: 120, borderRadius: 10, backgroundColor: colors.surface2 }}
                     contentFit="contain"
                   />
@@ -942,7 +943,7 @@ export default function ServiceDetailScreen() {
             <View style={styles.imageModalContent}>
               <Text style={styles.imageModalTitle}>{previewImage.title}</Text>
               <Image
-                source={{ uri: previewImage.url }}
+                source={{ uri: cloudinaryUrl(previewImage.url) }}
                 style={styles.imageModalPreview}
                 contentFit="contain"
               />
