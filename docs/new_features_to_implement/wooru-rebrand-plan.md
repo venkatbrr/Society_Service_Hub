@@ -415,9 +415,11 @@ The permanent identifiers are exactly the ones no end user ever sees, and the us
 
 **To do in the console:**
 
-1. **Branding** — App name → `Wooru`; support email → `thewooru@gmail.com`; logo; home page → `https://wooru.in`; privacy/terms URLs; authorized domain `wooru.in` (needs domain verification first, so likely a second pass after DNS).
-2. **IAM & Admin → Settings** — rename display name to `Wooru`.
-3. **IAM & Admin → IAM** — add `thewooru@gmail.com` as **Owner** if project ownership should move. This is the ownership fix that does *not* require a new project.
+1. **Branding** — App name → `Wooru`. This is the only field that matters immediately and the only one that needs nothing else first.
+2. **Support email is a dropdown, not a free-text field** — it lists only the project owner and IAM principals. `thewooru@gmail.com` cannot be selected until it is added under **IAM & Admin → IAM** as a principal (Owner). It *is* user-visible on the consent screen, so leaving it as `societyservicehub@gmail.com` is a small residual leak. Left as-is 2026-08-08.
+3. **Home page / privacy / terms / authorized domains** — all require `wooru.in` to be DNS-verified. Deferred to Group D (§11).
+4. **Logo** — deliberately skipped. Google requires a brand-verification review for apps displaying a logo on the consent screen; a name change alone does not, since only basic scopes are used.
+5. **IAM & Admin → Settings** — rename project display name to `Wooru` (cosmetic).
 4. **Clients** — new Android client for `in.wooru.app` + SHA-1; update the web client's origins.
 5. Check publishing status: **Testing** caps at 100 users and expires refresh tokens after 7 days. Only basic scopes (email/profile/openid) are used, so publishing to production needs no verification review.
 
