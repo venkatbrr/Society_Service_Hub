@@ -12,6 +12,14 @@
       "destination": "/landing.html"
     },
     {
+      "source": "/privacy",
+      "destination": "/privacy.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms.html"
+    },
+    {
       "source": "/admin",
       "destination": "/admin/index.html"
     },

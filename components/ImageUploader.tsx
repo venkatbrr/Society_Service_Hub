@@ -6,7 +6,7 @@ import { ActivityIndicator, Alert, Platform, StyleSheet, Text, TouchableOpacity,
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
-import { uploadToCloudinary } from '../lib/cloudinary';
+import { cloudinaryUrl, uploadToCloudinary } from '../lib/cloudinary';
 
 interface ImageUploaderProps {
   /** Current image URL (from Cloudinary or null) */
@@ -129,7 +129,7 @@ export function ImageUploader({
             <ActivityIndicator size="small" color={colors.accent} />
           ) : displayUrl ? (
             <Image
-              source={{ uri: displayUrl }}
+              source={{ uri: cloudinaryUrl(displayUrl, { width: 168, height: 168, crop: 'fill' }) }}
               style={styles.compactImage}
               contentFit="cover"
               transition={200}
@@ -170,7 +170,7 @@ export function ImageUploader({
           </View>
         ) : displayUrl ? (
           <Image
-            source={{ uri: displayUrl }}
+            source={{ uri: cloudinaryUrl(displayUrl) }}
             style={StyleSheet.absoluteFillObject}
             contentFit="cover"
             transition={300}

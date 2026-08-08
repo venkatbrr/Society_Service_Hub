@@ -9,6 +9,7 @@ import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
 import { useAuth } from '../../../../context/AuthContext';
+import { cloudinaryUrl } from '../../../../lib/cloudinary';
 import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
 import { goBackSmart } from '../../../../lib/navigation';
 import { supabase } from '../../../../lib/supabase';
@@ -630,7 +631,7 @@ export default function ManageListingScreen() {
               <View key={product.id} style={[styles.productRow, { borderColor: colors.border }]}>
                 {product.image_url ? (
                   <Image
-                    source={{ uri: product.image_url }}
+                    source={{ uri: cloudinaryUrl(product.image_url, { width: 120, height: 120, crop: 'fill' }) }}
                     style={styles.productThumb}
                     contentFit="cover"
                     transition={200}

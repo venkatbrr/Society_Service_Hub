@@ -11,6 +11,7 @@ import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
+import { cloudinaryUrl } from '../../../lib/cloudinary';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { goBackSmart } from '../../../lib/navigation';
 import { buildWhatsAppUrl, toLast10Digits } from '../../../lib/phone';
@@ -465,7 +466,7 @@ export default function ListingDetailScreen() {
           onPress={() => setSelectedImageUrl(listing.image_url || null)}
         >
           <Image
-            source={{ uri: listing.image_url }}
+            source={{ uri: cloudinaryUrl(listing.image_url) }}
             style={styles.heroImage}
             contentFit="cover"
             transition={300}
@@ -565,7 +566,13 @@ export default function ListingDetailScreen() {
                         onPress={() => setSelectedImageUrl((product as any).image_url || null)}
                       >
                         <Image
-                          source={{ uri: (product as any).image_url }}
+                          source={{
+                            uri: cloudinaryUrl((product as any).image_url, {
+                              width: 120,
+                              height: 120,
+                              crop: 'fill',
+                            }),
+                          }}
                           style={styles.productThumb}
                           contentFit="cover"
                           transition={200}
@@ -641,7 +648,13 @@ export default function ListingDetailScreen() {
                         onPress={() => setSelectedImageUrl((product as any).image_url || null)}
                       >
                         <Image
-                          source={{ uri: (product as any).image_url }}
+                          source={{
+                            uri: cloudinaryUrl((product as any).image_url, {
+                              width: 120,
+                              height: 120,
+                              crop: 'fill',
+                            }),
+                          }}
                           style={styles.productThumb}
                           contentFit="cover"
                           transition={200}
@@ -816,7 +829,7 @@ export default function ListingDetailScreen() {
           </TouchableOpacity>
           <Pressable onPress={(e) => e.stopPropagation()} style={styles.viewerImageWrap}>
             <Image
-              source={{ uri: selectedImageUrl || '' }}
+              source={{ uri: cloudinaryUrl(selectedImageUrl || '') }}
               style={styles.viewerImage}
               contentFit="contain"
               transition={200}

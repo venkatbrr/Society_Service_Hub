@@ -680,7 +680,9 @@ Images go to **Cloudinary**, not Supabase Storage.
 
 Used by: `mcn_listings.image_url`, `mcn_products.image_url`, `mcn_preorder_drops.image_url`, `mcn_preorder_items.image_url`, `event_transactions.image_url`, `community_requests.proof_photo_url`.
 
-The Supabase `community-uploads` bucket still exists but **no screen writes to it**. Profile avatars are deterministic initials via `components/Avatar.tsx` + `lib/avatarTint.ts` — there is no avatar upload.
+**Never render a stored `secure_url` directly.** The upload preset keeps the original at full camera resolution, so a raw URL ships a multi-megabyte image into a 40 px thumbnail. Wrap every `<Image source={{ uri }}>` in `cloudinaryUrl(url, transform?)` from `lib/cloudinary.ts`, which injects a delivery transformation after `/image/upload/`. Defaults are `w_800,c_scale,q_auto` — 800 px wide, no cropping, Cloudinary picking the smallest lossless-looking quality. Pass `{ width, height, crop: 'fill' }` for fixed-size thumbnails and avatars. The helper is idempotent and returns non-Cloudinary URLs (local `file://` picker previews, Google OAuth avatars) untouched, so it is safe to apply unconditionally.
+
+The Supabase `community-uploads` bucket still exists but **no screen writes to it**. `app/profile/edit.tsx` uploads a profile picture to the `wooru/avatars` subfolder and stores it on `profiles.avatar_url`; `components/Avatar.tsx` renders that when present and otherwise falls back to deterministic initials tinted by `lib/avatarTint.ts`.
 
 Bundled assets live in `assets/images/`. Keep import extensions matched to the real file type: the Community tab funds background is `funds_bg.jpg`, and importing it as `.png` breaks Android release resource compilation.
 

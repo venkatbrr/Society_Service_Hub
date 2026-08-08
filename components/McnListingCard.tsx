@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Modal, Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
+import { cloudinaryUrl } from '../lib/cloudinary';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
@@ -105,7 +106,7 @@ export const McnListingCard = React.memo(({
     >
       {listing.image_url ? (
         <Image
-          source={{ uri: listing.image_url }}
+          source={{ uri: cloudinaryUrl(listing.image_url) }}
           style={styles.coverImage}
           contentFit="cover"
           transition={200}
