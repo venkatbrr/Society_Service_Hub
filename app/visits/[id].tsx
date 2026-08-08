@@ -12,7 +12,9 @@ import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { VisitJoinerWithProfile, VisitWithJoinerData } from '../../lib/database.types';
+import { siteUrl } from '../../lib/siteUrl';
 import { supabase } from '../../lib/supabase';
+import { goBackSmart } from '../../lib/navigation';
 
 const parseLocalDateOnly = (dateStr: string) => {
   const [year, month, day] = dateStr.split('-').map((part) => Number(part));
@@ -44,7 +46,7 @@ const parseTimeFromWeb = (timeString: string, baseDate: Date) => {
 export default function VisitDetailScreen() {
   const { id, returnTo, visitTab } = useLocalSearchParams<{ id: string; returnTo?: string; visitTab?: 'upcoming' | 'past' }>();
   const router = useRouter();
-  const { user, profile } = useAuth();
+  const { user, profile, isCommunityLead, isPlatformAdmin } = useAuth();
   const colors = {
     background: Verandah.surface,
     text: Verandah.textPrimary,
@@ -74,6 +76,7 @@ export default function VisitDetailScreen() {
   const [newStartTime, setNewStartTime] = useState(new Date());
   const [newEndTime, setNewEndTime] = useState(new Date());
   const [isRescheduling, setIsRescheduling] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showRescheduleDatePicker, setShowRescheduleDatePicker] = useState(false);
   const [showRescheduleStartTimePicker, setShowRescheduleStartTimePicker] = useState(false);
   const [showRescheduleEndTimePicker, setShowRescheduleEndTimePicker] = useState(false);
@@ -160,21 +163,23 @@ export default function VisitDetailScreen() {
   const parsedEstimatedCost = visit?.estimated_cost ? Number(String(visit.estimated_cost).replace(/[^0-9.]/g, '')) : NaN;
 
   const fetchVisitData = useCallback(async () => {
-    if (!id || !user?.id) return;
+    if (!id || !user?.id || !profile?.community_id) return;
 
     try {
       // 1. Start parallel fetch for visit and joiners
-      // 'get_community_visits' fetches upcoming visits, but may not include full details for direct link
       const [visitsResult, joinersResult] = await Promise.all([
         supabase.rpc('get_community_visits', {
-          p_community_id: profile?.community_id || '',
-          p_user_id: user.id
+          p_community_id: profile.community_id,
+          p_user_id: user.id,
+          p_status: 'upcoming,in_progress,completed,cancelled',
+          p_time_scope: 'upcoming'
         }),
         supabase.rpc('get_visit_joiners', {
           p_visit_id: id
         })
       ]);
 
+      if (visitsResult.error) throw visitsResult.error;
       if (joinersResult.error) throw joinersResult.error;
       const joinersData = joinersResult.data || [];
       setJoiners(joinersData);
@@ -182,35 +187,38 @@ export default function VisitDetailScreen() {
       const currentVisit = (visitsResult.data as VisitWithJoinerData[] || []).find(v => v.id === id);
 
       if (!currentVisit) {
-        // Fallback: If not in the "upcoming/active rpc" list, fetch direct
+        // Fallback: If not in the rpc list, fetch direct
         const { data: directData, error: directError } = await supabase
           .from('service_visits')
           .select('*')
           .eq('id', id)
-          .single();
+          .maybeSingle();
 
         if (directError) throw directError;
+        if (!directData) {
+          setVisit(null);
+          return;
+        }
 
         // Fetch creator profile in parallel (don't waterfall)
-        const [creatorResult] = await Promise.all([
-          supabase
-            .from('profiles')
-            .select('full_name, flat_number, avatar_url')
-            .eq('id', directData.created_by)
-            .maybeSingle()
-        ]);
+        const creatorResult = await supabase
+          .from('profiles')
+          .select('full_name, flat_number, avatar_url')
+          .eq('id', directData.created_by)
+          .maybeSingle();
 
         setVisit({
           ...directData,
-          creator_name: creatorResult.data?.full_name || 'Unknown',
+          creator_name: creatorResult.data?.full_name || 'Neighbor',
           creator_flat: creatorResult.data?.flat_number,
           creator_avatar_url: creatorResult.data?.avatar_url,
-          joiner_count: joinersData.length
+          joiner_count: joinersData.length,
+          has_user_joined: joinersData.some((j: VisitJoinerWithProfile) => j.user_id === user.id),
         });
       } else {
           setVisit({
             ...currentVisit,
-            joiner_count: joinersData.length // Ensure accurate count from dedicated joiners fetch
+            joiner_count: joinersData.length
           });
       }
 
@@ -292,20 +300,76 @@ export default function VisitDetailScreen() {
     }
   };
 
-  const updateStatus = async (status: string) => {
-      try {
-          const { error } = await supabase
-            .from('service_visits')
-            .update({ status, updated_at: new Date().toISOString() })
-            .eq('id', id);
+  const performUpdateStatus = async (status: string) => {
+    setIsUpdatingStatus(true);
+    try {
+      const { error } = await supabase
+        .from('service_visits')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id);
 
-          if (error) throw error;
-          Toast.show({ type: 'success', text1: `Visit marked as ${status}` });
-          setVisit((prev: VisitWithJoinerData | null) => prev ? { ...prev, status } : null);
-      } catch (e) {
-          console.error(e);
-          Toast.show({ type: 'error', text1: 'Error updating status' });
+      if (error) throw error;
+      Toast.show({ type: 'success', text1: `Visit marked as ${status}` });
+      setVisit((prev: VisitWithJoinerData | null) => prev ? { ...prev, status } : null);
+    } catch (e: any) {
+      console.error(e);
+      Toast.show({ type: 'error', text1: 'Error updating status', text2: e?.message });
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const updateStatus = (status: string) => {
+    const actionLabel = status === 'completed' ? 'mark this visit as completed' : status === 'cancelled' ? 'cancel this visit' : `mark this visit as ${status}`;
+    const promptText = `Are you sure you want to ${actionLabel}?`;
+
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm(promptText)) {
+        void performUpdateStatus(status);
       }
+    } else {
+      Alert.alert('Confirm Action', promptText, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Confirm', style: 'destructive', onPress: () => void performUpdateStatus(status) },
+      ]);
+    }
+  };
+
+  const performDeleteVisit = async () => {
+    setIsUpdatingStatus(true);
+    try {
+      const { data, error } = await supabase
+        .from('service_visits')
+        .delete()
+        .eq('id', id)
+        .select('id');
+
+      if (error || !data || data.length !== 1) {
+        Toast.show({ type: 'error', text1: 'Delete failed', text2: error?.message || 'Could not delete visit' });
+        return;
+      }
+      Toast.show({ type: 'success', text1: 'Visit deleted' });
+      goBackSmart(router, `/visits/${id}`);
+    } catch (e: any) {
+      console.error(e);
+      Toast.show({ type: 'error', text1: 'Error deleting visit', text2: e?.message });
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleDeleteVisit = () => {
+    const promptText = 'Are you sure you want to delete this visit? This cannot be undone.';
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm(promptText)) {
+        void performDeleteVisit();
+      }
+    } else {
+      Alert.alert('Delete Visit', promptText, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => void performDeleteVisit() },
+      ]);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -318,35 +382,33 @@ export default function VisitDetailScreen() {
   };
 
   const handleBack = () => {
-    if (returnTo === 'visits') {
-      router.replace({
-        pathname: '/',
-        params: { segment: 'visits', visitTab: visitTab === 'past' ? 'past' : 'upcoming' },
-      });
-      return;
-    }
-
-    router.back();
+    goBackSmart(router, `/visits/${id}`);
   };
 
   const handleShare = async () => {
     if (!visit) return;
-    try {
-      const message = `Join my service visit on Society Hub!\n\n` +
-        `• Title: ${visit.title}\n` +
-        `• Provider: ${visit.provider_name}\n` +
-        `• Date: ${formatDate(visit.visit_date)}\n` +
-        `• Time: ${visit.visit_time_slot}\n` +
-        (visit.description ? `• Details: ${visit.description}\n` : '') +
-        `• Estimated Cost: ${visit.estimated_cost || 'Not specified'}\n\n` +
-        `Let's coordinate to split costs!`;
+    const shareUrl = siteUrl(`/visits/${visit.id}`);
 
-      await Share.share({
-        message,
-        title: visit.title,
-      });
+    const message = `Join my service visit on Society Hub!\n\n` +
+      `• Title: ${visit.title}\n` +
+      `• Provider: ${visit.provider_name}\n` +
+      `• Date: ${formatDate(visit.visit_date)}\n` +
+      `• Time: ${visit.visit_time_slot}\n` +
+      (visit.description ? `• Details: ${visit.description}\n` : '') +
+      `• Estimated Cost: ${visit.estimated_cost || 'Not specified'}\n\n` +
+      `🔗 View Visit:\n${shareUrl}`;
+
+    try {
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({ title: visit.title, text: message });
+      } else {
+        await Share.share({ message, title: visit.title });
+      }
     } catch (error: any) {
-      console.error('Error sharing:', error);
+      if (error && (error.name === 'AbortError' || error.message?.includes('abort') || error.message?.includes('cancel'))) {
+        return;
+      }
+      Toast.show({ type: 'error', text1: 'Error sharing visit' });
     }
   };
 
@@ -361,7 +423,10 @@ export default function VisitDetailScreen() {
   if (!visit) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
-        <Text style={{ color: colors.textMuted }}>Visit not found</Text>
+        <Text style={{ color: colors.textMuted, marginBottom: 12, fontSize: 16 }}>This visit is no longer available.</Text>
+        <TouchableOpacity onPress={handleBack}>
+          <Text style={{ color: colors.primary, fontSize: 16, fontWeight: '500' }}>Back to visits</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -437,11 +502,7 @@ export default function VisitDetailScreen() {
             </View>
             <View style={styles.metaItem}>
                 <Text style={[styles.metaLabel, { color: colors.textMuted }]}>Est. cost</Text>
-                {visit.estimated_cost && Number.isFinite(parsedEstimatedCost) && parsedEstimatedCost > 0 ? (
-                  <Rupees amount={parsedEstimatedCost} size="sm" />
-                ) : (
-                  <Text style={[styles.metaValue, { color: colors.text }]}>{visit.estimated_cost || 'Not specified'}</Text>
-                )}
+                <Text style={[styles.metaValue, { color: colors.text }]}>{visit.estimated_cost || 'Not specified'}</Text>
             </View>
           </View>
         </View>
@@ -460,7 +521,11 @@ export default function VisitDetailScreen() {
                             </TouchableOpacity>
                         )}
                         {visit.provider_whatsapp && (
-                            <TouchableOpacity style={[styles.contactBtn, { backgroundColor: colors.surface2 }]} onPress={() => Linking.openURL(`https://wa.me/${visit.provider_whatsapp}`)}>
+                            <TouchableOpacity style={[styles.contactBtn, { backgroundColor: colors.surface2 }]} onPress={() => {
+                              const digits = (visit.provider_whatsapp || '').replace(/\D/g, '');
+                              const intl = digits.length === 10 ? `91${digits}` : digits;
+                              void Linking.openURL(`https://wa.me/${intl}`);
+                            }}>
                                 <Ionicons name="logo-whatsapp" size={18} color={colors.secondary} />
                             </TouchableOpacity>
                         )}
@@ -512,36 +577,57 @@ export default function VisitDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Action Buttons — hidden for past visits */}
-      {!isPast && (
+      {/* Action Buttons */}
+      {(!isPast || isCreator) && (
       <View style={[styles.footer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
         {isCreator ? (
             <View style={styles.creatorActions}>
                 {visit.status === 'upcoming' && (
-                    <TouchableOpacity style={styles.primaryBtn} onPress={() => updateStatus('completed')}>
+                    <TouchableOpacity style={styles.primaryBtn} onPress={() => updateStatus('completed')} disabled={isUpdatingStatus}>
                       <View style={[styles.primaryBtnGradient, { backgroundColor: colors.primary }]}> 
                         <Text style={styles.primaryBtnText}>Mark as completed</Text>
                       </View>
                     </TouchableOpacity>
                 )}
                 {visit.status === 'upcoming' && (
-                  <TouchableOpacity style={styles.cancelBtn} onPress={() => updateStatus('cancelled')}>
+                  <TouchableOpacity style={[styles.rescheduleBtn, { borderColor: colors.border }]} onPress={handleOpenReschedule} disabled={isUpdatingStatus}>
+                    <Text style={[styles.rescheduleBtnText, { color: colors.primary }]}>Reschedule</Text>
+                  </TouchableOpacity>
+                )}
+                {visit.status === 'upcoming' && (
+                  <TouchableOpacity style={styles.cancelBtn} onPress={() => updateStatus('cancelled')} disabled={isUpdatingStatus}>
                     <Text style={styles.cancelBtnText}>Cancel Visit</Text>
                   </TouchableOpacity>
                 )}
+                {(isPast || visit.status !== 'upcoming') && (
+                  <TouchableOpacity style={styles.cancelBtn} onPress={handleDeleteVisit} disabled={isUpdatingStatus}>
+                    <Text style={styles.cancelBtnText}>Delete Visit</Text>
+                  </TouchableOpacity>
+                )}
+            </View>
+        ) : (isCommunityLead || isPlatformAdmin) ? (
+            <View style={styles.creatorActions}>
+                {visit.status === 'upcoming' && (
+                  <TouchableOpacity style={styles.cancelBtn} onPress={() => updateStatus('cancelled')} disabled={isUpdatingStatus}>
+                    <Text style={styles.cancelBtnText}>Cancel Visit</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity style={styles.cancelBtn} onPress={handleDeleteVisit} disabled={isUpdatingStatus}>
+                  <Text style={styles.cancelBtnText}>Delete Visit</Text>
+                </TouchableOpacity>
             </View>
         ) : visit.has_user_joined ? (
-            <TouchableOpacity style={[styles.leaveBtn, { borderColor: colors.accent, borderWidth: 1, borderRadius: 14 }]} onPress={handleLeave}>
+            <TouchableOpacity style={[styles.leaveBtn, { borderColor: colors.accent, borderWidth: 1, borderRadius: 14 }]} onPress={handleLeave} disabled={isUpdatingStatus}>
                 <Ionicons name="exit-outline" size={18} color={colors.accent} />
                 <Text style={[styles.leaveBtnText, { color: colors.accent }]}>Leave this visit</Text>
             </TouchableOpacity>
-        ) : visit.status === 'upcoming' && !isFull ? (
-            <TouchableOpacity style={styles.primaryBtn} onPress={() => setShowJoinModal(true)}>
+        ) : (!isPast && visit.status === 'upcoming' && !isFull) ? (
+            <TouchableOpacity style={styles.primaryBtn} onPress={() => setShowJoinModal(true)} disabled={isUpdatingStatus}>
               <View style={[styles.primaryBtnGradient, { backgroundColor: colors.primary }]}> 
                 <Text style={styles.primaryBtnText}>Join this visit</Text>
               </View>
             </TouchableOpacity>
-        ) : isFull ? (
+        ) : (!isPast && isFull) ? (
             <View style={[styles.disabledBtn, { backgroundColor: colors.border }]}>
                 <Text style={[styles.disabledBtnText, { color: colors.textMuted }]}>Visit Full</Text>
             </View>

@@ -3,6 +3,7 @@ import React from 'react';
 import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
+import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
 import { VisitStatusBadge } from './VisitStatusBadge';
@@ -74,10 +75,7 @@ export const VisitCard = React.memo(({
     e?.stopPropagation?.();
     try {
       const formattedDate = formatDate(visitDate);
-      const shareUrl =
-        Platform.OS === 'web' && typeof window !== 'undefined'
-          ? `${window.location.origin}/visits/${id}`
-          : `https://society-service-hub.app/visits/${id}`;
+      const shareUrl = siteUrl(`/visits/${id}`);
 
       const messageLines = [
         `🚗 *Service Visit: ${title}*`,
@@ -285,7 +283,7 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.pill,
     borderWidth: 1,
     borderColor: Verandah.borderStrong,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Verandah.card,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,

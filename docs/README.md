@@ -45,6 +45,7 @@
 | [`platform-admin.md`](platform-admin.md) | Web admin console: pages, RPCs, setup, verification | Any admin-console or platform RPC change |
 | [`disabled-features.md`](disabled-features.md) | Intentionally disabled/removed/deferred behavior | Any feature disabled or re-enabled |
 | [`fixes/`](fixes/) | Audits, implementation briefs, and verified fixes for edge cases | Created per deep-review pass |
+| [`supabase-mcp.md`](supabase-mcp.md) | Supabase MCP server: setup, per-IDE config, tools, security posture | MCP config, access mode, or enabled feature groups change |
 
 ### Federation — backend live, UI deferred
 

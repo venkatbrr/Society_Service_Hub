@@ -18,13 +18,36 @@ npm run preview        # Serve ./dist
 
 npx tsc --noEmit       # Type check — THE validation gate. No test framework is configured.
 
-npm run db:login       # Authenticate Supabase CLI
-npm run db:link        # Link to project mbzvcaoulawdugfearmj
-npm run db:push        # Apply migrations
-npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj   # Regenerate lib/database.types.ts
+npm run db:login          # Authenticate Supabase CLI
+
+# Every DB command is environment-suffixed. There is deliberately no
+# unsuffixed `db:push` — an unqualified push is how preprod work reaches prod.
+npm run db:push:preprod   # Apply migrations to preprod
+npm run db:push:prod      # Apply migrations to prod
+npm run types:preprod     # Regenerate lib/database.types.ts from preprod
+npm run types:prod        # Regenerate lib/database.types.ts from prod
+npm run fn:deploy:preprod # Deploy edge functions to preprod
+npm run fn:deploy:prod    # Deploy edge functions to prod
 ```
 
+The `:preprod` scripts contain a literal `PREPROD_REF_TODO` placeholder until the preprod project exists — they fail loudly rather than silently hitting prod. See [new_features_to_implement/two-environment-setup-plan.md](new_features_to_implement/two-environment-setup-plan.md).
+
 There is no lint script and no test suite. `npx tsc --noEmit` must pass before you call any change done.
+
+A **Supabase MCP server** is also configured (read-write, pinned to `mbzvcaoulawdugfearmj`). Setup and per-client config: [`supabase-mcp.md`](supabase-mcp.md).
+
+**Choosing CLI vs MCP — route by output size, not by preference:**
+
+| Task | Use | Why |
+|------|-----|-----|
+| Apply a schema change | CLI: `npm run db:push` | MCP `apply_migration` writes to the remote DB with no local file, desyncing `supabase/migrations/` from deployed schema. Git stays the source of truth. |
+| Regenerate types | CLI: `npx supabase gen types ...` | Writes to disk. MCP `generate_typescript_types` returns all of `lib/database.types.ts` into context — by far the most expensive call available. |
+| Bulk output of any kind | CLI, redirected to a file | Then read only the slice you need. |
+| Inspect live schema / RLS policies | MCP `list_tables` | Short answer, no script to write. |
+| Ad-hoc `SELECT` | MCP `execute_sql` | Cheaper than authoring and running a script. |
+| Read logs, run security/perf lint | MCP `get_logs`, `get_advisors` | No cheap CLI equivalent. |
+
+Rule of thumb: **if the result belongs in a file, use the CLI; if the result is a short answer, use MCP.** The MCP server supplements the migration workflow in §6 — it never replaces it.
 
 ---
 
@@ -157,10 +180,17 @@ Schema, RPC index, triggers, and RLS: [`architecture.md`](architecture.md) §4�
 
 When you create or modify a file in `supabase/migrations/`, complete the loop yourself:
 
-1. `npm run db:push`
-2. `npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj`
-3. **Re-add the hand-maintained enriched types block** (`ProviderWithInteraction`, `VisitWithJoinerData`, `VisitJoinerWithProfile`) at the bottom of `lib/database.types.ts` — step 2 overwrites the whole file, wiping it. See §11 and the comment above that block.
+1. `npm run db:push:preprod` — **preprod always first**
+2. `npm run types:preprod`
+3. **Re-add the hand-maintained enriched types block** (`ProviderWithInteraction`, `VisitWithJoinerData`, `VisitJoinerWithProfile`) at the bottom of `lib/database.types.ts` — step 2 overwrites the whole file, wiping it. See §11 and the comment above that block. The `types:*` npm scripts redirect straight over the file, so this is easier to forget now, not harder.
 4. `npx tsc --noEmit`
+5. After the change merges to `main`: `npm run db:push:prod`, then `npm run types:prod` to confirm prod agrees.
+
+Migrations are **not** applied by CI — merging to `main` deploys code, not schema. Step 5 is manual and skipping it breaks prod.
+
+Both environments run the same files from `supabase/migrations/`. Never edit an already-applied migration; write a new one.
+
+To confirm the two environments have not drifted, run [`supabase/checks/schema-fingerprint.sql`](../supabase/checks/schema-fingerprint.sql) against each and compare against [`supabase/checks/baseline-prod.md`](../supabase/checks/baseline-prod.md). (`supabase db diff` is the usual tool but needs Docker, which isn't installed here.) Recapture the baseline after every push to prod.
 
 Do not leave a migration unapplied or types unregenerated. Deployment is part of the implementation, not a follow-up.
 
@@ -224,6 +254,10 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Editing an already-applied migration file | `db push` tracks by filename, not content — it reports "up to date" and your fix never lands. Add a new migration or apply directly with `db query -f`. |
 | A bare column name inside a `RETURNS TABLE` function whose OUT param shares that name | Raises *"column reference is ambiguous"* at **call** time, not creation time. Alias the table and qualify the column. |
 | Expecting `npx supabase gen types` to preserve the file | It overwrites everything, wiping the hand-maintained `ProviderWithInteraction` / `VisitWithJoinerData` / `VisitJoinerWithProfile` block at the bottom. Re-append it every time — see §6. |
+| Committing `.env` | It is now gitignored and untracked. Environment selection lives in Vercel env vars and `eas.json` build profiles, never in a committed file. Copy `.env.example` to `.env` for local work. |
+| Hardcoding an absolute app URL | Use `siteUrl('/path')` from [`lib/siteUrl.ts`](../lib/siteUrl.ts). On web it reads `window.location.origin`, so preprod links stay on preprod; on native it reads `EXPO_PUBLIC_SITE_URL`. Eight hand-written URLs pointing at a dead domain were removed on 2026-08-08. |
+| Adding config to the admin console expecting `process.env` | `admin-dashboard/` has no bundler — files are copied verbatim. Config must be a `__PLACEHOLDER__` substituted by `build-admin.js`, which exits 1 if the Supabase env vars are missing. |
+| Editing `public/admin/` | It is generated output, now untracked and gitignored. Edit `admin-dashboard/` — the real source. |
 | Calling an `is_platform_admin()`-gated RPC via `supabase db query --linked` | That connection is not an authenticated admin user, so the function raises. Replicate its inner query to test instead. |
 | Assuming a fund's treasurer/collectors are community-wide | They are **per-fund** rows in `fund_roles`. A community with three funds has three independent treasurers. |
 | Mutating `mcn_carpools.available_seats` from the client | Capacity is fixed at publish time and trigger-enforced. Live seat availability is derived from `get_mcn_carpool_seats(UUID)` RPC. |
@@ -231,5 +265,13 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Calling `Alert.alert` for confirmation on web | `Alert.alert` is a no-op on web. Always use `confirmAction` from `lib/confirm.ts`. |
 | Using `whatsapp://` URL scheme directly | `whatsapp://` fails on web/PWA. Always use `buildWhatsAppUrl` from `lib/phone.ts`. |
 | Placing or updating business orders / pre-orders via direct table writes | Mutating money or ownership outside the atomic RPCs trips `enforce_mcn_order_immutable_fields` / `enforce_mcn_preorder_order_immutable_fields`. Always call `place_mcn_order()` or `place_mcn_preorder()`. |
+| An RLS `UPDATE` policy with `USING` but no `WITH CHECK` | Postgres reuses `USING` for the new row. If `USING` does not mention `community_id`, a resident can move their own row into another community. Always write both, and always pin the tenant column. |
+| `public.is_community_lead()` in a policy without a `community_id` predicate | It only asks "is this person a lead *anywhere*". A president of another society then matches every row on the platform. Pair it with `community_id = get_user_community_id()`. |
+| A `SECURITY DEFINER` RPC taking `community_id` or `user_id` parameter | It is an RLS bypass with caller-controlled scope. Derive scope from `auth.uid()`, `REVOKE FROM PUBLIC, anon`, and `SET search_path = public`. |
+| Interpolating user text into a PostgREST `.or()` filter | `,` is the delimiter and `%` is a wildcard. Strip `,()%\.` before interpolating to avoid `PGRST100` 400 errors or wildcard injection. |
+| Assuming a `.delete()` matching zero rows throws an error | It does not. `supabase-js` returns `{ error: null }`. Chain `.select('id')` and assert `data?.length === 1`. |
+| `wa.me` / `whatsapp://` URL built from bare 10-digit mobile | Stored numbers are 10 digits. `wa.me` requires international country code — prefix `91` at link time. |
+| `Share.share` on desktop web | Rejects when `navigator.share` is absent. Branch on `Platform.OS === 'web' && navigator.share` first with toast fallback. |
+| Assuming `pg_cron` is available for scheduled database tasks | `pg_cron` is not installed on this project. Do not write migrations assuming scheduled background database jobs. |
 
 

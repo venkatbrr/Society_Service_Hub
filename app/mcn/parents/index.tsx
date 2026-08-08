@@ -28,6 +28,7 @@ import { Verandah } from '../../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
+import { toLast10Digits } from '../../../lib/phone';
 import { supabase } from '../../../lib/supabase';
 
 import { isSupabaseSchemaError } from '../../../lib/supabaseErrors';
@@ -94,6 +95,7 @@ export default function ParentCornerScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isMissingSchema, setIsMissingSchema] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   // Filters & Sorting
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -117,7 +119,11 @@ export default function ParentCornerScreen() {
 
   const fetchEntries = useCallback(
     async (isRefresh = false) => {
-      if (!communityId) return;
+      if (!communityId) {
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
 
@@ -126,17 +132,22 @@ export default function ParentCornerScreen() {
           .from('mcn_parent_corner')
           .select('*')
           .eq('community_id', communityId)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(500);
 
         if (error) throw error;
         setEntries((data || []) as ParentCornerItem[]);
         setIsMissingSchema(false);
+        setLoadError(false);
       } catch (error: any) {
         console.error('Error fetching parent corner entries:', error);
         if (isSupabaseSchemaError(error)) {
           setIsMissingSchema(true);
+          setLoadError(false);
           setEntries([]);
         } else {
+          setIsMissingSchema(false);
+          setLoadError(true);
           Toast.show({ type: 'error', text1: 'Failed to load parent corner' });
         }
       } finally {
@@ -153,13 +164,18 @@ export default function ParentCornerScreen() {
     }, [fetchEntries])
   );
 
-  // Extract list of unique top schools in this community
+  // Extract list of unique top schools in this community (case-insensitive deduplication)
   const uniqueSchools = useMemo(() => {
-    const set = new Set<string>();
+    const byKey = new Map<string, string>();
     entries.forEach((e) => {
-      if (e.school_name.trim()) set.add(e.school_name.trim());
+      const label = e.school_name.trim();
+      if (!label) return;
+      const key = label.toLowerCase();
+      if (!byKey.has(key)) byKey.set(key, label);
     });
-    return Array.from(set).sort();
+    return Array.from(byKey.values()).sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+    );
   }, [entries]);
 
   // Filtered and Sorted Entries
@@ -204,15 +220,15 @@ export default function ParentCornerScreen() {
     // Sorting
     list.sort((a, b) => {
       if (sortBy === 'school') {
-        const comp = a.school_name.localeCompare(b.school_name);
+        const comp = a.school_name.localeCompare(b.school_name, undefined, { numeric: true, sensitivity: 'base' });
         if (comp !== 0) return comp;
-        return a.grade_class.localeCompare(b.grade_class);
+        return a.grade_class.localeCompare(b.grade_class, undefined, { numeric: true, sensitivity: 'base' });
       } else if (sortBy === 'grade') {
-        const comp = a.grade_class.localeCompare(b.grade_class);
+        const comp = a.grade_class.localeCompare(b.grade_class, undefined, { numeric: true, sensitivity: 'base' });
         if (comp !== 0) return comp;
-        return a.school_name.localeCompare(b.school_name);
+        return a.school_name.localeCompare(b.school_name, undefined, { numeric: true, sensitivity: 'base' });
       } else if (sortBy === 'flat') {
-        return a.flat_number.localeCompare(b.flat_number);
+        return a.flat_number.localeCompare(b.flat_number, undefined, { numeric: true, sensitivity: 'base' });
       } else {
         // recent
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -221,10 +237,6 @@ export default function ParentCornerScreen() {
 
     return list;
   }, [entries, debouncedSearch, selectedType, selectedBoard, selectedSchool, selectedIntent, sortBy]);
-
-  useEffect(() => {
-    fetchEntries();
-  }, [communityId, fetchEntries]);
 
   const handleShareParentPost = async (item: ParentCornerItem) => {
     const messageLines = [
@@ -251,40 +263,67 @@ export default function ParentCornerScreen() {
   };
 
   const handleWhatsAppPress = (item: ParentCornerItem) => {
-    const cleanPhone = item.contact_phone.replace(/\D/g, '');
+    const last10 = toLast10Digits(item.contact_phone || '');
+    if (last10.length !== 10) {
+      Toast.show({ type: 'error', text1: 'No valid phone number on this entry' });
+      return;
+    }
     const text = `Hi ${item.parent_name}, I saw your entry for ${item.student_name} (${item.school_name}) in our community Parent Corner.`;
-    const url = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(text)}`;
+    const url = `https://wa.me/91${last10}?text=${encodeURIComponent(text)}`;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.open(url, '_blank');
+      return;
+    }
     Linking.openURL(url).catch(() => {
       Toast.show({ type: 'error', text1: 'Could not open WhatsApp' });
     });
   };
 
   const handleCallPress = (phone: string) => {
-    const cleanPhone = phone.replace(/\D/g, '');
-    Linking.openURL(`tel:${cleanPhone}`).catch(() => {
+    const last10 = toLast10Digits(phone || '');
+    if (last10.length !== 10) {
+      Toast.show({ type: 'error', text1: 'No valid phone number on this entry' });
+      return;
+    }
+    Linking.openURL(`tel:${last10}`).catch(() => {
       Toast.show({ type: 'error', text1: 'Could not initiate call' });
     });
   };
 
   const handleDeleteEntry = (id: string, studentName: string) => {
-    Alert.alert('Delete Entry', `Are you sure you want to remove student record for "${studentName}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const { error } = await supabase.from('mcn_parent_corner').delete().eq('id', id);
-            if (error) throw error;
-            Toast.show({ type: 'success', text1: 'Entry removed' });
-            fetchEntries();
-          } catch (err) {
-            console.error(err);
-            Toast.show({ type: 'error', text1: 'Failed to delete entry' });
-          }
-        },
-      },
-    ]);
+    const performDelete = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('mcn_parent_corner')
+          .delete()
+          .eq('id', id)
+          .select('id');
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          Toast.show({ type: 'error', text1: 'Could not remove this entry' });
+          return;
+        }
+        Toast.show({ type: 'success', text1: 'Entry removed' });
+        fetchEntries();
+      } catch (err) {
+        console.error(err);
+        Toast.show({ type: 'error', text1: 'Failed to delete entry' });
+      }
+    };
+
+    const title = 'Remove this entry?';
+    const body = `This removes the record for "${studentName}" from Parent Corner. This cannot be undone.`;
+
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm(`${title}\n${body}`)) {
+        performDelete();
+      }
+    } else {
+      Alert.alert(title, body, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: performDelete },
+      ]);
+    }
   };
 
   const renderStudentCard = (item: ParentCornerItem) => {
@@ -312,19 +351,17 @@ export default function ParentCornerScreen() {
 
           {canManage && (
             <View style={styles.cardActionsRight}>
-              {isOwner && (
-                <TouchableOpacity
-                  onPress={() =>
-                    router.push({
-                      pathname: '/mcn/parents/add',
-                      params: { editId: item.id },
-                    } as any)
-                  }
-                  style={styles.iconBtn}
-                >
-                  <Ionicons name="create-outline" size={18} color={colors.textSecondary} />
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                onPress={() =>
+                  router.push({
+                    pathname: '/mcn/parents/add',
+                    params: { editId: item.id },
+                  } as any)
+                }
+                style={styles.iconBtn}
+              >
+                <Ionicons name="create-outline" size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleDeleteEntry(item.id, item.student_name)}
                 style={styles.iconBtn}
@@ -375,7 +412,7 @@ export default function ParentCornerScreen() {
         {item.notes ? (
           <View style={[styles.notesBox, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}>
             <Ionicons name="chatbubble-ellipses-outline" size={14} color={colors.accent} style={{ marginRight: 6 }} />
-            <Text style={[styles.notesText, { color: colors.textSecondary }]}>{item.notes}</Text>
+            <Text style={[styles.notesText, { color: colors.textSecondary }]} numberOfLines={4}>{item.notes}</Text>
           </View>
         ) : null}
 
@@ -416,14 +453,15 @@ export default function ParentCornerScreen() {
         options={buildMcnHeaderOptions({
           title: 'Parent Corner',
           onBack: handleBack,
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.push('/mcn/parents/add' as any)}
-              style={styles.headerAddBtn}
-            >
-              <Ionicons name="add-circle" size={26} color={colors.primary} />
-            </TouchableOpacity>
-          ),
+          headerRight: () =>
+            !isMissingSchema ? (
+              <TouchableOpacity
+                onPress={() => router.push('/mcn/parents/add' as any)}
+                style={styles.headerAddBtn}
+              >
+                <Ionicons name="add-circle" size={26} color={colors.primary} />
+              </TouchableOpacity>
+            ) : null,
         })}
       />
 
@@ -684,8 +722,14 @@ export default function ParentCornerScreen() {
             isMissingSchema ? (
               <EmptyState
                 icon="construct-outline"
-                title="Database Table Missing"
-                message="Please run migration file '20260726400000_add_mcn_parent_corner.sql' in your Supabase Dashboard SQL Editor to set up the Parent Corner table."
+                title="Parent Corner isn't available yet"
+                message="This feature needs the latest updates before it can load. Please try again later."
+              />
+            ) : loadError ? (
+              <EmptyState
+                icon="cloud-offline-outline"
+                title="Couldn't load Parent Corner"
+                message="Check your connection and pull down to refresh."
               />
             ) : (
               <EmptyState
@@ -699,13 +743,15 @@ export default function ParentCornerScreen() {
       )}
 
       {/* FAB Button */}
-      <TouchableOpacity
-        style={[styles.fab, { backgroundColor: colors.primary }]}
-        activeOpacity={0.8}
-        onPress={() => router.push('/mcn/parents/add' as any)}
-      >
-        <Ionicons name="add" size={28} color={colors.primaryFg} />
-      </TouchableOpacity>
+      {!isMissingSchema && (
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: colors.primary }]}
+          activeOpacity={0.8}
+          onPress={() => router.push('/mcn/parents/add' as any)}
+        >
+          <Ionicons name="add" size={28} color={colors.primaryFg} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

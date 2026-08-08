@@ -31,7 +31,11 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
+
+# admin console build output (contains substituted Supabase config)
+public/admin/
 
 # typescript
 *.tsbuildinfo

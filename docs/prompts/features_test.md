@@ -1,5 +1,5 @@
 ```
-FEATURE TEST:  <feature_name >
+FEATURE TEST:  "Providers" and "Visits" feaures under provicers screen.
 ```
 
 ---
@@ -125,7 +125,8 @@ Not every row applies to every feature. Consider every row, and report the ones 
 | **Dates & timezones** | The DB runs on **UTC**; residents are on **IST (UTC+5:30)**. Any `CURRENT_DATE`/`now()` comparison against a client-supplied local date is suspect between 00:00 and 05:30 IST. Look for `toISOString().split('T')[0]` — it converts local midnight to the previous UTC day. Check that server-computed and client-computed day counts agree |
 | **Web vs native** | `Alert.alert` is a **no-op on web** — confirmations must branch on `Platform.OS` and use `window.confirm`. `@react-native-community/datetimepicker` renders **`null` on web** — every date/time field needs a web branch. Check image pickers, share sheets, linking (`tel:`, `wa.me`), clipboard, and back-button handling on both |
 | **Refresh & staleness** | A screen fetching in a plain `useEffect` never refetches when you navigate back to it, and tab screens stay mounted for the whole session. After create / edit / delete, does every surface showing this data actually update — the list, the tab badge, the home card? |
-| **Loading, empty, and error states** | Can the spinner get stuck (an early `return` before `setLoading(false)`)? Does a failed fetch render as "you have nothing" instead of an error? Is a genuine failure distinguishable from an empty result? |
+| **Loading, empty, and error states** | Can the spinner get stuck (an early `return` before `setLoading(false)`)? Does a failed fetch render as "you have nothing" instead of an error? Is a genuine failure distinguishable from an empty result? **Count the states the screen can actually render** — a screen with only *loading* / *empty* has no error state, so every failure lands on the empty copy, often with a "be the first!" call to action while the toast fades. Also check that a sticky flag (`isMissingSchema`, `notFound`) is cleared on **every** path, not just on success |
+| **Text identity & grouping** | Any free-text field whose value is later used as a **key** — deduped into filter chips, compared with `===`, grouped into sections, matched against a hard-coded list. Curly vs. straight apostrophes (`’` U+2019 vs `'` U+0027) are the classic trap: dump the code points of every hard-coded suggestion/option literal (`node -e "…charCodeAt(0)>127…"`) rather than trusting your eyes, and check case and trailing-space handling. Two chips that look identical but list different people is the symptom. Also check that a picker's option list on the **write** screen matches the filter list on the **read** screen element-for-element |
 | **Optimistic updates** | If the UI updates before the server confirms, is the optimistic value *correct*, and is it rolled back on failure? |
 | **Concurrency & double submit** | Double-tap the primary button. Two devices acting on the same row. Is the button disabled in flight? Is the invariant enforced in the DB, or only in the render? |
 | **Roles & permissions** | Walk the feature as `resident`, `president`/`vice_president`, and platform `admin`. Is every UI-hidden action *also* blocked by RLS or an RPC guard? Can a user act on another user's or another community's row by ID? Does a shared table leak columns it shouldn't? |
@@ -266,6 +267,29 @@ Follow this outline. Match the tone and density of the existing reports in `docs
 - If a fix would balloon into a separate project, say that plainly and keep it out of the
   plan.
 - Do not propose refactors, renames, or redesigns that no finding requires.
+
+- **Never propose deleting cross-community / federation functionality.** The federation
+  layer is **backend-live and UI-deferred on purpose** — partnership tables, `list_visible_*`
+  / `can_user_see_*` / `set_*_visibility` / `*_community_partnership` RPCs,
+  `get_user_partner_community_ids()`, and the additive partner-community RLS policies are
+  **kept for future work**, not dead code. It is normal for an audit to find them
+  unreferenced by any screen; that is the deferred UI, not an orphan. Do not recommend
+  dropping, inlining, or "cleaning up" any of them, and do not count them as unused code in
+  a finding. If your feature genuinely touches a federated object, say so and note that an
+  entry in `docs/cross-community-changelog.md` is **mandatory in the same change set**
+  (`docs/CLAUDE.md` §5). Otherwise state plainly in the report that the change set adds no
+  federation object and removes none, and add a regression-sweep row proving it — e.g.
+  `git diff` shows zero hits for `partner`, `partnership`, `list_visible_`, `can_user_see_`,
+  `get_user_partner_community_ids`. Canonical reference: `docs/cross-community.md`.
+
+- **A shared defect is not this feature's defect.** Before writing up a fault, check whether
+  the identical code exists elsewhere (`grep` the pattern across `app/` and `components/`).
+  If five other screens carry it verbatim — the `Share.share` web fallback, `fontWeight:
+  '600'`, FAB `elevation`, hand-written row interfaces instead of `Tables<'x'>` — fixing it
+  in one screen makes the app *less* consistent and leaves the others broken. Record it in
+  **Part 2** as explicitly checked and deliberately out of scope, with the grep result and a
+  note that it deserves its own change set, so the next auditor does not re-derive it. Only
+  report it as a finding if this feature is where it actually bites.
 
 ---
 

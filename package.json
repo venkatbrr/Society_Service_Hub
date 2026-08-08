@@ -10,8 +10,14 @@
     "build": "expo export --platform web && node build-admin.js",
     "preview": "npx serve dist",
     "db:login": "npx supabase login",
-    "db:link": "npx supabase link --project-ref mbzvcaoulawdugfearmj",
-    "db:push": "npx supabase db push"
+    "db:link:prod": "npx supabase link --project-ref mbzvcaoulawdugfearmj",
+    "db:link:preprod": "npx supabase link --project-ref PREPROD_REF_TODO",
+    "db:push:preprod": "npx supabase db push --project-ref PREPROD_REF_TODO",
+    "db:push:prod": "npx supabase db push --project-ref mbzvcaoulawdugfearmj",
+    "types:preprod": "npx supabase gen types typescript --project-id PREPROD_REF_TODO > lib/database.types.ts",
+    "types:prod": "npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj > lib/database.types.ts",
+    "fn:deploy:preprod": "npx supabase functions deploy --project-ref PREPROD_REF_TODO",
+    "fn:deploy:prod": "npx supabase functions deploy --project-ref mbzvcaoulawdugfearmj"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

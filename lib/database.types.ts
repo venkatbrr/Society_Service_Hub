@@ -2709,7 +2709,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      auto_complete_past_visits: { Args: never; Returns: undefined }
       can_user_see_announcement: {
         Args: { p_announcement_id: string; p_user_id?: string }
         Returns: boolean
@@ -3633,7 +3632,6 @@ export const Constants = {
     },
   },
 } as const
-
 
 export type ProviderWithInteraction = Tables<'service_providers'> & {
   is_favorite?: boolean

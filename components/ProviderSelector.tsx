@@ -36,10 +36,18 @@ export const ProviderSelector = ({
 }: ProviderSelectorProps) => {
   const [providers, setProviders] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const effectiveMode: 'existing' | 'new' = allowNewProvider ? mode : 'existing';
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   useEffect(() => {
     if (!allowNewProvider && mode !== 'existing') {
@@ -58,12 +66,15 @@ export const ProviderSelector = ({
     try {
       const { data, error } = await supabase
         .from('service_providers')
-        .select('id, name, phone')
+        .select('id, name, phone, fraud_status')
         .eq('community_id', communityId)
         .order('name', { ascending: true });
 
       if (error) throw error;
-      setProviders(data || []);
+      const cleanData = (data || []).filter((p: any) =>
+        !p.fraud_status || p.fraud_status === 'pass' || p.fraud_status === 'queued_low'
+      );
+      setProviders(cleanData);
     } catch (e) {
       console.error(e);
     } finally {
@@ -72,7 +83,7 @@ export const ProviderSelector = ({
   };
 
   const filteredProviders = providers.filter(p => 
-    p.name.toLowerCase().includes(search.toLowerCase())
+    p.name.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
   const selectedProviderName = providers.find(p => p.id === selectedProviderId)?.name || 'Select a provider...';

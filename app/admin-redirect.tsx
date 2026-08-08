@@ -7,6 +7,7 @@ import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
+import { siteUrl } from '../lib/siteUrl';
 
 export default function AdminRedirectScreen() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function AdminRedirectScreen() {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.location.href = '/admin/index.html';
     } else {
-      Linking.openURL('https://commloom.vercel.app/admin/index.html').catch(() => {
+      Linking.openURL(siteUrl('/admin/index.html')).catch(() => {
         Toast.show({ type: 'error', text1: 'Could not open Admin Dashboard' });
       });
     }

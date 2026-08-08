@@ -15,7 +15,9 @@ import { APP_EMOJIS } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { ProviderWithInteraction } from '../../lib/database.types';
 import { actionToFraudStatus, checkReviewFraud, getFraudActionMessage } from '../../lib/fraudCheck';
+import { siteUrl } from '../../lib/siteUrl';
 import { supabase } from '../../lib/supabase';
+import { goBackSmart } from '../../lib/navigation';
 
 const getDaysOnPlatform = (createdAtStr: string | null) => {
   if (!createdAtStr) return '0 days';
@@ -113,7 +115,7 @@ export default function ProviderDetailScreen() {
         .from('service_providers')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (user) {
         const [providerResult, favsResult, ratsResult, hireResult] = await Promise.all([
@@ -139,21 +141,20 @@ export default function ProviderDetailScreen() {
           throw hireCountError;
         }
 
-        setProvider({
+        setProvider(providerResult.data ? {
           ...providerResult.data,
           is_favorite: !!(favsResult.data && favsResult.data.length > 0),
           user_rating: ratsResult.data ? ratsResult.data.rating : null,
           hire_count: hireResult.count || 0
-        });
+        } : null);
       } else {
         const { data: providerData, error: providerError } = await providerQuery;
         if (providerError) throw providerError;
-        setProvider({ ...providerData, hire_count: 0 });
+        setProvider(providerData ? { ...providerData, hire_count: 0 } : null);
       }
     } catch (error: any) {
       console.error(error);
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Provider not found' });
-      router.back();
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load provider' });
     } finally {
       setLoading(false);
     }
@@ -222,22 +223,20 @@ export default function ProviderDetailScreen() {
     if (!provider) return;
     await logHire();
     const cleanPhone = provider.phone.replace(/[^0-9]/g, '');
-    const url = `whatsapp://send?phone=${cleanPhone}`;
+    const intlPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const url = `whatsapp://send?phone=${intlPhone}`;
     const supported = await Linking.canOpenURL(url);
     if (supported) {
       await Linking.openURL(url);
     } else {
-      await Linking.openURL(`https://wa.me/${cleanPhone}`);
+      await Linking.openURL(`https://wa.me/${intlPhone}`);
     }
   };
 
   const handleShare = async () => {
     if (!provider) return;
     const ratingText = provider.avg_rating ? `★ ${Number(provider.avg_rating).toFixed(1)} (${provider.rating_count} reviews)` : '';
-    const shareUrl =
-      Platform.OS === 'web' && typeof window !== 'undefined'
-        ? `${window.location.origin}/provider/${provider.id}`
-        : `https://society-service-hub.app/provider/${provider.id}`;
+    const shareUrl = siteUrl(`/provider/${provider.id}`);
 
     const messageLines = [
       `👤 *Service Provider Contact*`,
@@ -246,7 +245,7 @@ export default function ProviderDetailScreen() {
       `Phone: ${provider.phone}`,
       ratingText ? `Rating: ${ratingText}` : '',
       provider.flat_block ? `Block/Flat: ${provider.flat_block}` : '',
-      provider.hire_count ? `Community Hires: ${provider.hire_count} homes` : '',
+      provider.hire_count ? `Contacted by neighbours: ${provider.hire_count} time${provider.hire_count === 1 ? '' : 's'}` : '',
       provider.description ? `About: "${provider.description}"` : '',
       ``,
       `🔗 View Profile & Contact Details:`,
@@ -273,15 +272,13 @@ export default function ProviderDetailScreen() {
     if (!provider || !user) return;
     const isCurrentlyFavorite = provider.is_favorite;
     setProvider({ ...provider, is_favorite: !isCurrentlyFavorite });
-    try {
-      if (isCurrentlyFavorite) {
-        await supabase.from('favorites').delete().match({ user_id: user.id, provider_id: provider.id });
-      } else {
-        await supabase.from('favorites').insert({ user_id: user.id, provider_id: provider.id });
-      }
-    } catch (error) {
-       setProvider({ ...provider, is_favorite: isCurrentlyFavorite });
-       Toast.show({ type: 'error', text1: 'Error updating favorite' });
+    const { error } = isCurrentlyFavorite
+      ? await supabase.from('favorites').delete().match({ user_id: user.id, provider_id: provider.id })
+      : await supabase.from('favorites').insert({ user_id: user.id, provider_id: provider.id });
+
+    if (error) {
+      setProvider(prev => prev ? { ...prev, is_favorite: isCurrentlyFavorite } : null);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update favorites' });
     }
   };
 
@@ -560,26 +557,54 @@ export default function ProviderDetailScreen() {
     return groups;
   };
 
-  const handleDelete = () => {
-    if (!provider || !canDelete) return;
-    Alert.alert('Delete Provider', 'Are you sure you want to delete this provider? This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-         try {
-           await supabase.from('service_providers').delete().eq('id', provider.id);
-           Toast.show({ type: 'success', text1: 'Deleted successfully' });
-           router.back();
-         } catch(e) {
-           Toast.show({ type: 'error', text1: 'Delete failed' });
-         }
-      } }
-    ]);
+  const performDelete = async () => {
+    if (!provider) return;
+    const { data, error } = await supabase
+      .from('service_providers')
+      .delete()
+      .eq('id', provider.id)
+      .select('id');
+
+    if (error || !data || data.length !== 1) {
+      Toast.show({ type: 'error', text1: 'Delete failed', text2: error?.message || 'Could not delete provider' });
+      return;
+    }
+    Toast.show({ type: 'success', text1: 'Provider deleted' });
+    goBackSmart(router, '/provider/' + provider.id);
   };
 
-  if (loading || !provider) {
+  const handleDelete = () => {
+    if (!provider || !canDelete) return;
+    const promptText = 'Are you sure you want to delete this provider? This cannot be undone.';
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm(promptText)) {
+        void performDelete();
+      }
+    } else {
+      Alert.alert('Delete provider', promptText, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: performDelete },
+      ]);
+    }
+  };
+
+  if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: colors.surface }]}>
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (!provider) {
+    return (
+      <View style={[styles.centerContainer, { backgroundColor: colors.surface }]}>
+        <Text style={{ color: colors.textMuted, marginBottom: 12, fontSize: 16 }}>
+          This provider is no longer available.
+        </Text>
+        <TouchableOpacity onPress={() => goBackSmart(router, '/provider/' + id)}>
+          <Text style={{ color: colors.primary, fontSize: 16, fontWeight: '500' }}>Back to providers</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -588,7 +613,7 @@ export default function ProviderDetailScreen() {
     <ScrollView style={[styles.container, { backgroundColor: colors.surface }]}>
       <View style={styles.headerCard}> 
         <View style={styles.headerTop}>
-           <HeaderBackButton onPress={() => router.back()} color={Verandah.textPrimary} style={styles.backButtonInline} />
+           <HeaderBackButton onPress={() => goBackSmart(router, '/provider/' + id)} color={Verandah.textPrimary} style={styles.backButtonInline} />
            <TouchableOpacity onPress={handleToggleFavorite} style={styles.iconButton}>
              <Ionicons 
                name={provider.is_favorite ? 'bookmark' : 'bookmark-outline'} 
@@ -613,7 +638,7 @@ export default function ProviderDetailScreen() {
               )}
               <View style={[styles.pill, { backgroundColor: Verandah.cautionSoft }]}>
                 <Text style={[styles.pillText, { color: Verandah.caution }]}>
-                  {provider.hire_count || 0} hire{provider.hire_count === 1 ? '' : 's'}
+                  contacted {provider.hire_count || 0} time{provider.hire_count === 1 ? '' : 's'}
                 </Text>
               </View>
             </View>
@@ -629,7 +654,7 @@ export default function ProviderDetailScreen() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Homes used</Text>
+            <Text style={styles.statLabel}>Contacts</Text>
             <Text style={styles.statValue}>{provider.hire_count || 0}</Text>
           </View>
           <View style={styles.statDivider} />
@@ -828,34 +853,31 @@ export default function ProviderDetailScreen() {
          </TouchableOpacity>
       </View>
 
-      {canDelete ? (
-         <View style={styles.adminControls}>
-            <TouchableOpacity style={[styles.dangerBtn, { borderColor: colors.accent }]} onPress={handleDelete}>
-              <Ionicons name="close-circle-outline" size={16} color={colors.accent} style={{ marginRight: 6 }} />
-              <Text style={{ color: colors.accent, marginLeft: 8, fontWeight: '500' }}>Delete provider</Text>
-            </TouchableOpacity>
-         </View>
-      ) : (
-         <View style={styles.adminControls}>
-            <TouchableOpacity
-              style={[styles.reportBtn, { borderColor: hasReported ? colors.border : colors.accent }]}
-              onPress={handleReport}
-              disabled={hasReported || isReporting}
-              activeOpacity={0.7}
-            >
-              {isReporting ? (
-                <ActivityIndicator color={colors.accent} size="small" />
-              ) : (
-                <>
-                  <Ionicons name={hasReported ? 'checkmark-circle' : 'flag-outline'} size={18} color={hasReported ? colors.textMuted : colors.accent} />
-                  <Text style={{ color: hasReported ? colors.textMuted : colors.accent, marginLeft: 8, fontWeight: '500' }}>
-                    {hasReported ? 'Reported' : 'Report provider'}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-         </View>
-      )}
+      <View style={styles.adminControls}>
+        <TouchableOpacity
+          style={[styles.reportBtn, { borderColor: hasReported ? colors.border : colors.accent, marginBottom: canDelete ? 10 : 0 }]}
+          onPress={handleReport}
+          disabled={hasReported || isReporting}
+          activeOpacity={0.7}
+        >
+          {isReporting ? (
+            <ActivityIndicator color={colors.accent} size="small" />
+          ) : (
+            <>
+              <Ionicons name={hasReported ? 'checkmark-circle' : 'flag-outline'} size={18} color={hasReported ? colors.textMuted : colors.accent} />
+              <Text style={{ color: hasReported ? colors.textMuted : colors.accent, marginLeft: 8, fontWeight: '500' }}>
+                {hasReported ? 'Reported' : 'Report provider'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+        {canDelete && (
+          <TouchableOpacity style={[styles.dangerBtn, { borderColor: colors.accent }]} onPress={handleDelete}>
+            <Ionicons name="close-circle-outline" size={16} color={colors.accent} style={{ marginRight: 6 }} />
+            <Text style={{ color: colors.accent, marginLeft: 8, fontWeight: '500' }}>Delete provider</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       <Modal
         visible={showReportModal}
@@ -1261,7 +1283,7 @@ const styles = StyleSheet.create({
   },
   loadMoreReviewsText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
@@ -1276,15 +1298,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 1,
     padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '500',
     marginBottom: 16,
   },
   modalLabel: {

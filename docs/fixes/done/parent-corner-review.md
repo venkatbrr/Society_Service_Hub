@@ -24,7 +24,7 @@ No edge function, no admin-console page, no `notifications` rows, no `components
 
 **Baseline:** `npx tsc --noEmit` is **clean** (exit 0) before any change. It must be clean after.
 
-**Result: 16 issues — 2 blocking, 6 high, 8 minor.**
+**Result: 19 issues — 2 blocking, 6 high, 11 minor.**
 
 ---
 
@@ -38,7 +38,7 @@ No edge function, no admin-console page, no `notifications` rows, no `components
    - Use `.maybeSingle()`, never `.single()`.
    - `mcn_parent_corner` **is** community-scoped: every query must filter by `communityId` from `useAuth()`. It is *not* on the user-scoped exception list.
 
-2. **`npx tsc --noEmit` is the only automated gate, and it catches none of these 16 bugs.**
+2. **`npx tsc --noEmit` is the only automated gate, and it catches none of these 19 bugs.**
    The Supabase client in [lib/supabase.ts:25](../../lib/supabase.ts#L25) is created as `createClient(url, key)` with **no `<Database>` generic**, so every `.from(...).select(...)` returns `any`. That is precisely why issue #3 — selecting a column that does not exist — has survived. You must walk the checklist in [§ Verification](#verification). Do not report anything fixed on the strength of `tsc` alone.
 
 3. **After touching `supabase/migrations/`, finish the loop yourself:**
@@ -56,6 +56,8 @@ No edge function, no admin-console page, no `notifications` rows, no `components
    - In [app/(tabs)/network.tsx](../../app/(tabs)/network.tsx) change **only** the error handling inside `fetchSectionStats` named in issue #16. That file is the shared MCN hub owned by six features; touch nothing else in it.
    - Do **not** change the `mcn_carpools` / `mcn_listings` / `mcn_posts` / `mcn_preorder_drops` policies. Issue #2 describes a hole those tables share, but widening the fix is a separate, riskier change set — see [Part 2](#part-2--resolved-design-decisions).
    - Do **not** introduce `lib/parentCorner*.ts` or any shared component. Nothing here is reused; two screens is the right size.
+   - Do **not** touch the share handler at [index.tsx:229-251](../../app/mcn/parents/index.tsx#L229-L251). It has a real defect on desktop web, but the identical code exists in five other files — see [D22](#part-2--resolved-design-decisions).
+   - **Do not delete any cross-community / federation object.** Federation is backend-live and UI-deferred *by design*, retained for future work. Nothing in this change set adds or removes a federated object, and nothing here licenses removing one as "unused". See [D23](#part-2--resolved-design-decisions).
 
 7. **Docs are part of the change set**, not a follow-up. See [§ Documentation updates](#documentation-updates).
 
@@ -73,14 +75,17 @@ No edge function, no admin-console page, no `notifications` rows, no `components
 | 6 | Board filter "University" can never match a saved entry | P1 | Client | [C2](#c2--appmcnparentsaddtsx--load-prefill-and-save-3-4-5-7), [C3](#c3--appmcnparentsindextsx--boards-contact-actions-sorting-6-7-8-14) |
 | 7 | Phone is never validated; WhatsApp link double-prefixes `91` | P1 | Client | [C2](#c2--appmcnparentsaddtsx--load-prefill-and-save-3-4-5-7), [C3](#c3--appmcnparentsindextsx--boards-contact-actions-sorting-6-7-8-14) |
 | 8 | "WhatsApp Parent" throws the PWA out of the app | P1 | Client (web) | [C3](#c3--appmcnparentsindextsx--boards-contact-actions-sorting-6-7-8-14) |
-| 9 | Every mount fires the list query twice | P2 | Client | [C4](#c4--appmcnparentsindextsx--fetching-caps-copy-9-10-13) |
-| 10 | No length limit anywhere — client or database | P2 | Client + DB | [M2](#m2--length-and-value-constraints-10), [C4](#c4--appmcnparentsindextsx--fetching-caps-copy-9-10-13), [C5](#c5--appmcnparentsaddtsx--input-caps-and-flat-normalisation-10-11) |
+| 9 | Every mount fires the list query twice | P2 | Client | [C4](#c4--appmcnparentsindextsx--fetching-caps-copy-9-10-13-17-19) |
+| 10 | No length limit anywhere — client or database | P2 | Client + DB | [M2](#m2--length-and-value-constraints-10), [C4](#c4--appmcnparentsindextsx--fetching-caps-copy-9-10-13-17-19), [C5](#c5--appmcnparentsaddtsx--input-caps-and-flat-normalisation-10-11) |
 | 11 | Flat number is not normalised | P2 | Client | [C5](#c5--appmcnparentsaddtsx--input-caps-and-flat-normalisation-10-11) |
 | 12 | Leads can delete but cannot edit, contradicting the docs | P2 | Client + Docs | [C6](#c6--appmcnparentsindextsx--lead-edit-affordance-12) |
-| 13 | Residents are told to run a migration file | P2 | Client | [C4](#c4--appmcnparentsindextsx--fetching-caps-copy-9-10-13) |
+| 13 | Residents are told to run a migration file | P2 | Client | [C4](#c4--appmcnparentsindextsx--fetching-caps-copy-9-10-13-17-19) |
 | 14 | "Class 10" sorts before "Class 2" | P2 | Client | [C3](#c3--appmcnparentsindextsx--boards-contact-actions-sorting-6-7-8-14) |
 | 15 | `architecture.md` documents a trigger that does not exist | P2 | Docs | [§ Documentation updates](#documentation-updates) |
 | 16 | A failed count renders "0 children listed" | P2 | Client | [C7](#c7--apptabsnetworktsx--count-error-handling-16) |
+| 17 | A failed load says "No student details added yet" | P2 | Client | [C4](#c4--appmcnparentsindextsx--fetching-caps-copy-9-10-13-17-19) |
+| 18 | A curly apostrophe splits one school into two filter chips | P2 | Client | [C8](#c8--school-name-consistency-18) |
+| 19 | The directory downloads every entry, unbounded | P2 | Client | [C4](#c4--appmcnparentsindextsx--fetching-caps-copy-9-10-13-17-19) |
 
 ---
 
@@ -545,6 +550,80 @@ None of the six `error` fields is checked. A PostgREST failure resolves the prom
 
 ---
 
+## 17. A failed load tells you the directory is empty and invites you to be the first
+
+[app/mcn/parents/index.tsx:124-145](../../app/mcn/parents/index.tsx#L124-L145):
+
+```js
+try {
+  const { data, error } = await supabase.from('mcn_parent_corner').select('*')…;
+  if (error) throw error;
+  setEntries((data || []) as ParentCornerItem[]);
+  setIsMissingSchema(false);
+} catch (error: any) {
+  console.error('Error fetching parent corner entries:', error);
+  if (isSupabaseSchemaError(error)) {
+    setIsMissingSchema(true);
+    setEntries([]);
+  } else {
+    Toast.show({ type: 'error', text1: 'Failed to load parent corner' });
+  }
+}
+```
+
+There is no error *state*, only an error *toast*. On a first load that fails for any non-schema reason — flaky mobile data, an expired JWT, a 500 — `entries` is still its initial `[]`, `loading` clears in the `finally`, and the list renders [index.tsx:690-696](../../app/mcn/parents/index.tsx#L690-L696):
+
+> **No student details added yet**
+> Be the first parent to list your child's school/college details and connect with neighbors!
+
+**Resident impact.** A parent on a weak connection is told, confidently, that not one family in the society has listed a child — and is invited to be the first. The toast that contradicts it has already faded. They leave believing the feature is unused, when forty families may be listed. This is the failure mode the empty state exists to prevent, inverted.
+
+A second, narrower bug sits in the same block: **`isMissingSchema` is only ever cleared on success.** Once it flips true, a later *non-schema* failure takes the `else` branch and leaves it true, so the screen keeps showing the "Database Table Missing" state (see #13) for a problem that is merely a dropped connection.
+
+**How the rest of the codebase distinguishes the two:** `lib/supabaseErrors.ts` exists precisely to separate "schema not deployed" from other failures, and the funds surfaces pair it with a dedicated message via `getMissingFundSchemaMessage()`. The missing piece here is a third state — *load failed* — distinct from both *empty* and *not deployed*.
+
+---
+
+## 18. A curly apostrophe splits one school into two identical-looking filter chips
+
+[app/mcn/parents/add.tsx:42-49](../../app/mcn/parents/add.tsx#L42-L49) offers tap-to-fill school suggestions. One of them contains a typographic apostrophe — verified by dumping the code points:
+
+```
+45: "  'St. Joseph’s School',"   NON-ASCII: ’=U+2019
+```
+
+`U+2019` (right single quotation mark), not `U+0027` (apostrophe). Tapping the chip stores the curly form. A parent who types the name by hand stores whichever their keyboard produces — Android and iOS emit a straight `'` unless smart punctuation is on. The two strings are not equal, and every consumer of `school_name` compares them literally:
+
+- [index.tsx:157-163](../../app/mcn/parents/index.tsx#L157-L163) builds the school filter chips from a `Set` of raw values → **two chips that look identical on screen**, each showing a different half of the families.
+- [index.tsx:196](../../app/mcn/parents/index.tsx#L196) filters on exact equality → picking either chip hides the other half.
+- [index.tsx:175](../../app/mcn/parents/index.tsx#L175) searches with `.includes()` → typing `Joseph's` with a straight quote finds none of the chip-created entries.
+
+**Resident impact.** Parent Corner's single most valuable question is *"who else goes to my child's school?"* — and at St. Joseph's the answer is split down the middle, with no visible reason why. The duplicate chips are indistinguishable, so nobody can even tell the list is wrong.
+
+The curly character is the acute case, but it is a symptom: `school_name` is free text with only `.trim()` applied ([add.tsx:184](../../app/mcn/parents/add.tsx#L184)), so `DPS` and `Delhi Public School` also become separate chips. The apostrophe is the one instance the app itself creates, which is why it is worth fixing at the source rather than treating as user variance.
+
+---
+
+## 19. The directory downloads every entry in the society, unbounded
+
+[index.tsx:125-129](../../app/mcn/parents/index.tsx#L125-L129):
+
+```js
+const { data, error } = await supabase
+  .from('mcn_parent_corner')
+  .select('*')
+  .eq('community_id', communityId)
+  .order('created_at', { ascending: false });
+```
+
+No `.limit()`, no `.range()`. Search, all four filters, and all four sorts run client-side over the whole array ([index.tsx:166-223](../../app/mcn/parents/index.tsx#L166-L223)). Every screen focus re-downloads the entire table for that community — every column, including every family's `contact_phone`.
+
+**Honest assessment: this is not biting today.** The live table holds **1 row**, and a large society realistically tops out in the low hundreds of children, which the client handles fine. It is listed because the query has no ceiling at all: a `.limit()` is the difference between a slow screen and a screen that silently renders a *partial* directory with no indication, and the school-chip row ([index.tsx:591](../../app/mcn/parents/index.tsx#L591)) grows one horizontal chip per distinct school with no cap.
+
+**Do not build pagination.** A bounded `.limit()` is the whole fix — see [C4](#c4--appmcnparentsindextsx--fetching-caps-copy-9-10-13-17-19). Client-side filtering over a few hundred rows is the right call for this screen and matches `app/mcn/carpools/index.tsx`.
+
+---
+
 # PART 2 — RESOLVED DESIGN DECISIONS
 
 | # | Question | Decision | Rationale |
@@ -566,6 +645,12 @@ None of the six `error` fields is checked. A PostgREST failure resolves the prom
 | D15 | Should the WhatsApp share text stop including the phone number? | **No change.** | It matches `app/mcn/drops/[id].tsx`, `components/McnListingCard.tsx` and `components/ProviderCard.tsx`, which all share contact details the same way. Redesigning the privacy model of the share sheet is a product decision, not a bug fix. |
 | D16 | Extract a shared `<PhoneField>` / `<ConfirmDelete>` helper? | **No.** | Two screens. `docs/CLAUDE.md` §4 says reuse the *existing* shared components; it does not ask for new abstractions, and no finding needs one. |
 | D17 | **Migration filename.** | **`supabase/migrations/20260828000000_parent_corner_fixes.sql`** — one file for both M1 and M2. | `ls supabase/migrations/ \| sort \| tail` ends at `20260827000000_service_reminders_fixes.sql`, so `20260828000000` sorts strictly after every existing file. **Before you write it**, run `npx supabase migration list --linked` and confirm `20260828000000` is not taken by a concurrent session (`docs/CLAUDE.md` §5). At review time that command failed with `SQLSTATE 28P01` because `SUPABASE_DB_PASSWORD` was unset — set it first. |
+| D18 | How should a failed load be distinguished from an empty directory (#17)? | Add a third state: a `loadError` boolean set in the non-schema `catch` and cleared on success. Render an `EmptyState` with `icon="cloud-offline-outline"`, title *"Couldn't load Parent Corner"*, message *"Check your connection and pull down to refresh."* Keep the existing toast. | Three genuinely different situations — *not deployed*, *load failed*, *nothing listed yet* — need three messages. A boolean is the smallest thing that separates them; an error object would tempt someone to render raw Postgres text at a resident. |
+| D19 | Fix the curly apostrophe (#18) by normalising `school_name` on save, or by correcting the literal? | **Correct the literal**, and additionally group the filter chips case-insensitively. Do **not** rewrite what residents type. | Normalising user-entered school names means guessing (`DPS` → `Delhi Public School`?), which corrupts data the resident can see. The app should not *create* the mismatch — that is the literal — and the chip row should be forgiving about case. Anything beyond that is a fuzzy-matching project. |
+| D20 | Backfill existing rows carrying the curly form (#18)? | **No backfill.** The live table has 1 row (school name 19 chars, no apostrophe). Verify with the query in [C8](#c8--school-name-consistency-18) and only act if it returns rows. | Rewriting resident-visible text without being asked is exactly the kind of step this document flags as dry-run-first. With zero affected rows there is nothing to weigh. |
+| D21 | Add pagination to the directory (#19)? | **No — a `.limit(500)` only.** | Pagination is a redesign no finding requires, and it would break the client-side filter/sort model the screen is built on. A ceiling prevents the pathological case without changing how the screen works. |
+| D22 | The Share button silently fails on desktop browsers without `navigator.share` (Firefox, older Safari). Fix it here? | **Out of scope — do not change the share handler.** | [index.tsx:242-250](../../app/mcn/parents/index.tsx#L242-L250) falls back to `Share.share`, which `react-native-web` rejects with *"Share is not supported in this browser"*; the `catch` only does `console.error`, so nothing visible happens. **This is verbatim the same code in six places** — `app/mcn/drops/[id].tsx`, `app/provider/[id].tsx`, `components/McnListingCard.tsx`, `components/PreorderDropCard.tsx`, `components/ProviderCard.tsx`. Fixing one screen makes the app inconsistent and leaves the other five broken. Raise it as its own change set covering all six. Noted here so the next auditor does not re-derive it. |
+| D23 | **Cross-community / federation objects.** | **Preserve everything. Delete nothing.** This change set adds no federation object and removes none. `mcn_parent_corner` has no `list_visible_*` / `can_user_see_*` RPC, no partner-community policy, and does not call `get_user_partner_community_ids()` — verified by `grep`. [M1](#m1--pin-the-community-on-update-and-delete-2) rewrites two policies that contain no federation clause today, so nothing federated is touched. | Federation is **backend-live, UI-deferred** and deliberately retained for future work (`docs/cross-community.md`). It must not be treated as dead code and stripped during cleanup. If a future revision of M1 ever adds a partner-community clause, an entry in `docs/cross-community-changelog.md` becomes **mandatory in the same change set** (`docs/CLAUDE.md` §5). |
 
 ---
 
@@ -577,7 +662,7 @@ None of the six `error` fields is checked. A PostgREST failure resolves the prom
 |-----|----------|-----------|
 | **A — P0** | [M1](#m1--pin-the-community-on-update-and-delete-2) (policies), [C1](#c1--appmcnparentsindextsx--delete-confirmation-1) (web delete confirm) | `npm run db:push` → `gen types` → re-append enriched-types block → `npx tsc --noEmit` clean → run the **Database** and **Web (PWA)** rows for #1, #2 |
 | **B — P1** | [C2](#c2--appmcnparentsaddtsx--load-prefill-and-save-3-4-5-7) (add screen: prefill, save guard, identity columns, phone, boards), [C3](#c3--appmcnparentsindextsx--boards-contact-actions-sorting-6-7-8-14) (list screen: boards, WhatsApp/call, sorting) | `npx tsc --noEmit` clean → run the rows for #3–#8, #14 |
-| **C — P2** | [M2](#m2--length-and-value-constraints-10) (constraints), [C4](#c4--appmcnparentsindextsx--fetching-caps-copy-9-10-13), [C5](#c5--appmcnparentsaddtsx--input-caps-and-flat-normalisation-10-11), [C6](#c6--appmcnparentsindextsx--lead-edit-affordance-12), [C7](#c7--apptabsnetworktsx--count-error-handling-16), docs | `npm run db:push` → `gen types` → re-append block → `npx tsc --noEmit` clean → full checklist + regression sweep |
+| **C — P2** | [M2](#m2--length-and-value-constraints-10) (constraints), [C4](#c4--appmcnparentsindextsx--fetching-caps-copy-9-10-13-17-19), [C5](#c5--appmcnparentsaddtsx--input-caps-and-flat-normalisation-10-11), [C6](#c6--appmcnparentsindextsx--lead-edit-affordance-12), [C7](#c7--apptabsnetworktsx--count-error-handling-16), [C8](#c8--school-name-consistency-18), docs | `npm run db:push` → `gen types` → re-append block → `npx tsc --noEmit` clean → full checklist + regression sweep |
 
 **C6 must land after C2.** Granting leads the edit pencil while the payload still resends `user_id` (#5) converts a latent ownership transfer into an everyday one.
 
@@ -881,7 +966,7 @@ The `.select('id')` is the same zero-rows guard as D7 — after M1 a lead from a
 
 4. **#14 — sorting [205-220](../../app/mcn/parents/index.tsx#L205-L220):** replace all four `localeCompare(x)` calls with `localeCompare(x, undefined, { numeric: true, sensitivity: 'base' })`.
 
-### C4 — `app/mcn/parents/index.tsx` — fetching, caps, copy (#9, #10, #13)
+### C4 — `app/mcn/parents/index.tsx` — fetching, caps, copy (#9, #10, #13, #17, #19)
 
 1. **#9** — delete the `useEffect` at [225-227](../../app/mcn/parents/index.tsx#L225-L227) entirely. Keep the `useFocusEffect` at [150-154](../../app/mcn/parents/index.tsx#L150-L154) and do **not** change its dependency array — `[fetchEntries]` is what makes it re-run on a community change. **This is the dead-code half of the task; do not land the fix without it.**
 2. **#9 (hardening)** — in `fetchEntries` [118-121](../../app/mcn/parents/index.tsx#L118-L121), change `if (!communityId) return;` to clear both flags first:
@@ -890,6 +975,41 @@ The `.select('id')` is the same zero-rows guard as D7 — after M1 a lead from a
    ```
 3. **#10** — add `numberOfLines={4}` to the notes `Text` at [378](../../app/mcn/parents/index.tsx#L378) so a long note cannot swallow the list even for rows written before M2.
 4. **#13** — rewrite the schema-missing `EmptyState` at [684-689](../../app/mcn/parents/index.tsx#L684-L689) to resident-facing sentence case, e.g. `title="Parent Corner isn't available yet"`, `message="This feature needs the latest updates before it can load. Please try again later."` In the same render pass, hide the FAB ([702](../../app/mcn/parents/index.tsx#L702)) and the header `+` ([420](../../app/mcn/parents/index.tsx#L420)) when `isMissingSchema` is true, so nobody opens a form that cannot save.
+
+5. **#17 — a real error state (D18).** Add `const [loadError, setLoadError] = useState(false);` beside `isMissingSchema` ([96](../../app/mcn/parents/index.tsx#L96)) and rewrite the fetch's success/failure branches [131-141](../../app/mcn/parents/index.tsx#L131-L141):
+
+   ```js
+   if (error) throw error;
+   setEntries((data || []) as ParentCornerItem[]);
+   setIsMissingSchema(false);
+   setLoadError(false);
+   } catch (error: any) {
+     console.error('Error fetching parent corner entries:', error);
+     if (isSupabaseSchemaError(error)) {
+       setIsMissingSchema(true);
+       setLoadError(false);
+       setEntries([]);
+     } else {
+       setIsMissingSchema(false);   // ← clears the sticky state from #17
+       setLoadError(true);
+       Toast.show({ type: 'error', text1: 'Failed to load parent corner' });
+     }
+   }
+   ```
+   Note both new `setIsMissingSchema(false)` calls — **the one in the `else` branch is the sticky-state half of the bug and is easy to skip.** Then make `ListEmptyComponent` [683-697](../../app/mcn/parents/index.tsx#L683-L697) a three-way choice, ordered `isMissingSchema` → `loadError` → empty:
+
+   ```jsx
+   isMissingSchema ? ( /* #13 copy */ )
+   : loadError ? (
+     <EmptyState
+       icon="cloud-offline-outline"
+       title="Couldn't load Parent Corner"
+       message="Check your connection and pull down to refresh."
+     />
+   ) : ( /* "No student details added yet" */ )
+   ```
+
+6. **#19 — bound the query (D21).** Add `.limit(500)` to the chain at [125-129](../../app/mcn/parents/index.tsx#L125-L129), after `.order(...)`. Do not add pagination or `.range()`.
 
 ### C5 — `app/mcn/parents/add.tsx` — input caps and flat normalisation (#10, #11)
 
@@ -930,13 +1050,61 @@ if (firstError) throw firstError;
 
 The existing `catch` at [85-87](../../app/(tabs)/network.tsx#L85-L87) then logs it and every count stays `null`, which the card already renders as *no badge at all* (`{parentCount !== null && …}` at [211](../../app/(tabs)/network.tsx#L211)) rather than a confident zero. Change nothing else in this file.
 
+### C8 — School-name consistency (#18)
+
+**First, confirm no live row is affected** (expected: 0 rows — the single live entry has a 19-character school name with no apostrophe):
+
+```sql
+SELECT id, school_name
+FROM public.mcn_parent_corner
+WHERE school_name LIKE '%' || chr(8217) || '%';   -- U+2019, the curly apostrophe
+```
+
+If this returns rows, stop and report — do not rewrite resident-visible text (D20).
+
+1. **`app/mcn/parents/add.tsx:45`** — replace the curly `’` (U+2019) with a straight `'` (U+0027) in `'St. Joseph’s School'`. Inside a single-quoted TypeScript string this needs escaping: `'St. Joseph\'s School'`, or switch that one entry to double quotes. **Verify with code points, not with your eyes** — the two characters are visually near-identical in most editors:
+
+   ```bash
+   node -e "const l=require('fs').readFileSync('app/mcn/parents/add.tsx','utf8').split('\n')[44]; console.log([...l].filter(c=>c.charCodeAt(0)>127).map(c=>'U+'+c.charCodeAt(0).toString(16)))"
+   ```
+   Expected output after the fix: `[]`. Check the other five suggestions in the same array while you are there.
+
+2. **`app/mcn/parents/index.tsx:157-163`** — make the chip list case-insensitive so `Delhi Public School` and `delhi public school` collapse into one chip, keeping the first-seen spelling as the label:
+
+   ```js
+   const uniqueSchools = useMemo(() => {
+     const byKey = new Map<string, string>();
+     entries.forEach((e) => {
+       const label = e.school_name.trim();
+       if (!label) return;
+       const key = label.toLowerCase();
+       if (!byKey.has(key)) byKey.set(key, label);
+     });
+     return Array.from(byKey.values()).sort((a, b) =>
+       a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+     );
+   }, [entries]);
+   ```
+   The filter at [196](../../app/mcn/parents/index.tsx#L196) already compares `.toLowerCase()` on both sides, so it matches this grouping with no change. **Do not** normalise `school_name` on save (D19).
+
 ---
 
 # VERIFICATION
 
-**`npx tsc --noEmit` catches none of these 16 findings.** The Supabase client is untyped ([lib/supabase.ts:25](../../lib/supabase.ts#L25)), the bugs are policy expressions, platform branches, string mismatches and swallowed errors — all invisible to the compiler. `tsc` proves only that you did not break the build. Walk this list.
+**`npx tsc --noEmit` catches none of these 19 findings.** The Supabase client is untyped ([lib/supabase.ts:25](../../lib/supabase.ts#L25)), the bugs are policy expressions, platform branches, string mismatches and swallowed errors — all invisible to the compiler. `tsc` proves only that you did not break the build. Walk this list.
 
-Two rows in the catalogue do **not** apply and were checked: the feature has **no date or time field anywhere**, so there is no UTC/IST exposure to test; and it creates **no `notifications` rows** and schedules no local notification, so there is no cadence to cap.
+Two rows in the catalogue do **not** apply and were checked: the feature has **no date or time field anywhere**, so there is no UTC/IST exposure to test; and it creates **no `notifications` rows** and schedules no local notification, so there is no cadence to cap. There are also **no RPCs** in this feature, so there is no `PGRST203` overload risk to check.
+
+**Test accounts** (the app is pre-production; this Supabase project holds pilot data only):
+
+| Role | Email | Password |
+|---|---|---|
+| `president` | `ira@gmail.com` | `123456` |
+| `resident` | `ira3@gmail.com` | `123456` |
+
+Walk the role-sensitive rows — **#1, #2b, #4, #5, #12** — as **both** accounts. There is no platform-`admin` test account; for admin behaviour, reason from the policies in [M1](#m1--pin-the-community-on-update-and-delete-2). Issue #2b needs a **second community** with its own president; if none exists, exercise it with direct read-only checks plus the two `UPDATE`/`DELETE` probes in the Database table run against a staging copy — do not run them against production.
+
+> **Nothing in this checklist was observed live.** This audit was static reading plus read-only SQL against the live project (`npx supabase db query --linked`) and reading `node_modules/` for the web behaviour of `Alert`, `Share`, and `expo-linking`. Every row below is unverified-by-observation and must actually be walked.
 
 ### Database
 
@@ -979,6 +1147,14 @@ Two rows in the catalogue do **not** apply and were checked: the feature has **n
 | 13 | Force the schema-missing state (temporarily point the client at a project without the table) | Resident-facing sentence-case copy; **no** migration filename; the FAB and header `+` are hidden |
 | 14 | Sort by **Class / Grade** with `Class 2`, `Class 9`, `Class 10` present | Order is 2, 9, 10 — not 10, 2, 9 |
 | 16 | Break the count (revoke, or go offline mid-load) and open the MCN hub | The Parent Corner card shows **no badge**. Before the fix: "0 children listed" |
+| 17 | Go offline (DevTools → Network → Offline), then open `/mcn/parents` cold | "Couldn't load Parent Corner — check your connection and pull down to refresh." **Not** "No student details added yet" |
+| 17 | Come back online and pull to refresh | The real directory renders; the error state clears |
+| 17 | Force the schema-missing state, then go offline and refresh | The screen switches to the connection error — it does **not** stay stuck on "Parent Corner isn't available yet" (the sticky-`isMissingSchema` half) |
+| 17 | Open `/mcn/parents` in a community with genuinely zero entries | Still "No student details added yet" — the empty state was not replaced, only disambiguated |
+| 18 | Add one entry via the **St. Joseph's** suggestion chip and another by typing `St. Joseph's School` with your keyboard's straight quote | **One** school chip, listing both children. Before the fix: two identical-looking chips with one child each |
+| 18 | Type `Joseph's` into the search box | Both entries match |
+| 18 | Add `Delhi Public School` and `delhi public school` | One chip, labelled with the first-seen spelling; both entries listed |
+| 19 | Load the directory and inspect the request in the network tab | The query carries `limit=500`; results are unchanged for a normal-sized society |
 
 ### Native — `npm run android`
 
@@ -1004,6 +1180,8 @@ Two rows in the catalogue do **not** apply and were checked: the feature has **n
 | Search | Type into search, watch the network tab | Filtering is client-side; no request per keystroke; the 300 ms debounce at [index.tsx:111-116](../../app/mcn/parents/index.tsx#L111-L116) is untouched |
 | Filters | Combine institution type + board + school + looking-for | Results narrow correctly; the school chip row still derives from live entries |
 | Other MCN screens | Open carpools, business listings, drops, borrow posts | Unchanged — M1 touched only `mcn_parent_corner` (D2) |
+| Federation | `git diff` the change set for `partner`, `partnership`, `list_visible_`, `can_user_see_`, `get_user_partner_community_ids` | **Zero hits.** No federation object added, altered, or deleted (D23) |
+| Federation | `SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname LIKE ANY (ARRAY['list_visible_%','can_user_see_%','%community_partnership%'])` before and after `db:push` | Identical counts — federation RPCs are retained, not cleaned up |
 | MCN hub | All six badges | Still render real counts; only the error path changed (C7) |
 
 ---
@@ -1019,7 +1197,8 @@ Each fact goes to exactly one file.
 - Editing another resident's entry via URL now returns you to the directory instead of loading a form that cannot save; a save that the database rejects reports an error and keeps your input.
 - Leads can now **edit** as well as delete any entry — this makes the existing §4.5 "Roles" line and the role matrix at `docs/features.md:448` true rather than aspirational; no wording change is needed there, but re-read them to confirm.
 - Board options: correct the list only if it does not already read `… PU Board, University, Other` (it does — D1 changed the writer to match the doc).
-- Sorting by class/grade and by flat is numeric-aware.
+- Sorting by class/grade and by flat is numeric-aware; the school filter chips group case-insensitively, so one school is one chip.
+- The directory now shows three distinct states — *not available yet*, *couldn't load*, and *nothing listed yet* — instead of reporting a failed load as an empty directory.
 
 **`docs/architecture.md`**:
 - §7 RLS model — `mcn_parent_corner` UPDATE and DELETE are now scoped to the row's community (`community_id = get_user_community_id() AND (owner OR lead)`, `OR is_platform_admin()`), and UPDATE carries an explicit `WITH CHECK`. Add a sentence to the "Uniform MCN owner-or-lead rule" paragraph at line 407 noting that `mcn_parent_corner` is now **stricter** than its four siblings, and that the same community pin has *not* yet been applied to `mcn_carpools`, `mcn_listings`, `mcn_posts`, `mcn_preorder_drops` (D2). A reader must not assume the rule is still uniform.
@@ -1040,4 +1219,9 @@ Each fact goes to exactly one file.
 
 **`docs/disabled-features.md`** — no change. Nothing is disabled or removed.
 
-**`docs/cross-community-changelog.md`** — no change. Parent Corner is single-community: no `list_visible_*` / `can_user_see_*` RPC, no partner-community policy, and `get_user_partner_community_ids()` is not involved. Confirm this still holds after M1 — if you find yourself adding a partner-community clause, an entry becomes **mandatory**.
+**`docs/cross-community-changelog.md`** — **no change, and nothing to delete.** Parent Corner is single-community: no `list_visible_*` / `can_user_see_*` RPC, no partner-community policy, and `get_user_partner_community_ids()` is not involved (verified by `grep`). Federation is backend-live and UI-deferred **on purpose** — see `docs/cross-community.md` — so no part of this change set may remove a federated object as "unused" (D23). Confirm the rule still holds after M1: if you find yourself adding a partner-community clause, an entry here becomes **mandatory in the same change set**.
+
+**`docs/CLAUDE.md`** §9 — one further trap row, from #17:
+| Trap | Reality |
+|------|---------|
+| A list screen with a loading state, an empty state, and no error state | A failed fetch leaves the array at `[]` and renders "you have nothing" — often with a call to action. The toast is gone in three seconds; the wrong empty state is permanent. Track load failure as its own boolean and give it its own `EmptyState`. |

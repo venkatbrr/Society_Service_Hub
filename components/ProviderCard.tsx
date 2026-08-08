@@ -5,6 +5,7 @@ import { Verandah } from '../constants/Colors';
 import { VerandahRadius } from '../constants/Verandah';
 import { getServiceCategoryEmoji } from '../constants/emojis';
 import { ProviderWithInteraction } from '../lib/database.types';
+import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
 
@@ -19,10 +20,7 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
   const handleShare = async (e: any) => {
     e.stopPropagation();
     const ratingText = provider.avg_rating ? `★ ${Number(provider.avg_rating).toFixed(1)} (${provider.rating_count} reviews)` : '';
-    const shareUrl =
-      Platform.OS === 'web' && typeof window !== 'undefined'
-        ? `${window.location.origin}/provider/${provider.id}`
-        : `https://society-service-hub.app/provider/${provider.id}`;
+    const shareUrl = siteUrl(`/provider/${provider.id}`);
 
     const messageLines = [
       `👤 *Service Provider Contact*`,

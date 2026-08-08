@@ -4,6 +4,7 @@ import React from 'react';
 import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { format12HourTime, getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
+import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
 
@@ -130,10 +131,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
       minute: '2-digit',
     });
 
-    const shareUrl =
-      Platform.OS === 'web' && typeof window !== 'undefined'
-        ? `${window.location.origin}/mcn/drops?id=${drop.id}`
-        : `https://society-service-hub.app/mcn/drops?id=${drop.id}`;
+    const shareUrl = siteUrl(`/mcn/drops?id=${drop.id}`);
 
     const messageLines = [
       `🍲 *Food Drop: ${drop.title}*`,

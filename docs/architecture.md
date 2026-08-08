@@ -270,7 +270,7 @@ Migration `20260824000000` fixed the app's code path but left the database open:
 
 | Table | Key columns |
 |-------|-------------|
-| `mcn_parent_corner` | `student_name`, `institution_type` (`school`/`college`/`preschool`), `school_name`, `board`, `grade_class`, `parent_name`, `flat_number`, `contact_phone`, `intents` (`TEXT[]`, GIN-indexed — structured tags: `carpool`, `study_group`, `homework_help`, `school_info`, `activities`, `playdate`, `other`), `notes` |
+| `mcn_parent_corner` | `student_name`, `institution_type` (`school`/`college`/`preschool`), `school_name`, `board`, `grade_class`, `parent_name`, `flat_number`, `contact_phone`, `intents` (`TEXT[]`, GIN-indexed — structured tags: `carpool`, `study_group`, `homework_help`, `school_info`, `activities`, `playdate`, `other`), `notes`. Constrained by `mcn_parent_corner_text_lengths` (`student_name` ≤60, `school_name` ≤100, `board` ≤40, `grade_class` ≤40, `parent_name` ≤60, `flat_number` ≤12, `contact_phone` ≤15, `notes` ≤300) and `mcn_parent_corner_intents_valid` (`<= 7` items from the allowed set). |
 | `schools` | `name`, `level`, `syllabus`, `distance`, `fee_range`, `facilities` (`TEXT[]`), `area_locality`, `address`, `contact_phone`, `website`, `google_maps_link`, `google_rating`, plus trigger-maintained `avg_academics`, `avg_teachers`, `avg_infrastructure`, `avg_sports_activities`, `avg_safety`, `avg_transport`, `avg_value`, `avg_happiness`, `review_count` |
 | `school_reviews` | `school_id` (accepts text IDs for curated schools), `child_grade`, eight `*_score` columns, eight optional `*_comment` columns, `overall_comment` |
 | `mcn_posts` | `kind` (`business`/`borrow`), `title`, `description`, `contact_hint`, `is_available` |
@@ -328,7 +328,7 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 ### Providers and visits
 
-`get_community_visits(...)` · `get_visit_joiners(p_visit_id)` · `auto_complete_past_visits()` · `platform_get_all_providers(...)` · `platform_get_provider_details(...)` · `platform_get_providers_by_category(...)` · `platform_delete_service_provider(...)`
+`get_community_visits(p_community_id, p_user_id, p_status, p_time_scope)` (SECURITY DEFINER, search_path = public, authenticated only; authorizes via `get_user_partner_community_ids` & `can_user_see_visit`, ignores `p_user_id` parameter to derive caller from `auth.uid()`) · `get_visit_joiners(p_visit_id)` (SECURITY DEFINER, search_path = public, authenticated only; authorizes via `can_user_see_visit`) · `platform_get_all_providers(...)` · `platform_get_provider_details(...)` · `platform_get_providers_by_category(...)` · `platform_delete_service_provider(...)`
 
 ### Hire feedback and reminders
 
@@ -431,13 +431,14 @@ RLS is enabled on every active table.
 | `mcn_preorder_drops` + children | **Public read**; creator writes; item and order policies chain through the parent drop |
 | `mcn_carpools` | Community read; creator or lead writes |
 | `mcn_carpool_requests` | Rider or ride host read; rider inserts; either side updates |
-| `mcn_parent_corner`, `mcn_posts` | Community read; owner or lead writes |
+| `mcn_parent_corner` | Community read; owner or lead writes (scoped to `community_id = get_user_community_id()`) |
+| `mcn_posts` | Community read; owner or lead writes |
 | `schools`, `school_reviews` | Community read; author writes own review. Leads and platform admins may also edit/delete any row (`20260822000000`). |
 
 **Uniform MCN owner-or-lead rule** — `mcn_preorder_drops`, `mcn_listings`, `mcn_carpools`, `mcn_parent_corner`, and `mcn_posts` allow the write when
 `owner = auth.uid() OR public.is_community_lead(auth.uid()) OR public.is_platform_admin(auth.uid())`.
 
-Applies to DELETE (`20260814000000`, corrected to `is_platform_admin` in `20260822000100`) and to UPDATE (`20260822000000`, which also repointed `schools_update`/`schools_delete` and `school_reviews_delete`). The original DELETE rule used `is_admin()`, which is only an alias for `is_community_lead()` and therefore gave the platform admin no override at all.
+Applies to DELETE (`20260814000000`, corrected to `is_platform_admin` in `20260822000100`) and to UPDATE (`20260822000000`, which also repointed `schools_update`/`schools_delete` and `school_reviews_delete`). The original DELETE rule used `is_admin()`, which is only an alias for `is_community_lead()` and therefore gave the platform admin no override at all. Note: `mcn_parent_corner` UPDATE and DELETE policies (`20260831000000`) additionally pin `community_id = get_user_community_id()` in both `USING` and `WITH CHECK` for owner/lead branches, making `mcn_parent_corner` strictly community-scoped. This community pin has not yet been applied to its four sibling MCN tables.
 
 Pending or removed users are blocked from community content even when a stale `community_id` remains on the profile.
 

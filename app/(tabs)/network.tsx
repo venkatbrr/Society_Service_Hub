@@ -76,6 +76,11 @@ export default function NetworkScreen() {
             .eq('is_available', true),
         ]);
 
+        const firstError = [businessRes, preorderRes, carpoolRes, parentRes, schoolRes, postRes]
+          .map((r) => r.error)
+          .find(Boolean);
+        if (firstError) throw firstError;
+
         setBusinessCount(businessRes.count ?? 0);
         setPreorderCount(preorderRes.count ?? 0);
         setCarpoolCount(carpoolRes.count ?? 0);

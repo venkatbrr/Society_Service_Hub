@@ -176,6 +176,12 @@ export function getImmediateParentRoute(pathname: string): string {
   if (cleanPath.startsWith('/services/')) return '/services';
   if (cleanPath === '/services') return '/profile';
 
+  // 7b. Providers & visits (Help tab)
+  if (cleanPath === '/provider/add') return '/';
+  if (cleanPath.startsWith('/provider/')) return '/';
+  if (cleanPath === '/visits/add') return '/';
+  if (cleanPath.startsWith('/visits/')) return '/';
+
   // 8. Community funds
   if (cleanPath === '/funds/add-transaction') {
     const eventId = params.get('event_id');

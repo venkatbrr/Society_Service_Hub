@@ -13,6 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 import { actionToFraudStatus, checkProviderFraud, getFraudActionMessage } from '../../lib/fraudCheck';
 import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
+import { goBackSmart } from '../../lib/navigation';
 
 const buildProviderCategoryGroups = (sourceCategories: string[]): CategoryGroup[] => {
   const included = new Set(sourceCategories);
@@ -347,7 +348,7 @@ export default function AddProviderScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerRow}>
-          <HeaderBackButton onPress={() => router.back()} color={colors.text} style={styles.backButton} />
+          <HeaderBackButton onPress={() => goBackSmart(router, '/provider/add')} color={colors.text} style={styles.backButton} />
           <Text style={styles.title}>Add provider</Text>
         </View>
 

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Modal, Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
+import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
 
@@ -60,10 +61,7 @@ export const McnListingCard = React.memo(({
     const flatNo = listing.profiles?.flat_number ? `Flat ${listing.profiles.flat_number}` : '';
     const catLabel = listing.category ? `${listing.category.emoji} ${listing.category.name}` : '';
 
-    const shareUrl =
-      Platform.OS === 'web' && typeof window !== 'undefined'
-        ? `${window.location.origin}/mcn/listing/${listing.id}`
-        : `https://society-service-hub.app/mcn/listing/${listing.id}`;
+    const shareUrl = siteUrl(`/mcn/listing/${listing.id}`);
 
     const messageLines = [
       `🏪 *Community Business: ${listing.name}*`,

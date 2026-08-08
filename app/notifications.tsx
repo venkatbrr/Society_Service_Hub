@@ -62,6 +62,10 @@ export default function NotificationsScreen() {
       case 'carpool_cancelled':
       case 'carpool_paused':
         return 'car-outline';
+      case 'provider_reported':
+        return 'flag';
+      case 'visit_rescheduled':
+        return 'calendar';
       default:
         return 'notifications';
     }
@@ -71,6 +75,16 @@ export default function NotificationsScreen() {
     await markAsRead(notification.id);
 
     // Navigate based on type
+    if (notification.type === 'provider_reported' && notification.data?.provider_id) {
+      router.push(`/provider/${notification.data.provider_id}`);
+      return;
+    }
+
+    if (notification.type === 'visit_rescheduled' && notification.data?.visit_id) {
+      router.push(`/visits/${notification.data.visit_id}`);
+      return;
+    }
+
     if (
       (notification.type === 'carpool_request' ||
        notification.type === 'carpool_request_accepted' ||

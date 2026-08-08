@@ -6,6 +6,22 @@
 
 ---
 
+## 2026-08-31 — Visit RPCs became federation-aware while closing an anonymous read leak
+
+**Migrations:** `supabase/migrations/20260831000100_secure_visit_rpcs.sql`, `supabase/migrations/20260831000200_visit_capacity_and_lifecycle.sql`
+
+**Federation objects touched:** `get_community_visits` and `get_visit_joiners` RPCs, capability key list.
+
+`get_community_visits` and `get_visit_joiners` were `SECURITY DEFINER` with no authorization and were `EXECUTE`-able by `anon`, so any caller holding the public anon key could read every visit and joiner in any community. Both are now pinned with `SET search_path = public`, revoked from `PUBLIC`/`anon`, and granted to `authenticated` only.
+
+The new authorization is deliberately built from the canonical federation helpers rather than a direct `community_id` comparison: `get_community_visits` gates its `p_community_id` argument on `get_user_partner_community_ids('visits', auth.uid())` and filters rows with `can_user_see_visit(sv.id, auth.uid())`; `get_visit_joiners` gates entirely on `can_user_see_visit(p_visit_id, auth.uid())`. `p_user_id` is now ignored and `has_user_joined` always answers for `auth.uid()`.
+
+**No federation object was removed or narrowed.** `service_visits_select_cross_community`, `service_providers_select_cross_community`, `can_user_see_visit`, `can_user_see_provider`, `get_user_partner_community_ids`, `service_visit_communities`, `provider_shares`, and `service_visits.is_cross_community` are all unchanged. The `service_visits` `UPDATE`/`DELETE` policies were widened to community leads and platform admins and the `UPDATE WITH CHECK` now pins `community_id`; both are single-community policies with no federation counterpart, and the pin constrains ownership, not sharing.
+
+**New capability key: `visits`.** It appears in no `community_partnerships.scope` JSONB yet, so partner reads of visits are inert and current behaviour is identical to the single-community policies. Adding `{"visits": true}` to an active partnership scope enables partner visit reads with no code change.
+
+---
+
 ## 2026-08-22 — `request_community_partnership` notified nobody (dead role literal)
 
 **Migrations:** `supabase/migrations/20260822000000_repoint_dead_community_lead_checks.sql`, `supabase/migrations/20260822000200_drop_legacy_app_role_enum_values.sql`

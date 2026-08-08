@@ -13,6 +13,7 @@ import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
+import { goBackSmart } from '../../lib/navigation';
 
 const buildVisitCategoryGroups = (sourceCategories: string[]): CategoryGroup[] => {
   const included = new Set(sourceCategories);
@@ -166,9 +167,16 @@ export default function AddVisitScreen() {
     const normalizedExistingPhone = selectedProvider?.phone
       ? (normalizeIndianMobile(selectedProvider.phone) ?? selectedProvider.phone)
       : null;
-    const normalizedExistingWhatsapp = selectedProvider?.whatsapp
-      ? (normalizeIndianMobile(selectedProvider.whatsapp) ?? selectedProvider.whatsapp)
-      : null;
+    const normalizedExistingWhatsapp = normalizedExistingPhone;
+
+    const parsedMaxJoiners = maxJoiners.trim() ? Number.parseInt(maxJoiners.trim(), 10) : null;
+    if (parsedMaxJoiners !== null && (!Number.isFinite(parsedMaxJoiners) || parsedMaxJoiners < 1)) {
+      return Toast.show({
+        type: 'error',
+        text1: 'Invalid max joiners',
+        text2: 'Enter 1 or more, or leave it empty for unlimited.',
+      });
+    }
 
     const startMins = startTime.getHours() * 60 + startTime.getMinutes();
     const endMins = endTime.getHours() * 60 + endTime.getMinutes();
@@ -198,14 +206,14 @@ export default function AddVisitScreen() {
         visit_date: formatLocalDateForDb(visitDate),
         visit_time_slot: timeSlot,
         estimated_cost: estimatedCost.trim() || null,
-        max_joiners: maxJoiners ? parseInt(maxJoiners) : null,
+        max_joiners: parsedMaxJoiners,
         status: 'upcoming'
       });
 
       if (error) throw error;
 
       Toast.show({ type: 'success', text1: 'Visit shared!' });
-      router.back();
+      goBackSmart(router, '/visits/add');
     } catch (e: any) {
       console.error(e);
       Toast.show({ type: 'error', text1: 'Error', text2: e.message });
@@ -219,7 +227,7 @@ export default function AddVisitScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <TouchableOpacity onPress={() => goBackSmart(router, '/visits/add')} style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerText}>

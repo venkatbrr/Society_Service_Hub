@@ -52,6 +52,13 @@ Behavior that is intentionally off, cut, or postponed. If a feature seems missin
 - **Status**: Replaced by per-item limits
 - **Details**: Pre-order food drops no longer expose an overall order cap. Capacity is set per item via `mcn_preorder_items.max_quantity` and enforced by a database trigger. The `mcn_preorder_drops.max_orders` column still exists but is not driven by the UI.
 
+### 7. Automatic visit completion sweep
+
+- **Status**: Removed / Dropped
+- **Details**: `auto_complete_past_visits()` was a `SECURITY DEFINER` function intended to sweep past-dated visits to `completed`. It was dropped in migration `20260831000100_secure_visit_rpcs.sql`.
+- **Reason**: `pg_cron` is not installed on this project, so automatic sweeps never ran. Visit completion is a manual host action (`Mark as completed` button on visit detail), while display status is derived client-side.
+- **To re-enable**: install `pg_cron` extension, create an authenticated RPC with `SET search_path`, and schedule a cron job.
+
 ---
 
 ## Deferred

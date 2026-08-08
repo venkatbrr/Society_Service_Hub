@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, SectionList, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, SectionList, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { CategoryFilter } from '../../components/CategoryFilter';
 import { EmptyState } from '../../components/EmptyState';
@@ -59,6 +59,10 @@ export default function HomeScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedGroupCategories, setSelectedGroupCategories] = useState<string[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [providersLoading, setProvidersLoading] = useState(true);
+  const [providersLoadError, setProvidersLoadError] = useState<string | null>(null);
+  const [visitsLoading, setVisitsLoading] = useState(true);
+  const [visitsLoadError, setVisitsLoadError] = useState<string | null>(null);
   const [activeFund, setActiveFund] = useState<any>(null);
   const [communityInvite, setCommunityInvite] = useState<{ name: string; code: string | null } | null>(null);
   const { user, communityId } = useAuth();
@@ -142,12 +146,15 @@ export default function HomeScreen() {
   const fetchProviders = useCallback(async () => {
     if (!communityId) return;
 
+    setProvidersLoading(true);
+    setProvidersLoadError(null);
     try {
       let query = supabase
         .from('service_providers')
         .select('*')
         .eq('community_id', communityId)
-        .order('avg_rating', { ascending: false });
+        .order('avg_rating', { ascending: false })
+        .limit(100);
 
       if (selectedCategory && selectedCategory !== 'All') {
         query = query.eq('category', selectedCategory);
@@ -156,7 +163,14 @@ export default function HomeScreen() {
       }
 
       if (debouncedSearchQuery) {
-        query = query.or(`name.ilike.%${debouncedSearchQuery}%,category.ilike.%${debouncedSearchQuery}%`);
+        const safe = debouncedSearchQuery.replace(/[,()%\\.]/g, ' ').trim();
+        const digits = debouncedSearchQuery.replace(/\D/g, '');
+        if (safe || digits) {
+          const clauses: string[] = [];
+          if (safe) clauses.push(`name.ilike.%${safe}%`, `category.ilike.%${safe}%`);
+          if (digits) clauses.push(`phone.ilike.%${digits}%`);
+          query = query.or(clauses.join(','));
+        }
       }
 
       // Fetch providers, favorites, and hire counts in parallel
@@ -197,13 +211,18 @@ export default function HomeScreen() {
       setProviders(mergedData);
     } catch (error: any) {
       console.error(error);
+      setProvidersLoadError('Failed to load providers');
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load providers' });
+    } finally {
+      setProvidersLoading(false);
     }
   }, [communityId, selectedCategory, selectedGroupCategories, debouncedSearchQuery, user?.id]);
 
   const fetchVisits = useCallback(async () => {
     if (!communityId || !user?.id) return;
 
+    setVisitsLoading(true);
+    setVisitsLoadError(null);
     try {
       // Fetch visits and user's joined visits in parallel
       const [visitsResult, joinersResult] = await Promise.all([
@@ -211,7 +230,8 @@ export default function HomeScreen() {
           .from('service_visits')
           .select('*')
           .eq('community_id', communityId)
-          .order('visit_date', { ascending: true }),
+          .order('visit_date', { ascending: true })
+          .limit(100),
         supabase
           .from('visit_joiners')
           .select('visit_id, user_id')
@@ -325,10 +345,13 @@ export default function HomeScreen() {
       setPastVisits(pastData);
       setArchivedVisits(archivedData);
     } catch (error: any) {
-      console.error('fetchVisits error:', error);
+      console.error(error);
+      setVisitsLoadError('Failed to load visits');
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load visits' });
+    } finally {
+      setVisitsLoading(false);
     }
-  }, [communityId, user?.id, debouncedSearchQuery]);
+  }, [communityId, user?.id, searchQuery]);
 
   // Fetch community stats once on mount / communityId change (not on every tab toggle)
   useEffect(() => {
@@ -382,18 +405,11 @@ export default function HomeScreen() {
       current.map(p => p.id === providerId ? { ...p, is_favorite: !isCurrentlyFavorite } : p)
     );
 
-    try {
-      if (isCurrentlyFavorite) {
-        await supabase
-          .from('favorites')
-          .delete()
-          .match({ user_id: user?.id, provider_id: providerId });
-      } else {
-        await supabase
-          .from('favorites')
-          .insert({ user_id: user?.id as string, provider_id: providerId });
-      }
-    } catch (error) {
+    const { error } = isCurrentlyFavorite
+      ? await supabase.from('favorites').delete().match({ user_id: user?.id, provider_id: providerId })
+      : await supabase.from('favorites').insert({ user_id: user?.id as string, provider_id: providerId });
+
+    if (error) {
       setProviders(current =>
         current.map(p => p.id === providerId ? { ...p, is_favorite: isCurrentlyFavorite } : p)
       );
@@ -512,7 +528,7 @@ export default function HomeScreen() {
                 <SearchBar
                   value={searchQuery}
                   onChangeText={setSearchQuery}
-                  placeholder="Search help..."
+                  placeholder="Search by name or phone number..."
                   isLightMode={true}
                 />
                 <CategoryFilter
@@ -525,12 +541,26 @@ export default function HomeScreen() {
             </>
           }
           ListEmptyComponent={
-            <EmptyState
-              icon={APP_EMOJIS.members}
-              title="No Providers Found"
-              message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to add a trusted service provider!"}
-              isLightMode={true}
-            />
+            providersLoading ? (
+              <View style={{ padding: 32, alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={Verandah.accent} />
+              </View>
+            ) : providersLoadError ? (
+              <EmptyState
+                icon={APP_EMOJIS.members}
+                ionicon="cloud-offline-outline"
+                title="Couldn't Load Providers"
+                message="Check your connection and pull down to retry."
+                isLightMode={true}
+              />
+            ) : (
+              <EmptyState
+                icon={APP_EMOJIS.members}
+                title="No Providers Found"
+                message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to add a trusted service provider!"}
+                isLightMode={true}
+              />
+            )
           }
         />
       ) : (
@@ -641,7 +671,19 @@ export default function HomeScreen() {
             </>
           }
           ListEmptyComponent={
-            visitTab === 'upcoming' ? (
+            visitsLoading ? (
+              <View style={{ padding: 32, alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={Verandah.accent} />
+              </View>
+            ) : visitsLoadError ? (
+              <EmptyState
+                icon={APP_EMOJIS.community}
+                ionicon="cloud-offline-outline"
+                title="Couldn't Load Visits"
+                message="Check your connection and pull down to retry."
+                isLightMode={true}
+              />
+            ) : visitTab === 'upcoming' ? (
               <EmptyState
                 icon={APP_EMOJIS.community}
                 ionicon="calendar-clear-outline"

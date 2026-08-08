@@ -25,6 +25,7 @@ import { format12HourTime, VerandahRadius, VerandahType } from '../../../constan
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { confirmAction } from '../../../lib/confirm';
+import { siteUrl } from '../../../lib/siteUrl';
 import { supabase } from '../../../lib/supabase';
 
 interface DropItem {
@@ -524,10 +525,7 @@ export default function PreorderDropDetailScreen() {
     // so WhatsApp/Facebook/etc. crawlers can fetch this drop's title, description,
     // and photo and render a real link-preview card — a bare app URL has no
     // server-rendered meta tags for them to read.
-    const shareUrl =
-      Platform.OS === 'web' && typeof window !== 'undefined'
-        ? `${window.location.origin}/api/share-drop?id=${drop.id}`
-        : `https://society-service-hub.app/api/share-drop?id=${drop.id}`;
+    const shareUrl = siteUrl(`/api/share-drop?id=${drop.id}`);
 
     const messageLines = [
       `🍲 *Food Drop: ${drop.title}*`,

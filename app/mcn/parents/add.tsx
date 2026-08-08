@@ -19,6 +19,7 @@ import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
+import { normalizeIndianMobile, toLast10Digits } from '../../../lib/phone';
 import { supabase } from '../../../lib/supabase';
 
 const INSTITUTION_TYPES = [
@@ -27,7 +28,7 @@ const INSTITUTION_TYPES = [
   { id: 'preschool', label: 'Pre-School', icon: 'baby' as const },
 ];
 
-const BOARD_OPTIONS = ['CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University / Autonomous', 'Other'];
+const BOARD_OPTIONS = ['CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University', 'Other'];
 
 const INTENT_OPTIONS: { id: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { id: 'carpool', label: 'Carpooling', icon: 'car-outline' },
@@ -42,7 +43,7 @@ const INTENT_OPTIONS: { id: string; label: string; icon: keyof typeof Ionicons.g
 const POPULAR_SCHOOL_SUGGESTIONS = [
   'Delhi Public School',
   'National Public School',
-  'St. Joseph’s School',
+  "St. Joseph's School",
   'Ryan International',
   'Kendriya Vidyalaya',
   'Orchids International',
@@ -51,7 +52,7 @@ const POPULAR_SCHOOL_SUGGESTIONS = [
 export default function AddParentCornerScreen() {
   const router = useRouter();
   const { editId } = useLocalSearchParams<{ editId?: string }>();
-  const { communityId, user } = useAuth();
+  const { communityId, user, isCommunityLead } = useAuth();
   const colors = Verandah;
 
   const [studentName, setStudentName] = useState('');
@@ -75,21 +76,19 @@ export default function AddParentCornerScreen() {
   // Auto-fill user profile info if creating new entry
   useEffect(() => {
     async function loadUserProfile() {
-      if (!user) return;
+      if (!user || editId) return;
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('full_name, flat_number, phone')
+          .select('full_name, flat_number, phone_number')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         if (data) {
-          if (!editId) {
-            setParentName(data.full_name || '');
-            setFlatNumber(data.flat_number || '');
-            setContactPhone(data.phone || '');
-          }
+          setParentName(data.full_name || '');
+          setFlatNumber(data.flat_number || '');
+          setContactPhone(data.phone_number || '');
         }
       } catch (err) {
         console.error('Error fetching user profile for pre-fill:', err);
@@ -104,21 +103,31 @@ export default function AddParentCornerScreen() {
           .from('mcn_parent_corner')
           .select('*')
           .eq('id', editId)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
-        if (data) {
-          setStudentName(data.student_name);
-          setInstitutionType(data.institution_type);
-          setSchoolName(data.school_name);
-          setBoard(data.board);
-          setGradeClass(data.grade_class);
-          setParentName(data.parent_name);
-          setFlatNumber(data.flat_number);
-          setContactPhone(data.contact_phone);
-          setIntents(data.intents || []);
-          setNotes(data.notes || '');
+        if (!data) {
+          Toast.show({ type: 'error', text1: 'This entry no longer exists' });
+          router.replace('/mcn/parents' as any);
+          return;
         }
+
+        if (data.user_id !== user?.id && !isCommunityLead) {
+          Toast.show({ type: 'error', text1: 'You can only edit your own entry' });
+          router.replace('/mcn/parents' as any);
+          return;
+        }
+
+        setStudentName(data.student_name);
+        setInstitutionType(data.institution_type);
+        setSchoolName(data.school_name);
+        setBoard(data.board);
+        setGradeClass(data.grade_class);
+        setParentName(data.parent_name);
+        setFlatNumber(data.flat_number);
+        setContactPhone(data.contact_phone);
+        setIntents(data.intents || []);
+        setNotes(data.notes || '');
       } catch (err) {
         console.error('Error loading existing entry:', err);
         Toast.show({ type: 'error', text1: 'Failed to load record details' });
@@ -127,11 +136,12 @@ export default function AddParentCornerScreen() {
       }
     }
 
-    loadUserProfile();
     if (editId) {
       loadExistingEntry();
+    } else {
+      loadUserProfile();
     }
-  }, [user, editId]);
+  }, [user, editId, isCommunityLead]);
 
   const toggleIntent = (id: string) => {
     setIntents((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
@@ -168,16 +178,15 @@ export default function AddParentCornerScreen() {
       return;
     }
 
-    if (!contactPhone.trim()) {
-      Toast.show({ type: 'error', text1: 'Contact Phone Number is required' });
+    const normalizedPhone = normalizeIndianMobile(contactPhone);
+    if (!normalizedPhone) {
+      Toast.show({ type: 'error', text1: 'Invalid phone number', text2: 'Enter a valid 10-digit Indian mobile number.' });
       return;
     }
 
     setLoading(true);
     try {
-      const payload = {
-        community_id: communityId,
-        user_id: user.id,
+      const fields = {
         student_name: studentName.trim(),
         institution_type: institutionType,
         school_name: schoolName.trim(),
@@ -185,25 +194,34 @@ export default function AddParentCornerScreen() {
         grade_class: gradeClass.trim(),
         parent_name: parentName.trim(),
         flat_number: flatNumber.trim(),
-        contact_phone: contactPhone.trim(),
+        contact_phone: normalizedPhone,
         intents,
         notes: notes.trim() || null,
-        updated_at: new Date().toISOString(),
       };
 
       if (editId) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('mcn_parent_corner')
-          .update(payload)
-          .eq('id', editId);
+          .update({ ...fields, updated_at: new Date().toISOString() })
+          .eq('id', editId)
+          .select('id')
+          .maybeSingle();
         if (error) throw error;
-        Toast.show({ type: 'success', text1: 'Child details updated!' });
+        if (!data) {
+          Toast.show({
+            type: 'error',
+            text1: 'Could not save',
+            text2: 'This entry may have been removed, or it is not yours to edit.',
+          });
+          return;
+        }
+        Toast.show({ type: 'success', text1: 'Child details updated' });
       } else {
         const { error } = await supabase
           .from('mcn_parent_corner')
-          .insert(payload);
+          .insert({ ...fields, community_id: communityId, user_id: user.id });
         if (error) throw error;
-        Toast.show({ type: 'success', text1: 'Child details added to Parent Corner!' });
+        Toast.show({ type: 'success', text1: 'Child details added to Parent Corner' });
       }
 
       router.replace('/mcn/parents' as any);
@@ -258,6 +276,7 @@ export default function AddParentCornerScreen() {
             placeholderTextColor={colors.textMuted}
             value={studentName}
             onChangeText={setStudentName}
+            maxLength={60}
           />
         </View>
 
@@ -298,6 +317,7 @@ export default function AddParentCornerScreen() {
             placeholderTextColor={colors.textMuted}
             value={schoolName}
             onChangeText={setSchoolName}
+            maxLength={100}
           />
           {/* Popular Suggestions */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
@@ -349,6 +369,7 @@ export default function AddParentCornerScreen() {
             placeholderTextColor={colors.textMuted}
             value={gradeClass}
             onChangeText={setGradeClass}
+            maxLength={40}
           />
         </View>
 
@@ -366,6 +387,7 @@ export default function AddParentCornerScreen() {
             placeholderTextColor={colors.textMuted}
             value={parentName}
             onChangeText={setParentName}
+            maxLength={60}
           />
         </View>
 
@@ -374,10 +396,12 @@ export default function AddParentCornerScreen() {
           <Text style={[styles.label, { color: colors.textPrimary }]}>Flat / Unit Number *</Text>
           <TextInput
             style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.textPrimary }]}
-            placeholder="e.g. Block A-402"
+            placeholder="e.g. A402"
             placeholderTextColor={colors.textMuted}
             value={flatNumber}
             onChangeText={setFlatNumber}
+            onBlur={() => setFlatNumber((prev) => prev.toUpperCase().replace(/[\s-]/g, ''))}
+            maxLength={12}
           />
         </View>
 
@@ -391,6 +415,8 @@ export default function AddParentCornerScreen() {
             keyboardType="phone-pad"
             value={contactPhone}
             onChangeText={setContactPhone}
+            onBlur={() => setContactPhone((prev) => toLast10Digits(prev))}
+            maxLength={15}
           />
         </View>
 
@@ -445,6 +471,7 @@ export default function AddParentCornerScreen() {
             numberOfLines={3}
             value={notes}
             onChangeText={setNotes}
+            maxLength={300}
           />
         </View>
 
