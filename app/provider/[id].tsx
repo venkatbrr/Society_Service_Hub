@@ -18,6 +18,8 @@ import { actionToFraudStatus, checkReviewFraud, getFraudActionMessage } from '..
 import { siteUrl } from '../../lib/siteUrl';
 import { supabase } from '../../lib/supabase';
 import { goBackSmart } from '../../lib/navigation';
+import { getDetailFieldsForCategory } from '../../constants/providerDetails';
+import { Rupees } from '../../components/Rupees';
 
 const getDaysOnPlatform = (createdAtStr: string | null) => {
   if (!createdAtStr) return '0 days';
@@ -90,7 +92,11 @@ export default function ProviderDetailScreen() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [reports, setReports] = useState<any[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
-  const isReviewSubmitDisabled = isSubmittingReview || (selectedRating === 0 && !provider?.user_rating);
+  const [myHireCount, setMyHireCount] = useState<number>(0);
+
+  const { communityId } = useAuth();
+  const isOwnCommunity = !provider || !communityId || provider.community_id === communityId;
+  const isReviewSubmitDisabled = isSubmittingReview || (selectedRating === 0 && !provider?.user_rating) || (myHireCount === 0);
   const hasExistingReview = provider?.user_rating != null;
   const canDelete = isPlatformAdmin || isCommunityLead;
   const visibleReviews = showAllReviews ? publicReviews : publicReviews.slice(0, 3);
@@ -118,20 +124,24 @@ export default function ProviderDetailScreen() {
         .maybeSingle();
 
       if (user) {
-        const [providerResult, favsResult, ratsResult, hireResult] = await Promise.all([
+        const [providerResult, favsResult, ratsResult, hireResult, myHireResult] = await Promise.all([
           providerQuery,
           supabase.from('favorites')
             .select('id')
             .eq('user_id', user.id)
             .eq('provider_id', id),
           supabase.from('ratings')
-            .select('rating')
+            .select('rating, review_text')
             .eq('user_id', user.id)
             .eq('provider_id', id)
             .maybeSingle(),
           supabase.from('provider_hires')
             .select('*', { count: 'exact', head: true })
+            .eq('provider_id', id),
+          supabase.from('provider_hires')
+            .select('*', { count: 'exact', head: true })
             .eq('provider_id', id)
+            .eq('user_id', user.id)
         ]);
 
         if (providerResult.error) throw providerResult.error;
@@ -139,6 +149,15 @@ export default function ProviderDetailScreen() {
         const hireCountError = hireResult.error;
         if (hireCountError && !isMissingRelationError(hireCountError)) {
           throw hireCountError;
+        }
+
+        setMyHireCount(myHireResult.count || 0);
+
+        if (ratsResult.data) {
+          setSelectedRating(ratsResult.data.rating);
+          if (ratsResult.data.review_text) {
+            setReviewText(ratsResult.data.review_text);
+          }
         }
 
         setProvider(providerResult.data ? {
@@ -151,6 +170,7 @@ export default function ProviderDetailScreen() {
         const { data: providerData, error: providerError } = await providerQuery;
         if (providerError) throw providerError;
         setProvider(providerData ? { ...providerData, hire_count: 0 } : null);
+        setMyHireCount(0);
       }
     } catch (error: any) {
       console.error(error);
@@ -173,6 +193,10 @@ export default function ProviderDetailScreen() {
         .maybeSingle();
 
       if (error) {
+        if (error.code === '23505') {
+          // Already logged for today (unique key user+provider+day); treat as success without duplicate count/notification
+          return null;
+        }
         if (isMissingRelationError(error)) return null;
         throw error;
       }
@@ -200,6 +224,7 @@ export default function ProviderDetailScreen() {
       }
 
       setProvider((prev: ProviderWithInteraction | null) => prev ? { ...prev, hire_count: (prev.hire_count || 0) + 1 } : null);
+      setMyHireCount(prev => prev + 1);
       return insertedHireId;
     } catch (err) {
       console.error('Error logging hire:', err);
@@ -438,7 +463,8 @@ export default function ProviderDetailScreen() {
         .from('ratings')
         .select('id, rating, review_text, created_at, user_id')
         .eq('provider_id', providerId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
       if (error) throw error;
 
       if (data && data.length > 0) {
@@ -480,7 +506,7 @@ export default function ProviderDetailScreen() {
   ];
 
   const handleReport = () => {
-    if (!provider || !user || hasReported) return;
+    if (!provider || !user || hasReported || !isOwnCommunity) return;
     setShowReportModal(true);
   };
 
@@ -488,9 +514,14 @@ export default function ProviderDetailScreen() {
     if (!provider || !user || !selectedReason) return;
     setIsReporting(true);
     try {
-      const detailsValue = selectedReason === 'other' ? reportDetails.trim() : null;
+      const detailsValue = reportDetails.trim() || null;
       if (selectedReason === 'other' && !detailsValue) {
         Toast.show({ type: 'error', text1: 'Details required', text2: 'Please explain the issue.' });
+        setIsReporting(false);
+        return;
+      }
+      if (detailsValue && detailsValue.length > 500) {
+        Toast.show({ type: 'error', text1: 'Details too long', text2: 'Details cannot exceed 500 characters.' });
         setIsReporting(false);
         return;
       }
@@ -531,14 +562,41 @@ export default function ProviderDetailScreen() {
     try {
       const { data, error } = await supabase
         .from('provider_reports')
-        .select('id, reason, details, created_at')
-        .eq('provider_id', id);
+        .select('id, reason, details, status, created_at')
+        .eq('provider_id', id)
+        .eq('status', 'pending');
       if (error) throw error;
       setReports(data || []);
     } catch (e) {
       console.error('Error fetching reports:', e);
     } finally {
       setReportsLoading(false);
+    }
+  };
+
+  const handleResolveReport = async (reportId: string, newStatus: 'reviewed' | 'dismissed') => {
+    if (!user || !canDelete) return;
+    try {
+      const { data, error } = await supabase
+        .from('provider_reports')
+        .update({
+          status: newStatus,
+          reviewed_by: user.id,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq('id', reportId)
+        .select('id');
+
+      if (error || !data || data.length !== 1) {
+        Toast.show({ type: 'error', text1: 'Action failed', text2: error?.message || 'Could not update report status' });
+        return;
+      }
+
+      Toast.show({ type: 'success', text1: `Report ${newStatus}` });
+      void fetchAllReports();
+    } catch (e) {
+      console.error('Error resolving report:', e);
+      Toast.show({ type: 'error', text1: 'Error updating report' });
     }
   };
 
@@ -665,6 +723,44 @@ export default function ProviderDetailScreen() {
         </View>
       </BaseCard>
 
+      {/* Overview & Category Details (Decision D6) */}
+      {(provider.description || (provider.details && Object.keys(provider.details).length > 0)) && (
+        <View style={styles.detailsCard}>
+          <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 8 }]}>Overview & Details</Text>
+          {provider.description ? (
+            <View style={{ marginBottom: (provider.details && Object.keys(provider.details).length > 0) ? 12 : 0 }}>
+              <Text style={[styles.detailMetaLabel, { color: colors.textMuted }]}>ABOUT</Text>
+              <Text style={[styles.publicReviewText, { color: colors.text }]}>{provider.description}</Text>
+            </View>
+          ) : null}
+          {provider.details && Object.keys(provider.details).length > 0 ? (
+            <View style={[styles.detailsMetaSection, { borderTopColor: colors.border }]}>
+              {Object.entries(provider.details).map(([key, val]) => {
+                if (val == null || val === '') return null;
+                const fieldConfig = getDetailFieldsForCategory(provider.category).find(f => f.key === key);
+                const label = fieldConfig?.label || key.replace(/_/g, ' ');
+                const formattedVal = Array.isArray(val) ? val.join(', ') : String(val);
+                return (
+                  <View key={key} style={styles.detailMeta}>
+                    <Text style={[styles.detailMetaLabel, { color: colors.textMuted }]}>{label.toUpperCase()}</Text>
+                    {fieldConfig?.type === 'number' ? (
+                      <View style={styles.moneyMetaRow}>
+                        <Rupees amount={typeof val === 'number' ? val : parseFloat(val) || 0} size={15} color={colors.text} />
+                        {fieldConfig.suffix ? (
+                          <Text style={[styles.detailMetaSuffix, { color: colors.textMuted }]}>/ {fieldConfig.suffix}</Text>
+                        ) : null}
+                      </View>
+                    ) : (
+                      <Text style={[styles.detailMetaValue, { color: colors.text }]}>{formattedVal}</Text>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          ) : null}
+        </View>
+      )}
+
       <View style={[styles.detailsCard, styles.historyCard, styles.personalNoteCard]}>
         <Text style={styles.sectionTitleSentenceCase}>Personal note</Text>
         {personalNoteLoading ? (
@@ -677,10 +773,14 @@ export default function ProviderDetailScreen() {
               placeholderTextColor={colors.textMuted}
               value={personalNote}
               onChangeText={setPersonalNote}
+              maxLength={1000}
               multiline
               numberOfLines={3}
               textAlignVertical="top"
             />
+            <Text style={{ fontSize: 11, color: colors.textMuted, textAlign: 'right', marginTop: 2 }}>
+              {personalNote.length}/1000
+            </Text>
             <TouchableOpacity
               onPress={handleSavePersonalNote}
               disabled={isSavingPersonalNote}
@@ -770,40 +870,58 @@ export default function ProviderDetailScreen() {
         )}
       </View>
 
-      {/* Community Reports Summary */}
-      {reports.length > 0 && (
+      {/* Community Reports Summary — threshold 2 for residents, threshold 1 for leads/admins (Decision D3) */}
+      {reports.length > 0 && (canDelete || reports.length >= 2) && (
         <View style={styles.detailsCard}>
           <Text style={[styles.sectionTitle, { color: colors.accent, marginBottom: 8 }]}>
             Community Reports ({reports.length})
           </Text>
           <View style={styles.publicReviewList}>
-            {Object.entries(getGroupedReports()).map(([reasonLabel, group], index) => (
-              <View
-                key={reasonLabel}
-                style={[
-                  styles.publicReviewItem,
-                  index > 0 && { borderTopColor: colors.border, borderTopWidth: 1 },
-                ]}
-              >
-                <View style={styles.publicReviewHeader}>
-                  <Text style={[styles.publicReviewName, { color: colors.text }]}>
-                    {reasonLabel}
-                  </Text>
-                  <Text style={[styles.publicReviewDate, { color: colors.textMuted, marginTop: 0 }]}>
-                    reported by {group.count} member{group.count === 1 ? '' : 's'}
-                  </Text>
-                </View>
-                {group.details.length > 0 && (
-                  <View style={{ marginTop: 6, gap: 2 }}>
-                    {group.details.map((detail, idx) => (
-                      <Text key={idx} style={[styles.publicReviewText, { color: colors.textMuted }]}>
-                        • "{detail}"
-                      </Text>
-                    ))}
+            {reports.map((rep, index) => {
+              const reasonLabel = REPORT_REASONS.find(r => r.key === rep.reason)?.label || rep.reason;
+              return (
+                <View
+                  key={rep.id}
+                  style={[
+                    styles.publicReviewItem,
+                    index > 0 && { borderTopColor: colors.border, borderTopWidth: 1 },
+                  ]}
+                >
+                  <View style={styles.publicReviewHeader}>
+                    <Text style={[styles.publicReviewName, { color: colors.text }]}>
+                      {reasonLabel}
+                    </Text>
+                    <Text style={[styles.publicReviewDate, { color: colors.textMuted, marginTop: 0 }]}>
+                      {new Date(rep.created_at).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                      })}
+                    </Text>
                   </View>
-                )}
-              </View>
-            ))}
+                  {rep.details ? (
+                    <Text style={[styles.publicReviewText, { color: colors.textMuted, marginTop: 4 }]}>
+                      • "{rep.details}"
+                    </Text>
+                  ) : null}
+                  {canDelete && (
+                    <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, justifyContent: 'flex-end' }}>
+                      <TouchableOpacity
+                        onPress={() => handleResolveReport(rep.id, 'reviewed')}
+                        style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6, borderWidth: 1, borderColor: colors.border }}
+                      >
+                        <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '500' }}>Mark reviewed</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => handleResolveReport(rep.id, 'dismissed')}
+                        style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6, borderWidth: 1, borderColor: colors.border }}
+                      >
+                        <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500' }}>Dismiss</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
           </View>
         </View>
       )}
@@ -814,16 +932,25 @@ export default function ProviderDetailScreen() {
          {selectedRating === 0 && !provider.user_rating && (
            <Text style={[styles.tapHint, { color: colors.accent }]}>⬆ Tap a star above to rate (required)</Text>
          )}
+         {myHireCount === 0 && (
+           <Text style={[styles.tapHint, { color: colors.textMuted, marginTop: 4 }]}>
+             💡 Contact this provider (via Call or WhatsApp) before submitting a review.
+           </Text>
+         )}
          <TextInput
            style={[styles.reviewInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
            placeholder="Share your experience... (optional)"
            placeholderTextColor={colors.textMuted}
            value={reviewText}
            onChangeText={setReviewText}
+           maxLength={1000}
            multiline
            numberOfLines={3}
            textAlignVertical="top"
          />
+         <Text style={{ fontSize: 11, color: colors.textMuted, textAlign: 'right', marginTop: 2, marginBottom: 4 }}>
+           {reviewText.length}/1000
+         </Text>
          <TouchableOpacity
            onPress={handleSubmitReview}
            disabled={isReviewSubmitDisabled}
@@ -854,23 +981,25 @@ export default function ProviderDetailScreen() {
       </View>
 
       <View style={styles.adminControls}>
-        <TouchableOpacity
-          style={[styles.reportBtn, { borderColor: hasReported ? colors.border : colors.accent, marginBottom: canDelete ? 10 : 0 }]}
-          onPress={handleReport}
-          disabled={hasReported || isReporting}
-          activeOpacity={0.7}
-        >
-          {isReporting ? (
-            <ActivityIndicator color={colors.accent} size="small" />
-          ) : (
-            <>
-              <Ionicons name={hasReported ? 'checkmark-circle' : 'flag-outline'} size={18} color={hasReported ? colors.textMuted : colors.accent} />
-              <Text style={{ color: hasReported ? colors.textMuted : colors.accent, marginLeft: 8, fontWeight: '500' }}>
-                {hasReported ? 'Reported' : 'Report provider'}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
+        {isOwnCommunity && (
+          <TouchableOpacity
+            style={[styles.reportBtn, { borderColor: hasReported ? colors.border : colors.accent, marginBottom: canDelete ? 10 : 0 }]}
+            onPress={handleReport}
+            disabled={hasReported || isReporting}
+            activeOpacity={0.7}
+          >
+            {isReporting ? (
+              <ActivityIndicator color={colors.accent} size="small" />
+            ) : (
+              <>
+                <Ionicons name={hasReported ? 'checkmark-circle' : 'flag-outline'} size={18} color={hasReported ? colors.textMuted : colors.accent} />
+                <Text style={{ color: hasReported ? colors.textMuted : colors.accent, marginLeft: 8, fontWeight: '500' }}>
+                  {hasReported ? 'Reported' : 'Report provider'}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
         {canDelete && (
           <TouchableOpacity style={[styles.dangerBtn, { borderColor: colors.accent }]} onPress={handleDelete}>
             <Ionicons name="close-circle-outline" size={16} color={colors.accent} style={{ marginRight: 6 }} />
@@ -950,18 +1079,24 @@ export default function ProviderDetailScreen() {
               </View>
             )}
 
-            {selectedReason === 'other' && (
+            {selectedReason && (
               <>
-                <Text style={[styles.modalLabel, { color: colors.textMuted }]}>Details *</Text>
+                <Text style={[styles.modalLabel, { color: colors.textMuted, marginTop: 12 }]}>
+                  Details {selectedReason === 'other' ? '*' : '(optional)'}
+                </Text>
                 <TextInput
                   style={[styles.modalInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
                   placeholder="Please describe the issue..."
                   placeholderTextColor={colors.textMuted}
                   numberOfLines={4}
                   multiline
+                  maxLength={500}
                   value={reportDetails}
                   onChangeText={setReportDetails}
                 />
+                <Text style={{ fontSize: 11, color: colors.textMuted, textAlign: 'right', marginTop: -16, marginBottom: 12 }}>
+                  {reportDetails.length}/500
+                </Text>
               </>
             )}
 

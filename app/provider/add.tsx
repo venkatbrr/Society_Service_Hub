@@ -156,6 +156,21 @@ export default function AddProviderScreen() {
       return;
     }
 
+    if (name.trim().length < 2 || name.trim().length > 80) {
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Name must be between 2 and 80 characters' });
+      return;
+    }
+
+    if (description.trim().length > 1000) {
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Description cannot exceed 1000 characters' });
+      return;
+    }
+
+    if (personalNote.trim().length > 1000) {
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Personal note cannot exceed 1000 characters' });
+      return;
+    }
+
     const normalizedPhone = normalizeIndianMobile(phone);
     if (!normalizedPhone) {
       Toast.show({ type: 'error', text1: 'Invalid Phone', text2: 'Enter a valid 10-digit mobile number. Country code is optional.' });
@@ -176,7 +191,11 @@ export default function AddProviderScreen() {
       }
 
       // Run fraud check before inserting
-      const verdict = await checkProviderFraud(normalizedPhone, communityId);
+      const verdict = await checkProviderFraud(normalizedPhone, communityId, {
+        name: name.trim(),
+        description: description.trim(),
+        created_by: user.id,
+      });
 
       if (verdict.action === 'BLOCK') {
         const msg = getFraudActionMessage(verdict);
@@ -319,7 +338,11 @@ export default function AddProviderScreen() {
               placeholder={field.placeholder}
               placeholderTextColor={colors.textMuted}
               value={details[field.key]?.toString() || ''}
-              onChangeText={(val) => updateDetail(field.key, val)}
+              onChangeText={(val) => {
+                const cleaned = val.replace(/[^0-9.]/g, '');
+                const num = parseFloat(cleaned);
+                updateDetail(field.key, isNaN(num) ? '' : Math.max(0, num));
+              }}
               keyboardType="numeric"
             />
           </View>
@@ -361,6 +384,7 @@ export default function AddProviderScreen() {
               placeholderTextColor={colors.textMuted}
               value={name}
               onChangeText={setName}
+              maxLength={80}
             />
           </View>
 
@@ -440,6 +464,7 @@ export default function AddProviderScreen() {
               placeholderTextColor={colors.textMuted}
               value={description}
               onChangeText={setDescription}
+              maxLength={1000}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
@@ -454,6 +479,7 @@ export default function AddProviderScreen() {
               placeholderTextColor={colors.textMuted}
               value={personalNote}
               onChangeText={setPersonalNote}
+              maxLength={1000}
               multiline
               numberOfLines={3}
               textAlignVertical="top"

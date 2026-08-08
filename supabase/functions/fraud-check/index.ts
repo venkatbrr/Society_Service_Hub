@@ -36,6 +36,9 @@ interface ProviderInput {
   provider_id?: string;
   phone: string;
   community_id: string;
+  name?: string;
+  description?: string;
+  created_by?: string;
 }
 
 interface ReviewInput {
@@ -44,6 +47,23 @@ interface ReviewInput {
   provider_id: string;
   review_text: string;
   rating: number;
+}
+
+function containsProfanity(text: string): boolean {
+  if (!text) return false;
+  const lowerText = text.toLowerCase();
+  return PROFANITY_BLOCKLIST.some((word) => {
+    const regex = new RegExp(`\\b${word}\\b`, 'i');
+    return regex.test(lowerText);
+  });
+}
+
+function containsContactInfo(text: string): boolean {
+  if (!text) return false;
+  const urlPattern = /https?:\/\/[^\s]+|www\.[^\s]+/i;
+  const phonePattern = /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/;
+  const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+  return urlPattern.test(text) || phonePattern.test(text) || emailPattern.test(text);
 }
 
 // ── Rule Evaluators ─────────────────────────────────────────────────────────
@@ -70,6 +90,46 @@ async function evaluateProviderRules(
     });
   }
 
+  // R-P2: Profanity in provider name or description
+  const providerText = `${input.name || ''} ${input.description || ''}`;
+  if (containsProfanity(providerText)) {
+    rules.push({
+      rule_id: 'R-P2',
+      rule_name: 'Profanity in provider details',
+      severity: 'FLAG',
+      evidence: 'Provider name or description contains profane terms',
+    });
+  }
+
+  // R-P3: Contact/URL in provider details
+  if (containsContactInfo(providerText)) {
+    rules.push({
+      rule_id: 'R-P3',
+      rule_name: 'Link or external contact in provider details',
+      severity: 'FLAG',
+      evidence: 'Provider name or description contains URL, phone, or email pattern',
+    });
+  }
+
+  // R-P4: Provider creation velocity per user
+  if (input.created_by) {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count: recentCreations } = await supabase
+      .from('service_providers')
+      .select('*', { count: 'exact', head: true })
+      .eq('created_by', input.created_by)
+      .gte('created_at', oneHourAgo);
+
+    if ((recentCreations ?? 0) >= 5) {
+      rules.push({
+        rule_id: 'R-P4',
+        rule_name: 'Provider creation velocity',
+        severity: 'FLAG',
+        evidence: `User created ${recentCreations} providers in the last hour`,
+      });
+    }
+  }
+
   return rules;
 }
 
@@ -80,9 +140,6 @@ async function evaluateReviewRules(
   const rules: TriggeredRule[] = [];
 
   // ── Parallel context queries ──────────────────────────────────────────
-  const now = new Date().toISOString();
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
   const [
@@ -106,14 +163,14 @@ async function evaluateReviewRules(
       .from('ratings')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', input.reviewer_id)
-      .gte('created_at', oneHourAgo),
+      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()),
 
     // R-R3: Provider velocity (ratings in last 24 hours)
     supabase
       .from('ratings')
       .select('*', { count: 'exact', head: true })
       .eq('provider_id', input.provider_id)
-      .gte('created_at', twentyFourHoursAgo),
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
 
     // R-R6: Transaction record check
     supabase
@@ -128,35 +185,32 @@ async function evaluateReviewRules(
       .select('rating, review_text')
       .eq('user_id', input.reviewer_id),
 
-    // R-R15: Rapid sequential (distinct providers in last 5 min)
+    // R-R15: Rapid sequential reviews across different providers
     supabase
       .from('ratings')
       .select('provider_id')
       .eq('user_id', input.reviewer_id)
       .gte('created_at', fiveMinAgo),
 
-    // R-R4: Duplicate text similarity (recent reviews for same provider)
-    input.review_text && input.review_text.trim().length > 0
-      ? supabase
-          .from('ratings')
-          .select('review_text')
-          .eq('provider_id', input.provider_id)
-          .not('review_text', 'is', null)
-          .neq('user_id', input.reviewer_id)
-          .limit(50)
-      : Promise.resolve({ data: [] }),
+    // R-R4: Similar text check on same provider
+    supabase
+      .from('ratings')
+      .select('review_text')
+      .eq('provider_id', input.provider_id)
+      .not('review_text', 'is', null)
+      .limit(50),
   ]);
 
   // ── R-R1: New account review ──────────────────────────────────────────
-  if (profileResult.data?.created_at) {
-    const accountAgeMs = Date.now() - new Date(profileResult.data.created_at).getTime();
-    const accountAgeHours = accountAgeMs / (1000 * 60 * 60);
+  if (profileResult.data) {
+    const createdAt = new Date(profileResult.data.created_at).getTime();
+    const accountAgeHours = (Date.now() - createdAt) / (1000 * 60 * 60);
     if (accountAgeHours < 24) {
       rules.push({
         rule_id: 'R-R1',
         rule_name: 'New account review',
         severity: 'FLAG',
-        evidence: `Account age ${accountAgeHours.toFixed(1)} hours < 24`,
+        evidence: `Account created ${accountAgeHours.toFixed(1)} hours ago (<24h)`,
       });
     }
   }

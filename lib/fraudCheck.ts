@@ -18,6 +18,7 @@ export interface FraudVerdict {
   flag_count: number;
   hard_block_triggered: boolean;
   summary: string;
+  unavailable?: boolean;
 }
 
 // Maps fraud verdict action to the fraud_status column value in the database
@@ -42,7 +43,8 @@ export { actionToFraudStatus };
 
 export async function checkProviderFraud(
   phone: string,
-  communityId: string
+  communityId: string,
+  extra?: { name?: string; description?: string; created_by?: string }
 ): Promise<FraudVerdict> {
   const normalizedPhone = normalizeIndianMobile(phone) ?? phone;
 
@@ -53,18 +55,21 @@ export async function checkProviderFraud(
         data: {
           phone: normalizedPhone,
           community_id: communityId,
+          name: extra?.name,
+          description: extra?.description,
+          created_by: extra?.created_by,
         },
       },
     });
 
     if (error) {
-      console.warn('Fraud check failed, defaulting to PASS:', error.message);
+      console.warn('Fraud check service unavailable, falling back to queued_low:', error.message);
       return createDefaultPassVerdict('provider', 'new');
     }
 
     return data as FraudVerdict;
   } catch (err) {
-    console.warn('Fraud check network error, defaulting to PASS:', err);
+    console.warn('Fraud check network error, falling back to queued_low:', err);
     return createDefaultPassVerdict('provider', 'new');
   }
 }
@@ -91,13 +96,13 @@ export async function checkReviewFraud(params: {
     });
 
     if (error) {
-      console.warn('Fraud check failed, defaulting to PASS:', error.message);
+      console.warn('Fraud check service unavailable, falling back to queued_low:', error.message);
       return createDefaultPassVerdict('review', 'new');
     }
 
     return data as FraudVerdict;
   } catch (err) {
-    console.warn('Fraud check network error, defaulting to PASS:', err);
+    console.warn('Fraud check network error, falling back to queued_low:', err);
     return createDefaultPassVerdict('review', 'new');
   }
 }
@@ -111,11 +116,12 @@ function createDefaultPassVerdict(
   return {
     entity_type: entityType,
     entity_id: entityId,
-    action: 'PASS',
+    action: 'QUEUE_LOW_PRIORITY',
     triggered_rules: [],
     flag_count: 0,
     hard_block_triggered: false,
-    summary: 'Fraud check unavailable, defaulting to pass.',
+    summary: 'Fraud check service unavailable; defaulting to queued_low status.',
+    unavailable: true,
   };
 }
 
@@ -132,8 +138,10 @@ export function getFraudActionMessage(verdict: FraudVerdict): {
       return { title: 'Success', message: '', type: 'success' };
     case 'QUEUE_LOW_PRIORITY':
       return {
-        title: 'Submitted for review',
-        message: 'Your submission will be visible after a quick review.',
+        title: 'Submitted',
+        message: verdict.unavailable
+          ? 'Your submission is live.'
+          : 'Your submission is live.',
         type: 'info',
       };
     case 'HIDE_PENDING_REVIEW':
@@ -145,7 +153,7 @@ export function getFraudActionMessage(verdict: FraudVerdict): {
     case 'BLOCK':
       return {
         title: 'Submission blocked',
-        message: verdict.summary || 'This submission was blocked by our safety checks.',
+        message: verdict.summary || 'This submission was blocked by safety checks.',
         type: 'error',
       };
   }

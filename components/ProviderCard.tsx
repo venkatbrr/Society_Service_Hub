@@ -87,7 +87,7 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
             <Text style={styles.dot}>·</Text>
             
             <Text style={styles.trustText} numberOfLines={1}>
-              {(provider.hire_count ?? 0) > 0 ? `${provider.hire_count} hires` : '0 homes'}
+              {(provider.hire_count ?? 0) === 1 ? '1 contact' : `${provider.hire_count ?? 0} contacts`}
             </Text>
           </View>
         </View>
