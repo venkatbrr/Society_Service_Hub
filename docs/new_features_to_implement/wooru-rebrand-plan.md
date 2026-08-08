@@ -521,3 +521,82 @@ Anything else is a miss.
 ```
 
 Steps 6 and 7 are deliberately interleaved: the admin-email migration is the single riskiest change in this plan, and it is the one change that most deserves a staging environment to land on first.
+
+---
+
+## 11. Go-live runbook — the 8 remaining items
+
+Everything in the repo is done and committed as `bcbd5d0` on branch `rebrand/wooru`. All 8 remaining items live in external dashboards.
+
+**They are grouped by dependency, not by convenience.** Within a group, order does not matter. Across groups it does — the ordering notes are the whole point of this section.
+
+### Group A — independent, do now
+
+| # | Item | Verify |
+|---|---|---|
+| ~~**1**~~ | ✅ **DONE 2026-08-08** — `20260901000000_rebrand_platform_admin_email.sql` applied to prod | Verified: migration recorded; both functions contain `thewooru@gmail.com` and **zero** `societyservicehub` occurrences; both admins return `is_platform_admin = true` |
+| **2** | **Vercel → Settings → Environment Variables:** add `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` at **Production** scope | Trigger a deploy; the build should succeed |
+| **3** | **Google Cloud → Branding:** App name → `Wooru`, support email, logo, home page, privacy/terms | Start a Google sign-in; the consent dialog should say Wooru |
+
+🔴 **#2 is more urgent than it looks.** `build-admin.js` now exits 1 without that variable, so **every Vercel build fails until it is set** — including the preview build for `rebrand/wooru` the moment that branch is pushed. Do #2 *before* pushing the branch.
+
+### Group B — native, strictly ordered
+
+Each step depends on the one before it. Doing these out of order produces confusing failures rather than clear ones.
+
+| Order | # | Item | Why this position |
+|---|---|---|---|
+| B1 | **5** | **expo.dev → rename project slug to `wooru`** (keep the `projectId`) | `eas build` compares `app.json`'s slug against the server's. Nothing native works until this matches. |
+| B2 | **4** | **Google Cloud → Clients → new Android client** for `in.wooru.app` + keystore SHA-1 | Must exist before you test native sign-in, or it fails with an opaque error |
+| B3 | **6** | `npx expo prebuild --clean` | Regenerates `/android`, currently built against `com.gatebond.app` |
+| B4 | — | `eas build --profile preview --platform android`, install, then test **Google Sign-In** and a **password-reset deep link** | The deep link exercises `wooru://`, which is why `wooru://**` had to be in the allow-list |
+
+Get the keystore SHA-1 with:
+
+```bash
+eas credentials
+```
+
+### Group C — Cloudinary, order matters within it
+
+| Order | # | Item |
+|---|---|---|
+| C1 | **7** | Cloudinary → Settings → Upload → create unsigned preset `wooru_unsigned`, default folder `wooru/` |
+| C2 | **7** | Update `.env` → `EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET=wooru_unsigned`, and set the same in Vercel (Production scope) |
+| C3 | — | **Test two uploads:** one *with* a subfolder (provider photo) and one *without* | 
+
+⚠️ **Reversing C1 and C2 breaks all image uploads** — the app would post to a preset that does not exist.
+
+C3 is not optional. Per §4.1, [`lib/cloudinary.ts:74`](../../lib/cloudinary.ts#L74) only sends a `folder` param when a subfolder is passed, so the two cases land via different mechanisms and can fail independently. Some unsigned presets also refuse a client-supplied `folder` outright.
+
+### Group D — domain cutover, last
+
+| Order | # | Item |
+|---|---|---|
+| D1 | **8** | Point `wooru.in` DNS at Vercel — records in [`two-environment-setup-plan.md`](two-environment-setup-plan.md) §7.2 |
+| D2 | — | Vercel → Domains: add `wooru.in` as **primary**, `www.wooru.in` **redirecting to apex** (decision **E**) |
+| D3 | — | Wait for TLS on both |
+| D4 | — | Supabase → Auth → **Site URL** → `https://wooru.in` (allow-list already has the entries) |
+| D5 | — | Google Cloud → Branding → **authorized domain** `wooru.in` — only possible once the domain verifies, which is why it is here and not in Group A |
+| D6 | — | **Test Google sign-in on `wooru.in` before announcing anything** |
+| D7 | — | Remove the four `localhost` entries from the Supabase redirect allow-list |
+
+**Decision E — recommendation: apex canonical** (`wooru.in`, with `www` redirecting). One canonical origin means one set of OAuth origins and no duplicate-content ambiguity. The Google web client already has all three origins registered, so either choice works without further console work.
+
+D7 is the production-hardening step flagged during the auth-config review — keep the localhost entries until you are done developing against prod.
+
+### Deliberately *not* in this runbook
+
+- **`FALLBACK_SITE_URL` is already `https://wooru.in`**, set ahead of DNS. Until D3 completes, **native builds must set `EXPO_PUBLIC_SITE_URL` explicitly** or share links point at a domain that does not resolve.
+- **Preprod** — everything here targets prod only. Resume [`two-environment-setup-plan.md`](two-environment-setup-plan.md) afterwards; its decision **C** is now resolved.
+- **Pushing `rebrand/wooru`** — do #2 first, or the preview build fails.
+
+### Sequencing summary
+
+```
+A(1,2,3) ──┬── B1(5) → B2(4) → B3(6) → B4 test
+           ├── C1(7) → C2 → C3 test
+           └── D1(8) → D2 → D3 → D4 → D5 → D6 → D7
+```
+
+Group A gates nothing but should happen first because #2 unblocks all deploys. B, C, and D are independent of each other and can run in parallel.
