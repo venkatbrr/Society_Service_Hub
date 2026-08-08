@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -14,9 +15,11 @@ import {
   View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { EMAIL_AUTH_UI_ENABLED } from '../constants/authFlags';
 import { Verandah } from '../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, signInWithEmail, signUpWithEmail } from '../lib/auth';
+import { siteUrl } from '../lib/siteUrl';
 import { supabase } from '../lib/supabase';
 
 // Google Sign-In native module — only available on Android/iOS.
@@ -213,11 +216,16 @@ export default function LoginScreen() {
           </View>
           <Text style={styles.title}>Wooru</Text>
           <Text style={styles.subtitle}>
-            {mode === 'signIn' ? 'Welcome back! Sign in to continue.' : 'Join your community marketplace.'}
+            {!EMAIL_AUTH_UI_ENABLED
+              ? 'Sign in with Google to continue.'
+              : mode === 'signIn'
+                ? 'Welcome back! Sign in to continue.'
+                : 'Join your community marketplace.'}
           </Text>
         </View>
 
         {/* Tab toggle */}
+        {EMAIL_AUTH_UI_ENABLED && (
         <View style={styles.tabContainer}>
           <TouchableOpacity
             style={styles.tabButton}
@@ -250,8 +258,11 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
         </View>
+        )}
 
         <View style={styles.form}>
+          {EMAIL_AUTH_UI_ENABLED && (
+          <>
           {mode === 'signUp' && (
             <>
               <View style={styles.inputGroup}>
@@ -375,6 +386,8 @@ export default function LoginScreen() {
             <View style={styles.divider} />
             <Text style={styles.dividerText}>or</Text>
           </View>
+          </>
+          )}
 
           <TouchableOpacity
             style={styles.googleButton}
@@ -393,16 +406,31 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          <View style={styles.toggleModeContainer}>
-            <Text style={styles.toggleModeText}>
-              {mode === 'signIn' ? "Don't have an account? " : "Already have an account? "}
-            </Text>
-            <TouchableOpacity onPress={toggleMode}>
-              <Text style={styles.toggleModeLink}>
-                {mode === 'signIn' ? 'Sign up' : 'Sign in'}
+          {EMAIL_AUTH_UI_ENABLED ? (
+            <View style={styles.toggleModeContainer}>
+              <Text style={styles.toggleModeText}>
+                {mode === 'signIn' ? "Don't have an account? " : "Already have an account? "}
               </Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity onPress={toggleMode}>
+                <Text style={styles.toggleModeLink}>
+                  {mode === 'signIn' ? 'Sign up' : 'Sign in'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            // Google is the only path now, so the sign-up form's terms checkbox
+            // is never shown. This keeps the consent moment visible.
+            <View style={styles.toggleModeContainer}>
+              <Text style={styles.toggleModeText}>By continuing you agree to our </Text>
+              <TouchableOpacity onPress={() => Linking.openURL(siteUrl('/terms'))}>
+                <Text style={styles.toggleModeLink}>Terms</Text>
+              </TouchableOpacity>
+              <Text style={styles.toggleModeText}> and </Text>
+              <TouchableOpacity onPress={() => Linking.openURL(siteUrl('/privacy'))}>
+                <Text style={styles.toggleModeLink}>Privacy Policy</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
