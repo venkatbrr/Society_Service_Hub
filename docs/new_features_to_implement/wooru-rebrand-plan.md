@@ -642,6 +642,23 @@ So the two no-subfolder call sites still produce URLs with no path prefix; they 
 
 ### Group D — domain cutover, last
 
+🔴 **D0 — a successful production deploy is a hard prerequisite.**
+
+`vercel domains add wooru.in wooru` fails with:
+
+> Your project's latest production deployment has errored. Therefore, the domain cannot be assigned. (400)
+
+**Production has been broken since `.env` was untracked.** Deployment `commloom-9e99t1now` (2026-08-08 10:23) failed with:
+
+```
+Missing EXPO_PUBLIC_SUPABASE_URL and/or EXPO_PUBLIC_SUPABASE_ANON_KEY.
+Error: Command "npm run build" exited with 1
+```
+
+The fail-fast guard added in two-environment plan §4.2 worked exactly as intended — it refused to ship an admin console with no configuration instead of deploying something silently dead. The env vars are now set (§11.1), so the next deploy should succeed.
+
+**Required order:** push `rebrand/wooru` → merge to `main` → production deploy goes green → *then* D1.
+
 | Order | # | Item |
 |---|---|---|
 | D1 | **8** | Point `wooru.in` DNS at Vercel — records in [`two-environment-setup-plan.md`](two-environment-setup-plan.md) §7.2 |
