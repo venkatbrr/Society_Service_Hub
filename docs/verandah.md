@@ -17,6 +17,23 @@ This document is the canonical reference for the Verandah UI system used in Woor
 
 No production UI should define parallel visual token sets.
 
+## Brand Mark
+
+The logo is an arch in `Verandah.primaryFg` (`#F0EDE3`) on `Verandah.primary` (`#0F3732`) — the icon set is drawn from the palette, so never introduce a separate "brand green".
+
+| File | Canvas | Composition | Used by |
+|------|--------|-------------|---------|
+| `assets/images/icon.png` | 1024² | Full-bleed green, opaque | App icon (iOS + store), login header |
+| `assets/images/adaptive-icon.png` | 1024² | Cream arch on **transparent**, safe-zone inset | Android adaptive foreground, Android notification icon |
+| `assets/images/splash-icon.png` | 1024² | Rounded green tile on transparent | Splash (`resizeMode: contain` over `#FAF8F4`) |
+| `assets/images/favicon.png` | 48² | Full-bleed green, opaque | Web favicon |
+| `public/images/icon-512.png` | 512² | Full-bleed green | PWA `any`, apple-touch-icon, landing + desktop-panel lockups |
+| `public/images/icon-512-maskable.png` | 512² | Full-bleed green, arch inset to the maskable safe zone | PWA `maskable` |
+
+`public/images/` is a hand-maintained mirror for the web build — it is not generated from `assets/images/`. Replacing a logo means updating **both** trees, then bumping `CACHE_NAME` in `public/service-worker.js`.
+
+Render the mark as an image, never as a substitute glyph. Where a lockup needs a rounded container, give the container `overflow: 'hidden'` and let `icon.png` fill it rather than compositing a small arch over a green square — the two read differently at small sizes.
+
 ## Full Palette
 
 From `Verandah`:

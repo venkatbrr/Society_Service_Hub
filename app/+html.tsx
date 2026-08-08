@@ -1,4 +1,3 @@
-import { Building05 } from '@untitledui/icons/Building05';
 import { Coins01 } from '@untitledui/icons/Coins01';
 import { ShoppingBag03 } from '@untitledui/icons/ShoppingBag03';
 import { Tool02 } from '@untitledui/icons/Tool02';
@@ -26,7 +25,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Wooru" />
-        <link rel="apple-touch-icon" href="/images/icon.png" />
+        <link rel="apple-touch-icon" href="/images/icon-512.png" />
 
         {/* Favicon */}
         <link rel="icon" type="image/png" href="/images/favicon.png" />
@@ -55,7 +54,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
           
           <div className="brand-header">
             <div className="brand-logo-icon">
-              <Building05 size={22} color="#10B981" aria-hidden="true" />
+              <img src="/images/icon-512.png" alt="" aria-hidden="true" />
             </div>
             <h1 className="brand-title">Wooru</h1>
           </div>
@@ -293,12 +292,19 @@ input:focus, textarea:focus, select:focus {
   .brand-logo-icon {
     width: 34px;
     height: 34px;
-    background: rgba(16, 185, 129, 0.15);
     border: 1px solid rgba(16, 185, 129, 0.3);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+  }
+
+  .brand-logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
   .brand-title {

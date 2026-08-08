@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -215,7 +216,11 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <Ionicons name="business" size={48} color={Verandah.primaryFg} />
+            <Image
+              source={require('../assets/images/icon.png')}
+              style={styles.logoImage}
+              resizeMode="cover"
+            />
           </View>
           <Text style={styles.title}>Wooru</Text>
           <Text style={styles.subtitle}>
@@ -462,6 +467,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   logoEmoji: {
     fontSize: 36,

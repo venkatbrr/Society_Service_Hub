@@ -1,6 +1,12 @@
 ```
-FEATURE TEST:  "Providers" and "Visits" feaures under provicers screen.
+FEATURE TEST:  <replace this line with the feature to audit>
 ```
+
+> **Before you start:** check `docs/fixes/done/` for an existing report on this feature.
+> Already audited and closed: Providers & Visits (Help tab), Carpooling, My Posts /
+> My Orders, Parent Corner, Provider rules & moderation, Service Reminders. Re-auditing
+> one of those is only useful if you say up front what changed since; otherwise pick a
+> feature that has no report.
 
 ---
 
@@ -47,41 +53,62 @@ analysis and without asking follow-up questions.
    `npx tsc --noEmit` is the only validation gate — there is no test framework and no lint
    script.
 
-3. **Never write to the database from SQL.** You may run read-only diagnostics. You may
-   probe PostgREST function resolution with calls that provably cannot mutate a row (for
-   example, passing a `00000000-…` UUID to a function whose `WHERE` clause also matches on
+   Also know the house helpers, because a screen that hand-rolls any of them is itself a
+   finding: `confirmAction` (`lib/confirm.ts`) for confirmations, `components/DateField.tsx`
+   for date inputs, `buildWhatsAppUrl` / `normalizeIndianMobile` (`lib/phone.ts`) for phone
+   links, `siteUrl()` (`lib/siteUrl.ts`) for any app URL, and `goBackSmart()`
+   (`lib/navigation.ts`) for header back buttons.
+
+3. **Never write to the database from SQL — and the live project is production.**
+   `mbzvcaoulawdugfearmj` is the **prod** Supabase project behind `wooru.in`; there is no
+   preprod project yet (the `:preprod` npm scripts still contain a literal
+   `PREPROD_REF_TODO` and fail loudly). You may run read-only diagnostics. You may probe
+   PostgREST function resolution with calls that provably cannot mutate a row (for example,
+   passing a `00000000-…` UUID to a function whose `WHERE` clause also matches on
    `auth.uid()`), because resolution errors surface before execution. Never run `INSERT`,
-   `UPDATE`, `DELETE`, or DDL against the live project. Never run `supabase db push`.
+   `UPDATE`, `DELETE`, or DDL. Never run `npm run db:push:prod`, `npm run db:push:preprod`,
+   or `supabase db push` in any form.
 
-4. **Test accounts — use them if you exercise the running app.** The app is **not yet in
-   production**; the Supabase project holds pilot/test data only, so signing in and driving
-   real flows through the UI (create a reminder, submit a form, tap through a list) is
-   allowed and encouraged when static reading cannot settle a question. Writes made *through
-   the app as these users* are fine; direct SQL writes are still forbidden (rule 3).
+4. **There are no test accounts — audit statically, and say so.** As of 2026-08-08 the prod
+   project holds **3 auth users** in **1 community**: two platform admins
+   (`thewooru@gmail.com`, `societyservicehub@gmail.com`, both `community_id IS NULL`) and a
+   single `resident`. There are **zero** `president` / `vice_president` accounts. Any
+   `ira@gmail.com` / `ira3@gmail.com` credentials you find in an older report or prompt are
+   **dead** — those rows do not exist.
 
-   | Role | Email | Password |
-   |---|---|---|
-   | `president` | `ira@gmail.com` | `123456` |
-   | `resident` | `ira3@gmail.com` | `123456` |
+   Email/password sign-in is also **off**: `EMAIL_AUTH_UI_ENABLED = false` in
+   `constants/authFlags.ts`, so the login screen offers Google only. You cannot mint
+   yourself a test user, and you must not create, promote, or delete accounts to get one.
 
-   Walk the role-sensitive findings as **both** accounts — a UI-hidden action that is still
-   reachable for a resident is a P0, and the only way to prove it is to be logged in as one.
-   There is no platform-`admin` test account here; for `admin` behaviour, reason from RLS
-   and the `platform_*` RPCs and say explicitly that you could not exercise it live.
-
-   Start the app with `npm run web` for the fastest loop (this also surfaces the web-only
-   defects in the catalogue below — `Alert.alert`, date pickers). Do not change these
-   accounts' passwords, roles, or community membership, and do not delete data you did not
-   create.
+   What that means for this audit:
+   - Base every finding on **code + migrations + read-only SQL against the live schema**
+     (`pg_policies`, `pg_proc`, `pg_constraint`, `pg_trigger`, row counts).
+   - Role-sensitive claims — "a resident can still reach this", "RLS blocks the cross-
+     community read" — must be proven from the **policy text and RPC guards**, and each one
+     must state explicitly that it was **not** exercised live and name the account that
+     would settle it.
+   - You may still run the app with `npm run web` and audit every **signed-out** and
+     **static** surface: the login screen, deep links, route resolution, web-only rendering
+     (`Alert.alert` no-ops, `null` date pickers, `Share.share`), layout, and console errors.
+     That is a real evidence source — mark those findings `[live]`.
+   - If the user hands you working credentials mid-audit, use them and upgrade the affected
+     findings from inferred to verified. Do not change any account's password, role, or
+     community membership, and do not delete data you did not create.
 
 5. **Do not guess when you can check.** If a column, constraint, function, or route might
    or might not exist, verify it — in `lib/database.types.ts`, in
    `supabase/migrations/`, or against the live PostgREST endpoint. A report full of
    "possibly" is worthless to the agent that has to act on it.
 
-6. **Read the sibling reports in `docs/fixes/` first** (for example
-   `service-reminders-review.md`). They establish the house style, depth, and evidence
-   standard your report must match.
+6. **Read the sibling reports first.** Closed audits live in **`docs/fixes/done/`** —
+   `providers-and-visits-review.md` and `service-reminders-review.md` are the best models.
+   Open audits stay at the top level of `docs/fixes/` (currently
+   `wooru-rebrand-remaining.md`, which also lists live-environment risks worth knowing).
+   They establish the house style, depth, and evidence standard your report must match.
+
+   Note that the older reports predate the two-environment split and still print
+   `npm run db:push`. That command **no longer exists** — see the loop in the *Deliverable*
+   section below. Copy their structure, not their commands.
 
 ---
 
@@ -123,7 +150,8 @@ Not every row applies to every feature. Consider every row, and report the ones 
 | **Empty & boundary input** | Empty string, whitespace-only, single character, exactly-at-limit, one-over-limit, zero, negative, very large numbers, leading zeros, emoji, RTL text, `'`/`"`/`\`/`%`/`<` in text that gets serialized or embedded in a tag or URL |
 | **Field limits vs DB limits** | Does the client's `maxLength` match the DB `CHECK`? If several fields are **serialized into one column**, does the *combined* length still fit? Compute it with real-world values and show the numbers |
 | **Dates & timezones** | The DB runs on **UTC**; residents are on **IST (UTC+5:30)**. Any `CURRENT_DATE`/`now()` comparison against a client-supplied local date is suspect between 00:00 and 05:30 IST. Look for `toISOString().split('T')[0]` — it converts local midnight to the previous UTC day. Check that server-computed and client-computed day counts agree |
-| **Web vs native** | `Alert.alert` is a **no-op on web** — confirmations must branch on `Platform.OS` and use `window.confirm`. `@react-native-community/datetimepicker` renders **`null` on web** — every date/time field needs a web branch. Check image pickers, share sheets, linking (`tel:`, `wa.me`), clipboard, and back-button handling on both |
+| **Web vs native** | `Alert.alert` is a **no-op on web** — every confirmation must go through `confirmAction` (`lib/confirm.ts`), never a hand-rolled `Platform.OS` branch and never a bare `Alert.alert`. `@react-native-community/datetimepicker` renders **`null` on web** — date fields must use `components/DateField.tsx`. WhatsApp links must use `buildWhatsAppUrl` (`lib/phone.ts`), not a raw `whatsapp://` scheme or a bare 10-digit `wa.me` number. `Share.share` rejects on desktop web when `navigator.share` is absent. Check image pickers, `tel:` links, clipboard, and back-button handling on both |
+| **Hardcoded URLs & brand** | Any absolute app URL must come from `siteUrl()` (`lib/siteUrl.ts`) so preprod links stay on preprod; the deep-link scheme is `wooru://`. Grep the feature for a literal `https://`, for the old names (`society service hub`, `commloom`, `gatebond`), and for a hand-written OAuth client ID. Admin-console config must be a `__PLACEHOLDER__` registered in `build-admin.js`, not `process.env` |
 | **Refresh & staleness** | A screen fetching in a plain `useEffect` never refetches when you navigate back to it, and tab screens stay mounted for the whole session. After create / edit / delete, does every surface showing this data actually update — the list, the tab badge, the home card? |
 | **Loading, empty, and error states** | Can the spinner get stuck (an early `return` before `setLoading(false)`)? Does a failed fetch render as "you have nothing" instead of an error? Is a genuine failure distinguishable from an empty result? **Count the states the screen can actually render** — a screen with only *loading* / *empty* has no error state, so every failure lands on the empty copy, often with a "be the first!" call to action while the toast fades. Also check that a sticky flag (`isMissingSchema`, `notFound`) is cleared on **every** path, not just on success |
 | **Text identity & grouping** | Any free-text field whose value is later used as a **key** — deduped into filter chips, compared with `===`, grouped into sections, matched against a hard-coded list. Curly vs. straight apostrophes (`’` U+2019 vs `'` U+0027) are the classic trap: dump the code points of every hard-coded suggestion/option literal (`node -e "…charCodeAt(0)>127…"`) rather than trusting your eyes, and check case and trailing-space handling. Two chips that look identical but list different people is the symptom. Also check that a picker's option list on the **write** screen matches the filter list on the **read** screen element-for-element |
@@ -134,7 +162,7 @@ Not every row applies to every feature. Consider every row, and report the ones 
 | **Function overloads** | If a migration adds parameters via a new signature instead of replacing the old one, both functions now exist and PostgREST may fail to resolve calls (`PGRST203`). Check every RPC the feature calls |
 | **Data lifecycle** | What happens on `ON DELETE CASCADE` / `SET NULL`? If a linked row (provider, listing, community) is deleted or becomes invisible, does the UI degrade gracefully — or does saving an unrelated edit silently null the link? What happens when a user leaves or switches community? |
 | **Navigation** | Deep-link straight to the screen in a fresh tab: does `router.back()` become a no-op? Does the header back button land on the right parent (`getImmediateParentRoute()`)? Android hardware back inside modals? |
-| **Notifications** | Does the feature create `notifications` rows? Do they repeat sensibly or fire exactly once and then go silent forever? Does the tap route to the right screen? Is there a delivery channel at all when the app is closed? |
+| **Notifications** | Does the feature create `notifications` rows? Do they repeat sensibly or fire exactly once and then go silent forever? Does the tap route to the right screen? Is there a delivery channel at all when the app is closed? `pg_cron` is **not installed** — nothing scheduled server-side can exist, so any "we'll remind them later" path must be client-scheduled or trigger-driven |
 | **Money & phone** | Currency parsing, negative and fractional amounts, and whether phone numbers go through `lib/phone.ts` rather than ad-hoc string handling |
 | **Design system** | Hard-coded colours or spacing instead of Verandah tokens (`docs/verandah.md`) |
 | **Scale** | Does the list query paginate? Does search hit the DB or filter client-side over everything? |
@@ -173,15 +201,16 @@ docs/fixes/<feature-slug>-review.md
 ```
 
 `<feature-slug>` is the feature name, lowercased and hyphenated
-(`My Service Reminders` → `service-reminders-review.md`). Create `docs/fixes/` if it does
-not exist.
+(`My Service Reminders` → `service-reminders-review.md`). Write it at the **top level** of
+`docs/fixes/` — that is where open work lives. `docs/fixes/done/` is for reports whose plan
+has been fully implemented; do not write there, and do not move anything into it.
 
 The report must be **self-contained**: the agent that reads it will not have your context,
 your conversation, or your tool output. Everything it needs must be on the page.
 
 ## Required structure
 
-Follow this outline. Match the tone and density of the existing reports in `docs/fixes/`.
+Follow this outline. Match the tone and density of the existing reports in `docs/fixes/done/`.
 
 1. **Title & header block** — feature name, date, status, scope (the file list from step 1),
    method, baseline (`npx tsc --noEmit` state before any change), and a one-line result:
@@ -190,11 +219,29 @@ Follow this outline. Match the tone and density of the existing reports in `docs
 2. **`## READ THIS FIRST — rules for the implementing agent`** — the non-negotiables:
    read `CLAUDE.md` and `docs/CLAUDE.md` first; `npx tsc --noEmit` is the only automated
    gate **and it will not catch these bugs**, so the verification checklist must be walked;
-   after touching `supabase/migrations/`, finish the loop
-   (`npm run db:push` → `npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj`
-   → `npx tsc --noEmit`); the SQL in the document is a specification, not tested code;
-   flag any step that rewrites live resident data as dry-run-first; and state an explicit
-   **scope boundary** naming any shared file the agent may touch only narrowly.
+   the SQL in the document is a specification, not tested code; flag any step that rewrites
+   live resident data as dry-run-first; and state an explicit **scope boundary** naming any
+   shared file the agent may touch only narrowly.
+
+   Two facts the report must spell out, because getting either wrong reaches production:
+
+   - **Commits go straight to `main`, and `main` is Vercel's production branch.** There is
+     no PR gate and nothing runs `tsc` before deploy. Whatever the agent lands is live on
+     `wooru.in` within minutes.
+   - **After touching `supabase/migrations/`, the deploy loop is environment-suffixed —
+     there is deliberately no bare `npm run db:push`:**
+     ```
+     npm run db:push:preprod     # preprod first (fails loudly until PREPROD_REF_TODO is real)
+     npm run types:preprod
+     # then RE-APPEND the hand-maintained enriched-types block at the bottom of
+     # lib/database.types.ts (ProviderWithInteraction / VisitWithJoinerData /
+     # VisitJoinerWithProfile) — gen types overwrites the whole file. docs/CLAUDE.md §6.
+     npx tsc --noEmit
+     npm run db:push:prod        # only after the change is on main
+     npm run types:prod
+     ```
+     Migrations are **not** applied by CI. Merging deploys code, not schema; the prod step
+     is manual and skipping it breaks prod.
 
 3. **`## Severity summary`** — one table: number, issue, severity (P0/P1/P2), area, and the
    task that fixes it, linked to its anchor.
@@ -238,11 +285,14 @@ Follow this outline. Match the tone and density of the existing reports in `docs
    timezone behaviour at 01:00 IST, notification cadence caps, cascade deletes, empty
    states, and the parent-route back button.
 
-   Name the **account** each row must be walked as, and repeat the credentials in the
-   report so the implementing agent does not have to hunt for them:
-   president `ira@gmail.com` / `123456`, resident `ira3@gmail.com` / `123456` (test users;
-   the app is pre-production). Mark any row you verified live during the audit as already
-   observed, and state its actual result.
+   Name the **role** each row must be walked as (`resident`, `president`/`vice_president`,
+   platform `admin`). Do **not** print credentials — there are no working test accounts
+   (ground rule 4), so open the checklist by saying so plainly: sign-in is Google-only,
+   prod holds two platform admins and one resident, and there is no president account.
+   Split the checklist into rows that can be walked **signed out or from code/SQL** and
+   rows that are **blocked pending a real account**, and mark the blocked ones as such
+   rather than pretending they are runnable. Mark any row you verified live during the
+   audit as already observed, and state its actual result.
 
 8. **`# DOCUMENTATION UPDATES`** — route each fact to **exactly one** owning file;
    duplicating facts across docs is what caused the last round of drift:
@@ -302,4 +352,6 @@ Reply with a short summary — not the whole report:
 3. The three findings that matter most, one line each, in resident-impact terms.
 4. Anything you could **not** verify and what would settle it.
 
-Then stop. Do not begin implementing fixes — a separate agent will act on your report.
+Then stop. Do not implement anything — not even a one-line fix you are certain of, and not
+even if you found a P0. The report is the whole deliverable, and it gets reviewed before a
+single line changes. A fix you land now is a fix nobody decided to make.

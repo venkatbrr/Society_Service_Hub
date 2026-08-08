@@ -246,6 +246,9 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | A table with only SELECT/INSERT policies that the app also deletes from | RLS makes the delete match zero rows and **return success**. A delete-then-insert edit flow then duplicates rows instead of replacing them. Check the `error` *and* give the table a DELETE policy. |
 | Writing a parent row and its children in two client round trips when a trigger can reject the children | The parent is already committed, so the rejection leaves an orphan — a "confirmed" pre-order with a total and no items. Anything a constraint can veto must be written in one transaction, i.e. a `SECURITY DEFINER` RPC. Pre-orders go through `place_mcn_preorder()`. |
 | Writing to the `community-uploads` bucket | Unused. Images go to Cloudinary via `lib/cloudinary.ts`. |
+| Leaving `android.adaptiveIcon.backgroundColor` at `#ffffff` | The adaptive foreground is a **cream** arch on transparent — on white it is invisible. It must be `#0F3732`, the same green as the full-bleed `icon.png`. |
+| Pointing `expo-notifications.icon` at `icon.png` | Android masks the notification icon to a silhouette by its alpha channel, so an opaque square renders as a solid white block. Use `adaptive-icon.png` — it has the transparency Android needs. |
+| Swapping a web icon without bumping `CACHE_NAME` in `public/service-worker.js` | The fetch handler is cache-first for images, so installed PWAs keep serving the old icon indefinitely. |
 | Expecting `notifications` rows for hire feedback | It is a purely local `expo-notifications` schedule, not a table row. |
 | Testing Google Sign-In in Expo Go | Requires a dev build. |
 | Reading a community table directly from the admin console | A platform admin has no RLS grant there — returns `[]` with **no error**, so the page renders plausible zeroes. Use a `platform_*` `SECURITY DEFINER` RPC. |

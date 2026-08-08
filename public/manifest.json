@@ -9,16 +9,22 @@
   "theme_color": "#0F3732",
   "icons": [
     {
-      "src": "/images/icon.png",
+      "src": "/images/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/images/adaptive-icon.png",
+      "src": "/images/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/images/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/images/favicon.png",

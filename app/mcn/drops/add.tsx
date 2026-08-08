@@ -133,18 +133,32 @@ export default function CreateOrEditFoodDropScreen() {
   const [loadingDrop, setLoadingDrop] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // The schedule the drop was loaded with, in edit mode. A drop that has been
+  // sitting open past its own cut-off must stay editable (the host may only
+  // want to fix a typo), so the "no past times" rule is enforced against the
+  // values the host actually changed.
+  const [loadedSchedule, setLoadedSchedule] = useState<{
+    cutoffDate: string;
+    cutoffTime: string;
+    fulfillmentDate: string;
+    fulfillmentTime: string;
+  } | null>(null);
+
   const isEditMode = !!dropId;
 
+  // Today's local calendar day — the floor for every date picker on this form.
+  const todayStr = formatDateStr(new Date());
+
   useEffect(() => {
-    // Set default dates if creating new drop
+    // Set default dates if creating new drop. formatDateStr (local calendar
+    // day) rather than toISOString — the UTC day is behind the IST day before
+    // 5:30 AM, which would seed a cut-off date that is already in the past.
     if (!dropId) {
       const now = new Date();
-      const todayStr = now.toISOString().split('T')[0];
       const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-      setCutoffDate(todayStr);
-      setFulfillmentDate(tomorrowStr);
+      setCutoffDate(formatDateStr(now));
+      setFulfillmentDate(formatDateStr(tomorrow));
     }
 
   }, [dropId]);
@@ -173,19 +187,33 @@ export default function CreateOrEditFoodDropScreen() {
           return;
         }
 
+        const loadedFulfillmentDate = dropData.fulfillment_date || '';
+        const loadedFulfillmentTime = normalizeFulfillmentTime(dropData.fulfillment_time || '13:00');
+
         setTitle(dropData.title || '');
         setDescription(dropData.description || '');
         setImageUrl(dropData.image_url || null);
-        setFulfillmentDate(dropData.fulfillment_date || '');
-        setFulfillmentTime(normalizeFulfillmentTime(dropData.fulfillment_time || '13:00'));
+        setFulfillmentDate(loadedFulfillmentDate);
+        setFulfillmentTime(loadedFulfillmentTime);
 
+        let loadedCutoffDate = '';
+        let loadedCutoffTime = '';
         if (dropData.cutoff_at) {
           const cutoffObj = new Date(dropData.cutoff_at);
-          setCutoffDate(cutoffObj.toISOString().split('T')[0]);
-          const hours = String(cutoffObj.getHours()).padStart(2, '0');
-          const mins = String(cutoffObj.getMinutes()).padStart(2, '0');
-          setCutoffTime(`${hours}:${mins}`);
+          // formatDateStr, not toISOString — the date and the time below must
+          // come from the same (local) clock or they describe different moments.
+          loadedCutoffDate = formatDateStr(cutoffObj);
+          loadedCutoffTime = formatTimeStr(cutoffObj);
+          setCutoffDate(loadedCutoffDate);
+          setCutoffTime(loadedCutoffTime);
         }
+
+        setLoadedSchedule({
+          cutoffDate: loadedCutoffDate,
+          cutoffTime: loadedCutoffTime,
+          fulfillmentDate: loadedFulfillmentDate,
+          fulfillmentTime: loadedFulfillmentTime,
+        });
       }
 
       // Load items
@@ -283,6 +311,39 @@ export default function CreateOrEditFoodDropScreen() {
 
     if (isNaN(fulfillAtObj.getTime())) {
       Toast.show({ type: 'error', text1: 'Invalid delivery time timestamp' });
+      return;
+    }
+
+    // A drop scheduled in the past is dead on arrival: place_mcn_preorder
+    // rejects every order once cutoff_at <= now(). Refuse it here rather than
+    // publishing a listing nobody can order from.
+    const now = new Date();
+
+    const cutoffChanged =
+      !loadedSchedule ||
+      loadedSchedule.cutoffDate !== cutoffDate ||
+      loadedSchedule.cutoffTime !== cutoffTime;
+
+    if (cutoffChanged && cutoffAtObj <= now) {
+      Toast.show({
+        type: 'error',
+        text1: 'Cut-off must be in the future',
+        text2: 'Pick a date and time from now onwards — neighbors need time to order.',
+      });
+      return;
+    }
+
+    const fulfillmentChanged =
+      !loadedSchedule ||
+      loadedSchedule.fulfillmentDate !== fulfillmentDate ||
+      loadedSchedule.fulfillmentTime !== fulfillmentTime;
+
+    if (fulfillmentChanged && fulfillAtObj <= now) {
+      Toast.show({
+        type: 'error',
+        text1: 'Delivery time must be in the future',
+        text2: 'Pick a date and time from now onwards.',
+      });
       return;
     }
 
@@ -554,6 +615,7 @@ export default function CreateOrEditFoodDropScreen() {
                 <input
                   type="date"
                   value={fulfillmentDate}
+                  min={cutoffDate && cutoffDate > todayStr ? cutoffDate : todayStr}
                   onChange={(e) => setFulfillmentDate(e.target.value)}
                   style={{
                     height: 42,
@@ -581,6 +643,9 @@ export default function CreateOrEditFoodDropScreen() {
                       value={parseDateStr(fulfillmentDate)}
                       mode="date"
                       display="default"
+                      minimumDate={parseDateStr(
+                        cutoffDate && cutoffDate > todayStr ? cutoffDate : todayStr
+                      )}
                       onChange={(event: DateTimePickerEvent, date?: Date) => {
                         setShowFulfillDatePicker(Platform.OS === 'ios');
                         if (date) setFulfillmentDate(formatDateStr(date));
@@ -653,6 +718,7 @@ export default function CreateOrEditFoodDropScreen() {
                 <input
                   type="date"
                   value={cutoffDate}
+                  min={todayStr}
                   onChange={(e) => setCutoffDate(e.target.value)}
                   style={{
                     height: 42,
@@ -680,6 +746,7 @@ export default function CreateOrEditFoodDropScreen() {
                       value={parseDateStr(cutoffDate)}
                       mode="date"
                       display="default"
+                      minimumDate={parseDateStr(todayStr)}
                       onChange={(event: DateTimePickerEvent, date?: Date) => {
                         setShowCutoffDatePicker(Platform.OS === 'ios');
                         if (date) setCutoffDate(formatDateStr(date));

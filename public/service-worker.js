@@ -1,11 +1,15 @@
 // Wooru — PWA Service Worker (v2)
 // Provides offline caching for static assets and network-first strategy for navigation.
 
-const CACHE_NAME = 'wooru-pwa-v1';
+// Bump CACHE_NAME whenever a cached asset changes — the fetch handler is
+// cache-first for images, so installed PWAs keep serving the old icons otherwise.
+const CACHE_NAME = 'wooru-pwa-v2';
 const STATIC_ASSETS = [
   '/landing.html',
   '/manifest.json',
   '/images/icon.png',
+  '/images/icon-512.png',
+  '/images/icon-512-maskable.png',
   '/images/favicon.png',
 ];
 
