@@ -604,17 +604,41 @@ Historical URLs like `commloom-9dp7cm4p1-society-service-hub.vercel.app` show wh
 
 Also deferred, and only relevant to native: `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` and `app.json`'s `iosUrlScheme` are both still literal placeholders — iOS Google Sign-In has never been configured. Log it in [`disabled-features.md`](../disabled-features.md) if iOS stays out of scope.
 
-### Group C — Cloudinary, order matters within it
+### Group C — Cloudinary ✅ DONE 2026-08-08
 
-| Order | # | Item |
+The existing preset was **renamed in place** (`society_hub_unsigned` → `wooruin`) and its asset folder changed to `wooru` — rather than creating a new preset. Renaming avoids the settings-drift risk of rebuilding a preset from defaults, which was the main hazard here.
+
+| Done | |
+|---|---|
+| Preset name | `society_hub_unsigned` → **`wooruin`** |
+| Preset asset folder | `society_hub` → **`wooru`** |
+| `.env` | `EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET=wooruin` |
+| Vercel Production + Preview | same, verified by readback |
+
+⚠️ **Renaming a preset breaks uploads until every consumer is updated** — the app posts `upload_preset=<name>`, and the old name 404s the instant it changes. `.env` and Vercel were updated immediately; **a redeploy is still required** for the live site to pick it up.
+
+#### Verified against the live Cloudinary API
+
+Both code paths were exercised with real uploads, not assumed:
+
+| Path | Call sites | Result |
 |---|---|---|
-| C1 | **7** | Cloudinary → Settings → Upload → create unsigned preset `wooru_unsigned`, default folder `wooru/` |
-| C2 | **7** | Update `.env` → `EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET=wooru_unsigned`, and set the same in Vercel (Production scope) |
-| C3 | — | **Test two uploads:** one *with* a subfolder (provider photo) and one *without* | 
+| **No `folder` param** | [`app/services/add.tsx:464`](../../app/services/add.tsx#L464), [`app/services/[id].tsx:756`](../../app/services/[id].tsx#L756) | `secure_url` → `/upload/v…/<id>.png`, `asset_folder: wooru` |
+| **`folder=wooru/<sub>`** | the other 8 `<ImageUploader>` usages | `secure_url` → `/upload/v…/wooru/<sub>/<id>.png`, `asset_folder: wooru` |
 
-⚠️ **Reversing C1 and C2 breaks all image uploads** — the app would post to a preset that does not exist.
+**The client-supplied `folder` is honoured** — the risk that an unsigned preset would reject or ignore it does not apply here.
 
-C3 is not optional. Per §4.1, [`lib/cloudinary.ts:74`](../../lib/cloudinary.ts#L74) only sends a `folder` param when a subfolder is passed, so the two cases land via different mechanisms and can fail independently. Some unsigned presets also refuse a client-supplied `folder` outright.
+#### Cloudinary has two independent folder concepts
+
+Worth recording, because the first test run was confusing until this was clear:
+
+- **`folder` upload param** → becomes the **public_id prefix**, and therefore appears in the URL. This is what [`lib/cloudinary.ts:75`](../../lib/cloudinary.ts#L75) sets.
+- **Preset "Asset folder"** → media-library organization only. Does **not** affect the URL.
+
+So the two no-subfolder call sites still produce URLs with no path prefix; they are merely filed under `wooru` in the library. That is cosmetic — the `secure_url` is what gets persisted to the database.
+
+🧹 **Cleanup owed:** four 1×1 test PNGs were uploaded during verification and cannot be removed without the API secret. Delete them in the media library:
+`xasvpb0nk3oinelatwdl` · `fwq7mdeyl7iz8awipyuh` · `wooru/testsub/hgolrxw9cwhnjlckd8be` · `wooru/testsub/lgfps6cy4y62phxdglvr`
 
 ### Group D — domain cutover, last
 
