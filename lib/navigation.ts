@@ -34,7 +34,7 @@ import { BackHandler, Platform } from 'react-native';
  *   genuinely no history to pop.
  */
 
-const STACK_STORAGE_KEY = 'ssh_navigation_stack';
+const STACK_STORAGE_KEY = 'wooru_navigation_stack';
 const MAX_TRACKED_ROUTES = 25;
 
 /** Native has no sessionStorage; an in-memory stack is enough there. */

@@ -1,4 +1,4 @@
-# Society Service Hub — Application Summary
+# Wooru — Application Summary
 
 > **The master overview.** Single-source portrait of the whole product for AI agents and maintainers.
 > Deep detail lives elsewhere: per-screen contracts in [`docs/features.md`](../docs/features.md), schema and RPCs in [`docs/architecture.md`](../docs/architecture.md), rules in [`docs/CLAUDE.md`](../docs/CLAUDE.md). Doc routing table: [`docs/README.md`](../docs/README.md).
@@ -9,7 +9,7 @@
 
 ## 1. What this app is
 
-Society Service Hub is a **multi-tenant community operations app for gated residential societies in India**. Each society ("community") is an isolated tenant. Residents join by a 6-character code; new societies are created only through a platform-reviewed request.
+Wooru is a **multi-tenant community operations app for gated residential societies in India**. Each society ("community") is an isolated tenant. Residents join by a 6-character code; new societies are created only through a platform-reviewed request.
 
 The product covers seven resident-facing capabilities:
 

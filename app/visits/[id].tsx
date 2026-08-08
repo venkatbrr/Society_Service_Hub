@@ -389,7 +389,7 @@ export default function VisitDetailScreen() {
     if (!visit) return;
     const shareUrl = siteUrl(`/visits/${visit.id}`);
 
-    const message = `Join my service visit on Society Hub!\n\n` +
+    const message = `Join my service visit on Wooru!\n\n` +
       `• Title: ${visit.title}\n` +
       `• Provider: ${visit.provider_name}\n` +
       `• Date: ${formatDate(visit.visit_date)}\n` +

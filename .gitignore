@@ -43,3 +43,6 @@ public/admin/
 # generated native folders
 /ios
 /android
+
+.vercel
+.env*

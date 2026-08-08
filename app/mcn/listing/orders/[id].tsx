@@ -146,7 +146,7 @@ export default function OrdersReceivedScreen() {
       (sum, item) => sum + Number(item.unit_price) * Number(item.quantity),
       0
     );
-    const text = `Hi ${buyerName}, thanks for your order on Society Service Hub!\n${productLines}\nTotal: ₹${total.toFixed(0)}`;
+    const text = `Hi ${buyerName}, thanks for your order on Wooru!\n${productLines}\nTotal: ₹${total.toFixed(0)}`;
     const url = buildWhatsAppUrl(phone, text);
     if (url) {
       Linking.openURL(url);

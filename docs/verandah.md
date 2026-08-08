@@ -1,6 +1,6 @@
 # Verandah Design Reference
 
-This document is the canonical reference for the Verandah UI system used in Society Service Hub.
+This document is the canonical reference for the Verandah UI system used in Wooru.
 
 ## Principles
 

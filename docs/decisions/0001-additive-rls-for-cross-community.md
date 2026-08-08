@@ -6,7 +6,7 @@
 
 ## Context
 
-Society Service Hub enforces multi-tenant isolation via Supabase Row Level Security. The central helper is `get_user_community_id()` which returns the JWT/profile-derived home community of the caller. It is referenced by RLS policies on roughly every domain table:
+Wooru enforces multi-tenant isolation via Supabase Row Level Security. The central helper is `get_user_community_id()` which returns the JWT/profile-derived home community of the caller. It is referenced by RLS policies on roughly every domain table:
 
 - `service_providers`, `service_visits`, `visit_joiners`, `ratings`, `provider_hires`, `events`, `event_transactions`, `fund_roles`, `community_requests`, plus several derived RPCs.
 

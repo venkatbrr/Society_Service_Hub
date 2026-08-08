@@ -31,9 +31,9 @@ This is the whole list. Everything else is either done or derivable from these.
 
 | # | What | Why I can't do it myself |
 |---|---|---|
-| **A** | **Create the preprod Supabase project.** Dashboard → New project. Same organization, **same region** as prod. Name it `society-hub-preprod`. Then send me the **project ref** (the 20-char string in the project URL). | The Supabase MCP server is scoped to a single project and exposes no `create_project` tool. The CLI *could* do it via `supabase projects create`, but that provisions billable infrastructure under your organization — that's your decision to make, not mine. |
+| **A** | **Create the preprod Supabase project.** Dashboard → New project. Same organization, **same region** as prod. Name it `wooru-preprod`. Then send me the **project ref** (the 20-char string in the project URL). | The Supabase MCP server is scoped to a single project and exposes no `create_project` tool. The CLI *could* do it via `supabase projects create`, but that provisions billable infrastructure under your organization — that's your decision to make, not mine. |
 | **B** | **Give me MCP access to preprod.** Either repoint the existing MCP server, or add a second entry (e.g. `supabase-preprod`) in `.mcp.json`. Setup steps are in [`../supabase-mcp.md`](../supabase-mcp.md). | The current MCP connection only reaches prod. Without this I can't verify preprod's schema matches. |
-| **C** | **Decide the domain name**, then tell me. | Everything in §7, §8, and the `EXPO_PUBLIC_SITE_URL` values depends on it. See §3 for exactly what changes when you decide. |
+| ~~**C**~~ | ✅ **Resolved** — the domain is `wooru.in`. See §3. DNS is not yet pointed at Vercel; the live host remains `wooru.vercel.app` in the meantime. | — |
 
 ### 1.2 Non-blocking — decisions I need eventually
 
@@ -62,12 +62,12 @@ They're live on prod but not committed. **Commit them before preprod is created*
 
 | Layer | Preprod | Prod |
 |---|---|---|
-| Supabase project | new — `society-hub-preprod` | existing — `mbzvcaoulawdugfearmj` |
+| Supabase project | new — `wooru-preprod` | existing — `mbzvcaoulawdugfearmj` |
 | Database contents | fake seed data | real |
 | Git branch | `preprod` | `main` |
 | Vercel | same project, `preprod` branch | same project, `main` branch |
-| Web URL | `staging.<DOMAIN>` | `<DOMAIN>` + `www.<DOMAIN>` |
-| Admin console | `staging.<DOMAIN>/admin` | `<DOMAIN>/admin` |
+| Web URL | `staging.wooru.in` | `wooru.in` + `www.wooru.in` |
+| Admin console | `staging.wooru.in/admin` | `wooru.in/admin` |
 | Google OAuth client | new, separate | existing |
 | Cloudinary | same cloud, `preprod/` folder + own preset | existing preset |
 | Mobile (EAS) | `preview` profile | `production` profile |
@@ -75,7 +75,7 @@ They're live on prod but not committed. **Commit them before preprod is created*
 **Promotion flow:**
 
 ```
-feature/* → PR → preprod → verify on staging.<DOMAIN> → PR → main → prod
+feature/* → PR → preprod → verify on staging.wooru.in → PR → main → prod
 ```
 
 ### Why one Vercel project rather than two
@@ -84,19 +84,20 @@ A single project keeps env vars, domains, and build settings in one place, and V
 
 ---
 
-## 3. The domain placeholder
+## 3. The domain ✅ decided — `wooru.in`
 
-Throughout this document, **`<DOMAIN>`** stands for the domain you buy. Nothing is hardcoded to a guess.
+This section used to carry a `<DOMAIN>` placeholder. The domain is now settled as **`wooru.in`**, purchased alongside the rebrand — see [`wooru-rebrand-plan.md`](wooru-rebrand-plan.md).
 
-Once you decide, exactly three things need the real value:
-
-| Where | What to set |
-|---|---|
-| [`../../lib/siteUrl.ts`](../../lib/siteUrl.ts) | `FALLBACK_SITE_URL` — currently `https://commloom.vercel.app`, your live host. Change to `https://<DOMAIN>`. |
-| Vercel env vars (§6.2) | `EXPO_PUBLIC_SITE_URL` — `https://<DOMAIN>` for Production, `https://staging.<DOMAIN>` for Preview |
-| [`../../eas.json`](../../eas.json) (§9) | `EXPO_PUBLIC_SITE_URL` per build profile |
+| Where | Value | Status |
+|---|---|---|
+| [`../../lib/siteUrl.ts`](../../lib/siteUrl.ts) | `FALLBACK_SITE_URL = 'https://wooru.in'` | ✅ done 2026-08-08 |
+| [`../../api/share-drop.ts`](../../api/share-drop.ts) | `APP_ORIGIN` reads `EXPO_PUBLIC_SITE_URL`, falls back to `https://wooru.in` | ✅ done 2026-08-08 |
+| Vercel env vars (§6.2) | `https://wooru.in` (Production) / `https://staging.wooru.in` (Preview) | ⛔ pending |
+| [`../../eas.json`](../../eas.json) (§9) | `EXPO_PUBLIC_SITE_URL` per build profile | ⛔ pending — `eas.json` still has no `env` blocks at all |
 
 Plus the dashboard-only settings in §7 and §8 (Vercel domains, Supabase Auth URLs, Google OAuth origins). None of those live in git.
+
+⚠️ **`wooru.in` DNS is not pointed at Vercel yet.** Until it resolves, the live host is `wooru.vercel.app` — which is what Supabase's Site URL and the Google OAuth origins currently point at. `FALLBACK_SITE_URL` is deliberately set ahead of DNS, so **native builds must set `EXPO_PUBLIC_SITE_URL` explicitly** until the domain is live.
 
 Everything else already reads the origin dynamically, so the domain choice does not ripple into application code.
 
@@ -143,7 +144,7 @@ Every share link repeated the same `Platform.OS === 'web' ? window.location.orig
 
 | File | Was |
 |---|---|
-| `app/admin-redirect.tsx` | `https://commloom.vercel.app/admin/index.html` |
+| `app/admin-redirect.tsx` | `https://wooru.in/admin/index.html` |
 | `app/mcn/drops/[id].tsx` | `https://society-service-hub.app/api/share-drop?id=…` |
 | `app/provider/[id].tsx` | `https://society-service-hub.app/provider/…` |
 | `app/visits/[id].tsx` | `https://society-service-hub.app/visits/…` |
@@ -223,13 +224,13 @@ Any mismatch is a prod-only change never captured as a migration. Fix it by writ
 ### 5.4 Auth configuration (dashboard-only — not in git)
 
 **Preprod** → Authentication → URL Configuration:
-- Site URL: `https://staging.<DOMAIN>`
+- Site URL: `https://staging.wooru.in`
 - Redirect allow-list:
-  - `https://staging.<DOMAIN>/**`
+  - `https://staging.wooru.in/**`
   - `http://localhost:8081/**`
   - `societyservicehub://**` — the native deep link, used by `lib/auth.ts` for password reset
 
-**Prod** — at cutover only (§7), change Site URL from the current `*.vercel.app` value to `https://<DOMAIN>` and add `https://<DOMAIN>/**` to the allow-list.
+**Prod** — at cutover only (§7), change Site URL from the current `*.vercel.app` value to `https://wooru.in` and add `https://wooru.in/**` to the allow-list.
 
 Also per-project and **not** captured in git: Google provider credentials, email templates, rate limits, JWT expiry. **Write down anything you change** — these are the easiest settings to lose.
 
@@ -296,7 +297,7 @@ Then on GitHub: require PRs into `main`, no direct pushes.
 | `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | prod iOS client | preprod iOS client |
 | `EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME` | same | same |
 | `EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | prod preset | `preprod_unsigned` |
-| `EXPO_PUBLIC_SITE_URL` | `https://<DOMAIN>` | `https://staging.<DOMAIN>` |
+| `EXPO_PUBLIC_SITE_URL` | `https://wooru.in` | `https://staging.wooru.in` |
 
 Leaving *Preview* unrestricted rather than pinning it to the `preprod` branch is deliberate: every feature-branch preview then points at preprod, which is the safe default.
 
@@ -338,9 +339,9 @@ Vercel prints the exact current values when you add each domain — **use what t
 
 **Project → Settings → Domains:**
 
-1. `<DOMAIN>` → production branch (`main`); set as primary
-2. `www.<DOMAIN>` → redirect to apex
-3. `staging.<DOMAIN>` → **set Git Branch = `preprod`**
+1. `wooru.in` → production branch (`main`); set as primary
+2. `www.wooru.in` → redirect to apex
+3. `staging.wooru.in` → **set Git Branch = `preprod`**
 
 Step 3 is the key one: a branch-assigned domain always serves that branch's latest deployment, so staging gets a stable URL instead of a per-commit preview hash.
 
@@ -354,7 +355,7 @@ Add to `vercel.json`:
 "headers": [
   {
     "source": "/(.*)",
-    "has": [{ "type": "host", "value": "staging.<DOMAIN>" }],
+    "has": [{ "type": "host", "value": "staging.wooru.in" }],
     "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
   }
 ]
@@ -375,14 +376,14 @@ On Vercel Pro, also enable **Deployment Protection → Password Protection** for
 
 ### 8.1 Google OAuth
 
-Create a **second Web OAuth client** — same Google Cloud project is fine — named `Society Hub — Preprod`.
+Create a **second Web OAuth client** — same Google Cloud project is fine — named `Wooru — Preprod`.
 
 **Preprod client:**
-- Authorized JavaScript origins: `https://staging.<DOMAIN>`, `http://localhost:8081`
+- Authorized JavaScript origins: `https://staging.wooru.in`, `http://localhost:8081`
 - Authorized redirect URI: `https://<PREPROD_REF>.supabase.co/auth/v1/callback`
 
 **Prod client** — add alongside existing entries:
-- Origins: add `https://<DOMAIN>`, `https://www.<DOMAIN>`
+- Origins: add `https://wooru.in`, `https://www.wooru.in`
 - Redirect URI unchanged: `https://mbzvcaoulawdugfearmj.supabase.co/auth/v1/callback`
 
 Paste each client ID + secret into the matching Supabase project's Google provider settings.
@@ -415,7 +416,7 @@ Add `env` blocks to [`../../eas.json`](../../eas.json):
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://<PREPROD_REF>.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "<preprod anon key>",
-        "EXPO_PUBLIC_SITE_URL": "https://staging.<DOMAIN>"
+        "EXPO_PUBLIC_SITE_URL": "https://staging.wooru.in"
       }
     },
     "preview": {
@@ -426,7 +427,7 @@ Add `env` blocks to [`../../eas.json`](../../eas.json):
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://mbzvcaoulawdugfearmj.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "<prod anon key>",
-        "EXPO_PUBLIC_SITE_URL": "https://<DOMAIN>"
+        "EXPO_PUBLIC_SITE_URL": "https://wooru.in"
       }
     }
   }
@@ -470,7 +471,7 @@ Add `env` blocks to [`../../eas.json`](../../eas.json):
 - [ ] Confirm `/admin` connects to preprod (check the network tab for the preprod ref)
 
 **Phase 3 — domain**
-- [ ] Buy `<DOMAIN>` → *needs §1.1-C*
+- [ ] Buy `wooru.in` → *needs §1.1-C*
 - [ ] Add apex + `www` → `main`; `staging` → branch `preprod`
 - [ ] Wait for TLS on all three
 - [ ] Add the `noindex` header
@@ -487,9 +488,9 @@ Add `env` blocks to [`../../eas.json`](../../eas.json):
 - [ ] `eas build --profile preview --platform android`; verify it hits preprod
 - [ ] Register the preprod signing SHA-1 if native sign-in fails
 
-**Phase 6 — retire the old URL**
-- [ ] Keep `commloom.vercel.app` as a redirect for a few weeks
-- [ ] Then remove it from the prod Google client's origins
+**Phase 6 — retire the old URL** — ✅ **obsolete, nothing to do**
+
+The Vercel project was renamed `commloom` → `wooru` on 2026-08-08 using **"Remove old domain"**, not "Redirect". `commloom.vercel.app` no longer resolves and has been dropped from the Google client's origins. Nothing held that URL, so no redirect period was needed. See [`wooru-rebrand-plan.md`](wooru-rebrand-plan.md) §7.1.
 
 ---
 
@@ -499,7 +500,7 @@ Add `env` blocks to [`../../eas.json`](../../eas.json):
 
 1. Write the migration in `supabase/migrations/` on a feature branch
 2. `npm run db:push:preprod` → `npm run types:preprod` → re-append enriched types → `npx tsc --noEmit`
-3. PR into `preprod`; verify on `staging.<DOMAIN>`
+3. PR into `preprod`; verify on `staging.wooru.in`
 4. PR `preprod` → `main`
 5. **After merging:** `npm run db:push:prod`, then `npm run types:prod` to confirm
 

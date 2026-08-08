@@ -282,7 +282,7 @@ export default function ListingDetailScreen() {
 
   const handleWhatsApp = () => {
     if (!contactPhone) return;
-    const text = `Hi ${listing?.profiles?.full_name || 'there'}, I found your business "${listing?.name}" on Society Hub and wanted to enquire about your services.`;
+    const text = `Hi ${listing?.profiles?.full_name || 'there'}, I found your business "${listing?.name}" on Wooru and wanted to enquire about your services.`;
     const url = buildWhatsAppUrl(contactPhone, text);
     if (url) {
       Linking.openURL(url);

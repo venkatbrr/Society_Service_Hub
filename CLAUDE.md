@@ -2,7 +2,7 @@
 
 Guidance for Claude Code (claude.ai/code) working in this repository.
 
-Society Service Hub — a multi-tenant community app for gated residential societies. **Expo (React Native) + TypeScript + Supabase + expo-router**, targeting Android, iOS, and an installable PWA, plus a separate vanilla-JS admin console at `admin-dashboard/`.
+Wooru — a multi-tenant community app for gated residential societies. **Expo (React Native) + TypeScript + Supabase + expo-router**, targeting Android, iOS, and an installable PWA, plus a separate vanilla-JS admin console at `admin-dashboard/`.
 
 ## Read this first
 

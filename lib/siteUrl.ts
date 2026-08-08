@@ -7,11 +7,13 @@ import { Platform } from 'react-native';
  * links stay on preprod and prod links stay on prod without any configuration.
  *
  * On native there is no origin to read, so it comes from EXPO_PUBLIC_SITE_URL,
- * set per EAS build profile (see eas.json). The fallback is the live prod host
- * and exists only so a misconfigured build produces working links rather than
- * broken ones — update it when the custom domain is live.
+ * set per EAS build profile (see eas.json). The fallback exists only so a
+ * misconfigured build produces working links rather than broken ones.
+ *
+ * Points at the custom domain, which is not live yet — until DNS resolves,
+ * native builds MUST set EXPO_PUBLIC_SITE_URL explicitly.
  */
-const FALLBACK_SITE_URL = 'https://commloom.vercel.app';
+const FALLBACK_SITE_URL = 'https://wooru.in';
 
 export function getSiteUrl(): string {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {

@@ -15,7 +15,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
 
         {/* SEO Optimization */}
-        <title>Society Service Hub — Resident Portal</title>
+        <title>Wooru — Resident Portal</title>
         <meta name="description" content="Your premium community marketplace — find trusted service providers rated by neighbors, coordinate visits, manage cultural funds, and connect with residents." />
 
         {/* PWA manifest & theme */}
@@ -25,7 +25,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         {/* Apple PWA support */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Society Hub" />
+        <meta name="apple-mobile-web-app-title" content="Wooru" />
         <link rel="apple-touch-icon" href="/images/icon.png" />
 
         {/* Favicon */}
@@ -57,7 +57,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
             <div className="brand-logo-icon">
               <Building05 size={22} color="#10B981" aria-hidden="true" />
             </div>
-            <h1 className="brand-title">Society Hub</h1>
+            <h1 className="brand-title">Wooru</h1>
           </div>
 
           <p className="brand-tagline">

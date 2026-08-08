@@ -82,7 +82,7 @@ const Auth = {
         .eq('id', user.id)
         .single();
 
-      const isCanonicalAdmin = user.email && user.email.trim().toLowerCase() === 'societyservicehub@gmail.com';
+      const isCanonicalAdmin = user.email && user.email.trim().toLowerCase() === 'thewooru@gmail.com';
 
       if (error) {
         // Fallback: check RPC or canonical email if profile select fails
@@ -156,7 +156,9 @@ window.Auth = Auth;
 window.initGoogleSignIn = function() {
   if (window.google && window.google.accounts) {
     google.accounts.id.initialize({
-      client_id: '39089637830-umcdd6qvaii40qpcmfjlv90fguk4bjlq.apps.googleusercontent.com',
+      // Substituted by build-admin.js from EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID.
+      // No bundler here, so process.env is unreachable at runtime.
+      client_id: '__GOOGLE_WEB_CLIENT_ID__',
       callback: window.handleGoogleSignInResponse
     });
     
