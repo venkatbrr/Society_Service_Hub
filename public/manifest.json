@@ -1,6 +1,6 @@
 {
-  "name": "Society Service Hub",
-  "short_name": "SSH",
+  "name": "Wooru",
+  "short_name": "Wooru",
   "description": "Your community marketplace — find providers, manage visits, track funds, and connect with neighbors.",
   "start_url": "/",
   "display": "standalone",

@@ -51,7 +51,7 @@ export const signInWithEmail = async (email: string, password: string) => {
  */
 export const resetPassword = async (email: string) => {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'societyservicehub://reset-password',
+    redirectTo: 'wooru://reset-password',
   });
   return { data, error };
 };

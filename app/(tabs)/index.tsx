@@ -132,7 +132,7 @@ export default function HomeScreen() {
 
     try {
       await Share.share({
-        message: `Join my community on Society Service Hub!${communityInvite.name ? `\nCommunity: ${communityInvite.name}` : ''}\nCode: ${communityInvite.code}`,
+        message: `Join my community on Wooru!${communityInvite.name ? `\nCommunity: ${communityInvite.name}` : ''}\nCode: ${communityInvite.code}`,
       });
     } catch (error) {
       const err = error as any;

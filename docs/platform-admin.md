@@ -62,7 +62,9 @@ These four are the complete enum. `community_lead` and `community_admin` were ph
 
 Notes:
 
-- `societyservicehub@gmail.com` is the canonical platform-admin identity. Client routing treats it as `admin` even before profile hydration completes, and migrations restore `app_role = 'admin'` with a null community if the profile is ever reset.
+- There are **two** platform admins: `thewooru@gmail.com` and `societyservicehub@gmail.com` (retained from before the Wooru rebrand). Both hold the role through their profile row — `app_role = 'admin'` with `community_id IS NULL`.
+- `thewooru@gmail.com` is additionally the **canonical** identity: it is the one address hardcoded in `is_platform_admin()` and `handle_new_user()`, and the one client routing treats as `admin` before profile hydration completes. It is the break-glass path if a profile row is ever reset.
+- A platform admin **cannot also be a resident**: `is_platform_admin()` requires `community_id IS NULL`, and `profile_block_guard` rejects a `block_id` that outlives its community. Promoting an existing resident account clears its community, block, and flat number.
 - Client routing gives `app_role = 'admin'` precedence even when `profiles.community_id` is stale — but the database value should still be corrected to `NULL`.
 - Approving a **community request** assigns the requester as `resident`. Approving a **funds-access request** is what promotes someone to `president`.
 - There is no `community_admin` promotion workflow, and no admin UI for cross-community federation.

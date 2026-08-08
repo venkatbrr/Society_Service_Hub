@@ -1,7 +1,7 @@
-// Society Service Hub — PWA Service Worker (v2)
+// Wooru — PWA Service Worker (v2)
 // Provides offline caching for static assets and network-first strategy for navigation.
 
-const CACHE_NAME = 'ssh-pwa-v2';
+const CACHE_NAME = 'wooru-pwa-v1';
 const STATIC_ASSETS = [
   '/landing.html',
   '/manifest.json',

@@ -6,7 +6,7 @@ FEATURE TEST:  "Providers" and "Visits" feaures under provicers screen.
 
 # Your mission
 
-You are auditing the feature named above in the **Society Service Hub** codebase
+You are auditing the feature named above in the **Wooru** codebase
 (Expo / React Native + TypeScript + Supabase + expo-router; Android, iOS, and an
 installable PWA; plus a vanilla-JS admin console at `admin-dashboard/`).
 

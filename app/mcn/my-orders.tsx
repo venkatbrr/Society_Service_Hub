@@ -265,7 +265,7 @@ export default function MyOrdersScreen() {
   };
 
   const handleWhatsApp = (phone: string | null, title: string, itemsText: string, total: number) => {
-    const text = `Hi, I placed an order for "${title}" on Society Service Hub:\n${itemsText}\nTotal: ₹${total.toFixed(0)}`;
+    const text = `Hi, I placed an order for "${title}" on Wooru:\n${itemsText}\nTotal: ₹${total.toFixed(0)}`;
     const url = buildWhatsAppUrl(phone, text);
     if (url) {
       Linking.openURL(url);

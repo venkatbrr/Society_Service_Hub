@@ -1,8 +1,8 @@
 /**
- * Cloudinary upload utility for Society Service Hub.
+ * Cloudinary upload utility for Wooru.
  *
  * Uses UNSIGNED upload preset (no API key required on client).
- * All images go to the `society_hub` folder on Cloudinary.
+ * All images go to the `wooru` folder on Cloudinary.
  */
 
 const CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -32,7 +32,7 @@ export interface CloudinaryUploadResult {
  * Upload an image URI (from expo-image-picker) to Cloudinary.
  *
  * @param imageUri - Local file URI (e.g. file:///... or content://...)
- * @param subfolder - Optional subfolder inside `society_hub/` (e.g. "listings", "products")
+ * @param subfolder - Optional subfolder inside `wooru/` (e.g. "listings", "products")
  * @returns The HTTPS URL of the uploaded image
  */
 export async function uploadToCloudinary(
@@ -72,7 +72,7 @@ export async function uploadToCloudinary(
   formData.append('upload_preset', UPLOAD_PRESET);
 
   if (subfolder) {
-    formData.append('folder', `society_hub/${subfolder}`);
+    formData.append('folder', `wooru/${subfolder}`);
   }
 
   const response = await fetch(UPLOAD_URL, {

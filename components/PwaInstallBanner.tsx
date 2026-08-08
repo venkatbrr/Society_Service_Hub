@@ -56,7 +56,7 @@ export function PwaInstallBanner() {
           <Ionicons name="download-outline" size={20} color={Verandah.primaryFg} />
         </View>
         <View style={styles.textWrap}>
-          <Text style={styles.title}>Install Society Hub</Text>
+          <Text style={styles.title}>Install Wooru</Text>
           <Text style={styles.subtitle}>Install app on your device for fast access</Text>
         </View>
         <TouchableOpacity style={styles.installBtn} onPress={handleInstall}>

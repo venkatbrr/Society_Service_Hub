@@ -259,7 +259,7 @@ export default function SosScreen() {
   const handleWhatsApp = useCallback((name: string, phone: string) => {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const target = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-    const message = encodeURIComponent(`Hi ${name}, I got your contact from Society Service Hub regarding blood donation.`);
+    const message = encodeURIComponent(`Hi ${name}, I got your contact from Wooru regarding blood donation.`);
     const url = `https://wa.me/${target}?text=${message}`;
     Linking.openURL(url).catch(() => {
       Toast.show({ type: 'error', text1: 'Error', text2: 'Could not open WhatsApp' });

@@ -11,7 +11,7 @@ import { siteUrl } from '../lib/siteUrl';
 
 export default function AdminRedirectScreen() {
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleOpenAdmin = () => {
@@ -50,7 +50,7 @@ export default function AdminRedirectScreen() {
         <Text style={styles.title}>Platform Admin Console</Text>
         
         <Text style={styles.description}>
-          You are signed in as Platform Admin (societyservicehub@gmail.com). Click below to open the Admin Console to manage community approvals, society settings, and fund access.
+          You are signed in as Platform Admin{user?.email ? ` (${user.email})` : ''}. Click below to open the Admin Console to manage community approvals, society settings, and fund access.
         </Text>
 
         <TouchableOpacity 

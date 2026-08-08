@@ -9,7 +9,11 @@
 // everyone else straight into the app.
 const { createClient } = require('@supabase/supabase-js');
 
-const APP_ORIGIN = 'https://society-service-hub.app';
+// Mirrors lib/siteUrl.ts, which this file cannot import — that module pulls in
+// react-native, and this runs in Vercel's plain Node runtime. Reads the same
+// EXPO_PUBLIC_SITE_URL the rest of the deployment uses, so preview deployments
+// emit preview URLs instead of production ones.
+const APP_ORIGIN = (process.env.EXPO_PUBLIC_SITE_URL || 'https://wooru.in').replace(/\/+$/, '');
 const DEFAULT_IMAGE = `${APP_ORIGIN}/images/icon.png`;
 
 const BOT_USER_AGENT_PATTERN =
@@ -65,7 +69,7 @@ module.exports = async function handler(req: any, res: any) {
 
   const title = escapeHtml(drop.title || 'Food Drop');
   const description = escapeHtml(
-    drop.description?.trim() || 'Pre-order fresh home-cooked food from your neighbors on Society Service Hub.'
+    drop.description?.trim() || 'Pre-order fresh home-cooked food from your neighbors on Wooru.'
   );
   const image = escapeHtml(drop.image_url || DEFAULT_IMAGE);
   const safeAppUrl = escapeHtml(appUrl);

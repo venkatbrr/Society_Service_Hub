@@ -338,7 +338,7 @@ export default function CarpoolDetailScreen() {
     }
     const clean = normalizeIndianMobile(phone) || phone.replace(/\D/g, '');
     const formatted = clean.length === 10 ? `91${clean}` : clean;
-    const msg = encodeURIComponent(`Hi, I saw your ride post "${carpool?.title || 'Ride'}" on Society Hub.`);
+    const msg = encodeURIComponent(`Hi, I saw your ride post "${carpool?.title || 'Ride'}" on Wooru.`);
     Linking.openURL(`https://wa.me/${formatted}?text=${msg}`);
   };
 

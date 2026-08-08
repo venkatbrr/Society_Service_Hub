@@ -390,7 +390,7 @@ Same class as finding 5; fold into the same hardening migration.
 
 Baseline: BlaBlaCar (intercity), Quick Ride / sRide (Indian corporate commute), and the residual Waze Carpool model.
 
-| Capability | Industry standard | Society Service Hub today | Gap |
+| Capability | Industry standard | Wooru today | Gap |
 |---|---|---|---|
 | **Ride identity** | A dated departure instance; recurring templates spawn per-day instances | Clock time + weekday labels, **no date** | Findings 14 · **critical** |
 | **Seat inventory** | `total_seats` fixed, `booked_seats` derived, atomic server-side reservation | One mutable column serving both roles, client-side arithmetic | 1, 2 · **critical** |

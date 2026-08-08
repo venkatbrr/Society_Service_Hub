@@ -41,7 +41,7 @@ Jump straight to what you need; skip the rest.
 
 ### Forgot password — `app/forgot-password.tsx`
 
-Sends a Supabase reset email. Email must contain `@`. Reset URL uses the `societyservicehub://reset-password` deep-link scheme. Returns to `/login`.
+Sends a Supabase reset email. Email must contain `@`. Reset URL uses the `wooru://reset-password` deep-link scheme. Returns to `/login`.
 
 ### Community select — `app/community-select.tsx`
 

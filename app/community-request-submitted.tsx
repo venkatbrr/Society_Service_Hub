@@ -74,7 +74,7 @@ export default function CommunityRequestSubmittedScreen() {
   const handleShareCode = async (code: string) => {
     try {
       await Share.share({
-        message: `Join my community on Society Service Hub! Use code: ${code}`,
+        message: `Join my community on Wooru! Use code: ${code}`,
         title: 'Community Join Code',
       });
     } catch {
@@ -83,7 +83,7 @@ export default function CommunityRequestSubmittedScreen() {
   };
 
   const handleShareWhatsApp = (code: string) => {
-    const message = encodeURIComponent(`Join my community on Society Service Hub! Use code: ${code}`);
+    const message = encodeURIComponent(`Join my community on Wooru! Use code: ${code}`);
     Linking.openURL(`whatsapp://send?text=${message}`).catch(() => {
       Toast.show({ type: 'error', text1: 'WhatsApp not installed' });
     });

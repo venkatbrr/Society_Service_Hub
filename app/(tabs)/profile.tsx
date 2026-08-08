@@ -262,7 +262,7 @@ export default function ProfileScreen() {
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Society Service Hub v1.0.0</Text>
+        <Text style={styles.version}>Wooru v1.0.0</Text>
       </ScrollView>
     </View>
   );

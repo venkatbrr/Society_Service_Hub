@@ -211,7 +211,7 @@ export default function LoginScreen() {
           <View style={styles.logoContainer}>
             <Ionicons name="business" size={48} color={Verandah.primaryFg} />
           </View>
-          <Text style={styles.title}>Society Service Hub</Text>
+          <Text style={styles.title}>Wooru</Text>
           <Text style={styles.subtitle}>
             {mode === 'signIn' ? 'Welcome back! Sign in to continue.' : 'Join your community marketplace.'}
           </Text>

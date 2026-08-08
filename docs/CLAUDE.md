@@ -2,7 +2,7 @@
 
 > **Rules you must follow while editing this repo.** Product detail lives in [`features.md`](features.md); technical detail in [`architecture.md`](architecture.md); design tokens in [`verandah.md`](verandah.md). Doc routing: [`README.md`](README.md).
 
-Society Service Hub — a multi-tenant community app for gated residential societies. **Expo (React Native) + TypeScript + Supabase + expo-router**, targeting iOS, Android, and an installable PWA, plus a separate vanilla-JS admin console.
+Wooru — a multi-tenant community app for gated residential societies. **Expo (React Native) + TypeScript + Supabase + expo-router**, targeting iOS, Android, and an installable PWA, plus a separate vanilla-JS admin console.
 
 ---
 
@@ -250,13 +250,15 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Testing Google Sign-In in Expo Go | Requires a dev build. |
 | Reading a community table directly from the admin console | A platform admin has no RLS grant there — returns `[]` with **no error**, so the page renders plausible zeroes. Use a `platform_*` `SECURITY DEFINER` RPC. |
 | Destructuring only `data` from a Supabase call | A silent failure then looks like real empty data. Always check `error` too. |
-| Editing `admin-dashboard/js/*` and expecting the change to show | It is source only. `node build-admin.js` copies it to `dist/admin/` and the **committed, actually-served** `public/admin/`. Rebuild and hard-refresh. |
+| Editing `admin-dashboard/js/*` and expecting the change to show | It is source only. `node build-admin.js` copies it to `dist/admin/`. (`public/admin/` was a second copy — it is now untracked and gitignored.) Rebuild and hard-refresh. |
 | Editing an already-applied migration file | `db push` tracks by filename, not content — it reports "up to date" and your fix never lands. Add a new migration or apply directly with `db query -f`. |
 | A bare column name inside a `RETURNS TABLE` function whose OUT param shares that name | Raises *"column reference is ambiguous"* at **call** time, not creation time. Alias the table and qualify the column. |
 | Expecting `npx supabase gen types` to preserve the file | It overwrites everything, wiping the hand-maintained `ProviderWithInteraction` / `VisitWithJoinerData` / `VisitJoinerWithProfile` block at the bottom. Re-append it every time — see §6. |
 | Committing `.env` | It is now gitignored and untracked. Environment selection lives in Vercel env vars and `eas.json` build profiles, never in a committed file. Copy `.env.example` to `.env` for local work. |
 | Hardcoding an absolute app URL | Use `siteUrl('/path')` from [`lib/siteUrl.ts`](../lib/siteUrl.ts). On web it reads `window.location.origin`, so preprod links stay on preprod; on native it reads `EXPO_PUBLIC_SITE_URL`. Eight hand-written URLs pointing at a dead domain were removed on 2026-08-08. |
-| Adding config to the admin console expecting `process.env` | `admin-dashboard/` has no bundler — files are copied verbatim. Config must be a `__PLACEHOLDER__` substituted by `build-admin.js`, which exits 1 if the Supabase env vars are missing. |
+| Adding config to the admin console expecting `process.env` | `admin-dashboard/` has no bundler — files are copied verbatim. Config must be a `__PLACEHOLDER__` registered in `ADMIN_SUBSTITUTIONS` in `build-admin.js`, which exits 1 if any mapped env var is missing. Currently `__SUPABASE_URL__`, `__SUPABASE_ANON_KEY__`, `__GOOGLE_WEB_CLIENT_ID__`. Only publishable values belong there — never a service role key. |
+| Hardcoding an app URL, brand name, or OAuth client ID | All three were rebranded on 2026-08-08. URLs go through `siteUrl()`; the deep-link scheme is `wooru://`; the admin console's Google client ID is a build-time placeholder. |
+| Making a platform admin also a resident | `is_platform_admin()` requires `community_id IS NULL`, and trigger `profile_block_guard` rejects a `block_id` whose community no longer matches. Promoting a resident account clears its community, block, and flat number — it cannot hold both roles. |
 | Editing `public/admin/` | It is generated output, now untracked and gitignored. Edit `admin-dashboard/` — the real source. |
 | Calling an `is_platform_admin()`-gated RPC via `supabase db query --linked` | That connection is not an authenticated admin user, so the function raises. Replicate its inner query to test instead. |
 | Assuming a fund's treasurer/collectors are community-wide | They are **per-fund** rows in `fund_roles`. A community with three funds has three independent treasurers. |

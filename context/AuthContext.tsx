@@ -12,7 +12,7 @@ type FundsAccessStatus = {
   rejection_reason: string | null;
   decided_at: string | null;
 } | null;
-const PLATFORM_ADMIN_EMAIL = 'societyservicehub@gmail.com';
+const PLATFORM_ADMIN_EMAIL = 'thewooru@gmail.com';
 
 function normalizeAppRole(role: AppRole | null | undefined, isKnownPlatformAdminEmail: boolean): AppRole {
   if (isKnownPlatformAdminEmail) {

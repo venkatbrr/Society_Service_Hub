@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Society_Service_Hub",
-    "slug": "Society_Service_Hub",
+    "name": "Wooru",
+    "slug": "wooru",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "societyservicehub",
+    "scheme": "wooru",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -14,7 +14,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "in.wooru.app"
     },
     "android": {
       "usesCleartextTraffic": true,
@@ -24,7 +25,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.gatebond.app"
+      "package": "in.wooru.app"
     },
     "web": {
       "bundler": "metro",

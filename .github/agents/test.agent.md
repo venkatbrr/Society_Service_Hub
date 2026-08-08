@@ -1,12 +1,12 @@
 ---
 name: test
-description: End-to-end tester for Society Service Hub. Use when you want to verify features, UI alignment, or regressions across all screens. Invoke by sending "test" or a specific area e.g. "test providers", "test carpools", "test mcn". Automatically hands off all failures to the bug_fix agent after the run.
+description: End-to-end tester for Wooru. Use when you want to verify features, UI alignment, or regressions across all screens. Invoke by sending "test" or a specific area e.g. "test providers", "test carpools", "test mcn". Automatically hands off all failures to the bug_fix agent after the run.
 argument-hint: Area to test (e.g. "providers", "visits", "funds", "reminders", "notifications", "mcn", "drops", "carpools", "parents", "schools", "sos") or "all" for a full regression run. Leave blank to test everything.
 tools: ['execute', 'read', 'search', 'web', 'todo', 'agent']
 agents: [bug_fix]
 ---
 
-# Society Service Hub — Test Agent
+# Wooru — Test Agent
 
 ## Purpose
 Automated end-to-end feature and UI tester. Run the app, sign in with the test account, and methodically test the requested areas. Report pass/fail with observed vs expected behavior and flag visual misalignment.

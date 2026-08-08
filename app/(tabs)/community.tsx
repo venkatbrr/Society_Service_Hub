@@ -201,7 +201,7 @@ export default function CommunityScreen() {
 
     try {
       await Share.share({
-        message: `Join my community on Society Service Hub!${communityDetails?.name ? `\nCommunity: ${communityDetails.name}` : ''}\nCode: ${code}`,
+        message: `Join my community on Wooru!${communityDetails?.name ? `\nCommunity: ${communityDetails.name}` : ''}\nCode: ${code}`,
       });
     } catch (error) {
       const err = error as any;
