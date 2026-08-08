@@ -745,7 +745,7 @@ export default function ProviderDetailScreen() {
                     <Text style={[styles.detailMetaLabel, { color: colors.textMuted }]}>{label.toUpperCase()}</Text>
                     {fieldConfig?.type === 'number' ? (
                       <View style={styles.moneyMetaRow}>
-                        <Rupees amount={typeof val === 'number' ? val : parseFloat(val) || 0} size={15} color={colors.text} />
+                        <Rupees amount={typeof val === 'number' ? val : parseFloat(val) || 0} size="sm" />
                         {fieldConfig.suffix ? (
                           <Text style={[styles.detailMetaSuffix, { color: colors.textMuted }]}>/ {fieldConfig.suffix}</Text>
                         ) : null}
