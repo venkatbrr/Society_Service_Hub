@@ -248,6 +248,10 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Writing to the `community-uploads` bucket | Unused. Images go to Cloudinary via `lib/cloudinary.ts`. |
 | Leaving `android.adaptiveIcon.backgroundColor` at `#ffffff` | The adaptive foreground is a **cream** arch on transparent — on white it is invisible. It must be `#0F3732`, the same green as the full-bleed `icon.png`. |
 | Pointing `expo-notifications.icon` at `icon.png` | Android masks the notification icon to a silhouette by its alpha channel, so an opaque square renders as a solid white block. Use `adaptive-icon.png` — it has the transparency Android needs. |
+| Depending on RPC guards to protect table UPDATE | A `SECURITY DEFINER` RPC's guard does not protect the underlying table. `join_community_by_code()` refuses a second join, but the `profiles` UPDATE policy let a resident set `community_id` directly. Column immutability under RLS needs a `BEFORE UPDATE` trigger — `WITH CHECK` cannot see `OLD`. |
+| Treating any `supabase.auth.getUser()` error as account deletion | `getUser()` returns `AuthRetryableFetchError` for a network timeout/offline state, not just a deleted user. Treating any error as signed-out logs users out whenever they lose signal. |
+| Calling `signOut({ scope: 'local' })` before global `signOut()` | Local signout clears storage tokens first, making the subsequent global call a silent no-op because no access token remains. Revoke server-side first, clear locally second. |
+| Static `app.json` for env-dependent native config | `app.config.js` (not `app.json`) is required for dynamic native config dependent on env vars — config plugin options in `app.json` are frozen at build time. |
 | Swapping a web icon without bumping `CACHE_NAME` in `public/service-worker.js` | The fetch handler is cache-first for images, so installed PWAs keep serving the old icon indefinitely. |
 | Expecting `notifications` rows for hire feedback | It is a purely local `expo-notifications` schedule, not a table row. |
 | Testing Google Sign-In in Expo Go | Requires a dev build. |

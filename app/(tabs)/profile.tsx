@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../components/Avatar';
 import { BlockPicker } from '../../components/BlockPicker';
@@ -121,9 +121,9 @@ export default function ProfileScreen() {
     loadFundRole();
   }, [communityId, fundsEnabled, user?.id]);
 
-  const handleSignOut = () => {
-    signOut();
-    router.replace('/login');
+  const handleSignOut = async () => {
+    await signOut();
+    if (Platform.OS !== 'web') router.replace('/login');
   };
 
   const saveMyBlock = async () => {
@@ -143,7 +143,6 @@ export default function ProfileScreen() {
   };
 
   const refreshAllProfileData = useCallback(async () => {
-    await refreshSession();
     if (user) {
       try {
         const { data } = await supabase.rpc('get_my_due_soon_count');
@@ -154,7 +153,7 @@ export default function ProfileScreen() {
         setRecentServices((data ?? []) as any);
       } catch {}
     }
-  }, [user, refreshSession]);
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {

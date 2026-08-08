@@ -25,12 +25,24 @@ LogBox.ignoreLogs([
 import { useSyncedBackNavigation } from '../lib/navigation';
 
 function RootLayoutNav() {
-  const { session, communityId, activeCommunityRequest, isPlatformAdmin, isLoading } = useAuth();
+  const { session, profile, communityId, activeCommunityRequest, isPlatformAdmin, isLoading } = useAuth();
   const segments = useSegments();
   const pathname = usePathname();
   const router = useRouter();
   const lastRedirectRef = useRef<string | null>(null);
   const savedTargetRouteRef = useRef<string | null>(null);
+
+  const takeSavedRoute = () => {
+    let target = savedTargetRouteRef.current;
+    if (!target && Platform.OS === 'web' && typeof window !== 'undefined') {
+      try { target = window.sessionStorage.getItem('wooru.pendingRoute'); } catch {}
+    }
+    savedTargetRouteRef.current = null;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try { window.sessionStorage.removeItem('wooru.pendingRoute'); } catch {}
+    }
+    return target;
+  };
 
   // Synchronize browser back button and mobile back button to immediate parent routes
   useSyncedBackNavigation();
@@ -66,6 +78,8 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (isLoading) return;
+    // A session without a resolved profile is mid-hydration, not "signed in with no community"
+    if (session && !profile && !isPlatformAdmin) return;
 
     const inAuthGroup = segments[0] === 'login';
     const isWebRootPath = Platform.OS === 'web' && pathname === '/';
@@ -86,6 +100,9 @@ function RootLayoutNav() {
       if (!inAuthGroup && !isPublicFoodDropRoute && !isWebRootPath) {
         if (pathname && pathname !== '/' && pathname !== '/login') {
           savedTargetRouteRef.current = pathname;
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            try { window.sessionStorage.setItem('wooru.pendingRoute', pathname); } catch {}
+          }
         }
         redirectTo = '/login';
       }
@@ -101,8 +118,7 @@ function RootLayoutNav() {
     } else if (isOnAdminRedirect) {
       // Non-admin landed on admin-redirect route → redirect appropriately
       if (communityId) {
-        redirectTo = savedTargetRouteRef.current || '/(tabs)';
-        savedTargetRouteRef.current = null;
+        redirectTo = takeSavedRoute() || '/(tabs)';
       } else if (activeCommunityRequest) {
         redirectTo = '/community-request-submitted';
       } else {
@@ -119,8 +135,7 @@ function RootLayoutNav() {
       (inAuthGroup || isOnCommunitySelect || isOnCommunityRequest || isOnCommunityRequestSubmitted)
     ) {
       // Has community → main app or saved target route
-      redirectTo = savedTargetRouteRef.current || '/(tabs)';
-      savedTargetRouteRef.current = null;
+      redirectTo = takeSavedRoute() || '/(tabs)';
     }
 
     if (!redirectTo) {
@@ -144,6 +159,7 @@ function RootLayoutNav() {
     }
   }, [
     session,
+    profile,
     communityId,
     activeCommunityRequest,
     isPlatformAdmin,

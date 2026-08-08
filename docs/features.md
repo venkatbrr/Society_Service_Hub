@@ -33,15 +33,15 @@ Jump straight to what you need; skip the rest.
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Sign up or sign in with email/password or Google |
+| **Purpose** | Sign in with Google (or optional email/password if enabled) |
 | **Tables** | `auth.users` via Supabase Auth; a trigger auto-creates the `profiles` row |
-| **Rules** | Email must contain `@`. Sign-up requires full name plus matching password and confirmation. Flat number is **not** collected here — `profiles.flat_number` stays optional and is captured later by flows that need it. Signing up with an already-registered email flips the form to sign-in mode and suggests Forgot password. Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection rather than silently reusing the last account. |
+| **Rules** | Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection rather than silently reusing the last account. OAuth errors on web display a clear Toast message. Target deep-link routes survive OAuth redirects on the PWA. |
 | **Navigation** | Entry point when unauthenticated. Links to `/forgot-password`. Post-auth routing belongs to the root layout, which restores any saved deep-link target. |
 | **Integrations** | Supabase Auth, Google Sign-In (needs a dev build — not Expo Go) |
 
 ### Forgot password — `app/forgot-password.tsx`
 
-Sends a Supabase reset email. Email must contain `@`. Reset URL uses the `wooru://reset-password` deep-link scheme. Returns to `/login`.
+Sends a Supabase reset email. Email must contain `@`. Reset URL redirects to `/login` (with `/reset-password` route reserved for future implementation).
 
 ### Community select — `app/community-select.tsx`
 
@@ -49,7 +49,7 @@ Sends a Supabase reset email. Email must contain `@`. Reset URL uses the `wooru:
 |--------|---------|
 | **Purpose** | Join an existing community by code, or start a new-community request |
 | **RPC** | `join_community_by_code(p_code)` |
-| **Rules** | 6-character uppercase alphanumeric code. Joining is **immediate — there is no resident approval queue**. On success the screen calls `refreshSession()` so `communityId` is populated before redirecting. If the joined community has `blocks_enabled = true`, the user is routed to `/community-join-block` first. |
+| **Rules** | 6-character uppercase alphanumeric code. Joining is **immediate — there is no resident approval queue**. A removed resident cannot re-join with the code; a community lead must re-admit them via `community_lead_readmit_resident`. On success the screen calls `refreshSession()` so `communityId` is populated before redirecting. If the joined community has `blocks_enabled = true`, the user is routed to `/community-join-block` first. |
 | **Navigation** | → `/community-join-block` or `/(tabs)`; → `/community-request` for a new community |
 
 ### Community join block — `app/community-join-block.tsx`

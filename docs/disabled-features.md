@@ -30,8 +30,10 @@ The old strings were written for the period when confirmation was off, where an 
 ### 1b. Email/password sign-in — UI hidden 2026-08-08
 
 - **Status**: **Hidden in the UI, fully working underneath.** Google is the only onboarding path residents see.
-- **Flag**: [`constants/authFlags.ts`](../constants/authFlags.ts) → `EMAIL_AUTH_UI_ENABLED = false`. Flip to `true` to restore; nothing else needs changing.
+- **Flag**: [`constants/authFlags.ts`](../constants/authFlags.ts) → `EMAIL_AUTH_UI_ENABLED = false`. Flip to `true` to restore.
+- **Prerequisites before re-enabling**: A real `/reset-password` route must be created in `app/reset-password.tsx` (the dormant `resetPassword()` in `lib/auth.ts` points to `/login` for now).
 - **Not removed**: `signUpWithEmail`, `signInWithEmail`, `resetPassword` and `getAuthErrorMessage` in `lib/auth.ts` are untouched, and the **Email provider stays enabled in Supabase**. Existing password accounts still work; the API still accepts them.
+- **Admin console note (D11)**: The admin console retains a password form at `/admin/index.html` for platform admins (`thewooru@gmail.com`), and Supabase's `auth_leaked_password_protection` is off.
 
 **Why.** Google accounts arrive pre-verified, so no confirmation email is sent. That removes the dependency on Supabase's rate-limited built-in SMTP (§1), along with password resets, password-strength decisions, and forgotten-password support — a large maintenance surface for a side project.
 

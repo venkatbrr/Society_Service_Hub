@@ -1,6 +1,7 @@
-import { Session, User } from '@supabase/supabase-js';
+import { isAuthRetryableFetchError, Session, User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AppState, Platform } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Enums, Tables } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 
@@ -74,6 +75,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [myFundsAccessRequest, setMyFundsAccessRequest] = useState<FundsAccessStatus>(null);
   const [activeCommunityRequest, setActiveCommunityRequest] = useState<ActiveCommunityRequest>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const sessionRef = React.useRef<Session | null>(session);
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   const isClearingRef = React.useRef(false);
 
@@ -224,7 +230,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .select('funds_enabled, blocks_enabled, block_label')
         .eq('id', resolvedCommunityId)
         .maybeSingle(),
-      supabase.rpc('get_funds_access_status', { p_community_id: resolvedCommunityId }),
+      supabase.rpc('get_funds_access_status'),
     ]).then(([{ data: communityData, error: communityError }, { data: fundsRequestStatus, error: fundsStatusError }]) => {
       if (communityError) {
         console.error('Error loading community activation status:', communityError);
@@ -276,9 +282,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (session?.user?.id) {
         const { error: userError } = await supabase.auth.getUser();
         if (userError) {
-          console.warn('User no longer exists on server — signing out:', userError.message);
-          await clearLocalSession();
-          return;
+          if (isAuthRetryableFetchError(userError)) {
+            console.warn('Could not reach auth server; keeping cached session:', userError.message);
+          } else {
+            console.warn('User no longer exists on server — signing out:', userError.message);
+            await clearLocalSession();
+            return;
+          }
         }
         await loadProfile(session.user.id, session);
       } else {
@@ -300,15 +310,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Safety fallback: Ensure isLoading never remains stuck indefinitely on slow/offline starts
     const safetyTimer = setTimeout(() => {
-      setIsLoading(false);
-    }, 3500);
+      if (!sessionRef.current) setIsLoading(false);
+    }, 8000);
 
     // Re-verify session when mobile app resumes to foreground from background (Native only)
     let appStateSubscription: any = null;
     if (Platform.OS !== 'web') {
       appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
         if (nextAppState === 'active') {
-          fetchSession();
+          supabase.auth.startAutoRefresh();
+          const uid = sessionRef.current?.user?.id;
+          if (uid) void loadProfile(uid, sessionRef.current);
+        } else {
+          supabase.auth.stopAutoRefresh();
         }
       });
     }
@@ -348,8 +362,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshSession = async () => {
     const { data, error } = await supabase.auth.refreshSession();
+
+    if (error && !isAuthRetryableFetchError(error)) {
+      console.warn('Refresh token rejected — signing out:', error.message);
+      await clearLocalSession();
+      Toast.show({
+        type: 'error',
+        text1: 'Session expired',
+        text2: 'Please sign in again.',
+        visibilityTime: 6000,
+      });
+      return;
+    }
     if (error) {
-      console.warn('Token refresh failed — falling back to current session:', error.message);
+      console.warn('Token refresh unreachable — keeping current session:', error.message);
     }
 
     const refreshedSession = data.session ?? session;
@@ -377,17 +403,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await loadProfile(currentSession?.user?.id, currentSession);
   };
 
+  const clearPushTokenForCurrentUser = async () => {
+    const uid = session?.user?.id;
+    if (!uid || Platform.OS === 'web') return;
+    const { error } = await supabase
+      .from('profiles')
+      .update({ expo_push_token: null })
+      .eq('id', uid);
+    if (error) console.warn('Could not clear push token on sign-out:', error.message);
+  };
+
   const signOut = async () => {
-    resetAuthState();
+    await clearPushTokenForCurrentUser();
+
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('Server sign-out failed; clearing locally anyway:', err);
+    }
+
     try {
       await supabase.auth.signOut({ scope: 'local' });
     } catch {
-      // Ignore local storage clear issues
+      /* storage clear best effort */
     }
 
-    supabase.auth.signOut().catch((err) => {
-      console.warn('Background signout notification error:', err);
-    });
+    resetAuthState();
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.location.href = '/login';

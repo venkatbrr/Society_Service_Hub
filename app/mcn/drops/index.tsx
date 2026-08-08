@@ -138,12 +138,11 @@ export default function FoodDropsCatalogScreen() {
           );
 
           if (creatorIds.length > 0) {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('id, full_name, flat_number')
-              .in('id', creatorIds);
+            const { data: hostRows } = await supabase.rpc('get_public_host_profiles', {
+              p_user_ids: creatorIds,
+            });
 
-            (profileData || []).forEach((profile: any) => {
+            (hostRows || []).forEach((profile: any) => {
               profileMap[profile.id] = {
                 full_name: profile.full_name || null,
                 flat_number: profile.flat_number || null,

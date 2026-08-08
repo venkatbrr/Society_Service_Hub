@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Linking,
+    Platform,
     Share,
     StyleSheet,
     Text,
@@ -50,14 +51,11 @@ export default function CommunityRequestSubmittedScreen() {
 
       setRequest(data);
 
-      if (data?.status === 'approved' && data.resulting_community_id) {
-        const { data: community, error: cErr } = await supabase
-          .from('communities')
-          .select('code')
-          .eq('id', data.resulting_community_id)
-          .maybeSingle();
-        if (!cErr && community?.code) {
-          setCommunityCode(community.code);
+      if (data?.status === 'approved') {
+        const { data: requestedComm } = await supabase.rpc('get_my_requested_community');
+        const commInfo = requestedComm?.[0];
+        if (commInfo?.code) {
+          setCommunityCode(commInfo.code);
         }
       }
     } catch (error: any) {
@@ -98,14 +96,11 @@ export default function CommunityRequestSubmittedScreen() {
       // If so, route to block/tower selection before entering the app —
       // same as the join-via-code flow in community-select.tsx.
       if (request?.resulting_community_id) {
-        const { data: community } = await supabase
-          .from('communities')
-          .select('blocks_enabled, block_label')
-          .eq('id', request.resulting_community_id)
-          .maybeSingle();
+        const { data: requestedComm } = await supabase.rpc('get_my_requested_community');
+        const community = requestedComm?.[0];
 
         if (community?.blocks_enabled) {
-          const blockLabel = (community as any)?.block_label ?? 'Block';
+          const blockLabel = community.block_label ?? 'Block';
           router.replace({
             pathname: '/community-join-block',
             params: { communityId: request.resulting_community_id, blockLabel },
@@ -223,7 +218,7 @@ export default function CommunityRequestSubmittedScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={async () => { await signOut(); router.replace('/login'); }}
+            onPress={async () => { await signOut(); if (Platform.OS !== 'web') router.replace('/login'); }}
             style={styles.textButton}
             activeOpacity={0.75}
           >
@@ -267,7 +262,7 @@ export default function CommunityRequestSubmittedScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={async () => { await signOut(); router.replace('/login'); }}
+          onPress={async () => { await signOut(); if (Platform.OS !== 'web') router.replace('/login'); }}
           style={styles.textButton}
           activeOpacity={0.75}
         >

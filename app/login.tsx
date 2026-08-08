@@ -157,6 +157,12 @@ export default function LoginScreen() {
         // Web: use Supabase OAuth redirect flow
         const origin = typeof window !== 'undefined' ? window.location.origin : '';
         const redirectUrl = origin ? `${origin}/login` : undefined;
+
+        try {
+          const pending = window.sessionStorage.getItem('wooru.pendingRoute');
+          if (pending) window.sessionStorage.setItem('wooru.pendingRoute', pending);
+        } catch { /* private mode */ }
+
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
@@ -194,12 +200,16 @@ export default function LoginScreen() {
         throw new Error('No ID token present!');
       }
     } catch (error: any) {
-      if (error.code !== statusCodes.SIGN_IN_CANCELLED) {
+      const isNativeCancel =
+        Platform.OS !== 'web' && error?.code === statusCodes.SIGN_IN_CANCELLED;
+
+      if (!isNativeCancel) {
         console.warn('Google Sign-In Error:', error);
         Toast.show({
           type: 'error',
-          text1: 'Google Auth Error',
-          text2: error.message || 'Failed to sign in with Google'
+          text1: 'Could not sign in with Google',
+          text2: error?.message || 'Please check your connection and try again.',
+          visibilityTime: 6000,
         });
       }
     } finally {
@@ -356,7 +366,7 @@ export default function LoginScreen() {
                     style={{ color: Verandah.accent, textDecorationLine: 'underline' }}
                     onPress={(e) => {
                       e.stopPropagation();
-                      Alert.alert('Terms & Conditions', 'Terms & Conditions placeholder. Link will be provided later.');
+                      Linking.openURL(siteUrl('/terms'));
                     }}
                   >
                     Terms & Conditions

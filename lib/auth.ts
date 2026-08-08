@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
+import { siteUrl } from './siteUrl';
 import { AuthError } from '@supabase/supabase-js';
 
 // Google Sign-In native module — only available on Android/iOS.
@@ -11,9 +12,19 @@ if (Platform.OS !== 'web') {
 
 export function configureGoogleSignIn() {
   if (Platform.OS === 'web' || !GoogleSignin) return; // no-op on web
+
+  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+
+  if (!webClientId || !iosClientId) {
+    throw new Error(
+      'EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID and EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID must be configured in environment variables.'
+    );
+  }
+
   GoogleSignin.configure({
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || 'dummy-web-client-id',
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || 'dummy-ios-client-id',
+    webClientId,
+    iosClientId,
   });
 }
 
@@ -48,10 +59,11 @@ export const signInWithEmail = async (email: string, password: string) => {
 
 /**
  * Sends a password reset email.
+ * Note: A real /reset-password route must be implemented before EMAIL_AUTH_UI_ENABLED is flipped on.
  */
 export const resetPassword = async (email: string) => {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'wooru://reset-password',
+    redirectTo: siteUrl('/login'),
   });
   return { data, error };
 };
@@ -68,8 +80,8 @@ export const getAuthErrorMessage = (error: AuthError) => {
     case 'Email not confirmed':
       return 'Please confirm your email first. Check your inbox for the confirmation link we sent you.';
     case 'Signup disabled':
-      return 'Signups are currently disabled.';
+      return 'Sign up is currently disabled. Please try again later.';
     default:
-      return error.message;
+      return error.message || 'An unexpected error occurred. Please try again.';
   }
 };

@@ -28,7 +28,7 @@ export default function AdminRedirectScreen() {
     setLoggingOut(true);
     try {
       await signOut();
-      router.replace('/login');
+      if (Platform.OS !== 'web') router.replace('/login');
     } catch (error: any) {
       Toast.show({
         type: 'error',

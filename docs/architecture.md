@@ -40,7 +40,7 @@ Community-scoped queries **must** filter by `communityId` from `useAuth()`. Serv
 `user_services` · `user_service_history` · `hire_feedback` · `provider_public_rating_nudges` · `provider_personal_notes` · `favorites`
 
 **Publicly readable** — no session required, so shared links resolve for logged-out visitors:
-`mcn_preorder_drops` and its item/order children, plus the host `profiles` row behind a drop (migrations `20260802010000`, `20260805000000`).
+`mcn_preorder_drops` and its item/order children. Public host profile metadata (`full_name`, `avatar_url`, `flat_number`) for host cards is served via `get_public_host_profiles(uuid[])` RPC (migrations `20260802010000`, `20260805000000`, `20260903000100`). `communities` table reads are restricted to authenticated members (`communities_select_own`) via `get_user_community_id()`, with pre-join requests using `get_my_requested_community()`.
 
 **Globally readable lookups**: `mcn_business_categories`, and `emergency_contacts` rows with `community_id IS NULL`.
 

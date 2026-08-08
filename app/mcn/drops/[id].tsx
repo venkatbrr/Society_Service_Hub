@@ -101,14 +101,21 @@ export default function PreorderDropDetailScreen() {
       if (dropErr || !dropData) throw dropErr || new Error('Drop not found');
 
       // Fetch host profile
-      let hostProfile = null;
+      let hostProfile: any = null;
       if (dropData.created_by) {
-        const { data: pData } = await supabase
-          .from('profiles')
-          .select('full_name, flat_number, phone_number')
-          .eq('id', dropData.created_by)
-          .maybeSingle();
-        hostProfile = pData;
+        const { data: hosts } = await supabase.rpc('get_public_host_profiles', {
+          p_user_ids: [dropData.created_by],
+        });
+        hostProfile = hosts?.[0] ?? null;
+
+        if (hostProfile && user?.id) {
+          const { data: contact } = await supabase
+            .from('profiles')
+            .select('phone_number')
+            .eq('id', dropData.created_by)
+            .maybeSingle();
+          hostProfile = { ...hostProfile, phone_number: contact?.phone_number ?? null };
+        }
       }
 
       // Fetch linked business listing if any
