@@ -18,7 +18,7 @@ import { Verandah } from '../../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
-import { goBackSmart } from '../../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../../lib/navigation';
 import { isValidIndianMobile, normalizeIndianMobile } from '../../../lib/phone';
 import { supabase } from '../../../lib/supabase';
 
@@ -105,7 +105,7 @@ export default function AddCarpoolScreen() {
         if (error) throw error;
         if (!data) {
           Toast.show({ type: 'error', text1: 'Ride not found' });
-          router.replace('/mcn/carpools' as any);
+          replaceTracked(router, '/mcn/carpools' as any);
           return;
         }
 
@@ -293,7 +293,7 @@ export default function AddCarpoolScreen() {
           text1: 'Ride updated',
           text2: 'Your route updates are now live.',
         });
-        router.replace(`/mcn/carpools/${id}` as any);
+        replaceTracked(router, `/mcn/carpools/${id}` as any);
       } else {
         const { error } = await supabase.from('mcn_carpools').insert({
           ...payload,
@@ -306,7 +306,7 @@ export default function AddCarpoolScreen() {
           text1: roleType === 'offering' ? 'Ride offered' : 'Ride request posted',
           text2: 'Your route is now visible to society residents.',
         });
-        router.replace('/mcn/carpools' as any);
+        replaceTracked(router, '/mcn/carpools' as any);
       }
     } catch (err: any) {
       console.error('Error saving carpool:', err);
@@ -320,12 +320,12 @@ export default function AddCarpoolScreen() {
     }
   };
 
+  // goBackSmart() derives the parent from the CURRENT path, so pass this
+  // screen's own route — not the destination. Passing '/mcn/carpools' made it
+  // resolve the parent of the *list* (`/network`), sending back one level too
+  // high and burning a history entry on the replace() fallback.
   const handleBack = () => {
-    if (isEditing && id) {
-      goBackSmart(router, `/mcn/carpools/${id}`);
-    } else {
-      goBackSmart(router, '/mcn/carpools');
-    }
+    goBackSmart(router, isEditing && id ? `/mcn/carpools/add?id=${id}` : '/mcn/carpools/add');
   };
 
   if (loadingInitial) {

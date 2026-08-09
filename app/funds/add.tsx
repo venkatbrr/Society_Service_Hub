@@ -8,6 +8,7 @@ import { VerandahRadius, VerandahSpace, VerandahType , VerandahLayout } from '..
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { MAX_TREASURERS } from '../../lib/fundRoles';
+import { replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
@@ -29,13 +30,13 @@ export default function AddFundScreen() {
   useEffect(() => {
     if (!fundsEnabled) {
       Toast.show({ type: 'error', text1: 'Funds inactive', text2: 'Funds are not active in this community.' });
-      router.replace('/(tabs)/community');
+      replaceTracked(router, '/(tabs)/community');
       return;
     }
 
     if (!isAdmin) {
       Toast.show({ type: 'error', text1: 'Access denied', text2: 'Only the admin can create a fund.' });
-      router.replace('/(tabs)/community');
+      replaceTracked(router, '/(tabs)/community');
       return;
     }
 
@@ -144,7 +145,7 @@ export default function AddFundScreen() {
       }
 
       Toast.show({ type: 'success', text1: 'Fund created successfully' });
-      router.replace(`/funds/${fund.id}`);
+      replaceTracked(router, `/funds/${fund.id}`);
     } catch (error: any) {
       Toast.show({
         type: 'error',

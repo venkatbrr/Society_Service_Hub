@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { goBackSmart } from '../../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -523,7 +523,7 @@ export default function CreateOrEditFoodDropScreen() {
           text2: 'Neighbors can now place pre-orders before the cut-off.',
         });
 
-        router.replace(`/mcn/drops/${dropData.id}` as any);
+        replaceTracked(router, `/mcn/drops/${dropData.id}` as any);
       }
     } catch (err: any) {
       console.error(err);

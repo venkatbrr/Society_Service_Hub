@@ -23,6 +23,7 @@ import { APP_EMOJIS } from '../../constants/emojis';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
+import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import {
     MAX_SPONSOR_NAME_LENGTH,
     MAX_SPONSOR_NOTE_LENGTH,
@@ -79,6 +80,11 @@ const extractImageUrl = (
 
 export default function AddTransactionScreen() {
   const { event_id, type: initialType, transaction_id } = useLocalSearchParams();
+  // getImmediateParentRoute() reads event_id off the query string to send the
+  // user back to the fund they were recording against, so keep it on the path.
+  const selfPath = event_id
+    ? `/funds/add-transaction?event_id=${event_id}`
+    : '/funds/add-transaction';
   const { user, appRole, myBlockId, refreshSession } = useAuth();
   const router = useRouter();
   const colors = {
@@ -492,7 +498,7 @@ export default function AddTransactionScreen() {
     return (
       <View style={[styles.loadingState, { backgroundColor: colors.background }]}>
         <Text style={[styles.title, { color: colors.text }]}>Funds are not active in this community.</Text>
-        <TouchableOpacity style={[styles.backInactiveBtn, { borderColor: colors.border }]} onPress={() => router.replace('/(tabs)/community')}>
+        <TouchableOpacity style={[styles.backInactiveBtn, { borderColor: colors.border }]} onPress={() => replaceTracked(router, '/(tabs)/community')}>
           <Text style={[styles.backInactiveText, { color: colors.primary }]}>Back to community</Text>
         </TouchableOpacity>
       </View>
@@ -509,7 +515,7 @@ export default function AddTransactionScreen() {
         <Text style={{ color: colors.textMuted, fontSize: 15, textAlign: 'center', marginBottom: 24, lineHeight: 22 }}>
           This fund has been closed by the community lead. No new transactions can be recorded or edited.
         </Text>
-        <TouchableOpacity style={[styles.backInactiveBtn, { borderColor: colors.border }]} onPress={() => router.back()}>
+        <TouchableOpacity style={[styles.backInactiveBtn, { borderColor: colors.border }]} onPress={() => goBackSmart(router, selfPath)}>
           <Text style={[styles.backInactiveText, { color: colors.primary }]}>Go back</Text>
         </TouchableOpacity>
       </View>
@@ -523,7 +529,7 @@ export default function AddTransactionScreen() {
     >
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <HeaderBackButton onPress={() => router.back()} color={colors.text} style={styles.backButton} />
+          <HeaderBackButton onPress={() => goBackSmart(router, selfPath)} color={colors.text} style={styles.backButton} />
           <View style={styles.headerTextContainer}>
             <Text style={styles.title}>
               {transaction_id

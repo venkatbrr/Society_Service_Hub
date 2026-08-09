@@ -13,7 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 import { actionToFraudStatus, checkProviderFraud, getFraudActionMessage } from '../../lib/fraudCheck';
 import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
-import { goBackSmart } from '../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../lib/navigation';
 
 const buildProviderCategoryGroups = (sourceCategories: string[]): CategoryGroup[] => {
   const included = new Set(sourceCategories);
@@ -147,7 +147,7 @@ export default function AddProviderScreen() {
       text1: 'Provider already saved',
       text2: `This phone number is already linked to ${existingProvider.name}${existingProvider.category ? ` (${existingProvider.category})` : ''}`,
     });
-    router.replace(`/provider/${existingProvider.id}` as any);
+    replaceTracked(router, `/provider/${existingProvider.id}` as any);
   };
 
   const handleSave = async () => {
@@ -255,7 +255,7 @@ export default function AddProviderScreen() {
       if (verdict.action === 'PASS') {
         Toast.show({ type: 'success', text1: 'Provider added successfully' });
         if (insertedProvider?.id) {
-          router.replace(`/provider/${insertedProvider.id}` as any);
+          replaceTracked(router, `/provider/${insertedProvider.id}` as any);
           return;
         }
       } else {

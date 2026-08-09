@@ -544,9 +544,12 @@ The app distinguishes **two different meanings of "back"**, and conflating them 
 - `goBackSmart(router, path)` — what header back buttons call. Pops with `router.back()` when the previous tracked route already **is** the logical parent (the common case, keeping history and forward in sync); otherwise falls back to `router.replace(parent)` for a cross-branch jump or a deep-link entry with nothing to pop.
 - `normalizeRoute(route)` — canonical form for comparisons: strips query, hash, trailing slash, and expo-router group segments so `/(tabs)/network` and `/network` compare equal.
 - `getPreviousRoute()` — the previous entry in the tracked stack.
+- `replaceTracked(router, route)` — **the only way any screen should replace.** Drops the outgoing entry from the tracked stack before calling `router.replace()`, so the push that follows lands in the slot the replaced route just vacated. Without it the tracked stack gains an entry while real history loses one, and the two drift permanently apart — see §9 of [`CLAUDE.md`](CLAUDE.md).
 - `useSyncedBackNavigation()` — runs in the root layout. Maintains the tracked stack and adds **one** Android guard: when `canGoBack()` is false (deep link into a nested screen), hardware back walks up the hierarchy instead of exiting the app. It deliberately does **not** listen to `popstate`.
 
 **Tracked stack** — a `sessionStorage` array (in-memory on native), capped at 25 entries, reconciled on every pathname change by a **truncate-or-push** rule: if the route is already in the stack the user moved back, so truncate to that index; otherwise push. This self-heals. The earlier implementation pushed unconditionally, so back navigations *grew* the stack and its contents stopped matching real history after the first back press.
+
+The truncate-or-push rule can only observe *that* the pathname changed, never *how*. A `router.replace()` therefore looks identical to a push, which is why every replace must go through `replaceTracked()` — it is the only signal the stack gets that an entry was consumed rather than added. `goBackSmart()` and the Android deep-link guard both use it internally.
 
 **When you add a `/mcn/*` or `/funds/*` route, add its parent mapping to `getImmediateParentRoute()`**, or back navigation falls through to the MCN hub. `app/funds/*` screens call `goBackSmart(router, path)` from their header back button the same way MCN screens do — plain `router.back()` silently does nothing on a deep-linked or freshly-loaded fund screen with no history to pop.
 

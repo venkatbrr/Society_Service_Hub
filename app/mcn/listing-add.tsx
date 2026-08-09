@@ -7,7 +7,7 @@ import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../lib/mcnHeader';
-import { goBackSmart } from '../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type McnCategory = { id: string; name: string; emoji: string; sort_order: number };
@@ -100,7 +100,7 @@ export default function AddListingScreen() {
 
       Toast.show({ type: 'success', text1: 'Business listing created' });
       // Navigate to the manage screen for this listing
-      router.replace(`/mcn/listing/manage/${listing.id}` as any);
+      replaceTracked(router, `/mcn/listing/manage/${listing.id}` as any);
     } catch (error: any) {
       console.error(error);
       const isDuplicateCategory = error?.code === '23505' || error?.code === 'unique_violation';

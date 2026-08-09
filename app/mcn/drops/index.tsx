@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { goBackSmart } from '../../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -50,7 +50,7 @@ export default function FoodDropsCatalogScreen() {
   useEffect(() => {
     if (targetDropId && redirectedRef.current !== targetDropId) {
       redirectedRef.current = targetDropId;
-      router.replace(`/mcn/drops/${targetDropId}` as any);
+      replaceTracked(router, `/mcn/drops/${targetDropId}` as any);
     }
   }, [targetDropId, router]);
   const [myMetrics, setMyMetrics] = useState<{
@@ -320,7 +320,7 @@ export default function FoodDropsCatalogScreen() {
           style={styles.masterToggleBtn}
           // Sibling tab of this screen, not a child: replace so repeated
           // toggling does not pile up browser history entries.
-          onPress={() => router.replace('/mcn/business' as any)}
+          onPress={() => replaceTracked(router, '/mcn/business' as any)}
           activeOpacity={0.8}
         >
           <View style={styles.iconLabelRow}>

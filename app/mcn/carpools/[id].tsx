@@ -343,7 +343,7 @@ export default function CarpoolDetailScreen() {
   };
 
   const handleBack = () => {
-    goBackSmart(router, '/mcn/carpools');
+    goBackSmart(router, `/mcn/carpools/${id}`);
   };
 
   if (loading) {

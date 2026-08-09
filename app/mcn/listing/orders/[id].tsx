@@ -163,7 +163,7 @@ export default function OrdersReceivedScreen() {
   const headerTitle = `Orders (${pendingCount} pending)`;
 
   const handleBack = () => {
-    goBackSmart(router, '/mcn/my-posts');
+    goBackSmart(router, `/mcn/listing/orders/${listingId}`);
   };
 
   const renderOrderRow = (order: Order) => {

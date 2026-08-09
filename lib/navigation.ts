@@ -113,6 +113,31 @@ export function getPreviousRoute(): string | null {
 }
 
 /**
+ * `router.replace()` that keeps the tracked stack honest. Use this instead of
+ * `router.replace()` everywhere.
+ *
+ * replace() overwrites the current history entry, so the route being left
+ * vanishes from the browser's back stack. But `syncNavigationStack` only ever
+ * observes "the pathname changed" and pushes, so the departed route stays in the
+ * tracked stack as a phantom. `getPreviousRoute()` then names a screen the user
+ * can no longer reach, `goBackSmart()` sees previous !== parent and takes its
+ * replace() fallback instead of popping — which burns a history slot, leaves two
+ * identical adjacent entries, and kills the forward button. The visible symptom
+ * is a back press that appears to do nothing.
+ *
+ * Dropping the outgoing entry here means the push that follows lands in the slot
+ * the replaced route just vacated, so tracked and real history stay aligned.
+ */
+export function replaceTracked(
+  router: ReturnType<typeof useRouter>,
+  route: Parameters<ReturnType<typeof useRouter>['replace']>[0]
+) {
+  const stack = readStack();
+  if (stack.length) writeStack(stack.slice(0, -1));
+  router.replace(route);
+}
+
+/**
  * Deterministic mapping of every sub-route to its immediate logical parent.
  *
  * Accepts a full path, optionally including a query string, because a few
@@ -147,6 +172,11 @@ export function getImmediateParentRoute(pathname: string): string {
   if (cleanPath === '/mcn/drops') return '/network';
 
   // 4. Carpools
+  if (cleanPath === '/mcn/carpools/add') {
+    // Editing an existing ride belongs to that ride; creating belongs to the list.
+    const rideId = params.get('id');
+    return rideId ? `/mcn/carpools/${rideId}` : '/mcn/carpools';
+  }
   if (cleanPath.startsWith('/mcn/carpools/')) return '/mcn/carpools';
   if (cleanPath === '/mcn/carpools') return '/network';
 
@@ -218,7 +248,7 @@ export function goBackSmart(router: ReturnType<typeof useRouter>, currentPath: s
 
   // Cross-branch jump or deep-link entry: replace so we do not leave a dangling
   // forward entry pointing at the screen the user just dismissed.
-  router.replace(parent as any);
+  replaceTracked(router, parent as any);
 }
 
 /**
@@ -252,7 +282,7 @@ export function useSyncedBackNavigation() {
       // Walk up the hierarchy instead of exiting the app.
       const parent = getImmediateParentRoute(pathname);
       if (parent && normalizeRoute(parent) !== normalizeRoute(pathname)) {
-        router.replace(parent as any);
+        replaceTracked(router, parent as any);
         return true;
       }
 

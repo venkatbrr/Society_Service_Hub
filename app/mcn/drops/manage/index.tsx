@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Verandah } from '../../../../constants/Colors';
+import { replaceTracked } from '../../../../lib/navigation';
 
 export default function ManageDropRedirectScreen() {
   const router = useRouter();
@@ -9,11 +10,11 @@ export default function ManageDropRedirectScreen() {
 
   useEffect(() => {
     if (id) {
-      router.replace(`/mcn/drops/manage/${id}` as any);
+      replaceTracked(router, `/mcn/drops/manage/${id}` as any);
       return;
     }
 
-    router.replace('/mcn/drops' as any);
+    replaceTracked(router, '/mcn/drops' as any);
   }, [id, router]);
 
   return (
