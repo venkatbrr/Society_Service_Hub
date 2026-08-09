@@ -16,6 +16,7 @@ import { Verandah } from '../constants/Colors';
 import { APP_EMOJIS } from '../constants/emojis';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
+import { replaceTracked } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
 
 export default function CommunitySelectScreen() {
@@ -63,9 +64,9 @@ export default function CommunitySelectScreen() {
         text2: `You joined ${(data as any)?.community_name ?? 'the community'}.`,
       });
       if (shouldPickBlock && joinedCommunityId) {
-        router.replace({ pathname: '/community-join-block', params: { communityId: joinedCommunityId, blockLabel } } as any);
+        replaceTracked(router, { pathname: '/community-join-block', params: { communityId: joinedCommunityId, blockLabel } } as any);
       } else {
-        router.replace('/(tabs)');
+        replaceTracked(router, '/(tabs)');
       }
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Join failed', text2: error.message });

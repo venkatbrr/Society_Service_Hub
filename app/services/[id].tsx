@@ -35,7 +35,7 @@ import {
     ServiceCategory,
 } from '../../lib/serviceCategories';
 import { cloudinaryUrl } from '../../lib/cloudinary';
-import { goBackSmart } from '../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import {
     parseNotesAndImages,
     ReminderImage,
@@ -424,7 +424,7 @@ export default function ServiceDetailScreen() {
         if (error) throw error;
 
         Toast.show({ type: 'success', text1: 'Reminder deleted' });
-        router.replace('/services');
+        replaceTracked(router, '/services');
       } catch (err: any) {
         Toast.show({ type: 'error', text1: 'Error', text2: err.message ?? 'Failed to delete reminder.' });
       }

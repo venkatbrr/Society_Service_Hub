@@ -26,7 +26,7 @@ import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { Tables } from '../../../lib/database.types';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
-import { goBackSmart } from '../../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../../lib/navigation';
 import { isValidIndianMobile, normalizeIndianMobile } from '../../../lib/phone';
 import { supabase } from '../../../lib/supabase';
 
@@ -208,7 +208,7 @@ export default function CarpoolDetailScreen() {
         const { error } = await supabase.from('mcn_carpools').delete().eq('id', carpool.id);
         if (error) throw error;
         Toast.show({ type: 'success', text1: 'Ride deleted' });
-        router.replace('/mcn/carpools' as any);
+        replaceTracked(router, '/mcn/carpools' as any);
       } catch (err: any) {
         console.error('Delete error:', err);
         Toast.show({ type: 'error', text1: 'Failed to delete ride', text2: err.message });
@@ -364,7 +364,7 @@ export default function CarpoolDetailScreen() {
           title="Ride not found"
           message="This ride may have been removed by the host, or it belongs to another community."
           actionLabel="Back to all rides"
-          onAction={() => router.replace('/mcn/carpools' as any)}
+          onAction={() => replaceTracked(router, '/mcn/carpools' as any)}
         />
       </View>
     );

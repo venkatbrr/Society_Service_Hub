@@ -20,6 +20,7 @@ import { Verandah } from '../../constants/Colors';
 import { EMERGENCY_CATEGORY_META, EMERGENCY_CATEGORY_ORDER, EmergencyCategory } from '../../constants/sos';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type ScopeMode = 'community' | 'global';
@@ -138,7 +139,7 @@ export default function ManageEmergencyContactsScreen() {
     if (canManage) return;
 
     Toast.show({ type: 'error', text1: 'Access denied', text2: 'Only community leads or platform admins can manage emergency contacts.' });
-    router.replace('/(tabs)/community' as any);
+    replaceTracked(router, '/(tabs)/community' as any);
   }, [canManage, router]);
 
   if (!canManage) return null;

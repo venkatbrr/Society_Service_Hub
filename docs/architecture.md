@@ -215,8 +215,8 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 | `mcn_business_categories` | `name`, `emoji`, `sort_order` — global lookup |
 | `mcn_listings` | `name`, `description`, `contact_phone`, `image_url` (Cloudinary), `category_id`, `owner_id`, `is_active`, `flagged_for_review_at` (set when auto-hidden by reports) |
 | `mcn_products` | `listing_id`, `name`, `description`, `unit`, `price` (**nullable** = "Price on request"), `item_type` (`product`/`service`), `image_url`, `is_available`, `sort_order` |
-| `mcn_orders` | `listing_id`, `buyer_id`, `buyer_phone`, `buyer_note`, `status` (`pending`/`fulfilled`/`cancelled`) |
-| `mcn_order_items` | `order_id`, `product_id`, `quantity`, `unit_price` |
+| `mcn_orders` | `listing_id`, `buyer_id`, `buyer_phone`, `buyer_note`, `status` (`pending`/`fulfilled`/`cancelled`) — **dormant since 2026-08-09**, no screen writes here |
+| `mcn_order_items` | `order_id`, `product_id`, `quantity`, `unit_price` — dormant, see above |
 | `mcn_listing_reports` | `listing_id`, `reported_by`, `reason`, `details`, `status`, `reviewed_by` — one report per user/listing, mirrors `provider_reports` |
 
 **Anti-spam triggers on `mcn_listings`** (migrations `20260819000000`, `20260821000000`, `20260821000200`), enforced server-side, not just in the UI:
@@ -346,7 +346,7 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 `place_mcn_preorder(p_drop_id, p_items, p_buyer_name, p_buyer_phone, p_flat_number, p_buyer_note, p_order_id)` — **the only supported way to place or edit a pre-order.** `p_items` is `[{"item_id": uuid, "quantity": numeric}]`, aggregated by item so a repeated id cannot bypass the cap; a non-null `p_order_id` edits that order (its existing lines are cleared first, so the buyer's own prior quantity is excluded from the cap sums rather than double-counted). Returns the order id. `check_mcn_drop_item_capacity(...)` — validates a drop's total `max_orders` cap. `check_mcn_drop_item_quantity_capacity(...)` — same idea, scoped to one item's `max_quantity` shared across every buyer. `get_mcn_drop_item_availability(p_drop_id)` — remaining stock per item, for display; the drop screen re-reads it on focus because another resident's order makes it stale.
 
-`place_mcn_order(p_listing_id, p_items, p_buyer_phone, p_buyer_note, p_order_id)` — **the atomic way to place or edit a business listing order.** Inserts/updates `mcn_orders` and `mcn_order_items` in a single transaction under `enforce_mcn_order_immutable_fields` trigger, ensuring consistency and preventing owner self-orders.
+`place_mcn_order(p_listing_id, p_items, p_buyer_phone, p_buyer_note, p_order_id)` — **the atomic way to place or edit a business listing order.** Inserts/updates `mcn_orders` and `mcn_order_items` in a single transaction under `enforce_mcn_order_immutable_fields` trigger, ensuring consistency and preventing owner self-orders. ⚠️ **No caller since 2026-08-09** — in-app business ordering was hidden and the function is dormant, not dropped. If ordering returns, route it back through here rather than writing to the tables directly. See [`disabled-features.md`](disabled-features.md) §2b.
 
 `get_mcn_carpool_seats(p_carpool_id)` — returns `(total_seats INT, booked_seats INT, remaining_seats INT)` dynamically derived from accepted requests.
 `get_mcn_carpool_passengers(p_carpool_id)` — returns `(passenger_name TEXT, passenger_flat TEXT, seats INT)` for society co-passenger roster visibility (excludes phone numbers).
@@ -518,7 +518,9 @@ This is exactly what broke MCN browser-back. `app/(tabs)/network.tsx` (the hub t
 
 **The fix:** the MCN sub-route tree lives at `app/mcn/` → `/mcn/*`, while the hub tab keeps `/network`. A tab screen and a route directory cannot share a name.
 
-> **Known remaining collision:** `app/index.tsx` and `app/(tabs)/index.tsx` both claim `/`. `app/index.tsx` exists only to bounce web visitors to `/landing.html` and native to `/login`. It has not caused a reported bug, but it is the same class of defect. Resolving it means either moving the Help tab off `/` or handling the landing redirect outside the router — a product decision, not a mechanical fix.
+> **Resolved 2026-08-09 — this collision did cause a bug.** `app/index.tsx` and `app/(tabs)/index.tsx` both claimed `/`. Because `app/index.tsx` ran `window.location.replace('/landing.html')` on mount, any browser-back that landed on `/` — including a signed-in user returning to the Home tab from `/provider/:id` — was thrown out of the app onto the marketing page.
+>
+> `app/index.tsx` has been **deleted**. `/` now unambiguously means the Home tab. Its two jobs moved into the `app/_layout.tsx` guard: signed-out web visitors at `/` get `window.location.replace('/landing.html')`, and native falls through to the existing `redirectTo = '/login'` branch. The landing redirect is additionally skipped when the user arrived via browser-back, so it cannot re-form the same trap.
 
 To check for collisions after adding routes, build the linking config and run `getStateFromPath` over your new URLs; a collision throws with both conflicting screen names.
 
@@ -541,15 +543,35 @@ The app distinguishes **two different meanings of "back"**, and conflating them 
 **API**
 
 - `getImmediateParentRoute(path)` — maps every `/mcn/*` route (plus `/services/*` and `/funds/*`) to its logical parent, e.g. `/mcn/drops/manage/:id` → `/mcn/drops/:id` → `/mcn/drops` → `/network`, or `/funds/add-transaction?event_id=X` → `/funds/X` → `/funds` → `/community`. Accepts an optional query string because a few parents are context-dependent: `/mcn/schools/review?schoolId=X` → that school, `/mcn/add?source=my-posts` → My Submissions, and `/funds/add-transaction?event_id=X` → that fund.
-- `goBackSmart(router, path)` — what header back buttons call. Pops with `router.back()` when the previous tracked route already **is** the logical parent (the common case, keeping history and forward in sync); otherwise falls back to `router.replace(parent)` for a cross-branch jump or a deep-link entry with nothing to pop.
+- `goBackSmart(router, path)` — what header back buttons call. Pops with `backTracked()` when the previous tracked route already **is** the logical parent (the common case, keeping history and forward in sync); otherwise falls back to `replaceTracked(parent)` for a cross-branch jump or a deep-link entry with nothing to pop. Its correctness rests entirely on the tracked stack matching real history — see the reducer below.
 - `normalizeRoute(route)` — canonical form for comparisons: strips query, hash, trailing slash, and expo-router group segments so `/(tabs)/network` and `/network` compare equal.
 - `getPreviousRoute()` — the previous entry in the tracked stack.
-- `replaceTracked(router, route)` — **the only way any screen should replace.** Drops the outgoing entry from the tracked stack before calling `router.replace()`, so the push that follows lands in the slot the replaced route just vacated. Without it the tracked stack gains an entry while real history loses one, and the two drift permanently apart — see §9 of [`CLAUDE.md`](CLAUDE.md).
-- `useSyncedBackNavigation()` — runs in the root layout. Maintains the tracked stack and adds **one** Android guard: when `canGoBack()` is false (deep link into a nested screen), hardware back walks up the hierarchy instead of exiting the app. It deliberately does **not** listen to `popstate`.
+- `replaceTracked(router, route)` / `pushTracked` / `backTracked` — thin wrappers that call `setNavIntent()` before delegating to the router. **Every `router.replace()` in `app/` goes through `replaceTracked`** (verified by grep; only `router.back()` is still called raw, which is safe — see below).
+- `useSyncedBackNavigation()` — runs in the root layout. Maintains the tracked stack and adds **one** Android guard: when `canGoBack()` is false (deep link into a nested screen), hardware back walks up the hierarchy instead of exiting the app. It observes `popstate` but never calls `preventDefault` and never navigates in response.
 
-**Tracked stack** — a `sessionStorage` array (in-memory on native), capped at 25 entries, reconciled on every pathname change by a **truncate-or-push** rule: if the route is already in the stack the user moved back, so truncate to that index; otherwise push. This self-heals. The earlier implementation pushed unconditionally, so back navigations *grew* the stack and its contents stopped matching real history after the first back press.
+**Tracked stack** — a `sessionStorage` array (in-memory on native), capped at 25 entries, reset to the current route on every fresh document load (React Navigation starts empty after a reload, but `sessionStorage` does not).
 
-The truncate-or-push rule can only observe *that* the pathname changed, never *how*. A `router.replace()` therefore looks identical to a push, which is why every replace must go through `replaceTracked()` — it is the only signal the stack gets that an entry was consumed rather than added. `goBackSmart()` and the Android deep-link guard both use it internally.
+It is reconciled on each pathname change by an **intent-driven reducer**, not by inspecting the pathname. This is the crux: *navigating to a route already in the stack* and *going back to it* are the same observation with opposite effects on history.
+
+```
+stack [N, B, L, M], replace(B)  ->  real [N, B, L, B]   4 entries, M consumed
+stack [N, B, L, B], back()      ->  real [N, B, L]      3 entries
+```
+
+The previous **truncate-or-push** rule guessed "already in the stack means back" and produced `[N, B]` for both. After a post-delete `replace`, tracked claimed depth 2 while the browser held 4 — so `goBackSmart` believed a pop would reach the parent, called `router.back()`, and landed the user on the record they had just deleted. The same ambiguity collapsed the tab bar's `Home → Network → Home` (three real entries, tracked as one).
+
+How the intent is resolved, strongest signal first:
+
+| Signal | Action |
+|---|---|
+| Explicit intent from a `*Tracked` helper | Apply it. Replaces are *always* explicit, so nothing below needs to detect one. |
+| Web, `popstate` fired since last sync | Browser back/forward. Direction unknown, so locate the route: back truncates to it, forward re-appends. |
+| Web, no popstate | A plain `router.push()` — append, even if the route is already in the stack. |
+| Native (no History API) | Landing on the entry directly beneath the current one is a pop (`router.back()`, hardware back, swipe-back); anything else is a push. |
+
+`window.history.length` is **not** a usable push-vs-replace signal: after a back, a push drops the forward entries, so the length can *shrink* on a push.
+
+The popstate counter the reducer reads is deliberately separate from the `sawPopStateAt` flag that `consumeHistoryPop()` clears — effects in `app/_layout.tsx` may run first, and one shared flag means whichever ran first ate the signal.
 
 **When you add a `/mcn/*` or `/funds/*` route, add its parent mapping to `getImmediateParentRoute()`**, or back navigation falls through to the MCN hub. `app/funds/*` screens call `goBackSmart(router, path)` from their header back button the same way MCN screens do — plain `router.back()` silently does nothing on a deep-linked or freshly-loaded fund screen with no history to pop.
 

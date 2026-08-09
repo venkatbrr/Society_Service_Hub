@@ -16,6 +16,7 @@ import { APP_EMOJIS } from '../constants/emojis';
 import { VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { Tables } from '../lib/database.types';
+import { replaceTracked } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
 
 type RequestDetail = Pick<
@@ -101,7 +102,7 @@ export default function CommunityRequestSubmittedScreen() {
 
         if (community?.blocks_enabled) {
           const blockLabel = community.block_label ?? 'Block';
-          router.replace({
+          replaceTracked(router, {
             pathname: '/community-join-block',
             params: { communityId: request.resulting_community_id, blockLabel },
           } as any);
@@ -202,7 +203,7 @@ export default function CommunityRequestSubmittedScreen() {
           ) : null}
 
           <TouchableOpacity
-            onPress={() => router.replace('/community-request')}
+            onPress={() => replaceTracked(router, '/community-request')}
             activeOpacity={0.8}
             style={[styles.primaryButton, { marginTop: 22 }]}
           >
@@ -210,7 +211,7 @@ export default function CommunityRequestSubmittedScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.replace('/community-select')}
+            onPress={() => replaceTracked(router, '/community-select')}
             style={[styles.secondaryButton, { borderColor: Verandah.border, marginTop: 12 }]}
             activeOpacity={0.8}
           >
@@ -218,7 +219,7 @@ export default function CommunityRequestSubmittedScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={async () => { await signOut(); if (Platform.OS !== 'web') router.replace('/login'); }}
+            onPress={async () => { await signOut(); if (Platform.OS !== 'web') replaceTracked(router, '/login'); }}
             style={styles.textButton}
             activeOpacity={0.75}
           >
@@ -262,7 +263,7 @@ export default function CommunityRequestSubmittedScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={async () => { await signOut(); if (Platform.OS !== 'web') router.replace('/login'); }}
+          onPress={async () => { await signOut(); if (Platform.OS !== 'web') replaceTracked(router, '/login'); }}
           style={styles.textButton}
           activeOpacity={0.75}
         >

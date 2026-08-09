@@ -18,6 +18,7 @@ import { HeaderBackButton } from '../components/HeaderBackButton';
 import { Verandah } from '../constants/Colors';
 import { VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
+import { replaceTracked } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
 
 const COMMUNITY_TYPES = ['apartment', 'gated villas', 'housing society', 'township'] as const;
@@ -81,7 +82,7 @@ export default function CommunityRequestScreen() {
         text2: 'We will review your request within about 24 hours.',
       });
       await refreshSession();
-      router.replace('/community-request-submitted');
+      replaceTracked(router, '/community-request-submitted');
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Request failed', text2: error.message });
     } finally {

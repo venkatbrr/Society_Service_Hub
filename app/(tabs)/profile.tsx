@@ -12,6 +12,7 @@ import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType , VerandahLayout } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 export default function ProfileScreen() {
@@ -123,7 +124,7 @@ export default function ProfileScreen() {
 
   const handleSignOut = async () => {
     await signOut();
-    if (Platform.OS !== 'web') router.replace('/login');
+    if (Platform.OS !== 'web') replaceTracked(router, '/login');
   };
 
   const saveMyBlock = async () => {

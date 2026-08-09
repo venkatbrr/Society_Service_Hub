@@ -24,7 +24,7 @@ import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../lib/mcnHeader';
-import { goBackSmart } from '../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type McnCategory = { id: string; name: string; emoji: string; sort_order: number };
@@ -216,7 +216,7 @@ export default function BusinessListingsScreen() {
           style={styles.masterToggleBtn}
           // Sibling tab of this screen, not a child: replace so repeated
           // toggling does not pile up browser history entries.
-          onPress={() => router.replace('/mcn/drops' as any)}
+          onPress={() => replaceTracked(router, '/mcn/drops' as any)}
           activeOpacity={0.8}
         >
           <View style={styles.iconLabelRow}>

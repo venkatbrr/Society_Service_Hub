@@ -12,7 +12,7 @@ import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
 import { VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
-import { goBackSmart } from '../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type FundsOverview = {
@@ -58,7 +58,7 @@ export default function FundsHomeScreen() {
     return (
       <View style={styles.centerWrap}>
         <Text style={styles.emptyTitle}>Funds are not active in this community.</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)/community')}>
+        <TouchableOpacity style={styles.backButton} onPress={() => replaceTracked(router, '/(tabs)/community')}>
           <Text style={styles.backButtonText}>Back to community</Text>
         </TouchableOpacity>
       </View>

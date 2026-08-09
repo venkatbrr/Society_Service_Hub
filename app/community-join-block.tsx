@@ -5,6 +5,7 @@ import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
+import { replaceTracked } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
 
 export default function CommunityJoinBlockScreen() {
@@ -78,7 +79,7 @@ export default function CommunityJoinBlockScreen() {
       if (error) throw error;
 
       await refreshSession();
-      router.replace('/(tabs)');
+      replaceTracked(router, '/(tabs)');
     } catch (error: any) {
       Toast.show({ type: 'error', text1: `Unable to save ${labelLower}`, text2: error.message });
     } finally {

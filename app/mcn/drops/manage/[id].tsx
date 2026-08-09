@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { goBackSmart } from '../../../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -252,7 +252,14 @@ export default function ManagePreorderDropScreen() {
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.surface }]}>
-        <Stack.Screen options={{ title: 'Food drop dashboard' }} />
+        <Stack.Screen
+          options={buildMcnHeaderOptions({
+            title: 'Food drop dashboard',
+            // See the note in drops/[id].tsx — a bare Stack.Screen restores the
+            // default back button and bypasses goBackSmart().
+            onBack: () => goBackSmart(router, '/mcn/drops/manage/' + String(dropId || '')),
+          })}
+        />
         <View style={styles.loaderWrap}>
           <ActivityIndicator color={colors.accent} />
         </View>
@@ -263,7 +270,14 @@ export default function ManagePreorderDropScreen() {
   if (!drop) {
     return (
       <View style={[styles.container, { backgroundColor: colors.surface }]}>
-        <Stack.Screen options={{ title: 'Food drop dashboard' }} />
+        <Stack.Screen
+          options={buildMcnHeaderOptions({
+            title: 'Food drop dashboard',
+            // See the note in drops/[id].tsx — a bare Stack.Screen restores the
+            // default back button and bypasses goBackSmart().
+            onBack: () => goBackSmart(router, '/mcn/drops/manage/' + String(dropId || '')),
+          })}
+        />
         <View style={styles.loaderWrap}>
           <Text style={{ color: colors.textSecondary }}>Drop not found.</Text>
         </View>
@@ -287,7 +301,7 @@ export default function ManagePreorderDropScreen() {
         const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
         if (error) throw error;
         Toast.show({ type: 'success', text1: 'Food drop deleted' });
-        router.replace('/mcn/drops' as any);
+        replaceTracked(router, '/mcn/drops' as any);
       } catch (err: any) {
         Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
       }

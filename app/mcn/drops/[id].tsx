@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { goBackSmart } from '../../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -461,7 +461,17 @@ export default function PreorderDropDetailScreen() {
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.surface }]}>
-        <Stack.Screen options={{ title: 'Food drop details' }} />
+        <Stack.Screen
+          options={buildMcnHeaderOptions({
+            title: 'Food drop details',
+            // A bare Stack.Screen here would fall back to React Navigation's
+            // default back button, which calls navigation.goBack() and pops the
+            // navigator instead of running goBackSmart() — on a deep-linked or
+            // freshly-loaded screen that lands on the tabs (/network), not the
+            // drops list. Clicking back while this state is on screen is common.
+            onBack: () => goBackSmart(router, `/mcn/drops/${dropId}`),
+          })}
+        />
         <View style={styles.loaderWrap}>
           <ActivityIndicator color={colors.accent} />
         </View>
@@ -472,7 +482,17 @@ export default function PreorderDropDetailScreen() {
   if (!drop) {
     return (
       <View style={[styles.container, { backgroundColor: colors.surface }]}>
-        <Stack.Screen options={{ title: 'Food drop details' }} />
+        <Stack.Screen
+          options={buildMcnHeaderOptions({
+            title: 'Food drop details',
+            // A bare Stack.Screen here would fall back to React Navigation's
+            // default back button, which calls navigation.goBack() and pops the
+            // navigator instead of running goBackSmart() — on a deep-linked or
+            // freshly-loaded screen that lands on the tabs (/network), not the
+            // drops list. Clicking back while this state is on screen is common.
+            onBack: () => goBackSmart(router, `/mcn/drops/${dropId}`),
+          })}
+        />
         <View style={styles.loaderWrap}>
           <Text style={{ color: colors.textSecondary }}>Food drop not found.</Text>
         </View>
@@ -506,7 +526,7 @@ export default function PreorderDropDetailScreen() {
         const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
         if (error) throw error;
         Toast.show({ type: 'success', text1: 'Food drop deleted' });
-        router.replace('/mcn/drops' as any);
+        replaceTracked(router, '/mcn/drops' as any);
       } catch (err: any) {
         Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
       }

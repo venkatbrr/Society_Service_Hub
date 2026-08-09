@@ -20,6 +20,7 @@ import { BLOOD_GROUPS } from '../../constants/sos';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeIndianMobile, toLast10Digits } from '../../lib/phone';
+import { replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 const MAX_NOTE_LENGTH = 140;
@@ -129,7 +130,7 @@ export default function DonorFormScreen() {
       if (error) throw error;
 
       Toast.show({ type: 'success', text1: existingId ? 'Donor profile updated' : 'Registered as donor' });
-      router.replace('/sos' as any);
+      replaceTracked(router, '/sos' as any);
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Unable to save donor profile', text2: error.message });
     } finally {
@@ -152,7 +153,7 @@ export default function DonorFormScreen() {
         if (error) throw error;
 
         Toast.show({ type: 'success', text1: 'Donor registration removed' });
-        router.replace('/sos' as any);
+        replaceTracked(router, '/sos' as any);
       } catch (error: any) {
         Toast.show({ type: 'error', text1: 'Unable to remove donor profile', text2: error.message });
       } finally {

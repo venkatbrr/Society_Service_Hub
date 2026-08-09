@@ -163,7 +163,7 @@ A **hub of four section cards**, each with a live count, plus two quick-action b
 | Parent Corner | `/mcn/parents` | children listed |
 | Schools Catalog & Compare | `/mcn/schools` | curated + community schools |
 
-**Business listings** (`/mcn/business`) — resident-run businesses with a cover photo, a category from the `mcn_business_categories` lookup, and offerings split into products vs services. Prices are nullable (`NULL` renders "Price on request"). Listings are grouped by category and collapsible; active sort ahead of paused. Residents place multi-item orders with quantity steppers (0.5 steps for kg/litre, 1 for piece/box/pack/dozen); owners see orders grouped Pending / Fulfilled / Cancelled and WhatsApp buyers with a pre-filled itemised message. Owner **or a community lead** can open the manage screen and delete the listing.
+**Business listings** (`/mcn/business`) — resident-run businesses with a cover photo, a category from the `mcn_business_categories` lookup, and offerings split into products vs services. Prices are nullable (`NULL` renders "Price on request"). Listings are grouped by category and collapsible; active sort ahead of paused. **Browse-and-contact only — there is no in-app ordering.** Residents read the offerings and prices, then reach the owner via the Call / WhatsApp pair on the listing detail screen. Owner **or a community lead** can open the manage screen and delete the listing. The cart, order modal, and owner-side orders inbox were hidden on 2026-08-09; `mcn_orders`, `mcn_order_items`, and `place_mcn_order()` remain in the database, unused — see [`docs/disabled-features.md`](../docs/disabled-features.md) §2b.
 
 **Pre-order food drops** (`/mcn/drops`) — time-gated group ordering for home chefs and food businesses. A drop has a fulfillment date + time window, a hard `cutoff_at` deadline, and line items with unit, price, and optional per-item `max_quantity` (enforced by a database trigger, not just UI). Catalog tabs: Active / Closed / My drops. Past the cutoff, new orders are blocked. Residents may place multiple orders while open and edit or cancel `confirmed` ones; once the host marks an order `fulfilled` it becomes immutable and shows as Delivered. The host dashboard (`/mcn/drops/manage/[id]`) aggregates item totals for kitchen prep and lists a delivery roster split into active, delivered, and cancelled. Drops are **publicly readable** so shared links work logged-out.
 
@@ -175,7 +175,7 @@ A **hub of four section cards**, each with a live count, plus two quick-action b
 
 **Borrow & Share** (`mcn_posts`, `/mcn/add`, `/mcn/my-posts`) — lightweight posts for borrowing or giving away items. Reached through My Submissions.
 
-**My Orders** (`/mcn/my-orders`) — the resident's own orders across two tabs: pre-order food and business listings.
+**My Orders** (`/mcn/my-orders`) — the resident's own food pre-orders. The business-listings tab was removed on 2026-08-09 when in-app business ordering was hidden.
 
 ### 7.4 Community tab (`app/(tabs)/community.tsx`)
 
@@ -275,7 +275,7 @@ Column-level detail lives in [`docs/architecture.md`](../docs/architecture.md) �
 | Providers | `service_providers`, `favorites`, `ratings`, `provider_hires`, `provider_reports`, `provider_personal_notes`, `provider_public_rating_nudges`, `hire_feedback`, `fraud_verdicts` |
 | Visits | `service_visits`, `visit_joiners` |
 | Funds | `events`, `event_transactions`, `fund_roles`, `funds_access_requests`, `funds_access_revocations` |
-| MCN — business | `mcn_business_categories`, `mcn_listings`, `mcn_products`, `mcn_orders`, `mcn_order_items` |
+| MCN — business | `mcn_business_categories`, `mcn_listings`, `mcn_products`, `mcn_orders`\*, `mcn_order_items`\* (\*retained but no longer written — ordering UI hidden) |
 | MCN — food drops | `mcn_preorder_drops`, `mcn_preorder_items`, `mcn_preorder_orders`, `mcn_preorder_order_items` |
 | MCN — carpools | `mcn_carpools`, `mcn_carpool_requests` |
 | MCN — parents & schools | `mcn_parent_corner`, `schools`, `school_reviews` |

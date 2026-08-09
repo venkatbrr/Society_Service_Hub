@@ -19,16 +19,30 @@ No production UI should define parallel visual token sets.
 
 ## Brand Mark
 
-The logo is an arch in `Verandah.primaryFg` (`#F0EDE3`) on `Verandah.primary` (`#0F3732`) — the icon set is drawn from the palette, so never introduce a separate "brand green".
+The logo is an arch resting on a rounded baseline bar, both in `Verandah.primaryFg` (`#F0EDE3`) on `Verandah.primary` (`#0F3732`) — the icon set is drawn from the palette, so never introduce a separate "brand green". The bar is wider than the arch, so the mark's bounding box is set by the bar, not the arch legs.
 
 | File | Canvas | Composition | Used by |
 |------|--------|-------------|---------|
 | `assets/images/icon.png` | 1024² | Full-bleed green, opaque | App icon (iOS + store), login header |
-| `assets/images/adaptive-icon.png` | 1024² | Cream arch on **transparent**, safe-zone inset | Android adaptive foreground, Android notification icon |
+| `assets/images/adaptive-icon.png` | 1024² | Cream mark on **transparent**, safe-zone inset | Android adaptive foreground, Android notification icon |
 | `assets/images/splash-icon.png` | 1024² | Rounded green tile on transparent | Splash (`resizeMode: contain` over `#FAF8F4`) |
-| `assets/images/favicon.png` | 48² | Full-bleed green, opaque | Web favicon |
-| `public/images/icon-512.png` | 512² | Full-bleed green | PWA `any`, apple-touch-icon, landing + desktop-panel lockups |
-| `public/images/icon-512-maskable.png` | 512² | Full-bleed green, arch inset to the maskable safe zone | PWA `maskable` |
+| `assets/images/favicon.png` | 48² | Rounded green tile on **transparent** | Web favicon (Expo `web.favicon`) |
+| `public/images/icon-512.png` | 512² | Full-bleed green | PWA `any`, landing + desktop-panel lockups |
+| `public/images/icon-192.png` | 192² | Full-bleed green | PWA `any` |
+| `public/images/icon-512-maskable.png` | 512² | Full-bleed green, mark inset to the maskable safe zone | PWA `maskable` |
+| `public/images/icon.png` | 1024² | Full-bleed green | PWA `any`, Open Graph image (`api/share-drop.ts`, `landing.html`) |
+| `public/images/apple-touch-180.png` | 180² | Full-bleed green, opaque | `apple-touch-icon` (app, landing, admin console) |
+| `public/images/favicon.png` / `favicon-32.png` / `favicon-16.png` | 48² / 32² / 16² | Rounded green tile on **transparent** | Browser tab icons everywhere |
+| `public/images/adaptive-icon.png` | 1024² | Cream mark on **transparent**, safe-zone inset | Web mirror of the Android foreground |
+
+Two rules decide which composition a slot gets:
+
+- **The platform masks it** (app icon, `apple-touch-icon`, PWA `any`/`maskable`, splash) → **opaque full-bleed green**. Pre-rounded art with transparent corners gets rounded a second time, and iOS composites alpha against *black*, not the brand green.
+- **The icon stands free** (browser tab favicons) → the **rounded tile on transparent**, which is what the design set ships.
+
+The same applies to in-app lockups: `.logo-icon` / `.brand-logo-icon` are `overflow: hidden` rounded containers filled by `icon-512.png`, so they need the full-bleed file — see the note below.
+
+The two inset renders (`adaptive-icon`, `icon-512-maskable`) place the mark inside the **inner 66%** of the canvas and centre its *bounding box*, rather than reusing the full-bleed composition — which sits low, so that the arch reads as grounded on the bar. Reusing it verbatim pushes the bar toward the crop edge on round Android masks.
 
 `public/images/` is a hand-maintained mirror for the web build — it is not generated from `assets/images/`. Replacing a logo means updating **both** trees, then bumping `CACHE_NAME` in `public/service-worker.js`.
 

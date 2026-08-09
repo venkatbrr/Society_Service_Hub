@@ -7,6 +7,7 @@ import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
+import { replaceTracked } from '../lib/navigation';
 import { siteUrl } from '../lib/siteUrl';
 
 export default function AdminRedirectScreen() {
@@ -28,7 +29,7 @@ export default function AdminRedirectScreen() {
     setLoggingOut(true);
     try {
       await signOut();
-      if (Platform.OS !== 'web') router.replace('/login');
+      if (Platform.OS !== 'web') replaceTracked(router, '/login');
     } catch (error: any) {
       Toast.show({
         type: 'error',

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { goBackSmart } from '../../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../../lib/navigation';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -108,13 +108,13 @@ export default function AddParentCornerScreen() {
         if (error) throw error;
         if (!data) {
           Toast.show({ type: 'error', text1: 'This entry no longer exists' });
-          router.replace('/mcn/parents' as any);
+          replaceTracked(router, '/mcn/parents' as any);
           return;
         }
 
         if (data.user_id !== user?.id && !isCommunityLead) {
           Toast.show({ type: 'error', text1: 'You can only edit your own entry' });
-          router.replace('/mcn/parents' as any);
+          replaceTracked(router, '/mcn/parents' as any);
           return;
         }
 
@@ -224,7 +224,7 @@ export default function AddParentCornerScreen() {
         Toast.show({ type: 'success', text1: 'Child details added to Parent Corner' });
       }
 
-      router.replace('/mcn/parents' as any);
+      replaceTracked(router, '/mcn/parents' as any);
     } catch (err: any) {
       console.error('Error saving parent corner record:', err);
       Toast.show({ type: 'error', text1: err.message || 'Failed to save details' });

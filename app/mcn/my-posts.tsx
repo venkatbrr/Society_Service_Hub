@@ -363,14 +363,6 @@ export default function MyPostsScreen() {
                 <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
                 <TouchableOpacity
                   style={styles.actionBtn}
-                  onPress={() => router.push(`/mcn/listing/orders/${item.id}` as any)}
-                >
-                  <Ionicons name="receipt-outline" size={14} color={colors.accent} />
-                  <Text style={[styles.actionText, { color: colors.accent }]}>Orders</Text>
-                </TouchableOpacity>
-                <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
-                <TouchableOpacity
-                  style={styles.actionBtn}
                   onPress={() => handleToggleListingActive(item.id, item.is_active)}
                 >
                   <Ionicons

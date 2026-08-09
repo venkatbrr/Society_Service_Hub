@@ -11,7 +11,7 @@ import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
 import { useAuth } from '../../../../context/AuthContext';
 import { cloudinaryUrl } from '../../../../lib/cloudinary';
 import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
-import { goBackSmart } from '../../../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../../../lib/navigation';
 import { supabase } from '../../../../lib/supabase';
 
 interface Product {
@@ -109,7 +109,7 @@ export default function ManageListingScreen() {
       // Security check: ensure current user is owner or a community lead
       if (listingData.owner_id !== user.id && !isCommunityLead) {
         Toast.show({ type: 'error', text1: 'Not authorized to manage this listing' });
-        router.replace('/mcn/business' as any);
+        replaceTracked(router, '/mcn/business' as any);
         return;
       }
 
@@ -426,7 +426,7 @@ export default function ManageListingScreen() {
           throw error;
         }
         Toast.show({ type: 'success', text1: 'Listing deleted' });
-        router.replace('/mcn/business' as any);
+        replaceTracked(router, '/mcn/business' as any);
       } catch (error: any) {
         console.error(error);
         Toast.show({ type: 'error', text1: 'Failed to delete listing', text2: error?.message });

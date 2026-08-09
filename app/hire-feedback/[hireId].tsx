@@ -14,6 +14,7 @@ import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type FeedbackSignal = 'positive' | 'negative' | 'skipped';
@@ -170,7 +171,7 @@ export default function HireFeedbackScreen() {
       });
       if (error) throw error;
 
-      router.replace({ pathname: '/provider/[id]', params: { id: providerId } } as any);
+      replaceTracked(router, { pathname: '/provider/[id]', params: { id: providerId } } as any);
     } catch (err: any) {
       Toast.show({ type: 'error', text1: 'Error', text2: err.message ?? 'Could not continue to rating.' });
     } finally {

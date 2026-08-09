@@ -5,6 +5,7 @@ import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 export default function FundsAccessRequestScreen() {
@@ -35,7 +36,7 @@ export default function FundsAccessRequestScreen() {
 
       await refreshSession();
       Toast.show({ type: 'success', text1: "Request submitted. We'll be in touch." });
-      router.replace('/(tabs)/community');
+      replaceTracked(router, '/(tabs)/community');
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Unable to submit request', text2: error.message });
     } finally {

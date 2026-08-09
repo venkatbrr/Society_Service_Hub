@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
 import { Verandah } from '../../constants/Colors';
+import { replaceTracked } from '../../lib/navigation';
 
 export default function AdminRouteIndex() {
   const router = useRouter();
@@ -10,7 +11,7 @@ export default function AdminRouteIndex() {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.location.replace('/admin/index.html');
     } else {
-      router.replace('/admin-redirect' as any);
+      replaceTracked(router, '/admin-redirect' as any);
     }
   }, [router]);
 

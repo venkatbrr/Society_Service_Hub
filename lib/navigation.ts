@@ -37,6 +37,56 @@ import { BackHandler, Platform } from 'react-native';
 const STACK_STORAGE_KEY = 'wooru_navigation_stack';
 const MAX_TRACKED_ROUTES = 25;
 
+/**
+ * Browser back/forward arrival detection.
+ *
+ * Redirect-only routes (the auth/community guard in `app/_layout.tsx`) navigate
+ * away the instant they mount. That is right when the user arrives going
+ * FORWARD, but it makes them unreachable going BACKWARD: browser-back lands on
+ * the guarded route, the guard fires `replace()`, and the user is thrown forward
+ * again — so back appears to jump several screens or to bounce to a redirect
+ * target. A guard that knows the direction can step further back instead.
+ *
+ * This only OBSERVES popstate. It never calls preventDefault and never
+ * navigates — expo-router owns popstate handling, and racing it is what
+ * corrupted browser history before (see the module header).
+ */
+let sawPopStateAt = 0;
+const POP_ARRIVAL_WINDOW_MS = 700;
+
+/**
+ * Monotonic popstate counter, read only by the stack sync.
+ *
+ * Deliberately separate from `sawPopStateAt`: the redirect guard consumes that
+ * flag via `consumeHistoryPop()`, and effects in `app/_layout.tsx` may run
+ * before ours. Sharing one flag would mean whichever effect ran first ate the
+ * signal and the other silently misread the navigation as a forward push.
+ */
+let popStateSeq = 0;
+
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  window.addEventListener('popstate', () => {
+    sawPopStateAt = Date.now();
+    popStateSeq += 1;
+  });
+}
+
+/** True when the current route was reached via browser back/forward. */
+export function arrivedViaHistoryPop(): boolean {
+  return sawPopStateAt !== 0 && Date.now() - sawPopStateAt < POP_ARRIVAL_WINDOW_MS;
+}
+
+/**
+ * `arrivedViaHistoryPop()`, but clears the flag so only the first caller after a
+ * pop sees it. Consuming matters: the redirect guard re-runs on unrelated state
+ * changes too, and a sticky flag would suppress legitimate forward redirects.
+ */
+export function consumeHistoryPop(): boolean {
+  const popped = arrivedViaHistoryPop();
+  sawPopStateAt = 0;
+  return popped;
+}
+
 /** Native has no sessionStorage; an in-memory stack is enough there. */
 let memoryStack: string[] = [];
 
@@ -82,25 +132,131 @@ function writeStack(stack: string[]) {
 }
 
 /**
- * Reconcile the tracked stack with the route we just landed on.
+ * A fresh document load starts React Navigation with an empty stack, but
+ * sessionStorage survives reloads — so without this the tracked stack claims a
+ * depth the app cannot actually pop through. `goBackSmart` would then read a
+ * `previousRoute` that no longer exists in this document and pop into it.
  *
- * If the route is already in the stack the user moved BACK (or jumped sideways
- * to an ancestor), so we truncate to that position. Otherwise it is a forward
- * navigation and we push.
+ * Runs once per document load (module init), NOT on client-side navigation.
+ */
+if (canUseSessionStorage()) {
+  writeStack([normalizeRoute(window.location.pathname)]);
+}
+
+/**
+ * What kind of navigation produced the route we just landed on.
  *
- * This truncate-or-push rule is what keeps the stack self-healing. The previous
- * implementation pushed unconditionally, so every back navigation *grew* the
- * stack and its contents stopped corresponding to real history after the first
- * back press.
+ * The stack must be TOLD this. It cannot be inferred from the pathname, because
+ * "navigate to a route that is already in the stack" and "go back to that route"
+ * are the same observation with opposite effects on history:
+ *
+ *   stack [N, B, L, M], replace(B)  ->  real [N, B, L, B]  (4 entries, M gone)
+ *   stack [N, B, L, B], back()      ->  real [N, B, L]     (3 entries)
+ *
+ * The old implementation guessed "already in the stack means back" and truncated
+ * to [N, B] for both. After a post-delete replace the tracked stack claimed depth
+ * 2 while the browser held 4, so `goBackSmart` believed a pop would land on the
+ * parent and called `router.back()` — which popped to the record the user had
+ * just deleted. Every wrong-destination and dead-back-button report traces to
+ * this one ambiguity.
+ */
+type NavIntent = 'push' | 'replace' | 'back';
+
+let pendingIntent: NavIntent | null = null;
+
+/**
+ * Declare the next navigation's kind. Called by the tracked helpers below; the
+ * flag is consumed by the very next `syncNavigationStack` and never persists.
+ */
+export function setNavIntent(intent: NavIntent) {
+  pendingIntent = intent;
+}
+
+let lastSeenPopSeq = 0;
+
+/**
+ * Resolve how we arrived, preferring hard signals over guesses:
+ *
+ *   1. An explicit intent from `pushTracked`/`replaceTracked`/`backTracked`.
+ *      Every `router.replace()` in the app routes through `replaceTracked`, so
+ *      a replace is ALWAYS explicit — nothing below has to detect one.
+ *   2. Web — a popstate since the last sync means the browser's own back or
+ *      forward button moved us. Direction is unknown, so this is the one case
+ *      where locating the route in the stack is right: back truncates to it,
+ *      forward re-appends it.
+ *   3. Web, no popstate — a plain `router.push()`. Appending is correct even
+ *      when the route is already in the stack (tab bar Home → Network → Home
+ *      genuinely grows history), which is exactly what the old lastIndexOf
+ *      inference got wrong.
+ *   4. Native has no History API and no popstate. A pop always lands on the
+ *      entry directly beneath the current one, so that check identifies raw
+ *      `router.back()`, hardware back, and swipe-back; anything else is a push.
+ *
+ * `window.history.length` looks like a tempting push-vs-replace signal and is
+ * not one: after a back, a push DROPS the forward entries, so the length can
+ * shrink on a push. Explicit intents make it unnecessary anyway.
+ */
+function resolveIntent(route: string, stack: string[]): NavIntent | 'locate' {
+  const explicit = pendingIntent;
+  pendingIntent = null;
+  if (explicit) return explicit;
+
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    if (popStateSeq !== lastSeenPopSeq) {
+      lastSeenPopSeq = popStateSeq;
+      return 'locate';
+    }
+    return 'push';
+  }
+
+  if (stack.length >= 2 && stack[stack.length - 2] === route) return 'back';
+  return 'push';
+}
+
+/**
+ * Reconcile the tracked stack with the route we just landed on, applying the
+ * resolved intent rather than guessing from the pathname.
  */
 function syncNavigationStack(pathname: string): string[] {
   const route = normalizeRoute(pathname);
   if (!route) return readStack();
 
   const stack = readStack();
-  const existingIndex = stack.lastIndexOf(route);
 
-  const next = existingIndex >= 0 ? stack.slice(0, existingIndex + 1) : [...stack, route];
+  // First route of the session.
+  if (!stack.length) {
+    lastSeenPopSeq = popStateSeq;
+    pendingIntent = null;
+    writeStack([route]);
+    return [route];
+  }
+
+  // Re-render on the same route: nothing moved, and consuming the intent here
+  // would eat a signal meant for the navigation that follows.
+  if (stack[stack.length - 1] === route) return stack;
+
+  const intent = resolveIntent(route, stack);
+
+  let next: string[];
+  switch (intent) {
+    case 'replace':
+      next = [...stack.slice(0, -1), route];
+      break;
+    case 'back':
+      next = stack.slice(0, -1);
+      // Defensive: if we popped to something other than expected, trust the URL.
+      if (next[next.length - 1] !== route) next = [...next.slice(0, -1), route];
+      break;
+    case 'locate': {
+      const existingIndex = stack.lastIndexOf(route);
+      next = existingIndex >= 0 ? stack.slice(0, existingIndex + 1) : [...stack, route];
+      break;
+    }
+    case 'push':
+    default:
+      next = [...stack, route];
+      break;
+  }
 
   writeStack(next);
   return next;
@@ -113,28 +269,41 @@ export function getPreviousRoute(): string | null {
 }
 
 /**
- * `router.replace()` that keeps the tracked stack honest. Use this instead of
- * `router.replace()` everywhere.
+ * `router.replace()` that tells the stack what it did.
  *
- * replace() overwrites the current history entry, so the route being left
- * vanishes from the browser's back stack. But `syncNavigationStack` only ever
- * observes "the pathname changed" and pushes, so the departed route stays in the
- * tracked stack as a phantom. `getPreviousRoute()` then names a screen the user
- * can no longer reach, `goBackSmart()` sees previous !== parent and takes its
- * replace() fallback instead of popping — which burns a history slot, leaves two
- * identical adjacent entries, and kills the forward button. The visible symptom
- * is a back press that appears to do nothing.
- *
- * Dropping the outgoing entry here means the push that follows lands in the slot
- * the replaced route just vacated, so tracked and real history stay aligned.
+ * replace() overwrites the current history entry, so the outgoing route leaves
+ * real history while the incoming one takes its slot — depth is unchanged. On
+ * web `resolveIntent` can see that from `history.length`, so an un-converted
+ * `router.replace()` is no longer a correctness bug there. On native there is no
+ * such signal, so prefer this everywhere.
  */
 export function replaceTracked(
   router: ReturnType<typeof useRouter>,
   route: Parameters<ReturnType<typeof useRouter>['replace']>[0]
 ) {
-  const stack = readStack();
-  if (stack.length) writeStack(stack.slice(0, -1));
+  setNavIntent('replace');
   router.replace(route);
+}
+
+/** `router.push()` that tells the stack what it did. */
+export function pushTracked(
+  router: ReturnType<typeof useRouter>,
+  route: Parameters<ReturnType<typeof useRouter>['push']>[0]
+) {
+  setNavIntent('push');
+  router.push(route);
+}
+
+/**
+ * `router.back()` that tells the stack what it did.
+ *
+ * On web this is belt-and-braces — programmatic back fires popstate, which the
+ * sync would catch anyway. On native it is required: nothing else distinguishes
+ * a pop from a push.
+ */
+export function backTracked(router: ReturnType<typeof useRouter>) {
+  setNavIntent('back');
+  router.back();
 }
 
 /**
@@ -242,7 +411,7 @@ export function goBackSmart(router: ReturnType<typeof useRouter>, currentPath: s
   const canPop = typeof router.canGoBack === 'function' ? router.canGoBack() : false;
 
   if (canPop && previousRoute && previousRoute === normalizedParent) {
-    router.back();
+    backTracked(router);
     return;
   }
 
@@ -273,8 +442,11 @@ export function useSyncedBackNavigation() {
     if (Platform.OS !== 'android' || !pathname) return;
 
     const onBackPress = () => {
-      // Let React Navigation pop normally whenever it has somewhere to pop to.
+      // Let React Navigation pop normally whenever it has somewhere to pop to,
+      // but declare the pop first — on native nothing else distinguishes the
+      // resulting pathname change from a forward push.
       if (typeof router.canGoBack === 'function' && router.canGoBack()) {
+        setNavIntent('back');
         return false;
       }
 

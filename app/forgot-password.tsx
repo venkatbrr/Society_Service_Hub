@@ -8,6 +8,7 @@ import { EMAIL_AUTH_UI_ENABLED } from '../constants/authFlags';
 import { Verandah } from '../constants/Colors';
 import { VerandahLayout, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, resetPassword } from '../lib/auth';
+import { replaceTracked } from '../lib/navigation';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function ForgotPasswordScreen() {
   // still deep-linkable. Send anyone who lands on it back to sign-in rather
   // than offering a reset for a password they were never asked to create.
   useEffect(() => {
-    if (!EMAIL_AUTH_UI_ENABLED) router.replace('/login');
+    if (!EMAIL_AUTH_UI_ENABLED) replaceTracked(router, '/login');
   }, [router]);
 
   const handleReset = async () => {

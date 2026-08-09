@@ -25,10 +25,12 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Wooru" />
-        <link rel="apple-touch-icon" href="/images/icon-512.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-180.png" />
 
         {/* Favicon */}
-        <link rel="icon" type="image/png" href="/images/favicon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon.png" />
 
         {/* Google Fonts - Plus Jakarta Sans & Inter */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

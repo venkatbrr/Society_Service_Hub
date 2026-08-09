@@ -5,7 +5,7 @@ import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Verandah } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
-import { normalizeRoute } from '../lib/navigation';
+import { normalizeRoute, pushTracked } from '../lib/navigation';
 
 type TabDef = {
   key: string;
@@ -100,7 +100,11 @@ export function GlobalBottomNav() {
           <TouchableOpacity
             key={tab.key}
             style={styles.tabButton}
-            onPress={() => router.push(tab.route as any)}
+            // pushTracked, not router.push: tapping back to a tab you were just
+            // on (Home -> Network -> Home) pushes a route that is already the
+            // entry beneath the current one. On native that is indistinguishable
+            // from a pop, so the push has to declare itself.
+            onPress={() => pushTracked(router, tab.route as any)}
             activeOpacity={0.7}
           >
             <Ionicons

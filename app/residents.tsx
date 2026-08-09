@@ -9,6 +9,7 @@ import { Verandah } from '../constants/Colors';
 import { VerandahLayout, VerandahRadius } from '../constants/Verandah';
 import { APP_EMOJIS } from '../constants/emojis';
 import { useAuth } from '../context/AuthContext';
+import { replaceTracked } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
 import { useWebPullToRefresh } from '../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../components/WebPullIndicator';
@@ -118,11 +119,11 @@ export default function ResidentsScreen() {
 
   const handleBack = () => {
     if (returnTo === 'profile') {
-      router.replace('/(tabs)/profile');
+      replaceTracked(router, '/(tabs)/profile');
       return;
     }
     if (returnTo === 'community') {
-      router.replace('/(tabs)/community');
+      replaceTracked(router, '/(tabs)/community');
       return;
     }
     router.back();

@@ -36,7 +36,7 @@ import {
     getFundPermissions,
     getRoleAccessSummary,
 } from '../../lib/fundRoles';
-import { goBackSmart } from '../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
@@ -166,7 +166,7 @@ export default function FundDetailScreen() {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Funds are not active in this community.</Text>
-        <TouchableOpacity style={[styles.roleAction, { backgroundColor: colors.surface2, marginTop: 12 }]} onPress={() => router.replace('/(tabs)/community')}>
+        <TouchableOpacity style={[styles.roleAction, { backgroundColor: colors.surface2, marginTop: 12 }]} onPress={() => replaceTracked(router, '/(tabs)/community')}>
           <Text style={[styles.roleActionText, { color: colors.primary }]}>Back to community</Text>
         </TouchableOpacity>
       </View>
@@ -197,7 +197,7 @@ export default function FundDetailScreen() {
           if (error) throw error;
         }
         Toast.show({ type: 'success', text1: 'Fund deleted successfully' });
-        router.replace('/funds');
+        replaceTracked(router, '/funds');
       } catch (err: any) {
         Toast.show({ type: 'error', text1: 'Error deleting fund', text2: err.message });
       }

@@ -22,7 +22,7 @@ LogBox.ignoreLogs([
   'AuthApiError',
 ]);
 
-import { useSyncedBackNavigation } from '../lib/navigation';
+import { consumeHistoryPop, replaceTracked, useSyncedBackNavigation } from '../lib/navigation';
 
 function RootLayoutNav() {
   const { session, profile, communityId, activeCommunityRequest, isPlatformAdmin, isLoading } = useAuth();
@@ -105,6 +105,20 @@ function RootLayoutNav() {
           }
         }
         redirectTo = '/login';
+      } else if (isWebRootPath && typeof window !== 'undefined') {
+        // Signed-out visitor at the web root gets the marketing page. This used
+        // to live in `app/index.tsx`, which had to be deleted: it also resolved
+        // to `/`, colliding with the Home tab at `app/(tabs)/index.tsx`. Two
+        // route files on one URL is exactly what corrupts browser history, and
+        // the redirect fired whenever back landed on `/` — including for
+        // signed-in users on the Home tab, who were thrown to /landing.html.
+        //
+        // Skip it entirely when the user got here by pressing back, or we
+        // recreate that trap.
+        if (!consumeHistoryPop()) {
+          window.location.replace('/landing.html');
+        }
+        return;
       }
     } else if (isPlatformAdmin) {
       // Platform admin on web → direct to full page web console
@@ -134,6 +148,19 @@ function RootLayoutNav() {
       communityId &&
       (inAuthGroup || isOnCommunitySelect || isOnCommunityRequest || isOnCommunityRequestSubmitted)
     ) {
+      // Signed in with a community, but sitting on a transitional screen
+      // (login / community-select / request). Going forward, bounce into the
+      // app. Going BACKWARD, do not: the user pressed back into a screen they
+      // already passed through, and redirecting forward pins them in place —
+      // browser back looks like it does nothing, or jumps to whatever tab was
+      // last focused. Step further back instead and leave the saved route
+      // untouched (takeSavedRoute() consumes it, so it must not run here).
+      if (consumeHistoryPop()) {
+        if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history.length > 1) {
+          window.history.back();
+        }
+        return;
+      }
       // Has community → main app or saved target route
       redirectTo = takeSavedRoute() || '/(tabs)';
     }
@@ -155,7 +182,7 @@ function RootLayoutNav() {
 
     if (!alreadyOnTarget) {
       lastRedirectRef.current = redirectTo;
-      router.replace(redirectTo as any);
+      replaceTracked(router, redirectTo as any);
     }
   }, [
     session,

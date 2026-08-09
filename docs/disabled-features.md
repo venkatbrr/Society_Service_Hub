@@ -54,6 +54,25 @@ The old strings were written for the period when confirmation was off, where an 
 - **Reason**: Reduced friction during early adoption.
 - **To re-enable**: add explicit validation to the sign-up form in `app/login.tsx`.
 
+### 2b. Community business in-app ordering — UI hidden 2026-08-09
+
+- **Status**: **Hidden in the UI, fully intact underneath.** MCN business listings are now a **directory only** — residents browse offerings and prices, then contact the owner by phone or WhatsApp to actually order.
+- **Not removed**: `mcn_orders`, `mcn_order_items`, the `place_mcn_order()` RPC, the `enforce_mcn_order_immutable_fields` trigger, and all existing order rows are untouched. No migration was written. Food-drop pre-orders are a **separate** flow and are unaffected — see [`features.md`](features.md) §4.3.
+
+**Why.** The ordering flow implied a confirmation contract the app never delivered: an order sat at `pending` with no way for a buyer to tell "the owner hasn't looked" from "the owner is preparing it," and no notification was ever sent in either direction. Rather than build an accept/decline step and a staleness story for a handful of neighbour-to-neighbour transactions, the surface was reduced to what already worked — call and WhatsApp.
+
+**What changed:**
+
+| File | Change |
+|---|---|
+| `app/mcn/listing/[id].tsx` | Quantity steppers, floating cart bar, and the order confirmation modal removed. The owner card's small call/WhatsApp circles were replaced by a labelled **Call / WhatsApp** pair below the description, shown to non-owners. A line above the offerings reads "Prices are indicative. Call or message *N* to place an order." |
+| `app/mcn/my-orders.tsx` | The **Business Orders** tab is gone; the screen is now food pre-orders only, with no segmented control. Its `?tab=business` param no longer does anything. |
+| `app/mcn/my-posts.tsx` | The **Orders** action on each owned listing card is gone. |
+
+**Still routable, just unlinked**: `app/mcn/listing/orders/[id].tsx` (Orders received) is kept on disk with no entry point. Reaching it by URL shows historical orders read-only — useful for anyone who placed one before this change.
+
+- **To re-enable**: restore the cart UI and the `place_mcn_order()` call in the listing detail screen, re-add the My Orders tab and the my-posts link. Nothing needs to change in the database. If it comes back, add the accept step at the same time — the `pending` status is what made the flow ambiguous in the first place.
+
 ---
 
 ## Removed

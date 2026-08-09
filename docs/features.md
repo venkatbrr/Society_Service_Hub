@@ -170,13 +170,15 @@ Required: title, category, provider context, date. Categories use the same two-l
 
 Business name required (max 80). Category required, from the `mcn_business_categories` lookup. Description optional (max 280). Contact phone required, normalized to 10 digits. Navigates to the manage screen on success.
 
-### Listing detail & order — `app/mcn/listing/[id].tsx`
+### Listing detail — `app/mcn/listing/[id].tsx`
 
 | Aspect | Details |
 |--------|---------|
-| **Tables / RPCs** | `mcn_listings`, `mcn_business_categories`, `mcn_products`, `mcn_orders`, `mcn_order_items`, `profiles`; RPC `place_mcn_order(p_listing_id, p_items, p_buyer_phone, p_buyer_note, p_order_id)` |
-| **Rules** | Offerings split by `item_type` into Products and Services, each row showing name, optional description, availability, and either `₹ amount / unit` or **"Price on request"** when `price IS NULL`. Quantity steps are **0.5 for kg/litre and 1 for piece/dozen/box/pack**, minimum 0. For non-owners, selecting items shows a floating Cart Bar with subtotal and Review & Order CTA. Placing/editing an order is atomic via `place_mcn_order()` in a single transaction under immutability triggers. Direct Call and WhatsApp actions (via `buildWhatsAppUrl`). |
-| **Roles** | Any resident except the owner can order. Owner **or lead** sees the Manage action in the header. |
+| **Tables** | `mcn_listings`, `mcn_business_categories`, `mcn_products`, `ratings`, `mcn_listing_reports`, `profiles` |
+| **Rules** | **Browse-and-contact only — there is no in-app ordering.** Offerings split by `item_type` into Products and Services, each row showing name, optional description, availability, and either `₹ amount / unit` or **"Price on request"** when `price IS NULL`. Unavailable offerings show a "Not available" badge. Non-owners see a line above the offerings — "Prices are indicative. Call or message *owner* to place an order." — and a labelled **Call / WhatsApp** pair below the description (via `buildWhatsAppUrl`); both are hidden from the owner and when no contact number exists. Also carries the ratings/reviews block and the report flow. |
+| **Roles** | Any resident can browse and contact the owner. Owner **or lead** sees the Manage action in the header. |
+
+> Cart, quantity steppers, and the order modal were removed on 2026-08-09 — `mcn_orders`, `mcn_order_items`, and `place_mcn_order()` all still exist and are simply unused. See [`disabled-features.md`](disabled-features.md) §2b.
 
 ### Manage listing — `app/mcn/listing/manage/[id].tsx`
 
@@ -185,9 +187,9 @@ Business name required (max 80). Category required, from the `mcn_business_categ
 | **Rules** | Toggle listing active/paused, edit details including category, and manage offerings. The offering modal supports `item_type` (`product`/`service`) and an optional price — blank stores `NULL` and renders as "Price on request". Deleting a product or a whole listing with orders in history is gracefully blocked with a prompt to pause instead (SQLSTATE 23503 handling). |
 | **Roles** | **Owner or lead.** The screen enforces this itself: a non-owner, non-lead is toasted and redirected to `/mcn/business`. |
 
-### Orders received — `app/mcn/listing/orders/[id].tsx`
+### Orders received — `app/mcn/listing/orders/[id].tsx` — **unlinked**
 
-Orders grouped Pending / Fulfilled / Cancelled. Auto-refreshes on focus. The WhatsApp button pre-fills a message with items and total via `buildWhatsAppUrl`. Pending orders can be marked fulfilled or cancelled behind `confirmAction`. Owner only.
+No screen navigates here since in-app business ordering was hidden on 2026-08-09; the route file is kept so historical orders stay reachable by URL. Behavior is unchanged: orders grouped Pending / Fulfilled / Cancelled, auto-refresh on focus, a WhatsApp button pre-filling items and total via `buildWhatsAppUrl`, and pending orders markable fulfilled or cancelled behind `confirmAction`. Owner only. See [`disabled-features.md`](disabled-features.md) §2b.
 
 ### 4.3 Pre-order food drops — `app/mcn/drops/*`
 
@@ -256,10 +258,12 @@ Routes: `index` · `[id]` · `review` · `add` · `compare`
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | One place for everything the resident has ordered |
-| **Tables** | `mcn_orders` + `mcn_order_items`, `mcn_preorder_orders` + `mcn_preorder_order_items` |
-| **Rules** | Two tabs — **Pre-order food** and **Business** — each scoped to `buyer_id = user.id` and sorted newest first. Business orders cancel while `pending`; food pre-orders cancel while `confirmed`. `fulfilled` and `cancelled` orders are read-only. |
+| **Purpose** | The resident's own food pre-orders |
+| **Tables** | `mcn_preorder_orders` + `mcn_preorder_order_items` |
+| **Rules** | A single list — scoped to `buyer_id = user.id`, sorted newest first, cancelled sinking to the bottom. Each card carries the drop title, host, delivery date/time, items, total, and View drop / Call host / WhatsApp actions. Pre-orders cancel while `confirmed`; `fulfilled` (shown as **Delivered**) and `cancelled` are read-only. |
 | **Navigation** | From the MCN hub quick-action bar |
+
+> The **Business Orders** tab was removed on 2026-08-09 along with in-app business ordering, taking the segmented control with it — one list means no tabs. The screen's old `?tab=business` param is inert. See [`disabled-features.md`](disabled-features.md) §2b.
 
 ---
 
@@ -429,9 +433,9 @@ Name updates apply directly. Email updates send a verification link to the new a
 | **MCN — business** |
 | View / search listings | ✅ | ✅ | — | — |
 | Create listing | ✅ | ✅ | — | — |
-| Manage listing (toggle, offerings, orders) | own only | own **or any** | — | — |
+| Manage listing (toggle, offerings) | own only | own **or any** | — | — |
 | Delete listing | own only | own **or any** | — | — |
-| Place / update order | any but own | any but own | — | — |
+| Contact owner (call / WhatsApp) | any but own | any but own | — | — |
 | **MCN — food drops** |
 | Browse drops | ✅ (also anonymous) | ✅ | — | — |
 | Publish drop | ✅ | ✅ | — | — |

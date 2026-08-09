@@ -14,7 +14,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { cloudinaryUrl } from '../../../lib/cloudinary';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { goBackSmart } from '../../../lib/navigation';
-import { buildWhatsAppUrl, toLast10Digits } from '../../../lib/phone';
+import { buildWhatsAppUrl } from '../../../lib/phone';
 import { supabase } from '../../../lib/supabase';
 
 interface Product {
@@ -39,31 +39,16 @@ interface Listing {
   profiles: { full_name: string; flat_number: string | null; phone_number: string | null } | null;
 }
 
-interface CartItem {
-  productId: string;
-  name: string;
-  price: number;
-  unit: string;
-  quantity: number;
-}
-
 export default function ListingDetailScreen() {
   const { id: listingId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user, communityId, profile, refreshSession, isCommunityLead } = useAuth();
+  const { user, communityId, refreshSession, isCommunityLead } = useAuth();
   const colors = Verandah;
   const scrollViewRef = useRef<ScrollView>(null);
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [existingOrder, setExistingOrder] = useState<any | null>(null);
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [buyerNote, setBuyerNote] = useState('');
-  const [buyerPhone, setBuyerPhone] = useState('');
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [showOrderModal, setShowOrderModal] = useState(false);
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   // Review & Rating state
   const [publicReviews, setPublicReviews] = useState<any[]>([]);
@@ -168,31 +153,7 @@ export default function ListingDetailScreen() {
       if (productsError) throw productsError;
       setProducts(productsData as Product[]);
 
-      // 3. Fetch existing pending order (if any)
-      const { data: orderData, error: orderError } = await supabase
-        .from('mcn_orders')
-        .select('*, mcn_order_items(*)')
-        .eq('listing_id', listingId)
-        .eq('buyer_id', user.id)
-        .eq('status', 'pending')
-        .maybeSingle();
-
-      if (orderError) throw orderError;
-      setExistingOrder(orderData);
-
-      if (orderData) {
-        setBuyerNote(orderData.buyer_note || '');
-        setBuyerPhone(orderData.buyer_phone || '');
-        const existingQuantities: Record<string, number> = {};
-        orderData.mcn_order_items.forEach((item: any) => {
-          existingQuantities[item.product_id] = Number(item.quantity);
-        });
-        setQuantities(existingQuantities);
-      } else {
-        setBuyerPhone(profile?.phone_number || '');
-      }
-
-      // 4. Fetch user's rating for this listing
+      // 3. Fetch user's rating for this listing
       const { data: myRatingData, error: myRatingError } = await supabase
         .from('ratings')
         .select('rating, review_text')
@@ -210,10 +171,10 @@ export default function ListingDetailScreen() {
         setReviewText('');
       }
 
-      // 5. Fetch public reviews
+      // 4. Fetch public reviews
       await fetchPublicReviews();
 
-      // 6. Has the current user already reported this listing?
+      // 5. Has the current user already reported this listing?
       const { data: reportData } = await supabase
         .from('mcn_listing_reports')
         .select('id')
@@ -227,7 +188,7 @@ export default function ListingDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [listingId, user?.id, profile?.phone_number, fetchPublicReviews]);
+  }, [listingId, user?.id, fetchPublicReviews]);
 
   const handleSubmitReport = async () => {
     if (!listingId || !user || !selectedReportReason) return;
@@ -294,67 +255,6 @@ export default function ListingDetailScreen() {
 
   const handleRating = (rating: number) => {
     setSelectedRating(rating);
-  };
-
-  const handleQuantityChange = (productId: string, delta: number, unit: string) => {
-    const isDecimal = unit === 'kg' || unit === 'litre';
-    const step = isDecimal ? 0.5 : 1;
-    const current = quantities[productId] || 0;
-    const next = Math.max(0, Math.round((current + delta * step) * 10) / 10);
-
-    setQuantities((prev) => {
-      const updated = { ...prev };
-      if (next === 0) {
-        delete updated[productId];
-      } else {
-        updated[productId] = next;
-      }
-      return updated;
-    });
-  };
-
-  const handleSubmitOrder = async () => {
-    if (!listingId || !user) return;
-    if (!buyerPhone || toLast10Digits(buyerPhone).length !== 10) {
-      Toast.show({ type: 'error', text1: 'Valid phone required', text2: 'Please enter a 10-digit contact number' });
-      return;
-    }
-
-    const itemsPayload = Object.entries(quantities)
-      .filter(([_, q]) => q > 0)
-      .map(([product_id, quantity]) => ({ product_id, quantity }));
-
-    if (itemsPayload.length === 0) {
-      Toast.show({ type: 'error', text1: 'No items selected', text2: 'Please select at least one item' });
-      return;
-    }
-
-    setIsPlacingOrder(true);
-    try {
-      const { data, error } = await supabase.rpc('place_mcn_order', {
-        p_listing_id: listingId,
-        p_items: itemsPayload,
-        p_buyer_phone: buyerPhone.trim(),
-        p_buyer_note: buyerNote.trim() || null,
-        p_order_id: existingOrder?.id || null,
-      });
-
-      if (error) throw error;
-
-      Toast.show({
-        type: 'success',
-        text1: existingOrder ? 'Order updated!' : 'Order placed successfully!',
-        text2: 'The seller has received your order.',
-      });
-
-      setShowOrderModal(false);
-      fetchListingData();
-    } catch (error: any) {
-      console.error('Error placing order:', error);
-      Toast.show({ type: 'error', text1: 'Failed to place order', text2: error?.message });
-    } finally {
-      setIsPlacingOrder(false);
-    }
   };
 
   const handleSubmitReview = async () => {
@@ -424,19 +324,14 @@ export default function ListingDetailScreen() {
   const visibleReviews = showAllReviews ? publicReviews : publicReviews.slice(0, 3);
   const productItems = products.filter((item) => item.item_type !== 'service');
   const serviceItems = products.filter((item) => item.item_type === 'service');
-
-  const totalOrderUnits = Object.values(quantities).reduce((a, b) => a + b, 0);
-  const totalOrderAmount = Object.entries(quantities).reduce((sum, [productId, qty]) => {
-    const p = products.find((prod) => prod.id === productId);
-    return sum + (p?.price ? Number(p.price) * qty : 0);
-  }, 0);
+  const isOwner = user?.id === listing.owner_id;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <ScrollView
         ref={scrollViewRef}
         style={styles.scroll}
-        contentContainerStyle={[styles.contentContainer, totalOrderUnits > 0 && { paddingBottom: 80 }]}
+        contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
       >
       <Stack.Screen
@@ -505,16 +400,6 @@ export default function ListingDetailScreen() {
           ) : null}
         </View>
 
-        {contactPhone ? (
-          <View style={styles.contactActions}>
-            <TouchableOpacity onPress={handleCall} style={[styles.contactIconBtn, { borderColor: colors.border }]}>
-              <Ionicons name="call-outline" size={20} color={colors.accent} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleWhatsApp} style={[styles.contactIconBtn, { borderColor: colors.border }]}>
-              <Ionicons name="logo-whatsapp" size={20} color={colors.accent} />
-            </TouchableOpacity>
-          </View>
-        ) : null}
       </View>
 
       {listing.description ? (
@@ -525,7 +410,28 @@ export default function ListingDetailScreen() {
         </View>
       ) : null}
 
-      {user?.id !== listing.owner_id ? (
+      {contactPhone && !isOwner ? (
+        <View style={styles.contactActions}>
+          <TouchableOpacity
+            onPress={handleCall}
+            style={[styles.contactBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="call-outline" size={18} color={colors.accent} />
+            <Text style={[styles.contactBtnText, { color: colors.accent }]}>Call</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleWhatsApp}
+            style={[styles.contactBtn, { borderColor: colors.primary, backgroundColor: colors.primary }]}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="logo-whatsapp" size={18} color={colors.primaryFg} />
+            <Text style={[styles.contactBtnText, { color: colors.primaryFg }]}>WhatsApp</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
+      {!isOwner ? (
         <TouchableOpacity
           style={styles.reportLink}
           onPress={() => (hasReported ? undefined : setShowReportModal(true))}
@@ -547,6 +453,12 @@ export default function ListingDetailScreen() {
         </Text>
       ) : (
         <>
+          {!isOwner ? (
+            <Text style={[styles.offeringsNote, { color: colors.textTertiary }]}>
+              Prices are indicative. Call or message {listing.profiles?.full_name || 'the owner'} to place an order.
+            </Text>
+          ) : null}
+
           {productItems.length > 0 ? (
             <View style={styles.offeringsSection}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Products</Text>
@@ -599,28 +511,6 @@ export default function ListingDetailScreen() {
                     {!product.is_available ? (
                       <View style={styles.unavailableBadge}>
                         <Text style={[styles.unavailableText, { color: colors.textMuted }]}>Not available</Text>
-                      </View>
-                    ) : user?.id !== listing.owner_id && product.price != null ? (
-                      <View style={styles.qtyControls}>
-                        {quantities[product.id] ? (
-                          <>
-                            <TouchableOpacity
-                              style={[styles.qtyBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
-                              onPress={() => handleQuantityChange(product.id, -1, product.unit)}
-                            >
-                              <Ionicons name="remove" size={16} color={colors.textPrimary} />
-                            </TouchableOpacity>
-                            <Text style={[styles.qtyDisplay, { color: colors.textPrimary }]}>
-                              {quantities[product.id]} {product.unit}
-                            </Text>
-                          </>
-                        ) : null}
-                        <TouchableOpacity
-                          style={[styles.qtyBtn, { borderColor: colors.primary, backgroundColor: colors.primary }]}
-                          onPress={() => handleQuantityChange(product.id, 1, product.unit)}
-                        >
-                          <Ionicons name="add" size={16} color={colors.primaryFg} />
-                        </TouchableOpacity>
                       </View>
                     ) : null}
                   </View>
@@ -681,28 +571,6 @@ export default function ListingDetailScreen() {
                     {!product.is_available ? (
                       <View style={styles.unavailableBadge}>
                         <Text style={[styles.unavailableText, { color: colors.textMuted }]}>Not available</Text>
-                      </View>
-                    ) : user?.id !== listing.owner_id && product.price != null ? (
-                      <View style={styles.qtyControls}>
-                        {quantities[product.id] ? (
-                          <>
-                            <TouchableOpacity
-                              style={[styles.qtyBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
-                              onPress={() => handleQuantityChange(product.id, -1, product.unit)}
-                            >
-                              <Ionicons name="remove" size={16} color={colors.textPrimary} />
-                            </TouchableOpacity>
-                            <Text style={[styles.qtyDisplay, { color: colors.textPrimary }]}>
-                              {quantities[product.id]} {product.unit}
-                            </Text>
-                          </>
-                        ) : null}
-                        <TouchableOpacity
-                          style={[styles.qtyBtn, { borderColor: colors.primary, backgroundColor: colors.primary }]}
-                          onPress={() => handleQuantityChange(product.id, 1, product.unit)}
-                        >
-                          <Ionicons name="add" size={16} color={colors.primaryFg} />
-                        </TouchableOpacity>
                       </View>
                     ) : null}
                   </View>
@@ -902,113 +770,6 @@ export default function ListingDetailScreen() {
         </Pressable>
       </Modal>
       </ScrollView>
-
-      {/* Floating Cart Bar for Non-Owners */}
-      {user?.id !== listing.owner_id && totalOrderUnits > 0 && (
-        <View style={[styles.cartBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.cartBarInfo}>
-            <Text style={[styles.cartBarLabel, { color: colors.textSecondary }]}>
-              {totalOrderUnits} {totalOrderUnits === 1 ? 'item' : 'items'}
-            </Text>
-            <Rupees amount={totalOrderAmount} size="md" tone="in" />
-          </View>
-          <TouchableOpacity
-            style={[styles.cartBarBtn, { backgroundColor: colors.primary }]}
-            activeOpacity={0.85}
-            onPress={() => setShowOrderModal(true)}
-          >
-            <Ionicons name="bag-check-outline" size={18} color={colors.primaryFg} />
-            <Text style={[styles.cartBarBtnText, { color: colors.primaryFg }]}>
-              {existingOrder ? 'Update Order' : 'Review & Order'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Order Confirmation Modal */}
-      <Modal
-        visible={showOrderModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowOrderModal(false)}
-      >
-        <Pressable style={styles.orderOverlay} onPress={() => setShowOrderModal(false)}>
-          <Pressable style={[styles.orderModalCard, { backgroundColor: colors.card }]} onPress={(e) => e.stopPropagation()}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-              {existingOrder ? 'Update Your Order' : 'Confirm Your Order'}
-            </Text>
-            <Text style={[styles.orderModalSubtitle, { color: colors.textSecondary }]}>
-              Ordering from {listing.name}
-            </Text>
-
-            {/* Items Summary in Modal */}
-            <ScrollView style={styles.modalItemsList} showsVerticalScrollIndicator={false}>
-              {Object.entries(quantities).filter(([_, q]) => q > 0).map(([productId, qty]) => {
-                const prod = products.find((p) => p.id === productId);
-                const subtotal = prod?.price ? Number(prod.price) * qty : 0;
-                return (
-                  <View key={productId} style={styles.modalItemRow}>
-                    <Text style={[styles.modalItemName, { color: colors.textPrimary }]}>
-                      {prod?.name || 'Item'} × {qty} {prod?.unit || ''}
-                    </Text>
-                    <Rupees amount={subtotal} size="sm" />
-                  </View>
-                );
-              })}
-              <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
-              <View style={styles.modalTotalRow}>
-                <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total Amount</Text>
-                <Rupees amount={totalOrderAmount} size="md" tone="in" />
-              </View>
-            </ScrollView>
-
-            {/* Buyer Contact & Note */}
-            <View style={styles.orderInputsWrap}>
-              <Text style={[styles.inputLabel, { color: colors.textPrimary }]}>Contact Phone (10 digits)</Text>
-              <TextInput
-                style={[styles.inputField, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.textPrimary }]}
-                placeholder="10-digit mobile number"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="phone-pad"
-                value={buyerPhone}
-                onChangeText={setBuyerPhone}
-              />
-
-              <Text style={[styles.inputLabel, { color: colors.textPrimary, marginTop: 8 }]}>Note for seller (optional)</Text>
-              <TextInput
-                style={[styles.inputField, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.textPrimary, minHeight: 44 }]}
-                placeholder="Special instructions or timing..."
-                placeholderTextColor={colors.textMuted}
-                value={buyerNote}
-                onChangeText={setBuyerNote}
-                multiline
-              />
-            </View>
-
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-              <TouchableOpacity
-                style={[styles.reportCancelBtn, { borderColor: colors.border }]}
-                onPress={() => setShowOrderModal(false)}
-              >
-                <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '500' }}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.reportSubmitBtn, { backgroundColor: colors.primary }]}
-                onPress={handleSubmitOrder}
-                disabled={isPlacingOrder}
-              >
-                {isPlacingOrder ? (
-                  <ActivityIndicator color={colors.primaryFg} size="small" />
-                ) : (
-                  <Text style={{ color: colors.primaryFg, fontSize: 14, fontWeight: '600' }}>
-                    {existingOrder ? 'Update Order' : 'Place Order'}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
   );
 }
@@ -1072,14 +833,21 @@ const styles = StyleSheet.create({
   contactActions: {
     flexDirection: 'row',
     gap: 8,
+    marginBottom: 8,
   },
-  contactIconBtn: {
-    borderWidth: 1,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  contactBtn: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
+    height: 40,
+    borderWidth: 1,
+    borderRadius: VerandahRadius.pill,
+  },
+  contactBtnText: {
+    ...VerandahType.bodyBold,
+    fontSize: 13,
   },
   descriptionSection: {
     marginBottom: 6,
@@ -1107,6 +875,10 @@ const styles = StyleSheet.create({
   emptyProducts: {
     ...VerandahType.body,
     fontStyle: 'italic',
+  },
+  offeringsNote: {
+    ...VerandahType.caption,
+    marginBottom: 8,
   },
   productRow: {
     flexDirection: 'row',
@@ -1140,24 +912,6 @@ const styles = StyleSheet.create({
   },
   unitText: {
     ...VerandahType.caption,
-  },
-  qtyControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  qtyBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  qtyDisplay: {
-    ...VerandahType.captionBold,
-    minWidth: 50,
-    textAlign: 'center',
   },
   unavailableBadge: {
     paddingHorizontal: 8,
@@ -1333,99 +1087,5 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  cartBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    elevation: 8,
-  },
-  cartBarInfo: {
-    flex: 1,
-  },
-  cartBarLabel: {
-    ...VerandahType.caption,
-    fontSize: 12,
-  },
-  cartBarBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: VerandahRadius.pill,
-    gap: 6,
-  },
-  cartBarBtnText: {
-    ...VerandahType.bodyBold,
-    fontSize: 13,
-  },
-  orderOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  orderModalCard: {
-    width: '100%',
-    maxWidth: 400,
-    borderRadius: VerandahRadius.lg,
-    padding: 20,
-    maxHeight: '85%',
-  },
-  orderModalSubtitle: {
-    ...VerandahType.caption,
-    fontSize: 13,
-    marginBottom: 12,
-  },
-  modalItemsList: {
-    maxHeight: 180,
-    marginVertical: 6,
-  },
-  modalItemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  modalItemName: {
-    ...VerandahType.body,
-    fontSize: 13,
-  },
-  modalTotalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  rowDivider: {
-    height: 1,
-    marginVertical: 8,
-  },
-  totalLabel: {
-    ...VerandahType.bodyBold,
-    fontSize: 14,
-  },
-  orderInputsWrap: {
-    marginTop: 8,
-  },
-  inputLabel: {
-    ...VerandahType.captionBold,
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  inputField: {
-    borderWidth: 1,
-    borderRadius: VerandahRadius.md,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 13,
   },
 });
