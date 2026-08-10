@@ -1,5 +1,4 @@
 import { Bell01 } from '@untitledui/icons/Bell01';
-import { MarkerPin01 } from '@untitledui/icons/MarkerPin01';
 import { Calendar } from '@untitledui/icons/Calendar';
 import { Plus } from '@untitledui/icons/Plus';
 import { Tool01 } from '@untitledui/icons/Tool01';
@@ -489,17 +488,9 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Greeting + location */}
+        {/* Greeting */}
         <View style={styles.greetingBlock}>
           <Text style={styles.greetingText}>{greeting}, {firstName}</Text>
-          {communityInvite?.name ? (
-            <View style={styles.locationRow}>
-              <MarkerPin01 size={13} color={Verandah.textSecondary} aria-hidden={true} />
-              <Text style={styles.locationText}>
-                {communityInvite.name}{communityInvite.address ? ` · ${communityInvite.address}` : ''}
-              </Text>
-            </View>
-          ) : null}
         </View>
       </View>
 

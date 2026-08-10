@@ -100,9 +100,9 @@ export function ChipRowSlider<T extends string = string>({
   const getLayout = useCallback((key: string): LayoutRectangle | null => {
     // 1. Check synchronous Web DOM measurement for real-time accuracy
     if (Platform.OS === 'web') {
-      const targetEl = itemRefs.current[key];
-      const contentEl = contentRef.current;
-      if (targetEl?.getBoundingClientRect && contentEl?.getBoundingClientRect) {
+      const targetEl = itemRefs.current[key] as any;
+      const contentEl = contentRef.current as any;
+      if (typeof targetEl?.getBoundingClientRect === 'function' && typeof contentEl?.getBoundingClientRect === 'function') {
         const targetRect = targetEl.getBoundingClientRect();
         const contentRect = contentEl.getBoundingClientRect();
         if (targetRect.width > 0 && targetRect.height > 0) {

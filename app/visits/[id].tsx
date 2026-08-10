@@ -1082,8 +1082,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footer: {
-    padding: 24,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 12,
     borderTopWidth: 1,
   },
   shareButton: {
@@ -1094,18 +1095,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   primaryBtn: {
-    borderRadius: 14,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   primaryBtnGradient: {
-    height: 44,
-    borderRadius: 14,
+    height: 38,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   primaryBtnText: {
     color: Verandah.primaryFg,
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '600',
   },
   leaveBtn: {
@@ -1113,36 +1114,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    height: 44,
+    height: 38,
   },
   leaveBtnText: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '600',
   },
   creatorActions: {
-      gap: 12,
+      gap: 8,
   },
   cancelBtn: {
-      height: 44,
-      borderRadius: 14,
+      height: 38,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: Verandah.danger,
       justifyContent: 'center',
       alignItems: 'center',
   },
   cancelBtnText: {
-      fontSize: 14,
+      fontSize: 13.5,
       fontWeight: '600',
       color: Verandah.danger,
   },
   disabledBtn: {
-      height: 44,
-      borderRadius: 14,
+      height: 38,
+      borderRadius: 12,
       justifyContent: 'center',
       alignItems: 'center',
   },
   disabledBtnText: {
-      fontSize: 14,
+      fontSize: 13.5,
       fontWeight: '600',
   },
   modalOverlay: {
@@ -1198,14 +1199,14 @@ const styles = StyleSheet.create({
       marginBottom: 12,
   },
   rescheduleBtn: {
-      height: 58,
-      borderRadius: 18,
+      height: 38,
+      borderRadius: 12,
       borderWidth: 1,
       justifyContent: 'center',
       alignItems: 'center',
   },
   rescheduleBtnText: {
-      fontSize: 16,
-      fontWeight: '500',
+      fontSize: 13.5,
+      fontWeight: '600',
   },
 });
