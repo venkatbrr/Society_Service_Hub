@@ -62,6 +62,8 @@ export function ChipRowSlider<T extends string = string>({
   accessibilityLabel,
 }: ChipRowSliderProps<T>) {
   const internalScrollRef = useRef<ScrollView | null>(null);
+  const contentRef = useRef<View | null>(null);
+  const itemRefs = useRef<Record<string, any>>({});
   const scrollOffsetRef = useRef(0);
   const dragStateRef = useRef<{ active: boolean; startX: number; startOffset: number }>({
     active: false,
@@ -86,16 +88,44 @@ export function ChipRowSlider<T extends string = string>({
   const currentChipsSig = chips.map((c) => c.key).join('|');
   if (prevChipsSigRef.current !== currentChipsSig) {
     if (prevChipsSigRef.current !== '') {
-      // Chip set changed — snap the pill to the new position instead of gliding across.
+      // Chip set changed — clear old layout measurements so chips that changed positions
+      // don't retain stale coordinates from previous groups.
+      layoutsRef.current = {};
+      itemRefs.current = {};
       shouldSnapRef.current = true;
     }
     prevChipsSigRef.current = currentChipsSig;
   }
 
+  const getLayout = useCallback((key: string): LayoutRectangle | null => {
+    // 1. Check synchronous Web DOM measurement for real-time accuracy
+    if (Platform.OS === 'web') {
+      const targetEl = itemRefs.current[key];
+      const contentEl = contentRef.current;
+      if (targetEl?.getBoundingClientRect && contentEl?.getBoundingClientRect) {
+        const targetRect = targetEl.getBoundingClientRect();
+        const contentRect = contentEl.getBoundingClientRect();
+        if (targetRect.width > 0 && targetRect.height > 0) {
+          const webLayout: LayoutRectangle = {
+            x: targetRect.left - contentRect.left,
+            y: targetRect.top - contentRect.top,
+            width: targetRect.width,
+            height: targetRect.height,
+          };
+          layoutsRef.current[key] = webLayout;
+          return webLayout;
+        }
+      }
+    }
+
+    // 2. Fall back to onLayout cache
+    return layoutsRef.current[key] ?? null;
+  }, []);
+
   const updatePosition = useCallback(
     (key: string | null) => {
       if (!key) return;
-      const targetLayout = layoutsRef.current[key];
+      const targetLayout = getLayout(key);
       if (!targetLayout || targetLayout.width <= 0) return;
 
       if (isInitialRef.current || shouldSnapRef.current) {
@@ -109,6 +139,7 @@ export function ChipRowSlider<T extends string = string>({
         return;
       }
 
+      setIsReady(true);
       Animated.parallel([
         Animated.timing(pillX, {
           toValue: targetLayout.x,
@@ -136,14 +167,20 @@ export function ChipRowSlider<T extends string = string>({
         }),
       ]).start();
     },
-    [pillX, pillY, pillW, pillH]
+    [getLayout, pillX, pillY, pillW, pillH]
   );
 
   useEffect(() => {
     if (resolvedValue) {
       updatePosition(resolvedValue);
+      if (Platform.OS === 'web') {
+        const frame = requestAnimationFrame(() => {
+          updatePosition(resolvedValue);
+        });
+        return () => cancelAnimationFrame(frame);
+      }
     }
-  }, [resolvedValue, updatePosition]);
+  }, [resolvedValue, currentChipsSig, updatePosition]);
 
   const handleLayout = (key: string, layout: LayoutRectangle) => {
     layoutsRef.current[key] = layout;
@@ -191,11 +228,14 @@ export function ChipRowSlider<T extends string = string>({
   };
 
   const content = (
-    <View style={[styles.contentRow, !scrollable && styles.contentRowNonScroll, contentContainerStyle]}>
+    <View
+      ref={contentRef}
+      style={[styles.contentRow, !scrollable && styles.contentRowNonScroll, contentContainerStyle]}
+    >
       {leading}
 
       {/* Pill — rendered first so it sits behind the chips */}
-      {isReady && resolvedValue && layoutsRef.current[resolvedValue] && (
+      {isReady && resolvedValue && (
         <Animated.View
           pointerEvents="none"
           aria-hidden={true}
@@ -219,6 +259,11 @@ export function ChipRowSlider<T extends string = string>({
         return (
           <TouchableOpacity
             key={chip.key}
+            ref={(el) => {
+              if (el) {
+                itemRefs.current[chip.key] = el;
+              }
+            }}
             style={[
               styles.chipBase,
               inactiveChipStyle,
