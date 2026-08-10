@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -227,6 +227,54 @@ export type Database = {
           },
         ]
       }
+      community_flats: {
+        Row: {
+          archived_at: string | null
+          block_id: string | null
+          community_id: string
+          created_at: string
+          flat_number: string
+          floor_label: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          block_id?: string | null
+          community_id: string
+          created_at?: string
+          flat_number: string
+          floor_label?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          block_id?: string | null
+          community_id?: string
+          created_at?: string
+          flat_number?: string
+          floor_label?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_flats_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "community_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_flats_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_group_members: {
         Row: {
           community_id: string
@@ -371,6 +419,8 @@ export type Database = {
           address: string | null
           approximate_units: string | null
           area: string | null
+          block_details: Json | null
+          block_label: string | null
           city: string
           community_type: string
           created_at: string
@@ -390,6 +440,8 @@ export type Database = {
           address?: string | null
           approximate_units?: string | null
           area?: string | null
+          block_details?: Json | null
+          block_label?: string | null
           city: string
           community_type: string
           created_at?: string
@@ -409,6 +461,8 @@ export type Database = {
           address?: string | null
           approximate_units?: string | null
           area?: string | null
+          block_details?: Json | null
+          block_label?: string | null
           city?: string
           community_type?: string
           created_at?: string
@@ -656,6 +710,77 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flat_addition_requests: {
+        Row: {
+          block_id: string
+          community_id: string
+          created_at: string
+          flat_number: string
+          id: string
+          rejection_reason: string | null
+          requested_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          block_id: string
+          community_id: string
+          created_at?: string
+          flat_number: string
+          id?: string
+          rejection_reason?: string | null
+          requested_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          block_id?: string
+          community_id?: string
+          created_at?: string
+          flat_number?: string
+          id?: string
+          rejection_reason?: string | null
+          requested_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flat_addition_requests_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "community_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flat_addition_requests_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flat_addition_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flat_addition_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1807,6 +1932,7 @@ export type Database = {
           created_at: string | null
           email: string | null
           expo_push_token: string | null
+          flat_id: string | null
           flat_number: string | null
           full_name: string | null
           id: string
@@ -1822,6 +1948,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           expo_push_token?: string | null
+          flat_id?: string | null
           flat_number?: string | null
           full_name?: string | null
           id: string
@@ -1837,6 +1964,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           expo_push_token?: string | null
+          flat_id?: string | null
           flat_number?: string | null
           full_name?: string | null
           id?: string
@@ -1860,6 +1988,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profiles_flat_id_fkey"
+            columns: ["flat_id"]
+            isOneToOne: false
+            referencedRelation: "community_flats"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_removed_by_fkey"
             columns: ["removed_by"]
             isOneToOne: false
@@ -1870,18 +2005,21 @@ export type Database = {
       }
       provider_hires: {
         Row: {
+          contact_date: string | null
           created_at: string | null
           id: string
           provider_id: string
           user_id: string
         }
         Insert: {
+          contact_date?: string | null
           created_at?: string | null
           id?: string
           provider_id: string
           user_id: string
         }
         Update: {
+          contact_date?: string | null
           created_at?: string | null
           id?: string
           provider_id?: string
@@ -2686,8 +2824,17 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      add_community_flats: {
+        Args: { p_block_id: string; p_flat_numbers: string[] }
+        Returns: number
+      }
+      allow_membership_change: { Args: never; Returns: undefined }
       archive_community_block: {
         Args: { p_block_id: string }
+        Returns: undefined
+      }
+      archive_community_flat: {
+        Args: { p_flat_id: string }
         Returns: undefined
       }
       assign_block_in_charge: {
@@ -2750,6 +2897,10 @@ export type Database = {
           projected_quantity: number
           remaining_capacity: number
         }[]
+      }
+      community_lead_readmit_resident: {
+        Args: { p_target_profile_id: string }
+        Returns: undefined
       }
       community_lead_remove_resident: {
         Args: { p_reason?: string; p_target_profile_id: string }
@@ -2820,7 +2971,7 @@ export type Database = {
         Returns: string
       }
       get_funds_access_status: {
-        Args: { p_community_id: string }
+        Args: never
         Returns: {
           decided_at: string
           rejection_reason: string
@@ -2890,6 +3041,16 @@ export type Database = {
           serviced_on: string
         }[]
       }
+      get_my_requested_community: {
+        Args: never
+        Returns: {
+          block_label: string
+          blocks_enabled: boolean
+          code: string
+          id: string
+          name: string
+        }[]
+      }
       get_my_upcoming_services: {
         Args: never
         Returns: {
@@ -2908,6 +3069,15 @@ export type Database = {
           service_name: string
           updated_at: string
           user_id: string
+        }[]
+      }
+      get_public_host_profiles: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          flat_number: string
+          full_name: string
+          id: string
         }[]
       }
       get_residents_directory: {
@@ -2978,6 +3148,17 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      list_community_flats: {
+        Args: { p_block_id?: string; p_community_id: string }
+        Returns: {
+          block_id: string
+          block_name: string
+          flat_number: string
+          floor_label: string
+          id: string
+          resident_count: number
+        }[]
+      }
       list_eligible_contributors_for_collector: {
         Args: { p_event_id: string }
         Returns: {
@@ -2997,6 +3178,21 @@ export type Database = {
           partnership_id: string
           scope: Json
           status: string
+        }[]
+      }
+      list_pending_flat_addition_requests: {
+        Args: { p_community_id: string }
+        Returns: {
+          block_id: string
+          block_name: string
+          community_id: string
+          created_at: string
+          flat_number: string
+          id: string
+          requested_by: string
+          requester_email: string
+          requester_name: string
+          requester_phone: string
         }[]
       }
       list_visible_providers: {
@@ -3109,12 +3305,21 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      platform_add_community_flats: {
+        Args: {
+          p_block_id: string
+          p_community_id: string
+          p_flat_numbers: string[]
+        }
+        Returns: number
+      }
       platform_approve_community_request:
         | { Args: { p_request_id: string }; Returns: string }
         | {
             Args: {
               p_block_label?: string
               p_block_names?: string[]
+              p_flats?: Json
               p_request_id: string
             }
             Returns: string
@@ -3125,6 +3330,10 @@ export type Database = {
       }
       platform_archive_community_block: {
         Args: { p_block_id: string }
+        Returns: undefined
+      }
+      platform_archive_community_flat: {
+        Args: { p_flat_id: string }
         Returns: undefined
       }
       platform_assign_block_in_charge: {
@@ -3150,6 +3359,10 @@ export type Database = {
         Args: { p_provider_id: string }
         Returns: boolean
       }
+      platform_delete_user: {
+        Args: { p_reason?: string; p_target_user_id: string }
+        Returns: undefined
+      }
       platform_get_all_providers: {
         Args: { p_community_id?: string; p_search?: string }
         Returns: {
@@ -3157,10 +3370,13 @@ export type Database = {
           category: string
           community_id: string
           community_name: string
+          fraud_status: string
           id: string
+          is_verified: boolean
           name: string
           phone: string
           rating_count: number
+          report_count: number
         }[]
       }
       platform_get_community_businesses: {
@@ -3293,9 +3509,24 @@ export type Database = {
         Args: { p_target_user_id: string }
         Returns: undefined
       }
+      platform_remove_resident_from_community: {
+        Args: { p_reason?: string; p_target_profile_id: string }
+        Returns: undefined
+      }
       platform_revoke_funds_access: {
         Args: { p_community_id: string; p_revoke_reason: string }
         Returns: undefined
+      }
+      platform_seed_community_flats: {
+        Args: {
+          p_block_label?: string
+          p_community_id: string
+          p_payload: Json
+        }
+        Returns: {
+          blocks_created: number
+          flats_created: number
+        }[]
       }
       platform_set_block_label: {
         Args: { p_community_id: string; p_label: string }
@@ -3364,6 +3595,14 @@ export type Database = {
         Args: { p_scope?: Json; p_target_community_id: string }
         Returns: string
       }
+      request_flat_addition: {
+        Args: { p_block_id: string; p_flat_number: string }
+        Returns: Json
+      }
+      review_flat_addition: {
+        Args: { p_approve: boolean; p_reason?: string; p_request_id: string }
+        Returns: Json
+      }
       set_audit_actor: { Args: { p_actor_id: string }; Returns: undefined }
       set_audit_context: {
         Args: { p_actor_id: string; p_reason?: string }
@@ -3406,6 +3645,7 @@ export type Database = {
           created_at: string | null
           email: string | null
           expo_push_token: string | null
+          flat_id: string | null
           flat_number: string | null
           full_name: string | null
           id: string
@@ -3420,8 +3660,17 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      set_my_flat: { Args: { p_flat_id: string }; Returns: undefined }
       set_partnership_status: {
         Args: { p_partnership_id: string; p_status: string }
+        Returns: undefined
+      }
+      set_provider_moderation_state: {
+        Args: {
+          p_fraud_status?: string
+          p_is_verified?: boolean
+          p_provider_id: string
+        }
         Returns: undefined
       }
       set_provider_visibility: {
@@ -3438,6 +3687,7 @@ export type Database = {
           created_at: string | null
           email: string | null
           expo_push_token: string | null
+          flat_id: string | null
           flat_number: string | null
           full_name: string | null
           id: string
@@ -3463,6 +3713,8 @@ export type Database = {
           p_address?: string
           p_approximate_units?: string
           p_area?: string
+          p_block_details?: Json
+          p_block_label?: string
           p_city: string
           p_community_type?: string
           p_name: string
@@ -3654,3 +3906,4 @@ export type VisitJoinerWithProfile = Tables<'visit_joiners'> & {
   flat_number?: string | null
   joined_at?: string
 }
+

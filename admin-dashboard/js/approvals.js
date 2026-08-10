@@ -3,6 +3,7 @@ const ApprovalsPage = {
   requests: [],
   blockLabels: {}, // request_id -> 'Block' | 'Tower'
   blockNames: {},  // request_id -> string[]
+  blockFlatsPayload: {}, // request_id -> JSON
   rejectingRequestId: null,
 
   async load() {
@@ -15,7 +16,7 @@ const ApprovalsPage = {
     try {
       const { data: requestRows, error } = await supabase
         .from('community_requests')
-        .select('id, name, community_type, city, pincode, area, address, approximate_units, requester_flat_number, requested_by, created_at')
+        .select('id, name, community_type, city, pincode, area, address, approximate_units, requester_flat_number, requested_by, created_at, block_label, block_details')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
@@ -61,8 +62,17 @@ const ApprovalsPage = {
 
     this.requests.forEach(req => {
       // Initialize block state for this request if not present
-      if (!this.blockLabels[req.id]) this.blockLabels[req.id] = 'Block';
-      if (!this.blockNames[req.id]) this.blockNames[req.id] = [];
+      if (!this.blockLabels[req.id]) {
+        this.blockLabels[req.id] = req.block_label || 'Block';
+      }
+      if (!this.blockNames[req.id]) {
+        if (req.block_details && Array.isArray(req.block_details)) {
+          this.blockNames[req.id] = req.block_details.map(b => (typeof b === 'object' ? b.block : b)).filter(Boolean);
+          this.blockFlatsPayload[req.id] = req.block_details;
+        } else {
+          this.blockNames[req.id] = [];
+        }
+      }
 
       const card = document.createElement('div');
       card.className = 'approval-card';
@@ -112,7 +122,7 @@ const ApprovalsPage = {
             <div class="form-group" style="margin-bottom: 0;">
               <label>Add Block Name</label>
               <div style="display: flex; gap: 8px;">
-                <input type="text" class="form-control" id="block-input-${req.id}" placeholder="e.g. Block A">
+                <input type="text" class="form-control" id="block-input-${req.id}" placeholder="e.g. A, B, C">
                 <button type="button" class="btn btn-secondary" onclick="ApprovalsPage.addBlockName('${req.id}')">Add</button>
               </div>
             </div>
@@ -151,7 +161,7 @@ const ApprovalsPage = {
 
   addBlockName(requestId) {
     const input = document.getElementById(`block-input-${requestId}`);
-    const name = input.value.trim();
+    const name = input.value.trim().toUpperCase();
     if (!name) return;
 
     if (this.blockNames[requestId].includes(name)) {
@@ -223,11 +233,18 @@ const ApprovalsPage = {
 
       if (updateError) throw updateError;
 
+      // Build flats payload if structured flats were passed
+      const rawPayload = this.blockFlatsPayload[requestId];
+      const flatsPayload = (rawPayload && Array.isArray(rawPayload) && rawPayload.length > 0)
+        ? rawPayload
+        : (hasBlocks ? names.map(n => ({ block: n, flats: [] })) : null);
+
       // Call platform approve RPC
       const { error } = await supabase.rpc('platform_approve_community_request', {
         p_request_id: requestId,
         p_block_names: hasBlocks ? names : null,
-        p_block_label: label
+        p_block_label: label,
+        p_flats: flatsPayload
       });
 
       if (error) throw error;

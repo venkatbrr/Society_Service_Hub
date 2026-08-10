@@ -5,7 +5,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { VerandahSpace, VerandahType } from '../constants/Verandah';
-import { APP_EMOJIS } from '../constants/emojis';
+import { Wallet02 } from '@untitledui/icons/Wallet02';
 import { useAuth } from '../context/AuthContext';
 import { Tables } from '../lib/database.types';
 import { FundAccessRole, getEffectiveFundRole } from '../lib/fundRoles';
@@ -136,7 +136,7 @@ export function FundsList() {
     return (
       <BaseCard padding={16}>
         <View style={styles.emptyHeader}>
-          <Text style={styles.emptyIcon}>{APP_EMOJIS.wallet}</Text>
+          <Wallet02 size={24} color={Verandah.textTertiary} aria-hidden={true} style={{ marginRight: 8 }} />
           <Text style={styles.emptyTitle}>No funds created</Text>
         </View>
         <Text style={styles.emptyCopy}> 

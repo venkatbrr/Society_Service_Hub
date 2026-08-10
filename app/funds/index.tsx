@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Plus } from '@untitledui/icons/Plus';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -10,7 +10,7 @@ import { FundsList } from '../../components/FundsList';
 import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
-import { VerandahType } from '../../constants/Verandah';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
@@ -72,13 +72,13 @@ export default function FundsHomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerRow}>
-          <HeaderBackButton onPress={() => goBackSmart(router, '/funds')} color={Verandah.primary} style={styles.iconButton} />
+          <HeaderBackButton onPress={() => goBackSmart(router, '/funds')} />
           <Text style={styles.headerTitle}>Community funds</Text>
           <View style={{ width: 36 }} />
         </View>
 
         {overview ? (
-          <BaseCard padding={12} style={styles.summaryCard}>
+          <BaseCard padding={14} style={styles.summaryCard}>
             <Text style={styles.sectionTitle}>Fund health</Text>
             <View style={styles.moneyRow}>
               <Text style={styles.summaryLine}>Collected</Text>
@@ -104,7 +104,7 @@ export default function FundsHomeScreen() {
           <Text style={styles.sectionTitle}>Events and funds</Text>
           {canCreateFund ? (
             <TouchableOpacity style={styles.createButton} onPress={() => router.push('/funds/add')}>
-              <Ionicons name="add" size={14} color={Verandah.primary} />
+              <Plus size={14} color={Verandah.primary} aria-hidden={true} />
               <Text style={styles.createButtonText}>Create fund</Text>
             </TouchableOpacity>
           ) : null}
@@ -119,7 +119,7 @@ export default function FundsHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Verandah.surface,
+    backgroundColor: Verandah.paper,
   },
   content: {
     paddingHorizontal: 20,
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   centerWrap: {
     flex: 1,
-    backgroundColor: Verandah.surface,
+    backgroundColor: Verandah.paper,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginTop: 12,
-    borderRadius: 12,
+    borderRadius: VerandahRadius.button,
     paddingHorizontal: 14,
     paddingVertical: 10,
     backgroundColor: Verandah.cardMuted,
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     ...VerandahType.caption,
     color: Verandah.primary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   headerRow: {
     flexDirection: 'row',
@@ -156,26 +156,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
   },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Verandah.card,
-    borderWidth: 0.5,
-    borderColor: Verandah.border,
-  },
   headerTitle: {
-    ...VerandahType.title,
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 26,
+    lineHeight: 30,
+    fontWeight: '400',
     color: Verandah.textPrimary,
   },
   summaryCard: {
     marginBottom: 14,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 20,
+    fontWeight: '400',
     color: Verandah.textPrimary,
     marginBottom: 10,
   },
@@ -198,21 +192,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
   },
   createButton: {
-    borderWidth: 1,
-    borderRadius: 999,
-    borderColor: Verandah.borderStrong,
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.pill,
+    borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     paddingHorizontal: 12,
     paddingVertical: 6,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
+    ...Verandah.shadowCard,
   },
   createButtonText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
     color: Verandah.primary,
+    fontFamily: VerandahType.sansFamily,
   },
 });

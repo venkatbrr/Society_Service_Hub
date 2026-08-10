@@ -1,11 +1,13 @@
-import { Ionicons } from '@expo/vector-icons';
+import { LinkExternal02 } from '@untitledui/icons/LinkExternal02';
+import { LogOut01 } from '@untitledui/icons/LogOut01';
+import { Shield01 } from '@untitledui/icons/Shield01';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahType } from '../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { replaceTracked } from '../lib/navigation';
 import { siteUrl } from '../lib/siteUrl';
@@ -45,7 +47,7 @@ export default function AdminRedirectScreen() {
     <View style={styles.container}>
       <View style={styles.card}>
         <View style={styles.iconContainer}>
-          <Ionicons name="desktop-outline" size={48} color={Verandah.primary} />
+          <Shield01 size={48} color={Verandah.primary} aria-hidden={true} />
         </View>
         
         <Text style={styles.title}>Platform Admin Console</Text>
@@ -59,7 +61,7 @@ export default function AdminRedirectScreen() {
           onPress={handleOpenAdmin}
           activeOpacity={0.8}
         >
-          <Ionicons name="open-outline" size={20} color="#FFFFFF" />
+          <LinkExternal02 size={18} color={Verandah.primaryFg} aria-hidden={true} />
           <Text style={styles.primaryButtonText}>Open Admin Dashboard</Text>
         </TouchableOpacity>
 
@@ -73,7 +75,7 @@ export default function AdminRedirectScreen() {
             <ActivityIndicator color={Verandah.primary} />
           ) : (
             <>
-              <Ionicons name="log-out-outline" size={18} color={Verandah.textSecondary} />
+              <LogOut01 size={18} color={Verandah.textSecondary} aria-hidden={true} />
               <Text style={styles.secondaryButtonText}>Sign Out</Text>
             </>
           )}
@@ -86,74 +88,75 @@ export default function AdminRedirectScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Verandah.surface,
+    backgroundColor: Verandah.paper,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   card: {
     backgroundColor: Verandah.card,
-    borderRadius: VerandahRadius.lg,
-    borderWidth: 1,
-    borderColor: Verandah.border,
+    borderRadius: VerandahRadius.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
     padding: 32,
     width: '100%',
     maxWidth: 400,
     alignItems: 'center',
-    shadowColor: Verandah.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 2,
+    ...Verandah.shadowCard,
   },
   iconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: Verandah.accentSoft,
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    backgroundColor: Verandah.cardMuted,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   title: {
-    ...VerandahType.display,
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 26,
+    lineHeight: 30,
+    fontWeight: '400',
     color: Verandah.textPrimary,
     textAlign: 'center',
     marginBottom: 12,
   },
   description: {
-    ...VerandahType.body,
+    fontSize: 14,
+    lineHeight: 20,
     color: Verandah.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 32,
+    marginBottom: 28,
+    fontFamily: VerandahType.sansFamily,
   },
   primaryButton: {
+    backgroundColor: Verandah.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: Verandah.primary,
-    borderRadius: VerandahRadius.md,
     width: '100%',
     paddingVertical: 14,
+    borderRadius: VerandahRadius.button,
     marginBottom: 12,
   },
   primaryButtonText: {
-    color: '#FFFFFF',
-    ...VerandahType.bodyBold,
+    color: Verandah.primaryFg,
+    fontSize: 15,
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
   },
   secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: Verandah.border,
-    borderRadius: VerandahRadius.md,
     width: '100%',
     paddingVertical: 12,
+    borderRadius: VerandahRadius.button,
   },
   secondaryButtonText: {
     color: Verandah.textSecondary,

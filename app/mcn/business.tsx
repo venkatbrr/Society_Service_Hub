@@ -1,10 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ChevronDown } from '@untitledui/icons/ChevronDown';
+import { ChevronUp } from '@untitledui/icons/ChevronUp';
+import { Plus } from '@untitledui/icons/Plus';
+import { XClose } from '@untitledui/icons/XClose';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     RefreshControl,
     ScrollView,
@@ -21,7 +23,7 @@ import { McnListingCard, McnListingItem } from '../../components/McnListingCard'
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../lib/mcnHeader';
 import { goBackSmart, replaceTracked } from '../../lib/navigation';
@@ -168,41 +170,12 @@ export default function BusinessListingsScreen() {
     return groupsList;
   }, [listings]);
 
-  const handleRemoveListing = async (id: string) => {
-    Alert.alert(
-      'Remove listing',
-      'Are you sure you want to permanently remove this business listing?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { error } = await supabase
-                .from('mcn_listings')
-                .delete()
-                .eq('id', id)
-                .eq('community_id', communityId || '');
-              if (error) throw error;
-              Toast.show({ type: 'success', text1: 'Listing removed' });
-              fetchListings();
-            } catch (error) {
-              console.error(error);
-              Toast.show({ type: 'error', text1: 'Error removing listing' });
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const handleBack = () => {
     goBackSmart(router, '/mcn/business');
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: 'Community Business',
@@ -219,20 +192,14 @@ export default function BusinessListingsScreen() {
           onPress={() => replaceTracked(router, '/mcn/drops' as any)}
           activeOpacity={0.8}
         >
-          <View style={styles.iconLabelRow}>
-            <Ionicons name="restaurant-outline" size={16} color={colors.textSecondary} />
-            <Text style={styles.masterToggleText}>Pre-order Food</Text>
-          </View>
+          <Text style={styles.masterToggleText}>Pre-order Food</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.masterToggleBtn, styles.masterToggleBtnActive]}
           activeOpacity={0.9}
         >
-          <View style={styles.iconLabelRow}>
-            <AppIcon name="store" size={16} />
-            <Text style={styles.masterToggleTextActive}>Community Businesses</Text>
-          </View>
+          <Text style={styles.masterToggleTextActive}>Businesses</Text>
         </TouchableOpacity>
       </View>
 
@@ -242,7 +209,7 @@ export default function BusinessListingsScreen() {
         </Text>
       </View>
 
-      <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
+      <View style={[styles.searchWrap, { borderColor: colors.borderHair, backgroundColor: colors.card }]}>
         <View style={styles.searchIconWrap}>
           <AppIcon name="search" size={14} />
         </View>
@@ -255,7 +222,7 @@ export default function BusinessListingsScreen() {
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')} style={{ padding: 4 }}>
-            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+            <XClose size={18} color={colors.textMuted} aria-hidden={true} />
           </TouchableOpacity>
         )}
       </View>
@@ -269,8 +236,8 @@ export default function BusinessListingsScreen() {
         <TouchableOpacity
           style={[
             styles.categoryChip,
-            { borderColor: colors.border, backgroundColor: colors.card },
-            selectedCategoryId === null && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+            { borderColor: colors.borderHair, backgroundColor: colors.card },
+            selectedCategoryId === null && { borderColor: colors.primary, backgroundColor: colors.accentSoft },
           ]}
           onPress={() => handleToggleCategory(null)}
           activeOpacity={0.8}
@@ -281,7 +248,7 @@ export default function BusinessListingsScreen() {
               style={[
                 styles.categoryChipText,
                 { color: colors.textSecondary },
-                selectedCategoryId === null && { color: colors.accent },
+                selectedCategoryId === null && { color: colors.primary },
               ]}
             >
               All
@@ -296,8 +263,8 @@ export default function BusinessListingsScreen() {
               key={category.id}
               style={[
                 styles.categoryChip,
-                { borderColor: colors.border, backgroundColor: colors.card },
-                isActive && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+                { borderColor: colors.borderHair, backgroundColor: colors.card },
+                isActive && { borderColor: colors.primary, backgroundColor: colors.accentSoft },
               ]}
               onPress={() => handleToggleCategory(category.id)}
               activeOpacity={0.8}
@@ -306,7 +273,7 @@ export default function BusinessListingsScreen() {
                 style={[
                   styles.categoryChipText,
                   { color: colors.textSecondary },
-                  isActive && { color: colors.accent },
+                  isActive && { color: colors.primary },
                 ]}
               >
                 {category.name}
@@ -359,11 +326,11 @@ export default function BusinessListingsScreen() {
                       <Text style={styles.categoryCountBadgeText}>{group.items.length}</Text>
                     </View>
                   </View>
-                  <Ionicons
-                    name={isCollapsed ? 'chevron-down' : 'chevron-up'}
-                    size={18}
-                    color={Verandah.textSecondary}
-                  />
+                  {isCollapsed ? (
+                    <ChevronDown size={18} color={Verandah.textSecondary} aria-hidden={true} />
+                  ) : (
+                    <ChevronUp size={18} color={Verandah.textSecondary} aria-hidden={true} />
+                  )}
                 </TouchableOpacity>
 
                 {/* Listing Cards under Category */}
@@ -377,7 +344,6 @@ export default function BusinessListingsScreen() {
                         isCommunityLead={isCommunityLead}
                         onPress={(id) => router.push(`/mcn/listing/${id}` as any)}
                         onManage={(id) => router.push(`/mcn/listing/manage/${id}` as any)}
-                        onRemove={handleRemoveListing}
                       />
                     ))}
                   </View>
@@ -400,7 +366,7 @@ export default function BusinessListingsScreen() {
         activeOpacity={0.8}
         onPress={() => router.push('/mcn/listing-add' as any)}
       >
-        <Ionicons name="add" size={28} color={colors.primaryFg} />
+        <Plus size={28} color={colors.primaryFg} aria-hidden={true} />
       </TouchableOpacity>
     </View>
   );
@@ -499,18 +465,19 @@ const styles = StyleSheet.create({
   },
   masterToggleRow: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingTop: 0,
-    paddingBottom: 2,
-    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: Verandah.cream,
+    borderRadius: VerandahRadius.segmented,
+    padding: 4,
+    gap: 4,
   },
   masterToggleBtn: {
     flex: 1,
     paddingVertical: 7,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: VerandahRadius.pill,
-    backgroundColor: '#F3F4F6',
+    borderRadius: VerandahRadius.segmentedInner,
   },
   categorySectionHeader: {
     flexDirection: 'row',
@@ -548,17 +515,17 @@ const styles = StyleSheet.create({
   },
   masterToggleBtnActive: {
     backgroundColor: Verandah.primary,
-    borderWidth: 1,
-    borderColor: Verandah.primary,
   },
   masterToggleText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
     color: Verandah.textSecondary,
+    fontFamily: VerandahType.sansFamily,
   },
   masterToggleTextActive: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: Verandah.primaryFg,
+    fontFamily: VerandahType.sansFamily,
   },
 });

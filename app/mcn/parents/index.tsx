@@ -1,4 +1,22 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Announcement01 } from '@untitledui/icons/Announcement01';
+import { BookOpen01 } from '@untitledui/icons/BookOpen01';
+import { Car01 } from '@untitledui/icons/Car01';
+import { DotsHorizontal } from '@untitledui/icons/DotsHorizontal';
+import { Edit01 } from '@untitledui/icons/Edit01';
+import { FaceSmile } from '@untitledui/icons/FaceSmile';
+import { Home02 } from '@untitledui/icons/Home02';
+import { Trophy01 } from '@untitledui/icons/Trophy01';
+import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
+import { MessageSquare01 } from '@untitledui/icons/MessageSquare01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { Plus } from '@untitledui/icons/Plus';
+import { PlusCircle } from '@untitledui/icons/PlusCircle';
+import { SearchLg } from '@untitledui/icons/SearchLg';
+import { Share07 } from '@untitledui/icons/Share07';
+import { Trash01 } from '@untitledui/icons/Trash01';
+import { User01 } from '@untitledui/icons/User01';
+import { Users01 } from '@untitledui/icons/Users01';
+import { XClose } from '@untitledui/icons/XClose';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { Stack, useRouter } from 'expo-router';
@@ -25,7 +43,7 @@ import { EmptyState } from '../../../components/EmptyState';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../../components/WebPullIndicator';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { toLast10Digits } from '../../../lib/phone';
@@ -72,14 +90,17 @@ const INTENT_LABELS: Record<string, string> = {
   other: 'Other',
 };
 
-const INTENT_ICONS: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
-  carpool: 'car-outline',
-  study_group: 'people-outline',
-  homework_help: 'pencil-outline',
-  school_info: 'megaphone-outline',
-  activities: 'football-outline',
-  playdate: 'happy-outline',
-  other: 'ellipsis-horizontal-outline',
+const renderIntentIcon = (id: string, color: string) => {
+  switch (id) {
+    case 'carpool': return <Car01 size={11} color={color} aria-hidden={true} style={{ marginRight: 3 }} />;
+    case 'study_group': return <Users01 size={11} color={color} aria-hidden={true} style={{ marginRight: 3 }} />;
+    case 'homework_help': return <Edit01 size={11} color={color} aria-hidden={true} style={{ marginRight: 3 }} />;
+    case 'school_info': return <Announcement01 size={11} color={color} aria-hidden={true} style={{ marginRight: 3 }} />;
+    case 'activities': return <Trophy01 size={11} color={color} aria-hidden={true} style={{ marginRight: 3 }} />;
+    case 'playdate': return <FaceSmile size={11} color={color} aria-hidden={true} style={{ marginRight: 3 }} />;
+    case 'other': return <DotsHorizontal size={11} color={color} aria-hidden={true} style={{ marginRight: 3 }} />;
+    default: return null;
+  }
 };
 
 const INTENT_FILTER_OPTIONS = [{ id: 'all', label: 'All' }, ...Object.entries(INTENT_LABELS).map(([id, label]) => ({ id, label }))];
@@ -360,21 +381,21 @@ export default function ParentCornerScreen() {
                 }
                 style={styles.iconBtn}
               >
-                <Ionicons name="create-outline" size={18} color={colors.textSecondary} />
+                <Edit01 size={18} color={colors.textSecondary} aria-hidden={true} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleDeleteEntry(item.id, item.student_name)}
                 style={styles.iconBtn}
               >
-                <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                <Trash01 size={18} color="#EF4444" aria-hidden={true} />
               </TouchableOpacity>
             </View>
           )}
         </View>
 
         {/* Institution & Board */}
-        <View style={[styles.institutionRow, { borderColor: colors.border }]}>
-          <Ionicons name="school-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
+        <View style={[styles.institutionRow, { borderColor: colors.borderHair }]}>
+          <BookOpen01 size={16} color={colors.primary} aria-hidden={true} style={{ marginRight: 6 }} />
           <Text style={[styles.institutionText, { color: colors.textPrimary }]}>
             {item.school_name}
           </Text>
@@ -385,12 +406,12 @@ export default function ParentCornerScreen() {
 
         {/* Parent Details */}
         <View style={styles.parentRow}>
-          <Ionicons name="person-outline" size={14} color={colors.textMuted} style={{ marginRight: 6 }} />
+          <User01 size={14} color={colors.textMuted} aria-hidden={true} style={{ marginRight: 6 }} />
           <Text style={[styles.parentText, { color: colors.textSecondary }]}>
             Parent: <Text style={{ color: colors.textPrimary, fontWeight: '500' }}>{item.parent_name}</Text>
           </Text>
           <Text style={[styles.flatDot, { color: colors.textMuted }]}>•</Text>
-          <Ionicons name="home-outline" size={14} color={colors.textMuted} style={{ marginRight: 4 }} />
+          <Home02 size={14} color={colors.textMuted} aria-hidden={true} style={{ marginRight: 4 }} />
           <Text style={[styles.parentText, { color: colors.textSecondary }]}>Flat {item.flat_number}</Text>
         </View>
 
@@ -399,9 +420,7 @@ export default function ParentCornerScreen() {
           <View style={styles.intentRow}>
             {item.intents.map((id) => (
               <View key={id} style={[styles.intentBadge, { backgroundColor: colors.accentSoft }]}>
-                {INTENT_ICONS[id] ? (
-                  <Ionicons name={INTENT_ICONS[id]} size={11} color={colors.accent} style={{ marginRight: 3 }} />
-                ) : null}
+                {renderIntentIcon(id, colors.accent)}
                 <Text style={[styles.intentBadgeText, { color: colors.accent }]}>{INTENT_LABELS[id] || id}</Text>
               </View>
             ))}
@@ -410,8 +429,8 @@ export default function ParentCornerScreen() {
 
         {/* Optional Notes (Carpool / Study group) */}
         {item.notes ? (
-          <View style={[styles.notesBox, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}>
-            <Ionicons name="chatbubble-ellipses-outline" size={14} color={colors.accent} style={{ marginRight: 6 }} />
+          <View style={[styles.notesBox, { backgroundColor: colors.cardMuted, borderColor: colors.borderHair }]}>
+            <MessageSquare01 size={14} color={colors.accent} aria-hidden={true} style={{ marginRight: 6 }} />
             <Text style={[styles.notesText, { color: colors.textSecondary }]} numberOfLines={4}>{item.notes}</Text>
           </View>
         ) : null}
@@ -423,24 +442,24 @@ export default function ParentCornerScreen() {
             onPress={() => handleWhatsAppPress(item)}
             activeOpacity={0.8}
           >
-            <Ionicons name="logo-whatsapp" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <MessageCircle01 size={18} color="#FFFFFF" aria-hidden={true} style={{ marginRight: 6 }} />
             <Text style={styles.whatsappBtnText}>WhatsApp Parent</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.callBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
+            style={[styles.callBtn, { borderColor: colors.borderHair, backgroundColor: colors.card }]}
             onPress={() => handleCallPress(item.contact_phone)}
             activeOpacity={0.8}
           >
-            <Ionicons name="call-outline" size={18} color={colors.primary} />
+            <Phone01 size={18} color={colors.primary} aria-hidden={true} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.callBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
+            style={[styles.callBtn, { borderColor: colors.borderHair, backgroundColor: colors.card }]}
             onPress={() => handleShareParentPost(item)}
             activeOpacity={0.8}
           >
-            <Ionicons name="share-outline" size={18} color={colors.accent} />
+            <Share07 size={18} color={colors.accent} aria-hidden={true} />
           </TouchableOpacity>
         </View>
       </BaseCard>
@@ -448,7 +467,7 @@ export default function ParentCornerScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: 'Parent Corner',
@@ -459,7 +478,7 @@ export default function ParentCornerScreen() {
                 onPress={() => router.push('/mcn/parents/add' as any)}
                 style={styles.headerAddBtn}
               >
-                <Ionicons name="add-circle" size={26} color={colors.primary} />
+                <PlusCircle size={24} color={colors.primary} aria-hidden={true} />
               </TouchableOpacity>
             ) : null,
         })}
@@ -473,9 +492,9 @@ export default function ParentCornerScreen() {
       </View>
 
       {/* Search Input */}
-      <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
+      <View style={[styles.searchWrap, { borderColor: colors.borderHair, backgroundColor: colors.card }]}>
         <View style={styles.searchIconWrap}>
-          <AppIcon name="search" size={14} />
+          <SearchLg size={14} color={colors.textMuted} aria-hidden={true} />
         </View>
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
@@ -486,7 +505,7 @@ export default function ParentCornerScreen() {
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')} style={{ padding: 4 }}>
-            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+            <XClose size={18} color={colors.textMuted} aria-hidden={true} />
           </TouchableOpacity>
         )}
       </View>
@@ -749,7 +768,7 @@ export default function ParentCornerScreen() {
           activeOpacity={0.8}
           onPress={() => router.push('/mcn/parents/add' as any)}
         >
-          <Ionicons name="add" size={28} color={colors.primaryFg} />
+          <Plus size={28} color={colors.primaryFg} aria-hidden={true} />
         </TouchableOpacity>
       )}
     </View>

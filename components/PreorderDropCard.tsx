@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Share07 } from '@untitledui/icons/Share07';
 import { Image } from 'expo-image';
 import React from 'react';
 import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -7,7 +7,6 @@ import { format12HourTime, getNetworkTileImageHeight, VerandahRadius, VerandahTy
 import { cloudinaryUrl } from '../lib/cloudinary';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
-import { BaseCard } from './BaseCard';
 
 const NETWORK_TILE_IMAGE_HEIGHT = getNetworkTileImageHeight();
 
@@ -39,14 +38,12 @@ interface PreorderDropCardProps {
   drop: PreorderDropItem;
   isCreator?: boolean;
   onPress: () => void;
-  onManage?: () => void;
 }
 
 export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
   drop,
   isCreator = false,
   onPress,
-  onManage,
 }) => {
   const now = new Date();
   const cutoffDate = new Date(drop.cutoff_at);
@@ -56,21 +53,21 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
   const getCutoffBadge = () => {
     if (drop.status === 'completed') {
       return {
-        label: '✅ Delivered & Completed',
-        color: '#059669',
+        label: 'Delivered & Completed',
+        color: Verandah.green600,
         bgColor: '#D1FAE5',
       };
     }
     if (drop.status === 'cancelled') {
       return {
-        label: '❌ Drop Cancelled',
+        label: 'Drop Cancelled',
         color: '#DC2626',
         bgColor: '#FEE2E2',
       };
     }
     if (drop.status === 'closed' || isCutoffPassed) {
       return {
-        label: '🔒 Pre-Orders Closed (Preparing)',
+        label: 'Pre-Orders Closed',
         color: '#4B5563',
         bgColor: '#F3F4F6',
       };
@@ -98,9 +95,9 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
     });
 
     return {
-      label: `⏳ ${timeText} (${cutoffFormatted})`,
-      color: '#D97706',
-      bgColor: '#FEF3C7',
+      label: `${timeText} (${cutoffFormatted})`,
+      color: '#854F0B',
+      bgColor: '#FBEAD0',
     };
   };
 
@@ -119,35 +116,48 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
     month: 'short',
   });
 
-  const rawHostName = drop.profiles?.full_name?.trim() || drop.mcn_listings?.name?.trim() || 'Resident Host';
+  // Delivery reads in the same "Wed, 01:00 pm" shape as the cut-off chip, so the
+  // two pills sitting side by side stay comparable at a glance.
+  const fulfillDateTime = new Date(`${drop.fulfillment_date}T${drop.fulfillment_time}`);
+  const deliveryFormatted = isNaN(fulfillDateTime.getTime())
+    ? `${fulfillFormatted} · ${format12HourTime(drop.fulfillment_time)}`
+    : fulfillDateTime.toLocaleDateString('en-IN', {
+        weekday: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+  const hostFullName = drop.profiles?.full_name?.trim() || null;
+  const listingName = drop.mcn_listings?.name?.trim() || null;
+  const rawHostName = hostFullName || listingName || 'Resident Host';
   const creatorName = rawHostName === 'Host' ? 'Resident Host' : rawHostName;
   const flatNo = drop.profiles?.flat_number ? `Flat ${drop.profiles.flat_number}` : null;
   const hostDisplay = flatNo ? `${creatorName} (${flatNo})` : creatorName;
 
+  // Second line: where the food comes from. Prefer a linked business listing,
+  // otherwise it is a resident cooking from home.
+  const hostSubtitle = [flatNo, listingName && listingName !== creatorName ? listingName : 'Home kitchen']
+    .filter(Boolean)
+    .join(' · ');
+
   const handleShare = async (e: any) => {
     e.stopPropagation();
-    const cutoffFormatted = cutoffDate.toLocaleDateString('en-IN', {
-      weekday: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
     const shareUrl = siteUrl(`/mcn/drops?id=${drop.id}`);
 
     const messageLines = [
-      `🍲 *Food Drop: ${drop.title}*`,
+      `*Food Drop: ${drop.title}*`,
       `Hosted by ${hostDisplay}`,
       ``,
-      `📅 Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
-      `⏰ Pre-Orders Close: ${cutoffFormatted}`,
+      `Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
+      `Pre-Orders Close: ${cutoffFormatted}`,
     ];
 
     if (drop.image_url) {
-      messageLines.push(`🖼️ Photo: ${drop.image_url}`);
+      messageLines.push(`Photo: ${drop.image_url}`);
     }
 
     messageLines.push(``);
-    messageLines.push(`🔗 View Menu & Place Pre-Order:`);
+    messageLines.push(`View Menu & Place Pre-Order:`);
     messageLines.push(shareUrl);
 
     const message = messageLines.join('\n');
@@ -164,132 +174,192 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
   };
 
   return (
-    <BaseCard padding={10} style={styles.card}>
-      <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-        {/* Top Creator Header */}
-        <View style={styles.header}>
-          <Avatar name={creatorName} size={36} />
-          <View style={styles.headerText}>
-            <Text style={styles.creatorName} numberOfLines={1}>
-              {creatorName}
-            </Text>
-            <Text style={styles.flatNo}>{hostDisplay}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <TouchableOpacity style={styles.shareHeaderBtn} onPress={handleShare} hitSlop={8}>
-              <Ionicons name="share-outline" size={16} color="#FFFFFF" />
+    <View style={styles.card}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+        {/* Cover photo with overlaid cut-off badge */}
+        <View style={styles.coverImageWrap}>
+          {drop.image_url ? (
+            <Image source={{ uri: cloudinaryUrl(drop.image_url) }} style={styles.coverImage} contentFit="cover" transition={200} />
+          ) : (
+            <View style={styles.coverPlaceholder}>
+              <Text style={styles.coverPlaceholderText}>food photo</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Body */}
+        <View style={styles.body}>
+          {/* Host row */}
+          <View style={styles.header}>
+            <Avatar name={creatorName} size={32} />
+            <View style={styles.headerText}>
+              <Text style={styles.creatorName} numberOfLines={1}>
+                {creatorName}
+              </Text>
+              <Text style={styles.flatNo} numberOfLines={1}>
+                {hostSubtitle}
+              </Text>
+            </View>
+            <TouchableOpacity style={styles.shareHeaderBtn} onPress={handleShare} hitSlop={8} activeOpacity={0.85}>
+              <Share07 size={14} color={Verandah.primaryFg} aria-hidden={true} />
               <Text style={styles.shareHeaderText}>Share</Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Cover Photo */}
-        {drop.image_url ? (
-          <View style={styles.coverImageWrap}>
-            <Image source={{ uri: cloudinaryUrl(drop.image_url) }} style={styles.coverImage} contentFit="cover" transition={200} />
-          </View>
-        ) : null}
+          {/* Title */}
+          <Text style={styles.title}>{drop.title}</Text>
 
-        {/* Delivery and cut-off info */}
-        <View style={styles.metaRow}>
-          <View style={[styles.metaChip, { backgroundColor: badge.bgColor }]}> 
-            {drop.status === 'completed' ? (
-              <Ionicons name="checkmark-circle" size={13} color="#059669" />
-            ) : null}
-            <Text style={[styles.metaChipText, { color: badge.color }]} numberOfLines={1}>
-              {drop.status === 'completed' ? 'Completed' : `Closes: ${cutoffFormatted}`}
-            </Text>
-          </View>
-          <View style={styles.metaChipNeutral}>
-            <Ionicons name="calendar-outline" size={13} color={Verandah.accent} />
-            <Text style={styles.metaChipNeutralText} numberOfLines={1}>
-              Delivery: {fulfillFormatted} ({format12HourTime(drop.fulfillment_time)})
-            </Text>
-          </View>
-        </View>
-
-        {/* Title & Description */}
-        <Text style={styles.title}>{drop.title}</Text>
-        {drop.description ? (
-          <Text style={styles.description} numberOfLines={2}>
-            {drop.description}
-          </Text>
-        ) : null}
-
-        {/* Action Row */}
-        <View style={styles.footer}>
-          <View style={styles.footerLeft}>
-            {drop.item_count !== undefined ? (
-              <Text style={styles.orderStats}>
-                🍲 {drop.item_count}
-                {drop.max_orders ? ` / ${drop.max_orders}` : ''}{' '}
-                {drop.item_count === 1 ? 'item ordered' : 'items ordered'}
+          {/* Cut-off + delivery, side by side */}
+          <View style={styles.metaRow}>
+            <View style={[styles.cutoffBadge, { backgroundColor: badge.bgColor }]}>
+              <Text style={[styles.cutoffBadgeText, { color: badge.color }]} numberOfLines={1}>
+                {drop.status === 'completed' ? 'Completed' : `Closes ${cutoffFormatted}`}
               </Text>
-            ) : null}
-            <TouchableOpacity style={styles.shareInlineBtn} onPress={handleShare}>
-              <Ionicons name="share-social-outline" size={13} color={Verandah.accent} />
-              <Text style={styles.shareInlineText}>Share drop</Text>
-            </TouchableOpacity>
+            </View>
+
+            <View style={styles.deliveryChip}>
+              <Text style={styles.deliveryText} numberOfLines={1}>
+                Delivery {deliveryFormatted}
+              </Text>
+            </View>
+
           </View>
 
-          <TouchableOpacity
-            style={[
-              styles.actionBtn,
-              !isOpen && !isCreator && styles.actionBtnDisabled,
-            ]}
-            onPress={isCreator && onManage ? onManage : onPress}
-          >
-            <Text style={styles.actionBtnText}>
-              {isCreator
-                ? 'Manage Drop →'
-                : isOpen
-                ? 'Place Pre-Order →'
-                : 'View Menu Details →'}
+          {drop.description ? (
+            <Text style={styles.description} numberOfLines={2}>
+              {drop.description}
             </Text>
-          </TouchableOpacity>
+          ) : null}
+
+          {/* Hosts manage their own drop from inside the detail screen, so the
+              card carries no action for them — tapping it opens the drop. */}
+          {isCreator ? null : (
+            <>
+              <View style={styles.divider} />
+              <TouchableOpacity
+                style={[styles.actionBtn, !isOpen && styles.actionBtnDisabled]}
+                onPress={onPress}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.actionBtnText, !isOpen && styles.actionBtnTextDisabled]}>
+                  {isOpen ? 'Reserve now' : 'View Menu Details'}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </TouchableOpacity>
-    </BaseCard>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 8,
+    marginBottom: 12,
+    borderRadius: VerandahRadius.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    backgroundColor: Verandah.card,
+    overflow: 'hidden',
+    ...Verandah.shadowCard,
+  },
+  body: {
+    padding: 12,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   headerText: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 10,
   },
   creatorName: {
     ...VerandahType.bodyBold,
-    fontSize: 13,
+    fontSize: 14,
     color: Verandah.textPrimary,
   },
   flatNo: {
     ...VerandahType.caption,
-    fontSize: 11,
+    fontSize: 11.5,
     color: Verandah.textSecondary,
-    marginTop: 0,
+    marginTop: 1,
   },
   shareHeaderBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     borderRadius: VerandahRadius.pill,
-    backgroundColor: Verandah.accent,
+    backgroundColor: Verandah.primary,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 6,
   },
   shareHeaderText: {
     ...VerandahType.captionBold,
-    color: '#FFFFFF',
+    color: Verandah.primaryFg,
+    fontSize: 12.5,
+  },
+  coverPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: Verandah.cream,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  coverPlaceholderText: {
+    ...VerandahType.caption,
+    fontSize: 11.5,
+    color: Verandah.textFaint,
+    backgroundColor: Verandah.card,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: VerandahRadius.pill,
+    overflow: 'hidden',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 6,
+  },
+  cutoffBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: VerandahRadius.pill,
+  },
+  cutoffBadgeText: {
     fontSize: 11,
+    fontWeight: '700',
+    fontFamily: VerandahType.sansFamily,
+  },
+  deliveryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: Verandah.accentSoft,
+    flexShrink: 1,
+  },
+  deliveryText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Verandah.green600,
+    fontFamily: VerandahType.sansFamily,
+    flexShrink: 1,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: Verandah.borderHair,
+    marginTop: 10,
+    marginBottom: 10,
   },
   manageBadgeBtn: {
     backgroundColor: '#EEF2FF',
@@ -304,62 +374,28 @@ const styles = StyleSheet.create({
   },
   coverImageWrap: {
     height: NETWORK_TILE_IMAGE_HEIGHT,
-    borderRadius: VerandahRadius.md,
-    overflow: 'hidden',
-    marginBottom: 6,
+    width: '100%',
+    position: 'relative',
+    backgroundColor: Verandah.cream,
   },
   coverImage: {
     width: '100%',
     height: '100%',
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 4,
-  },
-  metaChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  metaChipText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  metaChipNeutral: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#F9FAFB',
-    borderWidth: 0.5,
-    borderColor: '#E5E7EB',
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-  },
-  metaChipNeutralText: {
-    fontSize: 10,
-    fontWeight: '500',
-    color: Verandah.textPrimary,
-    flexShrink: 1,
-  },
   title: {
-    ...VerandahType.title,
-    fontSize: 15,
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '400',
+    letterSpacing: -0.3,
     color: Verandah.textPrimary,
-    marginBottom: 2,
   },
   description: {
     ...VerandahType.body,
-    fontSize: 12,
+    fontSize: 12.5,
     color: Verandah.textSecondary,
-    marginBottom: 6,
-    lineHeight: 16,
+    marginTop: 6,
+    lineHeight: 17,
   },
   footer: {
     flexDirection: 'row',
@@ -374,9 +410,11 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   orderStats: {
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '600',
     color: Verandah.textSecondary,
+    fontFamily: VerandahType.sansFamily,
+    flexShrink: 1,
   },
   shareInlineBtn: {
     flexDirection: 'row',
@@ -391,17 +429,22 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   actionBtn: {
-    backgroundColor: Verandah.accent,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: VerandahRadius.md,
+    backgroundColor: Verandah.primary,
+    paddingVertical: 11,
+    borderRadius: VerandahRadius.button,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionBtnDisabled: {
     backgroundColor: Verandah.cardMuted,
   },
   actionBtnText: {
-    ...VerandahType.captionBold,
-    fontSize: 11,
-    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+    color: Verandah.primaryFg,
+    fontFamily: VerandahType.sansFamily,
+  },
+  actionBtnTextDisabled: {
+    color: Verandah.textSecondary,
   },
 });

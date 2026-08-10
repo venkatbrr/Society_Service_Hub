@@ -1,4 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ChevronRight } from '@untitledui/icons/ChevronRight';
+import { File02 } from '@untitledui/icons/File02';
+import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -8,6 +10,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
+    useWindowDimensions,
     View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,7 +19,7 @@ import { NetworkTileIcon } from '../../components/NetworkTileIcon';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { WEST_HYDERABAD_SCHOOLS } from '../../data/westHyderabadSchools';
 import { supabase } from '../../lib/supabase';
@@ -26,6 +29,18 @@ export default function NetworkScreen() {
   const insets = useSafeAreaInsets();
   const { communityId } = useAuth();
   const colors = Verandah;
+  const { width: windowWidth } = useWindowDimensions();
+
+  // "My Community Network" must stay on one line at any width. The app is capped
+  // at the 460px phone frame on desktop, so size off whichever is narrower and
+  // scale down rather than wrapping. adjustsFontSizeToFit is a no-op on web, so
+  // this clamp — not the Text prop — is what actually prevents the overflow;
+  // 0.56em per char is a deliberately generous advance estimate for the serif.
+  const HERO_TITLE = 'My Community Network';
+  const heroTitleSize = Math.max(
+    18,
+    Math.min(30, (Math.min(windowWidth, 460) - 40) / (HERO_TITLE.length * 0.56))
+  );
 
   const [businessCount, setBusinessCount] = useState<number | null>(null);
   const [preorderCount, setPreorderCount] = useState<number | null>(null);
@@ -106,34 +121,40 @@ export default function NetworkScreen() {
   const webPullProps = useWebPullToRefresh(() => fetchSectionStats(true), refreshing);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
-      {/* Screen Header */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>My Community Network</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Connect with neighbors, local businesses, school parents & community sharing
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
+      {/* Dark teal hero panel */}
+      <View style={styles.hero}>
+        <Text
+          style={[styles.heroTitle, { fontSize: heroTitleSize, lineHeight: heroTitleSize + 4 }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
+          {HERO_TITLE}
         </Text>
-      </View>
+        <Text style={styles.heroSubtitle}>
+          Neighbours, local businesses, school parents & sharing — all in one place.
+        </Text>
 
-      {/* Quick Action Navigation Bar */}
-      <View style={styles.quickActionsRow}>
-        <TouchableOpacity
-          style={[styles.quickActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-          onPress={() => router.push('/mcn/my-orders' as any)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="bag-handle-outline" size={18} color={colors.primary} style={{ marginRight: 6 }} />
-          <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>My Orders</Text>
-        </TouchableOpacity>
+        <View style={styles.quickActionsRow}>
+          <TouchableOpacity
+            style={styles.quickActionBtn}
+            onPress={() => router.push('/mcn/my-orders' as any)}
+            activeOpacity={0.8}
+          >
+            <ShoppingBag01 size={16} color={colors.cream} style={{ marginRight: 6 }} aria-hidden={true} />
+            <Text style={styles.quickActionText}>My Orders</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.quickActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-          onPress={() => router.push('/mcn/my-posts' as any)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="documents-outline" size={18} color={colors.accent} style={{ marginRight: 6 }} />
-          <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>My Submissions</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.quickActionBtn}
+            onPress={() => router.push('/mcn/my-posts' as any)}
+            activeOpacity={0.8}
+          >
+            <File02 size={16} color={colors.cream} style={{ marginRight: 6 }} aria-hidden={true} />
+            <Text style={styles.quickActionText}>My Submissions</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Main Section Cards */}
@@ -169,7 +190,7 @@ export default function NetworkScreen() {
                 {preorderCount || 0} open drops · {businessCount || 0} active listings
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             Pre-order weekend specials, home-baked sweets, pop-up meals & local resident services. Order directly inside your society!
@@ -194,14 +215,14 @@ export default function NetworkScreen() {
                 {carpoolCount ?? 0} active rides · City & Outstation
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             Share daily office commutes, weekend intercity travel, outstation trips & school runs with verified society neighbors!
           </Text>
         </BaseCard>
 
-        {/* 2. Parent Corner Section Card */}
+        {/* 3. Parent Corner Section Card */}
         <BaseCard
           padding={14}
           onPress={() => router.push('/mcn/parents' as any)}
@@ -219,7 +240,7 @@ export default function NetworkScreen() {
                 </Text>
               )}
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             Connect with neighborhood parents, share children's school & college details, organize morning carpool & study groups.
@@ -239,12 +260,12 @@ export default function NetworkScreen() {
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Schools Catalog & Compare</Text>
               {schoolCount !== null && (
-                <Text style={[styles.badgeText, { color: '#059669' }]}>
+                <Text style={[styles.badgeText, { color: Verandah.green600 }]}>
                   {schoolCount} {schoolCount === 1 ? 'school cataloged' : 'schools cataloged'}
                 </Text>
               )}
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             Browse and compare 50+ nearby schools, syllabus, distances, & fee structures curated by community residents.
@@ -269,7 +290,7 @@ export default function NetworkScreen() {
                 {postCount ?? 0} {postCount === 1 ? 'active borrow post' : 'active borrow posts'}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             Borrow tools, ladders, board games, travel gear & books from neighbors in your society!
@@ -285,52 +306,61 @@ export default function NetworkScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: VerandahLayout.screenPaddingTop,
+    backgroundColor: Verandah.paper,
   },
-  header: {
+  hero: {
+    backgroundColor: Verandah.teal900,
+    paddingTop: VerandahLayout.screenPaddingTop + 4,
     paddingHorizontal: 20,
-    marginBottom: 8,
+    paddingBottom: 14,
   },
-  title: {
-    ...VerandahType.display,
+  heroTitle: {
+    fontFamily: VerandahType.serifFamily,
+    fontWeight: '400',
+    color: Verandah.cream,
+    letterSpacing: -0.4,
     marginBottom: 4,
   },
-  subtitle: {
-    ...VerandahType.body,
-    fontSize: 13,
+  heroSubtitle: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    lineHeight: 17,
+    color: 'rgba(240, 237, 227, 0.72)',
   },
   quickActionsRow: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 12,
-    marginBottom: 8,
+    gap: 10,
+    marginTop: 12,
   },
   quickActionBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 7,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: VerandahRadius.md,
-    borderWidth: 1,
+    borderRadius: VerandahRadius.button,
+    borderWidth: 0.5,
+    borderColor: 'rgba(240, 237, 227, 0.22)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   quickActionText: {
-    ...VerandahType.bodyBold,
+    fontFamily: VerandahType.sansFamily,
+    fontWeight: '600',
     fontSize: 13,
+    color: Verandah.cream,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
+    paddingTop: 14,
     paddingBottom: 24,
+    gap: 10,
   },
   sectionCard: {
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: Verandah.borderStrong,
-    borderStyle: 'solid',
+    marginBottom: 0,
   },
   cardHeaderRow: {
     flexDirection: 'row',
@@ -338,26 +368,28 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   cardTitle: {
-    ...VerandahType.title,
-    fontSize: 17,
+    fontFamily: VerandahType.sansFamily,
+    fontWeight: '600',
+    fontSize: 15,
   },
   badgeText: {
-    ...VerandahType.captionBold,
+    fontFamily: VerandahType.sansFamily,
+    fontWeight: '500',
     fontSize: 12,
     marginTop: 2,
   },
   cardDescription: {
-    ...VerandahType.body,
-    fontSize: 13,
-    lineHeight: 18,
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    lineHeight: 17,
     marginBottom: 0,
   },
 });

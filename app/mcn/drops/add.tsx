@@ -1,4 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Calendar } from '@untitledui/icons/Calendar';
+import { Clock } from '@untitledui/icons/Clock';
+import { Plus } from '@untitledui/icons/Plus';
+import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
+import { Trash01 } from '@untitledui/icons/Trash01';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart, replaceTracked } from '../../../lib/navigation';
@@ -17,7 +21,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { ImageUploader } from '../../../components/ImageUploader';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
@@ -551,7 +555,7 @@ export default function CreateOrEditFoodDropScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.surface }]}
+      style={[styles.container, { backgroundColor: colors.paper }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Stack.Screen
@@ -604,7 +608,7 @@ export default function CreateOrEditFoodDropScreen() {
         {/* Fulfillment Schedule */}
         <View style={styles.cardSection}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-            <Ionicons name="calendar-outline" size={16} color={Verandah.accent} />
+            <Calendar size={16} color={Verandah.primary} aria-hidden={true} />
             <Text style={styles.cardSectionTitle}>Delivery / Fulfillment Schedule</Text>
           </View>
 
@@ -620,7 +624,7 @@ export default function CreateOrEditFoodDropScreen() {
                   style={{
                     height: 42,
                     borderRadius: 8,
-                    border: `0.5px solid ${colors.border}`,
+                    border: `0.5px solid ${colors.borderHair}`,
                     padding: '0 10px',
                     fontSize: 14,
                     color: colors.textPrimary,
@@ -666,7 +670,7 @@ export default function CreateOrEditFoodDropScreen() {
                   style={{
                     height: 42,
                     borderRadius: 8,
-                    border: `0.5px solid ${colors.border}`,
+                    border: `0.5px solid ${colors.borderHair}`,
                     padding: '0 10px',
                     fontSize: 14,
                     color: colors.textPrimary,
@@ -704,7 +708,7 @@ export default function CreateOrEditFoodDropScreen() {
         {/* Cut-off Deadline */}
         <View style={styles.cardSection}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-            <Ionicons name="time-outline" size={16} color={Verandah.accent} />
+            <Clock size={16} color={Verandah.primary} aria-hidden={true} />
             <Text style={styles.cardSectionTitle}>Pre-Order Cut-off Deadline</Text>
           </View>
           <Text style={styles.cardSectionSub}>
@@ -723,7 +727,7 @@ export default function CreateOrEditFoodDropScreen() {
                   style={{
                     height: 42,
                     borderRadius: 8,
-                    border: `0.5px solid ${colors.border}`,
+                    border: `0.5px solid ${colors.borderHair}`,
                     padding: '0 10px',
                     fontSize: 14,
                     color: colors.textPrimary,
@@ -767,7 +771,7 @@ export default function CreateOrEditFoodDropScreen() {
                   style={{
                     height: 42,
                     borderRadius: 8,
-                    border: `0.5px solid ${colors.border}`,
+                    border: `0.5px solid ${colors.borderHair}`,
                     padding: '0 10px',
                     fontSize: 14,
                     color: colors.textPrimary,
@@ -808,11 +812,11 @@ export default function CreateOrEditFoodDropScreen() {
         <View style={styles.cardSection}>
           <View style={styles.itemsHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="restaurant-outline" size={16} color={Verandah.accent} />
+              <ShoppingBag01 size={16} color={Verandah.primary} aria-hidden={true} />
               <Text style={styles.cardSectionTitle}>Items offered for this drop</Text>
             </View>
             <TouchableOpacity style={styles.addItemBtn} onPress={handleAddItem}>
-              <Ionicons name="add" size={16} color={colors.accent} />
+              <Plus size={16} color={colors.primary} aria-hidden={true} />
               <Text style={styles.addItemBtnText}>Add Item</Text>
             </TouchableOpacity>
           </View>
@@ -823,7 +827,7 @@ export default function CreateOrEditFoodDropScreen() {
                 <Text style={styles.itemFormTitle}>Item #{idx + 1}</Text>
                 {items.length > 1 ? (
                   <TouchableOpacity onPress={() => handleRemoveItem(item.id)}>
-                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                    <Trash01 size={18} color={colors.danger} aria-hidden={true} />
                   </TouchableOpacity>
                 ) : null}
               </View>

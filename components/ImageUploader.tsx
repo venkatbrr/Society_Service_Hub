@@ -1,4 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Camera01 } from '@untitledui/icons/Camera01';
+import { RefreshCw01 } from '@untitledui/icons/RefreshCw01';
+import { Trash01 } from '@untitledui/icons/Trash01';
+import { XCircle } from '@untitledui/icons/XCircle';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
@@ -135,7 +138,7 @@ export function ImageUploader({
               transition={200}
             />
           ) : (
-            <Ionicons name="camera-outline" size={22} color={colors.textMuted} />
+            <Camera01 size={20} color={colors.textMuted} aria-hidden={true} />
           )}
         </TouchableOpacity>
         {displayUrl && !uploading && onImageRemoved ? (
@@ -144,7 +147,7 @@ export function ImageUploader({
             style={styles.compactRemoveBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="close-circle" size={20} color={colors.danger} />
+            <XCircle size={18} color={colors.danger} aria-hidden={true} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -177,7 +180,7 @@ export function ImageUploader({
           />
         ) : (
           <View style={styles.placeholderContent}>
-            <Ionicons name="camera-outline" size={32} color={colors.textMuted} />
+            <Camera01 size={30} color={colors.textMuted} aria-hidden={true} />
             <Text style={[styles.placeholderText, { color: colors.textMuted }]}>{placeholder}</Text>
           </View>
         )}
@@ -186,12 +189,12 @@ export function ImageUploader({
       {displayUrl && !uploading ? (
         <View style={styles.actions}>
           <TouchableOpacity onPress={pickImage} style={styles.actionBtn}>
-            <Ionicons name="swap-horizontal-outline" size={16} color={colors.accent} />
+            <RefreshCw01 size={15} color={colors.accent} aria-hidden={true} />
             <Text style={[styles.actionText, { color: colors.accent }]}>Change</Text>
           </TouchableOpacity>
           {onImageRemoved ? (
             <TouchableOpacity onPress={handleRemove} style={styles.actionBtn}>
-              <Ionicons name="trash-outline" size={16} color={colors.danger} />
+              <Trash01 size={15} color={colors.danger} aria-hidden={true} />
               <Text style={[styles.actionText, { color: colors.danger }]}>Remove</Text>
             </TouchableOpacity>
           ) : null}

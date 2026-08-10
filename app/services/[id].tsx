@@ -1,4 +1,13 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
+import { ChevronDown } from '@untitledui/icons/ChevronDown';
+import { ChevronUp } from '@untitledui/icons/ChevronUp';
+import { Edit01 } from '@untitledui/icons/Edit01';
+import { SearchLg } from '@untitledui/icons/SearchLg';
+import { Tool01 } from '@untitledui/icons/Tool01';
+import { Trash01 } from '@untitledui/icons/Trash01';
+import { Users01 } from '@untitledui/icons/Users01';
+import { XClose } from '@untitledui/icons/XClose';
+import { XCircle } from '@untitledui/icons/XCircle';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -23,14 +32,12 @@ import { ProviderSelector } from '../../components/ProviderSelector';
 import { ServiceHistoryList } from '../../components/ServiceHistoryList';
 import { UrgencyBadge } from '../../components/UrgencyBadge';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import {
     mapServiceCategoryToProviderCategory,
     SERVICE_CATEGORIES,
     SERVICE_CATEGORY_DEFAULT_FREQUENCY,
-    SERVICE_CATEGORY_EMOJI,
-    SERVICE_CATEGORY_ICONS,
     SERVICE_CATEGORY_LABELS,
     ServiceCategory,
 } from '../../lib/serviceCategories';
@@ -99,11 +106,13 @@ export default function ServiceDetailScreen() {
   const colors = {
     background: Verandah.surface,
     text: Verandah.textPrimary,
+    textPrimary: Verandah.textPrimary,
     textMuted: Verandah.textSecondary,
     primary: Verandah.primary,
     secondary: Verandah.accent,
     accent: Verandah.danger,
     border: Verandah.border,
+    borderHair: Verandah.borderHair,
     card: Verandah.card,
     surface: Verandah.card,
     surface2: Verandah.cardMuted,
@@ -464,7 +473,6 @@ export default function ServiceDetailScreen() {
   }
 
   const category = service.category as ServiceCategory;
-  const emoji = SERVICE_CATEGORY_EMOJI[category] ?? '🔧';
   const dueDate = new Date(service.next_due_on).toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'long',
@@ -488,9 +496,9 @@ export default function ServiceDetailScreen() {
           style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.75}
         >
-          <Ionicons name="arrow-back" size={20} color={colors.text} />
+          <ArrowLeft size={20} color={colors.text} aria-hidden={true} />
         </TouchableOpacity>
-        <Ionicons name={(SERVICE_CATEGORY_ICONS[category] as any) ?? 'build-outline'} size={20} color={colors.primary} style={{ marginRight: 6 }} />
+        <Tool01 size={20} color={colors.primary} style={{ marginRight: 6 }} aria-hidden={true} />
         <Text style={styles.headerTitle} numberOfLines={1}>
           {service.service_name}
         </Text>
@@ -543,8 +551,8 @@ export default function ServiceDetailScreen() {
           onPress={handleFindTech}
           activeOpacity={0.82}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="search-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <SearchLg size={16} color={colors.primary} aria-hidden={true} />
             <Text style={[styles.secondaryBtnText, { color: colors.primary }]}>Find technicians</Text>
           </View>
         </TouchableOpacity>
@@ -561,8 +569,8 @@ export default function ServiceDetailScreen() {
           onPress={() => setEditOpen((v) => !v)}
           activeOpacity={0.8}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name={editOpen ? 'chevron-up' : 'create-outline'} size={16} color={colors.text} style={{ marginRight: 6 }} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            {editOpen ? <ChevronUp size={16} color={colors.text} aria-hidden={true} /> : <Edit01 size={16} color={colors.text} aria-hidden={true} />}
             <Text style={[styles.editToggleText, { color: colors.text }]}>
               {editOpen ? 'Hide edit details' : 'Edit details'}
             </Text>
@@ -601,7 +609,7 @@ export default function ServiceDetailScreen() {
                     }}
                     activeOpacity={0.8}
                   >
-                    <Ionicons name={(SERVICE_CATEGORY_ICONS[cat] as any) ?? 'build-outline'} size={16} color={sel ? colors.primary : colors.textMuted} style={{ marginRight: 6 }} />
+                    <Tool01 size={16} color={sel ? colors.primary : colors.textMuted} style={{ marginRight: 6 }} aria-hidden={true} />
                     <Text style={[{ fontSize: 11, fontWeight: '500', flexShrink: 1 }, { color: sel ? colors.primary : colors.textMuted }]} numberOfLines={2}>
                       {SERVICE_CATEGORY_LABELS[cat]}
                     </Text>
@@ -637,7 +645,7 @@ export default function ServiceDetailScreen() {
             ) : providerOptions.length === 0 ? (
               <>
                 <View style={[styles.providerStateCard, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
-                  <Ionicons name="people-outline" size={22} color={colors.textMuted} />
+                  <Users01 size={22} color={colors.textMuted} aria-hidden={true} />
                   <Text style={[styles.providerStateText, { color: colors.textMuted }]}>No saved providers available to map yet.</Text>
                 </View>
                 <TouchableOpacity
@@ -673,7 +681,7 @@ export default function ServiceDetailScreen() {
                       </Text>
                     )}
                   </View>
-                  <Ionicons name={providerPickerOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
+                  {providerPickerOpen ? <ChevronUp size={16} color={colors.textMuted} aria-hidden={true} /> : <ChevronDown size={16} color={colors.textMuted} aria-hidden={true} />}
                 </TouchableOpacity>
 
                 {providerPickerOpen ? (
@@ -843,8 +851,8 @@ export default function ServiceDetailScreen() {
           onPress={handleDelete}
           activeOpacity={0.8}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="trash-outline" size={16} color={Verandah.danger} style={{ marginRight: 6 }} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <Trash01 size={16} color={Verandah.danger} aria-hidden={true} />
             <Text style={[styles.deleteBtnText, { color: Verandah.danger }]}>Delete this reminder</Text>
           </View>
         </TouchableOpacity>
@@ -852,11 +860,11 @@ export default function ServiceDetailScreen() {
 
       <Modal visible={showMarkDoneSheet} transparent animationType="slide" onRequestClose={() => setShowMarkDoneSheet(false)}>
         <View style={styles.sheetOverlay}>
-          <View style={[styles.sheetCard, { backgroundColor: colors.background, borderColor: colors.border }]}> 
+          <View style={[styles.sheetCard, { backgroundColor: colors.background, borderColor: colors.borderHair || Verandah.borderHair }]}> 
             <View style={styles.sheetHeader}>
-              <Text style={[styles.sheetTitle, { color: colors.text }]}>Mark serviced - quick details (optional)</Text>
+              <Text style={[styles.sheetTitle, { color: colors.textPrimary || colors.text }]}>Mark serviced - quick details (optional)</Text>
               <TouchableOpacity onPress={() => setShowMarkDoneSheet(false)}>
-                <Text style={[styles.sheetClose, { color: colors.textMuted }]}>✕</Text>
+                <XClose size={18} color={colors.textMuted} aria-hidden={true} />
               </TouchableOpacity>
             </View>
 
@@ -936,7 +944,7 @@ export default function ServiceDetailScreen() {
             activeOpacity={0.8}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Ionicons name="close-circle" size={34} color="#FFFFFF" />
+            <XCircle size={34} color="#FFFFFF" aria-hidden={true} />
           </TouchableOpacity>
 
           {previewImage ? (

@@ -32,14 +32,13 @@ export function configureGoogleSignIn() {
  * Signs up a new user with email and password.
  * Optionally includes metadata like full_name.
  */
-export const signUpWithEmail = async (email: string, password: string, fullName: string, flatNumber?: string) => {
+export const signUpWithEmail = async (email: string, password: string, fullName: string) => {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         full_name: fullName,
-        flat_number: flatNumber || null,
       },
     },
   });

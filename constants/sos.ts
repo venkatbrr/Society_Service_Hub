@@ -1,5 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
-import { ComponentProps } from 'react';
+import { Car01 } from '@untitledui/icons/Car01';
+import { DotsHorizontal } from '@untitledui/icons/DotsHorizontal';
+import { Lock01 } from '@untitledui/icons/Lock01';
+import { MedicalCross } from '@untitledui/icons/MedicalCross';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { ShieldTick } from '@untitledui/icons/ShieldTick';
+import { Zap } from '@untitledui/icons/Zap';
+import React from 'react';
 
 export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as const;
 
@@ -18,15 +24,15 @@ export type EmergencyCategory =
 
 export const EMERGENCY_CATEGORY_META: Record<
   EmergencyCategory,
-  { label: string; icon: ComponentProps<typeof Ionicons>['name'] }
+  { label: string; IconComponent: React.ComponentType<any> }
 > = {
-  hospital: { label: 'Hospitals', icon: 'medical-outline' },
-  ambulance: { label: 'Ambulance', icon: 'car-outline' },
-  police: { label: 'Police', icon: 'shield-checkmark-outline' },
-  fire: { label: 'Fire', icon: 'flame-outline' },
-  security: { label: 'Security', icon: 'lock-closed-outline' },
-  helpline: { label: 'Helplines', icon: 'call-outline' },
-  other: { label: 'Other', icon: 'ellipsis-horizontal-circle-outline' },
+  hospital: { label: 'Hospitals', IconComponent: MedicalCross },
+  ambulance: { label: 'Ambulance', IconComponent: Car01 },
+  police: { label: 'Police', IconComponent: ShieldTick },
+  fire: { label: 'Fire', IconComponent: Zap },
+  security: { label: 'Security', IconComponent: Lock01 },
+  helpline: { label: 'Helplines', IconComponent: Phone01 },
+  other: { label: 'Other', IconComponent: DotsHorizontal },
 };
 
 export const EMERGENCY_CATEGORY_ORDER: EmergencyCategory[] = [

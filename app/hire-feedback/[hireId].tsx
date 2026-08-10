@@ -1,3 +1,6 @@
+import { ThumbsUp } from '@untitledui/icons/ThumbsUp';
+import { ThumbsDown } from '@untitledui/icons/ThumbsDown';
+import { FastForward } from '@untitledui/icons/FastForward';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -24,7 +27,7 @@ export default function HireFeedbackScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const colors = {
-    background: Verandah.surface,
+    background: Verandah.paper,
     text: Verandah.textPrimary,
     textMuted: Verandah.textSecondary,
     primary: Verandah.primary,
@@ -242,7 +245,7 @@ export default function HireFeedbackScreen() {
             onPress={() => setSelectedSignal('positive')}
             activeOpacity={0.82}
           >
-            <Text style={styles.signalEmoji}>👍</Text>
+            <ThumbsUp size={26} color={selectedSignal === 'positive' ? colors.secondary : colors.textMuted} aria-hidden={true} />
             <Text style={[styles.signalLabel, { color: colors.text }]}>Good</Text>
           </TouchableOpacity>
 
@@ -255,7 +258,7 @@ export default function HireFeedbackScreen() {
             onPress={() => setSelectedSignal('negative')}
             activeOpacity={0.82}
           >
-            <Text style={styles.signalEmoji}>👎</Text>
+            <ThumbsDown size={26} color={selectedSignal === 'negative' ? colors.accent : colors.textMuted} aria-hidden={true} />
             <Text style={[styles.signalLabel, { color: colors.text }]}>Not great</Text>
           </TouchableOpacity>
 
@@ -271,7 +274,7 @@ export default function HireFeedbackScreen() {
             }}
             activeOpacity={0.82}
           >
-            <Text style={styles.signalEmoji}>⏭</Text>
+            <FastForward size={26} color={selectedSignal === 'skipped' ? colors.primary : colors.textMuted} aria-hidden={true} />
             <Text style={[styles.signalLabel, { color: colors.text }]}>Skip</Text>
           </TouchableOpacity>
         </View>

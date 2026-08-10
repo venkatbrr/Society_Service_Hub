@@ -1,4 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
+import { Calendar } from '@untitledui/icons/Calendar';
+import { Clock } from '@untitledui/icons/Clock';
+import { LogOut01 } from '@untitledui/icons/LogOut01';
+import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { Share07 } from '@untitledui/icons/Share07';
+import { XClose } from '@untitledui/icons/XClose';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -9,7 +16,7 @@ import { JoinerListItem } from '../../components/JoinerListItem';
 import { Rupees } from '../../components/Rupees';
 import { VisitStatusBadge } from '../../components/VisitStatusBadge';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { VisitJoinerWithProfile, VisitWithJoinerData } from '../../lib/database.types';
 import { siteUrl } from '../../lib/siteUrl';
@@ -251,7 +258,7 @@ export default function VisitDetailScreen() {
         visit_id: id,
         user_id: user.id,
         note: note.trim() || null,
-        flat_number: flatNo.trim() || null
+        flat_number: (profile?.flat_number || flatNo).trim() || null
       });
 
       if (error) throw error;
@@ -449,7 +456,7 @@ export default function VisitDetailScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
+            <ArrowLeft size={22} color={colors.text} aria-hidden={true} />
           </TouchableOpacity>
         </View>
 
@@ -480,14 +487,14 @@ export default function VisitDetailScreen() {
              <View style={{ alignItems: 'flex-end', gap: 6 }}>
                 <VisitStatusBadge status={displayStatus} />
                 <TouchableOpacity onPress={handleShare} style={{ padding: 4 }} activeOpacity={0.7}>
-                   <Ionicons name="share-social-outline" size={20} color={colors.primary} />
+                   <Share07 size={18} color={colors.primary} aria-hidden={true} />
                 </TouchableOpacity>
              </View>
           </View>
 
           <Text style={styles.visitTitle}>{visit.title}</Text>
           <View style={styles.timeSlotRow}>
-            <Ionicons name="time-outline" size={18} color={colors.icon} />
+            <Clock size={16} color={colors.icon} aria-hidden={true} />
             <Text style={[styles.timeSlot, { color: colors.text }]}>{visit.visit_time_slot}</Text>
           </View>
 
@@ -517,7 +524,7 @@ export default function VisitDetailScreen() {
                     <View style={styles.contactRow}>
                         {visit.provider_phone && (
                             <TouchableOpacity style={[styles.contactBtn, { backgroundColor: colors.surface2 }]} onPress={() => Linking.openURL(`tel:${visit.provider_phone}`)}>
-                                <Ionicons name="call" size={18} color={colors.primary} />
+                                <Phone01 size={16} color={colors.primary} aria-hidden={true} />
                             </TouchableOpacity>
                         )}
                         {visit.provider_whatsapp && (
@@ -526,7 +533,7 @@ export default function VisitDetailScreen() {
                               const intl = digits.length === 10 ? `91${digits}` : digits;
                               void Linking.openURL(`https://wa.me/${intl}`);
                             }}>
-                                <Ionicons name="logo-whatsapp" size={18} color={colors.secondary} />
+                                <MessageCircle01 size={16} color={colors.secondary} aria-hidden={true} />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -618,7 +625,7 @@ export default function VisitDetailScreen() {
             </View>
         ) : visit.has_user_joined ? (
             <TouchableOpacity style={[styles.leaveBtn, { borderColor: colors.accent, borderWidth: 1, borderRadius: 14 }]} onPress={handleLeave} disabled={isUpdatingStatus}>
-                <Ionicons name="exit-outline" size={18} color={colors.accent} />
+                <LogOut01 size={16} color={colors.accent} aria-hidden={true} />
                 <Text style={[styles.leaveBtnText, { color: colors.accent }]}>Leave this visit</Text>
             </TouchableOpacity>
         ) : (!isPast && visit.status === 'upcoming' && !isFull) ? (
@@ -642,7 +649,7 @@ export default function VisitDetailScreen() {
                 <View style={styles.modalHeader}>
                     <Text style={[styles.modalTitle, { color: colors.text }]}>Join Visit</Text>
                     <TouchableOpacity onPress={() => setShowJoinModal(false)}>
-                        <Ionicons name="close" size={24} color={colors.text} />
+                        <XClose size={22} color={colors.text} aria-hidden={true} />
                     </TouchableOpacity>
                 </View>
 
@@ -651,16 +658,25 @@ export default function VisitDetailScreen() {
                     style={styles.modalBody}
                 >
                     <View style={styles.inputGroup}>
-                        <Text style={[styles.label, { color: colors.text }]}>My flat number</Text>
-                        <TextInput
-                            style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
-                            placeholder="e.g. A412"
-                            placeholderTextColor={colors.textMuted}
-                            value={flatNo}
-                            onChangeText={setFlatNo}
-                            onBlur={() => setFlatNo(prev => prev.toUpperCase().replace(/[\s-]/g, ''))}
-                            autoCapitalize="characters"
-                        />
+                        <Text style={[styles.label, { color: colors.text }]}>My flat / unit number</Text>
+                        {profile?.flat_number ? (
+                          <View style={[styles.input, { justifyContent: 'center', borderColor: colors.border, backgroundColor: colors.surface }]}>
+                            <Text style={{ color: colors.text, ...VerandahType.body }}>{profile.flat_number}</Text>
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            style={[styles.input, { justifyContent: 'center', borderColor: Verandah.caution, backgroundColor: Verandah.cautionSoft }]}
+                            onPress={() => {
+                              setShowJoinModal(false);
+                              router.push('/profile/edit' as any);
+                            }}
+                            activeOpacity={0.85}
+                          >
+                            <Text style={{ color: Verandah.caution, ...VerandahType.captionBold }}>
+                              + Set your flat in profile
+                            </Text>
+                          </TouchableOpacity>
+                        )}
                     </View>
 
                     <View style={styles.inputGroup}>
@@ -697,7 +713,7 @@ export default function VisitDetailScreen() {
                 <View style={styles.modalHeader}>
                     <Text style={[styles.modalTitle, { color: colors.text }]}>Reschedule Visit</Text>
                     <TouchableOpacity onPress={() => setShowRescheduleModal(false)}>
-                        <Ionicons name="close" size={24} color={colors.text} />
+                        <XClose size={22} color={colors.text} aria-hidden={true} />
                     </TouchableOpacity>
                 </View>
 

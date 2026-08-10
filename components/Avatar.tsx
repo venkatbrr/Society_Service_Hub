@@ -11,12 +11,14 @@ type Props = {
   url?: string | null;
   size?: number;
   shape?: 'circle' | 'square';
+  /** Overrides the auto-derived initials tint (e.g. gold initials on a dark teal card). */
+  tint?: { bg: string; fg: string };
 };
 
 /**
  * Avatar component displaying image if available, else initials fallback.
  */
-export const Avatar = React.memo(({ name, url, size = 36, shape = 'circle' }: Props) => {
+export const Avatar = React.memo(({ name, url, size = 36, shape = 'circle', tint: tintOverride }: Props) => {
   const borderRadius = shape === 'circle' ? size / 2 : VerandahRadius.sm + 2;
 
   if (url) {
@@ -34,7 +36,7 @@ export const Avatar = React.memo(({ name, url, size = 36, shape = 'circle' }: Pr
     );
   }
 
-  const tint = getAvatarTint(name);
+  const tint = tintOverride ?? getAvatarTint(name);
 
   const parts = name.trim().split(/\s+/).filter(Boolean);
   let initials = '';

@@ -1,4 +1,13 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AlertCircle } from '@untitledui/icons/AlertCircle';
+import { Calendar } from '@untitledui/icons/Calendar';
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { Clock } from '@untitledui/icons/Clock';
+import { Eye } from '@untitledui/icons/Eye';
+import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
+import { XCircle } from '@untitledui/icons/XCircle';
+import { XClose } from '@untitledui/icons/XClose';
 import * as Linking from 'expo-linking';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
@@ -16,7 +25,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
-import { format12HourTime, VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { format12HourTime, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { confirmAction } from '../../lib/confirm';
 import { buildMcnHeaderOptions } from '../../lib/mcnHeader';
@@ -249,15 +258,17 @@ export default function MyOrdersScreen() {
                 : styles.badgeConfirmed,
             ]}
           >
-            <Ionicons
-              name={isFulfilled ? 'checkmark-circle' : isCancelled ? 'close-circle' : 'time-outline'}
-              size={13}
-              color={isFulfilled ? '#059669' : isCancelled ? '#DC2626' : '#D97706'}
-            />
+            {isFulfilled ? (
+              <CheckCircle size={13} color={Verandah.green600} aria-hidden={true} />
+            ) : isCancelled ? (
+              <XCircle size={13} color="#DC2626" aria-hidden={true} />
+            ) : (
+              <Clock size={13} color="#D97706" aria-hidden={true} />
+            )}
             <Text
               style={[
                 styles.statusBadgeText,
-                { color: isFulfilled ? '#059669' : isCancelled ? '#DC2626' : '#D97706' },
+                { color: isFulfilled ? Verandah.green600 : isCancelled ? '#DC2626' : '#D97706' },
               ]}
             >
               {isFulfilled ? 'Delivered' : isCancelled ? 'Cancelled' : 'Confirmed'}
@@ -268,7 +279,7 @@ export default function MyOrdersScreen() {
         {/* Delivery Schedule Banner */}
         {fulfillFormatted && drop?.fulfillment_time && (
           <View style={styles.deliveryBanner}>
-            <Ionicons name="calendar-outline" size={15} color={colors.accent} />
+            <Calendar size={15} color={colors.primary} aria-hidden={true} />
             <Text style={styles.deliveryBannerText}>
               Delivery: <Text style={{ fontWeight: '700' }}>{fulfillFormatted}</Text> ({format12HourTime(drop.fulfillment_time)})
             </Text>
@@ -291,7 +302,7 @@ export default function MyOrdersScreen() {
           })}
         </View>
 
-        <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
+        <View style={[styles.rowDivider, { backgroundColor: colors.borderHair }]} />
 
         {/* Total & Date */}
         <View style={styles.footerRow}>
@@ -305,7 +316,7 @@ export default function MyOrdersScreen() {
         </View>
 
         {order.buyer_note ? (
-          <View style={[styles.noteContainer, { backgroundColor: colors.surface }]}>
+          <View style={[styles.noteContainer, { backgroundColor: colors.cardMuted }]}>
             <Text style={[styles.noteLabel, { color: colors.textTertiary }]}>Your note:</Text>
             <Text style={[styles.noteText, { color: colors.textSecondary }]}>"{order.buyer_note}"</Text>
           </View>
@@ -316,27 +327,27 @@ export default function MyOrdersScreen() {
           <View style={styles.actionRow}>
             <TouchableOpacity
               onPress={() => router.push(`/mcn/drops/${order.drop_id}` as any)}
-              style={[styles.actionBtn, { borderColor: colors.accent, backgroundColor: '#F0FDF4' }]}
+              style={[styles.actionBtn, { borderColor: colors.primary, backgroundColor: Verandah.cardMuted }]}
             >
-              <Ionicons name="eye-outline" size={16} color={colors.accent} />
-              <Text style={[styles.actionBtnText, { color: colors.accent }]}>View Drop</Text>
+              <Eye size={16} color={colors.primary} aria-hidden={true} />
+              <Text style={[styles.actionBtnText, { color: colors.primary }]}>View Drop</Text>
             </TouchableOpacity>
 
             {phone ? (
               <>
                 <TouchableOpacity
                   onPress={() => handleCall(phone)}
-                  style={[styles.actionBtn, { borderColor: colors.border }]}
+                  style={[styles.actionBtn, { borderColor: colors.borderHair }]}
                 >
-                  <Ionicons name="call-outline" size={16} color={colors.accent} />
-                  <Text style={[styles.actionBtnText, { color: colors.accent }]}>Call Host</Text>
+                  <Phone01 size={16} color={colors.primary} aria-hidden={true} />
+                  <Text style={[styles.actionBtnText, { color: colors.primary }]}>Call Host</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => handleWhatsApp(phone, dropTitle, itemsSummary, order.total_amount)}
-                  style={[styles.actionBtn, { borderColor: colors.border }]}
+                  style={[styles.actionBtn, { borderColor: colors.borderHair }]}
                 >
-                  <Ionicons name="logo-whatsapp" size={16} color={colors.accent} />
-                  <Text style={[styles.actionBtnText, { color: colors.accent }]}>WhatsApp</Text>
+                  <MessageCircle01 size={16} color={colors.secondary} aria-hidden={true} />
+                  <Text style={[styles.actionBtnText, { color: colors.secondary }]}>WhatsApp</Text>
                 </TouchableOpacity>
               </>
             ) : null}
@@ -351,7 +362,7 @@ export default function MyOrdersScreen() {
                   <ActivityIndicator size="small" color={colors.danger} />
                 ) : (
                   <>
-                    <Ionicons name="close-circle-outline" size={16} color={colors.danger} />
+                    <XClose size={16} color={colors.danger} aria-hidden={true} />
                     <Text style={[styles.cancelBtnText, { color: colors.danger }]}>Cancel pre-order</Text>
                   </>
                 )}
@@ -364,7 +375,7 @@ export default function MyOrdersScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: 'My Orders',
@@ -374,7 +385,7 @@ export default function MyOrdersScreen() {
 
       {loading ? (
         <View style={styles.loaderWrap}>
-          <ActivityIndicator color={colors.accent} />
+          <ActivityIndicator color={colors.primary} />
         </View>
       ) : (
         <ScrollView
@@ -391,7 +402,7 @@ export default function MyOrdersScreen() {
         >
           {preorderError ? (
             <View style={styles.errorWrap}>
-              <Ionicons name="alert-circle-outline" size={44} color={colors.danger} />
+              <AlertCircle size={44} color={colors.danger} aria-hidden={true} />
               <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>Couldn't load your pre-orders</Text>
               <Text style={[styles.errorSubtitle, { color: colors.textSecondary }]}>{preorderError}</Text>
               <TouchableOpacity
@@ -405,7 +416,7 @@ export default function MyOrdersScreen() {
             sortedPreorderOrders.map(renderPreorderCard)
           ) : (
             <View style={styles.emptyWrap}>
-              <Ionicons name="restaurant-outline" size={48} color={colors.textMuted} />
+              <ShoppingBag01 size={48} color={colors.textMuted} aria-hidden={true} />
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 You haven't placed any food pop-up pre-orders yet.
               </Text>
@@ -475,7 +486,7 @@ const styles = StyleSheet.create({
   deliveryBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0FDF4',
+    backgroundColor: Verandah.accentSoft,
     padding: 8,
     borderRadius: VerandahRadius.sm,
     marginBottom: 8,

@@ -53,47 +53,88 @@ export const Colors = {
 };
 
 /**
- * Verandah Design Language — Color Tokens
+ * Verandah Design Language — Color & Shadow Tokens (Turn 1 "Verandah")
  *
- * Warm, restrained palette for a residential utility app.
- * Every screen reads from these tokens — no hardcoded hex values.
+ * Warm, restrained palette for residential community utility.
+ * Single source of truth across every screen.
  */
 export const Verandah = {
-  // Surface — warm off-white, the canvas everything sits on
-  surface: '#FAF8F4',
-  card: '#FFFFFF',
-  cardMuted: '#F1EFE8',
+  // Brand
+  teal900: '#0F3732',
+  green600: '#0F6E56',
+  secondary: '#0F6E56',
 
-  // Primary — deep teal, used for primary CTA backgrounds and brand moments
+  // Surfaces & Backgrounds
+  paper: '#FAF8F4',
+  surface: '#FAF8F4',
+  cream: '#F0EDE3',
+  creamSoft: '#EFEBE1',
+  card: '#FFFFFF',
+  cardMuted: '#F0EDE3',
+
+  // Primary & Secondary Actions
   primary: '#0F3732',
   primaryFg: '#F0EDE3',
-
-  // Accent — mid teal, used for confirmations, verified badges, active tab, links
   accent: '#0F6E56',
   accentSoft: '#E1F5EE',
 
-  // Caution — warm amber, friendly nudges, never alarms
+  // Gold Accents
+  gold: '#DDA94A',      // Gold accent on dark
+  goldInk: '#854F0B',   // Gold accent on light (ratings, emphasis)
   caution: '#854F0B',
   cautionSoft: '#FAEEDA',
+  sand: '#FBEAD0',      // Warm chip / avatar tint bg
 
-  // Semantic but rare — destructive only, used sparingly
+  // Semantic
   danger: '#A32D2D',
   dangerSoft: '#FCEBEB',
 
-  // Text
+  // Typography Tokens
+  textInk: '#1F2A28',
   textPrimary: '#1F2A28',
   textSecondary: '#6B6F6D',
+  textMuted: '#6B6F6D',
+  textSubtle: '#888780',
   textTertiary: '#888780',
-  textMuted: '#B4B2A9',
+  textFaint: '#A9A498',
+  textDisabled: '#9A988F',
 
   // Borders
-  border: 'rgba(15, 55, 50, 0.14)',
-  borderStrong: 'rgba(15, 55, 50, 0.18)',
+  border: 'rgba(15, 55, 50, 0.08)',
+  borderHair: 'rgba(15, 55, 50, 0.10)',
+  borderSoft: 'rgba(15, 55, 50, 0.08)',
+  borderStrong: 'rgba(15, 55, 50, 0.14)',
+
+  // Mock / Bezel
+  phoneBezel: '#111614',
+
+  // Shadows
+  shadowCard: {
+    shadowColor: '#0F3732',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  shadowRaised: {
+    shadowColor: '#0F3732',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 4,
+  },
+  shadowDevice: {
+    shadowColor: '#0F3732',
+    shadowOffset: { width: 0, height: 40 },
+    shadowOpacity: 0.28,
+    shadowRadius: 80,
+    elevation: 12,
+  },
 
   // Avatar tinted backgrounds
   avatarTints: [
     { bg: '#E1F5EE', fg: '#0F6E56' },  // teal
-    { bg: '#FAEEDA', fg: '#854F0B' },  // amber
+    { bg: '#FBEAD0', fg: '#854F0B' },  // sand / amber
     { bg: '#EEEDFE', fg: '#3C3489' },  // purple
     { bg: '#FBEAF0', fg: '#993556' },  // pink
     { bg: '#E6F1FB', fg: '#185FA5' },  // blue

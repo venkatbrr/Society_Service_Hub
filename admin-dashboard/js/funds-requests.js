@@ -50,6 +50,9 @@ const FundsRequestsPage = {
           statusBadge = '<span class="badge-pill badge-pending">Pending</span>';
         } else if (r.status === 'approved') {
           statusBadge = '<span class="badge-pill badge-approved">Approved</span>';
+        } else if (r.status === 'withdrawn') {
+          // A withdrawn request was pulled by the requester, not refused by us.
+          statusBadge = '<span class="badge-pill badge-rejected">Withdrawn</span>';
         } else {
           statusBadge = `<span class="badge-pill badge-rejected">Rejected</span>`;
         }
@@ -145,6 +148,9 @@ const FundsRequestsPage = {
       statusLabel = '<span class="badge-pill badge-pending">Pending Review</span>';
     } else if (req.status === 'approved') {
       statusLabel = '<span class="badge-pill badge-approved">Approved</span>';
+    } else if (req.status === 'withdrawn') {
+      // A withdrawn request was pulled by the requester, not refused by us.
+      statusLabel = '<span class="badge-pill badge-rejected">Withdrawn</span>';
     } else {
       statusLabel = '<span class="badge-pill badge-rejected">Rejected</span>';
     }

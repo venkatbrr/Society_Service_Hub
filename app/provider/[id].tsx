@@ -1,4 +1,14 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Bookmark } from '@untitledui/icons/Bookmark';
+import { BookmarkCheck } from '@untitledui/icons/BookmarkCheck';
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { ChevronDown } from '@untitledui/icons/ChevronDown';
+import { ChevronUp } from '@untitledui/icons/ChevronUp';
+import { Flag01 } from '@untitledui/icons/Flag01';
+import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { Share07 } from '@untitledui/icons/Share07';
+import { Star01 } from '@untitledui/icons/Star01';
+import { Trash01 } from '@untitledui/icons/Trash01';
 import * as Linking from 'expo-linking';
 import * as Notifications from 'expo-notifications';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,9 +19,9 @@ import { Avatar } from '../../components/Avatar';
 import { BaseCard } from '../../components/BaseCard';
 import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { RatingStars } from '../../components/RatingStars';
+import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
-import { APP_EMOJIS } from '../../constants/emojis';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { ProviderWithInteraction } from '../../lib/database.types';
 import { actionToFraudStatus, checkReviewFraud, getFraudActionMessage } from '../../lib/fraudCheck';
@@ -19,7 +29,6 @@ import { siteUrl } from '../../lib/siteUrl';
 import { supabase } from '../../lib/supabase';
 import { goBackSmart } from '../../lib/navigation';
 import { getDetailFieldsForCategory } from '../../constants/providerDetails';
-import { Rupees } from '../../components/Rupees';
 
 const getDaysOnPlatform = (createdAtStr: string | null) => {
   if (!createdAtStr) return '0 days';
@@ -302,7 +311,7 @@ export default function ProviderDetailScreen() {
       : await supabase.from('favorites').insert({ user_id: user.id, provider_id: provider.id });
 
     if (error) {
-      setProvider(prev => prev ? { ...prev, is_favorite: isCurrentlyFavorite } : null);
+      setProvider((prev: ProviderWithInteraction | null) => prev ? { ...prev, is_favorite: isCurrentlyFavorite } : null);
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update favorites' });
     }
   };
@@ -668,16 +677,16 @@ export default function ProviderDetailScreen() {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.surface }]}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.headerCard}> 
         <View style={styles.headerTop}>
-           <HeaderBackButton onPress={() => goBackSmart(router, '/provider/' + id)} color={Verandah.textPrimary} style={styles.backButtonInline} />
+           <HeaderBackButton onPress={() => goBackSmart(router, '/provider/' + id)} style={styles.backButtonInline} />
            <TouchableOpacity onPress={handleToggleFavorite} style={styles.iconButton}>
-             <Ionicons 
-               name={provider.is_favorite ? 'bookmark' : 'bookmark-outline'} 
-               size={18} 
-               color={provider.is_favorite ? Verandah.accent : Verandah.textPrimary} 
-             />
+             {provider.is_favorite ? (
+               <BookmarkCheck size={18} color={Verandah.accent} aria-hidden={true} />
+             ) : (
+               <Bookmark size={18} color={Verandah.textPrimary} aria-hidden={true} />
+             )}
            </TouchableOpacity>
         </View>
 
@@ -708,7 +717,10 @@ export default function ProviderDetailScreen() {
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text style={styles.statLabel}>Rating</Text>
-            <Text style={styles.statValue}>★ {Number(provider.avg_rating || 0).toFixed(1)}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Star01 size={14} color={Verandah.goldInk} fill={Verandah.goldInk} aria-hidden={true} />
+              <Text style={styles.statValue}>{Number(provider.avg_rating || 0).toFixed(1)}</Text>
+            </View>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
@@ -745,7 +757,7 @@ export default function ProviderDetailScreen() {
                     <Text style={[styles.detailMetaLabel, { color: colors.textMuted }]}>{label.toUpperCase()}</Text>
                     {fieldConfig?.type === 'number' ? (
                       <View style={styles.moneyMetaRow}>
-                        <Rupees amount={typeof val === 'number' ? val : parseFloat(val) || 0} size="sm" />
+                        <Rupees amount={typeof val === 'number' ? val : parseFloat(String(val)) || 0} size="sm" />
                         {fieldConfig.suffix ? (
                           <Text style={[styles.detailMetaSuffix, { color: colors.textMuted }]}>/ {fieldConfig.suffix}</Text>
                         ) : null}
@@ -806,11 +818,11 @@ export default function ProviderDetailScreen() {
 
       <View style={styles.actionGrid}>
         <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: colors.secondary }]} onPress={handleWhatsApp}>
-          <Ionicons name="logo-whatsapp" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+          <MessageCircle01 size={18} color="#FFFFFF" aria-hidden={true} style={{ marginRight: 6 }} />
           <Text style={styles.mainActionText}>WhatsApp</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: colors.primary }]} onPress={handleCall}>
-          <Ionicons name="call-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+          <Phone01 size={18} color="#FFFFFF" aria-hidden={true} style={{ marginRight: 6 }} />
           <Text style={styles.mainActionText}>Call</Text>
         </TouchableOpacity>
       </View>
@@ -846,9 +858,7 @@ export default function ProviderDetailScreen() {
                       })}
                     </Text>
                   </View>
-                  <Text style={styles.publicReviewStars}>
-                    {'★'.repeat(review.rating)}{'☆'.repeat(Math.max(0, 5 - review.rating))}
-                  </Text>
+                  <RatingStars rating={review.rating} size={14} />
                 </View>
                 {review.review_text ? (
                   <Text style={[styles.publicReviewText, { color: colors.textMuted, marginTop: 6 }]}>{review.review_text}</Text>
@@ -870,7 +880,7 @@ export default function ProviderDetailScreen() {
         )}
       </View>
 
-      {/* Community Reports Summary — threshold 2 for residents, threshold 1 for leads/admins (Decision D3) */}
+      {/* Community Reports Summary */}
       {reports.length > 0 && (canDelete || reports.length >= 2) && (
         <View style={styles.detailsCard}>
           <Text style={[styles.sectionTitle, { color: colors.accent, marginBottom: 8 }]}>
@@ -930,11 +940,11 @@ export default function ProviderDetailScreen() {
         <Text style={[styles.sectionTitle, styles.rateTitleCompact, { color: colors.text, marginBottom: 0 }]}>Rate this Provider</Text>
          <RatingStars rating={selectedRating || provider.user_rating || 0} onRating={handleRating} size={30} isLightMode={true} />
          {selectedRating === 0 && !provider.user_rating && (
-           <Text style={[styles.tapHint, { color: colors.accent }]}>⬆ Tap a star above to rate (required)</Text>
+           <Text style={[styles.tapHint, { color: colors.accent }]}>Tap a star above to rate (required)</Text>
          )}
          {myHireCount === 0 && (
            <Text style={[styles.tapHint, { color: colors.textMuted, marginTop: 4 }]}>
-             💡 Contact this provider (via Call or WhatsApp) before submitting a review.
+             Contact this provider (via Call or WhatsApp) before submitting a review.
            </Text>
          )}
          <TextInput
@@ -975,8 +985,8 @@ export default function ProviderDetailScreen() {
 
       <View style={styles.actionRowAlt}>
          <TouchableOpacity style={styles.altBtn} onPress={handleShare}>
-          <Ionicons name="share-social-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
-            <Text style={[styles.altBtnText, { color: colors.textMuted }]}>Share Contact</Text>
+           <Share07 size={16} color={colors.primary} aria-hidden={true} style={{ marginRight: 6 }} />
+           <Text style={[styles.altBtnText, { color: colors.textMuted }]}>Share Contact</Text>
          </TouchableOpacity>
       </View>
 
@@ -992,7 +1002,11 @@ export default function ProviderDetailScreen() {
               <ActivityIndicator color={colors.accent} size="small" />
             ) : (
               <>
-                <Ionicons name={hasReported ? 'checkmark-circle' : 'flag-outline'} size={18} color={hasReported ? colors.textMuted : colors.accent} />
+                {hasReported ? (
+                  <CheckCircle size={18} color={colors.textMuted} aria-hidden={true} />
+                ) : (
+                  <Flag01 size={18} color={colors.accent} aria-hidden={true} />
+                )}
                 <Text style={{ color: hasReported ? colors.textMuted : colors.accent, marginLeft: 8, fontWeight: '500' }}>
                   {hasReported ? 'Reported' : 'Report provider'}
                 </Text>
@@ -1002,7 +1016,7 @@ export default function ProviderDetailScreen() {
         )}
         {canDelete && (
           <TouchableOpacity style={[styles.dangerBtn, { borderColor: colors.accent }]} onPress={handleDelete}>
-            <Ionicons name="close-circle-outline" size={16} color={colors.accent} style={{ marginRight: 6 }} />
+            <Trash01 size={16} color={colors.accent} aria-hidden={true} style={{ marginRight: 6 }} />
             <Text style={{ color: colors.accent, marginLeft: 8, fontWeight: '500' }}>Delete provider</Text>
           </TouchableOpacity>
         )}
@@ -1042,11 +1056,11 @@ export default function ProviderDetailScreen() {
                   ? REPORT_REASONS.find(r => r.key === selectedReason)?.label 
                   : 'Select a reason...'}
               </Text>
-              <Ionicons 
-                name={isDropdownOpen ? 'chevron-up' : 'chevron-down'} 
-                size={20} 
-                color={colors.textMuted} 
-              />
+              {isDropdownOpen ? (
+                <ChevronUp size={20} color={colors.textMuted} aria-hidden={true} />
+              ) : (
+                <ChevronDown size={20} color={colors.textMuted} aria-hidden={true} />
+              )}
             </TouchableOpacity>
 
             {isDropdownOpen && (

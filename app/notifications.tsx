@@ -1,10 +1,23 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AlertCircle } from '@untitledui/icons/AlertCircle';
+import { ArrowUp } from '@untitledui/icons/ArrowUp';
+import { Award01 } from '@untitledui/icons/Award01';
+import { Bell01 } from '@untitledui/icons/Bell01';
+import { BellOff01 } from '@untitledui/icons/BellOff01';
+import { Calendar } from '@untitledui/icons/Calendar';
+import { Car01 } from '@untitledui/icons/Car01';
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { File02 } from '@untitledui/icons/File02';
+import { Flag01 } from '@untitledui/icons/Flag01';
+import { Tool01 } from '@untitledui/icons/Tool01';
+import { UserX01 } from '@untitledui/icons/UserX01';
+import { Wallet02 } from '@untitledui/icons/Wallet02';
+import { XCircle } from '@untitledui/icons/XCircle';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { HeaderBackButton } from '../components/HeaderBackButton';
 import { Verandah } from '../constants/Colors';
-import { VerandahLayout } from '../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useNotifications } from '../context/NotificationContext';
 import { useWebPullToRefresh } from '../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../components/WebPullIndicator';
@@ -22,52 +35,44 @@ export default function NotificationsScreen() {
 
   const pullToRefresh = useWebPullToRefresh(onRefresh, refreshing);
 
-  useEffect(() => {
-    // Optionally mark all as read when leaving the screen
-    // return () => markAllAsRead();
-  }, []);
-
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIconComponent = (type: string) => {
     switch (type) {
       case 'new_visit':
-        return 'calendar';
+      case 'visit_rescheduled':
+        return Calendar;
       case 'community_approved':
-        return 'checkmark-circle';
+      case 'funds_access_approved':
+        return CheckCircle;
       case 'community_rejected':
-        return 'close-circle';
+      case 'funds_access_rejected':
+        return XCircle;
       case 'new_community_request':
-        return 'document-text';
+        return File02;
       case 'new_promotion_request':
       case 'promoted_to_admin':
       case 'promotion_approved':
-        return 'arrow-up-circle';
+        return ArrowUp;
       case 'promotion_rejected':
-        return 'alert-circle';
+        return AlertCircle;
       case 'removed_from_community':
-        return 'person-remove';
+        return UserX01;
       case 'service_reminder':
-        return 'construct';
+        return Tool01;
       case 'funds_access_requested':
-        return 'cash';
-      case 'funds_access_approved':
-        return 'checkmark-done-circle';
-      case 'funds_access_rejected':
-        return 'close-circle';
+        return Wallet02;
       case 'community_lead_appointed':
-        return 'ribbon';
+        return Award01;
       case 'carpool_request':
       case 'carpool_request_accepted':
       case 'carpool_request_rejected':
       case 'carpool_request_cancelled':
       case 'carpool_cancelled':
       case 'carpool_paused':
-        return 'car-outline';
+        return Car01;
       case 'provider_reported':
-        return 'flag';
-      case 'visit_rescheduled':
-        return 'calendar';
+        return Flag01;
       default:
-        return 'notifications';
+        return Bell01;
     }
   };
 
@@ -109,8 +114,8 @@ export default function NotificationsScreen() {
     }
 
     if (
-      notification.type === 'promoted_to_admin' || 
-      notification.type === 'promotion_approved' || 
+      notification.type === 'promoted_to_admin' ||
+      notification.type === 'promotion_approved' ||
       notification.type === 'promotion_rejected' ||
       notification.type === 'new_community_request' ||
       notification.type === 'new_promotion_request' ||
@@ -135,69 +140,91 @@ export default function NotificationsScreen() {
     }
 
     if (notification.type === 'service_reminder' && notification.data?.service_id) {
-      router.push({ pathname: '/services/[id]', params: { id: notification.data.service_id } } as any);
+      router.push(`/services/${notification.data.service_id}` as any);
     }
   };
 
-  const renderItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={[
-        styles.notificationItem,
-        {
-          backgroundColor: item.is_read ? 'transparent' : Verandah.card,
-          borderColor: item.is_read ? Verandah.border : Verandah.borderStrong,
-        },
-        !item.is_read && styles.notificationItemUnread,
-      ]}
-      onPress={() => handleNotificationPress(item)}
-    >
-      <View style={[
-        styles.iconContainer,
-        { backgroundColor: item.is_read ? Verandah.cardMuted : Verandah.primary }
-      ]}>
-        <Ionicons
-          name={getNotificationIcon(item.type) as any}
-          size={22}
-          color={item.is_read ? Verandah.textSecondary : Verandah.primaryFg}
-        />
-      </View>
-      <View style={styles.content}>
-        <View style={styles.row}>
-          <Text style={[styles.notifTitle, { color: Verandah.textPrimary }, !item.is_read && { fontWeight: '500' }]}>
-            {item.title}
-          </Text>
-          {!item.is_read && (
-            <View style={[styles.unreadDot, { backgroundColor: Verandah.accent }]} />
-          )}
+  const renderItem = ({ item }: { item: any }) => {
+    const isUnread = !item.is_read;
+    const IconComp = getNotificationIconComponent(item.type);
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.notificationItem,
+          {
+            backgroundColor: isUnread ? Verandah.card : Verandah.cardMuted,
+            borderColor: isUnread ? Verandah.borderStrong : Verandah.borderHair,
+          },
+          isUnread && styles.notificationItemUnread,
+        ]}
+        onPress={() => handleNotificationPress(item)}
+        activeOpacity={0.7}
+      >
+        <View
+          style={[
+            styles.iconContainer,
+            {
+              backgroundColor: isUnread ? Verandah.accentSoft : Verandah.cardMuted,
+            },
+          ]}
+        >
+          <IconComp
+            size={22}
+            color={isUnread ? Verandah.accent : Verandah.textMuted}
+            aria-hidden={true}
+          />
         </View>
-        <Text style={[styles.body, { color: Verandah.textSecondary }]} numberOfLines={2}>
-          {item.body}
-        </Text>
-        <Text style={[styles.time, { color: Verandah.textSecondary }]}>
-          {new Date(item.created_at).toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+
+        <View style={styles.content}>
+          <View style={styles.row}>
+            <Text
+              style={[
+                styles.notifTitle,
+                {
+                  color: isUnread ? Verandah.textPrimary : Verandah.textSecondary,
+                  fontWeight: isUnread ? '600' : '400',
+                },
+              ]}
+              numberOfLines={1}
+            >
+              {item.title}
+            </Text>
+            {isUnread && <View style={[styles.unreadDot, { backgroundColor: Verandah.accent }]} />}
+          </View>
+
+          <Text
+            style={[
+              styles.body,
+              { color: isUnread ? Verandah.textPrimary : Verandah.textSecondary },
+            ]}
+            numberOfLines={2}
+          >
+            {item.body}
+          </Text>
+
+          <Text style={[styles.time, { color: Verandah.textTertiary }]}>
+            {new Date(item.created_at).toLocaleDateString('en-IN', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: Verandah.surface }]}>
+    <View style={[styles.container, { backgroundColor: Verandah.paper }]}>
       <View style={styles.header}>
-        <HeaderBackButton
-          onPress={() => router.back()}
-          color={Verandah.textPrimary}
-          style={[styles.backButton, { backgroundColor: Verandah.card, borderColor: Verandah.border }] as any}
-        />
+        <HeaderBackButton onPress={() => router.back()} />
         <Text style={[styles.headerTitle, { color: Verandah.textPrimary }]}>Notifications</Text>
         {notifications.length > 0 && (
           <TouchableOpacity
             onPress={markAllAsRead}
-            style={[styles.markAllButton, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}
+            style={[styles.markAllButton, { backgroundColor: Verandah.card, borderColor: Verandah.borderHair }]}
           >
             <Text style={[styles.markAll, { color: Verandah.primary }]}>Mark all read</Text>
           </TouchableOpacity>
@@ -223,8 +250,8 @@ export default function NotificationsScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <View style={[styles.emptyIconWrapper, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>
-                <Ionicons name="notifications-off-outline" size={48} color={Verandah.textSecondary} />
+              <View style={[styles.emptyIconWrapper, { backgroundColor: Verandah.cardMuted, borderColor: Verandah.borderHair }]}>
+                <BellOff01 size={40} color={Verandah.textSecondary} aria-hidden={true} />
               </View>
               <Text style={[styles.emptyText, { color: Verandah.textPrimary }]}>No notifications yet</Text>
               <Text style={[styles.emptySubtext, { color: Verandah.textSecondary }]}>
@@ -241,46 +268,34 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  headerGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: 0,
+    backgroundColor: Verandah.paper,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 20,
-    gap: 16,
-    zIndex: 1,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
+    paddingBottom: 14,
+    gap: 12,
+    backgroundColor: Verandah.paper,
   },
   headerTitle: {
     flex: 1,
-    fontSize: 20,
-    fontWeight: '500',
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 26,
+    lineHeight: 30,
+    fontWeight: '400',
   },
   markAllButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: VerandahRadius.button,
+    borderWidth: 0.5,
   },
   markAll: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 12.5,
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
   },
   center: {
     flex: 1,
@@ -291,29 +306,31 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 4,
+    gap: 8,
   },
   notificationItem: {
     flexDirection: 'row',
-    padding: 16,
-    gap: 14,
-    marginBottom: 10,
-    borderRadius: 16,
-    borderWidth: 1,
+    padding: 14,
+    gap: 12,
+    marginBottom: 0,
+    borderRadius: VerandahRadius.card,
+    borderWidth: 0.5,
+    ...Verandah.shadowCard,
   },
   notificationItemUnread: {
     elevation: 0,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
   content: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   row: {
     flexDirection: 'row',
@@ -323,47 +340,50 @@ const styles = StyleSheet.create({
   },
   notifTitle: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 14.5,
+    fontFamily: VerandahType.sansFamily,
   },
   unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   body: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: VerandahType.sansFamily,
   },
   time: {
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 11.5,
+    marginTop: 2,
+    fontFamily: VerandahType.sansFamily,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
-    marginTop: 80,
+    marginTop: 60,
   },
   emptyIconWrapper: {
-    width: 100,
-    height: 100,
-    borderRadius: 32,
+    width: 80,
+    height: 80,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
-    borderWidth: 1,
-    elevation: 0,
+    marginBottom: 16,
+    borderWidth: 0.5,
   },
   emptyText: {
-    fontSize: 20,
-    fontWeight: '500',
-    marginBottom: 8,
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 22,
+    fontWeight: '400',
+    marginBottom: 6,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 13,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
+    fontFamily: VerandahType.sansFamily,
   },
 });

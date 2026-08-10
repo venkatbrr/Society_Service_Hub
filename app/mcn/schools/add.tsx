@@ -1,11 +1,11 @@
+import { Check } from '@untitledui/icons/Check';
 import { Stack, useRouter } from 'expo-router';
 import { goBackSmart } from '../../../lib/navigation';
 import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Ionicons } from '@expo/vector-icons';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
@@ -232,16 +232,23 @@ export default function AddSchoolScreen() {
                   key={facility}
                   style={[
                     styles.facilityCheckbox,
-                    { borderColor: colors.border },
-                    selected && { backgroundColor: colors.accentSoft, borderColor: colors.accent }
+                    { borderColor: colors.borderHair },
+                    selected && { backgroundColor: Verandah.cardMuted, borderColor: colors.primary }
                   ]}
                   onPress={() => toggleFacility(facility)}
                 >
-                  <Ionicons
-                    name={selected ? 'checkbox' : 'square-outline'}
-                    size={18}
-                    color={selected ? colors.accent : colors.textMuted}
-                  />
+                  <View style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: 4,
+                    borderWidth: 1.5,
+                    borderColor: selected ? colors.primary : colors.textDisabled,
+                    backgroundColor: selected ? colors.primary : 'transparent',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    {selected ? <Check size={12} color={Verandah.primaryFg} aria-hidden={true} /> : null}
+                  </View>
                   <Text style={[styles.facilityLabel, { color: colors.textPrimary }]}>{facility}</Text>
                 </TouchableOpacity>
               );

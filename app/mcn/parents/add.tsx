@@ -1,4 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Announcement01 } from '@untitledui/icons/Announcement01';
+import { Car01 } from '@untitledui/icons/Car01';
+import { DotsHorizontal } from '@untitledui/icons/DotsHorizontal';
+import { Edit01 } from '@untitledui/icons/Edit01';
+import { FaceSmile } from '@untitledui/icons/FaceSmile';
+import { Trophy01 } from '@untitledui/icons/Trophy01';
+import { Users01 } from '@untitledui/icons/Users01';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart, replaceTracked } from '../../../lib/navigation';
 import React, { useEffect, useState } from 'react';
@@ -16,7 +22,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { AppIcon } from '../../../components/AppIcon';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { normalizeIndianMobile, toLast10Digits } from '../../../lib/phone';
@@ -30,15 +36,28 @@ const INSTITUTION_TYPES = [
 
 const BOARD_OPTIONS = ['CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University', 'Other'];
 
-const INTENT_OPTIONS: { id: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { id: 'carpool', label: 'Carpooling', icon: 'car-outline' },
-  { id: 'study_group', label: 'Study Group', icon: 'people-outline' },
-  { id: 'homework_help', label: 'Homework Help', icon: 'pencil-outline' },
-  { id: 'school_info', label: 'School Info & Updates', icon: 'megaphone-outline' },
-  { id: 'activities', label: 'Sports / Activities Buddy', icon: 'football-outline' },
-  { id: 'playdate', label: 'Playdate / Hangout', icon: 'happy-outline' },
-  { id: 'other', label: 'Other', icon: 'ellipsis-horizontal-outline' },
+const INTENT_OPTIONS = [
+  { id: 'carpool', label: 'Carpooling' },
+  { id: 'study_group', label: 'Study Group' },
+  { id: 'homework_help', label: 'Homework Help' },
+  { id: 'school_info', label: 'School Info & Updates' },
+  { id: 'activities', label: 'Sports / Activities Buddy' },
+  { id: 'playdate', label: 'Playdate / Hangout' },
+  { id: 'other', label: 'Other' },
 ];
+
+const renderIntentAddIcon = (id: string, color: string) => {
+  switch (id) {
+    case 'carpool': return <Car01 size={13} color={color} aria-hidden={true} />;
+    case 'study_group': return <Users01 size={13} color={color} aria-hidden={true} />;
+    case 'homework_help': return <Edit01 size={13} color={color} aria-hidden={true} />;
+    case 'school_info': return <Announcement01 size={13} color={color} aria-hidden={true} />;
+    case 'activities': return <Trophy01 size={13} color={color} aria-hidden={true} />;
+    case 'playdate': return <FaceSmile size={13} color={color} aria-hidden={true} />;
+    case 'other': return <DotsHorizontal size={13} color={color} aria-hidden={true} />;
+    default: return null;
+  }
+};
 
 const POPULAR_SCHOOL_SUGGESTIONS = [
   'Delhi Public School',
@@ -52,7 +71,7 @@ const POPULAR_SCHOOL_SUGGESTIONS = [
 export default function AddParentCornerScreen() {
   const router = useRouter();
   const { editId } = useLocalSearchParams<{ editId?: string }>();
-  const { communityId, user, isCommunityLead } = useAuth();
+  const { communityId, user, profile, isCommunityLead } = useAuth();
   const colors = Verandah;
 
   const [studentName, setStudentName] = useState('');
@@ -173,8 +192,14 @@ export default function AddParentCornerScreen() {
       return;
     }
 
-    if (!flatNumber.trim()) {
-      Toast.show({ type: 'error', text1: 'Flat Number is required' });
+    const effectiveFlat = (profile?.flat_number || flatNumber).trim();
+    if (!effectiveFlat) {
+      Toast.show({
+        type: 'error',
+        text1: 'Flat number required',
+        text2: 'Please set your flat in profile before submitting.',
+      });
+      router.push('/profile/edit' as any);
       return;
     }
 
@@ -193,7 +218,7 @@ export default function AddParentCornerScreen() {
         board: board.trim(),
         grade_class: gradeClass.trim(),
         parent_name: parentName.trim(),
-        flat_number: flatNumber.trim(),
+        flat_number: effectiveFlat.toUpperCase(),
         contact_phone: normalizedPhone,
         intents,
         notes: notes.trim() || null,
@@ -394,15 +419,21 @@ export default function AddParentCornerScreen() {
         {/* Flat / House Number */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.textPrimary }]}>Flat / Unit Number *</Text>
-          <TextInput
-            style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.textPrimary }]}
-            placeholder="e.g. A402"
-            placeholderTextColor={colors.textMuted}
-            value={flatNumber}
-            onChangeText={setFlatNumber}
-            onBlur={() => setFlatNumber((prev) => prev.toUpperCase().replace(/[\s-]/g, ''))}
-            maxLength={12}
-          />
+          {(profile?.flat_number || flatNumber) ? (
+            <View style={[styles.input, { justifyContent: 'center', borderColor: colors.border, backgroundColor: colors.card }]}>
+              <Text style={{ color: colors.textPrimary, ...VerandahType.body }}>{profile?.flat_number || flatNumber}</Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[styles.input, { justifyContent: 'center', borderColor: Verandah.caution, backgroundColor: Verandah.cautionSoft }]}
+              onPress={() => router.push('/profile/edit' as any)}
+              activeOpacity={0.85}
+            >
+              <Text style={{ color: Verandah.caution, ...VerandahType.captionBold }}>
+                + Set your flat in profile to continue
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Contact Phone */}
@@ -431,17 +462,13 @@ export default function AddParentCornerScreen() {
                   key={opt.id}
                   style={[
                     styles.boardChip,
-                    { borderColor: colors.border, backgroundColor: colors.card },
-                    isActive && { backgroundColor: colors.accentSoft, borderColor: colors.primary },
+                    { borderColor: colors.borderHair, backgroundColor: colors.card },
+                    isActive && { backgroundColor: Verandah.cardMuted, borderColor: colors.primary },
                   ]}
                   onPress={() => toggleIntent(opt.id)}
                 >
                   <View style={styles.iconLabelRow}>
-                    <Ionicons
-                      name={opt.icon}
-                      size={13}
-                      color={isActive ? colors.primary : colors.textSecondary}
-                    />
+                    {renderIntentAddIcon(opt.id, isActive ? colors.primary : colors.textSecondary)}
                     <Text style={[styles.boardChipText, { color: isActive ? colors.primary : colors.textSecondary }]}>
                       {opt.label}
                     </Text>

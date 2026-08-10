@@ -1,47 +1,44 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Toast from 'react-native-toast-message';
+import { FlatPicker } from '../../components/FlatPicker';
+import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const { user, refreshSession } = useAuth();
-  
-  const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
-  const [flatNumber, setFlatNumber] = useState(user?.user_metadata?.flat_number || '');
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.user_metadata?.avatar_url || null);
+  const { user, profile, communityId, blockLabel, refreshSession } = useAuth();
+
+  const [fullName, setFullName] = useState(profile?.full_name || user?.user_metadata?.full_name || '');
+  const [selectedFlatId, setSelectedFlatId] = useState<string | null>((profile as any)?.flat_id || null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || user?.user_metadata?.avatar_url || null);
   const [email, setEmail] = useState(user?.email || '');
   const [loading, setLoading] = useState(false);
 
   const colors = Verandah;
 
   useEffect(() => {
-    async function loadProfileData() {
-      if (!user?.id) return;
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('flat_number, avatar_url, full_name')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (data) {
-          if (data.flat_number && !flatNumber) setFlatNumber(data.flat_number);
-          if (data.avatar_url && !avatarUrl) setAvatarUrl(data.avatar_url);
-          if (data.full_name && !fullName) setFullName(data.full_name);
-        }
-      } catch (e) {
-        console.error('Error fetching profile detail:', e);
-      }
+    if (profile) {
+      if (profile.full_name) setFullName(profile.full_name);
+      if (profile.avatar_url) setAvatarUrl(profile.avatar_url);
+      if ((profile as any).flat_id) setSelectedFlatId((profile as any).flat_id);
     }
-    loadProfileData();
-  }, [user?.id]);
+  }, [profile]);
 
   const handleSave = async () => {
     if (!fullName.trim()) {
@@ -53,7 +50,6 @@ export default function EditProfileScreen() {
     try {
       const metadataUpdates: any = {
         full_name: fullName.trim(),
-        flat_number: flatNumber.trim() || null,
         avatar_url: avatarUrl,
       };
 
@@ -73,12 +69,19 @@ export default function EditProfileScreen() {
         .from('profiles')
         .update({
           full_name: fullName.trim(),
-          flat_number: flatNumber.trim() || null,
           avatar_url: avatarUrl,
         })
         .eq('id', user?.id as string);
 
       if (profileError) throw profileError;
+
+      // Save flat if changed
+      if (selectedFlatId !== ((profile as any)?.flat_id || null)) {
+        const { error: flatError } = await supabase.rpc('set_my_flat', {
+          p_flat_id: selectedFlatId,
+        });
+        if (flatError) throw flatError;
+      }
 
       await refreshSession();
 
@@ -87,7 +90,7 @@ export default function EditProfileScreen() {
       } else {
         Toast.show({ type: 'success', text1: 'Profile updated' });
       }
-      
+
       router.back();
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Update failed', text2: error.message });
@@ -97,16 +100,17 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: colors.surface }}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1, backgroundColor: colors.paper }}
+    >
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={20} color={colors.primary} />
-        </TouchableOpacity>
+        <HeaderBackButton onPress={() => router.back()} />
         <Text style={styles.title}>Edit Profile</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Profile Picture</Text>
           <ImageUploader
@@ -130,17 +134,20 @@ export default function EditProfileScreen() {
           />
         </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Flat / Unit Number</Text>
-          <TextInput
-            style={styles.input}
-            value={flatNumber}
-            onChangeText={setFlatNumber}
-            placeholder="e.g. A-402, B-101"
-            placeholderTextColor={colors.textTertiary}
-            autoCapitalize="characters"
-          />
-        </View>
+        {communityId && (
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Flat / Unit Number</Text>
+            <FlatPicker
+              communityId={communityId}
+              value={selectedFlatId}
+              onChange={(flatId) => setSelectedFlatId(flatId)}
+              blockLabel={blockLabel}
+              allowClear={true}
+              required={false}
+              disabled={loading}
+            />
+          </View>
+        )}
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Email Address</Text>
@@ -153,13 +160,19 @@ export default function EditProfileScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
           />
-          <Text style={styles.helpText}>If you change your email, you will need to verify the new address before the change takes effect.</Text>
+          <Text style={styles.helpText}>
+            If you change your email, you will need to verify the new address before the change takes effect.
+          </Text>
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={loading}>
-          {loading ? <ActivityIndicator color={Verandah.primaryFg} /> : <Text style={styles.saveBtnText}>Save Changes</Text>}
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={loading} activeOpacity={0.85}>
+          {loading ? (
+            <ActivityIndicator color={Verandah.primaryFg} size="small" />
+          ) : (
+            <Text style={styles.saveBtnText}>Save Changes</Text>
+          )}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -173,65 +186,66 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 16,
-    backgroundColor: Verandah.surface,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Verandah.cardMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingBottom: 14,
+    backgroundColor: Verandah.paper,
   },
   title: {
-    ...VerandahType.bodyBold,
-    fontSize: 18,
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: '400',
     color: Verandah.textPrimary,
   },
   content: {
-    padding: 24,
-    gap: 20,
+    padding: 20,
+    gap: 16,
+    paddingBottom: 40,
   },
   inputGroup: {
-    gap: 8,
+    gap: 6,
   },
   label: {
-    ...VerandahType.captionBold,
-    color: Verandah.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    color: Verandah.textTertiary,
+    fontFamily: VerandahType.sansFamily,
   },
   input: {
-    borderWidth: 1,
-    borderColor: Verandah.border,
-    borderRadius: VerandahRadius.md,
-    paddingHorizontal: 16,
-    height: 50,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    borderRadius: VerandahRadius.search,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    fontFamily: VerandahType.sansFamily,
     color: Verandah.textPrimary,
     backgroundColor: Verandah.card,
-    fontSize: 16,
+    ...Verandah.shadowCard,
   },
   helpText: {
-    ...VerandahType.micro,
+    fontSize: 12,
     color: Verandah.textTertiary,
-    marginTop: 4,
     lineHeight: 16,
+    fontFamily: VerandahType.sansFamily,
   },
   footer: {
-    padding: 24,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
-    backgroundColor: Verandah.surface,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Verandah.border,
+    padding: 20,
+    borderTopWidth: 0.5,
+    borderTopColor: Verandah.borderHair,
+    backgroundColor: Verandah.paper,
   },
   saveBtn: {
     backgroundColor: Verandah.primary,
-    borderRadius: VerandahRadius.md,
-    height: 50,
+    paddingVertical: 14,
+    borderRadius: VerandahRadius.button,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   saveBtnText: {
-    ...VerandahType.bodyBold,
     color: Verandah.primaryFg,
+    fontSize: 15,
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
   },
 });

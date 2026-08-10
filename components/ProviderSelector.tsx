@@ -1,4 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Check } from '@untitledui/icons/Check';
+import { ChevronDown } from '@untitledui/icons/ChevronDown';
+import { ChevronUp } from '@untitledui/icons/ChevronUp';
+import { SearchLg } from '@untitledui/icons/SearchLg';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
@@ -86,7 +89,9 @@ export const ProviderSelector = ({
     p.name.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
-  const selectedProviderName = providers.find(p => p.id === selectedProviderId)?.name || 'Select a provider...';
+  const selectedProviderName = selectedProviderId 
+    ? providers.find(p => p.id === selectedProviderId)?.name || 'Select a provider...' 
+    : 'Select a provider...';
 
   return (
     <View style={styles.container}>
@@ -116,13 +121,17 @@ export const ProviderSelector = ({
             <Text style={[styles.selectorText, { color: selectedProviderId ? Verandah.textPrimary : Verandah.textTertiary }]}>
               {selectedProviderName}
             </Text>
-            <Ionicons name={dropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={Verandah.textTertiary} />
+            {dropdownOpen ? (
+              <ChevronUp size={20} color={Verandah.textTertiary} aria-hidden={true} />
+            ) : (
+              <ChevronDown size={20} color={Verandah.textTertiary} aria-hidden={true} />
+            )}
           </TouchableOpacity>
 
           {dropdownOpen && (
             <View style={[styles.dropdown, Platform.OS === 'web' && styles.dropdownWeb]}>
               <View style={styles.searchContainer}>
-                <Ionicons name="search" size={18} color={Verandah.textTertiary} />
+                <SearchLg size={16} color={Verandah.textTertiary} aria-hidden={true} />
                 <TextInput 
                   style={styles.searchInput} 
                   placeholder="Search providers..." 
@@ -146,7 +155,7 @@ export const ProviderSelector = ({
                       }}
                     >
                       <Text style={styles.itemText}>{p.name}</Text>
-                      {selectedProviderId === p.id && <Ionicons name="checkmark" size={18} color={Verandah.accent} />}
+                      {selectedProviderId === p.id && <Check size={18} color={Verandah.accent} aria-hidden={true} />}
                     </TouchableOpacity>
                   ))
                 ) : (

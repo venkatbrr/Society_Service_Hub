@@ -1,4 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Download01 } from '@untitledui/icons/Download01';
+import { XClose } from '@untitledui/icons/XClose';
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
@@ -53,7 +54,7 @@ export function PwaInstallBanner() {
     <View style={styles.bannerContainer}>
       <View style={styles.contentRow}>
         <View style={styles.iconWrap}>
-          <Ionicons name="download-outline" size={20} color={Verandah.primaryFg} />
+          <Download01 size={18} color={Verandah.primaryFg} aria-hidden={true} />
         </View>
         <View style={styles.textWrap}>
           <Text style={styles.title}>Install Wooru</Text>
@@ -63,7 +64,7 @@ export function PwaInstallBanner() {
           <Text style={styles.installBtnText}>Install</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.closeBtn} onPress={handleDismiss} hitSlop={8}>
-          <Ionicons name="close" size={18} color={Verandah.textMuted} />
+          <XClose size={16} color={Verandah.textMuted} aria-hidden={true} />
         </TouchableOpacity>
       </View>
     </View>

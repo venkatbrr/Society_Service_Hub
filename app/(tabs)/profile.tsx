@@ -1,4 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Bell01 } from '@untitledui/icons/Bell01';
+import { Building05 } from '@untitledui/icons/Building05';
+import { ChevronRight } from '@untitledui/icons/ChevronRight';
+import { Edit01 } from '@untitledui/icons/Edit01';
+import { LogOut01 } from '@untitledui/icons/LogOut01';
+import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
+import { Tool01 } from '@untitledui/icons/Tool01';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -10,14 +16,14 @@ import { Rupees } from '../../components/Rupees';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahType , VerandahLayout } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, signOut, appRole, communityId, fundsEnabled, blocksEnabled, blockLabel, myBlockId, refreshSession } = useAuth();
+  const { user, profile, signOut, appRole, communityId, fundsEnabled, blocksEnabled, blockLabel, myBlockId, refreshSession } = useAuth();
   const blockLabelLower = blockLabel.toLowerCase();
   const [dueSoonCount, setDueSoonCount] = useState<number>(0);
   const [recentServices, setRecentServices] = useState<Array<{
@@ -174,91 +180,115 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <View style={styles.headerWrapper}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Settings</Text>
+          <Text style={styles.headerTitle}>Profile</Text>
         </View>
       </View>
 
       <ScrollView
         {...webPullProps.pullProps}
-        style={styles.scrollContent}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
         }
       >
         <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
-        <View style={styles.card}>
-          <View style={styles.profileHeader}>
-            <Avatar name={String(user?.user_metadata?.full_name || 'User')} url={user?.user_metadata?.avatar_url || (user as any)?.avatar_url} size={52} />
-            <View style={styles.profileInfo}>
-              <Text style={styles.name}>
-                {user?.user_metadata?.full_name || 'User'}
+        {/* Dark teal identity card */}
+        <View style={styles.identityCard}>
+          <Avatar
+            name={String(user?.user_metadata?.full_name || 'User')}
+            url={user?.user_metadata?.avatar_url || (user as any)?.avatar_url}
+            size={56}
+            tint={{ bg: Verandah.gold, fg: Verandah.teal900 }}
+          />
+          <View style={styles.profileInfo}>
+            <Text style={styles.identityName}>
+              {user?.user_metadata?.full_name || 'User'}
+            </Text>
+            <Text style={styles.identityEmail}>
+              {user?.email}
+            </Text>
+            {profile?.flat_number ? (
+              <Text style={styles.identityFlat}>
+                Flat / Unit: {profile.flat_number}
               </Text>
-              <Text style={styles.email}>
-                {user?.email}
-              </Text>
-              {user?.user_metadata?.flat_number ? (
-                <Text style={{ fontSize: 13, color: Verandah.textSecondary, marginTop: 2, fontWeight: '500' }}>
-                  Flat / Unit: {user.user_metadata.flat_number}
-                </Text>
-              ) : null}
-              <View style={styles.roleBadge}>
-                <Text style={styles.roleBadgeText}>
-                  You are: {roleLabel}
-                </Text>
-              </View>
+            ) : null}
+            <View style={styles.identityRoleBadge}>
+              <Text style={styles.identityRoleText}>{roleLabel}</Text>
             </View>
-            <TouchableOpacity onPress={() => router.push('/profile/edit' as any)} style={{ padding: 8, alignSelf: 'flex-start' }}>
-              <Ionicons name="pencil" size={20} color={Verandah.textTertiary} />
-            </TouchableOpacity>
           </View>
+          <TouchableOpacity onPress={() => router.push('/profile/edit' as any)} style={{ padding: 8, alignSelf: 'flex-start' }}>
+            <Edit01 size={18} color="rgba(240, 237, 227, 0.65)" aria-hidden={true} />
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          onPress={() => router.push('/services' as any)}
-          style={styles.adminCard}
-          activeOpacity={0.82}
-        >
-          <View style={styles.adminIconWrap}>
-            <Ionicons name="build-outline" size={18} color={Verandah.textTertiary} />
-          </View>
-          <View style={styles.adminContent}>
-            <Text style={styles.adminTitle}>Service reminders</Text>
-            {dueSoonCount > 0 ? (
-              <Text style={[styles.adminCopy, { color: Verandah.caution }]}>{dueSoonCount} due or overdue</Text>
-            ) : (
-              <Text style={styles.adminCopy}>Track appliances &amp; maintenance</Text>
-            )}
-          </View>
-          {dueSoonCount > 0 ? (
-            <View style={[styles.pendingBadge, { backgroundColor: Verandah.caution }]}>
-              <Text style={styles.pendingBadgeText}>{dueSoonCount}</Text>
+        {/* Grouped menu card */}
+        <View style={styles.menuCard}>
+          <TouchableOpacity
+            onPress={() => router.push('/services' as any)}
+            style={styles.menuRow}
+            activeOpacity={0.82}
+          >
+            <View style={styles.adminIconWrap}>
+              <Tool01 size={18} color={Verandah.accent} aria-hidden={true} />
             </View>
-          ) : (
-            <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
-          )}
-        </TouchableOpacity>
+            <View style={styles.adminContent}>
+              <Text style={styles.adminTitle}>Service reminders</Text>
+              {dueSoonCount > 0 ? (
+                <Text style={[styles.adminCopy, { color: Verandah.caution }]}>{dueSoonCount} due or overdue</Text>
+              ) : (
+                <Text style={styles.adminCopy}>Track appliances &amp; maintenance</Text>
+              )}
+            </View>
+            {dueSoonCount > 0 ? (
+              <View style={[styles.pendingBadge, { backgroundColor: Verandah.caution }]}>
+                <Text style={styles.pendingBadgeText}>{dueSoonCount}</Text>
+              </View>
+            ) : (
+              <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
+            )}
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => router.push('/mcn/my-posts' as any)}
-          style={styles.adminCard}
-          activeOpacity={0.82}
-        >
-          <View style={styles.adminIconWrap}>
-            <Ionicons name="storefront-outline" size={18} color={Verandah.textTertiary} />
-          </View>
-          <View style={styles.adminContent}>
-            <Text style={styles.adminTitle}>My community posts</Text>
-            <Text style={styles.adminCopy}>Manage your business and borrow listings</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
-        </TouchableOpacity>
+          <View style={styles.menuDivider} />
+
+          <TouchableOpacity
+            onPress={() => router.push('/mcn/my-posts' as any)}
+            style={styles.menuRow}
+            activeOpacity={0.82}
+          >
+            <View style={[styles.adminIconWrap, { backgroundColor: Verandah.avatarTints[2].bg }]}>
+              <ShoppingBag01 size={18} color={Verandah.avatarTints[2].fg} aria-hidden={true} />
+            </View>
+            <View style={styles.adminContent}>
+              <Text style={styles.adminTitle}>My community posts</Text>
+              <Text style={styles.adminCopy}>Business &amp; borrow listings</Text>
+            </View>
+            <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          <TouchableOpacity
+            onPress={() => router.push('/notifications' as any)}
+            style={styles.menuRow}
+            activeOpacity={0.82}
+          >
+            <View style={[styles.adminIconWrap, { backgroundColor: Verandah.sand }]}>
+              <Bell01 size={18} color={Verandah.goldInk} aria-hidden={true} />
+            </View>
+            <View style={styles.adminContent}>
+              <Text style={styles.adminTitle}>Notifications</Text>
+              <Text style={styles.adminCopy}>Drops, visits &amp; funds</Text>
+            </View>
+            <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           style={styles.signOutButton}
           onPress={handleSignOut}
         >
-          <Ionicons name="log-out-outline" size={18} color={Verandah.danger} />
+          <LogOut01 size={18} color={Verandah.danger} aria-hidden={true} />
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
 
@@ -271,33 +301,106 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Verandah.surface,
-    borderTopWidth: 3,
-    borderTopColor: Verandah.primary,
+    backgroundColor: Verandah.paper,
   },
   headerWrapper: {
-    backgroundColor: Verandah.surface,
+    backgroundColor: Verandah.paper,
   },
   header: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: VerandahLayout.screenPaddingTop,
     paddingBottom: 6,
   },
   headerTitle: {
-    ...VerandahType.display,
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: '400',
     color: Verandah.textPrimary,
+    marginTop: 10,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 6,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 40,
+    gap: 14,
   },
   card: {
-    padding: 10,
-    borderRadius: 12,
-    marginBottom: 6,
-    borderWidth: 1,
-    borderColor: Verandah.borderStrong,
+    padding: 14,
+    borderRadius: VerandahRadius.card,
+    marginBottom: 0,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
+    ...Verandah.shadowCard,
+  },
+  identityCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 18,
+    borderRadius: VerandahRadius.card,
+    backgroundColor: Verandah.teal900,
+    ...Verandah.shadowRaised,
+  },
+  identityName: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 23,
+    color: Verandah.cream,
+  },
+  identityEmail: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 13,
+    fontWeight: '400',
+    marginTop: 1,
+    color: 'rgba(240, 237, 227, 0.7)',
+  },
+  identityFlat: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    fontWeight: '500',
+    marginTop: 2,
+    color: 'rgba(240, 237, 227, 0.7)',
+  },
+  identityRoleBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: VerandahRadius.pill,
+    borderWidth: 0.5,
+    borderColor: 'rgba(240, 237, 227, 0.28)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  identityRoleText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: Verandah.cream,
+    fontFamily: VerandahType.sansFamily,
+  },
+  menuCard: {
+    borderRadius: VerandahRadius.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    backgroundColor: Verandah.card,
+    overflow: 'hidden',
+    ...Verandah.shadowCard,
+  },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  menuDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: 68,
+    backgroundColor: Verandah.borderHair,
   },
   profileHeader: {
     flexDirection: 'row',
@@ -308,12 +411,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontSize: 18,
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 17,
     fontWeight: '600',
     marginBottom: 1,
     color: Verandah.textPrimary,
   },
   email: {
+    fontFamily: VerandahType.sansFamily,
     fontSize: 13,
     fontWeight: '400',
     color: Verandah.textSecondary,
@@ -322,24 +427,26 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: 6,
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
+    paddingVertical: 3,
+    borderRadius: VerandahRadius.pill,
     backgroundColor: Verandah.accentSoft,
   },
   roleBadgeText: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '600',
     letterSpacing: 0.4,
     textTransform: 'uppercase',
     color: Verandah.accent,
+    fontFamily: VerandahType.sansFamily,
   },
   section: {
-    padding: 10,
-    borderRadius: 12,
-    marginBottom: 6,
-    borderWidth: 1,
-    borderColor: Verandah.borderStrong,
+    padding: 14,
+    borderRadius: VerandahRadius.card,
+    marginBottom: 0,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
+    ...Verandah.shadowCard,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -348,24 +455,28 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   sectionTitle: {
+    fontFamily: VerandahType.sansFamily,
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '600',
     color: Verandah.textPrimary,
   },
   infoRow: {
     marginVertical: 2,
   },
   label: {
-    fontSize: 10,
-    fontWeight: '500',
-    letterSpacing: 1,
+    fontSize: 10.5,
+    fontWeight: '600',
+    letterSpacing: 0.5,
     marginBottom: 4,
     color: Verandah.textTertiary,
+    textTransform: 'uppercase',
+    fontFamily: VerandahType.sansFamily,
   },
   value: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '400',
     color: Verandah.textPrimary,
+    fontFamily: VerandahType.sansFamily,
   },
   codeBadge: {
     alignSelf: 'flex-start',
@@ -374,32 +485,34 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   divider: {
-    height: 1,
+    height: 0.5,
     marginVertical: 8,
-    backgroundColor: Verandah.border,
+    backgroundColor: Verandah.borderHair,
   },
   hint: {
     fontSize: 12,
     marginTop: 8,
     lineHeight: 16,
     color: Verandah.textTertiary,
+    fontFamily: VerandahType.sansFamily,
   },
   adminCard: {
-    borderWidth: 1,
-    borderColor: Verandah.borderStrong,
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: 6,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    borderRadius: VerandahRadius.card,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     backgroundColor: Verandah.card,
+    ...Verandah.shadowCard,
   },
   adminIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Verandah.accentSoft,
@@ -412,20 +525,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   adminTitle: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 14.5,
+    fontWeight: '600',
     color: Verandah.textPrimary,
   },
   adminCopy: {
+    fontFamily: VerandahType.sansFamily,
     fontSize: 12,
     lineHeight: 16,
     marginTop: 2,
     color: Verandah.textSecondary,
   },
   pendingBadge: {
-    minWidth: 24,
-    height: 24,
-    borderRadius: 12,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
@@ -433,7 +548,8 @@ const styles = StyleSheet.create({
   pendingBadgeText: {
     color: '#FFF',
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: '700',
+    fontFamily: VerandahType.sansFamily,
   },
   chevronIcon: {
     fontSize: 16,
@@ -445,21 +561,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Verandah.border,
+    borderTopColor: Verandah.borderHair,
     gap: 8,
   },
   recentRowMain: {
     flex: 1,
   },
   recentServiceName: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13.5,
+    fontWeight: '600',
     color: Verandah.textPrimary,
+    fontFamily: VerandahType.sansFamily,
   },
   recentServiceMeta: {
-    fontSize: 12,
+    fontSize: 11.5,
     marginTop: 2,
     color: Verandah.textSecondary,
+    fontFamily: VerandahType.sansFamily,
   },
   spacer: {
     flex: 1,
@@ -468,13 +586,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: 12,
-    gap: 6,
+    borderRadius: VerandahRadius.button,
+    gap: 8,
+    marginTop: 4,
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: Verandah.dangerSoft,
+    borderWidth: 0.5,
+    borderColor: 'rgba(217, 45, 32, 0.2)',
     backgroundColor: Verandah.dangerSoft,
   },
   signOutIcon: {
@@ -482,9 +601,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   signOutText: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
     color: Verandah.danger,
+    fontFamily: VerandahType.sansFamily,
   },
   codeRow: {
     flexDirection: 'row',
@@ -513,6 +633,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '400',
     color: Verandah.textMuted,
+    fontFamily: VerandahType.sansFamily,
   },
   blockRow: {
     flexDirection: 'row',
@@ -525,20 +646,21 @@ const styles = StyleSheet.create({
     color: Verandah.textPrimary,
   },
   blockAction: {
-    borderWidth: 1,
-    borderRadius: 10,
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.button,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderColor: Verandah.borderStrong,
+    borderColor: Verandah.borderHair,
   },
   blockActionText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
     color: Verandah.primary,
+    fontFamily: VerandahType.sansFamily,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
   },
   modalCard: {
@@ -548,8 +670,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   modalTitle: {
-    fontSize: 17,
-    fontWeight: '500',
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 20,
+    fontWeight: '400',
     color: Verandah.textPrimary,
   },
   modalActions: {
@@ -559,20 +682,21 @@ const styles = StyleSheet.create({
   },
   modalSecondary: {
     flex: 1,
-    borderWidth: 1,
-    borderRadius: 12,
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.button,
     alignItems: 'center',
     paddingVertical: 12,
-    borderColor: Verandah.borderStrong,
+    borderColor: Verandah.borderHair,
   },
   modalSecondaryText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: Verandah.textPrimary,
+    fontFamily: VerandahType.sansFamily,
   },
   modalPrimary: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: VerandahRadius.button,
     alignItems: 'center',
     paddingVertical: 12,
     backgroundColor: Verandah.primary,
@@ -580,6 +704,7 @@ const styles = StyleSheet.create({
   modalPrimaryText: {
     color: Verandah.primaryFg,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
   },
 });

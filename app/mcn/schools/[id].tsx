@@ -1,4 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { Coins01 } from '@untitledui/icons/Coins01';
+import { File02 } from '@untitledui/icons/File02';
+import { Globe02 } from '@untitledui/icons/Globe02';
+import { MarkerPin01 } from '@untitledui/icons/MarkerPin01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { Trash01 } from '@untitledui/icons/Trash01';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart } from '../../../lib/navigation';
@@ -10,7 +16,7 @@ import { AspectScores, SchoolRadarChart } from '../../../components/SchoolRadarC
 import { SchoolReviewCard, SchoolReviewItem } from '../../../components/SchoolReviewCard';
 import { ScoreSentimentIcon } from '../../../components/ScoreSentimentIcon';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { SCHOOL_ASPECTS } from '../../../constants/schoolReviewAspects';
 import { useAuth } from '../../../context/AuthContext';
 import { WEST_HYDERABAD_SCHOOLS } from '../../../data/westHyderabadSchools';
@@ -251,16 +257,17 @@ export default function SchoolDetailScreen() {
       aspectScores.avg_transport +
       aspectScores.avg_value +
       aspectScores.avg_happiness) / SCHOOL_ASPECTS.length;
+  const overallScore = totalAspectAvg;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: 'School details',
           onBack: handleGoBack,
           headerRight: () => canDelete ? (
             <TouchableOpacity onPress={handleDelete} style={styles.headerDeleteBtn}>
-              <Ionicons name="trash-outline" size={20} color={colors.danger} />
+              <Trash01 size={20} color={colors.danger} aria-hidden={true} />
             </TouchableOpacity>
           ) : null,
         })}
@@ -272,15 +279,15 @@ export default function SchoolDetailScreen() {
         </Text>
 
         {/* Quick info row */}
-        <View style={[styles.quickInfoCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+        <View style={[styles.quickInfoCard, { borderColor: colors.borderHair, backgroundColor: colors.card }]}>
           <View style={styles.infoCol}>
-            <Ionicons name="location-outline" size={18} color={colors.accent} />
+            <MarkerPin01 size={18} color={colors.primary} aria-hidden={true} />
             <Text style={[styles.infoVal, { color: colors.textPrimary }]} numberOfLines={1}>{school.area_locality || 'Nearby'}</Text>
             <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Locality</Text>
           </View>
-          <View style={[styles.infoDivider, { backgroundColor: colors.border }]} />
+          <View style={[styles.infoDivider, { backgroundColor: colors.borderHair }]} />
           <View style={styles.infoCol}>
-            <Ionicons name="cash-outline" size={18} color={colors.accent} />
+            <Coins01 size={18} color={colors.primary} aria-hidden={true} />
             <Text style={[styles.infoVal, { color: colors.textPrimary }]} numberOfLines={1}>{school.fee_range}</Text>
             <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Annual Fees</Text>
           </View>
@@ -302,9 +309,9 @@ export default function SchoolDetailScreen() {
               {school.contact_phone ? (
                 <TouchableOpacity
                   onPress={handleCall}
-                  style={[styles.contactCard, { borderColor: colors.border, backgroundColor: colors.card }]}
+                  style={[styles.contactCard, { borderColor: colors.borderHair, backgroundColor: colors.card }]}
                 >
-                  <Ionicons name="call" size={16} color={colors.accent} />
+                  <Phone01 size={16} color={colors.primary} aria-hidden={true} />
                   <Text style={[styles.contactCardVal, { color: colors.textSecondary }]}>{school.contact_phone}</Text>
                   <Text style={[styles.contactCardLabel, { color: colors.textTertiary }]}>Call School</Text>
                 </TouchableOpacity>
@@ -313,9 +320,9 @@ export default function SchoolDetailScreen() {
               {school.website ? (
                 <TouchableOpacity
                   onPress={handleWebsite}
-                  style={[styles.contactCard, { borderColor: colors.border, backgroundColor: colors.card }]}
+                  style={[styles.contactCard, { borderColor: colors.borderHair, backgroundColor: colors.card }]}
                 >
-                  <Ionicons name="globe" size={16} color={colors.accent} />
+                  <Globe02 size={16} color={colors.primary} aria-hidden={true} />
                   <Text style={[styles.contactCardVal, { color: colors.textSecondary }]} numberOfLines={1}>
                     {school.website}
                   </Text>
@@ -326,9 +333,9 @@ export default function SchoolDetailScreen() {
               {getMapsUrl(school) ? (
                 <TouchableOpacity
                   onPress={handleMaps}
-                  style={[styles.contactCard, { borderColor: colors.border, backgroundColor: colors.card }]}
+                  style={[styles.contactCard, { borderColor: colors.borderHair, backgroundColor: colors.card }]}
                 >
-                  <Ionicons name="navigate" size={16} color={colors.accent} />
+                  <MarkerPin01 size={16} color={colors.primary} aria-hidden={true} />
                   <Text style={[styles.contactCardVal, { color: colors.textSecondary }]} numberOfLines={1}>
                     Open location
                   </Text>
@@ -350,7 +357,7 @@ export default function SchoolDetailScreen() {
             <View style={styles.facilitiesList}>
               {school.facilities.map((item) => (
                 <View key={item} style={styles.facilityItem}>
-                  <Ionicons name="checkmark-circle" size={18} color={colors.accent} />
+                  <CheckCircle size={18} color={Verandah.secondary} aria-hidden={true} />
                   <Text style={[styles.facilityText, { color: colors.textSecondary }]}>{item}</Text>
                 </View>
               ))}
@@ -371,38 +378,53 @@ export default function SchoolDetailScreen() {
             ) : null}
           </View>
 
-          {/* Spider/Radar Chart (when reviews >= 1) */}
-          {reviews.length > 0 ? (
-            <View style={styles.chartBox}>
-              <Text style={styles.chartSubtitle}>Community Score Breakdown ({SCHOOL_ASPECTS.length} Dimensions)</Text>
-              <SchoolRadarChart scores={aspectScores} size={250} />
+          {reviews.length === 0 ? (
+            <View style={[styles.emptyReportCard, { borderColor: colors.borderHair, backgroundColor: colors.card }]}>
+              <Text style={[styles.emptyReportTitle, { color: colors.textPrimary }]}>
+                No parent reviews yet
+              </Text>
+              <Text style={[styles.emptyReportBody, { color: colors.textSecondary }]}>
+                Be the first parent to grade this school across academics, faculty, safety, and happiness.
+              </Text>
+            </View>
+          ) : (
+            <View style={[styles.radarWrapper, { borderColor: colors.borderHair, backgroundColor: colors.card }]}>
+              <View style={styles.overallScoreRow}>
+                <View>
+                  <Text style={[styles.overallScoreLabel, { color: colors.textSecondary }]}>Community Score</Text>
+                  <Text style={[styles.overallScoreNum, { color: colors.primary }]}>
+                    {overallScore > 0 ? overallScore.toFixed(1) : '--'}
+                    <Text style={{ fontSize: 16, color: colors.textTertiary }}> / 5.0</Text>
+                  </Text>
+                </View>
+                {overallScore > 0 ? (
+                  <View style={styles.overallSentiment}>
+                    <ScoreSentimentIcon score={overallScore} size={32} />
+                  </View>
+                ) : null}
+              </View>
 
-              {/* Aspect Breakdown List */}
-              <View style={styles.aspectListWrap}>
+              <SchoolRadarChart scores={aspectScores} />
+
+              <View style={styles.aspectBreakdown}>
                 {SCHOOL_ASPECTS.map((aspect) => {
-                  const key = `avg_${aspect.key}` as keyof AspectScores;
-                  const val = aspectScores[key] || 0;
+                  const val = ((aspectScores as any)[`avg_${aspect.key}`] as number) || 0;
                   return (
-                    <View key={aspect.key} style={styles.aspectListRow}>
-                      <View style={styles.aspectListLabelWrap}>
-                        <SchoolAspectIcon aspectKey={aspect.key} size={14} />
-                        <Text style={styles.aspectListLabel}>{aspect.label}</Text>
+                    <View key={aspect.key} style={[styles.aspectRow, { borderTopColor: colors.borderHair }]}>
+                      <View style={styles.aspectLeft}>
+                        <SchoolAspectIcon aspectKey={aspect.key} size={15} />
+                        <Text style={[styles.aspectName, { color: colors.textPrimary }]}>{aspect.label}</Text>
                       </View>
-                      <View style={styles.aspectListValWrap}>
-                        <ScoreSentimentIcon score={val} size={14} />
-                        <Text style={styles.aspectListScore}>{val > 0 ? val.toFixed(1) : '-'}</Text>
+                      <View style={styles.aspectRight}>
+                        <ScoreSentimentIcon score={val} size={15} />
+                        <Text style={[styles.aspectScoreVal, { color: colors.textPrimary }]}>
+                          {val > 0 ? val.toFixed(1) : '--'}
+                        </Text>
                       </View>
                     </View>
                   );
                 })}
               </View>
-            </View>
-          ) : (
-            <View style={styles.noReviewsBox}>
-              <Text style={styles.noReviewsTitle}>No parent report cards yet</Text>
-              <Text style={styles.noReviewsText}>
-                Be the first parent from your society to grade this school across {SCHOOL_ASPECTS.length} key dimensions!
-              </Text>
 
               <View style={styles.whyGradeBox}>
                 <Text style={styles.whyGradeHeader}>How Your Report Card Helps Neighbor Families:</Text>
@@ -437,7 +459,7 @@ export default function SchoolDetailScreen() {
             onPress={() => router.push(`/mcn/schools/review?schoolId=${school.id}` as any)}
             activeOpacity={0.8}
           >
-            <Ionicons name="clipboard-outline" size={18} color="#FFFFFF" />
+            <File02 size={18} color={Verandah.primaryFg} aria-hidden={true} />
             <Text style={styles.reviewCtaText}>
               {ownReview ? 'Edit Your Parent Report Card' : 'Grade This School (Parent Report Card)'}
             </Text>
@@ -600,22 +622,35 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 12,
   },
-  chartBox: {
+  radarWrapper: {
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
-    borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
     padding: 16,
     alignItems: 'center',
     marginBottom: 12,
   },
-  chartSubtitle: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: Verandah.textSecondary,
+  overallScoreRow: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  aspectListWrap: {
+  overallScoreLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  overallScoreNum: {
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  overallSentiment: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aspectBreakdown: {
     width: '100%',
     marginTop: 12,
     borderTopWidth: 0.5,
@@ -623,49 +658,46 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     gap: 6,
   },
-  aspectListRow: {
+  aspectRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderTopWidth: 0.5,
+    paddingTop: 6,
   },
-  aspectListLabelWrap: {
+  aspectLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  aspectListLabel: {
+  aspectName: {
     fontSize: 12,
     fontWeight: '500',
-    color: Verandah.textSecondary,
   },
-  aspectListValWrap: {
+  aspectRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  aspectListScore: {
+  aspectScoreVal: {
     fontSize: 12,
     fontWeight: '700',
-    color: Verandah.textPrimary,
   },
-  noReviewsBox: {
-    backgroundColor: '#F9FAFB',
+  emptyReportCard: {
+    backgroundColor: Verandah.card,
     borderWidth: 0.5,
-    borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
     padding: 14,
     alignItems: 'center',
     marginBottom: 12,
   },
-  noReviewsTitle: {
+  emptyReportTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: Verandah.textPrimary,
     marginBottom: 4,
   },
-  noReviewsText: {
+  emptyReportBody: {
     fontSize: 12,
-    color: Verandah.textSecondary,
     textAlign: 'center',
     lineHeight: 16,
     marginBottom: 10,

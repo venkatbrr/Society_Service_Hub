@@ -1,4 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Flag01 } from '@untitledui/icons/Flag01';
+import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { Star01 } from '@untitledui/icons/Star01';
+import { XClose } from '@untitledui/icons/XClose';
 import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,7 +13,7 @@ import { Avatar } from '../../../components/Avatar';
 import { RatingStars } from '../../../components/RatingStars';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { cloudinaryUrl } from '../../../lib/cloudinary';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
@@ -381,7 +385,7 @@ export default function ListingDetailScreen() {
             </Text>
             {ratingCount > 0 && (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="star" size={14} color="#F59E0B" />
+                <Star01 size={14} color={Verandah.goldInk} fill={Verandah.goldInk} />
                 <Text style={{ fontSize: 13, color: colors.textPrimary, marginLeft: 2, fontWeight: '500' }}>
                   {avgRating.toFixed(1)}
                 </Text>
@@ -414,18 +418,18 @@ export default function ListingDetailScreen() {
         <View style={styles.contactActions}>
           <TouchableOpacity
             onPress={handleCall}
-            style={[styles.contactBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
+            style={[styles.contactBtn, { borderColor: colors.borderHair, backgroundColor: colors.card }]}
             activeOpacity={0.85}
           >
-            <Ionicons name="call-outline" size={18} color={colors.accent} />
-            <Text style={[styles.contactBtnText, { color: colors.accent }]}>Call</Text>
+            <Phone01 size={18} color={colors.primary} aria-hidden={true} />
+            <Text style={[styles.contactBtnText, { color: colors.primary }]}>Call</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleWhatsApp}
             style={[styles.contactBtn, { borderColor: colors.primary, backgroundColor: colors.primary }]}
             activeOpacity={0.85}
           >
-            <Ionicons name="logo-whatsapp" size={18} color={colors.primaryFg} />
+            <MessageCircle01 size={18} color={colors.primaryFg} aria-hidden={true} />
             <Text style={[styles.contactBtnText, { color: colors.primaryFg }]}>WhatsApp</Text>
           </TouchableOpacity>
         </View>
@@ -438,7 +442,7 @@ export default function ListingDetailScreen() {
           disabled={hasReported}
           activeOpacity={0.7}
         >
-          <Ionicons name="flag-outline" size={13} color={hasReported ? colors.textMuted : colors.textTertiary} />
+          <Flag01 size={13} color={hasReported ? colors.textMuted : colors.textTertiary} aria-hidden={true} />
           <Text style={[styles.reportLinkText, { color: hasReported ? colors.textMuted : colors.textTertiary }]}>
             {hasReported ? 'Reported' : 'Report this listing'}
           </Text>
@@ -614,9 +618,7 @@ export default function ListingDetailScreen() {
                       })}
                     </Text>
                   </View>
-                  <Text style={styles.publicReviewStars}>
-                    {'★'.repeat(review.rating)}{'☆'.repeat(Math.max(0, 5 - review.rating))}
-                  </Text>
+                  <RatingStars rating={review.rating} size={14} />
                 </View>
                 {review.review_text ? (
                   <Text style={[styles.publicReviewText, { color: colors.textSecondary, marginTop: 8 }]}>{review.review_text}</Text>
@@ -693,7 +695,7 @@ export default function ListingDetailScreen() {
               setSelectedImageUrl(null);
             }}
           >
-            <Ionicons name="close" size={24} color={colors.surface} />
+            <XClose size={24} color={colors.surface} />
           </TouchableOpacity>
           <Pressable onPress={(e) => e.stopPropagation()} style={styles.viewerImageWrap}>
             <Image

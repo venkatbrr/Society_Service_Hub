@@ -73,12 +73,13 @@ Rule of thumb: **if the result belongs in a file, use the CLI; if the result is 
 - **Batch reads** with `Promise.all` rather than sequential awaits.
 - **Scope joins tightly** — e.g. `visit_joiners` is fetched for the current page's visit IDs only, never the whole table.
 - **Phone numbers** — normalize with `lib/phone.ts` (`normalizeIndianMobile`, `isValidIndianMobile`). When searching providers by phone, strip non-digits from *both* sides (`replace(/\D/g, '')`) and use the placeholder `"Search by name or phone number..."`.
-- **Flat / house numbers** — uppercase and strip spaces and hyphens on blur. Use placeholders like `A101`, never hyphenated examples.
+- **Flat / house numbers & inventory** — Residents **never type** flat numbers in onboarding or profile edit. They pick from verified inventory dropdowns backed by `community_flats` via `FlatPicker` (which groups by floor and supports fast unit search). `profiles.flat_id` is the primary foreign key; `sync_profile_flat_denorm` triggers auto-sync for `profiles.flat_number` and `profiles.block_id`. Downstream transactional forms (pre-orders, rides, parent corner, visits) display read-only flat numbers from `profile.flat_number` and prompt users who haven't set their flat yet to pick one in profile edit. If a unit is missing from inventory, users trigger the escape hatch modal which files a `flat_addition_requests` record for lead/admin approval.
 - **Dates** — store visit dates as local calendar dates (`YYYY-MM-DD`) so they cannot roll back a day across timezones. Always use `@react-native-community/datetimepicker`, never a raw `TextInput`.
 
 ### UI
 
-- **Icons**: `Ionicons` from `@expo/vector-icons` for every interactive control. `APP_EMOJIS` is decorative only; emojis are otherwise reserved for dynamic category tags.
+- **Icons**: `@untitledui/icons` for every interactive control and status indicator. Zero emojis or Unicode character stand-ins across UI text, buttons, and navigation.
+- **Theme**: Verandah design direction (`#0F3732` deep teal, `#FAF8F4` paper canvas, `#F0EDE3` cream surface, `#DDA94A` gold accent, `#1F2A28` ink text).
 - **Toasts**: `react-native-toast-message` for all user-facing success and failure feedback.
 - **Confirmations are platform-split** — `window.confirm` on web, `Alert.alert` on native. React Native's `Alert` does not render on web, so a web-only path that relies on it silently does nothing.
 - **Information architecture**: community-level content belongs in the Community tab; the Profile tab is account-level only.
@@ -111,7 +112,7 @@ Rule of thumb: **if the result belongs in a file, use the CLI; if the result is 
 - **Web viewport** — `html`, `body`, `#root` are `height: 100%` and `#root` is `display: flex` in `app/+html.tsx`. Changing this pushes the tab bar off-screen.
 - **Web focus outlines** — reset via `input:focus, textarea:focus, select:focus { outline: none; }` in `app/+html.tsx`.
 - **Web pull-to-refresh** — `RefreshControl` is a native no-op, so scrollable lists use `useWebPullToRefresh` + `WebPullIndicator`. Nested scroll containers mean the browser's own native pull-to-refresh never fires, so the hook also has a second, longer-pull tier (`HARD_RELOAD_THRESHOLD`) that runs a real `window.location.reload()` — the only way a web user gets a true browser refresh (e.g. to pick up a new deployed build) rather than just an in-app data refetch.
-- **Global bottom nav** — the visible tab bar is `components/GlobalBottomNav.tsx`, rendered once in `app/_layout.tsx`, not `(tabs)/_layout.tsx`'s own `Tabs` bar (hidden via `tabBarStyle: { display: 'none' }`). This is what makes the bar show up on non-tab routes like `/funds/*` and `/mcn/*`. Add new tab-adjacent routes to its `TABS[].isActive` matcher so the right tab highlights.
+- **Global bottom nav** — the visible tab bar is `components/GlobalBottomNav.tsx`, rendered once in `app/_layout.tsx`, not `(tabs)/_layout.tsx`'s own `Tabs` bar (hidden via `tabBarStyle: { display: 'none' }`). This is what makes the bar show up on non-tab routes like `/funds/*` and `/mcn/*`. Add new tab-adjacent routes to its `TABS[].isActive` matcher so the right tab highlights. Its glyphs come from `components/NavIcons.tsx`, not `@untitledui/icons` — see `docs/verandah.md` for the rail's geometry and motion spec.
 - **Vercel serverless functions** (`api/*.ts`) — excluded from `tsconfig.json` like `supabase/functions`, since they run in a separate Node runtime Vercel builds independently. Used for things a client-rendered SPA can't do itself, e.g. `api/share-drop.ts` serves per-drop Open Graph tags to link-preview crawlers (WhatsApp, etc.) since the app's static `index.html` has no per-page meta tags.
 - **Service worker** — registration checks `document.readyState` for `complete`/`interactive` so it still runs when the bundle loads late.
 - **Platform-specific components** — add a `.web.tsx` sibling rather than branching on `Platform.OS` inside a render tree.

@@ -1,4 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ChevronDown } from '@untitledui/icons/ChevronDown';
+import { ChevronUp } from '@untitledui/icons/ChevronUp';
+import { Edit01 } from '@untitledui/icons/Edit01';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
@@ -149,11 +151,11 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
             <Text style={styles.expandBtnText}>
               {expanded ? 'Hide parent notes' : 'View parent notes'}
             </Text>
-            <Ionicons
-              name={expanded ? 'chevron-up' : 'chevron-down'}
-              size={14}
-              color={Verandah.accent}
-            />
+            {expanded ? (
+              <ChevronUp size={14} color={Verandah.accent} aria-hidden={true} />
+            ) : (
+              <ChevronDown size={14} color={Verandah.accent} aria-hidden={true} />
+            )}
           </TouchableOpacity>
 
           {expanded ? (
@@ -178,7 +180,7 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
       {/* Edit CTA for own review */}
       {isOwnReview && onEdit ? (
         <TouchableOpacity style={styles.editBtn} onPress={onEdit} activeOpacity={0.7}>
-          <Ionicons name="create-outline" size={14} color={Verandah.accent} />
+          <Edit01 size={14} color={Verandah.accent} aria-hidden={true} />
           <Text style={styles.editBtnText}>Edit your report card</Text>
         </TouchableOpacity>
       ) : null}
@@ -338,7 +340,7 @@ const styles = StyleSheet.create({
   overallCommentBox: {
     marginTop: 8,
     marginBottom: 4,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: Verandah.accentSoft,
     borderWidth: 0.5,
     borderColor: '#BBF7D0',
     borderRadius: 8,

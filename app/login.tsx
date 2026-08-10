@@ -1,4 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Check } from '@untitledui/icons/Check';
+import { Eye } from '@untitledui/icons/Eye';
+import { EyeOff } from '@untitledui/icons/EyeOff';
+import { Lock01 } from '@untitledui/icons/Lock01';
+import { Mail01 } from '@untitledui/icons/Mail01';
+import { User01 } from '@untitledui/icons/User01';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -18,7 +23,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { EMAIL_AUTH_UI_ENABLED } from '../constants/authFlags';
 import { Verandah } from '../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, signInWithEmail, signUpWithEmail } from '../lib/auth';
 import { siteUrl } from '../lib/siteUrl';
 import { supabase } from '../lib/supabase';
@@ -56,20 +61,12 @@ export default function LoginScreen() {
     }
   }, []);
 
-  // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTc, setAgreeTc] = useState(false);
-
-  const toggleMode = () => {
-    setMode(mode === 'signIn' ? 'signUp' : 'signIn');
-    // Clear passwords on toggle
-    setPassword('');
-    setConfirmPassword('');
-  };
 
   const validateForm = () => {
     if (!email.trim() || !email.includes('@')) {
@@ -222,57 +219,43 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <View style={styles.logoContainer}>
             <Image
               source={require('../assets/images/icon.png')}
               style={styles.logoImage}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           </View>
           <Text style={styles.title}>Wooru</Text>
           <Text style={styles.subtitle}>
             {!EMAIL_AUTH_UI_ENABLED
-              ? 'Sign in with Google to continue.'
+              ? 'Your neighbourhood,\nall in one calm place.'
               : mode === 'signIn'
                 ? 'Welcome back! Sign in to continue.'
                 : 'Join your community marketplace.'}
           </Text>
         </View>
 
-        {/* Tab toggle */}
         {EMAIL_AUTH_UI_ENABLED && (
         <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => { setMode('signIn'); setPassword(''); setConfirmPassword(''); }}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.tabButton} onPress={() => { setMode('signIn'); setPassword(''); setConfirmPassword(''); }} activeOpacity={0.7}>
             {mode === 'signIn' ? (
-              <View style={styles.tabActive}>
-                <Text style={styles.tabActiveText}>Sign in</Text>
-              </View>
+              <View style={styles.tabActive}><Text style={styles.tabActiveText}>Sign in</Text></View>
             ) : (
-              <View style={styles.tabInactive}>
-                <Text style={[styles.tabInactiveText, { color: Verandah.textMuted }]}>Sign in</Text>
-              </View>
+              <View style={styles.tabInactive}><Text style={styles.tabInactiveText}>Sign in</Text></View>
             )}
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => { setMode('signUp'); setPassword(''); setConfirmPassword(''); }}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.tabButton} onPress={() => { setMode('signUp'); setPassword(''); setConfirmPassword(''); }} activeOpacity={0.7}>
             {mode === 'signUp' ? (
-              <View style={styles.tabActive}>
-                <Text style={styles.tabActiveText}>Sign up</Text>
-              </View>
+              <View style={styles.tabActive}><Text style={styles.tabActiveText}>Sign up</Text></View>
             ) : (
-              <View style={styles.tabInactive}>
-                <Text style={[styles.tabInactiveText, { color: Verandah.textMuted }]}>Sign up</Text>
-              </View>
+              <View style={styles.tabInactive}><Text style={styles.tabInactiveText}>Sign up</Text></View>
             )}
           </TouchableOpacity>
         </View>
@@ -282,171 +265,86 @@ export default function LoginScreen() {
           {EMAIL_AUTH_UI_ENABLED && (
           <>
           {mode === 'signUp' && (
-            <>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Full name</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="person-outline" size={18} color={Verandah.textTertiary} style={{ marginRight: 8 }} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Aarav Sharma"
-                    placeholderTextColor={Verandah.textTertiary}
-                    value={fullName}
-                    onChangeText={setFullName}
-                  />
-                </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Full name</Text>
+              <View style={styles.inputContainer}>
+                <User01 size={18} color="rgba(240, 237, 227, 0.6)" style={{ marginRight: 8 }} aria-hidden={true} />
+                <TextInput style={styles.input} placeholder="Aarav Sharma" placeholderTextColor="rgba(240, 237, 227, 0.4)" value={fullName} onChangeText={setFullName} />
               </View>
-            </>
+            </View>
           )}
-
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email address</Text>
             <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={18} color={Verandah.textTertiary} style={{ marginRight: 8 }} />
-              <TextInput
-                style={styles.input}
-                placeholder="your@email.com"
-                placeholderTextColor={Verandah.textTertiary}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
+              <Mail01 size={18} color="rgba(240, 237, 227, 0.6)" style={{ marginRight: 8 }} aria-hidden={true} />
+              <TextInput style={styles.input} placeholder="your@email.com" placeholderTextColor="rgba(240, 237, 227, 0.4)" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
             </View>
           </View>
-
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
             <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={18} color={Verandah.textTertiary} style={{ marginRight: 8 }} />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor={Verandah.textTertiary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
+              <Lock01 size={18} color="rgba(240, 237, 227, 0.6)" style={{ marginRight: 8 }} aria-hidden={true} />
+              <TextInput style={styles.input} placeholder="Password" placeholderTextColor="rgba(240, 237, 227, 0.4)" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={Verandah.textTertiary} />
+                {showPassword ? <EyeOff size={18} color="rgba(240, 237, 227, 0.6)" /> : <Eye size={18} color="rgba(240, 237, 227, 0.6)" />}
               </TouchableOpacity>
             </View>
           </View>
-
           {mode === 'signUp' && (
             <>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Confirm password</Text>
                 <View style={styles.inputContainer}>
-                  <Ionicons name="shield-checkmark-outline" size={18} color={Verandah.textTertiary} style={{ marginRight: 8 }} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirm password"
-                    placeholderTextColor={Verandah.textTertiary}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry={!showPassword}
-                  />
+                  <Lock01 size={18} color="rgba(240, 237, 227, 0.6)" style={{ marginRight: 8 }} aria-hidden={true} />
+                  <TextInput style={styles.input} placeholder="Confirm password" placeholderTextColor="rgba(240, 237, 227, 0.4)" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry={!showPassword} />
                 </View>
               </View>
-
-              <TouchableOpacity
-                onPress={() => setAgreeTc(!agreeTc)}
-                style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, marginBottom: 16 }}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name={agreeTc ? 'checkbox' : 'square-outline'}
-                  size={20}
-                  color={agreeTc ? Verandah.accent : Verandah.textMuted}
-                />
-                <Text style={{ marginLeft: 8, fontSize: 13, color: Verandah.textSecondary }}>
+              <TouchableOpacity onPress={() => setAgreeTc(!agreeTc)} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, marginBottom: 16 }} activeOpacity={0.8}>
+                <View style={[styles.checkbox, agreeTc && styles.checkboxActive]}>
+                  {agreeTc ? <Check size={14} color="#0F3732" /> : null}
+                </View>
+                <Text style={{ marginLeft: 8, fontSize: 13, color: 'rgba(240, 237, 227, 0.8)' }}>
                   I agree to the{' '}
-                  <Text
-                    style={{ color: Verandah.accent, textDecorationLine: 'underline' }}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      Linking.openURL(siteUrl('/terms'));
-                    }}
-                  >
-                    Terms & Conditions
-                  </Text>
+                  <Text style={{ color: Verandah.gold, textDecorationLine: 'underline' }} onPress={(e) => { e.stopPropagation(); Linking.openURL(siteUrl('/terms')); }}>Terms & Conditions</Text>
                 </Text>
               </TouchableOpacity>
             </>
           )}
-
           {mode === 'signIn' && (
-            <TouchableOpacity
-              onPress={() => router.push('/forgot-password')}
-              style={styles.forgotPassword}
-            >
+            <TouchableOpacity onPress={() => router.push('/forgot-password')} style={styles.forgotPassword}>
               <Text style={styles.forgotPasswordText}>Forgot password?</Text>
             </TouchableOpacity>
           )}
-
-          <TouchableOpacity
-            onPress={handleEmailAuth}
-            disabled={loading || googleLoading}
-            activeOpacity={0.8}
-            style={styles.authButton}
-          >
-            {loading ? (
-              <ActivityIndicator color={Verandah.primaryFg} />
-            ) : (
-              <Text style={styles.authButtonText}>
-                {mode === 'signIn' ? 'Sign in' : 'Create account'}
-              </Text>
-            )}
+          <TouchableOpacity onPress={handleEmailAuth} disabled={loading || googleLoading} activeOpacity={0.8} style={styles.authButton}>
+            {loading ? <ActivityIndicator color={Verandah.teal900} /> : <Text style={styles.authButtonText}>{mode === 'signIn' ? 'Sign in' : 'Create account'}</Text>}
           </TouchableOpacity>
-
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />
             <Text style={styles.dividerText}>or</Text>
           </View>
           </>
           )}
-
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={signInWithGoogle}
-            disabled={loading || googleLoading}
-          >
+          <TouchableOpacity style={styles.googleButton} onPress={signInWithGoogle} disabled={loading || googleLoading} activeOpacity={0.88}>
             {googleLoading ? (
-              <ActivityIndicator color={Verandah.primary} />
+              <ActivityIndicator color="#0F3732" />
             ) : (
               <>
-                <Ionicons name="logo-google" size={18} color={Verandah.primary} style={{ marginRight: 8 }} />
-                <Text style={styles.googleButtonText}>
-                  Continue with Google
-                </Text>
+                <Text style={styles.googleG}>G</Text>
+                <Text style={styles.googleButtonText}>Continue with Google</Text>
               </>
             )}
           </TouchableOpacity>
-
           {EMAIL_AUTH_UI_ENABLED ? (
             <View style={styles.toggleModeContainer}>
-              <Text style={styles.toggleModeText}>
-                {mode === 'signIn' ? "Don't have an account? " : "Already have an account? "}
-              </Text>
-              <TouchableOpacity onPress={toggleMode}>
-                <Text style={styles.toggleModeLink}>
-                  {mode === 'signIn' ? 'Sign up' : 'Sign in'}
-                </Text>
-              </TouchableOpacity>
+              <Text style={styles.toggleModeText}>{mode === 'signIn' ? "Don't have an account? " : "Already have an account? "}</Text>
+              <TouchableOpacity onPress={() => { setMode(mode === 'signIn' ? 'signUp' : 'signIn'); setPassword(''); setConfirmPassword(''); }}><Text style={styles.toggleModeLink}>{mode === 'signIn' ? 'Sign up' : 'Sign in'}</Text></TouchableOpacity>
             </View>
           ) : (
-            // Google is the only path now, so the sign-up form's terms checkbox
-            // is never shown. This keeps the consent moment visible.
             <View style={styles.toggleModeContainer}>
               <Text style={styles.toggleModeText}>By continuing you agree to our </Text>
-              <TouchableOpacity onPress={() => Linking.openURL(siteUrl('/terms'))}>
-                <Text style={styles.toggleModeLink}>Terms</Text>
-              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL(siteUrl('/terms'))}><Text style={styles.toggleModeLink}>Terms</Text></TouchableOpacity>
               <Text style={styles.toggleModeText}> and </Text>
-              <TouchableOpacity onPress={() => Linking.openURL(siteUrl('/privacy'))}>
-                <Text style={styles.toggleModeLink}>Privacy Policy</Text>
-              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL(siteUrl('/privacy'))}><Text style={styles.toggleModeLink}>Privacy Policy</Text></TouchableOpacity>
             </View>
           )}
         </View>
@@ -456,185 +354,43 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Verandah.surface,
-  },
+  container: { flex: 1, backgroundColor: Verandah.teal900 },
   scrollContent: {
-    padding: 24,
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
     paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 40,
+    paddingBottom: 28,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: VerandahRadius.xl,
-    backgroundColor: Verandah.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    overflow: 'hidden',
-  },
-  logoImage: {
-    width: '100%',
-    height: '100%',
-  },
-  logoEmoji: {
-    fontSize: 36,
-    lineHeight: 40,
-  },
-  title: {
-    ...VerandahType.display,
-    color: Verandah.textPrimary,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 15,
-    color: Verandah.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    borderRadius: VerandahRadius.xl,
-    padding: 4,
-    marginBottom: 28,
-    backgroundColor: Verandah.cardMuted,
-  },
-  tabButton: {
-    flex: 1,
-  },
-  tabActive: {
-    paddingVertical: 12,
-    borderRadius: VerandahRadius.xl,
-    alignItems: 'center',
-    backgroundColor: Verandah.card,
-  },
-  tabActiveText: {
-    color: Verandah.primary,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  tabInactive: {
-    paddingVertical: 12,
-    borderRadius: VerandahRadius.xl,
-    alignItems: 'center',
-  },
-  tabInactiveText: {
-    fontSize: 15,
-    fontWeight: '400',
-  },
-  form: {
-    gap: 20,
-  },
-  inputGroup: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '500',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-    color: Verandah.textTertiary,
-    marginLeft: 4,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 0.5,
-    borderColor: Verandah.borderStrong,
-    borderRadius: VerandahRadius.md,
-    backgroundColor: Verandah.card,
-    paddingHorizontal: 16,
-    height: 54,
-  },
-  inputEmoji: {
-    fontSize: 20,
-    lineHeight: 24,
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: Verandah.textPrimary,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginTop: -8,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: Verandah.accent,
-  },
-  authButton: {
-    marginTop: 10,
-    height: 54,
-    borderRadius: VerandahRadius.xl,
-    backgroundColor: Verandah.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  authButtonText: {
-    color: Verandah.primaryFg,
-    fontSize: 17,
-    fontWeight: '500',
-  },
-  dividerContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 10,
-  },
-  divider: {
-    width: '100%',
-    height: 1,
-    backgroundColor: Verandah.border,
-  },
-  dividerText: {
-    position: 'absolute',
-    paddingHorizontal: 16,
-    fontSize: 12,
-    fontWeight: '500',
-    color: Verandah.textMuted,
-    backgroundColor: Verandah.surface,
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 54,
-    borderRadius: VerandahRadius.lg,
-    borderWidth: 0.5,
-    borderColor: Verandah.borderStrong,
-    backgroundColor: 'transparent',
-    gap: 12,
-  },
-  googleEmoji: {
-    fontSize: 20,
-    lineHeight: 24,
-  },
-  googleButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: Verandah.primary,
-  },
-  toggleModeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  toggleModeText: {
-    fontSize: 15,
-    color: Verandah.textMuted,
-  },
-  toggleModeLink: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: Verandah.accent,
-  },
+  header: { alignItems: 'center', marginBottom: 24 },
+  logoContainer: { width: 78, height: 78, borderRadius: 22, backgroundColor: 'rgba(255, 255, 255, 0.08)', borderWidth: 1, borderColor: 'rgba(221, 169, 74, 0.3)', justifyContent: 'center', alignItems: 'center', marginBottom: 12, overflow: 'hidden' },
+  logoImage: { width: '100%', height: '100%' },
+  title: { fontFamily: VerandahType.serifFamily, fontSize: 42, fontWeight: '400', color: Verandah.cream, marginTop: 16, marginBottom: 8, textAlign: 'center', letterSpacing: -0.5 },
+  subtitle: { fontFamily: VerandahType.sansFamily, fontSize: 14.5, color: 'rgba(240, 237, 227, 0.75)', textAlign: 'center', lineHeight: 21, maxWidth: 290 },
+  tabContainer: { flexDirection: 'row', borderRadius: VerandahRadius.pill, padding: 3, marginBottom: 24, backgroundColor: 'rgba(0, 0, 0, 0.2)', borderWidth: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' },
+  tabButton: { flex: 1 },
+  tabActive: { paddingVertical: 9, borderRadius: VerandahRadius.pill, alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.15)' },
+  tabActiveText: { color: Verandah.cream, fontSize: 14, fontWeight: '600', fontFamily: VerandahType.sansFamily },
+  tabInactive: { paddingVertical: 9, borderRadius: VerandahRadius.pill, alignItems: 'center' },
+  tabInactiveText: { fontSize: 14, fontWeight: '400', color: 'rgba(240, 237, 227, 0.5)', fontFamily: VerandahType.sansFamily },
+  form: { gap: 16 },
+  inputGroup: { gap: 6 },
+  label: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase', color: 'rgba(240, 237, 227, 0.65)', marginLeft: 4, fontFamily: VerandahType.sansFamily },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 0.5, borderColor: 'rgba(255, 255, 255, 0.12)', borderRadius: VerandahRadius.search, backgroundColor: 'rgba(255, 255, 255, 0.06)', paddingHorizontal: 14, height: 48 },
+  input: { flex: 1, fontSize: 14, color: Verandah.cream, fontFamily: VerandahType.sansFamily },
+  checkbox: { width: 20, height: 20, borderRadius: 5, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.3)', backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  checkboxActive: { backgroundColor: Verandah.gold, borderColor: Verandah.gold },
+  forgotPassword: { alignSelf: 'flex-end', marginTop: -6 },
+  forgotPasswordText: { fontSize: 13, fontWeight: '500', color: Verandah.gold, fontFamily: VerandahType.sansFamily },
+  authButton: { marginTop: 8, height: 48, borderRadius: VerandahRadius.button, backgroundColor: Verandah.cream, justifyContent: 'center', alignItems: 'center' },
+  authButtonText: { color: Verandah.teal900, fontSize: 15, fontWeight: '600', fontFamily: VerandahType.sansFamily },
+  dividerContainer: { alignItems: 'center', justifyContent: 'center', marginVertical: 8 },
+  divider: { width: '100%', height: 1, backgroundColor: 'rgba(255, 255, 255, 0.1)' },
+  dividerText: { position: 'absolute', paddingHorizontal: 12, fontSize: 11, fontWeight: '500', color: 'rgba(240, 237, 227, 0.5)', backgroundColor: Verandah.teal900 },
+  googleButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 52, borderRadius: VerandahRadius.button, backgroundColor: Verandah.cream, marginTop: 32, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 6, elevation: 3 },
+  googleButtonText: { fontSize: 15, fontWeight: '700', color: Verandah.teal900, fontFamily: VerandahType.sansFamily, letterSpacing: -0.1 },
+  googleG: { fontSize: 17, fontWeight: '700', color: '#EA4335', fontFamily: VerandahType.sansFamily, marginRight: 10 },
+  toggleModeContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 14, flexWrap: 'wrap' },
+  toggleModeText: { fontSize: 12, color: 'rgba(240, 237, 227, 0.65)', fontFamily: VerandahType.sansFamily },
+  toggleModeLink: { fontSize: 12, fontWeight: '600', color: Verandah.gold, fontFamily: VerandahType.sansFamily },
 });

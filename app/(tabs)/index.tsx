@@ -1,8 +1,14 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Bell01 } from '@untitledui/icons/Bell01';
+import { MarkerPin01 } from '@untitledui/icons/MarkerPin01';
+import { Calendar } from '@untitledui/icons/Calendar';
+import { Plus } from '@untitledui/icons/Plus';
+import { Tool01 } from '@untitledui/icons/Tool01';
+import { UserPlus01 } from '@untitledui/icons/UserPlus01';
+import { Users01 } from '@untitledui/icons/Users01';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, SectionList, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, RefreshControl, SectionList, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { CategoryFilter } from '../../components/CategoryFilter';
 import { EmptyState } from '../../components/EmptyState';
@@ -11,8 +17,7 @@ import { SearchBar } from '../../components/SearchBar';
 import { UpcomingServicesCard } from '../../components/UpcomingServicesCard';
 import { VisitCard } from '../../components/VisitCard';
 import { Verandah } from '../../constants/Colors';
-import { APP_EMOJIS, getServiceCategoryEmoji } from '../../constants/emojis';
-import { VerandahRadius, VerandahType , VerandahLayout } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
@@ -64,7 +69,7 @@ export default function HomeScreen() {
   const [visitsLoading, setVisitsLoading] = useState(true);
   const [visitsLoadError, setVisitsLoadError] = useState<string | null>(null);
   const [activeFund, setActiveFund] = useState<any>(null);
-  const [communityInvite, setCommunityInvite] = useState<{ name: string; code: string | null } | null>(null);
+  const [communityInvite, setCommunityInvite] = useState<{ name: string; code: string | null; address: string | null } | null>(null);
   const { user, communityId } = useAuth();
   const router = useRouter();
 
@@ -107,7 +112,7 @@ export default function HomeScreen() {
 
       const { data, error } = await supabase
         .from('communities')
-        .select('name, code')
+        .select('name, code, address')
         .eq('id', communityId)
         .maybeSingle();
 
@@ -117,12 +122,24 @@ export default function HomeScreen() {
       }
 
       if (data) {
-        setCommunityInvite({ name: data.name, code: data.code });
+        setCommunityInvite({ name: data.name, code: data.code, address: data.address });
       }
     }
 
     fetchCommunityInvite();
   }, [communityId]);
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
+
+  const firstName = useMemo(() => {
+    const full = String(user?.user_metadata?.full_name || '').trim();
+    return full ? full.split(/\s+/)[0] : 'there';
+  }, [user?.user_metadata?.full_name]);
 
   const handleInviteNeighbors = useCallback(async () => {
     if (!communityInvite?.code) {
@@ -436,24 +453,32 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.headerWrapper}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Service Hub</Text>
+        {/* Brand row: app mark + wordmark, then bell and avatar */}
+        <View style={styles.brandRow}>
+          <View style={styles.brandLeft}>
+            <View style={styles.logoMark}>
+              <Image
+                source={require('../../assets/images/icon.png')}
+                style={styles.logoImage}
+                resizeMode="cover"
+              />
+            </View>
+            <Text style={styles.wordmark}>Wooru</Text>
           </View>
+
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={styles.headerButtonWithText}
               onPress={handleInviteNeighbors}
               activeOpacity={0.8}
             >
-              <Ionicons name="person-add-outline" size={18} color={Verandah.accent} />
-              <Text style={styles.headerButtonText}>Invite neighbours</Text>
+              <UserPlus01 size={15} color={Verandah.accent} aria-hidden={true} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.headerButton}
               onPress={() => router.push('/notifications')}
             >
-              <Ionicons name="notifications-outline" size={19} color={Verandah.caution} />
+              <Bell01 size={18} color={Verandah.primary} aria-hidden={true} />
               {unreadCount > 0 && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
@@ -462,12 +487,25 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Greeting + location */}
+        <View style={styles.greetingBlock}>
+          <Text style={styles.greetingText}>{greeting}, {firstName}</Text>
+          {communityInvite?.name ? (
+            <View style={styles.locationRow}>
+              <MarkerPin01 size={13} color={Verandah.textSecondary} aria-hidden={true} />
+              <Text style={styles.locationText}>
+                {communityInvite.name}{communityInvite.address ? ` · ${communityInvite.address}` : ''}
+              </Text>
+            </View>
+          ) : null}
+        </View>
       </View>
 
       <View style={styles.segmentedControl}>
         {activeSegment === 'providers' ? (
           <View style={[styles.segmentBtn, styles.segmentBtnActive]}>
-            <Text style={[styles.segmentText, { color: Verandah.primary }]}>Providers</Text>
+            <Text style={[styles.segmentText, { color: Verandah.primary, fontWeight: '700' }]}>Providers</Text>
           </View>
         ) : (
           <TouchableOpacity
@@ -484,7 +522,7 @@ export default function HomeScreen() {
         )}
         {activeSegment === 'visits' ? (
           <View style={[styles.segmentBtn, styles.segmentBtnActive]}>
-            <Text style={[styles.segmentText, { color: Verandah.primary }]}>Visits</Text>
+            <Text style={[styles.segmentText, { color: Verandah.primary, fontWeight: '700' }]}>Visits</Text>
           </View>
         ) : (
           <TouchableOpacity
@@ -529,7 +567,6 @@ export default function HomeScreen() {
               <WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />
               <UpcomingServicesCard />
 
-
               <View style={styles.filterSection}>
                 <SearchBar
                   value={searchQuery}
@@ -553,15 +590,14 @@ export default function HomeScreen() {
               </View>
             ) : providersLoadError ? (
               <EmptyState
-                icon={APP_EMOJIS.members}
-                ionicon="cloud-offline-outline"
+                IconComponent={Users01}
                 title="Couldn't Load Providers"
                 message="Check your connection and pull down to retry."
                 isLightMode={true}
               />
             ) : (
               <EmptyState
-                icon={APP_EMOJIS.members}
+                IconComponent={Users01}
                 title="No Providers Found"
                 message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to add a trusted service provider!"}
                 isLightMode={true}
@@ -616,10 +652,8 @@ export default function HomeScreen() {
           renderSectionHeader={({ section }) => (
             <View style={styles.categoryHeader}>
               <View style={[styles.categoryHeaderAccent, { backgroundColor: Verandah.accent }]} />
-              <Text style={styles.categoryHeaderEmoji}>
-                {getServiceCategoryEmoji(section.title)}
-              </Text>
-                <Text style={[styles.categoryHeaderTitle, { color: Verandah.textPrimary }]}>
+              <Tool01 size={14} color={Verandah.accent} aria-hidden={true} />
+              <Text style={[styles.categoryHeaderTitle, { color: Verandah.textPrimary }]}>
                 {section.title}
               </Text>
               <View style={[styles.categoryCountBadge, { backgroundColor: Verandah.accentSoft }]}>
@@ -643,26 +677,26 @@ export default function HomeScreen() {
 
               <View style={styles.filterSection}>
                 <View style={styles.subTabControl}>
-                  <TouchableOpacity style={[styles.subTabBtn, visitTab === 'upcoming' && { backgroundColor: Verandah.accentSoft }]}
+                  <TouchableOpacity style={[styles.subTabBtn, visitTab === 'upcoming' && { backgroundColor: Verandah.card }]}
                     onPress={() => setVisitTab('upcoming')}
                   >
-                    <Text style={[styles.subTabText, visitTab === 'upcoming' ? { color: Verandah.accent, fontWeight: '500' } : { color: Verandah.textMuted }]}>
+                    <Text style={[styles.subTabText, visitTab === 'upcoming' ? { color: Verandah.primary, fontWeight: '700' } : { color: Verandah.textMuted }]}>
                       Upcoming ({visits.length})
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.subTabBtn, visitTab === 'past' && { backgroundColor: Verandah.accentSoft }]}
+                    style={[styles.subTabBtn, visitTab === 'past' && { backgroundColor: Verandah.card }]}
                     onPress={() => setVisitTab('past')}
                   >
-                    <Text style={[styles.subTabText, visitTab === 'past' ? { color: Verandah.accent, fontWeight: '500' } : { color: Verandah.textMuted }]}>
+                    <Text style={[styles.subTabText, visitTab === 'past' ? { color: Verandah.primary, fontWeight: '700' } : { color: Verandah.textMuted }]}>
                       Recent ({pastVisits.length})
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.subTabBtn, visitTab === 'archived' && { backgroundColor: Verandah.accentSoft }]}
+                    style={[styles.subTabBtn, visitTab === 'archived' && { backgroundColor: Verandah.card }]}
                     onPress={() => setVisitTab('archived')}
                   >
-                    <Text style={[styles.subTabText, visitTab === 'archived' ? { color: Verandah.accent, fontWeight: '500' } : { color: Verandah.textMuted }]}>
+                    <Text style={[styles.subTabText, visitTab === 'archived' ? { color: Verandah.primary, fontWeight: '700' } : { color: Verandah.textMuted }]}>
                       Archived ({archivedVisits.length})
                     </Text>
                   </TouchableOpacity>
@@ -683,24 +717,21 @@ export default function HomeScreen() {
               </View>
             ) : visitsLoadError ? (
               <EmptyState
-                icon={APP_EMOJIS.community}
-                ionicon="cloud-offline-outline"
+                IconComponent={Users01}
                 title="Couldn't Load Visits"
                 message="Check your connection and pull down to retry."
                 isLightMode={true}
               />
             ) : visitTab === 'upcoming' ? (
               <EmptyState
-                icon={APP_EMOJIS.community}
-                ionicon="calendar-clear-outline"
+                IconComponent={Calendar}
                 title="No Upcoming Visits"
                 message={searchQuery ? 'No visits match your search' : 'Be the first to share when a provider is coming!'}
                 isLightMode={true}
               />
             ) : (
               <EmptyState
-                icon={APP_EMOJIS.loading}
-                ionicon="time-outline"
+                IconComponent={Calendar}
                 title="No Past Visits"
                 message={searchQuery ? 'No visits match your search' : 'Completed and expired visits will appear here'}
                 isLightMode={true}
@@ -716,7 +747,7 @@ export default function HomeScreen() {
         activeOpacity={0.9}
       >
         <View style={styles.fabInner}>
-          <Text style={styles.fabIcon}>{APP_EMOJIS.add}</Text>
+          <Plus size={24} color={Verandah.primaryFg} aria-hidden={true} />
         </View>
       </TouchableOpacity>
     </View>
@@ -726,12 +757,65 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Verandah.surface,
-    borderTopWidth: 3,
-    borderTopColor: Verandah.primary,
+    backgroundColor: Verandah.paper,
   },
   headerWrapper: {
-    backgroundColor: Verandah.surface,
+    backgroundColor: Verandah.paper,
+    paddingHorizontal: 24,
+    paddingTop: VerandahLayout.screenPaddingTop,
+    paddingBottom: 4,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  brandLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+  },
+  logoMark: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: Verandah.teal900,
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  wordmark: {
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 22,
+    lineHeight: 26,
+    fontWeight: '400',
+    letterSpacing: -0.3,
+    color: Verandah.textPrimary,
+  },
+  greetingBlock: {
+    marginTop: 10,
+  },
+  greetingText: {
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: '400',
+    letterSpacing: -0.4,
+    color: Verandah.textPrimary,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 3,
+  },
+  locationText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    lineHeight: 17,
+    color: Verandah.textSecondary,
   },
   header: {
     flexDirection: 'row',
@@ -743,39 +827,39 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontFamily: VerandahType.serifFamily,
-    fontSize: 22,
-    lineHeight: 26,
-    fontWeight: '500',
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: '400',
     color: Verandah.textPrimary,
+    marginTop: 10,
   },
   headerActions: {
     flexDirection: 'row',
     gap: 8,
+    alignItems: 'center',
   },
   headerButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Verandah.cautionSoft,
+    backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
   headerButtonWithText: {
+    width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Verandah.cardMuted,
+    backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    paddingHorizontal: 10,
-    gap: 5,
     position: 'relative',
-  },
-  headerButtonText: {
-    fontSize: 12.5,
-    fontWeight: '500',
-    color: Verandah.accent,
   },
   badge: {
     position: 'absolute',
@@ -789,92 +873,89 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 3,
     borderWidth: 2,
-    borderColor: Verandah.surface,
+    borderColor: Verandah.paper,
   },
   badgeText: {
     color: Verandah.primaryFg,
     fontSize: 9,
-    fontWeight: '500',
+    fontWeight: '700',
+    fontFamily: VerandahType.sansFamily,
   },
   segmentedControl: {
     flexDirection: 'row',
     marginHorizontal: 24,
-    borderRadius: VerandahRadius.md,
+    borderRadius: VerandahRadius.segmented, // 12px
     padding: 3,
-    marginBottom: 6,
+    marginBottom: 8,
     backgroundColor: Verandah.cardMuted,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
   },
   segmentBtn: {
     flex: 1,
-    paddingVertical: 6,
+    paddingVertical: 7,
     alignItems: 'center',
-    borderRadius: VerandahRadius.sm,
+    borderRadius: VerandahRadius.segmentedInner, // 9px
   },
   segmentBtnActive: {
-    borderRadius: VerandahRadius.sm,
     backgroundColor: Verandah.card,
+    ...Verandah.shadowCard,
   },
   segmentText: {
     fontSize: 13,
     fontWeight: '500',
+    fontFamily: VerandahType.sansFamily,
   },
   filterSection: {
-    marginTop: 0,
-    marginBottom: 0,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 10,
-    letterSpacing: -0.3,
-    color: Verandah.textPrimary,
+    marginTop: 2,
+    marginBottom: 2,
   },
   listContent: {
     paddingBottom: 100,
     paddingHorizontal: 24,
-    paddingTop: 0,
+    paddingTop: 2,
   },
   subTabControl: {
     flexDirection: 'row',
-    borderRadius: VerandahRadius.md,
+    borderRadius: VerandahRadius.segmented,
     padding: 3,
-    marginBottom: 8,
+    marginBottom: 10,
     backgroundColor: Verandah.cardMuted,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
   },
   subTabBtn: {
     flex: 1,
     paddingVertical: 6,
-    borderRadius: VerandahRadius.sm,
+    borderRadius: VerandahRadius.segmentedInner,
     alignItems: 'center',
     justifyContent: 'center',
   },
   subTabText: {
-    fontSize: 13,
-    fontWeight: '400',
+    fontSize: 12.5,
+    fontWeight: '500',
+    fontFamily: VerandahType.sansFamily,
   },
   categoryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 6,
     paddingHorizontal: 4,
-    marginTop: 4,
-    marginBottom: 2,
+    marginTop: 6,
+    marginBottom: 4,
     gap: 8,
   },
   categoryHeaderAccent: {
-    width: 4,
-    height: 18,
+    width: 3,
+    height: 16,
     borderRadius: 2,
-  },
-  categoryHeaderEmoji: {
-    fontSize: 16,
-    lineHeight: 20,
   },
   categoryHeaderTitle: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     flex: 1,
     letterSpacing: -0.2,
+    fontFamily: VerandahType.sansFamily,
   },
   categoryCountBadge: {
     paddingHorizontal: 8,
@@ -882,30 +963,26 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   categoryCountText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
   },
   fab: {
     position: 'absolute',
     bottom: 24,
     right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    elevation: 0,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     zIndex: 10,
+    ...Verandah.shadowRaised,
   },
   fabInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: Verandah.primary,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  fabIcon: {
-    fontSize: 28,
-    lineHeight: 30,
-    color: Verandah.primaryFg,
   },
 });

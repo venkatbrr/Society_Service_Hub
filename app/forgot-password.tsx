@@ -1,4 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Lock01 } from '@untitledui/icons/Lock01';
+import { Mail01 } from '@untitledui/icons/Mail01';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -6,7 +7,7 @@ import Toast from 'react-native-toast-message';
 import { HeaderBackButton } from '../components/HeaderBackButton';
 import { EMAIL_AUTH_UI_ENABLED } from '../constants/authFlags';
 import { Verandah } from '../constants/Colors';
-import { VerandahLayout, VerandahType } from '../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, resetPassword } from '../lib/auth';
 import { replaceTracked } from '../lib/navigation';
 
@@ -54,18 +55,14 @@ export default function ForgotPasswordScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.container, { backgroundColor: Verandah.surface }]}
+      style={[styles.container, { backgroundColor: Verandah.paper }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <HeaderBackButton
-          style={[styles.backButton, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}
-          onPress={() => router.back()}
-          color={Verandah.textPrimary}
-        />
+        <HeaderBackButton onPress={() => router.back()} />
 
         <View style={styles.header}>
-          <View style={[styles.iconContainer, { backgroundColor: Verandah.primary }]}>
-            <Ionicons name="key-outline" size={36} color={Verandah.primaryFg} />
+          <View style={[styles.iconContainer, { backgroundColor: Verandah.cardMuted, borderColor: Verandah.borderHair, borderWidth: 0.5 }]}>
+            <Lock01 size={32} color={Verandah.primary} aria-hidden={true} />
           </View>
           <Text style={styles.title}>Reset password</Text>
           <Text style={[styles.subtitle, { color: Verandah.textSecondary }]}>
@@ -73,11 +70,11 @@ export default function ForgotPasswordScreen() {
           </Text>
         </View>
 
-        <View style={[styles.formCard, { backgroundColor: Verandah.card, borderColor: Verandah.border }]}>
+        <View style={[styles.formCard, { backgroundColor: Verandah.card, borderColor: Verandah.borderHair }]}>
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: Verandah.textPrimary }]}>Email address</Text>
-            <View style={[styles.inputContainer, { backgroundColor: Verandah.cardMuted, borderColor: Verandah.borderStrong }]}>
-               <Ionicons name="mail-outline" size={20} color={Verandah.textSecondary} style={styles.inputIcon} />
+            <View style={[styles.inputContainer, { backgroundColor: Verandah.cardMuted, borderColor: Verandah.borderHair }]}>
+               <Mail01 size={18} color={Verandah.textSecondary} aria-hidden={true} style={styles.inputIcon} />
                <TextInput
                  style={[styles.input, { color: Verandah.textPrimary }]}
                  placeholder="your@email.com"

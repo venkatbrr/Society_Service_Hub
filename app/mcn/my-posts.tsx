@@ -1,4 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { Edit01 } from '@untitledui/icons/Edit01';
+import { PauseCircle } from '@untitledui/icons/PauseCircle';
+import { PlayCircle } from '@untitledui/icons/PlayCircle';
+import { Plus } from '@untitledui/icons/Plus';
+import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
+import { SwitchHorizontal01 } from '@untitledui/icons/SwitchHorizontal01';
+import { Trash01 } from '@untitledui/icons/Trash01';
+import { XClose } from '@untitledui/icons/XClose';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart } from '../../lib/navigation';
@@ -15,7 +23,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { EmptyState } from '../../components/EmptyState';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { confirmAction } from '../../lib/confirm';
@@ -254,7 +262,7 @@ export default function MyPostsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: 'My Submissions',
@@ -270,10 +278,10 @@ export default function MyPostsScreen() {
           activeOpacity={0.8}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons
-              name="storefront-outline"
+            <ShoppingBag01
               size={15}
               color={activeSegment === 'business' ? colors.primary : colors.textSecondary}
+              aria-hidden={true}
             />
             <Text
               style={[
@@ -292,10 +300,10 @@ export default function MyPostsScreen() {
           activeOpacity={0.8}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons
-              name="swap-horizontal-outline"
+            <SwitchHorizontal01
               size={15}
               color={activeSegment === 'borrow' ? colors.primary : colors.textSecondary}
+              aria-hidden={true}
             />
             <Text
               style={[
@@ -310,7 +318,7 @@ export default function MyPostsScreen() {
       </View>
 
       {loading ? (
-        <View style={[styles.centerContainer, { backgroundColor: colors.surface }]}>
+        <View style={[styles.centerContainer, { backgroundColor: colors.paper }]}>
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : activeSegment === 'business' ? (
@@ -328,7 +336,7 @@ export default function MyPostsScreen() {
             />
           }
           renderItem={({ item }) => (
-            <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.borderHair }]}>
               <View style={styles.cardHeader}>
                 <View style={styles.cardTitleWrap}>
                   <Text style={[styles.cardTitle, { color: colors.textPrimary }]} numberOfLines={1}>
@@ -357,29 +365,29 @@ export default function MyPostsScreen() {
                   style={styles.actionBtn}
                   onPress={() => router.push(`/mcn/listing/manage/${item.id}` as any)}
                 >
-                  <Ionicons name="pencil-outline" size={14} color={colors.primary} />
+                  <Edit01 size={14} color={colors.primary} aria-hidden={true} />
                   <Text style={[styles.actionText, { color: colors.primary }]}>Manage</Text>
                 </TouchableOpacity>
-                <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
+                <View style={[styles.actionDivider, { backgroundColor: colors.borderHair }]} />
                 <TouchableOpacity
                   style={styles.actionBtn}
                   onPress={() => handleToggleListingActive(item.id, item.is_active)}
                 >
-                  <Ionicons
-                    name={item.is_active ? 'pause-circle-outline' : 'play-circle-outline'}
-                    size={14}
-                    color={colors.textPrimary}
-                  />
+                  {item.is_active ? (
+                    <PauseCircle size={14} color={colors.textPrimary} aria-hidden={true} />
+                  ) : (
+                    <PlayCircle size={14} color={colors.textPrimary} aria-hidden={true} />
+                  )}
                   <Text style={[styles.actionText, { color: colors.textPrimary }]}>
                     {item.is_active ? 'Pause' : 'Activate'}
                   </Text>
                 </TouchableOpacity>
-                <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
+                <View style={[styles.actionDivider, { backgroundColor: colors.borderHair }]} />
                 <TouchableOpacity
                   style={styles.actionBtn}
                   onPress={() => handleDeleteListing(item.id)}
                 >
-                  <Ionicons name="trash-outline" size={14} color={colors.danger} />
+                  <Trash01 size={14} color={colors.danger} aria-hidden={true} />
                   <Text style={[styles.actionText, { color: colors.danger }]}>Delete</Text>
                 </TouchableOpacity>
               </View>
@@ -408,7 +416,7 @@ export default function MyPostsScreen() {
             const canDeletePost = isOwner || !!isCommunityLead;
 
             return (
-              <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.borderHair }]}>
                 <View style={styles.cardHeader}>
                   <View style={styles.cardTitleWrap}>
                     <Text style={[styles.cardTitle, { color: colors.textPrimary }]} numberOfLines={1}>
@@ -436,24 +444,24 @@ export default function MyPostsScreen() {
                 <View style={styles.cardActions}>
                   {item.is_available && isOwner ? (
                     <TouchableOpacity style={styles.actionBtn} onPress={() => handleClose(item.id)}>
-                      <Ionicons name="close-circle-outline" size={14} color={colors.textPrimary} />
+                      <XClose size={14} color={colors.textPrimary} aria-hidden={true} />
                       <Text style={[styles.actionText, { color: colors.textPrimary }]}>Close</Text>
                     </TouchableOpacity>
                   ) : (
                     <View style={styles.actionBtn}>
-                      <Ionicons name="checkmark-circle-outline" size={14} color={colors.textMuted} />
+                      <CheckCircle size={14} color={colors.textMuted} aria-hidden={true} />
                       <Text style={[styles.actionText, { color: colors.textMuted }]}>
                         {item.is_available ? 'Active' : 'Closed'}
                       </Text>
                     </View>
                   )}
-                  <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
+                  <View style={[styles.actionDivider, { backgroundColor: colors.borderHair }]} />
                   <TouchableOpacity
                     style={styles.actionBtn}
                     onPress={() => handleDelete(item.id, item.user_id)}
                     disabled={!canDeletePost}
                   >
-                    <Ionicons name="trash-outline" size={14} color={canDeletePost ? colors.danger : colors.textMuted} />
+                    <Trash01 size={14} color={canDeletePost ? colors.danger : colors.textMuted} aria-hidden={true} />
                     <Text style={[styles.actionText, { color: canDeletePost ? colors.danger : colors.textMuted }]}>Delete</Text>
                   </TouchableOpacity>
                 </View>
@@ -474,7 +482,7 @@ export default function MyPostsScreen() {
           router.push('/mcn/listing-add' as any);
         }}
       >
-        <Ionicons name="add" size={28} color={colors.primaryFg} />
+        <Plus size={28} color={colors.primaryFg} aria-hidden={true} />
       </TouchableOpacity>
     </View>
   );

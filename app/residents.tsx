@@ -1,13 +1,16 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
+import { ChevronDown } from '@untitledui/icons/ChevronDown';
+import { ChevronUp } from '@untitledui/icons/ChevronUp';
+import { SearchLg } from '@untitledui/icons/SearchLg';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../components/Avatar';
+import { HeaderBackButton } from '../components/HeaderBackButton';
 import { Verandah } from '../constants/Colors';
-import { VerandahLayout, VerandahRadius } from '../constants/Verandah';
-import { APP_EMOJIS } from '../constants/emojis';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { replaceTracked } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
@@ -100,22 +103,29 @@ export default function ResidentsScreen() {
       }
     });
 
-    const sortedGroups = Array.from(groups.keys()).sort().map(key => ({
-      title: key,
-      data: (expandedBlocks.has(key) || term) ? groups.get(key)! : [],
-      count: groups.get(key)!.length,
-    }));
+    const result: Array<{ title: string; data: DirectoryResident[]; count: number }> = [];
+
+    Array.from(groups.keys()).sort().forEach(blockName => {
+      const allRows = groups.get(blockName)!;
+      const isExpanded = expandedBlocks.has(blockName) || !!term;
+      result.push({
+        title: blockName,
+        data: isExpanded ? allRows : [],
+        count: allRows.length,
+      });
+    });
 
     if (unassigned.length > 0) {
-      sortedGroups.push({ 
-        title: 'Unassigned', 
-        data: (expandedBlocks.has('Unassigned') || term) ? unassigned : [],
-        count: unassigned.length
+      const isExpanded = expandedBlocks.has('Other') || !!term;
+      result.push({
+        title: 'Other',
+        data: isExpanded ? unassigned : [],
+        count: unassigned.length,
       });
     }
 
-    return sortedGroups;
-  }, [filteredResidents, blocksEnabled, expandedBlocks, search]);
+    return result;
+  }, [blocksEnabled, filteredResidents, search, expandedBlocks]);
 
   const handleBack = () => {
     if (returnTo === 'profile') {
@@ -128,8 +138,6 @@ export default function ResidentsScreen() {
     }
     router.back();
   };
-
-  const pullToRefresh = useWebPullToRefresh(() => loadResidents(true), refreshing);
 
   const handleRemoveResident = () => {
     if (!selectedResident) return;
@@ -148,11 +156,12 @@ export default function ResidentsScreen() {
                 p_target_profile_id: selectedResident.id,
               });
               if (error) throw error;
+
               Toast.show({ type: 'success', text1: 'Resident removed' });
               setSelectedResident(null);
-              await loadResidents();
+              await loadResidents(false);
             } catch (error: any) {
-              Toast.show({ type: 'error', text1: 'Remove failed', text2: error.message });
+              Toast.show({ type: 'error', text1: 'Failed to remove resident', text2: error.message });
             } finally {
               setRemoving(false);
             }
@@ -162,27 +171,24 @@ export default function ResidentsScreen() {
     );
   };
 
+  const pullToRefresh = useWebPullToRefresh(() => loadResidents(true), refreshing);
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={[styles.backButton, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}
-        >
-          <Ionicons name="arrow-back" size={20} color={colors.primary} />
-        </TouchableOpacity>
+        <HeaderBackButton onPress={handleBack} />
         <View style={styles.headerCopy}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Community directory</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Active residents in your community</Text>
+          <Text style={styles.title}>Residents directory</Text>
+          <Text style={styles.subtitle}>{residents.length} neighbors in community</Text>
         </View>
       </View>
 
-      <View style={[styles.searchWrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
-        <Text style={styles.searchIcon}>{APP_EMOJIS.search}</Text>
+      <View style={styles.searchWrap}>
+        <SearchLg size={16} color={Verandah.textTertiary} aria-hidden={true} />
         <TextInput
-          style={[styles.searchInput, { color: colors.textPrimary }]}
-          placeholder="Search by name or flat"
-          placeholderTextColor={colors.textMuted}
+          style={styles.searchInput}
+          placeholder="Search by name or flat number"
+          placeholderTextColor={Verandah.textMuted}
           value={search}
           onChangeText={setSearch}
         />
@@ -190,14 +196,14 @@ export default function ResidentsScreen() {
 
       {loading ? (
         <View style={styles.loaderWrap}>
-          <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color={Verandah.accent} />
         </View>
       ) : (
         <SectionList
+          {...pullToRefresh.pullProps}
           sections={groupedResidents}
           keyExtractor={(item) => item.id}
-          {...pullToRefresh.pullProps}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadResidents(true)} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadResidents(true)} tintColor={Verandah.accent} />}
           ListHeaderComponent={<WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />}
           contentContainerStyle={filteredResidents.length ? styles.listContent : styles.emptyContent}
           ListEmptyComponent={
@@ -208,7 +214,7 @@ export default function ResidentsScreen() {
             const isExpanded = expandedBlocks.has(section.title) || !!search.trim();
             return (
               <TouchableOpacity
-                style={[styles.blockTile, { backgroundColor: colors.card, borderColor: colors.border }]}
+                style={[styles.blockTile, { backgroundColor: colors.card, borderColor: colors.borderHair }]}
                 onPress={() => {
                   setExpandedBlocks(prev => {
                     const next = new Set(prev);
@@ -223,15 +229,19 @@ export default function ResidentsScreen() {
                 <View style={styles.blockTileRight}>
                   <Text style={[styles.blockTileCount, { color: colors.textSecondary }]}>{section.count} residents</Text>
                   {!search.trim() && (
-                    <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color={colors.textSecondary} />
+                    isExpanded ? (
+                      <ChevronUp size={18} color={colors.textSecondary} aria-hidden={true} />
+                    ) : (
+                      <ChevronDown size={18} color={colors.textSecondary} aria-hidden={true} />
+                    )
                   )}
                 </View>
               </TouchableOpacity>
             );
           }}
           renderItem={({ item }) => (
-            <View style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 6 }]}>
-              <Avatar name={item.full_name || 'Resident'} size={32} />
+            <View style={[styles.row, { backgroundColor: colors.card, borderColor: colors.borderHair, marginBottom: 6 }]}>
+              <Avatar name={item.full_name || 'Resident'} size={34} />
               <View style={styles.rowCopy}>
                 <View style={styles.rowTop}>
                   {canViewPhone ? (
@@ -262,7 +272,6 @@ export default function ResidentsScreen() {
         />
       )}
 
-      {/* Resident detail modal — visible to community leads */}
       <Modal
         visible={!!selectedResident}
         transparent
@@ -270,7 +279,7 @@ export default function ResidentsScreen() {
         onRequestClose={() => setSelectedResident(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.paper }]}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
               {selectedResident?.full_name || 'Resident'}
             </Text>
@@ -289,14 +298,14 @@ export default function ResidentsScreen() {
 
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={[styles.modalCloseBtn, { borderColor: colors.border }]}
+                style={[styles.modalCloseBtn, { borderColor: colors.borderHair }]}
                 onPress={() => setSelectedResident(null)}
               >
                 <Text style={[styles.modalCloseText, { color: colors.textPrimary }]}>Close</Text>
               </TouchableOpacity>
               {isCommunityLead && selectedResident?.app_role !== 'president' && selectedResident?.app_role !== 'vice_president' ? (
                 <TouchableOpacity
-                  style={[styles.modalRemoveBtn, { backgroundColor: colors.accent }]}
+                  style={[styles.modalRemoveBtn, { backgroundColor: colors.danger }]}
                   onPress={handleRemoveResident}
                   disabled={removing}
                 >
@@ -316,39 +325,192 @@ export default function ResidentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 20, paddingTop: VerandahLayout.screenPaddingTop },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  backButton: { width: 40, height: 40, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  headerCopy: { flex: 1 },
-  title: { fontSize: 24, fontWeight: '500', letterSpacing: -0.4 },
-  subtitle: { fontSize: 13, marginTop: 2 },
-  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, height: 40, marginBottom: 10 },
-  searchIcon: { fontSize: 15, lineHeight: 16 },
-  searchInput: { flex: 1, fontSize: 13 },
-  loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  listContent: { paddingBottom: 24, gap: 6 },
-  emptyContent: { flexGrow: 1, justifyContent: 'center' },
-  emptyText: { textAlign: 'center', fontSize: 13 },
-  blockTile: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, marginTop: 8, marginBottom: 6 },
-  blockTileTitle: { fontSize: 15, fontWeight: '600' },
-  blockTileRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  blockTileCount: { fontSize: 12 },
-  row: { borderWidth: 1, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  rowCopy: { flex: 1 },
-  rowTop: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  name: { fontSize: 14, fontWeight: '600' },
-  meta: { fontSize: 12, marginTop: 1, lineHeight: 16 },
-  metaRow: { flexDirection: 'row', gap: 10, marginTop: 2 },
-  metaCompact: { fontSize: 11 },
-  leadBadge: { borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2 },
-  leadBadgeText: { fontSize: 10, fontWeight: '500' },
-  modalOverlay: { flex: 1, backgroundColor: Verandah.borderStrong, justifyContent: 'flex-end' },
-  modalCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 8 },
-  modalTitle: { fontSize: 18, fontWeight: '500' },
-  modalMeta: { fontSize: 14 },
-  modalActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  modalCloseBtn: { flex: 1, borderWidth: 1, borderRadius: VerandahRadius.md, paddingVertical: 12, alignItems: 'center' },
-  modalCloseText: { fontSize: 14, fontWeight: '500' },
-  modalRemoveBtn: { flex: 1, borderRadius: VerandahRadius.md, paddingVertical: 12, alignItems: 'center' },
-  modalRemoveText: { color: Verandah.primaryFg, fontSize: 14, fontWeight: '500' },
+  container: {
+    flex: 1,
+    backgroundColor: Verandah.paper,
+    paddingHorizontal: 20,
+    paddingTop: VerandahLayout.screenPaddingTop,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 10,
+  },
+  headerCopy: {
+    flex: 1,
+  },
+  title: {
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 26,
+    lineHeight: 30,
+    fontWeight: '400',
+    color: Verandah.textPrimary,
+  },
+  subtitle: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    color: Verandah.textSecondary,
+    marginTop: 2,
+  },
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    borderRadius: VerandahRadius.search,
+    paddingHorizontal: 12,
+    height: 42,
+    backgroundColor: Verandah.card,
+    marginBottom: 10,
+    ...Verandah.shadowCard,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13.5,
+    fontFamily: VerandahType.sansFamily,
+    color: Verandah.textPrimary,
+  },
+  loaderWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listContent: {
+    paddingBottom: 32,
+    gap: 4,
+  },
+  emptyContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 13,
+    fontFamily: VerandahType.sansFamily,
+  },
+  blockTile: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: VerandahRadius.card,
+    borderWidth: 0.5,
+    marginTop: 8,
+    marginBottom: 6,
+    ...Verandah.shadowCard,
+  },
+  blockTileTitle: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 14.5,
+    fontWeight: '600',
+  },
+  blockTileRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  blockTileCount: {
+    fontSize: 12,
+    fontFamily: VerandahType.sansFamily,
+  },
+  row: {
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.card,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    ...Verandah.shadowCard,
+  },
+  rowCopy: {
+    flex: 1,
+  },
+  rowTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  name: {
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
+  },
+  meta: {
+    fontSize: 12,
+    marginTop: 1,
+    lineHeight: 16,
+    fontFamily: VerandahType.sansFamily,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 2,
+  },
+  metaCompact: {
+    fontSize: 11.5,
+    fontFamily: VerandahType.sansFamily,
+  },
+  leadBadge: {
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  leadBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    gap: 8,
+  },
+  modalTitle: {
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 20,
+    fontWeight: '400',
+  },
+  modalMeta: {
+    fontSize: 13.5,
+    fontFamily: VerandahType.sansFamily,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  modalCloseBtn: {
+    flex: 1,
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.button,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  modalCloseText: {
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
+  },
+  modalRemoveBtn: {
+    flex: 1,
+    borderRadius: VerandahRadius.button,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  modalRemoveText: {
+    color: Verandah.primaryFg,
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
+  },
 });

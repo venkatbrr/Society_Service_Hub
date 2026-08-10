@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
 import React from 'react';
 import { StyleProp, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 
@@ -11,7 +11,7 @@ type HeaderBackButtonProps = {
 export function HeaderBackButton({ onPress, color = '#1F2A28', style }: HeaderBackButtonProps) {
   return (
     <TouchableOpacity onPress={onPress} style={[styles.button, style]} hitSlop={8}>
-      <Ionicons name="arrow-back" size={21} color={color} />
+      <ArrowLeft size={21} color={color} aria-hidden="true" />
     </TouchableOpacity>
   );
 }

@@ -1,3 +1,6 @@
+import { CheckVerified01 } from '@untitledui/icons/CheckVerified01';
+import { Plus } from '@untitledui/icons/Plus';
+import { Tool01 } from '@untitledui/icons/Tool01';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -7,7 +10,6 @@ import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verand
 import { useAuth } from '../context/AuthContext';
 import {
     mapServiceCategoryToProviderCategory,
-    SERVICE_CATEGORY_EMOJI,
     ServiceCategory,
 } from '../lib/serviceCategories';
 import { supabase } from '../lib/supabase';
@@ -69,21 +71,23 @@ export function UpcomingServicesCard() {
   // State: zero services
   if (state === 'zero') {
     return (
-      <View style={styles.card}>
+      <View style={styles.promoCard}>
         <View style={styles.zeroRow}>
-          <Text style={styles.zeroEmoji}>🔧</Text>
+          <View style={styles.promoIconBox}>
+            <Tool01 size={16} color={Verandah.gold} aria-hidden={true} />
+          </View>
           <View style={styles.zeroContent}>
-            <Text style={styles.zeroTitle} numberOfLines={1}>Never miss maintenance</Text>
-            <Text style={styles.zeroBody} numberOfLines={1}>
-              Track AC, RO and other services
+            <Text style={styles.promoTitle} numberOfLines={1}>Never miss maintenance</Text>
+            <Text style={styles.promoBody} numberOfLines={1}>
+              Track AC, RO &amp; other services
             </Text>
           </View>
           <TouchableOpacity
-            style={styles.zeroCtaCompact}
+            style={styles.promoCta}
             onPress={() => router.push('/services/add')}
             activeOpacity={0.85}
           >
-            <Text style={styles.zeroCtaTextCompact}>Add service</Text>
+            <Text style={styles.promoCtaText}>Add</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -95,7 +99,10 @@ export function UpcomingServicesCard() {
     return (
       <View style={styles.card}>
         <View style={styles.trackRow}>
-          <Text style={styles.trackText}>✓ All services on track</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <CheckVerified01 size={14} color={Verandah.accent} aria-hidden={true} />
+            <Text style={styles.trackText}>All services on track</Text>
+          </View>
           <TouchableOpacity onPress={() => router.push('/services' as any)} activeOpacity={0.8}>
             <Text style={styles.viewAll}>View all ({totalCount})</Text>
           </TouchableOpacity>
@@ -112,10 +119,11 @@ export function UpcomingServicesCard() {
       </View>
 
       {urgentServices.map((s) => {
-        const emoji = SERVICE_CATEGORY_EMOJI[s.category as ServiceCategory] ?? '🔧';
         return (
           <View key={s.id} style={styles.serviceRow}>
-            <Text style={styles.rowEmoji}>{emoji}</Text>
+            <View style={styles.iconBox}>
+              <Tool01 size={14} color={Verandah.accent} aria-hidden={true} />
+            </View>
             <View style={styles.rowContent}>
               <Text style={styles.rowName} numberOfLines={1}>
                 {s.service_name}
@@ -143,8 +151,9 @@ export function UpcomingServicesCard() {
       })}
 
       <View style={styles.cardFooter}>
-        <TouchableOpacity onPress={() => router.push('/services/add')} activeOpacity={0.8}>
-          <Text style={styles.footerLink}>+ Add service</Text>
+        <TouchableOpacity onPress={() => router.push('/services/add')} activeOpacity={0.8} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Plus size={12} color={Verandah.accent} aria-hidden={true} />
+          <Text style={styles.footerLink}>Add service</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/services' as any)} activeOpacity={0.8}>
           <Text style={styles.footerLinkMuted}>View all ({totalCount})</Text>
@@ -156,49 +165,76 @@ export function UpcomingServicesCard() {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: VerandahRadius.md,
-    borderWidth: 1,
-    borderColor: Verandah.borderStrong,
+    borderRadius: VerandahRadius.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
-    marginBottom: 6,
-    paddingVertical: 8,
+    marginBottom: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
+    ...Verandah.shadowCard,
   },
-  // Zero state
-  zeroRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  zeroEmoji: { fontSize: 18 },
+  iconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: Verandah.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Zero state — dark teal promo
+  promoCard: {
+    borderRadius: VerandahRadius.card,
+    backgroundColor: Verandah.teal900,
+    marginBottom: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    ...Verandah.shadowRaised,
+  },
+  promoIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: 'rgba(221, 169, 74, 0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  promoTitle: { fontSize: 13.5, fontWeight: '700', color: Verandah.cream, fontFamily: VerandahType.sansFamily },
+  promoBody: { fontSize: 11.5, color: 'rgba(240, 237, 227, 0.68)', marginTop: 2, fontFamily: VerandahType.sansFamily },
+  promoCta: { borderRadius: VerandahRadius.pill, paddingVertical: 7, paddingHorizontal: 16, backgroundColor: Verandah.gold },
+  promoCtaText: { fontSize: 12.5, fontWeight: '700', color: Verandah.teal900, fontFamily: VerandahType.sansFamily },
+  zeroRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   zeroContent: { flex: 1 },
-  zeroTitle: { fontSize: 13, fontWeight: '500', color: Verandah.textPrimary },
-  zeroBody: { fontSize: 11, color: Verandah.textSecondary, marginTop: 1 },
-  zeroCtaCompact: { borderRadius: VerandahRadius.sm, paddingVertical: 5, paddingHorizontal: 10, backgroundColor: Verandah.primary },
-  zeroCtaTextCompact: { fontSize: 12, fontWeight: '500', color: Verandah.primaryFg },
+  zeroTitle: { fontSize: 13, fontWeight: '500', color: Verandah.textPrimary, fontFamily: VerandahType.sansFamily },
+  zeroBody: { fontSize: 11, color: Verandah.textSecondary, marginTop: 1, fontFamily: VerandahType.sansFamily },
+  zeroCtaCompact: { borderRadius: VerandahRadius.button, paddingVertical: 6, paddingHorizontal: 12, backgroundColor: Verandah.primary },
+  zeroCtaTextCompact: { fontSize: 12, fontWeight: '600', color: Verandah.primaryFg, fontFamily: VerandahType.sansFamily },
   // All on track
   trackRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  trackText: { fontSize: 13, fontWeight: '500', color: Verandah.accent },
-  viewAll: { fontSize: 12, fontWeight: '500', color: Verandah.accent },
+  trackText: { fontSize: 13, fontWeight: '500', color: Verandah.accent, fontFamily: VerandahType.sansFamily },
+  viewAll: { fontSize: 12, fontWeight: '500', color: Verandah.accent, fontFamily: VerandahType.sansFamily },
   // Has-due
-  cardHeader: { marginBottom: 4 },
-  cardTitle: { fontSize: 13, fontWeight: '500', color: Verandah.textPrimary },
+  cardHeader: { marginBottom: 6 },
+  cardTitle: { fontSize: 13, fontWeight: '600', color: Verandah.textPrimary, fontFamily: VerandahType.sansFamily },
   serviceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderTopWidth: 0.5,
-    borderTopColor: Verandah.border,
+    borderTopColor: Verandah.borderHair,
     gap: 8,
   },
-  rowEmoji: { fontSize: 18 },
   rowContent: { flex: 1, gap: 2 },
-  rowName: { fontSize: 13, fontWeight: '500', color: Verandah.textPrimary },
-  findTech: { fontSize: 12, fontWeight: '500', color: Verandah.accent },
+  rowName: { fontSize: 13, fontWeight: '500', color: Verandah.textPrimary, fontFamily: VerandahType.sansFamily },
+  findTech: { fontSize: 12, fontWeight: '500', color: Verandah.accent, fontFamily: VerandahType.sansFamily },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 4,
-    paddingTop: 4,
+    marginTop: 6,
+    paddingTop: 6,
     borderTopWidth: 0.5,
-    borderTopColor: Verandah.border,
+    borderTopColor: Verandah.borderHair,
   },
-  footerLink: { fontSize: 12, fontWeight: '500', color: Verandah.accent },
-  footerLinkMuted: { fontSize: 12, fontWeight: '500', color: Verandah.textTertiary },
+  footerLink: { fontSize: 12, fontWeight: '600', color: Verandah.accent, fontFamily: VerandahType.sansFamily },
+  footerLinkMuted: { fontSize: 12, fontWeight: '500', color: Verandah.textTertiary, fontFamily: VerandahType.sansFamily },
 });

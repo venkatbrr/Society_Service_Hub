@@ -1,9 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Bookmark } from '@untitledui/icons/Bookmark';
+import { CheckVerified01 } from '@untitledui/icons/CheckVerified01';
+import { Share07 } from '@untitledui/icons/Share07';
+import { Star01 } from '@untitledui/icons/Star01';
 import React from 'react';
 import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius } from '../constants/Verandah';
-import { getServiceCategoryEmoji } from '../constants/emojis';
+import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { ProviderWithInteraction } from '../lib/database.types';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
@@ -16,22 +18,21 @@ type ProviderCardProps = {
   isLightMode?: boolean;
 };
 
-export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, isLightMode }: ProviderCardProps) => {
+export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite }: ProviderCardProps) => {
   const handleShare = async (e: any) => {
     e.stopPropagation();
-    const ratingText = provider.avg_rating ? `★ ${Number(provider.avg_rating).toFixed(1)} (${provider.rating_count} reviews)` : '';
+    const ratingText = provider.avg_rating ? `${Number(provider.avg_rating).toFixed(1)} (${provider.rating_count} reviews)` : '';
     const shareUrl = siteUrl(`/provider/${provider.id}`);
 
     const messageLines = [
-      `👤 *Service Provider Contact*`,
-      `Name: ${provider.name}`,
-      `Category: ${getServiceCategoryEmoji(provider.category)} ${provider.category}`,
+      `*${provider.name}*`,
+      `Category: ${provider.category}`,
       `Phone: ${provider.phone}`,
       ratingText ? `Rating: ${ratingText}` : '',
       provider.flat_block ? `Block/Flat: ${provider.flat_block}` : '',
       provider.description ? `About: "${provider.description}"` : '',
       ``,
-      `🔗 View Provider Profile:`,
+      `View Provider Profile:`,
       shareUrl,
     ];
 
@@ -51,11 +52,11 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
   return (
     <BaseCard
       onPress={onPress}
-      padding={10}
+      padding={12}
       style={styles.card}
     >
       <View style={styles.content}>
-        <Avatar name={provider.name} size={36} />
+        <Avatar name={provider.name} size={38} />
         
         <View style={styles.mainInfo}>
           <View style={styles.headerRow}>
@@ -64,6 +65,7 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
             </Text>
             {provider.is_verified && (
               <View style={styles.pillVerified}>
+                <CheckVerified01 size={11} color={Verandah.accent} aria-hidden={true} style={{ marginRight: 3 }} />
                 <Text style={styles.pillVerifiedText}>Verified</Text>
               </View>
             )}
@@ -71,13 +73,13 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
 
           <View style={styles.metaRow}>
             <Text style={styles.categoryText} numberOfLines={1}>
-              {getServiceCategoryEmoji(provider.category)} {provider.category}
+              {provider.category}
             </Text>
             
             <Text style={styles.dot}>·</Text>
             
             <View style={styles.ratingBox}>
-              <Ionicons name="star" size={11} color={Verandah.caution} />
+              <Star01 size={11} color={Verandah.goldInk} fill={Verandah.goldInk} aria-hidden={true} />
               <Text style={styles.ratingNumber}>
                 {Number(provider.avg_rating).toFixed(1)}
               </Text>
@@ -98,10 +100,10 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
             onPress={handleShare}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons
-              name="share-outline"
+            <Share07
               size={18}
               color={Verandah.accent}
+              aria-hidden={true}
             />
           </TouchableOpacity>
 
@@ -110,10 +112,11 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite, i
             onPress={() => onToggleFavorite(provider.id, !!provider.is_favorite)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons
-              name={provider.is_favorite ? 'bookmark' : 'bookmark-outline'}
+            <Bookmark
               size={18}
               color={provider.is_favorite ? Verandah.accent : Verandah.textMuted}
+              fill={provider.is_favorite ? Verandah.accent : 'none'}
+              aria-hidden={true}
             />
           </TouchableOpacity>
         </View>

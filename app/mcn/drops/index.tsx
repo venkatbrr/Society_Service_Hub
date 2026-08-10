@@ -1,4 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { ChevronDown } from '@untitledui/icons/ChevronDown';
+import { ChevronUp } from '@untitledui/icons/ChevronUp';
+import { Plus } from '@untitledui/icons/Plus';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart, replaceTracked } from '../../../lib/navigation';
@@ -20,7 +23,7 @@ import { Rupees } from '../../../components/Rupees';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../../components/WebPullIndicator';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
@@ -142,7 +145,19 @@ export default function FoodDropsCatalogScreen() {
               p_user_ids: creatorIds,
             });
 
-            (hostRows || []).forEach((profile: any) => {
+            // The RPC is the anon-safe path. Signed-in residents can still read
+            // host profiles directly via profiles_select_public_hosts, so fall
+            // back to that when the RPC yields nothing (e.g. not yet deployed).
+            let hostProfiles: any[] = hostRows || [];
+            if (hostProfiles.length === 0 && user?.id) {
+              const { data: directRows } = await supabase
+                .from('profiles')
+                .select('id, full_name, flat_number')
+                .in('id', creatorIds);
+              hostProfiles = directRows || [];
+            }
+
+            hostProfiles.forEach((profile: any) => {
               profileMap[profile.id] = {
                 full_name: profile.full_name || null,
                 flat_number: profile.flat_number || null,
@@ -296,10 +311,10 @@ export default function FoodDropsCatalogScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
-          title: 'Pre-Order Food',
+          title: 'Pre-order Food',
           onBack: handleBack,
         })}
       />
@@ -310,10 +325,7 @@ export default function FoodDropsCatalogScreen() {
           style={[styles.masterToggleBtn, styles.masterToggleBtnActive]}
           activeOpacity={0.9}
         >
-          <View style={styles.iconLabelRow}>
-            <Ionicons name="restaurant-outline" size={16} color="#FFFFFF" />
-            <Text style={styles.masterToggleTextActive}>Pre-order Food</Text>
-          </View>
+          <Text style={styles.masterToggleTextActive}>Pre-order Food</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -323,40 +335,26 @@ export default function FoodDropsCatalogScreen() {
           onPress={() => replaceTracked(router, '/mcn/business' as any)}
           activeOpacity={0.8}
         >
-          <View style={styles.iconLabelRow}>
-            <AppIcon name="store" size={16} color={colors.textSecondary} />
-            <Text style={styles.masterToggleText}>Community Businesses</Text>
-          </View>
+          <Text style={styles.masterToggleText}>Businesses</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Subtitle Banner */}
-      <View style={styles.headerBanner}>
-        <Text style={styles.bannerSub}>
-          Browse fresh weekend specials, home-baked items, and neighborhood food pop-ups before cut-off deadlines.
-        </Text>
-      </View>
-
-      {/* Filter Segment Tabs */}
+      {/* Filter Pills */}
       <View style={styles.tabsRow}>
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'active' && styles.tabBtnActive]}
           onPress={() => setActiveTab('active')}
+          activeOpacity={0.85}
         >
-          <View style={styles.iconLabelRow}>
-            <Ionicons name="restaurant-outline" size={14} color={activeTab === 'active' ? '#FFFFFF' : Verandah.textSecondary} />
-            <Text style={[styles.tabText, activeTab === 'active' && styles.tabTextActive]}>Open Pre-orders</Text>
-          </View>
+          <Text style={[styles.tabText, activeTab === 'active' && styles.tabTextActive]}>Open</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'closed' && styles.tabBtnActive]}
           onPress={() => setActiveTab('closed')}
+          activeOpacity={0.85}
         >
-          <View style={styles.iconLabelRow}>
-            <AppIcon name="lock" size={14} color={activeTab === 'closed' ? '#FFFFFF' : Verandah.textSecondary} />
-            <Text style={[styles.tabText, activeTab === 'closed' && styles.tabTextActive]}>Past / Preparing</Text>
-          </View>
+          <Text style={[styles.tabText, activeTab === 'closed' && styles.tabTextActive]}>Past</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -368,11 +366,9 @@ export default function FoodDropsCatalogScreen() {
             }
             setActiveTab('my_drops');
           }}
+          activeOpacity={0.85}
         >
-          <View style={styles.iconLabelRow}>
-            <AppIcon name="chef" size={14} color={activeTab === 'my_drops' ? '#FFFFFF' : Verandah.textSecondary} />
-            <Text style={[styles.tabText, activeTab === 'my_drops' && styles.tabTextActive]}>My Pre-order Food</Text>
-          </View>
+          <Text style={[styles.tabText, activeTab === 'my_drops' && styles.tabTextActive]}>Mine</Text>
         </TouchableOpacity>
       </View>
 
@@ -410,7 +406,7 @@ export default function FoodDropsCatalogScreen() {
       {/* Content List */}
       {loading ? (
         <View style={styles.loaderWrap}>
-          <ActivityIndicator color={colors.accent} />
+          <ActivityIndicator color={colors.primary} />
         </View>
       ) : (
         <FlatList
@@ -424,7 +420,7 @@ export default function FoodDropsCatalogScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => fetchDrops(true)}
-              colors={[colors.accent]}
+              colors={[colors.primary]}
             />
           }
           ListHeaderComponent={
@@ -449,17 +445,17 @@ export default function FoodDropsCatalogScreen() {
                     {isPreparing ? (
                       <AppIcon name="chef" size={14} />
                     ) : (
-                      <Ionicons name="checkmark-circle" size={16} color="#059669" />
+                      <CheckCircle size={16} color={Verandah.green600} aria-hidden={true} />
                     )}
                     <Text style={isPreparing ? styles.sectionHeaderTextPreparing : styles.sectionHeaderTextCompleted}>
                       {isPreparing ? 'Kitchen Preparing' : 'Past Completed & Delivered Drops'} ({row.count})
                     </Text>
                   </View>
-                  <Ionicons
-                    name={collapsed ? 'chevron-down' : 'chevron-up'}
-                    size={16}
-                    color={isPreparing ? '#92400E' : '#065F46'}
-                  />
+                  {collapsed ? (
+                    <ChevronDown size={16} color={isPreparing ? '#92400E' : '#065F46'} aria-hidden={true} />
+                  ) : (
+                    <ChevronUp size={16} color={isPreparing ? '#92400E' : '#065F46'} aria-hidden={true} />
+                  )}
                 </TouchableOpacity>
               );
             }
@@ -470,10 +466,6 @@ export default function FoodDropsCatalogScreen() {
                 drop={item}
                 isCreator={item.created_by === user?.id}
                 onPress={() => router.push(`/mcn/drops/${item.id}` as any)}
-                onManage={() => {
-                  if (!requireLoginForAction()) return;
-                  router.push(`/mcn/drops/manage/${item.id}` as any);
-                }}
               />
             );
           }}
@@ -504,7 +496,7 @@ export default function FoodDropsCatalogScreen() {
           onPress={() => router.push('/mcn/drops/add' as any)}
           activeOpacity={0.85}
         >
-          <Ionicons name="add" size={24} color="#FFFFFF" />
+          <Plus size={24} color={Verandah.primaryFg} aria-hidden={true} />
           <Text style={styles.fabText}>Host Food Drop</Text>
         </TouchableOpacity>
       ) : null}
@@ -536,10 +528,9 @@ const styles = StyleSheet.create({
   tabsRow: {
     flexDirection: 'row',
     marginHorizontal: 16,
-    marginBottom: 6,
-    backgroundColor: '#F3F4F6',
-    borderRadius: VerandahRadius.pill,
-    padding: 2,
+    marginTop: 12,
+    marginBottom: 12,
+    gap: 8,
   },
   iconLabelRow: {
     flexDirection: 'row',
@@ -547,24 +538,27 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tabBtn: {
-    flex: 1,
-    paddingVertical: 5,
+    paddingVertical: 7,
+    paddingHorizontal: 18,
     alignItems: 'center',
     borderRadius: VerandahRadius.pill,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    backgroundColor: Verandah.card,
   },
   tabBtnActive: {
     backgroundColor: Verandah.primary,
-    borderWidth: 1,
     borderColor: Verandah.primary,
   },
   tabText: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: Verandah.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+    color: Verandah.textPrimary,
+    fontFamily: VerandahType.sansFamily,
   },
   tabTextActive: {
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: Verandah.primaryFg,
   },
   loaderWrap: {
     flex: 1,
@@ -625,7 +619,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     paddingVertical: 4,
     paddingHorizontal: 10,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: Verandah.accentSoft,
     borderRadius: VerandahRadius.md,
     borderWidth: 1,
     borderColor: '#A7F3D0',
@@ -641,7 +635,7 @@ const styles = StyleSheet.create({
   revenueCard: {
     marginHorizontal: 16,
     marginBottom: 8,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: Verandah.accentSoft,
     borderWidth: 1,
     borderColor: '#A7F3D0',
     borderRadius: VerandahRadius.lg,
@@ -681,32 +675,33 @@ const styles = StyleSheet.create({
   },
   masterToggleRow: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingTop: 0,
-    paddingBottom: 2,
-    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: Verandah.cream,
+    borderRadius: VerandahRadius.segmented,
+    padding: 4,
+    gap: 4,
   },
   masterToggleBtn: {
     flex: 1,
-    paddingVertical: 6,
+    paddingVertical: 7,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: VerandahRadius.pill,
-    backgroundColor: '#F3F4F6',
+    borderRadius: VerandahRadius.segmentedInner,
   },
   masterToggleBtnActive: {
     backgroundColor: Verandah.primary,
-    borderWidth: 1,
-    borderColor: Verandah.primary,
   },
   masterToggleText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
     color: Verandah.textSecondary,
+    fontFamily: VerandahType.sansFamily,
   },
   masterToggleTextActive: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: Verandah.primaryFg,
+    fontFamily: VerandahType.sansFamily,
   },
 });

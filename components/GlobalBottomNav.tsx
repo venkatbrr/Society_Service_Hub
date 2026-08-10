@@ -1,18 +1,31 @@
-import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import React from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Animated,
+  Easing,
+  Image,
+  LayoutChangeEvent,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Verandah } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import { normalizeRoute, pushTracked } from '../lib/navigation';
+import { NavBookmark, NavBuildings, NavHomeHeart, NavIconProps, NavPerson } from './NavIcons';
+
+// The real logo file, not a traced glyph — cream mark on transparent, already inset to
+// the safe zone, so it centres itself inside the disc at full bleed.
+const THRESHOLD_MARK = require('../assets/images/adaptive-icon.png');
 
 type TabDef = {
   key: string;
   label: string;
   route: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  iconActive: keyof typeof Ionicons.glyphMap;
+  /** Omitted for MCN, which renders the logo image inside its disc instead of a glyph. */
+  Icon?: React.ComponentType<NavIconProps>;
   isActive: (pathname: string) => boolean;
 };
 
@@ -21,32 +34,27 @@ const TABS: TabDef[] = [
     key: 'help',
     label: 'Help',
     route: '/',
-    icon: 'home-outline',
-    iconActive: 'home',
+    Icon: NavHomeHeart,
     isActive: (p) => p === '/',
   },
   {
     key: 'saved',
     label: 'Saved',
     route: '/favorites',
-    icon: 'bookmark-outline',
-    iconActive: 'bookmark',
+    Icon: NavBookmark,
     isActive: (p) => p === '/favorites',
   },
   {
     key: 'mcn',
     label: 'MCN',
     route: '/network',
-    icon: 'people-outline',
-    iconActive: 'people',
     isActive: (p) => p === '/network' || p.startsWith('/mcn/'),
   },
   {
     key: 'community',
     label: 'Community',
     route: '/community',
-    icon: 'business-outline',
-    iconActive: 'business',
+    Icon: NavBuildings,
     isActive: (p) =>
       p === '/community' ||
       p.startsWith('/funds') ||
@@ -58,18 +66,175 @@ const TABS: TabDef[] = [
     key: 'profile',
     label: 'Profile',
     route: '/profile',
-    icon: 'person-outline',
-    iconActive: 'person',
+    Icon: NavPerson,
     isActive: (p) => p === '/profile' || p.startsWith('/services'),
   },
 ];
 
+// Geometry — every value here is load-bearing for the "nothing moves" rule: the icon row
+// and the label row are both fixed height, so revealing the active label cannot nudge the
+// icons off their shared baseline.
+const BAR_HEIGHT = 72;
+const COLUMN_HEIGHT = 56;
+const ICON_ROW_HEIGHT = 24;
+const LABEL_ROW_HEIGHT = 12;
+const ICON_LABEL_GAP = 4;
+const HIGHLIGHT_INSET_Y = (BAR_HEIGHT - COLUMN_HEIGHT) / 2; // 8
+const HIGHLIGHT_INSET_X = 12;
+const DISC_SIZE = 42;
+
+// Springy overshoot shared by the highlight slide and the icon pop.
+const SPRING = Easing.bezier(0.34, 1.5, 0.5, 1);
+
+const ACTIVE_COLOR = Verandah.primary; // #0F3732
+const INACTIVE_COLOR = Verandah.textDisabled; // #9A988F
+const ACTIVE_STROKE = 2.2;
+const INACTIVE_STROKE = 1.9;
+
+const discShadow = Platform.select({
+  web: { boxShadow: '0 8px 20px rgba(15, 55, 50, 0.30)' } as any,
+  default: {
+    shadowColor: '#0F3732',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+});
+
+type NavTabProps = {
+  tab: TabDef;
+  isActive: boolean;
+  onPress: () => void;
+};
+
+function NavTab({ tab, isActive, onPress }: NavTabProps) {
+  const isCentre = tab.key === 'mcn';
+  const scale = React.useRef(new Animated.Value(isActive ? 1.1 : 1)).current;
+  const labelOpacity = React.useRef(new Animated.Value(isActive ? 1 : 0)).current;
+  const lift = React.useRef(new Animated.Value(isActive && isCentre ? -3 : 0)).current;
+
+  React.useEffect(() => {
+    Animated.timing(scale, {
+      toValue: isActive ? 1.1 : 1,
+      duration: 400,
+      easing: SPRING,
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(labelOpacity, {
+      toValue: isActive ? 1 : 0,
+      duration: 300,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [isActive, scale, labelOpacity]);
+
+  // The centre disc settles at -3px and then breathes between -3 and -6 for as long as
+  // MCN is the active tab.
+  React.useEffect(() => {
+    if (!isCentre) return;
+
+    if (!isActive) {
+      lift.stopAnimation();
+      Animated.timing(lift, {
+        toValue: 0,
+        duration: 420,
+        easing: Easing.bezier(0.34, 1.4, 0.5, 1),
+        useNativeDriver: false,
+      }).start();
+      return;
+    }
+
+    const float = Animated.loop(
+      Animated.sequence([
+        Animated.timing(lift, {
+          toValue: -6,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: false,
+        }),
+        Animated.timing(lift, {
+          toValue: -3,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: false,
+        }),
+      ])
+    );
+
+    Animated.timing(lift, {
+      toValue: -3,
+      duration: 420,
+      easing: Easing.bezier(0.34, 1.4, 0.5, 1),
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) float.start();
+    });
+
+    return () => {
+      float.stop();
+      lift.stopAnimation();
+    };
+  }, [isActive, isCentre, lift]);
+
+  const IconComponent = tab.Icon;
+  const iconColor = isActive ? ACTIVE_COLOR : INACTIVE_COLOR;
+  const strokeWidth = isActive ? ACTIVE_STROKE : INACTIVE_STROKE;
+
+  return (
+    <TouchableOpacity
+      style={styles.tabButton}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isActive }}
+      accessibilityLabel={tab.label}
+    >
+      <View style={styles.iconRow}>
+        {isCentre ? (
+          <Animated.View
+            style={[
+              styles.disc,
+              discShadow,
+              { transform: [{ translateY: lift }, { scale }] },
+            ]}
+          >
+            <Image
+              source={THRESHOLD_MARK}
+              style={styles.discMark}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+            />
+          </Animated.View>
+        ) : (
+          IconComponent && (
+            <Animated.View style={{ transform: [{ scale }] }}>
+              <IconComponent size={24} color={iconColor} strokeWidth={strokeWidth} />
+            </Animated.View>
+          )
+        )}
+      </View>
+      <View style={styles.labelRow}>
+        <Animated.Text
+          style={[
+            styles.label,
+            isCentre && styles.labelCentre,
+            { opacity: labelOpacity },
+          ]}
+          numberOfLines={1}
+        >
+          {tab.label}
+        </Animated.Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 /**
- * Persistent bottom navigation rendered once at the root layout so it stays
- * visible on every screen, not just the five `(tabs)` routes — expo-router's
- * own `Tabs` bar only renders for screens inside that group. The `(tabs)`
- * Tabs navigator itself is still what actually switches screens; this bar
- * just draws the chrome and pushes to the same tab-root routes.
+ * Persistent bottom navigation ("Threshold Rail") rendered once at the root layout.
+ * Tab set/routes match the pre-redesign nav exactly (Help · Saved · MCN · Community · Profile).
+ * An arch-topped highlight slides behind whichever tab is active, and the centre MCN disc
+ * floats while it holds focus.
  */
 export function GlobalBottomNav() {
   const rawPathname = usePathname();
@@ -78,66 +243,135 @@ export function GlobalBottomNav() {
   const insets = useSafeAreaInsets();
   const { session, communityId, isLoading } = useAuth();
 
-  if (isLoading || !session || !communityId) {
+  const [barWidth, setBarWidth] = React.useState(0);
+  const highlightX = React.useRef(new Animated.Value(0)).current;
+
+  const activeIndex = TABS.findIndex((tab) => tab.isActive(pathname));
+  const tabWidth = barWidth > 0 ? barWidth / TABS.length : 0;
+
+  React.useEffect(() => {
+    if (tabWidth <= 0 || activeIndex < 0) return;
+    Animated.timing(highlightX, {
+      toValue: activeIndex * tabWidth + HIGHLIGHT_INSET_X,
+      duration: 460,
+      easing: SPRING,
+      useNativeDriver: false,
+    }).start();
+  }, [activeIndex, tabWidth, highlightX]);
+
+  const onLayout = React.useCallback((e: LayoutChangeEvent) => {
+    setBarWidth(e.nativeEvent.layout.width);
+  }, []);
+
+  const isExcludedRoute =
+    pathname === '/community-select' ||
+    pathname === '/community-request' ||
+    pathname === '/community-request-submitted' ||
+    pathname === '/community-join-block' ||
+    pathname === '/login' ||
+    pathname === '/forgot-password' ||
+    pathname === '/admin-redirect';
+
+  if (isLoading || !session || !communityId || isExcludedRoute) {
     return null;
   }
 
-  const activeKey = TABS.find((tab) => tab.isActive(pathname))?.key ?? null;
+  // Home-indicator padding sits below the 72px bar, never inside it.
+  const bottomInset = insets.bottom > 0 ? insets.bottom : Platform.OS === 'web' ? 8 : 22;
+  const showHighlight = tabWidth > 0 && activeIndex >= 0;
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          height: (Platform.OS === 'web' ? 52 : 46) + (Platform.OS === 'web' ? 0 : insets.bottom),
-          paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom,
-        },
-      ]}
-    >
-      {TABS.map((tab) => {
-        const isActive = tab.key === activeKey;
-        return (
-          <TouchableOpacity
+    <View style={[styles.container, { paddingBottom: bottomInset }]}>
+      <View style={styles.bar} onLayout={onLayout}>
+        {showHighlight && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.highlight,
+              {
+                width: tabWidth - HIGHLIGHT_INSET_X * 2,
+                transform: [{ translateX: highlightX }],
+              },
+            ]}
+          />
+        )}
+        {TABS.map((tab, index) => (
+          <NavTab
             key={tab.key}
-            style={styles.tabButton}
-            // pushTracked, not router.push: tapping back to a tab you were just
-            // on (Home -> Network -> Home) pushes a route that is already the
-            // entry beneath the current one. On native that is indistinguishable
-            // from a pop, so the push has to declare itself.
+            tab={tab}
+            isActive={index === activeIndex}
             onPress={() => pushTracked(router, tab.route as any)}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={isActive ? tab.iconActive : tab.icon}
-              size={19}
-              color={isActive ? Verandah.accent : Verandah.textMuted}
-            />
-            <Text style={[styles.label, { color: isActive ? Verandah.accent : Verandah.textMuted }]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+          />
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    backgroundColor: Verandah.card,
+    backgroundColor: Verandah.paper, // #FAF8F4
     borderTopWidth: 0.5,
-    borderTopColor: Verandah.border,
-    paddingTop: 5,
+    borderTopColor: Verandah.borderHair,
+  },
+  bar: {
+    flexDirection: 'row',
+    height: BAR_HEIGHT,
+    alignItems: 'center',
+  },
+  highlight: {
+    position: 'absolute',
+    left: 0,
+    top: HIGHLIGHT_INSET_Y,
+    height: BAR_HEIGHT - HIGHLIGHT_INSET_Y * 2,
+    backgroundColor: 'rgba(15, 55, 50, 0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 55, 50, 0.08)',
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
   },
   tabButton: {
     flex: 1,
+    height: COLUMN_HEIGHT,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 1,
+    gap: ICON_LABEL_GAP,
+  },
+  iconRow: {
+    height: ICON_ROW_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  labelRow: {
+    height: LABEL_ROW_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    lineHeight: 12,
+    color: ACTIVE_COLOR,
+  },
+  labelCentre: {
+    fontWeight: '800',
+  },
+  // The asset insets its mark to the inner ~58%, so the image box is oversized past the
+  // disc to land the visible arch at ~65% of it. The overhang is transparent.
+  discMark: {
+    width: 48,
+    height: 48,
+  },
+  disc: {
+    position: 'absolute',
+    width: DISC_SIZE,
+    height: DISC_SIZE,
+    borderRadius: 14,
+    backgroundColor: Verandah.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

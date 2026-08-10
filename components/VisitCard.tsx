@@ -1,4 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Calendar } from '@untitledui/icons/Calendar';
+import { Link01 } from '@untitledui/icons/Link01';
+import { Share07 } from '@untitledui/icons/Share07';
+import { Users01 } from '@untitledui/icons/Users01';
 import React from 'react';
 import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
@@ -78,13 +81,13 @@ export const VisitCard = React.memo(({
       const shareUrl = siteUrl(`/visits/${id}`);
 
       const messageLines = [
-        `🚗 *Service Visit: ${title}*`,
+        `*Service Visit: ${title}*`,
         `Provider: ${providerName}`,
-        `📅 Date: ${formattedDate}`,
-        `⏰ Time: ${visitTimeSlot}`,
+        `Date: ${formattedDate}`,
+        `Time: ${visitTimeSlot}`,
         estimatedCost ? `Estimated Cost: ~${estimatedCost}` : '',
         ``,
-        `🔗 View Visit & Join:`,
+        `View Visit & Join:`,
         shareUrl,
       ];
 
@@ -106,7 +109,7 @@ export const VisitCard = React.memo(({
   const isFull = maxJoiners ? joinerCount >= maxJoiners : false;
 
   return (
-    <BaseCard padding={10} onPress={onPress}>
+    <BaseCard padding={12} onPress={onPress}>
       {/* Creator Row */}
       <View style={styles.creatorRow}>
         <Avatar name={creatorName} size={30} />
@@ -116,7 +119,7 @@ export const VisitCard = React.memo(({
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <TouchableOpacity style={styles.shareHeaderBtn} onPress={handleShare} hitSlop={8}>
-            <Ionicons name="share-outline" size={15} color={Verandah.accent} />
+            <Share07 size={14} color={Verandah.accent} aria-hidden={true} />
             <Text style={styles.shareHeaderText}>Share</Text>
           </TouchableOpacity>
           <VisitStatusBadge status={status} />
@@ -130,12 +133,12 @@ export const VisitCard = React.memo(({
           <Text style={styles.providerText}>
             Provider: <Text style={styles.providerName}>{providerName}</Text>
           </Text>
-          {hasProviderProfile && <Ionicons name="link" size={12} color={Verandah.accent} style={{ marginLeft: 4 }} />}
+          {hasProviderProfile && <Link01 size={12} color={Verandah.accent} style={{ marginLeft: 4 }} aria-hidden={true} />}
         </View>
 
         <View style={styles.detailsRow}>
           <View style={styles.detailItem}>
-            <Ionicons name="calendar-outline" size={13} color={Verandah.textTertiary} />
+            <Calendar size={13} color={Verandah.textTertiary} aria-hidden={true} />
             <Text style={styles.detailText}>{formatDate(visitDate)} · {visitTimeSlot}</Text>
           </View>
         </View>
@@ -154,13 +157,13 @@ export const VisitCard = React.memo(({
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
           <View style={styles.joinerCount}>
-            <Ionicons name="people-outline" size={14} color={Verandah.accent} />
+            <Users01 size={14} color={Verandah.accent} aria-hidden={true} />
             <Text style={styles.joinerText}>
               {joinerCount} {maxJoiners ? `/ ${maxJoiners}` : ''} {joinerCount === 1 ? 'neighbor' : 'neighbors'} joined
             </Text>
           </View>
           <TouchableOpacity onPress={handleShare} style={styles.shareInlineBtn}>
-            <Ionicons name="share-social-outline" size={14} color={Verandah.accent} />
+            <Share07 size={13} color={Verandah.accent} aria-hidden={true} />
             <Text style={styles.shareInlineText}>Share visit</Text>
           </TouchableOpacity>
         </View>

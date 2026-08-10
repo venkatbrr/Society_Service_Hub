@@ -5,6 +5,12 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@untitledui/icons-react": [
+        "./node_modules/@untitledui/icons"
+      ],
+      "@untitledui/icons-react/*": [
+        "./node_modules/@untitledui/icons/*"
       ]
     }
   },

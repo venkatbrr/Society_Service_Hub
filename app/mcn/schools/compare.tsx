@@ -1,10 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { XCircle } from '@untitledui/icons/XCircle';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../../constants/Colors';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
 
@@ -103,7 +105,7 @@ export default function CompareSchoolsScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: 'Compare schools',
@@ -115,7 +117,7 @@ export default function CompareSchoolsScreen() {
         <ScrollView style={styles.verticalScroll} showsVerticalScrollIndicator={false}>
           <View style={styles.grid}>
             {/* Header Row: School Names */}
-            <View style={[styles.row, styles.headerRow, { borderBottomColor: colors.border }]}>
+            <View style={[styles.row, styles.headerRow, { borderBottomColor: colors.borderHair }]}>
               <View style={[styles.labelCell, { backgroundColor: colors.card }]} />
               {schools.map((school) => (
                 <View key={school.id} style={[styles.valueCell, styles.headerCell, { backgroundColor: colors.card }]}>
@@ -130,7 +132,7 @@ export default function CompareSchoolsScreen() {
             </View>
 
             {/* Syllabus Row */}
-            <View style={[styles.row, { borderBottomColor: colors.border }]}>
+            <View style={[styles.row, { borderBottomColor: colors.borderHair }]}>
               <View style={styles.labelCell}>
                 <Text style={[styles.labelText, { color: colors.textSecondary }]}>Syllabus</Text>
               </View>
@@ -142,7 +144,7 @@ export default function CompareSchoolsScreen() {
             </View>
 
             {/* Fee Range Row */}
-            <View style={[styles.row, { borderBottomColor: colors.border }]}>
+            <View style={[styles.row, { borderBottomColor: colors.borderHair }]}>
               <View style={styles.labelCell}>
                 <Text style={[styles.labelText, { color: colors.textSecondary }]}>Annual Fees</Text>
               </View>
@@ -154,7 +156,7 @@ export default function CompareSchoolsScreen() {
             </View>
 
             {/* Facilities Section Header */}
-            <View style={[styles.row, styles.sectionHeaderRow, { backgroundColor: colors.cardMuted, borderBottomColor: colors.border }]}>
+            <View style={[styles.row, styles.sectionHeaderRow, { backgroundColor: colors.cardMuted, borderBottomColor: colors.borderHair }]}>
               <View style={styles.labelCell}>
                 <Text style={[styles.sectionTitleText, { color: colors.textPrimary }]}>FACILITIES</Text>
               </View>
@@ -165,7 +167,7 @@ export default function CompareSchoolsScreen() {
 
             {/* Facilities comparison rows */}
             {COMPARE_FACILITIES.map((facility) => (
-              <View key={facility} style={[styles.row, { borderBottomColor: colors.border }]}>
+              <View key={facility} style={[styles.row, { borderBottomColor: colors.borderHair }]}>
                 <View style={styles.labelCell}>
                   <Text style={[styles.labelText, { color: colors.textSecondary }]} numberOfLines={1}>
                     {facility.replace(/\s*\/.*$/, '')} {/* Shorten name for space */}
@@ -177,11 +179,11 @@ export default function CompareSchoolsScreen() {
                   );
                   return (
                     <View key={school.id} style={styles.valueCell}>
-                      <Ionicons
-                        name={hasFacility ? 'checkmark-circle' : 'close-circle'}
-                        size={20}
-                        color={hasFacility ? '#4CAF50' : colors.textMuted}
-                      />
+                      {hasFacility ? (
+                        <CheckCircle size={20} color={Verandah.secondary} aria-hidden={true} />
+                      ) : (
+                        <XCircle size={20} color={colors.textDisabled} aria-hidden={true} />
+                      )}
                     </View>
                   );
                 })}
@@ -189,7 +191,7 @@ export default function CompareSchoolsScreen() {
             ))}
 
             {/* Description / Summary Row */}
-            <View style={[styles.row, { borderBottomColor: colors.border }]}>
+            <View style={[styles.row, { borderBottomColor: colors.borderHair }]}>
               <View style={styles.labelCell}>
                 <Text style={[styles.labelText, { color: colors.textSecondary }]}>About Summary</Text>
               </View>

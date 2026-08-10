@@ -1,3 +1,8 @@
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { File02 } from '@untitledui/icons/File02';
+import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { XClose } from '@untitledui/icons/XClose';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -9,13 +14,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../../components/Avatar';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../../constants/Verandah';
 import { useAuth } from '../../../../context/AuthContext';
 import { confirmAction } from '../../../../lib/confirm';
 import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
@@ -188,13 +192,13 @@ export default function OrdersReceivedScreen() {
           {buyerPhone ? (
             <View style={styles.contactActions}>
               <TouchableOpacity onPress={() => handleCall(buyerPhone)} style={[styles.contactBtn, { borderColor: colors.border }]}>
-                <Ionicons name="call-outline" size={16} color={colors.accent} />
+                <Phone01 size={16} color={colors.accent} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleWhatsApp(buyerName, buyerPhone, order.mcn_order_items)}
                 style={[styles.contactBtn, { borderColor: colors.border }]}
               >
-                <Ionicons name="logo-whatsapp" size={16} color={colors.accent} />
+                <MessageCircle01 size={16} color={colors.accent} />
               </TouchableOpacity>
             </View>
           ) : (
@@ -237,7 +241,7 @@ export default function OrdersReceivedScreen() {
               disabled={isBusy}
               style={[styles.cancelBtn, { borderColor: colors.danger }]}
             >
-              <Ionicons name="close-circle-outline" size={16} color={colors.danger} />
+              <XClose size={16} color={colors.danger} aria-hidden={true} />
               <Text style={[styles.cancelBtnText, { color: colors.danger }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -249,7 +253,7 @@ export default function OrdersReceivedScreen() {
                 <ActivityIndicator size="small" color={colors.primaryFg} />
               ) : (
                 <>
-                  <Ionicons name="checkmark-circle-outline" size={16} color={colors.primaryFg} />
+                  <CheckCircle size={16} color={colors.primaryFg} aria-hidden={true} />
                   <Text style={[styles.fulfillBtnText, { color: colors.primaryFg }]}>Mark fulfilled</Text>
                 </>
               )}
@@ -261,7 +265,7 @@ export default function OrdersReceivedScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: headerTitle,
@@ -284,7 +288,7 @@ export default function OrdersReceivedScreen() {
 
           {fulfilledOrders.length > 0 && (
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.accent }]}>Fulfilled</Text>
+              <Text style={[styles.sectionTitle, { color: colors.primary }]}>Fulfilled</Text>
               {fulfilledOrders.map(renderOrderRow)}
             </View>
           )}
@@ -298,7 +302,7 @@ export default function OrdersReceivedScreen() {
 
           {orders.length === 0 && (
             <View style={styles.emptyWrap}>
-              <Ionicons name="receipt-outline" size={48} color={colors.textMuted} />
+              <File02 size={48} color={colors.textMuted} aria-hidden={true} />
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No orders received yet.</Text>
             </View>
           )}

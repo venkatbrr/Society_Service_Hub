@@ -1,4 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowDown } from '@untitledui/icons/ArrowDown';
+import { ArrowUp } from '@untitledui/icons/ArrowUp';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
@@ -28,11 +29,11 @@ export const TransactionItem = ({ transaction }: TransactionItemProps) => {
   return (
     <View style={styles.container}>
       <View style={[styles.iconWrapper, { backgroundColor: isIncome ? Verandah.accentSoft : Verandah.cautionSoft }]}>
-        <Ionicons 
-          name={isIncome ? 'arrow-down' : 'arrow-up'} 
-          size={18} 
-          color={isIncome ? Verandah.accent : Verandah.caution} 
-        />
+        {isIncome ? (
+          <ArrowDown size={16} color={Verandah.accent} aria-hidden={true} />
+        ) : (
+          <ArrowUp size={16} color={Verandah.caution} aria-hidden={true} />
+        )}
       </View>
       
       <View style={styles.content}>
@@ -58,7 +59,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: VerandahSpace.sm + 2,
     borderBottomWidth: 0.5,
-    borderBottomColor: Verandah.border,
+    borderBottomColor: Verandah.borderHair,
   },
   iconWrapper: {
     width: 36,

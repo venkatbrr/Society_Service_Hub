@@ -1,3 +1,8 @@
+import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
+import { ChevronDown } from '@untitledui/icons/ChevronDown';
+import { ChevronUp } from '@untitledui/icons/ChevronUp';
+import { Tool01 } from '@untitledui/icons/Tool01';
+import { Users01 } from '@untitledui/icons/Users01';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -16,9 +21,8 @@ import Toast from 'react-native-toast-message';
 import { DateField, formatLocalDateForDb } from '../../components/DateField';
 import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
-import { Ionicons } from '@expo/vector-icons';
 import { goBackSmart } from '../../lib/navigation';
 import {
     mapServiceCategoryToProviderCategory,
@@ -73,6 +77,7 @@ export default function AddServiceScreen() {
     textMuted: Verandah.textSecondary,
     primary: Verandah.primary,
     border: Verandah.border,
+    borderHair: Verandah.borderHair,
     card: Verandah.card,
     surface: Verandah.cardMuted,
   };
@@ -253,7 +258,7 @@ export default function AddServiceScreen() {
           style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.75}
         >
-          <Ionicons name="arrow-back" size={20} color={colors.text} />
+          <ArrowLeft size={20} color={colors.text} aria-hidden={true} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add reminder</Text>
       </View>
@@ -293,11 +298,11 @@ export default function AddServiceScreen() {
                 onPress={() => handleCategorySelect(cat)}
                 activeOpacity={0.8}
               >
-                <Ionicons
-                  name={(SERVICE_CATEGORY_ICONS[cat] as any) ?? 'build-outline'}
+                <Tool01
                   size={16}
                   color={selected ? colors.primary : colors.textMuted}
                   style={{ marginRight: 6 }}
+                  aria-hidden={true}
                 />
                 <Text
                   style={[styles.catLabel, { color: selected ? colors.primary : colors.textMuted }]}
@@ -342,8 +347,8 @@ export default function AddServiceScreen() {
           </View>
         ) : providerOptions.length === 0 ? (
           <>
-            <View style={[styles.providerStateCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Text style={styles.providerStateIcon}>👥</Text>
+            <View style={[styles.providerStateCard, { backgroundColor: colors.card, borderColor: colors.borderHair }]}>
+              <Users01 size={22} color={colors.textMuted} aria-hidden={true} />
               <Text style={[styles.providerStateText, { color: colors.textMuted }]}>No saved providers yet. You can still create the reminder now and link a provider later.</Text>
             </View>
             <TouchableOpacity
@@ -379,7 +384,7 @@ export default function AddServiceScreen() {
                   </Text>
                 )}
               </View>
-              <Ionicons name={providerPickerOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
+              {providerPickerOpen ? <ChevronUp size={16} color={colors.textMuted} aria-hidden={true} /> : <ChevronDown size={16} color={colors.textMuted} aria-hidden={true} />}
             </TouchableOpacity>
 
             {providerPickerOpen ? (

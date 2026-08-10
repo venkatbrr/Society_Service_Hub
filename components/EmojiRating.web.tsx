@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emojiBtnSelected: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Verandah.cream,
     borderWidth: 1,
     borderColor: Verandah.accent,
   },

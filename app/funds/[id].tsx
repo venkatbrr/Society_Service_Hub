@@ -1,4 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
+import { MinusCircle } from '@untitledui/icons/MinusCircle';
+import { Paperclip } from '@untitledui/icons/Paperclip';
+import { Pencil01 } from '@untitledui/icons/Pencil01';
+import { PlusCircle } from '@untitledui/icons/PlusCircle';
+import { Shield01 } from '@untitledui/icons/Shield01';
+import { Trash01 } from '@untitledui/icons/Trash01';
+import { XClose } from '@untitledui/icons/XClose';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -21,8 +28,7 @@ import { BlockPicker } from '../../components/BlockPicker';
 import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
-import { APP_EMOJIS } from '../../constants/emojis';
-import { VerandahLayout, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { cloudinaryUrl } from '../../lib/cloudinary';
 import { Tables } from '../../lib/database.types';
@@ -430,7 +436,7 @@ export default function FundDetailScreen() {
                 style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: 8, backgroundColor: Verandah.dangerSoft }}
                 activeOpacity={0.8}
               >
-                <Ionicons name="trash-outline" size={16} color={Verandah.danger} />
+                <Trash01 size={16} color={Verandah.danger} />
                 <Text style={{ fontSize: 13, fontWeight: '600', color: Verandah.danger }}>Delete fund</Text>
               </TouchableOpacity>
             </View>
@@ -469,7 +475,7 @@ export default function FundDetailScreen() {
         <View style={styles.accessCard}>
           <View style={styles.accessHeader}>
             <Text style={[styles.accessTitle, { color: colors.text }]}>Role Access</Text>
-            <Text style={styles.accessIcon}>{APP_EMOJIS.admin}</Text>
+            <Shield01 size={18} color={Verandah.accent} aria-hidden={true} />
           </View>
           <Text style={[styles.accessText, { color: colors.textMuted }]}>{roleAccessSummary}</Text>
         </View>
@@ -484,7 +490,7 @@ export default function FundDetailScreen() {
               onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=income`)}
               disabled={!permissions.canAddContribution || !!fund.is_closed}
             >
-              <Text style={styles.actionIcon}>{APP_EMOJIS.contribution}</Text>
+              <PlusCircle size={18} color={permissions.canAddContribution && !fund.is_closed ? '#FFF' : colors.textMuted} aria-hidden={true} />
               <Text
                 style={[
                   styles.actionButtonText,
@@ -503,7 +509,7 @@ export default function FundDetailScreen() {
               onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=expense`)}
               disabled={!permissions.canAddExpense || !!fund.is_closed}
             >
-              <Text style={styles.actionIcon}>{APP_EMOJIS.expense}</Text>
+              <MinusCircle size={18} color={permissions.canAddExpense && !fund.is_closed ? '#FFF' : colors.textMuted} aria-hidden={true} />
               <Text
                 style={[
                   styles.actionButtonText,
@@ -714,7 +720,7 @@ export default function FundDetailScreen() {
             const RowContent = (
               <>
                 <View style={[styles.avatar, { backgroundColor: Verandah.accentSoft }]}>
-                  <Text style={styles.statusEmoji}>{APP_EMOJIS.contribution}</Text>
+                  <PlusCircle size={16} color={Verandah.accent} />
                 </View>
                 <View style={styles.transMain}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -725,7 +731,7 @@ export default function FundDetailScreen() {
                           : transaction.title || 'Contribution')}
                     </Text>
                     {canEditRow && (
-                      <Ionicons name="pencil" size={13} color={colors.textMuted} />
+                      <Pencil01 size={13} color={colors.textMuted} />
                     )}
                   </View>
                   <Text style={[styles.transDate, { color: colors.textMuted }]}>
@@ -790,13 +796,13 @@ export default function FundDetailScreen() {
                 activeOpacity={0.75}
               >
                 <View style={[styles.avatar, { backgroundColor: Verandah.dangerSoft }]}>
-                  <Text style={styles.statusEmoji}>{APP_EMOJIS.expense}</Text>
+                  <MinusCircle size={16} color={Verandah.danger} />
                 </View>
                 <View style={styles.transMain}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={[styles.transName, { color: colors.text }]}>{transaction.title || 'Expense'}</Text>
                     {receiptUrl ? (
-                      <Ionicons name="document-attach-outline" size={14} color={Verandah.primary} />
+                      <Paperclip size={14} color={Verandah.primary} />
                     ) : null}
                   </View>
                   <Text style={[styles.transDate, { color: colors.textMuted }]}>
@@ -875,7 +881,7 @@ export default function FundDetailScreen() {
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                     <Text style={[styles.modalTitle, { color: colors.text, fontSize: 18 }]}>Expense Details</Text>
                     <TouchableOpacity onPress={() => setSelectedExpense(null)} style={{ padding: 4 }}>
-                      <Ionicons name="close" size={22} color={colors.textMuted} />
+                      <XClose size={22} color={colors.textMuted} />
                     </TouchableOpacity>
                   </View>
 
@@ -935,7 +941,7 @@ export default function FundDetailScreen() {
                           router.push(`/funds/add-transaction?event_id=${fund.id}&type=expense&transaction_id=${expId}`);
                         }}
                       >
-                        <Ionicons name="pencil" size={15} color="#FFF" style={{ marginRight: 6 }} />
+                        <Pencil01 size={15} color="#FFF" style={{ marginRight: 6 }} />
                         <Text style={[styles.roleActionText, { color: '#FFF', fontWeight: '600' }]}>Edit Expense</Text>
                       </TouchableOpacity>
                     ) : null}

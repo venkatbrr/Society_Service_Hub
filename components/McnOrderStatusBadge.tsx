@@ -15,7 +15,7 @@ export const McnOrderStatusBadge = React.memo(({ status }: McnOrderStatusBadgePr
       case 'confirmed':
         return { bg: '#EFF6FF', text: '#2563EB', label: 'Confirmed' };
       case 'fulfilled':
-        return { bg: '#ECFDF5', text: '#059669', label: 'Delivered' };
+        return { bg: Verandah.accentSoft, text: Verandah.green600, label: 'Delivered' };
       case 'cancelled':
         return { bg: Verandah.dangerSoft, text: Verandah.danger, label: 'Cancelled' };
       default:

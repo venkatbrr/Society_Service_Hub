@@ -1,7 +1,7 @@
+import { Star01 } from '@untitledui/icons/Star01';
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { APP_EMOJIS } from '../constants/emojis';
 
 type RatingStarsProps = {
   rating: number;
@@ -11,44 +11,36 @@ type RatingStarsProps = {
   isLightMode?: boolean;
 };
 
-export const RatingStars = ({ 
-  rating, 
-  onRating = () => {}, 
-  size = 24, 
-  readonly = false, 
-  isLightMode 
+export const RatingStars = ({
+  rating,
+  onRating = () => {},
+  size = 18,
+  readonly = false,
 }: RatingStarsProps) => {
+  const goldColor = Verandah.goldInk; // #854F0B
+  const emptyColor = Verandah.textDisabled; // #9A988F
+
   return (
     <View style={styles.container}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <TouchableOpacity
-          key={star}
-          disabled={readonly}
-          onPress={() => onRating(star)}
-          activeOpacity={readonly ? 1 : 0.7}
-        >
-          <Text
-            style={[
-              styles.star,
-              {
-                fontSize: size,
-                color:
-                  star <= Math.floor(rating)
-                    ? Verandah.caution
-                    : star - rating <= 0.5 && star > rating
-                      ? Verandah.caution
-                      : Verandah.textMuted,
-              },
-            ]}
+      {[1, 2, 3, 4, 5].map((star) => {
+        const isFilled = star <= Math.round(rating);
+        return (
+          <TouchableOpacity
+            key={star}
+            disabled={readonly}
+            onPress={() => onRating(star)}
+            activeOpacity={readonly ? 1 : 0.7}
+            style={styles.star}
           >
-            {star <= Math.floor(rating)
-              ? APP_EMOJIS.starFilled
-              : star - rating <= 0.5 && star > rating
-                ? APP_EMOJIS.starHalf
-                : APP_EMOJIS.starEmpty}
-          </Text>
-        </TouchableOpacity>
-      ))}
+            <Star01
+              size={size}
+              color={isFilled ? goldColor : emptyColor}
+              fill={isFilled ? goldColor : 'none'}
+              aria-hidden={true}
+            />
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
@@ -57,8 +49,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 3,
   },
   star: {
-    marginRight: 4,
+    padding: 1,
   },
 });

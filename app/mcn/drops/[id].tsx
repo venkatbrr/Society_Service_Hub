@@ -1,4 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { Clock } from '@untitledui/icons/Clock';
+import { Edit01 } from '@untitledui/icons/Edit01';
+import { InfoCircle } from '@untitledui/icons/InfoCircle';
+import { Lock01 } from '@untitledui/icons/Lock01';
+import { Share07 } from '@untitledui/icons/Share07';
+import { Trash01 } from '@untitledui/icons/Trash01';
+import { XCircle } from '@untitledui/icons/XCircle';
 import { Image } from 'expo-image';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart, replaceTracked } from '../../../lib/navigation';
@@ -21,7 +28,7 @@ import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../components/Avatar';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
-import { format12HourTime, VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { format12HourTime, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { cloudinaryUrl } from '../../../lib/cloudinary';
@@ -350,8 +357,14 @@ export default function PreorderDropDetailScreen() {
       return;
     }
 
-    if (!flatNumber.trim()) {
-      Toast.show({ type: 'error', text1: 'Please enter your flat / house number' });
+    const effectiveFlat = profile?.flat_number || flatNumber;
+    if (!effectiveFlat.trim()) {
+      Toast.show({
+        type: 'error',
+        text1: 'Flat number required',
+        text2: 'Please set your flat in profile before placing an order.',
+      });
+      router.push('/profile/edit' as any);
       return;
     }
 
@@ -375,7 +388,7 @@ export default function PreorderDropDetailScreen() {
         })),
         p_buyer_name: buyerName.trim() || profile?.full_name || 'Resident',
         p_buyer_phone: buyerPhone.trim(),
-        p_flat_number: flatNumber.trim().toUpperCase(),
+        p_flat_number: (profile?.flat_number || flatNumber).trim().toUpperCase(),
         p_buyer_note: buyerNote.trim() || null,
         p_order_id: editingOrderId || null,
       });
@@ -386,12 +399,12 @@ export default function PreorderDropDetailScreen() {
         editingOrderId
           ? {
               type: 'success',
-              text1: 'Pre-order updated successfully! 🎉',
+              text1: 'Pre-order updated successfully',
               text2: 'Your updated food choices have been saved.',
             }
           : {
               type: 'success',
-              text1: 'Pre-order placed successfully! 🎉',
+              text1: 'Pre-order placed successfully',
               text2: 'Your food host will deliver to your flat at the scheduled time.',
             }
       );
@@ -589,7 +602,7 @@ export default function PreorderDropDetailScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.surface }]}
+      style={[styles.container, { backgroundColor: colors.paper }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Stack.Screen
@@ -601,7 +614,7 @@ export default function PreorderDropDetailScreen() {
                 <TouchableOpacity
                   onPress={() => router.push(`/mcn/drops/manage/${drop.id}` as any)}
                 >
-                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.accent }}>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary }}>
                     Dashboard
                   </Text>
                 </TouchableOpacity>
@@ -632,15 +645,15 @@ export default function PreorderDropDetailScreen() {
             </Text>
           </View>
           <TouchableOpacity style={styles.shareBtn} onPress={handleShareDrop} activeOpacity={0.8}>
-            <Ionicons name="share-social-outline" size={15} color="#FFFFFF" />
+            <Share07 size={15} color={Verandah.primaryFg} aria-hidden={true} />
             <Text style={styles.shareBtnText}>Share</Text>
           </TouchableOpacity>
         </View>
 
         {/* Schedule & Cut-off Banner */}
         <View style={[styles.statusBanner, isOpen ? styles.bannerOpen : styles.bannerClosed]}>
-          <Text style={styles.bannerIcon}>{isOpen ? '⏳' : '🔒'}</Text>
-          <View style={{ flex: 1 }}>
+          {isOpen ? <Clock size={16} color={colors.primary} aria-hidden={true} /> : <Lock01 size={16} color={colors.textMuted} aria-hidden={true} />}
+          <View style={{ flex: 1, marginLeft: 8 }}>
             <Text style={styles.bannerMainText}>
               {isOpen ? `Pre-Orders Open until ${cutoffFormatted}` : 'Pre-Orders Closed'}
             </Text>
@@ -657,7 +670,7 @@ export default function PreorderDropDetailScreen() {
         {/* Host Notice Banner if current user is the host */}
         {isCreator ? (
           <View style={styles.hostNoticeBox}>
-            <Ionicons name="information-circle" size={22} color={colors.accent} />
+            <InfoCircle size={22} color={colors.primary} aria-hidden={true} />
             <View style={{ flex: 1 }}>
               <Text style={styles.hostNoticeTitle}>You are hosting this food drop</Text>
               <Text style={styles.hostNoticeSub}>
@@ -674,11 +687,11 @@ export default function PreorderDropDetailScreen() {
 
                 {isOpen ? (
                   <TouchableOpacity
-                    style={[styles.hostManageBtn, { backgroundColor: '#FFFFFF', borderWidth: 0.5, borderColor: Verandah.accent }]}
+                    style={[styles.hostManageBtn, { backgroundColor: '#FFFFFF', borderWidth: 0.5, borderColor: Verandah.primary }]}
                     onPress={() => router.push(`/mcn/drops/add?dropId=${drop.id}` as any)}
                     activeOpacity={0.8}
                   >
-                    <Text style={[styles.hostManageBtnText, { color: Verandah.accent }]}>✏️ Edit Drop</Text>
+                    <Text style={[styles.hostManageBtnText, { color: Verandah.primary }]}>Edit Drop</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
@@ -701,7 +714,7 @@ export default function PreorderDropDetailScreen() {
                   key={ord.id}
                   style={[
                     styles.existingOrderBox,
-                    isFulfilled && { backgroundColor: '#F0FDF4', borderColor: '#059669' },
+                    isFulfilled && { backgroundColor: Verandah.accentSoft, borderColor: Verandah.green600 },
                     isCancelled && { backgroundColor: '#F9FAFB', borderColor: '#D1D5DB' },
                   ]}
                 >
@@ -710,12 +723,12 @@ export default function PreorderDropDetailScreen() {
                       <Text style={styles.orderLabelText}>Order #{userOrders.length - index}</Text>
                       {isFulfilled ? (
                         <View style={styles.fulfilledBadgeInline}>
-                          <Ionicons name="checkmark-circle" size={14} color="#059669" />
+                          <CheckCircle size={14} color={Verandah.green600} aria-hidden={true} />
                           <Text style={styles.fulfilledBadgeText}>Delivered</Text>
                         </View>
                       ) : isConfirmed ? (
                         <View style={styles.confirmedBadgeInline}>
-                          <Ionicons name="time-outline" size={14} color="#2563EB" />
+                          <Clock size={14} color={colors.primary} aria-hidden={true} />
                           <Text style={styles.confirmedBadgeText}>Confirmed</Text>
                         </View>
                       ) : (
@@ -748,7 +761,7 @@ export default function PreorderDropDetailScreen() {
 
                   {isFulfilled ? (
                     <View style={styles.deliveredNoticeBox}>
-                      <Ionicons name="checkmark-circle-outline" size={16} color="#059669" />
+                      <CheckCircle size={16} color={Verandah.green600} aria-hidden={true} />
                       <Text style={styles.deliveredNoticeText}>
                         Food marked as delivered by host. Enjoy your meal!
                       </Text>
@@ -762,10 +775,10 @@ export default function PreorderDropDetailScreen() {
                         ]}
                         onPress={() => handleStartEditOrder(ord)}
                       >
-                        <Ionicons
-                          name="pencil"
+                        <Edit01
                           size={14}
-                          color={editingOrderId === ord.id ? '#FFFFFF' : colors.accent}
+                          color={editingOrderId === ord.id ? '#FFFFFF' : colors.primary}
+                          aria-hidden={true}
                         />
                         <Text
                           style={[
@@ -781,7 +794,7 @@ export default function PreorderDropDetailScreen() {
                         style={styles.cancelOrderBtn}
                         onPress={() => handleCancelOrder(ord.id)}
                       >
-                        <Ionicons name="trash-outline" size={14} color={Verandah.danger} />
+                        <Trash01 size={14} color={Verandah.danger} aria-hidden={true} />
                         <Text style={styles.cancelOrderBtnText}>Cancel</Text>
                       </TouchableOpacity>
                     </View>
@@ -874,7 +887,7 @@ export default function PreorderDropDetailScreen() {
             onPress={handleDeleteDrop}
             activeOpacity={0.8}
           >
-            <Ionicons name="trash-outline" size={13} color={colors.danger} />
+            <Trash01 size={13} color={colors.danger} aria-hidden={true} />
             <Text style={styles.hostDeleteBtnText}>Delete Drop</Text>
           </TouchableOpacity>
         ) : null}
@@ -884,8 +897,9 @@ export default function PreorderDropDetailScreen() {
           <View style={styles.formSection}>
             {editingOrderId ? (
               <View style={styles.editingModeBanner}>
+                <Edit01 size={16} color={Verandah.primary} aria-hidden={true} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.editingBannerTitle}>✏️ Updating Active Pre-Order</Text>
+                  <Text style={styles.editingBannerTitle}>Updating Active Pre-Order</Text>
                   <Text style={styles.editingBannerSub}>
                     Modify item quantities above and click Update Pre-Order below to save.
                   </Text>
@@ -907,14 +921,22 @@ export default function PreorderDropDetailScreen() {
               onChangeText={setBuyerName}
             />
 
-            <Text style={[styles.subLabel, { marginTop: 10 }]}>Flat / House Number *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. A-302, Flat 104"
-              placeholderTextColor={colors.textMuted}
-              value={flatNumber}
-              onChangeText={setFlatNumber}
-            />
+            <Text style={[styles.subLabel, { marginTop: 10 }]}>Flat / Unit Number *</Text>
+            {profile?.flat_number ? (
+              <View style={[styles.input, { justifyContent: 'center', backgroundColor: colors.card }]}>
+                <Text style={{ color: colors.textPrimary, ...VerandahType.body }}>{profile.flat_number}</Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.input, { justifyContent: 'center', borderColor: Verandah.caution, backgroundColor: Verandah.cautionSoft }]}
+                onPress={() => router.push('/profile/edit' as any)}
+                activeOpacity={0.85}
+              >
+                <Text style={{ color: Verandah.caution, ...VerandahType.captionBold }}>
+                  + Set your flat in profile to order
+                </Text>
+              </TouchableOpacity>
+            )}
 
             <Text style={[styles.subLabel, { marginTop: 10 }]}>Contact Phone Number *</Text>
             <TextInput
@@ -1006,7 +1028,7 @@ export default function PreorderDropDetailScreen() {
             />
           ) : null}
           <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelectedImageUrl(null)}>
-            <Ionicons name="close-circle" size={32} color="#FFFFFF" />
+            <XCircle size={32} color="#FFFFFF" />
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
@@ -1176,7 +1198,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#DCFCE7',
+    backgroundColor: Verandah.accentSoft,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
@@ -1184,7 +1206,7 @@ const styles = StyleSheet.create({
   fulfilledBadgeText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#059669',
+    color: Verandah.green600,
   },
   confirmedBadgeInline: {
     flexDirection: 'row',
@@ -1219,7 +1241,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: Verandah.accentSoft,
     padding: 6,
     borderRadius: 6,
     marginTop: 4,
@@ -1227,7 +1249,7 @@ const styles = StyleSheet.create({
   deliveredNoticeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#059669',
+    color: Verandah.green600,
     flex: 1,
   },
   orderActionRow: {
@@ -1243,7 +1265,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: Verandah.accentSoft,
     borderWidth: 1,
     borderColor: Verandah.accent,
     paddingHorizontal: 10,
@@ -1272,37 +1294,38 @@ const styles = StyleSheet.create({
   },
   editingModeBanner: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EFF6FF',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: `${Verandah.primary}0D`,
     borderWidth: 1,
-    borderColor: '#93C5FD',
-    borderRadius: 6,
-    padding: 8,
+    borderColor: `${Verandah.primary}30`,
+    borderRadius: VerandahRadius.md,
+    padding: 10,
     marginBottom: 8,
   },
   editingBannerTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#1E40AF',
+    color: Verandah.primary,
   },
   editingBannerSub: {
     fontSize: 10,
-    color: '#1E3A8A',
+    color: Verandah.textSecondary,
     marginTop: 1,
   },
   cancelEditBtn: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Verandah.card,
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: Verandah.primary,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
-    marginLeft: 6,
+    borderRadius: VerandahRadius.md,
+    marginLeft: 'auto' as any,
   },
   cancelEditBtnText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#2563EB',
+    color: Verandah.primary,
   },
   sectionHeader: {
     ...VerandahType.sectionLabel,

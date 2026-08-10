@@ -85,15 +85,15 @@ Notes:
 | Aspect | Details |
 |--------|---------|
 | **Tables / RPCs** | Reads `community_requests`, `profiles`; writes via `platform_approve_community_request`, `platform_reject_community_request`; audit via `set_audit_actor` |
-| **Behavior** | Approval creates the community, generates its join code, and assigns the requester as `resident`. The admin can optionally seed blocks/towers at approval time by entering block names and choosing the label — supplying blocks sets `blocks_enabled = true` and the matching `block_label`. Rejection accepts an optional reason. Reviewer cards show requester name, phone, email, flat number, and submitted location details. |
+| **Behavior** | Approval creates the community, generates its join code, sets requester as community lead (`president`), and matches requester flat against seeded inventory. The admin can pre-fill or customize blocks and seed flat inventories automatically via `p_flats` payload. Rejection accepts an optional reason. Reviewer cards show requester name, phone, email, flat number, and submitted location/block details. |
 
 ### `#communities` — directory and detail
 
 | Aspect | Details |
 |--------|---------|
 | **Direct table reads** | `communities`, `profiles` only |
-| **RPCs** | `list_community_blocks`, `platform_get_community_funds`, `platform_get_community_preorders`, `platform_get_community_businesses`, `platform_get_resident_details`, `platform_soft_remove_resident`, `platform_set_community_lead`, `platform_remove_community_lead`, `platform_set_fund_treasurer`, `platform_set_blocks_enabled`, `platform_set_block_label`, `platform_add_community_block`, `platform_archive_community_block`, `platform_remove_block_in_charge`, `platform_revoke_funds_access`, `set_audit_actor` |
-| **Behavior** | Lists communities with membership and lead counts. Detail view is described panel-by-panel below. Removals are **soft deletes**: they set `removed_at`/`removed_by`, reset the role to `resident`, and preserve last-lead protection. |
+| **RPCs** | `list_community_blocks`, `platform_get_community_funds`, `platform_get_community_preorders`, `platform_get_community_businesses`, `platform_get_resident_details`, `platform_soft_remove_resident`, `platform_remove_resident_from_community`, `platform_delete_user`, `platform_set_community_lead`, `platform_remove_community_lead`, `platform_set_fund_treasurer`, `platform_set_blocks_enabled`, `platform_set_block_label`, `platform_add_community_block`, `platform_archive_community_block`, `platform_remove_block_in_charge`, `platform_revoke_funds_access`, `set_audit_actor` |
+| **Behavior** | Lists communities with membership and lead counts. Detail view is described panel-by-panel below. Supports clean removal from community (`platform_remove_resident_from_community`) and permanent account deletion (`platform_delete_user`), both preserving last-lead protection. |
 
 **Detail view panels**
 
@@ -104,6 +104,7 @@ Notes:
 | Funds Activation | Status, per-fund balance cards (click → fund modal with financial summary, treasurer, collectors, contributions), and **Revoke Funds Access** |
 | Community Lead Management | Appoint any active plain resident as **President** or **VP**. `platform_set_community_lead` auto-demotes the current holder of that role first, so appointing is also how you *replace*. Shown only when funds are enabled. |
 | Blocks / Towers | Enable toggle, Block/Tower label switch, add/archive blocks |
+| **Flats Inventory** | Canonical list of units grouped by block, total flat counts, bulk add flat numbers, and individual flat archival |
 | **Fund Roles** | **One card per fund**, each listing that fund's **Treasurer** and its **Block Collectors** (name, flat, block scope). Collectors have a Remove action; the treasurer has an **Assign / Replace** picker. Grouped per fund because both roles are fund-scoped, not community-scoped — a community with three funds has three independent treasurers. |
 | Pre-Order Food Drops & Statistics | Per-drop table (title, host, fulfillment date/time, status, orders, revenue) with totals and a ₹ sales badge |
 | Businesses Available in Community | Per-listing table (name, owner, category, phone with WhatsApp link, product count, rating, active status) |

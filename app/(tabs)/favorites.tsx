@@ -1,3 +1,4 @@
+import { Bookmark } from '@untitledui/icons/Bookmark';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -8,8 +9,7 @@ import { ProviderCard } from '../../components/ProviderCard';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
-import { APP_EMOJIS } from '../../constants/emojis';
-import { VerandahType , VerandahLayout } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { ProviderWithInteraction } from '../../lib/database.types';
 import { supabase } from '../../lib/supabase';
@@ -86,7 +86,7 @@ export default function FavoritesScreen() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Saved</Text>
           <Text style={styles.headerSubtitle}>
-            Your favorite providers
+            Your saved service providers
           </Text>
         </View>
       </View>
@@ -115,9 +115,9 @@ export default function FavoritesScreen() {
         }
         ListEmptyComponent={
           <EmptyState
-            icon={APP_EMOJIS.favoritesEmpty}
-            title="No Favorites Yet"
-            message="Tap the heart icon on a service provider to save them here."
+            IconComponent={Bookmark}
+            title="No Saved Providers"
+            message="Tap the bookmark icon on a service provider to save them here."
             isLightMode={true}
           />
         }
@@ -129,29 +129,34 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Verandah.surface,
-    borderTopWidth: 3,
-    borderTopColor: Verandah.primary,
+    backgroundColor: Verandah.paper,
   },
   headerWrapper: {
-    backgroundColor: Verandah.surface,
+    backgroundColor: Verandah.paper,
   },
   header: {
     paddingHorizontal: 24,
     paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 20,
+    paddingBottom: 14,
   },
   headerTitle: {
-    ...VerandahType.display,
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: '400',
     color: Verandah.textPrimary,
+    marginTop: 10,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '400',
     marginTop: 4,
     color: Verandah.textSecondary,
+    fontFamily: VerandahType.sansFamily,
   },
   listContent: {
-    padding: 16,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    gap: 12,
   },
 });

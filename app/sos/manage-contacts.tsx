@@ -1,4 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
+import { Edit01 } from '@untitledui/icons/Edit01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { Trash01 } from '@untitledui/icons/Trash01';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -255,7 +258,7 @@ export default function ManageEmergencyContactsScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color={Verandah.primary} />
+          <ArrowLeft size={18} color={Verandah.primary} aria-hidden={true} />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
           <Text style={styles.title}>Manage emergency numbers</Text>
@@ -370,33 +373,36 @@ export default function ManageEmergencyContactsScreen() {
 
         <Text style={styles.sectionTitle}>{scopedTitle}</Text>
         {contacts.length === 0 ? (
-          <EmptyState icon="call-outline" ionicon="call-outline" message="No emergency contacts found for this scope yet." />
+          <EmptyState IconComponent={Phone01} message="No emergency contacts found for this scope yet." isLightMode={true} />
         ) : (
-          contacts.map((row) => (
-            <BaseCard key={row.id} padding={14}>
-              <View style={styles.contactRow}>
-                <View style={styles.contactTextWrap}>
-                  <View style={styles.contactHeadRow}>
-                    <Ionicons name={EMERGENCY_CATEGORY_META[row.category].icon} size={16} color={Verandah.primary} />
-                    <Text style={styles.contactName}>{row.name}</Text>
-                    {!row.is_active ? <Text style={styles.inactiveBadge}>Inactive</Text> : null}
+          contacts.map((row) => {
+            const IconComponent = EMERGENCY_CATEGORY_META[row.category]?.IconComponent || Phone01;
+            return (
+              <BaseCard key={row.id} padding={14}>
+                <View style={styles.contactRow}>
+                  <View style={styles.contactTextWrap}>
+                    <View style={styles.contactHeadRow}>
+                      <IconComponent size={16} color={Verandah.primary} aria-hidden={true} />
+                      <Text style={styles.contactName}>{row.name}</Text>
+                      {!row.is_active ? <Text style={styles.inactiveBadge}>Inactive</Text> : null}
+                    </View>
+                    <Text style={styles.contactMeta}>{row.phone}</Text>
+                    {row.description ? <Text style={styles.contactMeta}>{row.description}</Text> : null}
+                    <Text style={styles.contactMeta}>Sort: {row.sort_order}</Text>
                   </View>
-                  <Text style={styles.contactMeta}>{row.phone}</Text>
-                  {row.description ? <Text style={styles.contactMeta}>{row.description}</Text> : null}
-                  <Text style={styles.contactMeta}>Sort: {row.sort_order}</Text>
-                </View>
 
-                <View style={styles.rowActions}>
-                  <TouchableOpacity style={styles.rowActionBtn} onPress={() => onEdit(row)}>
-                    <Ionicons name="create-outline" size={15} color={Verandah.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.rowActionBtn} onPress={() => onDelete(row)}>
-                    <Ionicons name="trash-outline" size={15} color={Verandah.danger} />
-                  </TouchableOpacity>
+                  <View style={styles.rowActions}>
+                    <TouchableOpacity style={styles.rowActionBtn} onPress={() => onEdit(row)}>
+                      <Edit01 size={15} color={Verandah.primary} aria-hidden={true} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.rowActionBtn} onPress={() => onDelete(row)}>
+                      <Trash01 size={15} color={Verandah.danger} aria-hidden={true} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            </BaseCard>
-          ))
+              </BaseCard>
+            );
+          })
         )}
 
         {hasMore ? (
@@ -412,7 +418,7 @@ export default function ManageEmergencyContactsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Verandah.surface,
+    backgroundColor: Verandah.paper,
     paddingHorizontal: VerandahSpace.lg,
     paddingTop: VerandahLayout.screenPaddingTop,
   },
@@ -420,7 +426,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Verandah.surface,
+    backgroundColor: Verandah.paper,
   },
   header: {
     flexDirection: 'row',
@@ -429,12 +435,12 @@ const styles = StyleSheet.create({
     marginBottom: VerandahSpace.sm,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: VerandahRadius.md,
-    borderWidth: 1,
-    borderColor: Verandah.border,
-    backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    backgroundColor: Verandah.cardMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -442,12 +448,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    ...VerandahType.title,
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: '400',
     color: Verandah.textPrimary,
   },
   subtitle: {
-    ...VerandahType.caption,
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
     color: Verandah.textSecondary,
+    marginTop: 2,
   },
   scopeSwitchWrap: {
     flexDirection: 'row',

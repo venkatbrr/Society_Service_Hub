@@ -1,4 +1,20 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Calendar } from '@untitledui/icons/Calendar';
+import { Car01 } from '@untitledui/icons/Car01';
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { Clock } from '@untitledui/icons/Clock';
+import { Coins01 } from '@untitledui/icons/Coins01';
+import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
+import { Minus } from '@untitledui/icons/Minus';
+import { PauseCircle } from '@untitledui/icons/PauseCircle';
+import { Pencil01 } from '@untitledui/icons/Pencil01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { PlayCircle } from '@untitledui/icons/PlayCircle';
+import { Plus } from '@untitledui/icons/Plus';
+import { SwitchHorizontal01 } from '@untitledui/icons/SwitchHorizontal01';
+import { Trash01 } from '@untitledui/icons/Trash01';
+import { User01 } from '@untitledui/icons/User01';
+import { Users01 } from '@untitledui/icons/Users01';
+import { XClose } from '@untitledui/icons/XClose';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -22,7 +38,7 @@ import { BaseCard } from '../../../components/BaseCard';
 import { EmptyState } from '../../../components/EmptyState';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { Tables } from '../../../lib/database.types';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
@@ -248,8 +264,14 @@ export default function CarpoolDetailScreen() {
       });
       return;
     }
-    if (!cleanFlat) {
-      Toast.show({ type: 'error', text1: 'Missing details', text2: 'Please enter your flat number (e.g. A101).' });
+    const effectiveFlat = (profile?.flat_number || flatNumber).trim();
+    if (!effectiveFlat) {
+      Toast.show({
+        type: 'error',
+        text1: 'Flat number required',
+        text2: 'Please set your flat in profile before requesting a seat.',
+      });
+      router.push('/profile/edit' as any);
       return;
     }
 
@@ -261,7 +283,7 @@ export default function CarpoolDetailScreen() {
         rider_id: user.id,
         rider_name: cleanName,
         rider_phone: cleanPhone,
-        flat_number: cleanFlat,
+        flat_number: effectiveFlat.toUpperCase(),
         seats_requested: seatsRequested,
         note: riderNote.trim() || null,
         status: 'pending',
@@ -393,7 +415,7 @@ export default function CarpoolDetailScreen() {
                     style={styles.headerEditBtn}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
-                    <Ionicons name="pencil-outline" size={20} color={colors.primary} />
+                    <Pencil01 size={20} color={colors.primary} />
                   </TouchableOpacity>
                 )
               : undefined,
@@ -418,11 +440,11 @@ export default function CarpoolDetailScreen() {
                 },
               ]}
             >
-              <Ionicons
-                name={carpool.role_type === 'offering' ? 'car-outline' : 'person-outline'}
-                size={14}
-                color={carpool.role_type === 'offering' ? colors.accent : colors.textPrimary}
-              />
+              {carpool.role_type === 'offering' ? (
+                <Car01 size={14} color={colors.accent} />
+              ) : (
+                <User01 size={14} color={colors.textPrimary} />
+              )}
               <Text
                 style={[
                   styles.roleBadgeText,
@@ -494,11 +516,11 @@ export default function CarpoolDetailScreen() {
           </View>
 
           {/* Timings & Seats */}
-          <View style={[styles.infoGrid, { borderColor: colors.border }]}>
+          <View style={[styles.infoGrid, { borderColor: colors.borderHair }]}>
             {/* Trip Date or Recurring indicator */}
             {carpool.trip_date ? (
               <View style={styles.gridItem}>
-                <Ionicons name="calendar-outline" size={18} color={colors.accent} />
+                <Calendar size={18} color={colors.primary} aria-hidden={true} />
                 <View>
                   <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>Date</Text>
                   <Text style={[styles.gridValue, { color: colors.textPrimary }]}>
@@ -513,7 +535,7 @@ export default function CarpoolDetailScreen() {
             ) : null}
 
             <View style={styles.gridItem}>
-              <Ionicons name="time-outline" size={18} color={colors.primary} />
+              <Clock size={18} color={colors.primary} aria-hidden={true} />
               <View>
                 <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>Departure</Text>
                 <Text style={[styles.gridValue, { color: colors.textPrimary }]}>{carpool.departure_time}</Text>
@@ -522,7 +544,7 @@ export default function CarpoolDetailScreen() {
 
             {carpool.return_time ? (
               <View style={styles.gridItem}>
-                <Ionicons name="swap-horizontal-outline" size={18} color={colors.accent} />
+                <SwitchHorizontal01 size={18} color={colors.primary} aria-hidden={true} />
                 <View>
                   <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>Return time</Text>
                   <Text style={[styles.gridValue, { color: colors.textPrimary }]}>{carpool.return_time}</Text>
@@ -531,7 +553,7 @@ export default function CarpoolDetailScreen() {
             ) : null}
 
             <View style={styles.gridItem}>
-              <Ionicons name="people-outline" size={18} color={colors.textSecondary} />
+              <Users01 size={18} color={colors.textSecondary} aria-hidden={true} />
               <View>
                 <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>
                   {carpool.role_type === 'offering' ? 'Capacity' : 'Seats needed'}
@@ -549,8 +571,8 @@ export default function CarpoolDetailScreen() {
                 >
                   {carpool.role_type === 'offering'
                     ? isFull
-                      ? 'Ride full'
-                      : `${effectiveRemaining} of ${effectiveTotal} seats left`
+                    ? 'Ride full'
+                    : `${effectiveRemaining} of ${effectiveTotal} seats left`
                     : `${carpool.available_seats} ${carpool.available_seats === 1 ? 'seat' : 'seats'}`}
                 </Text>
               </View>
@@ -559,10 +581,10 @@ export default function CarpoolDetailScreen() {
             {/* Cost row - Only shown for offering rides */}
             {carpool.role_type === 'offering' && (
               <View style={styles.gridItem}>
-                <Ionicons
-                  name="cash-outline"
+                <Coins01
                   size={18}
-                  color={carpool.pricing_type === 'paid' ? colors.accent : colors.accent}
+                  color={colors.primary}
+                  aria-hidden={true}
                 />
                 <View>
                   <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>Ride cost</Text>
@@ -575,10 +597,10 @@ export default function CarpoolDetailScreen() {
                         </Text>
                       </View>
                     ) : (
-                      <Text style={[styles.gridValue, { color: colors.accent }]}>Paid</Text>
+                      <Text style={[styles.gridValue, { color: colors.primary }]}>Paid</Text>
                     )
                   ) : (
-                    <Text style={[styles.gridValue, { color: colors.accent }]}>Free ride</Text>
+                    <Text style={[styles.gridValue, { color: colors.primary }]}>Free ride</Text>
                   )}
                 </View>
               </View>
@@ -586,7 +608,7 @@ export default function CarpoolDetailScreen() {
 
             {carpool.role_type === 'offering' && carpool.vehicle_info ? (
               <View style={styles.gridItem}>
-                <Ionicons name="car-sport-outline" size={18} color={colors.textSecondary} />
+                <Car01 size={18} color={colors.textSecondary} aria-hidden={true} />
                 <View>
                   <Text style={[styles.gridLabel, { color: colors.textTertiary }]}>Vehicle</Text>
                   <Text style={[styles.gridValue, { color: colors.textPrimary }]}>{carpool.vehicle_info}</Text>
@@ -602,7 +624,7 @@ export default function CarpoolDetailScreen() {
               <View style={styles.daysRow}>
                 {carpool.recurring_days.map((day) => (
                   <View key={day} style={[styles.dayBadge, { backgroundColor: colors.accentSoft }]}>
-                    <Text style={[styles.dayBadgeText, { color: colors.accent }]}>{day}</Text>
+                    <Text style={[styles.dayBadgeText, { color: colors.primary }]}>{day}</Text>
                   </View>
                 ))}
               </View>
@@ -618,8 +640,8 @@ export default function CarpoolDetailScreen() {
           ) : null}
 
           {/* Creator Profile & Contact Card */}
-          <View style={[styles.hostCard, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}>
-            <Ionicons name="person-circle-outline" size={38} color={colors.primary} />
+          <View style={[styles.hostCard, { backgroundColor: colors.cardMuted, borderColor: colors.borderHair }]}>
+            <User01 size={38} color={colors.primary} aria-hidden={true} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.hostName, { color: colors.textPrimary }]}>
                 {carpool.creator_profile?.full_name || 'Resident'}
@@ -631,7 +653,7 @@ export default function CarpoolDetailScreen() {
                 {(carpool.contact_phone || carpool.creator_profile?.phone_number) ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
                     <Text style={[styles.hostFlat, { color: colors.textTertiary }]}>·</Text>
-                    <Ionicons name="call-outline" size={12} color={colors.textTertiary} />
+                    <Phone01 size={12} color={colors.textTertiary} aria-hidden={true} />
                     <Text style={[styles.hostFlat, { color: colors.textSecondary }]}>
                       {carpool.contact_phone || carpool.creator_profile?.phone_number}
                     </Text>
@@ -647,14 +669,14 @@ export default function CarpoolDetailScreen() {
                   onPress={() => handleCallHost(carpool.contact_phone || carpool.creator_profile?.phone_number)}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="call-outline" size={18} color={colors.accent} />
+                  <Phone01 size={18} color={colors.primary} aria-hidden={true} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.iconBtn, { backgroundColor: colors.accentSoft }]}
                   onPress={() => handleWhatsAppHost(carpool.contact_phone || carpool.creator_profile?.phone_number)}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="logo-whatsapp" size={18} color={colors.accent} />
+                  <MessageCircle01 size={18} color={colors.primary} aria-hidden={true} />
                 </TouchableOpacity>
               </View>
             ) : null}
@@ -668,13 +690,13 @@ export default function CarpoolDetailScreen() {
               Confirmed co-passengers ({passengers.length})
             </Text>
             {passengers.map((p, idx) => (
-              <View key={idx} style={[styles.reqCard, { borderColor: colors.border, marginBottom: 6 }]}>
+              <View key={idx} style={[styles.reqCard, { borderColor: colors.borderHair, marginBottom: 6 }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Text style={{ fontSize: 14, fontWeight: '500', color: colors.textPrimary }}>
                     {p.passenger_name} (Flat {p.passenger_flat})
                   </Text>
                   <View style={{ backgroundColor: colors.accentSoft, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
-                    <Text style={{ fontSize: 11, fontWeight: '500', color: colors.accent }}>
+                    <Text style={{ fontSize: 11, fontWeight: '500', color: colors.primary }}>
                       {p.seats} {p.seats === 1 ? 'seat' : 'seats'}
                     </Text>
                   </View>
@@ -695,7 +717,7 @@ export default function CarpoolDetailScreen() {
                   onPress={() => handleUpdateStatus('paused')}
                   disabled={actionLoading}
                 >
-                  <Ionicons name="pause-circle-outline" size={18} color={colors.caution} />
+                  <PauseCircle size={18} color={colors.caution} aria-hidden={true} />
                   <Text style={[styles.actionButtonText, { color: colors.caution }]}>Pause</Text>
                 </TouchableOpacity>
               ) : carpool.status === 'paused' ? (
@@ -704,8 +726,8 @@ export default function CarpoolDetailScreen() {
                   onPress={() => handleUpdateStatus('active')}
                   disabled={actionLoading}
                 >
-                  <Ionicons name="play-circle-outline" size={18} color={colors.accent} />
-                  <Text style={[styles.actionButtonText, { color: colors.accent }]}>Resume</Text>
+                  <PlayCircle size={18} color={colors.primary} aria-hidden={true} />
+                  <Text style={[styles.actionButtonText, { color: colors.primary }]}>Resume</Text>
                 </TouchableOpacity>
               ) : null}
 
@@ -715,7 +737,7 @@ export default function CarpoolDetailScreen() {
                   onPress={() => handleUpdateStatus('cancelled')}
                   disabled={actionLoading}
                 >
-                  <Ionicons name="close-circle-outline" size={18} color={colors.danger} />
+                  <XClose size={18} color={colors.danger} aria-hidden={true} />
                   <Text style={[styles.actionButtonText, { color: colors.danger }]}>Cancel</Text>
                 </TouchableOpacity>
               )}
@@ -726,7 +748,7 @@ export default function CarpoolDetailScreen() {
                   onPress={() => handleUpdateStatus('completed')}
                   disabled={actionLoading}
                 >
-                  <Ionicons name="checkmark-done-circle-outline" size={18} color={colors.textPrimary} />
+                  <CheckCircle size={18} color={colors.textPrimary} aria-hidden={true} />
                   <Text style={[styles.actionButtonText, { color: colors.textPrimary }]}>Complete</Text>
                 </TouchableOpacity>
               )}
@@ -736,7 +758,7 @@ export default function CarpoolDetailScreen() {
                 onPress={handleDeleteCarpool}
                 disabled={actionLoading}
               >
-                <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                <Trash01 size={18} color={colors.danger} aria-hidden={true} />
                 <Text style={[styles.actionButtonText, { color: colors.danger }]}>Delete</Text>
               </TouchableOpacity>
             </View>
@@ -760,7 +782,7 @@ export default function CarpoolDetailScreen() {
                 </Text>
               ) : (
                 hostRequests.map((req) => (
-                  <View key={req.id} style={[styles.reqCard, { borderColor: colors.border }]}>
+                  <View key={req.id} style={[styles.reqCard, { borderColor: colors.borderHair }]}>
                     <View style={styles.reqHeader}>
                       <Text style={[styles.reqName, { color: colors.textPrimary }]}>
                         {req.rider_name} (Flat {req.flat_number})
@@ -784,7 +806,7 @@ export default function CarpoolDetailScreen() {
                             fontWeight: '500',
                             color:
                               req.status === 'accepted'
-                                ? colors.accent
+                                ? colors.primary
                                 : req.status === 'pending'
                                 ? colors.caution
                                 : colors.danger,
@@ -860,7 +882,7 @@ export default function CarpoolDetailScreen() {
                         fontSize: 11,
                         fontWeight: '500',
                         color:
-                          myOpenRequest.status === 'accepted' ? colors.accent : colors.caution,
+                          myOpenRequest.status === 'accepted' ? colors.primary : colors.caution,
                       }}
                     >
                       {myOpenRequest.status === 'accepted' ? 'Confirmed' : 'Pending host review'}
@@ -900,10 +922,10 @@ export default function CarpoolDetailScreen() {
                   onPress={() => setShowJoinModal(true)}
                   disabled={isFull}
                 >
-                  <Ionicons
-                    name="car-sport"
+                  <Car01
                     size={20}
                     color={isFull ? colors.textMuted : colors.primaryFg}
+                    aria-hidden={true}
                   />
                   <Text
                     style={[
@@ -932,7 +954,7 @@ export default function CarpoolDetailScreen() {
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Request carpool seat</Text>
               <TouchableOpacity onPress={() => setShowJoinModal(false)}>
-                <Ionicons name="close" size={24} color={colors.textSecondary} />
+                <XClose size={24} color={colors.textSecondary} aria-hidden={true} />
               </TouchableOpacity>
             </View>
 
@@ -950,15 +972,24 @@ export default function CarpoolDetailScreen() {
 
               <View style={styles.modalInputGroup}>
                 <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Flat / Unit number *</Text>
-                <TextInput
-                  style={[styles.modalInput, { color: colors.textPrimary, borderColor: colors.borderStrong }]}
-                  value={flatNumber}
-                  onChangeText={setFlatNumber}
-                  onBlur={() => setFlatNumber((prev) => prev.trim().replace(/[^a-zA-Z0-9]/g, '').toUpperCase())}
-                  placeholder="e.g. A101"
-                  placeholderTextColor={colors.textTertiary}
-                  autoCapitalize="characters"
-                />
+                {profile?.flat_number ? (
+                  <View style={[styles.modalInput, { justifyContent: 'center', backgroundColor: colors.card, borderColor: colors.borderStrong }]}>
+                    <Text style={{ color: colors.textPrimary, ...VerandahType.body }}>{profile.flat_number}</Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.modalInput, { justifyContent: 'center', borderColor: Verandah.caution, backgroundColor: Verandah.cautionSoft }]}
+                    onPress={() => {
+                      setShowJoinModal(false);
+                      router.push('/profile/edit' as any);
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={{ color: Verandah.caution, ...VerandahType.captionBold }}>
+                      + Set your flat in profile to request
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               <View style={styles.modalInputGroup}>
@@ -981,7 +1012,7 @@ export default function CarpoolDetailScreen() {
                     style={[styles.modalCounterBtn, { borderColor: colors.borderStrong }]}
                     onPress={() => setSeatsRequested(Math.max(1, seatsRequested - 1))}
                   >
-                    <Ionicons name="remove" size={18} color={colors.textPrimary} />
+                    <Minus size={18} color={colors.textPrimary} />
                   </TouchableOpacity>
                   <Text style={[styles.modalCounterText, { color: colors.textPrimary }]}>{seatsRequested}</Text>
                   <TouchableOpacity
@@ -989,8 +1020,7 @@ export default function CarpoolDetailScreen() {
                     onPress={() => setSeatsRequested(Math.min(Math.max(1, effectiveRemaining), seatsRequested + 1))}
                     disabled={seatsRequested >= effectiveRemaining}
                   >
-                    <Ionicons
-                      name="add"
+                    <Plus
                       size={18}
                       color={seatsRequested >= effectiveRemaining ? colors.textMuted : colors.textPrimary}
                     />

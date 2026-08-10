@@ -1,4 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Car01 } from '@untitledui/icons/Car01';
+import { Clock } from '@untitledui/icons/Clock';
+import { Plus } from '@untitledui/icons/Plus';
+import { SearchLg } from '@untitledui/icons/SearchLg';
+import { User01 } from '@untitledui/icons/User01';
+import { Users01 } from '@untitledui/icons/Users01';
+import { XClose } from '@untitledui/icons/XClose';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -19,7 +25,7 @@ import { Rupees } from '../../../components/Rupees';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../../components/WebPullIndicator';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { Tables } from '../../../lib/database.types';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
@@ -215,7 +221,7 @@ export default function CarpoolListScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: 'Community carpooling',
@@ -232,7 +238,7 @@ export default function CarpoolListScreen() {
 
       {/* Search Input */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
+        <SearchLg size={18} color={colors.textMuted} style={styles.searchIcon} aria-hidden={true} />
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder="Search by city, outstation destination, route, notes..."
@@ -242,7 +248,7 @@ export default function CarpoolListScreen() {
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+            <XClose size={18} color={colors.textMuted} aria-hidden={true} />
           </TouchableOpacity>
         )}
       </View>
@@ -354,15 +360,15 @@ export default function CarpoolListScreen() {
                       },
                     ]}
                   >
-                    <Ionicons
-                      name={item.role_type === 'offering' ? 'car-outline' : 'person-outline'}
-                      size={14}
-                      color={item.role_type === 'offering' ? colors.accent : colors.textPrimary}
-                    />
+                    {item.role_type === 'offering' ? (
+                      <Car01 size={14} color={colors.primary} aria-hidden={true} />
+                    ) : (
+                      <User01 size={14} color={colors.textPrimary} aria-hidden={true} />
+                    )}
                     <Text
                       style={[
                         styles.roleBadgeText,
-                        { color: item.role_type === 'offering' ? colors.accent : colors.textPrimary },
+                        { color: item.role_type === 'offering' ? colors.primary : colors.textPrimary },
                       ]}
                     >
                       {item.role_type === 'offering' ? 'Offering seats' : 'Seeking ride'}
@@ -376,12 +382,12 @@ export default function CarpoolListScreen() {
                           {unitPrice > 0 ? (
                             <Rupees amount={unitPrice} size="sm" tone="in" />
                           ) : (
-                            <Text style={[styles.badgeText, { color: colors.accent }]}>Paid</Text>
+                            <Text style={[styles.badgeText, { color: colors.primary }]}>Paid</Text>
                           )}
                         </View>
                       ) : (
                         <View style={[styles.badge, { backgroundColor: colors.accentSoft }]}>
-                          <Text style={[styles.badgeText, { color: colors.accent }]}>
+                          <Text style={[styles.badgeText, { color: colors.primary }]}>
                             Free ride
                           </Text>
                         </View>
@@ -400,7 +406,7 @@ export default function CarpoolListScreen() {
 
                     {isJoined && (
                       <View style={[styles.badge, { backgroundColor: colors.accentSoft }]}>
-                        <Text style={[styles.badgeText, { color: colors.accent }]}>
+                        <Text style={[styles.badgeText, { color: colors.primary }]}>
                           Joined
                         </Text>
                       </View>
@@ -416,7 +422,7 @@ export default function CarpoolListScreen() {
                 {/* Route Flow */}
                 <View style={styles.routeContainer}>
                   <View style={styles.routePointRow}>
-                    <View style={[styles.dotCircle, { backgroundColor: colors.accent }]} />
+                    <View style={[styles.dotCircle, { backgroundColor: colors.primary }]} />
                     <Text style={[styles.routeLabel, { color: colors.textTertiary }]}>From:</Text>
                     <Text style={[styles.routeValue, { color: colors.textPrimary }]} numberOfLines={1}>
                       {item.start_point}
@@ -435,9 +441,9 @@ export default function CarpoolListScreen() {
                 </View>
 
                 {/* Details Meta */}
-                <View style={[styles.metaRow, { borderColor: colors.border }]}>
+                <View style={[styles.metaRow, { borderColor: colors.borderHair }]}>
                   <View style={styles.metaItem}>
-                    <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+                    <Clock size={14} color={colors.textSecondary} aria-hidden={true} />
                     <Text style={[styles.metaText, { color: colors.textSecondary }]}>
                       {item.trip_date ? `${new Date(item.trip_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · ` : ''}
                       {item.departure_time}
@@ -446,7 +452,7 @@ export default function CarpoolListScreen() {
                   </View>
 
                   <View style={styles.metaItem}>
-                    <Ionicons name="people-outline" size={14} color={colors.textSecondary} />
+                    <Users01 size={14} color={colors.textSecondary} aria-hidden={true} />
                     <Text style={[styles.metaText, { color: colors.textSecondary }]}>
                       {item.available_seats} {item.available_seats === 1 ? 'seat' : 'seats'}{' '}
                       {item.role_type === 'offering' ? 'capacity' : 'needed'}
@@ -476,7 +482,7 @@ export default function CarpoolListScreen() {
                         ? ` (${item.creator_profile.flat_number})`
                         : ''}
                     </Text>
-                    <Text style={[styles.viewDetailsLink, { color: colors.accent }]}>
+                    <Text style={[styles.viewDetailsLink, { color: colors.primary }]}>
                       Details →
                     </Text>
                   </View>
@@ -493,7 +499,7 @@ export default function CarpoolListScreen() {
         activeOpacity={0.8}
         onPress={() => router.push('/mcn/carpools/add' as any)}
       >
-        <Ionicons name="add" size={24} color={colors.primaryFg} />
+        <Plus size={24} color={colors.primaryFg} aria-hidden={true} />
         <Text style={[styles.fabText, { color: colors.primaryFg }]}>Offer / request</Text>
       </TouchableOpacity>
     </View>

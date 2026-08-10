@@ -1,4 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Calendar } from '@untitledui/icons/Calendar';
+import { Car01 } from '@untitledui/icons/Car01';
+import { Check } from '@untitledui/icons/Check';
+import { Coins01 } from '@untitledui/icons/Coins01';
+import { RefreshCw01 } from '@untitledui/icons/RefreshCw01';
+import { User01 } from '@untitledui/icons/User01';
+import { Zap } from '@untitledui/icons/Zap';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -15,7 +21,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { DateField, formatLocalDateForDb } from '../../../components/DateField';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { goBackSmart, replaceTracked } from '../../../lib/navigation';
@@ -346,7 +352,7 @@ export default function AddCarpoolScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={[styles.container, { backgroundColor: colors.surface }]}
+      style={[styles.container, { backgroundColor: colors.paper }]}
     >
       <Stack.Screen options={buildMcnHeaderOptions({ title: pageTitle, onBack: handleBack })} />
 
@@ -362,10 +368,10 @@ export default function AddCarpoolScreen() {
               onPress={() => setRoleType('offering')}
               activeOpacity={0.8}
             >
-              <Ionicons
-                name="car-outline"
+              <Car01
                 size={18}
                 color={roleType === 'offering' ? colors.primary : colors.textMuted}
+                aria-hidden={true}
               />
               <Text
                 style={[
@@ -385,15 +391,15 @@ export default function AddCarpoolScreen() {
               onPress={() => setRoleType('seeking')}
               activeOpacity={0.8}
             >
-              <Ionicons
-                name="person-outline"
+              <User01
                 size={18}
-                color={roleType === 'seeking' ? colors.accent : colors.textMuted}
+                color={roleType === 'seeking' ? colors.primary : colors.textMuted}
+                aria-hidden={true}
               />
               <Text
                 style={[
                   styles.roleBtnText,
-                  { color: roleType === 'seeking' ? colors.accent : colors.textSecondary },
+                  { color: roleType === 'seeking' ? colors.primary : colors.textSecondary },
                 ]}
               >
                 Need a ride
@@ -481,10 +487,10 @@ export default function AddCarpoolScreen() {
               onPress={() => setScheduleType('recurring')}
               activeOpacity={0.8}
             >
-              <Ionicons
-                name="repeat-outline"
+              <RefreshCw01
                 size={16}
                 color={scheduleType === 'recurring' ? colors.primary : colors.textMuted}
+                aria-hidden={true}
               />
               <Text
                 style={[
@@ -504,15 +510,15 @@ export default function AddCarpoolScreen() {
               onPress={() => setScheduleType('one_off')}
               activeOpacity={0.8}
             >
-              <Ionicons
-                name="calendar-outline"
+              <Calendar
                 size={16}
-                color={scheduleType === 'one_off' ? colors.accent : colors.textMuted}
+                color={scheduleType === 'one_off' ? colors.primary : colors.textMuted}
+                aria-hidden={true}
               />
               <Text
                 style={[
                   styles.roleBtnText,
-                  { color: scheduleType === 'one_off' ? colors.accent : colors.textSecondary },
+                  { color: scheduleType === 'one_off' ? colors.primary : colors.textSecondary },
                 ]}
               >
                 One-off / outstation
@@ -538,11 +544,11 @@ export default function AddCarpoolScreen() {
               <Text style={[styles.label, { color: colors.textSecondary }]}>Recurring days *</Text>
               <View style={styles.presetRow}>
                 <TouchableOpacity onPress={() => selectPreset('weekdays')}>
-                  <Text style={[styles.presetLink, { color: colors.accent }]}>Weekdays</Text>
+                  <Text style={[styles.presetLink, { color: colors.primary }]}>Weekdays</Text>
                 </TouchableOpacity>
                 <Text style={{ color: colors.textTertiary }}>·</Text>
                 <TouchableOpacity onPress={() => selectPreset('daily')}>
-                  <Text style={[styles.presetLink, { color: colors.accent }]}>Daily</Text>
+                  <Text style={[styles.presetLink, { color: colors.primary }]}>Daily</Text>
                 </TouchableOpacity>
                 <Text style={{ color: colors.textTertiary }}>·</Text>
                 <TouchableOpacity onPress={() => selectPreset('clear')}>
@@ -725,11 +731,20 @@ export default function AddCarpoolScreen() {
             onPress={() => setHasReturnTime(!hasReturnTime)}
             activeOpacity={0.8}
           >
-            <Ionicons
-              name={hasReturnTime ? 'checkbox' : 'square-outline'}
-              size={20}
-              color={hasReturnTime ? colors.primary : colors.textTertiary}
-            />
+            <View
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 4,
+                borderWidth: 1.5,
+                borderColor: hasReturnTime ? colors.primary : colors.textTertiary,
+                backgroundColor: hasReturnTime ? colors.primary : 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {hasReturnTime && <Check size={12} color={colors.primaryFg} aria-hidden={true} />}
+            </View>
             <Text style={[styles.checkboxLabel, { color: colors.textPrimary }]}>Specify return time (round trip)</Text>
           </TouchableOpacity>
 
@@ -918,15 +933,15 @@ export default function AddCarpoolScreen() {
                   setPricePerSeat('');
                 }}
               >
-                <Ionicons
-                  name="gift-outline"
+                <Zap
                   size={16}
-                  color={pricingType === 'free' ? colors.accent : colors.textMuted}
+                  color={pricingType === 'free' ? colors.primary : colors.textMuted}
+                  aria-hidden={true}
                 />
                 <Text
                   style={[
                     styles.roleBtnText,
-                    { color: pricingType === 'free' ? colors.accent : colors.textSecondary },
+                    { color: pricingType === 'free' ? colors.primary : colors.textSecondary },
                   ]}
                 >
                   Free ride
@@ -940,10 +955,10 @@ export default function AddCarpoolScreen() {
                 ]}
                 onPress={() => setPricingType('paid')}
               >
-                <Ionicons
-                  name="cash-outline"
+                <Coins01
                   size={16}
                   color={pricingType === 'paid' ? colors.primary : colors.textMuted}
+                  aria-hidden={true}
                 />
                 <Text
                   style={[

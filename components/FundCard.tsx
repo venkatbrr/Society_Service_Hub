@@ -1,8 +1,8 @@
+import { ChevronRight } from '@untitledui/icons/ChevronRight';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
-import { APP_EMOJIS } from '../constants/emojis';
 import { Tables } from '../lib/database.types';
 import { FundAccessRole, formatRole } from '../lib/fundRoles';
 import { BaseCard } from './BaseCard';
@@ -69,7 +69,7 @@ export const FundCard = ({ fund, totals, currentRole, treasurerNames, collectorC
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>Open fund details</Text>
-        <Text style={styles.footerIcon}>{APP_EMOJIS.chevronRight}</Text>
+        <ChevronRight size={14} color={Verandah.textTertiary} aria-hidden={true} />
       </View>
     </BaseCard>
   );

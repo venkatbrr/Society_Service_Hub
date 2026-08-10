@@ -1,7 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Share07 } from '@untitledui/icons/Share07';
+import { Star01 } from '@untitledui/icons/Star01';
 import { Image } from 'expo-image';
-import React, { useState } from 'react';
-import { Modal, Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { cloudinaryUrl } from '../lib/cloudinary';
@@ -39,19 +40,12 @@ interface McnListingCardProps {
   isCommunityLead: boolean;
   onPress: (listingId: string) => void;
   onManage: (listingId: string) => void;
-  onRemove: (listingId: string) => void;
 }
 
 export const McnListingCard = React.memo(({
   listing,
-  currentUserId,
-  isCommunityLead,
   onPress,
-  onManage,
-  onRemove,
 }: McnListingCardProps) => {
-  const [showMenu, setShowMenu] = useState(false);
-  const isOwner = listing.owner_id === currentUserId;
   const ratings = listing.ratings || [];
   const ratingCount = ratings.length;
   const avgRating = ratingCount > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
@@ -60,12 +54,12 @@ export const McnListingCard = React.memo(({
     e.stopPropagation();
     const ownerName = listing.profiles?.full_name || 'Resident';
     const flatNo = listing.profiles?.flat_number ? `Flat ${listing.profiles.flat_number}` : '';
-    const catLabel = listing.category ? `${listing.category.emoji} ${listing.category.name}` : '';
+    const catLabel = listing.category?.name || '';
 
     const shareUrl = siteUrl(`/mcn/listing/${listing.id}`);
 
     const messageLines = [
-      `🏪 *Community Business: ${listing.name}*`,
+      `*Community Business: ${listing.name}*`,
       catLabel ? `Category: ${catLabel}` : '',
       `Owner: ${ownerName} ${flatNo ? `(${flatNo})` : ''}`,
     ];
@@ -75,11 +69,11 @@ export const McnListingCard = React.memo(({
     }
 
     if (listing.contact_phone) {
-      messageLines.push(`📞 Phone/WhatsApp: ${listing.contact_phone}`);
+      messageLines.push(`Phone/WhatsApp: ${listing.contact_phone}`);
     }
 
     messageLines.push(``);
-    messageLines.push(`🔗 View Offerings & Order:`);
+    messageLines.push(`View Offerings & Order:`);
     messageLines.push(shareUrl);
 
     const message = messageLines.filter(Boolean).join('\n');
@@ -99,10 +93,7 @@ export const McnListingCard = React.memo(({
     <BaseCard
       style={[styles.card, !listing.is_active && styles.inactiveCard]}
       padding={listing.image_url ? 0 : 12}
-      onPress={() => {
-        if (showMenu) return;
-        onPress(listing.id);
-      }}
+      onPress={() => onPress(listing.id)}
     >
       {listing.image_url ? (
         <Image
@@ -123,8 +114,8 @@ export const McnListingCard = React.memo(({
               {listing.profiles?.flat_number ? ` · ${listing.profiles.flat_number}` : ''}
             </Text>
             {ratingCount > 0 && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                <Ionicons name="star" size={12} color="#F59E0B" />
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8, gap: 2 }}>
+                <Star01 size={12} color={Verandah.goldInk} fill={Verandah.goldInk} aria-hidden={true} />
                 <Text style={{ fontSize: 12, color: Verandah.textPrimary, marginLeft: 2, fontWeight: '500' }}>
                   {avgRating.toFixed(1)}
                 </Text>
@@ -137,7 +128,7 @@ export const McnListingCard = React.memo(({
           {listing.category ? (
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryBadgeText}>
-                {listing.category.emoji} {listing.category.name}
+                {listing.category.name}
               </Text>
             </View>
           ) : null}
@@ -147,51 +138,16 @@ export const McnListingCard = React.memo(({
             </View>
           ) : null}
         </View>
-        {(isOwner || isCommunityLead) && (
-          <TouchableOpacity onPress={(e) => { e.stopPropagation(); setShowMenu(true); }} style={styles.menuBtn}>
-            <Ionicons name="ellipsis-vertical" size={20} color={Verandah.textSecondary} />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <View style={styles.footer}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <TouchableOpacity
-            onPress={() => onPress(listing.id)}
-            style={styles.actionBtn}
-          >
-            <Text style={[styles.actionBtnText, { color: Verandah.accent }]}>View details →</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleShare}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 }}
-            hitSlop={8}
-          >
-            <Ionicons name="share-outline" size={16} color={Verandah.accent} />
-            <Text style={[styles.actionBtnText, { color: Verandah.accent, fontSize: 12 }]}>Share</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Share sits where the overflow menu used to. Removing a listing lives on
+            the manage screen and My Submissions, so the card carries no destructive
+            action, and "View details" is redundant with tapping the card. */}
+        <TouchableOpacity onPress={handleShare} style={styles.shareBtn} hitSlop={8} activeOpacity={0.85}>
+          <Share07 size={14} color={Verandah.primaryFg} aria-hidden={true} />
+          <Text style={styles.shareBtnText}>Share</Text>
+        </TouchableOpacity>
       </View>
 
       </View>
-
-      <Modal visible={showMenu} transparent animationType="fade" onRequestClose={() => setShowMenu(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowMenu(false)}>
-          <View style={styles.menuContainer}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setShowMenu(false);
-                onRemove(listing.id);
-              }}
-            >
-              <Ionicons name="trash-outline" size={20} color={Verandah.danger} />
-              <Text style={[styles.menuText, { color: Verandah.danger }]}>Remove listing</Text>
-            </TouchableOpacity>
-          </View>
-        </Pressable>
-      </Modal>
     </BaseCard>
   );
 });
@@ -260,50 +216,25 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },
-  menuBtn: {
-    padding: 4,
+  shareBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: Verandah.primary,
+  },
+  shareBtnText: {
+    ...VerandahType.captionBold,
+    color: Verandah.primaryFg,
+    fontSize: 12.5,
   },
   description: {
     ...VerandahType.body,
     marginBottom: 8,
     lineHeight: 18,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-  },
-  actionBtn: {
-    paddingVertical: 2,
-  },
-  actionBtnText: {
-    ...VerandahType.captionBold,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: Verandah.borderStrong,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  menuContainer: {
-    backgroundColor: Verandah.surface,
-    borderRadius: VerandahRadius.lg,
-    width: 220,
-    padding: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    gap: 12,
-  },
-  menuText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: Verandah.textPrimary,
   },
   viewerOverlay: {
     flex: 1,

@@ -1,5 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { InfoCircle } from '@untitledui/icons/InfoCircle';
+import { Lock01 } from '@untitledui/icons/Lock01';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -19,8 +20,7 @@ import { BlockPicker } from '../../components/BlockPicker';
 import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
-import { APP_EMOJIS } from '../../constants/emojis';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { goBackSmart, replaceTracked } from '../../lib/navigation';
@@ -508,7 +508,7 @@ export default function AddTransactionScreen() {
   if (fund?.is_closed) {
     return (
       <View style={[styles.loadingState, { backgroundColor: colors.background, padding: 24 }]}>
-        <Ionicons name="lock-closed" size={48} color={Verandah.caution} style={{ marginBottom: 16 }} />
+        <Lock01 size={48} color={Verandah.caution} style={{ marginBottom: 16 }} />
         <Text style={{ color: colors.text, fontSize: 18, fontWeight: '600', marginBottom: 8, textAlign: 'center' }}>
           Fund is closed
         </Text>
@@ -567,7 +567,7 @@ export default function AddTransactionScreen() {
           </View>
 
           <View style={[styles.notice, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={styles.noticeIcon}>{APP_EMOJIS.info}</Text>
+            <InfoCircle size={16} color={colors.textMuted} style={{ marginRight: 6 }} />
             <Text style={[styles.noticeText, { color: colors.textMuted }]}>
               {transaction_id
                 ? 'You are editing this transaction. You can modify the amount, title, and notes.'

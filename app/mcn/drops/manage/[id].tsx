@@ -1,4 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { ChevronDown } from '@untitledui/icons/ChevronDown';
+import { ChevronUp } from '@untitledui/icons/ChevronUp';
+import { Edit01 } from '@untitledui/icons/Edit01';
+import { Lock01 } from '@untitledui/icons/Lock01';
+import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { Trash01 } from '@untitledui/icons/Trash01';
+import { XCircle } from '@untitledui/icons/XCircle';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart, replaceTracked } from '../../../../lib/navigation';
@@ -16,7 +24,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../../constants/Verandah';
 import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
 import { supabase } from '../../../../lib/supabase';
 
@@ -327,7 +335,7 @@ export default function ManagePreorderDropScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
           title: 'Food Drop Dashboard',
@@ -349,31 +357,31 @@ export default function ManagePreorderDropScreen() {
               style={styles.editDropBtn}
               onPress={() => router.push(`/mcn/drops/add?dropId=${drop.id}` as any)}
             >
-              <Ionicons name="create-outline" size={14} color={Verandah.accent} />
+              <Edit01 size={14} color={Verandah.primary} aria-hidden={true} />
               <Text style={styles.editDropBtnText} numberOfLines={1}>Edit drop</Text>
             </TouchableOpacity>
 
             {isOpen ? (
               <TouchableOpacity style={styles.closeBtn} onPress={handleCloseDropEarly}>
-                <Ionicons name="lock-closed-outline" size={14} color="#D97706" />
+                <Lock01 size={14} color="#D97706" aria-hidden={true} />
                 <Text style={styles.closeBtnText} numberOfLines={1}>Close early</Text>
               </TouchableOpacity>
             ) : null}
 
             {drop.status !== 'completed' ? (
               <TouchableOpacity style={styles.completeBtn} onPress={handleCompleteDrop}>
-                <Ionicons name="checkmark-circle-outline" size={16} color="#059669" />
+                <CheckCircle size={16} color={Verandah.green600} aria-hidden={true} />
                 <Text style={styles.completeBtnText} numberOfLines={1}>Mark completed</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.completedBadge}>
-                <Ionicons name="checkmark-circle" size={16} color="#059669" />
+                <CheckCircle size={16} color={Verandah.green600} aria-hidden={true} />
                 <Text style={styles.completedBadgeText} numberOfLines={1}>Completed</Text>
               </View>
             )}
 
             <TouchableOpacity style={[styles.closeBtn, { backgroundColor: '#FEE2E2', borderColor: '#F87171' }]} onPress={handleDeleteDrop}>
-              <Ionicons name="trash-outline" size={14} color="#DC2626" />
+              <Trash01 size={14} color="#DC2626" aria-hidden={true} />
               <Text style={[styles.closeBtnText, { color: '#DC2626' }]} numberOfLines={1}>Delete</Text>
             </TouchableOpacity>
           </View>
@@ -399,7 +407,7 @@ export default function ManagePreorderDropScreen() {
 
         {/* Kitchen Prep Aggregation Section */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>👩‍🍳 Kitchen Prep Aggregation Summary</Text>
+          <Text style={styles.sectionTitle}>Kitchen Prep Aggregation Summary</Text>
           <Text style={styles.sectionSub}>
             Total items needed for cooking / preparation across all active pre-orders:
           </Text>
@@ -428,7 +436,7 @@ export default function ManagePreorderDropScreen() {
 
         {/* Active Resident Pre-Orders Section */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>📍 Active Pre-Orders ({confirmedOrders.length})</Text>
+          <Text style={styles.sectionTitle}>Active Pre-Orders ({confirmedOrders.length})</Text>
           <Text style={styles.sectionSub}>
             Deliver to residents by flat number. Click "Mark delivered" when handed over.
           </Text>
@@ -451,13 +459,13 @@ export default function ManagePreorderDropScreen() {
                       style={styles.iconCircle}
                       onPress={() => handleCall(order.buyer_phone)}
                     >
-                      <Ionicons name="call-outline" size={16} color={colors.accent} />
+                      <Phone01 size={16} color={colors.primary} aria-hidden={true} />
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.iconCircle}
                       onPress={() => handleWhatsApp(order.buyer_phone, order.flat_number)}
                     >
-                      <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
+                      <MessageCircle01 size={16} color="#10B981" aria-hidden={true} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -489,10 +497,10 @@ export default function ManagePreorderDropScreen() {
                     style={styles.fulfillmentBtn}
                     onPress={() => handleToggleFulfillment(order.id, order.status)}
                   >
-                    <Ionicons
-                      name="checkmark-circle-outline"
+                    <CheckCircle
                       size={15}
                       color="#FFFFFF"
+                      aria-hidden={true}
                     />
                     <Text style={styles.fulfillmentBtnText}>Mark delivered</Text>
                   </TouchableOpacity>
@@ -511,14 +519,14 @@ export default function ManagePreorderDropScreen() {
               activeOpacity={0.7}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                <Ionicons name="checkmark-circle" size={18} color="#059669" />
+                <CheckCircle size={18} color={Verandah.green600} aria-hidden={true} />
                 <Text style={styles.sectionTitle}>Delivered & Completed Orders ({fulfilledOrders.length})</Text>
               </View>
-              <Ionicons
-                name={showDeliveredSection ? 'chevron-up' : 'chevron-down'}
-                size={20}
-                color={colors.textSecondary}
-              />
+              {showDeliveredSection ? (
+                <ChevronUp size={20} color={colors.textSecondary} aria-hidden={true} />
+              ) : (
+                <ChevronDown size={20} color={colors.textSecondary} aria-hidden={true} />
+              )}
             </TouchableOpacity>
 
             {showDeliveredSection ? (
@@ -526,16 +534,16 @@ export default function ManagePreorderDropScreen() {
                 {fulfilledOrders.map((order) => (
                   <View key={order.id} style={[styles.orderCard, styles.orderCardFulfilled]}>
                     <View style={styles.orderHeader}>
-                      <View style={[styles.flatBadge, { backgroundColor: '#DCFCE7' }]}>
-                        <Text style={[styles.flatBadgeText, { color: '#059669' }]}>Flat {order.flat_number}</Text>
+                      <View style={[styles.flatBadge, { backgroundColor: Verandah.accentSoft }]}>
+                        <Text style={[styles.flatBadgeText, { color: Verandah.green600 }]}>Flat {order.flat_number}</Text>
                       </View>
                       <Text style={styles.orderBuyerName}>{order.buyer_name}</Text>
                       <View style={styles.contactActions}>
                         <TouchableOpacity style={styles.iconCircle} onPress={() => handleCall(order.buyer_phone)}>
-                          <Ionicons name="call-outline" size={16} color={colors.accent} />
+                          <Phone01 size={16} color={colors.primary} aria-hidden={true} />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.iconCircle} onPress={() => handleWhatsApp(order.buyer_phone, order.flat_number)}>
-                          <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
+                          <MessageCircle01 size={16} color="#10B981" aria-hidden={true} />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -560,7 +568,7 @@ export default function ManagePreorderDropScreen() {
                         style={[styles.fulfillmentBtn, styles.fulfillmentBtnDone]}
                         onPress={() => handleToggleFulfillment(order.id, order.status)}
                       >
-                        <Ionicons name="checkmark-circle" size={15} color="#059669" />
+                        <CheckCircle size={15} color={Verandah.green600} aria-hidden={true} />
                         <Text style={[styles.fulfillmentBtnText, styles.fulfillmentBtnTextDone]}>Delivered</Text>
                       </TouchableOpacity>
                     </View>
@@ -580,16 +588,16 @@ export default function ManagePreorderDropScreen() {
               activeOpacity={0.7}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+                <XCircle size={18} color="#9CA3AF" aria-hidden={true} />
                 <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
                   Cancelled Orders ({cancelledOrders.length})
                 </Text>
               </View>
-              <Ionicons
-                name={showCancelledSection ? 'chevron-up' : 'chevron-down'}
-                size={20}
-                color={colors.textSecondary}
-              />
+              {showCancelledSection ? (
+                <ChevronUp size={20} color={colors.textSecondary} aria-hidden={true} />
+              ) : (
+                <ChevronDown size={20} color={colors.textSecondary} aria-hidden={true} />
+              )}
             </TouchableOpacity>
 
             {showCancelledSection ? (
@@ -603,10 +611,10 @@ export default function ManagePreorderDropScreen() {
                       <Text style={[styles.orderBuyerName, { color: colors.textSecondary }]}>{order.buyer_name}</Text>
                       <View style={styles.contactActions}>
                         <TouchableOpacity style={styles.iconCircle} onPress={() => handleCall(order.buyer_phone)}>
-                          <Ionicons name="call-outline" size={16} color={colors.textSecondary} />
+                          <Phone01 size={16} color={colors.textSecondary} aria-hidden={true} />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.iconCircle} onPress={() => handleWhatsApp(order.buyer_phone, order.flat_number)}>
-                          <Ionicons name="logo-whatsapp" size={16} color="#9CA3AF" />
+                          <MessageCircle01 size={16} color="#9CA3AF" aria-hidden={true} />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -737,7 +745,7 @@ const styles = StyleSheet.create({
   completeBtnText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#059669',
+    color: Verandah.green600,
   },
   completedBadge: {
     backgroundColor: '#F3F4F6',
@@ -754,7 +762,7 @@ const styles = StyleSheet.create({
   completedBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#059669',
+    color: Verandah.green600,
   },
   metricsRow: {
     flexDirection: 'row',
@@ -960,7 +968,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   fulfillmentBtnTextDone: {
-    color: '#059669',
+    color: Verandah.green600,
   },
   collapsibleHeader: {
     flexDirection: 'row',

@@ -1,4 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
+import { DotsVertical } from '@untitledui/icons/DotsVertical';
+import { Trash01 } from '@untitledui/icons/Trash01';
+import { XCircle } from '@untitledui/icons/XCircle';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import React, { useState } from 'react';
@@ -57,7 +59,7 @@ export function McnPostCard({ post, currentUserId, isCommunityLead, onMarkUnavai
   };
 
   return (
-    <BaseCard style={styles.card} padding={16}>
+    <BaseCard style={styles.card} padding={14}>
       <View style={styles.header}>
         <Avatar name={post.profiles?.full_name || 'Resident'} size={40} />
         <View style={styles.headerText}>
@@ -68,8 +70,8 @@ export function McnPostCard({ post, currentUserId, isCommunityLead, onMarkUnavai
           </Text>
         </View>
         {showMenuIcon && (
-          <TouchableOpacity onPress={() => setShowMenu(true)} style={styles.menuBtn}>
-            <Ionicons name="ellipsis-vertical" size={20} color={Verandah.textSecondary} />
+          <TouchableOpacity onPress={() => setShowMenu(true)} style={styles.menuBtn} hitSlop={8}>
+            <DotsVertical size={20} color={Verandah.textSecondary} aria-hidden={true} />
           </TouchableOpacity>
         )}
       </View>
@@ -97,7 +99,7 @@ export function McnPostCard({ post, currentUserId, isCommunityLead, onMarkUnavai
                   onMarkUnavailable(post.id);
                 }}
               >
-                <Ionicons name="close-circle-outline" size={20} color={Verandah.textPrimary} />
+                <XCircle size={18} color={Verandah.textPrimary} aria-hidden={true} />
                 <Text style={styles.menuText}>Mark as unavailable</Text>
               </TouchableOpacity>
             )}
@@ -109,7 +111,7 @@ export function McnPostCard({ post, currentUserId, isCommunityLead, onMarkUnavai
                   onDelete(post.id);
                 }}
               >
-                <Ionicons name="trash-outline" size={20} color={Verandah.danger} />
+                <Trash01 size={18} color={Verandah.danger} aria-hidden={true} />
                 <Text style={[styles.menuText, { color: Verandah.danger }]}>Delete</Text>
               </TouchableOpacity>
             )}
@@ -122,11 +124,9 @@ export function McnPostCard({ post, currentUserId, isCommunityLead, onMarkUnavai
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Verandah.borderStrong,
-    shadowColor: 'transparent',
-    elevation: 0,
+    marginBottom: 8,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
   },
   header: {
     flexDirection: 'row',

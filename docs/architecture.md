@@ -172,10 +172,18 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 | Table | Key columns | Scope |
 |-------|-------------|-------|
 | `communities` | `name`, `code` (6-char join code), `funds_enabled`, `blocks_enabled`, `block_label`, `city`, `area`, `pincode`, `address`, `community_type`, `approximate_units` | Community |
-| `profiles` | `id` (= `auth.users.id`), `full_name`, `email`, `phone_number`, `flat_number`, `app_role`, `community_id`, `block_id`, `avatar_url`, `expo_push_token`, `removed_at`, `removed_by` | Self / community |
-| `community_requests` | `name`, `city`, `pincode`, `area`, `address`, `community_type`, `approximate_units`, `requester_flat_number`, `proof_photo_url`, `requested_by`, `status`, `rejection_reason`, `reviewed_by`, `reviewed_at`, `resulting_community_id` | Requester / platform |
+| `profiles` | `id` (= `auth.users.id`), `full_name`, `email`, `phone_number`, `flat_id`, `flat_number`, `app_role`, `community_id`, `block_id`, `avatar_url`, `expo_push_token`, `removed_at`, `removed_by` | Self / community |
+| `community_requests` | `name`, `city`, `pincode`, `area`, `address`, `community_type`, `approximate_units`, `requester_flat_number`, `proof_photo_url`, `requested_by`, `status`, `rejection_reason`, `reviewed_by`, `reviewed_at`, `resulting_community_id`, `block_label`, `block_details` | Requester / platform |
 | `community_blocks` | `community_id`, `name`, `archived_at` | Community |
+| `community_flats` | `community_id`, `block_id`, `flat_number`, `floor_label`, `archived_at` | Community |
+| `flat_addition_requests` | `community_id`, `block_id`, `requested_by`, `flat_number`, `status`, `rejection_reason`, `reviewed_by`, `reviewed_at` | Resident / lead / platform |
 | `profile_audit_log` | Audit trail for profile mutations | Platform |
+
+**Flat and Block Normalization Model** (migrations `20260904000000`–`20260904000300`):
+- `community_flats` is the canonical inventory of verified units in a community.
+- `profiles.flat_id` is the primary foreign key. A database trigger (`sync_profile_flat_denorm`) maintains `profiles.flat_number` (formatted as `<block>-<flat>`, e.g. `A-412`) and `profiles.block_id` in sync automatically.
+- Downstream tables (`mcn_preorder_orders`, `mcn_carpool_requests`, `mcn_parent_corner`, `visit_joiners`) preserve immutable textual `flat_number` snapshots.
+- Missing flats are submitted via `request_flat_addition()` and reviewed by community leads or platform admins.
 
 ### 4.2 Providers and trust
 

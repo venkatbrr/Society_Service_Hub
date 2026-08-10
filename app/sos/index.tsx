@@ -1,4 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
+import { ChevronRight } from '@untitledui/icons/ChevronRight';
+import { Drop } from '@untitledui/icons/Drop';
+import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { Settings01 } from '@untitledui/icons/Settings01';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -362,7 +367,7 @@ export default function SosScreen() {
           style={styles.backButton}
           activeOpacity={0.85}
         >
-          <Ionicons name="arrow-back" size={20} color={Verandah.primary} />
+          <ArrowLeft size={18} color={Verandah.primary} aria-hidden={true} />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
           <Text style={styles.title}>Emergency & Blood Donors</Text>
@@ -388,7 +393,7 @@ export default function SosScreen() {
       <ScrollView
         {...pullToRefresh.pullProps}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadAll(true)} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadAll(true)} tintColor={Verandah.accent} />}
         showsVerticalScrollIndicator={false}
       >
         <WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />
@@ -402,31 +407,32 @@ export default function SosScreen() {
                   activeOpacity={0.85}
                 >
                   <View style={styles.manageIconWrap}>
-                    <Ionicons name="settings-outline" size={18} color={Verandah.primary} />
+                    <Settings01 size={18} color={Verandah.primary} aria-hidden={true} />
                   </View>
                   <View style={styles.manageTextWrap}>
                     <Text style={styles.cardTitle}>Manage emergency numbers</Text>
                     <Text style={styles.cardCopy}>Add or update local hospitals, security, and helplines.</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
+                  <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
                 </TouchableOpacity>
               </BaseCard>
             ) : null}
 
             {groupedContacts.length === 0 ? (
               <EmptyState
-                icon="call-outline"
+                IconComponent={Phone01}
                 title="No emergency numbers found"
                 message="Ask your community lead to add local emergency contacts."
-                ionicon="call-outline"
+                isLightMode={true}
               />
             ) : (
               groupedContacts.map((group) => {
                 const meta = EMERGENCY_CATEGORY_META[group.category];
+                const IconComponent = meta.IconComponent;
                 return (
                   <BaseCard key={group.category} padding={14}>
                     <View style={styles.groupHeader}>
-                      <Ionicons name={meta.icon} size={16} color={Verandah.primary} />
+                      <IconComponent size={16} color={Verandah.primary} aria-hidden={true} />
                       <Text style={styles.groupTitle}>{meta.label}</Text>
                     </View>
 
@@ -445,7 +451,7 @@ export default function SosScreen() {
                           onPress={() => handleCall(row.name, row.phone)}
                           activeOpacity={0.85}
                         >
-                          <Ionicons name="call-outline" size={16} color={Verandah.primaryFg} />
+                          <Phone01 size={15} color={Verandah.primaryFg} aria-hidden={true} />
                           <Text style={styles.callButtonText}>Call</Text>
                         </TouchableOpacity>
                       </View>
@@ -524,10 +530,10 @@ export default function SosScreen() {
 
             {donors.length === 0 ? (
               <EmptyState
-                icon="water-outline"
-                ionicon="water-outline"
+                IconComponent={Drop}
                 title="No donors found"
                 message="No matching blood donors are visible right now."
+                isLightMode={true}
               />
             ) : (
               donors.map((row) => (
@@ -550,11 +556,11 @@ export default function SosScreen() {
                         onPress={() => handleWhatsApp(row.full_name, row.contact_phone)}
                         activeOpacity={0.82}
                       >
-                        <Ionicons name="logo-whatsapp" size={16} color="#FFFFFF" />
+                        <MessageCircle01 size={16} color="#FFFFFF" aria-hidden={true} />
                       </TouchableOpacity>
 
                       <TouchableOpacity style={styles.callButton} onPress={() => handleCall(row.full_name, row.contact_phone)}>
-                        <Ionicons name="call-outline" size={16} color={Verandah.primaryFg} />
+                        <Phone01 size={15} color={Verandah.primaryFg} aria-hidden={true} />
                         <Text style={styles.callButtonText}>Call</Text>
                       </TouchableOpacity>
                     </View>
@@ -578,29 +584,29 @@ export default function SosScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Verandah.surface,
-    paddingHorizontal: 12,
+    backgroundColor: Verandah.paper,
+    paddingHorizontal: 16,
     paddingTop: VerandahLayout.screenPaddingTop,
   },
   loaderWrap: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Verandah.surface,
+    backgroundColor: Verandah.paper,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: VerandahSpace.sm,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   backButton: {
-    width: 34,
-    height: 34,
+    width: 36,
+    height: 36,
     borderRadius: VerandahRadius.md,
-    borderWidth: 1,
-    borderColor: Verandah.border,
-    backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    backgroundColor: Verandah.cardMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -608,41 +614,50 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    ...VerandahType.title,
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: '400',
     color: Verandah.textPrimary,
   },
   subtitle: {
-    ...VerandahType.caption,
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
     color: Verandah.textSecondary,
+    marginTop: 2,
   },
   segmentedWrap: {
     flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: Verandah.border,
-    borderRadius: VerandahRadius.lg,
-    backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    borderRadius: VerandahRadius.segmented,
+    backgroundColor: Verandah.cardMuted,
     padding: 3,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   segmentButton: {
     flex: 1,
     alignItems: 'center',
-    borderRadius: VerandahRadius.md,
-    paddingVertical: 5,
+    borderRadius: VerandahRadius.segmented,
+    paddingVertical: 7,
   },
   segmentButtonActive: {
-    backgroundColor: Verandah.cardMuted,
+    backgroundColor: Verandah.card,
+    ...Verandah.shadowCard,
   },
   segmentText: {
-    ...VerandahType.captionBold,
-    color: Verandah.textSecondary,
+    fontSize: 13,
+    fontWeight: '500',
+    fontFamily: VerandahType.sansFamily,
+    color: Verandah.textMuted,
   },
   segmentTextActive: {
     color: Verandah.primary,
+    fontWeight: '700',
   },
   scrollContent: {
-    paddingBottom: 24,
-    gap: 6,
+    paddingBottom: 40,
+    gap: 10,
   },
   manageRow: {
     flexDirection: 'row',
@@ -650,13 +665,13 @@ const styles = StyleSheet.create({
     gap: VerandahSpace.md,
   },
   manageIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 0.5,
-    borderColor: Verandah.border,
+    borderColor: Verandah.borderHair,
     backgroundColor: Verandah.cardMuted,
   },
   manageTextWrap: {

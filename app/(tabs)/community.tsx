@@ -1,4 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
+import { BarChart01 } from '@untitledui/icons/BarChart01';
+import { Building01 } from '@untitledui/icons/Building01';
+import { ChevronRight } from '@untitledui/icons/ChevronRight';
+import { LayersThree01 } from '@untitledui/icons/LayersThree01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { Plus } from '@untitledui/icons/Plus';
+import { Share07 } from '@untitledui/icons/Share07';
+import { Users01 } from '@untitledui/icons/Users01';
+import { Wallet02 } from '@untitledui/icons/Wallet02';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -10,7 +18,7 @@ import { Rupees } from '../../components/Rupees';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { formatRole } from '../../lib/fundRoles';
@@ -72,7 +80,7 @@ const formatRelativePulseTime = (timestamp: string) => {
 export default function CommunityScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user, communityId, appRole, isCommunityLead, fundsEnabled, myFundsAccessRequest, refreshSession } = useAuth();
+  const { user, communityId, appRole, isCommunityLead, fundsEnabled, blockLabel, myFundsAccessRequest, refreshSession } = useAuth();
 
   const [pulseItems, setPulseItems] = useState<PulseItem[]>([]);
   const [overview, setOverview] = useState<FundsOverview | null>(null);
@@ -223,9 +231,13 @@ export default function CommunityScreen() {
         }
       >
         <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
-        <BaseCard padding={12} style={styles.heroCard}>
+        <View style={styles.heroBlock}>
+          <Text style={styles.heroEyebrow}>Your community</Text>
           <Text style={styles.heroTitle}>{communityDetails?.name ?? 'Your community'}</Text>
-        </BaseCard>
+          <Text style={styles.heroMeta}>
+            {communityDetails?.address ? `${communityDetails.address} · ` : ''}You are a {appRoleLabel}
+          </Text>
+        </View>
 
         <View style={styles.fundsSection}>
           <View style={styles.sectionHeader}>
@@ -236,7 +248,7 @@ export default function CommunityScreen() {
                 style={styles.createButton}
                 activeOpacity={0.85}
               >
-                <Ionicons name="add" size={14} color={Verandah.primary} />
+                <Plus size={14} color={Verandah.primary} aria-hidden={true} />
                 <Text style={styles.createButtonText}>Create fund</Text>
               </TouchableOpacity>
             ) : null}
@@ -244,10 +256,10 @@ export default function CommunityScreen() {
 
           {fundsEnabled ? (
             <TouchableOpacity onPress={() => router.push('/funds' as any)} activeOpacity={0.85}>
-              <BaseCard padding={10} style={styles.fundsSummaryCard}>
+              <BaseCard padding={14} style={styles.fundsSummaryCard}>
                 <View style={styles.fundsSummaryTopRow}>
                   <View style={styles.fundsSummaryBadge}>
-                    <Ionicons name="stats-chart-outline" size={14} color={Verandah.accent} />
+                    <BarChart01 size={13} color={Verandah.accent} aria-hidden={true} />
                     <Text style={styles.fundsSummaryBadgeText}>Live summary</Text>
                   </View>
                   <Text style={styles.summarySubline}>{overview?.active_funds_count ?? 0} active funds</Text>
@@ -272,29 +284,35 @@ export default function CommunityScreen() {
 
                 <View style={styles.fundsOpenRow}>
                   <View style={styles.actionCardIconWrap}>
-                    <Ionicons name="wallet-outline" size={18} color={Verandah.primary} />
+                    <Wallet02 size={16} color={Verandah.primary} aria-hidden={true} />
                   </View>
                   <View style={styles.actionCardTextWrap}>
                     <Text style={styles.cardTitle}>Open community funds</Text>
                     <Text style={styles.cardCopy}>View fund health and all fund events in one place.</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
+                  <ChevronRight size={16} color={Verandah.textMuted} aria-hidden={true} />
                 </View>
               </BaseCard>
             </TouchableOpacity>
           ) : pendingFundsRequest ? (
-            <BaseCard padding={10}>
-              <Text style={styles.cardTitle}>Funds support - pending review</Text>
-              <Text style={styles.cardCopy}>Submitted by {pendingFundsRequest.requester_name ?? 'Resident'} on {new Date(pendingFundsRequest.created_at).toLocaleDateString('en-IN')}.</Text>
-              <Text style={styles.cardCopy}>We'll be in touch on {pendingFundsRequest.contact_phone}.</Text>
+            <View style={styles.pendingCard}>
+              <View style={styles.pendingHeaderRow}>
+                <Text style={styles.cardTitle}>Funds support</Text>
+                <View style={styles.pendingChip}>
+                  <Text style={styles.pendingChipText}>Pending review</Text>
+                </View>
+              </View>
+              <Text style={styles.pendingCopy}>
+                Submitted by {pendingFundsRequest.requester_name ?? 'Resident'} on {new Date(pendingFundsRequest.created_at).toLocaleDateString('en-IN')}. We'll be in touch on {pendingFundsRequest.contact_phone}.
+              </Text>
               {pendingFundsRequest.requested_by === user?.id ? (
                 <TouchableOpacity onPress={handleWithdrawFundsRequest}>
                   <Text style={styles.inlineLink}>Withdraw request</Text>
                 </TouchableOpacity>
               ) : null}
-            </BaseCard>
+            </View>
           ) : myFundsAccessRequest?.status === 'rejected' ? (
-            <BaseCard padding={10}>
+            <BaseCard padding={14}>
               <Text style={styles.cardTitle}>Funds support</Text>
               <Text style={styles.cardCopy}>Last request was rejected: {myFundsAccessRequest.rejection_reason ?? 'No reason provided'}.</Text>
               <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/funds-access/request')}>
@@ -302,7 +320,7 @@ export default function CommunityScreen() {
               </TouchableOpacity>
             </BaseCard>
           ) : (
-            <BaseCard padding={10}>
+            <BaseCard padding={14}>
               <Text style={styles.cardTitle}>Funds support</Text>
               <Text style={styles.cardCopy}>Your community can request funds support to start collecting and tracking community contributions.</Text>
               {hadHistoricalFunds ? (
@@ -316,101 +334,100 @@ export default function CommunityScreen() {
         </View>
 
 
-        {fundsEnabled && (appRole === 'president' || appRole === 'vice_president') ? (
+        {(appRole === 'president' || appRole === 'vice_president') ? (
           <View style={styles.compactSection}>
             <TouchableOpacity onPress={() => router.push('/community/blocks')} activeOpacity={0.85}>
-              <BaseCard padding={10} style={styles.actionCard}>
+              <BaseCard padding={14} style={styles.actionCard}>
                 <View style={styles.actionCardRow}>
                   <View style={styles.actionCardIconWrap}>
-                    <Ionicons name="layers-outline" size={18} color={Verandah.primary} />
+                    <LayersThree01 size={16} color={Verandah.primary} aria-hidden={true} />
                   </View>
                   <View style={styles.actionCardTextWrap}>
-                    <Text style={styles.cardTitle}>Manage blocks</Text>
-                    <Text style={styles.cardCopy}>Set up blocks and block in-charges for fund collection.</Text>
+                    <Text style={styles.cardTitle}>Manage {blockLabel.toLowerCase()}s</Text>
+                    <Text style={styles.cardCopy}>Set up {blockLabel.toLowerCase()}s and block in-charges.</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
+                  <ChevronRight size={16} color={Verandah.textMuted} aria-hidden={true} />
+                </View>
+              </BaseCard>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.push('/community/flats' as any)} activeOpacity={0.85} style={{ marginTop: 8 }}>
+              <BaseCard padding={14} style={styles.actionCard}>
+                <View style={styles.actionCardRow}>
+                  <View style={styles.actionCardIconWrap}>
+                    <Building01 size={16} color={Verandah.primary} aria-hidden={true} />
+                  </View>
+                  <View style={styles.actionCardTextWrap}>
+                    <Text style={styles.cardTitle}>Manage flats</Text>
+                    <Text style={styles.cardCopy}>View and add verified flats, review resident requests.</Text>
+                  </View>
+                  <ChevronRight size={16} color={Verandah.textMuted} aria-hidden={true} />
                 </View>
               </BaseCard>
             </TouchableOpacity>
           </View>
         ) : null}
 
-        <View style={styles.compactSection}>
+        <View style={styles.tileGrid}>
           <TouchableOpacity
+            style={styles.tile}
             onPress={() => router.push({ pathname: '/residents', params: { returnTo: 'community' } } as any)}
             activeOpacity={0.85}
           >
-            <BaseCard padding={10} style={styles.actionCard}>
-              <View style={styles.actionCardRow}>
-                <View style={styles.actionCardIconWrap}>
-                  <Ionicons name="people-outline" size={18} color={Verandah.primary} />
-                </View>
-                <View style={styles.actionCardTextWrap}>
-                  <Text style={styles.cardTitle}>Residents directory</Text>
-                  <Text style={styles.cardCopy}>See who lives in your community.</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
-              </View>
-            </BaseCard>
+            <View style={styles.tileIconWrap}>
+              <Users01 size={20} color={Verandah.accent} aria-hidden={true} />
+            </View>
+            <Text style={styles.tileTitle}>Residents{'\n'}directory</Text>
+            <Text style={styles.tileCopy}>See who lives here</Text>
           </TouchableOpacity>
-        </View>
 
-        <View style={styles.compactSection}>
           <TouchableOpacity
+            style={styles.tile}
             onPress={() => router.push('/sos' as any)}
             activeOpacity={0.85}
           >
-            <BaseCard padding={10} style={styles.sosActionCard}>
-              <View style={styles.actionCardRow}>
-                <View style={[styles.actionCardIconWrap, { backgroundColor: '#E1F5EE' }]}>
-                  <Ionicons name="call-outline" size={18} color={Verandah.primary} />
-                </View>
-                <View style={styles.actionCardTextWrap}>
-                  <Text style={styles.cardTitle}>Emergency numbers & blood donors</Text>
-                  <Text style={styles.cardCopy}>Call emergency numbers or find available blood donors.</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={Verandah.textMuted} />
-              </View>
-            </BaseCard>
+            <View style={[styles.tileIconWrap, { backgroundColor: Verandah.sand }]}>
+              <Phone01 size={20} color={Verandah.goldInk} aria-hidden={true} />
+            </View>
+            <Text style={styles.tileTitle}>Emergency &{'\n'}donors</Text>
+            <Text style={styles.tileCopy}>Numbers & blood</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <BaseCard padding={10}>
-            <View style={styles.infoHeaderRow}>
-              <Text style={styles.cardTitle}>Community info</Text>
-              <Ionicons name="information-circle-outline" size={18} color={Verandah.textTertiary} />
-            </View>
-            <View style={styles.codeTile}>
-              <View style={styles.codeTileLeft}>
-                <Text style={styles.infoLabel}>Community code</Text>
-                <Text style={styles.codeTileValue}>{communityDetails?.code ?? '---'}</Text>
-              </View>
-              <TouchableOpacity onPress={handleInviteNeighbors} style={styles.inviteButton} activeOpacity={0.85}>
-                <Ionicons name="share-social-outline" size={14} color={Verandah.primary} />
-                <Text style={styles.inviteButtonText}>Invite neighbors</Text>
+          <View style={styles.infoPanel}>
+            <View style={styles.infoPanelTopRow}>
+              <Text style={styles.infoPanelLabel}>Community code</Text>
+              <TouchableOpacity onPress={handleInviteNeighbors} style={styles.invitePanelButton} activeOpacity={0.85}>
+                <Share07 size={14} color={Verandah.teal900} aria-hidden={true} />
+                <Text style={styles.invitePanelButtonText}>Invite</Text>
               </TouchableOpacity>
             </View>
-            {communityDetails?.address ? (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Address</Text>
-                <Text style={styles.infoValue}>{communityDetails.address}</Text>
+            <Text style={styles.infoPanelCode}>{communityDetails?.code ?? '---'}</Text>
+
+            <View style={styles.infoPanelMetaRow}>
+              {communityDetails?.address ? (
+                <View style={styles.infoPanelMetaCol}>
+                  <Text style={styles.infoPanelLabel}>Address</Text>
+                  <Text style={styles.infoPanelValue}>{communityDetails.address}</Text>
+                </View>
+              ) : null}
+              <View style={styles.infoPanelMetaCol}>
+                <Text style={styles.infoPanelLabel}>Your role</Text>
+                <Text style={styles.infoPanelValue}>{appRoleLabel}</Text>
               </View>
-            ) : null}
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Your role</Text>
-              <Text style={styles.infoValue}>{appRoleLabel}</Text>
             </View>
+
             {fundRoles.length > 0 ? (
               <View style={styles.badgeWrap}>
                 {fundRoles.map((role) => (
-                  <View key={role} style={styles.badge}> 
-                    <Text style={styles.badgeText}>{formatRole(role)}</Text>
+                  <View key={role} style={styles.panelBadge}>
+                    <Text style={styles.panelBadgeText}>{formatRole(role)}</Text>
                   </View>
                 ))}
               </View>
             ) : null}
-          </BaseCard>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -420,14 +437,13 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Verandah.surface,
-    borderTopWidth: 3,
-    borderTopColor: Verandah.primary,
+    backgroundColor: Verandah.paper,
   },
   content: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 30,
+    gap: 12, // Turn 1 spec: 12-14px section gap
   },
   section: {
     marginBottom: 0,
@@ -439,12 +455,173 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   heroCard: {
-    marginBottom: 6,
+    marginBottom: 0,
+  },
+  heroBlock: {
+    marginBottom: 2,
+  },
+  heroEyebrow: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 10.5,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: Verandah.textTertiary,
+    marginBottom: 2,
   },
   heroTitle: {
-    ...VerandahType.display,
-    fontSize: 22,
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: '400',
+    letterSpacing: -0.4,
     color: Verandah.textPrimary,
+  },
+  heroMeta: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    lineHeight: 17,
+    marginTop: 3,
+    color: Verandah.textSecondary,
+  },
+  pendingCard: {
+    borderRadius: VerandahRadius.card,
+    borderWidth: 0.5,
+    borderColor: 'rgba(133, 79, 11, 0.18)',
+    backgroundColor: Verandah.sand,
+    padding: 14,
+  },
+  pendingHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  pendingChip: {
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: 'rgba(133, 79, 11, 0.12)',
+  },
+  pendingChipText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: Verandah.goldInk,
+  },
+  pendingCopy: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    lineHeight: 17,
+    color: Verandah.goldInk,
+  },
+  tileGrid: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  tile: {
+    flex: 1,
+    borderRadius: VerandahRadius.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    backgroundColor: Verandah.card,
+    padding: 14,
+    ...Verandah.shadowCard,
+  },
+  tileIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Verandah.accentSoft,
+    marginBottom: 10,
+  },
+  tileTitle: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 18,
+    color: Verandah.textPrimary,
+  },
+  tileCopy: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 11.5,
+    lineHeight: 15,
+    marginTop: 3,
+    color: Verandah.textSecondary,
+  },
+  infoPanel: {
+    borderRadius: VerandahRadius.card,
+    backgroundColor: Verandah.teal900,
+    padding: 16,
+    ...Verandah.shadowRaised,
+  },
+  infoPanelTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  infoPanelLabel: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+    color: 'rgba(240, 237, 227, 0.6)',
+  },
+  infoPanelCode: {
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 30,
+    lineHeight: 38,
+    fontWeight: '400',
+    letterSpacing: 4,
+    color: Verandah.cream,
+    marginTop: 2,
+  },
+  infoPanelMetaRow: {
+    flexDirection: 'row',
+    gap: 24,
+    marginTop: 12,
+  },
+  infoPanelMetaCol: {
+    flexShrink: 1,
+  },
+  infoPanelValue: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 13.5,
+    fontWeight: '500',
+    marginTop: 3,
+    color: Verandah.cream,
+  },
+  invitePanelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: Verandah.cream,
+  },
+  invitePanelButtonText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: Verandah.teal900,
+  },
+  panelBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: VerandahRadius.pill,
+    borderWidth: 0.5,
+    borderColor: 'rgba(240, 237, 227, 0.28)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  panelBadgeText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 11,
+    fontWeight: '600',
+    color: Verandah.cream,
   },
   sectionLabel: {
     ...VerandahType.sectionLabel,
@@ -455,7 +632,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   sectionSubtle: {
     fontSize: 12,
@@ -466,28 +643,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 22,
+    lineHeight: 26,
+    fontWeight: '400',
     color: Verandah.textPrimary,
   },
   createButton: {
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderRadius: 999,
-    borderColor: Verandah.borderStrong,
-    backgroundColor: Verandah.card,
+    borderColor: Verandah.borderHair,
+    backgroundColor: Verandah.cardMuted,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
   createButtonText: {
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: '600',
     color: Verandah.primary,
+    fontFamily: VerandahType.sansFamily,
   },
   fundsSummaryCard: {
   },
@@ -495,13 +675,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   fundsOpenRow: {
-    marginTop: 6,
-    paddingTop: 8,
+    marginTop: 8,
+    paddingTop: 10,
     borderTopWidth: 0.5,
-    borderTopColor: Verandah.border,
+    borderTopColor: Verandah.borderHair,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -517,8 +697,9 @@ const styles = StyleSheet.create({
   },
   fundsSummaryBadgeText: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '600',
     color: Verandah.accent,
+    fontFamily: VerandahType.sansFamily,
   },
   pulseRow: {
     paddingHorizontal: 16,
@@ -526,7 +707,7 @@ const styles = StyleSheet.create({
   },
   pulseDivider: {
     borderBottomWidth: 0.5,
-    borderBottomColor: Verandah.border,
+    borderBottomColor: Verandah.borderHair,
   },
   pulseSummary: {
     ...VerandahType.body,
@@ -542,41 +723,45 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 18,
     color: Verandah.textPrimary,
+    fontFamily: VerandahType.sansFamily,
   },
   summarySubline: {
-    marginTop: 2,
-    fontSize: 11,
-    fontWeight: '400',
+    fontSize: 11.5,
+    fontWeight: '500',
     color: Verandah.textSecondary,
+    fontFamily: VerandahType.sansFamily,
   },
   summaryStatus: {
     marginTop: 6,
     fontSize: 12,
     lineHeight: 16,
     color: Verandah.textSecondary,
+    fontFamily: VerandahType.sansFamily,
   },
   moneyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 3,
+    marginBottom: 4,
   },
   cardTitle: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: 14.5,
+    fontWeight: '600',
     marginBottom: 2,
     color: Verandah.textPrimary,
+    fontFamily: VerandahType.sansFamily,
   },
   cardCopy: {
     fontSize: 12,
     marginTop: 1,
     lineHeight: 16,
     color: Verandah.textSecondary,
+    fontFamily: VerandahType.sansFamily,
   },
   actionCard: {
   },
   sosActionCard: {
-    borderColor: Verandah.caution,
+    borderColor: 'rgba(15, 110, 86, 0.3)',
   },
   actionCardRow: {
     flexDirection: 'row',
@@ -584,12 +769,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   actionCardIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: Verandah.cardMuted,
     borderWidth: 0.5,
-    borderColor: Verandah.border,
+    borderColor: Verandah.borderHair,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -604,14 +789,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   codeTile: {
     borderWidth: 0.5,
-    borderColor: Verandah.border,
+    borderColor: Verandah.borderHair,
     backgroundColor: Verandah.cardMuted,
     borderRadius: VerandahRadius.md,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -622,64 +807,70 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   codeTileValue: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: 17,
+    fontWeight: '600',
     color: Verandah.textPrimary,
     letterSpacing: 0.8,
+    fontFamily: VerandahType.sansFamily,
   },
   inviteButton: {
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderRadius: 999,
-    borderColor: Verandah.borderStrong,
+    borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingVertical: 6,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
   },
   inviteButtonText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
     color: Verandah.primary,
+    fontFamily: VerandahType.sansFamily,
   },
   infoRow: {
-    marginTop: 10,
+    marginTop: 8,
   },
   infoLabel: {
     fontSize: 11,
     textTransform: 'uppercase',
-    fontWeight: '500',
+    fontWeight: '600',
     marginBottom: 2,
     color: Verandah.textTertiary,
+    fontFamily: VerandahType.sansFamily,
+    letterSpacing: 0.4,
   },
   infoValue: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '400',
     color: Verandah.textPrimary,
+    fontFamily: VerandahType.sansFamily,
   },
   badgeWrap: {
-    marginTop: 10,
+    marginTop: 8,
     flexDirection: 'row',
     gap: 8,
     flexWrap: 'wrap',
   },
   badge: {
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderRadius: 999,
     borderColor: Verandah.primary,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 4,
   },
   badgeText: {
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: 10.5,
+    fontWeight: '600',
     textTransform: 'uppercase',
     color: Verandah.primary,
+    fontFamily: VerandahType.sansFamily,
   },
   ctaButton: {
     marginTop: 12,
-    borderRadius: VerandahRadius.md,
+    borderRadius: VerandahRadius.button,
     paddingVertical: 11,
     alignItems: 'center',
     backgroundColor: Verandah.primary,
@@ -687,12 +878,14 @@ const styles = StyleSheet.create({
   ctaButtonText: {
     color: Verandah.primaryFg,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
   },
   inlineLink: {
     marginTop: 10,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
     color: Verandah.accent,
+    fontFamily: VerandahType.sansFamily,
   },
 });

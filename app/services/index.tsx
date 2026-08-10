@@ -1,4 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Plus } from '@untitledui/icons/Plus';
+import { Tool01 } from '@untitledui/icons/Tool01';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -12,11 +13,12 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { ServiceCard, ServiceCardItem } from '../../components/ServiceCard';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
@@ -61,28 +63,23 @@ export default function ServicesListScreen() {
   const pullToRefresh = useWebPullToRefresh(onRefresh, refreshing);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => goBackSmart(router, '/services')}
-          style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
-          activeOpacity={0.75}
-        >
-          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
-        </TouchableOpacity>
+        <HeaderBackButton onPress={() => goBackSmart(router, '/services')} />
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>My service reminders</Text>
         <TouchableOpacity
           onPress={() => router.push('/services/add')}
           style={[styles.addButton, { backgroundColor: colors.primary }]}
           activeOpacity={0.82}
         >
-          <Text style={styles.addButtonText}>+ Add</Text>
+          <Plus size={14} color={Verandah.primaryFg} aria-hidden={true} />
+          <Text style={styles.addButtonText}>Add</Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       ) : (
         <FlatList
@@ -98,14 +95,16 @@ export default function ServicesListScreen() {
           showsVerticalScrollIndicator={false}
           {...pullToRefresh.pullProps}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
           }
           ListHeaderComponent={
             <WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="build-outline" size={44} color={colors.textSecondary} />
+              <View style={[styles.emptyIconWrapper, { backgroundColor: Verandah.cardMuted, borderColor: Verandah.borderHair }]}>
+                <Tool01 size={40} color={colors.textSecondary} aria-hidden={true} />
+              </View>
               <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No service reminders yet</Text>
               <Text style={[styles.emptyBody, { color: colors.textSecondary }]}>
                 Track your AC, RO, and other appliances so you never miss maintenance.
@@ -126,52 +125,76 @@ export default function ServicesListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: Verandah.paper },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 6,
-    gap: 10,
+    paddingBottom: 10,
+    gap: 12,
+    backgroundColor: Verandah.paper,
   },
-  backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: VerandahRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  backIcon: { fontSize: 18, fontWeight: '500' },
   headerTitle: {
     flex: 1,
-    fontSize: 19,
-    fontWeight: '500',
-    letterSpacing: -0.3,
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: '400',
   },
   addButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: VerandahRadius.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: VerandahRadius.button,
   },
-  addButtonText: { color: Verandah.primaryFg, fontSize: 13, fontWeight: '500' },
-  listContent: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 20 },
+  addButtonText: {
+    color: Verandah.primaryFg,
+    fontSize: 13,
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
+  },
+  listContent: { paddingHorizontal: 20, paddingTop: 6, paddingBottom: 24, gap: 10 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyContainer: {
     alignItems: 'center',
-    paddingTop: VerandahLayout.screenPaddingTop,
+    paddingTop: 60,
     paddingHorizontal: 24,
-    gap: 12,
+    gap: 10,
   },
-  emptyEmoji: { fontSize: 48 },
-  emptyTitle: { fontSize: 18, fontWeight: '500', textAlign: 'center' },
-  emptyBody: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  emptyIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 0.5,
+    marginBottom: 8,
+  },
+  emptyTitle: {
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 22,
+    fontWeight: '400',
+    textAlign: 'center',
+  },
+  emptyBody: {
+    fontSize: 13.5,
+    textAlign: 'center',
+    lineHeight: 19,
+    fontFamily: VerandahType.sansFamily,
+  },
   emptyButton: {
     marginTop: 8,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: VerandahRadius.md,
+    borderRadius: VerandahRadius.button,
   },
-  emptyButtonText: { color: Verandah.primaryFg, fontSize: 15, fontWeight: '500' },
+  emptyButtonText: {
+    color: Verandah.primaryFg,
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
+  },
 });

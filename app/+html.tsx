@@ -1,6 +1,7 @@
-import { Coins01 } from '@untitledui/icons/Coins01';
-import { ShoppingBag03 } from '@untitledui/icons/ShoppingBag03';
-import { Tool02 } from '@untitledui/icons/Tool02';
+import { Tool01 } from '@untitledui/icons/Tool01';
+import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
+import { Wallet02 } from '@untitledui/icons/Wallet02';
+import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
 import { ScrollViewStyleReset } from 'expo-router/html';
 
 // This file is web-only and used to configure the root HTML for every
@@ -32,10 +33,10 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
         <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon.png" />
 
-        {/* Google Fonts - Plus Jakarta Sans & Inter */}
+        {/* Google Fonts - Instrument Serif & Plus Jakarta Sans */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
         <ScrollViewStyleReset />
 
@@ -68,7 +69,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
           <div className="brand-features-list">
             <div className="brand-feature-item">
               <div className="feature-item-icon">
-                <Tool02 size={16} color="#10B981" aria-hidden="true" />
+                <Tool01 size={16} color="#DDA94A" aria-hidden="true" />
               </div>
               <div>
                 <div className="feature-item-title">Verified Services</div>
@@ -78,7 +79,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
             <div className="brand-feature-item">
               <div className="feature-item-icon">
-                <ShoppingBag03 size={16} color="#10B981" aria-hidden="true" />
+                <ShoppingBag01 size={16} color="#DDA94A" aria-hidden="true" />
               </div>
               <div>
                 <div className="feature-item-title">Food Drops</div>
@@ -88,7 +89,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
             <div className="brand-feature-item">
               <div className="feature-item-icon">
-                <Coins01 size={16} color="#10B981" aria-hidden="true" />
+                <Wallet02 size={16} color="#DDA94A" aria-hidden="true" />
               </div>
               <div>
                 <div className="feature-item-title">Cultural Funds</div>
@@ -98,7 +99,8 @@ export default function Root({ children }: { children: React.ReactNode }) {
           </div>
 
           <a href="/" className="landing-back-link">
-            ← Main Website
+            <ArrowLeft size={14} color="#DDA94A" style={{ marginRight: 6 }} aria-hidden="true" />
+            Main Website
           </a>
         </div>
 
@@ -160,11 +162,11 @@ input:focus, textarea:focus, select:focus {
 /* Desktop Viewports (>= 768px): Centered Mobile View Container with Dark Backdrop */
 @media (min-width: 768px) {
   body {
-    background-color: #0A1D1A !important;
+    background-color: #0F3732 !important;
     background-image: 
-      radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.15) 0%, transparent 45%),
-      radial-gradient(circle at 85% 85%, rgba(15, 55, 50, 0.4) 0%, transparent 55%),
-      radial-gradient(circle at 50% 50%, #0A1D1A 0%, #040E0C 100%) !important;
+      radial-gradient(circle at 15% 15%, rgba(221, 169, 74, 0.12) 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(15, 110, 86, 0.25) 0%, transparent 55%),
+      radial-gradient(circle at 50% 50%, #0F3732 0%, #08211E 100%) !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -183,18 +185,11 @@ input:focus, textarea:focus, select:focus {
     max-height: 880px !important;
     border-radius: 28px !important;
     background-color: #FAF8F4 !important;
-    box-shadow: 0 35px 90px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 40px 80px rgba(15, 55, 50, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
     overflow: hidden !important;
     position: relative !important;
     z-index: 10 !important;
     flex-shrink: 0 !important;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    #root {
-      background-color: #071412 !important;
-      box-shadow: 0 35px 90px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(16, 185, 129, 0.2) !important;
-    }
   }
 
   /* Desktop Ambient Mesh Blur Orbs */
@@ -203,21 +198,21 @@ input:focus, textarea:focus, select:focus {
     position: absolute;
     border-radius: 50%;
     filter: blur(90px);
-    opacity: 0.35;
+    opacity: 0.3;
     pointer-events: none;
     z-index: 1;
   }
   .desktop-orb-1 {
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, #10B981 0%, transparent 70%);
+    background: radial-gradient(circle, #DDA94A 0%, transparent 70%);
     top: -150px;
     left: -100px;
   }
   .desktop-orb-2 {
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, #0F3732 0%, transparent 70%);
+    background: radial-gradient(circle, #0F6E56 0%, transparent 70%);
     bottom: -200px;
     right: -100px;
   }
@@ -231,11 +226,11 @@ input:focus, textarea:focus, select:focus {
     background: transparent;
   }
   #root *::-webkit-scrollbar-thumb {
-    background: rgba(16, 185, 129, 0.25);
+    background: rgba(15, 55, 50, 0.2);
     border-radius: 4px;
   }
   #root *::-webkit-scrollbar-thumb:hover {
-    background: rgba(16, 185, 129, 0.5);
+    background: rgba(15, 55, 50, 0.4);
   }
 }
 
@@ -249,10 +244,10 @@ input:focus, textarea:focus, select:focus {
     left: max(32px, calc(50% - 580px));
     transform: translateY(-50%);
     width: 290px;
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 24px;
     padding: 28px 24px;
     color: #FAF8F4;
@@ -264,14 +259,14 @@ input:focus, textarea:focus, select:focus {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(16, 185, 129, 0.15);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    background: rgba(221, 169, 74, 0.15);
+    border: 1px solid rgba(221, 169, 74, 0.3);
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 1px;
-    color: #6EE7B7;
+    color: #DDA94A;
     margin-bottom: 16px;
     align-self: flex-start;
   }
@@ -279,9 +274,9 @@ input:focus, textarea:focus, select:focus {
   .pulse-dot {
     width: 6px;
     height: 6px;
-    background: #10B981;
+    background: #DDA94A;
     border-radius: 50%;
-    box-shadow: 0 0 8px #10B981;
+    box-shadow: 0 0 8px #DDA94A;
   }
 
   .brand-header {
@@ -294,7 +289,7 @@ input:focus, textarea:focus, select:focus {
   .brand-logo-icon {
     width: 34px;
     height: 34px;
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    border: 1px solid rgba(221, 169, 74, 0.3);
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -310,17 +305,18 @@ input:focus, textarea:focus, select:focus {
   }
 
   .brand-title {
-    font-size: 18px;
-    font-weight: 800;
-    color: #ffffff;
-    letter-spacing: -0.5px;
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: #F0EDE3;
+    letter-spacing: -0.4px;
     margin: 0;
   }
 
   .brand-tagline {
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.45;
-    color: rgba(250, 248, 244, 0.65);
+    color: rgba(240, 237, 227, 0.7);
     margin: 0 0 20px 0;
   }
 
@@ -340,7 +336,7 @@ input:focus, textarea:focus, select:focus {
   .feature-item-icon {
     width: 28px;
     height: 28px;
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(221, 169, 74, 0.12);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -364,7 +360,7 @@ input:focus, textarea:focus, select:focus {
   .landing-back-link {
     font-size: 12px;
     font-weight: 600;
-    color: #6EE7B7;
+    color: #DDA94A;
     text-decoration: none;
     display: inline-flex;
     align-items: center;

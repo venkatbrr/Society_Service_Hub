@@ -1,4 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AlertCircle } from '@untitledui/icons/AlertCircle';
+import { Edit01 } from '@untitledui/icons/Edit01';
+import { Plus } from '@untitledui/icons/Plus';
+import { Trash01 } from '@untitledui/icons/Trash01';
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -7,7 +10,7 @@ import Toast from 'react-native-toast-message';
 import { ImageUploader } from '../../../../components/ImageUploader';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../../constants/Verandah';
 import { useAuth } from '../../../../context/AuthContext';
 import { cloudinaryUrl } from '../../../../lib/cloudinary';
 import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
@@ -580,7 +583,7 @@ export default function ManageListingScreen() {
 
         {listing.flagged_for_review_at ? (
           <View style={[styles.toggleRow, { borderColor: colors.danger, backgroundColor: colors.dangerSoft, marginBottom: 10 }]}>
-            <Ionicons name="alert-circle" size={18} color={colors.danger} style={{ marginRight: 8 }} />
+            <AlertCircle size={18} color={colors.danger} aria-hidden={true} style={{ marginRight: 8 }} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.toggleLabel, { color: colors.danger }]}>Hidden pending review</Text>
               <Text style={[styles.toggleDesc, { color: colors.textSecondary }]}>
@@ -592,7 +595,7 @@ export default function ManageListingScreen() {
         ) : null}
 
         {/* Listing Active Toggle */}
-        <View style={[styles.toggleRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
+        <View style={[styles.toggleRow, { borderColor: colors.borderHair, backgroundColor: colors.card }]}>
           <View>
             <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Listing active</Text>
             <Text style={[styles.toggleDesc, { color: colors.textSecondary }]}>
@@ -611,10 +614,10 @@ export default function ManageListingScreen() {
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Products & services</Text>
           <TouchableOpacity
-            style={[styles.addProductBtn, { borderColor: colors.border }]}
+            style={[styles.addProductBtn, { borderColor: colors.borderHair }]}
             onPress={() => handleOpenProductModal(null)}
           >
-            <Ionicons name="add" size={16} color={colors.primary} />
+            <Plus size={16} color={colors.primary} aria-hidden={true} />
             <Text style={[styles.addProductText, { color: colors.primary }]}>Add item</Text>
           </TouchableOpacity>
         </View>
@@ -628,7 +631,7 @@ export default function ManageListingScreen() {
             </View>
           ) : (
             products.map((product) => (
-              <View key={product.id} style={[styles.productRow, { borderColor: colors.border }]}>
+              <View key={product.id} style={[styles.productRow, { borderColor: colors.borderHair }]}>
                 {product.image_url ? (
                   <Image
                     source={{ uri: cloudinaryUrl(product.image_url, { width: 120, height: 120, crop: 'fill' }) }}
@@ -640,7 +643,7 @@ export default function ManageListingScreen() {
                 <View style={styles.productMain}>
                   <Text style={[styles.productName, { color: colors.textPrimary }]}>{product.name}</Text>
                   <View style={styles.productMetaRow}>
-                    <View style={[styles.itemTypeBadge, { borderColor: colors.border }]}> 
+                    <View style={[styles.itemTypeBadge, { borderColor: colors.borderHair }]}> 
                       <Text style={[styles.itemTypeBadgeText, { color: colors.textSecondary }]}>
                         {product.item_type === 'service' ? 'Service' : 'Product'}
                       </Text>
@@ -678,15 +681,15 @@ export default function ManageListingScreen() {
                   </View>
                   <TouchableOpacity
                     onPress={() => handleOpenProductModal(product)}
-                    style={[styles.actionIconBtn, { borderColor: colors.border }]}
+                    style={[styles.actionIconBtn, { borderColor: colors.borderHair }]}
                   >
-                    <Ionicons name="pencil-outline" size={16} color={colors.textSecondary} />
+                    <Edit01 size={16} color={colors.textSecondary} aria-hidden={true} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => handleDeleteProduct(product.id)}
-                    style={[styles.actionIconBtn, { borderColor: colors.border }]}
+                    style={[styles.actionIconBtn, { borderColor: colors.borderHair }]}
                   >
-                    <Ionicons name="trash-outline" size={16} color={colors.danger} />
+                    <Trash01 size={16} color={colors.danger} aria-hidden={true} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -700,7 +703,7 @@ export default function ManageListingScreen() {
             onPress={handleDeleteListing}
             activeOpacity={0.8}
           >
-            <Ionicons name="trash-outline" size={18} color={colors.danger} />
+            <Trash01 size={18} color={colors.danger} aria-hidden={true} />
             <Text style={[styles.deleteListingBtnText, { color: colors.danger }]}>Delete business listing</Text>
           </TouchableOpacity>
         </View>

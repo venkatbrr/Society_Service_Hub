@@ -10,8 +10,9 @@ import {
   TextStyle,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Ionicons } from '@expo/vector-icons';
+import { Calendar } from '@untitledui/icons/Calendar';
 import { Verandah } from '@/constants/Colors';
+import { VerandahRadius, VerandahType } from '@/constants/Verandah';
 
 export function formatLocalDateForDb(d: Date): string {
   const year = d.getFullYear();
@@ -68,13 +69,13 @@ export const DateField: React.FC<DateFieldProps> = ({
           }}
           style={{
             height: 48,
-            borderWidth: 1,
+            borderWidth: 0.5,
             borderStyle: 'solid',
-            borderColor: colors.border,
-            borderRadius: 12,
+            borderColor: colors.borderHair,
+            borderRadius: VerandahRadius.search,
             paddingLeft: 12,
             paddingRight: 12,
-            fontSize: 15,
+            fontSize: 14,
             color: colors.textPrimary,
             backgroundColor: colors.card,
             fontFamily: 'inherit',
@@ -99,22 +100,19 @@ export const DateField: React.FC<DateFieldProps> = ({
     <View style={[styles.container, style]}>
       <TouchableOpacity
         style={[
-          styles.dateButton,
-          {
-            backgroundColor: colors.card,
-            borderColor: colors.border,
-          },
+          styles.touchable,
+          { borderColor: colors.borderHair, backgroundColor: colors.card },
+          disabled && styles.disabled,
           touchableStyle,
-          disabled && styles.disabledButton,
         ]}
         onPress={() => !disabled && setShowPicker(true)}
         disabled={disabled}
         activeOpacity={0.7}
       >
-        <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
-        <Text style={[styles.dateText, { color: colors.textPrimary }, textStyle]}>
+        <Text style={[styles.text, { color: colors.textPrimary }, textStyle]}>
           {formattedLabel}
         </Text>
+        <Calendar size={18} color={colors.textSecondary} aria-hidden={true} />
       </TouchableOpacity>
 
       {showPicker && (
@@ -140,20 +138,20 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
   },
-  dateButton: {
+  touchable: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     height: 48,
-    borderWidth: 1,
-    borderRadius: 12,
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.search,
     paddingHorizontal: 12,
-    gap: 8,
   },
-  dateText: {
-    fontSize: 15,
-    fontWeight: '400',
-  },
-  disabledButton: {
+  disabled: {
     opacity: 0.6,
+  },
+  text: {
+    fontSize: 14,
+    fontFamily: VerandahType.sansFamily,
   },
 });

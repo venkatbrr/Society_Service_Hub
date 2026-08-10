@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../constants/categories';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius } from '../constants/Verandah';
+import { VerandahRadius, VerandahType } from '../constants/Verandah';
 
 type CategoryFilterProps = {
   selectedCategory: string | null;
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   groupScrollContent: {
     paddingHorizontal: 24,
     gap: 6,
-    paddingBottom: 8,
+    paddingBottom: 6,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -227,11 +227,12 @@ const styles = StyleSheet.create({
   chipInactive: {
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
-    borderColor: Verandah.border,
+    borderColor: Verandah.borderHair,
   },
   chipText: {
     fontSize: 12.5,
     fontWeight: '500',
+    fontFamily: VerandahType.sansFamily,
   },
   chipTextActive: {
     color: Verandah.primaryFg,

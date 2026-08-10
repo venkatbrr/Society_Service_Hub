@@ -1,4 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
+import { Lightbulb01 } from '@untitledui/icons/Lightbulb01';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useRef, useState } from 'react';
@@ -7,9 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { ProviderSelector } from '../../components/ProviderSelector';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahType } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../../constants/categories';
-import { getServiceCategoryEmoji } from '../../constants/emojis';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
@@ -228,7 +228,7 @@ export default function AddVisitScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => goBackSmart(router, '/visits/add')} style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
+            <ArrowLeft size={24} color={colors.text} aria-hidden={true} />
           </TouchableOpacity>
           <View style={styles.headerText}>
             <Text style={styles.title}>Plan a visit</Text>
@@ -503,7 +503,7 @@ export default function AddVisitScreen() {
         </View>
 
         <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Ionicons name="bulb-outline" size={20} color={colors.primary} />
+            <Lightbulb01 size={20} color={colors.primary} aria-hidden={true} />
             <Text style={[styles.infoText, { color: colors.primary }]}>
                 Share visits to coordinate with neighbors. Providers often charge less for multiple jobs in one trip!
             </Text>

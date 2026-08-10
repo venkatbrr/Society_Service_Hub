@@ -67,11 +67,12 @@ export const BaseCard = React.memo(({ children, onPress, isLightMode = true, sty
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Verandah.card,
-    borderRadius: VerandahRadius.lg,
+    borderRadius: VerandahRadius.card, // 18px
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: Verandah.borderStrong,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
     borderStyle: 'solid',
     overflow: 'hidden',
+    ...Verandah.shadowCard,
   },
 });

@@ -35,6 +35,7 @@ type AuthContextType = {
   blocksEnabled: boolean;
   blockLabel: string;
   myBlockId: string | null;
+  flatId: string | null;
   myFundsAccessRequest: FundsAccessStatus;
   activeCommunityRequest: ActiveCommunityRequest;
   isLoading: boolean;
@@ -54,6 +55,7 @@ const AuthContext = createContext<AuthContextType>({
   blocksEnabled: false,
   blockLabel: 'Block',
   myBlockId: null,
+  flatId: null,
   myFundsAccessRequest: null,
   activeCommunityRequest: null,
   isLoading: true,
@@ -72,6 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [blocksEnabled, setBlocksEnabled] = useState(false);
   const [blockLabel, setBlockLabel] = useState('Block');
   const [myBlockId, setMyBlockId] = useState<string | null>(null);
+  const [flatId, setFlatId] = useState<string | null>(null);
   const [myFundsAccessRequest, setMyFundsAccessRequest] = useState<FundsAccessStatus>(null);
   const [activeCommunityRequest, setActiveCommunityRequest] = useState<ActiveCommunityRequest>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,6 +95,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setBlocksEnabled(false);
     setBlockLabel('Block');
     setMyBlockId(null);
+    setFlatId(null);
     setMyFundsAccessRequest(null);
     setActiveCommunityRequest(null);
   };
@@ -212,6 +216,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setProfile(profileData ?? null);
     setCommunityId(resolvedCommunityId);
     setMyBlockId(profileData?.block_id ?? null);
+    setFlatId((profileData as any)?.flat_id ?? null);
     setActiveCommunityRequest(nextActiveRequest);
     setIsLoading(false);
 
@@ -456,6 +461,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         blocksEnabled,
         blockLabel,
         myBlockId,
+        flatId,
         myFundsAccessRequest,
         activeCommunityRequest,
         isLoading,

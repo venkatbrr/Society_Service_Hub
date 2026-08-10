@@ -239,7 +239,7 @@ See [`docs/platform-admin.md`](../docs/platform-admin.md).
 `index` (Help) · `favorites` (Saved) · `network` (MCN) · `community` · `profile`
 
 ### Standalone
-`/notifications` · `/residents` · `/profile/edit` · `/community/blocks`
+`/notifications` · `/residents` · `/profile/edit` · `/community/blocks` · `/community/flats`
 
 ### Providers & visits
 `/provider/add` · `/provider/[id]` · `/visits/add` · `/visits/[id]` · `/hire-feedback/[hireId]`
@@ -271,7 +271,7 @@ Column-level detail lives in [`docs/architecture.md`](../docs/architecture.md) �
 
 | Domain | Tables |
 |--------|--------|
-| Tenancy & identity | `communities`, `profiles`, `community_requests`, `community_blocks`, `profile_audit_log` |
+| Tenancy & identity | `communities`, `profiles`, `community_requests`, `community_blocks`, `community_flats`, `flat_addition_requests`, `profile_audit_log` |
 | Providers | `service_providers`, `favorites`, `ratings`, `provider_hires`, `provider_reports`, `provider_personal_notes`, `provider_public_rating_nudges`, `hire_feedback`, `fraud_verdicts` |
 | Visits | `service_visits`, `visit_joiners` |
 | Funds | `events`, `event_transactions`, `fund_roles`, `funds_access_requests`, `funds_access_revocations` |

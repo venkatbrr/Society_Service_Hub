@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
+import { Verandah } from '../constants/Colors';
 
 export function WebDesktopFrame({ children }: { children: React.ReactNode }) {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -35,7 +36,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100vh' as any,
     minHeight: '100vh' as any,
-    backgroundColor: '#0A1D1A',
+    backgroundColor: Verandah.phoneBezel,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
     height: '90vh' as any,
     maxHeight: 880,
     borderRadius: 28,
-    backgroundColor: '#FAF8F4',
+    backgroundColor: Verandah.paper,
     overflow: 'hidden',
     boxShadow: '0 35px 90px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.12)' as any,
     position: 'relative',

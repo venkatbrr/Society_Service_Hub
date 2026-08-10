@@ -1,6 +1,25 @@
 const fs = require('fs');
 const path = require('path');
 
+// Load .env if present and environment variables not already set
+if (fs.existsSync('.env')) {
+  const envContent = fs.readFileSync('.env', 'utf8');
+  envContent.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return;
+    const match = trimmed.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      const key = match[1].trim();
+      let val = match[2].trim();
+      // Remove surrounding quotes or inline comments
+      val = val.replace(/^["']|["']$/g, '').split('#')[0].trim();
+      if (!process.env[key]) {
+        process.env[key] = val;
+      }
+    }
+  });
+}
+
 function copyFolderSync(from, to) {
   if (!fs.existsSync(to)) {
     fs.mkdirSync(to, { recursive: true });

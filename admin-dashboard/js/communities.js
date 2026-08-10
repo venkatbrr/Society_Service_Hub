@@ -4,6 +4,7 @@ const CommunitiesPage = {
   selectedCommunityId: null,
   residents: [],
   communityBlocks: [],
+  communityFlats: [],
   communityFunds: [],
   searchTerm: '',
 
@@ -161,6 +162,11 @@ const CommunitiesPage = {
         this.communityBlocks = [];
       }
 
+      // 2b. Fetch community flats
+      const { data: flatsData, error: flatsError } = await supabase.rpc('list_community_flats', { p_community_id: communityId });
+      if (flatsError) console.error('Error fetching flats:', flatsError);
+      this.communityFlats = flatsData || [];
+
       // 3. Fetch community funds via platform admin RPC. Each fund row
       // already carries its own treasurers[] and collectors[] (fund-scoped),
       // so no separate fund_roles query is needed.
@@ -280,6 +286,42 @@ const CommunitiesPage = {
       } else {
         blocksHtml = '<p class="text-3">No blocks created yet.</p>';
       }
+    }
+
+    // Build flats options & list
+    let flatsHtml = '';
+    const totalFlatsCount = this.communityFlats.length;
+    let blockOptionsForFlats = '<option value="">Select Block/Tower...</option>';
+    (this.communityBlocks || []).forEach(b => {
+      blockOptionsForFlats += `<option value="${b.id}">${b.name}</option>`;
+    });
+
+    if (totalFlatsCount > 0) {
+      // Group flats by block
+      const groupedFlats = {};
+      this.communityFlats.forEach(f => {
+        const bName = f.block_name || 'No Block';
+        if (!groupedFlats[bName]) groupedFlats[bName] = [];
+        groupedFlats[bName].push(f);
+      });
+
+      Object.entries(groupedFlats).forEach(([blockName, bFlats]) => {
+        flatsHtml += `
+          <div style="margin-bottom: 12px;">
+            <strong style="font-size: 0.85rem; color: var(--primary);">${community.block_label} ${blockName} (${bFlats.length} flats)</strong>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+              ${bFlats.map(f => `
+                <span class="chip" style="font-size: 0.8rem; padding: 3px 8px; display: inline-flex; align-items: center; gap: 4px;">
+                  ${f.flat_number}${f.resident_count > 0 ? ` <small class="text-3">(${f.resident_count})</small>` : ''}
+                  <span class="chip-remove" title="Archive flat" onclick="CommunitiesPage.archiveFlat('${f.id}')">&times;</span>
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      flatsHtml = '<p class="text-3">No flats added to this community yet.</p>';
     }
 
     // Build fund roles list, grouped per fund: treasurer(s) + block collectors.
@@ -489,7 +531,10 @@ const CommunitiesPage = {
               </span>
             </td>
             <td>
-              ${!r.removed_at ? `<button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem; color: var(--danger);" onclick="event.stopPropagation(); CommunitiesPage.confirmRemoveResident('${r.id}')">Remove</button>` : ''}
+              <div style="display: flex; gap: 6px;">
+                ${!r.removed_at ? `<button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem; color: var(--danger);" title="Remove from community" onclick="event.stopPropagation(); CommunitiesPage.confirmRemoveResident('${r.id}')">Remove</button>` : ''}
+                <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem; color: #DC2626; border-color: rgba(220, 38, 38, 0.3);" title="Permanently delete user account" onclick="event.stopPropagation(); CommunitiesPage.confirmDeleteUserAccount('${r.id}')">Delete</button>
+              </div>
             </td>
           </tr>
         `;
@@ -606,6 +651,32 @@ const CommunitiesPage = {
                 </div>
               </div>
             ` : `<p class="text-3">Turn on blocks/towers to manage collection scopes.</p>`}
+          </div>
+
+          <!-- Flats Inventory Section Card -->
+          <div class="section-card" style="margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h2>Flats Inventory</h2>
+              <span class="badge-pill badge-muted">${totalFlatsCount} total flat${totalFlatsCount !== 1 ? 's' : ''}</span>
+            </div>
+
+            <div style="max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 16px; background: var(--surface);">
+              ${flatsHtml}
+            </div>
+
+            ${this.communityBlocks.length > 0 ? `
+              <div class="form-row" style="grid-template-columns: 140px 1fr auto; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label>Select ${community.block_label}</label>
+                  <select class="form-control" id="add-flats-block-select">${blockOptionsForFlats}</select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label>Flat Numbers (comma or space separated)</label>
+                  <input type="text" class="form-control" id="add-flats-input" placeholder="e.g. 101, 102, 103, 104">
+                </div>
+                <button class="btn btn-primary" onclick="CommunitiesPage.addFlats()">Add Flats</button>
+              </div>
+            ` : `<p class="text-3">Add at least one ${community.block_label.toLowerCase()} above before adding flats.</p>`}
           </div>
 
           <!-- Fund Roles (Treasurers & Block In-Charges), grouped per fund -->
@@ -791,6 +862,55 @@ const CommunitiesPage = {
     }
   },
 
+  async addFlats() {
+    const blockSelect = document.getElementById('add-flats-block-select');
+    const input = document.getElementById('add-flats-input');
+    const blockId = blockSelect?.value;
+    const rawText = input?.value?.trim();
+
+    if (!blockId) {
+      alert('Please select a block/tower');
+      return;
+    }
+    if (!rawText) {
+      alert('Please enter at least one flat number');
+      return;
+    }
+
+    const flatNumbers = rawText.split(/[\s,]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
+    if (flatNumbers.length === 0) return;
+
+    try {
+      const { data, error } = await supabase.rpc('platform_add_community_flats', {
+        p_block_id: blockId,
+        p_flat_numbers: flatNumbers
+      });
+      if (error) throw error;
+
+      alert(`Added ${data || flatNumbers.length} flat(s) successfully.`);
+      input.value = '';
+      await this.load();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add flats: ' + err.message);
+    }
+  },
+
+  async archiveFlat(flatId) {
+    if (!confirm('Are you sure you want to archive this flat?\nResidents assigned to this flat will be disconnected.')) return;
+
+    try {
+      const { error } = await supabase.rpc('platform_archive_community_flat', {
+        p_flat_id: flatId
+      });
+      if (error) throw error;
+      await this.load();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to archive flat: ' + err.message);
+    }
+  },
+
   async appointLead(role) {
     const residentSelect = document.getElementById('lead-appoint-resident');
     const residentId = residentSelect.value;
@@ -883,7 +1003,7 @@ const CommunitiesPage = {
       return;
     }
 
-    if (!confirm(`Are you sure you want to remove ${resident.full_name || 'Resident'} from the community?\nThis will soft-remove the resident, reset their role to resident, and log the action.`)) {
+    if (!confirm(`Are you sure you want to remove ${resident.full_name || 'Resident'} from the community?\n\nThis will dissociate them from the community, flat, and blocks so they can join fresh.`)) {
       return;
     }
 
@@ -891,17 +1011,51 @@ const CommunitiesPage = {
       const { data: { user } } = await supabase.auth.getUser();
       await supabase.rpc('set_audit_actor', { p_actor_id: user.id });
 
-      const { error } = await supabase.rpc('platform_soft_remove_resident', {
+      const { error } = await supabase.rpc('platform_remove_resident_from_community', {
         p_target_profile_id: residentId,
-        p_reason: 'Platform admin removal'
+        p_reason: 'Platform admin removed resident from community'
       });
 
       if (error) throw error;
-      alert('Resident removed successfully.');
+      alert('Resident removed from community successfully.');
       await this.load();
     } catch (err) {
       console.error(err);
       alert('Failed to remove resident: ' + err.message);
+    }
+  },
+
+  async confirmDeleteUserAccount(residentId) {
+    const resident = this.residents.find(r => r.id === residentId);
+    if (!resident) return;
+
+    const leadCount = this.residents.filter(r => !r.removed_at && (r.app_role === 'president' || r.app_role === 'vice_president')).length;
+    const isLead = resident.app_role === 'president' || resident.app_role === 'vice_president';
+    
+    if (isLead && leadCount <= 1) {
+      alert('Cannot delete the only community lead in this community. Reassign lead role first.');
+      return;
+    }
+
+    if (!confirm(`PERMANENT ACTION:\nAre you sure you want to PERMANENTLY DELETE the account for ${resident.full_name || 'Resident'} (${resident.email || resident.phone_number || ''})?\n\nThis will completely delete their auth login credentials, profile, and all account data.`)) {
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.rpc('set_audit_actor', { p_actor_id: user.id });
+
+      const { error } = await supabase.rpc('platform_delete_user', {
+        p_target_user_id: residentId,
+        p_reason: 'Platform admin hard deleted user account'
+      });
+
+      if (error) throw error;
+      alert('User account deleted permanently.');
+      await this.load();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete user account: ' + err.message);
     }
   },
 
@@ -1030,11 +1184,13 @@ const CommunitiesPage = {
       // Set up modal footer actions
       if (!data.removed_at) {
         footer.innerHTML = `
-          <button class="btn btn-danger" style="margin-right: auto;" onclick="CommunitiesPage.confirmRemoveFromModal('${data.id}', '${data.full_name}')">Remove Resident</button>
+          <button class="btn btn-secondary" style="color: var(--danger); margin-right: 8px;" onclick="CommunitiesPage.confirmRemoveFromModal('${data.id}', '${data.full_name}')">Remove from Community</button>
+          <button class="btn btn-danger" style="margin-right: auto;" onclick="CommunitiesPage.confirmDeleteUserFromModal('${data.id}', '${data.full_name}')">Delete User Account</button>
           <button class="btn btn-secondary" onclick="CommunitiesPage.closeResidentModal()">Close</button>
         `;
       } else {
         footer.innerHTML = `
+          <button class="btn btn-danger" style="margin-right: auto;" onclick="CommunitiesPage.confirmDeleteUserFromModal('${data.id}', '${data.full_name}')">Delete User Account</button>
           <button class="btn btn-secondary" onclick="CommunitiesPage.closeResidentModal()">Close</button>
         `;
       }
@@ -1052,6 +1208,11 @@ const CommunitiesPage = {
   async confirmRemoveFromModal(profileId, fullName) {
     this.closeResidentModal();
     await this.confirmRemoveResident(profileId);
+  },
+
+  async confirmDeleteUserFromModal(profileId, fullName) {
+    this.closeResidentModal();
+    await this.confirmDeleteUserAccount(profileId);
   },
 
   async viewFundDetails(fundId) {

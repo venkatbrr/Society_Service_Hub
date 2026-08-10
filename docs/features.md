@@ -56,9 +56,9 @@ Sends a Supabase reset email. Email must contain `@`. Reset URL redirects to `/l
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Capture flat number and block/tower right after joining a block-enabled community |
-| **Tables** | Writes `profiles.flat_number` and `profiles.block_id` |
-| **Rules** | Appears only when `blocks_enabled = true`. **Mandatory — cannot be skipped.** Flat number normalizes to uppercase with spaces and hyphens stripped on blur. Block is chosen from a dropdown. All copy uses the community's `block_label` ("Block" or "Tower"). |
+| **Purpose** | Capture flat and block/tower from verified inventory right after joining a community |
+| **RPC** | `set_my_flat(p_flat_id)` → updates `profiles.flat_id`, trigger syncs `flat_number` and `block_id` |
+| **Rules** | Residents pick their block and unit from the `FlatPicker` dropdowns. **Residents never type flat numbers.** Flats are grouped by floor with quick search. An escape hatch ("Can't find flat?") triggers `FlatAdditionRequestModal` to submit missing units for review. All copy uses the community's `block_label` ("Block" or "Tower"). |
 | **Navigation** | From `/community-select` → `/(tabs)` on save |
 
 ### Community request — `app/community-request.tsx`
@@ -307,6 +307,16 @@ Blocks are optional per community and **decoupled from funds activation**. `comm
 | **Lifecycle** | Platform admins may seed blocks at community-approval time (setting `blocks_enabled = true` and the label). Joining residents pass through `/community-join-block`. Profile shows a block picker only while blocks are active. Contribution flows load contributors through `list_eligible_contributors_for_collector(...)` so block in-charges see only their own residents. |
 | **Roles** | Lead only |
 
+### Flats inventory — `app/community/flats.tsx`
+
+Lead-managed canonical unit inventory for the community.
+
+| Aspect | Details |
+|--------|---------|
+| **RPCs** | `list_community_flats`, `add_community_flats`, `archive_community_flat`, `list_pending_flat_addition_requests`, `review_flat_addition` |
+| **Rules** | Community leads can view flats grouped by block/floor, bulk-add flat lists (comma/newline separated), and archive units. In addition, leads review resident flat addition requests with one-tap approve or reject (with reason) workflows. Approving a request automatically assigns the flat to the requesting resident. |
+| **Roles** | Lead only |
+
 ### SOS — `app/sos/index.tsx`, `app/sos/donor.tsx`, `app/sos/manage-contacts.tsx`
 
 | Aspect | Details |
@@ -370,7 +380,7 @@ Title required. **Exactly one treasurer must be selected** (leads and platform a
 
 ### Edit profile — `app/profile/edit.tsx`
 
-Name updates apply directly. Email updates send a verification link to the new address before taking effect (`supabase.auth.updateUser` plus a `profiles` write). Empty names are rejected.
+Name updates apply directly. Email updates send a verification link to the new address before taking effect (`supabase.auth.updateUser` plus a `profiles` write). Flat/unit is selected via `FlatPicker` backed by `community_flats` and saved via `set_my_flat(p_flat_id)`. Empty names are rejected.
 
 ### Personal service reminders — `app/services/*`
 
