@@ -1,10 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
   LayoutRectangle,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   Platform,
   ScrollView,
   StyleProp,
@@ -73,7 +71,6 @@ export function ChipRowSlider<T extends string = string>({
   const suppressPressRef = useRef(false);
 
   const layoutsRef = useRef<Record<string, LayoutRectangle>>({});
-  const [layouts, setLayouts] = useState<Record<string, LayoutRectangle>>({});
   const isInitialRef = useRef(true);
   const shouldSnapRef = useRef(false);
   const [isReady, setIsReady] = useState(false);
@@ -85,21 +82,14 @@ export function ChipRowSlider<T extends string = string>({
 
   const resolvedValue = value ?? (chips.length > 0 ? chips[0].key : null);
 
-  // Maintain progress values per chip for color cross-fade
-  const progressMapRef = useRef<Record<string, Animated.Value>>({});
-  chips.forEach((c) => {
-    if (!progressMapRef.current[c.key]) {
-      progressMapRef.current[c.key] = new Animated.Value(c.key === resolvedValue ? 1 : 0);
-    }
-  });
-
   const prevChipsSigRef = useRef('');
   const currentChipsSig = chips.map((c) => c.key).join('|');
   if (prevChipsSigRef.current !== currentChipsSig) {
-    prevChipsSigRef.current = currentChipsSig;
-    if (!isInitialRef.current) {
+    if (prevChipsSigRef.current !== '') {
+      // Chip set changed — snap the pill to the new position instead of gliding across.
       shouldSnapRef.current = true;
     }
+    prevChipsSigRef.current = currentChipsSig;
   }
 
   const updatePosition = useCallback(
@@ -116,10 +106,6 @@ export function ChipRowSlider<T extends string = string>({
         setIsReady(true);
         isInitialRef.current = false;
         shouldSnapRef.current = false;
-
-        chips.forEach((c) => {
-          progressMapRef.current[c.key]?.setValue(c.key === key ? 1 : 0);
-        });
         return;
       }
 
@@ -148,17 +134,9 @@ export function ChipRowSlider<T extends string = string>({
           easing: SLIDER_SPRING,
           useNativeDriver: false,
         }),
-        ...chips.map((c) =>
-          Animated.timing(progressMapRef.current[c.key], {
-            toValue: c.key === key ? 1 : 0,
-            duration: SLIDER_DURATION,
-            easing: SLIDER_SPRING,
-            useNativeDriver: false,
-          })
-        ),
       ]).start();
     },
-    [chips, pillX, pillY, pillW, pillH]
+    [pillX, pillY, pillW, pillH]
   );
 
   useEffect(() => {
@@ -169,7 +147,6 @@ export function ChipRowSlider<T extends string = string>({
 
   const handleLayout = (key: string, layout: LayoutRectangle) => {
     layoutsRef.current[key] = layout;
-    setLayouts((prev) => ({ ...prev, [key]: layout }));
     if (key === resolvedValue) {
       updatePosition(key);
     }
@@ -217,31 +194,7 @@ export function ChipRowSlider<T extends string = string>({
     <View style={[styles.contentRow, !scrollable && styles.contentRowNonScroll, contentContainerStyle]}>
       {leading}
 
-      {/* Layer 1: Normal flow inactive chips (with invisible content for sizing) */}
-      {chips.map((chip) => {
-        const isSelected = chip.key === resolvedValue;
-        return (
-          <TouchableOpacity
-            key={chip.key}
-            style={[styles.chipBase, inactiveChipStyle, chipStyle]}
-            onPress={() => handlePress(chip.key)}
-            onLayout={(e) => handleLayout(chip.key, e.nativeEvent.layout)}
-            activeOpacity={0.8}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isSelected }}
-            accessibilityLabel={chip.accessibilityLabel || chip.label}
-          >
-            <View style={[styles.chipInner, { opacity: 0 }]}>
-              {chip.icon ? <View style={styles.iconWrap}>{chip.icon}</View> : null}
-              <Text style={[styles.chipText, textStyle, activeTextStyle]}>
-                {chip.label}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        );
-      })}
-
-      {/* Layer 2: Moving active highlight pill (above inactive chips, below labels) */}
+      {/* Pill — rendered first so it sits behind the chips */}
       {isReady && resolvedValue && layoutsRef.current[resolvedValue] && (
         <Animated.View
           pointerEvents="none"
@@ -259,53 +212,41 @@ export function ChipRowSlider<T extends string = string>({
         />
       )}
 
-      {/* Layer 3: Absolute labels/icons on top with cross-fading color */}
+      {/* Chips — transparent backgrounds so the pill shows through */}
       {chips.map((chip) => {
-        const chipLayout = layouts[chip.key];
-        if (!chipLayout) return null;
-        const progress = progressMapRef.current[chip.key];
-        const textColor = progress
-          ? progress.interpolate({
-              inputRange: [0, 1],
-              outputRange: [inactiveColor, activeColor],
-            })
-          : inactiveColor;
+        const isSelected = chip.key === resolvedValue;
 
         return (
-          <View
-            key={`layer3-${chip.key}`}
-            pointerEvents="none"
-            aria-hidden={true}
-            accessibilityElementsHidden={true}
-            importantForAccessibility="no-hide-descendants"
+          <TouchableOpacity
+            key={chip.key}
             style={[
-              styles.layer3Wrap,
+              styles.chipBase,
+              inactiveChipStyle,
               chipStyle,
-              {
-                left: chipLayout.x,
-                top: chipLayout.y,
-                width: chipLayout.width,
-                height: chipLayout.height,
-                borderWidth: 0,
-                borderColor: 'transparent',
-                backgroundColor: 'transparent',
-              },
+              // Force transparent background so the pill behind is always visible
+              { backgroundColor: 'transparent' },
             ]}
+            onPress={() => handlePress(chip.key)}
+            onLayout={(e) => handleLayout(chip.key, e.nativeEvent.layout)}
+            activeOpacity={0.85}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isSelected }}
+            accessibilityLabel={chip.accessibilityLabel || chip.label}
           >
             <View style={styles.chipInner}>
               {chip.icon ? <View style={styles.iconWrap}>{chip.icon}</View> : null}
-              <Animated.Text
+              <Text
                 style={[
                   styles.chipText,
                   textStyle,
-                  { color: textColor },
-                  chip.key === resolvedValue && activeTextStyle,
+                  { color: isSelected ? activeColor : inactiveColor },
+                  isSelected && activeTextStyle,
                 ]}
               >
                 {chip.label}
-              </Animated.Text>
+              </Text>
             </View>
-          </View>
+          </TouchableOpacity>
         );
       })}
     </View>
@@ -363,7 +304,7 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.pill,
     paddingHorizontal: 12,
     paddingVertical: 5,
-    backgroundColor: Verandah.card,
+    backgroundColor: 'transparent',
     borderWidth: 0.5,
     borderColor: Verandah.borderHair,
     justifyContent: 'center',
@@ -393,12 +334,5 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.pill,
     borderWidth: 0.5,
     borderColor: Verandah.primary,
-    zIndex: 2,
-  },
-  layer3Wrap: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 3,
   },
 });

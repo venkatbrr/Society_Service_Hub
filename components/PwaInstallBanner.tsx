@@ -5,20 +5,43 @@ import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
 
+/** How many days to wait before re-showing the install banner after dismissal */
+const DISMISS_COOLDOWN_DAYS = 3;
+
+/** Check if the cooldown period since last dismissal has elapsed */
+function isDismissCooldownOver(): boolean {
+  if (typeof localStorage === 'undefined') return true;
+  const dismissedAt = localStorage.getItem('pwa_install_dismissed_at');
+  if (!dismissedAt) return true;
+  const elapsed = Date.now() - Number(dismissedAt);
+  return elapsed >= DISMISS_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+}
+
+/** Check if the app is already running as an installed PWA */
+function isRunningAsInstalledPwa(): boolean {
+  if (typeof window === 'undefined') return false;
+  // Check display-mode standalone (Chrome / Edge)
+  if (window.matchMedia('(display-mode: standalone)').matches) return true;
+  // Check iOS standalone mode
+  if ((window.navigator as any).standalone === true) return true;
+  return false;
+}
+
 export function PwaInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    // Don't show if already installed as PWA
+    if (isRunningAsInstalledPwa()) return;
 
     const handleBeforeInstallPrompt = (e: Event) => {
       // Prevent automatic browser prompt bar
       e.preventDefault();
       setDeferredPrompt(e);
-      // Check if user previously dismissed prompt
-      const dismissed = localStorage.getItem('pwa_install_dismissed');
-      if (!dismissed) {
+      // Show banner if cooldown has elapsed since last dismiss
+      if (isDismissCooldownOver()) {
         setVisible(true);
       }
     };
@@ -43,7 +66,8 @@ export function PwaInstallBanner() {
 
   const handleDismiss = () => {
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('pwa_install_dismissed', 'true');
+      // Store the timestamp of dismissal for cooldown-based re-prompting
+      localStorage.setItem('pwa_install_dismissed_at', String(Date.now()));
     }
     setVisible(false);
   };

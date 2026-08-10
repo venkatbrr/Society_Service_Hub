@@ -351,7 +351,7 @@ export default function CommunityScreen() {
               </BaseCard>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => router.push('/community/flats' as any)} activeOpacity={0.85} style={{ marginTop: 8 }}>
+            <TouchableOpacity onPress={() => router.push('/community/flats' as any)} activeOpacity={0.85}>
               <BaseCard padding={14} style={styles.actionCard}>
                 <View style={styles.actionCardRow}>
                   <View style={styles.actionCardIconWrap}>
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 30,
-    gap: 12, // Turn 1 spec: 12-14px section gap
+    gap: 6,
   },
   section: {
     marginBottom: 0,
@@ -452,6 +452,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   compactSection: {
+    gap: 6,
     marginBottom: 0,
   },
   heroCard: {
@@ -670,6 +671,7 @@ const styles = StyleSheet.create({
     fontFamily: VerandahType.sansFamily,
   },
   fundsSummaryCard: {
+    marginBottom: 0,
   },
   fundsSummaryTopRow: {
     flexDirection: 'row',
@@ -759,6 +761,7 @@ const styles = StyleSheet.create({
     fontFamily: VerandahType.sansFamily,
   },
   actionCard: {
+    marginBottom: 0,
   },
   sosActionCard: {
     borderColor: 'rgba(15, 110, 86, 0.3)',
