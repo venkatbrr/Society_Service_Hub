@@ -51,6 +51,9 @@ interface PreorderOrder {
   buyer_note: string | null;
   total_amount: number;
   created_at: string;
+  cancelled_by?: string | null;
+  cancelled_at?: string | null;
+  cancellation_note?: string | null;
   mcn_preorder_drops: {
     id: string;
     title: string;
@@ -87,6 +90,7 @@ export default function MyOrdersScreen() {
           .from('mcn_preorder_orders')
           .select(`
             id, status, buyer_note, total_amount, created_at, drop_id,
+            cancelled_by, cancelled_at, cancellation_note,
             mcn_preorder_drops(
               id, title, fulfillment_date, fulfillment_time,
               profiles!created_by(full_name, flat_number, phone_number)
@@ -223,6 +227,7 @@ export default function MyOrdersScreen() {
 
     const isFulfilled = order.status === 'fulfilled';
     const isCancelled = order.status === 'cancelled';
+    const cancelledByHost = isCancelled && !!order.cancelled_by && order.cancelled_by !== user?.id;
     const isCancelling = cancellingId === order.id;
 
     const itemsSummary = order.mcn_preorder_order_items
@@ -271,7 +276,7 @@ export default function MyOrdersScreen() {
                 { color: isFulfilled ? Verandah.green600 : isCancelled ? '#DC2626' : '#D97706' },
               ]}
             >
-              {isFulfilled ? 'Delivered' : isCancelled ? 'Cancelled' : 'Confirmed'}
+              {isFulfilled ? 'Delivered' : isCancelled ? (cancelledByHost ? 'Cancelled by host' : 'Cancelled') : 'Confirmed'}
             </Text>
           </View>
         </View>
@@ -319,6 +324,13 @@ export default function MyOrdersScreen() {
           <View style={[styles.noteContainer, { backgroundColor: colors.cardMuted }]}>
             <Text style={[styles.noteLabel, { color: colors.textTertiary }]}>Your note:</Text>
             <Text style={[styles.noteText, { color: colors.textSecondary }]}>"{order.buyer_note}"</Text>
+          </View>
+        ) : null}
+
+        {cancelledByHost && order.cancellation_note ? (
+          <View style={[styles.noteContainer, { backgroundColor: colors.cardMuted }]}>
+            <Text style={[styles.noteLabel, { color: colors.textTertiary }]}>Host note:</Text>
+            <Text style={[styles.noteText, { color: colors.textSecondary }]}>"{order.cancellation_note}"</Text>
           </View>
         ) : null}
 

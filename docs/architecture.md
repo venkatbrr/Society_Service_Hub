@@ -239,12 +239,14 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 |-------|-------------|
 | `mcn_preorder_drops` | `title`, `description`, `image_url`, `listing_id` (nullable), `created_by`, `fulfillment_date`, `fulfillment_time`, `cutoff_at`, `max_orders`, `status` (`open`/`closed`/`completed`/`cancelled`) |
 | `mcn_preorder_items` | `drop_id`, `name`, `description`, `unit` (`piece`/`kg`/`box`/`pack`/`portion`/`litre`), `price`, `max_quantity`, `image_url` |
-| `mcn_preorder_orders` | `drop_id`, `buyer_id`, `buyer_name`, `buyer_phone`, `flat_number`, `buyer_note`, `total_amount`, `status` (`confirmed`/`fulfilled`/`cancelled`) |
+| `mcn_preorder_orders` | `drop_id`, `buyer_id`, `buyer_name`, `buyer_phone`, `flat_number`, `buyer_note`, `total_amount`, `status` (`confirmed`/`fulfilled`/`cancelled`), `cancelled_by`, `cancelled_at`, `cancellation_note` |
 | `mcn_preorder_order_items` | `order_id`, `item_id`, `item_name`, `quantity` (numeric — supports 0.5), `unit_price`. Unique on `(order_id, item_id)` — one line per item per order |
 
 Drop-wide total item capacity (`mcn_preorder_drops.max_orders`) is enforced server-side by `check_mcn_drop_item_capacity()` plus a trigger (migrations `20260803000000`, `20260804000000`), not only in the UI.
 
 Per-item capacity (`mcn_preorder_items.max_quantity`) is a separate, smaller cap: the total quantity of *that one item* across every buyer's orders combined, not a per-order allowance. It is enforced by `check_mcn_drop_item_quantity_capacity()` (pre-flight check) and `get_mcn_drop_item_availability()` (remaining-stock display), backed by triggers on `mcn_preorder_order_items` and `mcn_preorder_orders` (migration `20260816000000`).
+
+**Cancellation attribution and note** (migration `20260905000000`): `mcn_preorder_orders` tracks `cancelled_by`, `cancelled_at`, and `cancellation_note`. Trigger `stamp_mcn_preorder_cancellation` (`BEFORE UPDATE`) automatically stamps `cancelled_by = auth.uid()` and `cancelled_at = now()` whenever status transitions to `cancelled`, preventing clients from forging attribution. When un-cancelling, attribution and notes are reset to NULL.
 
 **Orders are placed and edited through `place_mcn_preorder()` only** (migration `20260824000000`) — never by writing `mcn_preorder_orders` and `mcn_preorder_order_items` from the client. The client previously inserted the order row, then the line items, as two round trips; when the cap trigger rejected the second call the first was already committed, leaving a `confirmed` order with a `total_amount`, no line items, and a phantom contribution to the host's Est. Revenue. Every over-cap attempt minted one. The RPC does the whole thing in one transaction under a `FOR UPDATE` lock on the drop and each item, re-checks both caps, and derives `unit_price` and `total_amount` from `mcn_preorder_items` rather than trusting the client. Cancelling an order is still a direct `status` update.
 

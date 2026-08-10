@@ -7,6 +7,7 @@ import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
 import { Phone01 } from '@untitledui/icons/Phone01';
 import { Trash01 } from '@untitledui/icons/Trash01';
 import { XCircle } from '@untitledui/icons/XCircle';
+import { XClose } from '@untitledui/icons/XClose';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackSmart, replaceTracked } from '../../../../lib/navigation';
@@ -14,10 +15,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    Modal,
     Platform,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
@@ -37,6 +41,9 @@ interface DropOrder {
   total_amount: number;
   status: 'confirmed' | 'fulfilled' | 'cancelled';
   created_at: string;
+  cancelled_by?: string | null;
+  cancelled_at?: string | null;
+  cancellation_note?: string | null;
   mcn_preorder_order_items: {
     id: string;
     item_name: string;
@@ -64,6 +71,12 @@ export default function ManagePreorderDropScreen() {
   const [loading, setLoading] = useState(true);
   const [showDeliveredSection, setShowDeliveredSection] = useState(true);
   const [showCancelledSection, setShowCancelledSection] = useState(false);
+
+  const [cancelTarget, setCancelTarget] = useState<DropOrder | null>(null);
+  const [cancelNote, setCancelNote] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+
+  const QUICK_REASONS = ['Sold out', "Couldn't deliver", 'Ingredients ran out'];
 
   const fetchDropManagerData = useCallback(async () => {
     if (!dropId) return;
@@ -170,6 +183,50 @@ export default function ManagePreorderDropScreen() {
     } catch (err) {
       console.error(err);
       Toast.show({ type: 'error', text1: 'Failed to update order status' });
+    }
+  };
+
+  const handleConfirmCancelOrder = async () => {
+    if (!cancelTarget) return;
+    const order = cancelTarget;
+    const note = cancelNote.trim();
+
+    setCancelling(true);
+    try {
+      const { data, error } = await supabase
+        .from('mcn_preorder_orders')
+        .update({
+          status: 'cancelled',
+          cancellation_note: note || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', order.id)
+        .eq('status', 'confirmed') // no cancelling something already delivered
+        .select('id')
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        Toast.show({
+          type: 'info',
+          text1: 'Nothing to cancel',
+          text2: 'This pre-order was already delivered or cancelled.',
+        });
+      } else {
+        Toast.show({
+          type: 'success',
+          text1: 'Pre-order cancelled',
+          text2: `Flat ${order.flat_number} — let the resident know.`,
+        });
+      }
+      setCancelTarget(null);
+      setCancelNote('');
+      fetchDropManagerData();
+    } catch (err: any) {
+      console.error(err);
+      Toast.show({ type: 'error', text1: 'Failed to cancel pre-order', text2: err?.message });
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -493,17 +550,32 @@ export default function ManagePreorderDropScreen() {
                     <Rupees amount={order.total_amount} size="md" tone="in" />
                   </View>
 
-                  <TouchableOpacity
-                    style={styles.fulfillmentBtn}
-                    onPress={() => handleToggleFulfillment(order.id, order.status)}
-                  >
-                    <CheckCircle
-                      size={15}
-                      color="#FFFFFF"
-                      aria-hidden={true}
-                    />
-                    <Text style={styles.fulfillmentBtnText}>Mark delivered</Text>
-                  </TouchableOpacity>
+                  <View style={styles.footerActions}>
+                    {drop?.status !== 'completed' ? (
+                      <TouchableOpacity
+                        style={styles.cancelOrderBtn}
+                        onPress={() => {
+                          setCancelNote('');
+                          setCancelTarget(order);
+                        }}
+                      >
+                        <XCircle size={15} color="#DC2626" aria-hidden={true} />
+                        <Text style={styles.cancelOrderBtnText}>Cancel</Text>
+                      </TouchableOpacity>
+                    ) : null}
+
+                    <TouchableOpacity
+                      style={styles.fulfillmentBtn}
+                      onPress={() => handleToggleFulfillment(order.id, order.status)}
+                    >
+                      <CheckCircle
+                        size={15}
+                        color="#FFFFFF"
+                        aria-hidden={true}
+                      />
+                      <Text style={styles.fulfillmentBtnText}>Mark delivered</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             ))
@@ -628,7 +700,10 @@ export default function ManagePreorderDropScreen() {
                           <Rupees amount={line.quantity * line.unit_price} size="sm" />
                         </View>
                       ))}
-                      {order.buyer_note ? <Text style={styles.buyerNote}>Note: "{order.buyer_note}"</Text> : null}
+                      {order.buyer_note ? <Text style={styles.buyerNote}>Buyer note: "{order.buyer_note}"</Text> : null}
+                      {order.cancellation_note ? (
+                        <Text style={[styles.buyerNote, { color: '#DC2626' }]}>Cancellation note: "{order.cancellation_note}"</Text>
+                      ) : null}
                     </View>
 
                     <View style={styles.orderFooter}>
@@ -638,7 +713,11 @@ export default function ManagePreorderDropScreen() {
                       </View>
 
                       <View style={styles.cancelledBadgePill}>
-                        <Text style={styles.cancelledBadgePillText}>Cancelled</Text>
+                        <Text style={styles.cancelledBadgePillText}>
+                          {order.cancelled_by && drop && order.cancelled_by === drop.created_by
+                            ? 'You cancelled'
+                            : 'Cancelled'}
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -648,6 +727,144 @@ export default function ManagePreorderDropScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      {/* Host Cancel Pre-Order Modal */}
+      <Modal
+        visible={cancelTarget !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          if (!cancelling) {
+            setCancelTarget(null);
+            setCancelNote('');
+          }
+        }}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => {
+            if (!cancelling) {
+              setCancelTarget(null);
+              setCancelNote('');
+            }
+          }}
+        >
+          <Pressable
+            style={[styles.modalContent, { backgroundColor: colors.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Cancel this pre-order?</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  if (!cancelling) {
+                    setCancelTarget(null);
+                    setCancelNote('');
+                  }
+                }}
+                disabled={cancelling}
+              >
+                <XClose size={22} color={colors.textSecondary} aria-hidden={true} />
+              </TouchableOpacity>
+            </View>
+
+            {cancelTarget ? (
+              <ScrollView contentContainerStyle={{ gap: 14 }}>
+                <View style={[styles.cancelRecapBox, { backgroundColor: colors.cardMuted, borderColor: colors.border }]}>
+                  <Text style={styles.cancelRecapHeader}>
+                    Flat {cancelTarget.flat_number} · {cancelTarget.buyer_name}
+                  </Text>
+                  <View style={styles.cancelRecapItems}>
+                    {(cancelTarget.mcn_preorder_order_items || []).map((line) => (
+                      <View key={line.id} style={styles.lineRow}>
+                        <Text style={styles.lineText}>
+                          {line.quantity}x {line.item_name}
+                        </Text>
+                        <Rupees amount={line.quantity * line.unit_price} size="sm" />
+                      </View>
+                    ))}
+                  </View>
+                  <View style={styles.cancelRecapTotalRow}>
+                    <Text style={styles.cancelRecapTotalLabel}>Total:</Text>
+                    <Rupees amount={cancelTarget.total_amount} size="sm" tone="in" />
+                  </View>
+                </View>
+
+                <Text style={styles.consequenceText}>
+                  The items go back into the available count. This cannot be undone.
+                </Text>
+
+                <View style={styles.modalInputGroup}>
+                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>
+                    Note to resident (optional)
+                  </Text>
+
+                  <View style={styles.quickChipsRow}>
+                    {QUICK_REASONS.map((reason) => {
+                      const isSelected = cancelNote === reason;
+                      return (
+                        <TouchableOpacity
+                          key={reason}
+                          style={[
+                            styles.quickChip,
+                            isSelected && styles.quickChipSelected,
+                          ]}
+                          onPress={() => setCancelNote(reason)}
+                          activeOpacity={0.7}
+                        >
+                          <Text
+                            style={[
+                              styles.quickChipText,
+                              isSelected && styles.quickChipTextSelected,
+                            ]}
+                          >
+                            {reason}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <TextInput
+                    style={[styles.modalInputMultiline, { color: colors.textPrimary, borderColor: colors.borderStrong }]}
+                    value={cancelNote}
+                    onChangeText={setCancelNote}
+                    placeholder="Anything the resident should know"
+                    placeholderTextColor={colors.textTertiary}
+                    multiline
+                    maxLength={200}
+                  />
+                </View>
+
+                <View style={styles.modalActionsRow}>
+                  <TouchableOpacity
+                    style={[styles.modalDismissBtn, { borderColor: colors.borderStrong }]}
+                    onPress={() => {
+                      setCancelTarget(null);
+                      setCancelNote('');
+                    }}
+                    disabled={cancelling}
+                  >
+                    <Text style={[styles.modalDismissBtnText, { color: colors.textPrimary }]}>Keep order</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.modalDestructiveBtn}
+                    onPress={handleConfirmCancelOrder}
+                    disabled={cancelling}
+                  >
+                    {cancelling ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.modalDestructiveBtnText}>Cancel order</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            ) : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -957,7 +1174,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 5,
     minWidth: 122,
-    alignSelf: 'flex-end',
   },
   fulfillmentBtnDone: {
     backgroundColor: '#D1FAE5',
@@ -969,6 +1185,28 @@ const styles = StyleSheet.create({
   },
   fulfillmentBtnTextDone: {
     color: Verandah.green600,
+  },
+  footerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  cancelOrderBtn: {
+    backgroundColor: '#FEE2E2',
+    borderWidth: 0.5,
+    borderColor: '#F87171',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: VerandahRadius.pill,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+  },
+  cancelOrderBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#DC2626',
   },
   collapsibleHeader: {
     flexDirection: 'row',
@@ -990,5 +1228,131 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: '#6B7280',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '85%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    ...VerandahType.title,
+    fontSize: 17,
+  },
+  cancelRecapBox: {
+    borderRadius: VerandahRadius.md,
+    borderWidth: 0.5,
+    padding: 10,
+    gap: 6,
+  },
+  cancelRecapHeader: {
+    ...VerandahType.bodyBold,
+    fontSize: 13,
+    color: Verandah.textPrimary,
+  },
+  cancelRecapItems: {
+    gap: 2,
+  },
+  cancelRecapTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 0.5,
+    borderTopColor: '#E5E7EB',
+    paddingTop: 4,
+  },
+  cancelRecapTotalLabel: {
+    ...VerandahType.bodyBold,
+    fontSize: 12,
+    color: Verandah.textPrimary,
+  },
+  consequenceText: {
+    ...VerandahType.caption,
+    fontSize: 12,
+    color: '#DC2626',
+  },
+  modalInputGroup: {
+    gap: 8,
+  },
+  modalLabel: {
+    ...VerandahType.captionBold,
+    fontSize: 12,
+  },
+  quickChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  quickChip: {
+    backgroundColor: '#F3F4F6',
+    borderWidth: 0.5,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: VerandahRadius.pill,
+  },
+  quickChipSelected: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#F87171',
+  },
+  quickChipText: {
+    ...VerandahType.caption,
+    fontSize: 12,
+    color: Verandah.textSecondary,
+  },
+  quickChipTextSelected: {
+    color: '#DC2626',
+    fontWeight: '600',
+  },
+  modalInputMultiline: {
+    minHeight: 70,
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    textAlignVertical: 'top',
+  },
+  modalActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 6,
+    marginBottom: 16,
+  },
+  modalDismissBtn: {
+    flex: 1,
+    height: 44,
+    borderWidth: 0.5,
+    borderRadius: VerandahRadius.pill,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalDismissBtnText: {
+    ...VerandahType.bodyBold,
+    fontSize: 14,
+  },
+  modalDestructiveBtn: {
+    flex: 1,
+    height: 44,
+    backgroundColor: '#DC2626',
+    borderRadius: VerandahRadius.pill,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalDestructiveBtnText: {
+    ...VerandahType.bodyBold,
+    fontSize: 14,
+    color: '#FFFFFF',
   },
 });

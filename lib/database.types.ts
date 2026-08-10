@@ -1731,6 +1731,9 @@ export type Database = {
           buyer_name: string
           buyer_note: string | null
           buyer_phone: string
+          cancellation_note: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           community_id: string
           created_at: string
           drop_id: string
@@ -1745,6 +1748,9 @@ export type Database = {
           buyer_name: string
           buyer_note?: string | null
           buyer_phone: string
+          cancellation_note?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           community_id: string
           created_at?: string
           drop_id: string
@@ -1759,6 +1765,9 @@ export type Database = {
           buyer_name?: string
           buyer_note?: string | null
           buyer_phone?: string
+          cancellation_note?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           community_id?: string
           created_at?: string
           drop_id?: string

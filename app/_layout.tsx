@@ -25,7 +25,7 @@ LogBox.ignoreLogs([
 import { consumeHistoryPop, replaceTracked, useSyncedBackNavigation } from '../lib/navigation';
 
 function RootLayoutNav() {
-  const { session, profile, communityId, activeCommunityRequest, isPlatformAdmin, isLoading } = useAuth();
+  const { session, profile, communityId, flatId, blocksEnabled, blockLabel, activeCommunityRequest, isPlatformAdmin, isLoading } = useAuth();
   const segments = useSegments();
   const pathname = usePathname();
   const router = useRouter();
@@ -92,6 +92,7 @@ function RootLayoutNav() {
     const isOnCommunityRequest = currentRoute === 'community-request';
     const isOnCommunityRequestSubmitted = currentRoute === 'community-request-submitted';
     const isOnCommunitySelect = currentRoute === 'community-select';
+    const isOnCommunityJoinBlock = currentRoute === 'community-join-block';
 
     let redirectTo: string | null = null;
 
@@ -106,15 +107,6 @@ function RootLayoutNav() {
         }
         redirectTo = '/login';
       } else if (isWebRootPath && typeof window !== 'undefined') {
-        // Signed-out visitor at the web root gets the marketing page. This used
-        // to live in `app/index.tsx`, which had to be deleted: it also resolved
-        // to `/`, colliding with the Home tab at `app/(tabs)/index.tsx`. Two
-        // route files on one URL is exactly what corrupts browser history, and
-        // the redirect fired whenever back landed on `/` — including for
-        // signed-in users on the Home tab, who were thrown to /landing.html.
-        //
-        // Skip it entirely when the user got here by pressing back, or we
-        // recreate that trap.
         if (!consumeHistoryPop()) {
           window.location.replace('/landing.html');
         }
@@ -132,7 +124,11 @@ function RootLayoutNav() {
     } else if (isOnAdminRedirect) {
       // Non-admin landed on admin-redirect route → redirect appropriately
       if (communityId) {
-        redirectTo = takeSavedRoute() || '/(tabs)';
+        if (blocksEnabled && !flatId) {
+          redirectTo = '/community-join-block';
+        } else {
+          redirectTo = takeSavedRoute() || '/(tabs)';
+        }
       } else if (activeCommunityRequest) {
         redirectTo = '/community-request-submitted';
       } else {
@@ -144,25 +140,28 @@ function RootLayoutNav() {
     } else if (!communityId && !activeCommunityRequest && !isOnCommunitySelect && !isOnCommunityRequest) {
       // No community, no request → select/request community
       redirectTo = '/community-select';
-    } else if (
-      communityId &&
-      (inAuthGroup || isOnCommunitySelect || isOnCommunityRequest || isOnCommunityRequestSubmitted)
-    ) {
-      // Signed in with a community, but sitting on a transitional screen
-      // (login / community-select / request). Going forward, bounce into the
-      // app. Going BACKWARD, do not: the user pressed back into a screen they
-      // already passed through, and redirecting forward pins them in place —
-      // browser back looks like it does nothing, or jumps to whatever tab was
-      // last focused. Step further back instead and leave the saved route
-      // untouched (takeSavedRoute() consumes it, so it must not run here).
-      if (consumeHistoryPop()) {
-        if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history.length > 1) {
-          window.history.back();
+    } else if (communityId) {
+      const needsFlatSelection = Boolean(blocksEnabled && !flatId);
+
+      if (needsFlatSelection) {
+        // In block-enabled community without flat selected → route to flat picker
+        if (!isOnCommunityJoinBlock) {
+          redirectTo = '/community-join-block';
         }
-        return;
+      } else {
+        // Flat selected or no blocks enabled
+        if (isOnCommunityJoinBlock) {
+          redirectTo = '/(tabs)';
+        } else if (inAuthGroup || isOnCommunitySelect || isOnCommunityRequest || isOnCommunityRequestSubmitted) {
+          if (consumeHistoryPop()) {
+            if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history.length > 1) {
+              window.history.back();
+            }
+            return;
+          }
+          redirectTo = takeSavedRoute() || '/(tabs)';
+        }
       }
-      // Has community → main app or saved target route
-      redirectTo = takeSavedRoute() || '/(tabs)';
     }
 
     if (!redirectTo) {
@@ -188,6 +187,9 @@ function RootLayoutNav() {
     session,
     profile,
     communityId,
+    flatId,
+    blocksEnabled,
+    blockLabel,
     activeCommunityRequest,
     isPlatformAdmin,
     isLoading,

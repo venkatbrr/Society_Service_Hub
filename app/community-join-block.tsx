@@ -25,9 +25,9 @@ export default function CommunityJoinBlockScreen() {
   const { communityId: routeCommunityId, blockLabel: routeBlockLabel } =
     useLocalSearchParams<{ communityId: string; blockLabel?: string }>();
   
-  const { communityId: authCommunityId, profile, refreshSession } = useAuth();
+  const { communityId: authCommunityId, profile, blockLabel: authBlockLabel, refreshSession } = useAuth();
   const effectiveCommunityId = routeCommunityId || authCommunityId || profile?.community_id || '';
-  const label = routeBlockLabel || 'Block';
+  const label = routeBlockLabel || authBlockLabel || 'Block';
 
   const [selectedFlatId, setSelectedFlatId] = useState<string | null>(
     (profile as any)?.flat_id || null

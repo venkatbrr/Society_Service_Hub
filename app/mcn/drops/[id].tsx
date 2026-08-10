@@ -707,6 +707,7 @@ export default function PreorderDropDetailScreen() {
               const isFulfilled = ord.status === 'fulfilled';
               const isCancelled = ord.status === 'cancelled';
               const isConfirmed = ord.status === 'confirmed';
+              const cancelledByHost = isCancelled && !!ord.cancelled_by && ord.cancelled_by !== user?.id;
               const orderItems = ord.mcn_preorder_order_items || [];
 
               return (
@@ -732,8 +733,10 @@ export default function PreorderDropDetailScreen() {
                           <Text style={styles.confirmedBadgeText}>Confirmed</Text>
                         </View>
                       ) : (
-                        <View style={styles.cancelledBadgeInline}>
-                          <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+                        <View style={[styles.cancelledBadgeInline, cancelledByHost && { backgroundColor: '#FEE2E2' }]}>
+                          <Text style={[styles.cancelledBadgeText, cancelledByHost && { color: '#DC2626' }]}>
+                            {cancelledByHost ? 'Cancelled by host' : 'Cancelled'}
+                          </Text>
                         </View>
                       )}
                     </View>
@@ -758,6 +761,17 @@ export default function PreorderDropDetailScreen() {
                     </Text>
                     <Rupees amount={ord.total_amount} size="md" tone="in" />
                   </View>
+
+                  {ord.buyer_note ? (
+                    <Text style={styles.buyerNoteText}>Your note: "{ord.buyer_note}"</Text>
+                  ) : null}
+
+                  {cancelledByHost && ord.cancellation_note ? (
+                    <View style={styles.cancellationNoticeBox}>
+                      <Text style={styles.cancellationNoticeLabel}>Host cancellation note:</Text>
+                      <Text style={styles.cancellationNoticeText}>"{ord.cancellation_note}"</Text>
+                    </View>
+                  ) : null}
 
                   {isFulfilled ? (
                     <View style={styles.deliveredNoticeBox}>
@@ -1236,6 +1250,31 @@ const styles = StyleSheet.create({
   existingDateText: {
     fontSize: 10,
     color: Verandah.textTertiary,
+  },
+  buyerNoteText: {
+    fontSize: 11,
+    fontStyle: 'italic',
+    color: Verandah.textSecondary,
+    marginTop: 4,
+  },
+  cancellationNoticeBox: {
+    backgroundColor: '#FEE2E2',
+    borderWidth: 0.5,
+    borderColor: '#F87171',
+    borderRadius: 6,
+    padding: 6,
+    marginTop: 6,
+    gap: 2,
+  },
+  cancellationNoticeLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#DC2626',
+  },
+  cancellationNoticeText: {
+    fontSize: 11,
+    fontStyle: 'italic',
+    color: '#991B1B',
   },
   deliveredNoticeBox: {
     flexDirection: 'row',
