@@ -9,6 +9,7 @@
     "web": "expo start --web",
     "build": "expo export --platform web && node build-admin.js",
     "preview": "npx serve dist",
+    "legal:html": "node scripts/generate-legal-html.js",
     "db:login": "npx supabase login",
     "db:link:prod": "npx supabase link --project-ref mbzvcaoulawdugfearmj",
     "db:link:preprod": "npx supabase link --project-ref PREPROD_REF_TODO",

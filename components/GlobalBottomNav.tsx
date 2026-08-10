@@ -67,7 +67,7 @@ const TABS: TabDef[] = [
     label: 'Profile',
     route: '/profile',
     Icon: NavPerson,
-    isActive: (p) => p === '/profile' || p.startsWith('/services'),
+    isActive: (p) => p === '/profile' || p.startsWith('/services') || p === '/legal',
   },
 ];
 

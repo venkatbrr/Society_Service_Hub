@@ -9,6 +9,7 @@ import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import {
+    getServiceCategoryIcon,
     mapServiceCategoryToProviderCategory,
     ServiceCategory,
 } from '../lib/serviceCategories';
@@ -119,10 +120,11 @@ export function UpcomingServicesCard() {
       </View>
 
       {urgentServices.map((s) => {
+        const CategoryIcon = getServiceCategoryIcon(s.category);
         return (
           <View key={s.id} style={styles.serviceRow}>
             <View style={styles.iconBox}>
-              <Tool01 size={14} color={Verandah.accent} aria-hidden={true} />
+              <CategoryIcon size={14} color={Verandah.accent} aria-hidden={true} />
             </View>
             <View style={styles.rowContent}>
               <Text style={styles.rowName} numberOfLines={1}>

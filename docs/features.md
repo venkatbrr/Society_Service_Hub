@@ -17,7 +17,7 @@ Jump straight to what you need; skip the rest.
 | MCN tab | hub, business, drops, carpools, parents, schools, posts, orders | [§4](#4-mcn--my-community-network) |
 | Community tab | funds status, blocks, SOS, residents | [§5](#5-community-tab) |
 | Funds | list, add, detail, transactions, access request | [§6](#6-funds) |
-| Profile tab | profile, edit, reminders, hire feedback | [§7](#7-profile-tab) |
+| Profile tab | profile, edit, reminders, hire feedback, legal | [§7](#7-profile-tab) |
 | Notifications | feed | [§8](#8-notifications) |
 | Platform admin | web console (5 pages) | [`platform-admin.md`](platform-admin.md) |
 | Access matrix | who can do what | [§9](#9-role-based-access-matrix) |
@@ -392,6 +392,15 @@ Name updates apply directly. Email updates send a verification link to the new a
 | **Add** (`add.tsx`) | Required: `service_name`, `category`, `last_serviced_on`, `frequency_months`. Date cannot be in the future; frequency is 1–60 months. Cross-platform date picking via `DateField` (`<input type="date">` on web). Notes capped at 500 characters with live counter. Images stored as `images` JSONB array (up to 3 images with titles). Choosing a category pre-fills default frequency. Provider picker searches by name/phone. Saves via `goBackSmart`. |
 | **Detail / edit** (`[id].tsx`) | Reads the row directly from `user_services` by ID. Honest mark-done (no fake optimistic badge flash); single 4-arg RPC `mark_service_done(p_service_id, p_provider_id, p_cost_paid, p_note)` logs to `user_service_history` and resets notification count. Editing preserves provider link even if provider list is filtered or fails loading (`providerLinkUnresolved`). History edits automatically reconcile `user_services.last_serviced_on` via DB trigger. Technician button routes to Help tab Providers segment with category filter. |
 | **Surfaces** | `components/UpcomingServicesCard.tsx` sits on the Help tab (refreshes on focus; "Find tech" routes to Help tab provider segment). Profile shows badge count and "{N} due or overdue" label from `get_my_due_soon_count()`. `notify_due_services()` creates `service_reminder` notifications on a repeating cadence (at most 1 per 6.5 days, capped at 5 per cycle) driven daily by `check_due_services` Edge Function. |
+
+### Terms & privacy — `app/legal.tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | In-app reading surface for Terms of Service and Privacy Policy |
+| **Data** | Single source of truth in `data/legal.ts` (DPDP Act 2023 compliant) |
+| **Rules** | Segmented control switches between Terms of Service and Privacy Policy. Deep-linkable via `?doc=privacy` or `?doc=terms`. Scroll position resets on tab change. Full Verandah styling with support for callouts, tables, bullet lists, subheadings, and tappable contact/internal links. |
+| **Navigation** | Reachable post-auth via Profile menu card (`/legal`), and pre-auth from Login screen (`/legal` or `/legal?doc=privacy`). Header back button maps to `/profile` via `goBackSmart`. |
 
 ---
 

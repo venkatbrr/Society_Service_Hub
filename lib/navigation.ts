@@ -371,9 +371,12 @@ export function getImmediateParentRoute(pathname: string): string {
   }
   if (cleanPath === '/mcn/my-orders' || cleanPath === '/mcn/my-posts') return '/network';
 
-  // 7. Personal service reminders
+  // 7. Personal service reminders & Legal
   if (cleanPath.startsWith('/services/')) return '/services';
   if (cleanPath === '/services') return '/profile';
+  if (cleanPath === '/legal') {
+    return params.get('returnTo') === 'login' ? '/login' : '/profile';
+  }
 
   // 7b. Providers & visits (Help tab)
   if (cleanPath === '/provider/add') return '/';

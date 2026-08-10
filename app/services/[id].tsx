@@ -39,6 +39,8 @@ import {
     SERVICE_CATEGORIES,
     SERVICE_CATEGORY_DEFAULT_FREQUENCY,
     SERVICE_CATEGORY_LABELS,
+    SERVICE_CATEGORY_UNTITLED_ICONS,
+    getServiceCategoryIcon,
     ServiceCategory,
 } from '../../lib/serviceCategories';
 import { cloudinaryUrl } from '../../lib/cloudinary';
@@ -484,6 +486,8 @@ export default function ServiceDetailScreen() {
     year: 'numeric',
   });
 
+  const HeaderCategoryIcon = getServiceCategoryIcon(service.category);
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.background }}
@@ -498,7 +502,7 @@ export default function ServiceDetailScreen() {
         >
           <ArrowLeft size={20} color={colors.text} aria-hidden={true} />
         </TouchableOpacity>
-        <Tool01 size={20} color={colors.primary} style={{ marginRight: 6 }} aria-hidden={true} />
+        <HeaderCategoryIcon size={20} color={colors.primary} style={{ marginRight: 6 }} aria-hidden={true} />
         <Text style={styles.headerTitle} numberOfLines={1}>
           {service.service_name}
         </Text>
@@ -593,6 +597,7 @@ export default function ServiceDetailScreen() {
             <View style={styles.categoryGrid}>
               {SERVICE_CATEGORIES.map((cat) => {
                 const sel = editCategory === cat;
+                const CatIcon = SERVICE_CATEGORY_UNTITLED_ICONS[cat] ?? Tool01;
                 return (
                   <TouchableOpacity
                     key={cat}
@@ -609,7 +614,7 @@ export default function ServiceDetailScreen() {
                     }}
                     activeOpacity={0.8}
                   >
-                    <Tool01 size={16} color={sel ? colors.primary : colors.textMuted} style={{ marginRight: 6 }} aria-hidden={true} />
+                    <CatIcon size={16} color={sel ? colors.primary : colors.textMuted} style={{ marginRight: 6 }} aria-hidden={true} />
                     <Text style={[{ fontSize: 11, fontWeight: '500', flexShrink: 1 }, { color: sel ? colors.primary : colors.textMuted }]} numberOfLines={2}>
                       {SERVICE_CATEGORY_LABELS[cat]}
                     </Text>

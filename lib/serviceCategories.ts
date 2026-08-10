@@ -58,19 +58,42 @@ export const SERVICE_CATEGORY_EMOJI: Record<ServiceCategory, string> = {
   other: '🔧',
 };
 
-export const SERVICE_CATEGORY_ICONS: Record<ServiceCategory, string> = {
-  ac: 'snow-outline',
-  ro_water_purifier: 'water-outline',
-  geyser: 'flame-outline',
-  washing_machine: 'sync-outline',
-  refrigerator: 'cube-outline',
-  chimney: 'restaurant-outline',
-  pest_control: 'bug-outline',
-  car: 'car-outline',
-  bike: 'bicycle-outline',
-  inverter_battery: 'battery-charging-outline',
-  other: 'build-outline',
+import { BatteryCharging01 } from '@untitledui/icons/BatteryCharging01';
+import { Car01 } from '@untitledui/icons/Car01';
+import { Droplets01 } from '@untitledui/icons/Droplets01';
+import { RefreshCw01 } from '@untitledui/icons/RefreshCw01';
+import { Snowflake01 } from '@untitledui/icons/Snowflake01';
+import { Speedometer01 } from '@untitledui/icons/Speedometer01';
+import { ThermometerCold } from '@untitledui/icons/ThermometerCold';
+import { ThermometerWarm } from '@untitledui/icons/ThermometerWarm';
+import { Tool01 } from '@untitledui/icons/Tool01';
+import { Virus } from '@untitledui/icons/Virus';
+import { Wind01 } from '@untitledui/icons/Wind01';
+import React from 'react';
+
+export const SERVICE_CATEGORY_UNTITLED_ICONS: Record<
+  ServiceCategory,
+  React.ComponentType<{ size?: number; color?: string; style?: any; 'aria-hidden'?: boolean }>
+> = {
+  ac: Snowflake01,
+  ro_water_purifier: Droplets01,
+  geyser: ThermometerWarm,
+  washing_machine: RefreshCw01,
+  refrigerator: ThermometerCold,
+  chimney: Wind01,
+  pest_control: Virus,
+  car: Car01,
+  bike: Speedometer01,
+  inverter_battery: BatteryCharging01,
+  other: Tool01,
 };
+
+export function getServiceCategoryIcon(
+  category: string | null | undefined
+): React.ComponentType<{ size?: number; color?: string; style?: any; 'aria-hidden'?: boolean }> {
+  if (!category) return Tool01;
+  return SERVICE_CATEGORY_UNTITLED_ICONS[category as ServiceCategory] ?? Tool01;
+}
 
 /** Default service frequency in months, prefilled when user selects a category. */
 export const SERVICE_CATEGORY_DEFAULT_FREQUENCY: Record<ServiceCategory, number> = {

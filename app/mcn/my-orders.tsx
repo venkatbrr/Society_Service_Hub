@@ -284,7 +284,7 @@ export default function MyOrdersScreen() {
         {/* Delivery Schedule Banner */}
         {fulfillFormatted && drop?.fulfillment_time && (
           <View style={styles.deliveryBanner}>
-            <Calendar size={15} color={colors.primary} aria-hidden={true} />
+            <Calendar size={13} color={colors.primary} aria-hidden={true} />
             <Text style={styles.deliveryBannerText}>
               Delivery: <Text style={{ fontWeight: '700' }}>{fulfillFormatted}</Text> ({format12HourTime(drop.fulfillment_time)})
             </Text>
@@ -311,8 +311,8 @@ export default function MyOrdersScreen() {
 
         {/* Total & Date */}
         <View style={styles.footerRow}>
-          <View>
-            <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total amount</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total:</Text>
             <Rupees amount={order.total_amount} size="sm" tone="in" />
           </View>
           <Text style={[styles.dateText, { color: colors.textTertiary }]}>
@@ -320,17 +320,21 @@ export default function MyOrdersScreen() {
           </Text>
         </View>
 
-        {order.buyer_note ? (
-          <View style={[styles.noteContainer, { backgroundColor: colors.cardMuted }]}>
-            <Text style={[styles.noteLabel, { color: colors.textTertiary }]}>Your note:</Text>
-            <Text style={[styles.noteText, { color: colors.textSecondary }]}>"{order.buyer_note}"</Text>
-          </View>
-        ) : null}
-
-        {cancelledByHost && order.cancellation_note ? (
-          <View style={[styles.noteContainer, { backgroundColor: colors.cardMuted }]}>
-            <Text style={[styles.noteLabel, { color: colors.textTertiary }]}>Host note:</Text>
-            <Text style={[styles.noteText, { color: colors.textSecondary }]}>"{order.cancellation_note}"</Text>
+        {/* Notes (Compact unified container) */}
+        {order.buyer_note || (cancelledByHost && order.cancellation_note) ? (
+          <View style={[styles.notesBox, { backgroundColor: colors.cardMuted }]}>
+            {order.buyer_note ? (
+              <Text style={styles.noteLine}>
+                <Text style={[styles.noteLineLabel, { color: colors.textTertiary }]}>Your note: </Text>
+                <Text style={[styles.noteLineText, { color: colors.textSecondary }]}>"{order.buyer_note}"</Text>
+              </Text>
+            ) : null}
+            {cancelledByHost && order.cancellation_note ? (
+              <Text style={styles.noteLine}>
+                <Text style={[styles.noteLineLabel, { color: '#DC2626' }]}>Host note: </Text>
+                <Text style={[styles.noteLineText, { color: '#DC2626' }]}>"{order.cancellation_note}"</Text>
+              </Text>
+            ) : null}
           </View>
         ) : null}
 
@@ -341,7 +345,7 @@ export default function MyOrdersScreen() {
               onPress={() => router.push(`/mcn/drops/${order.drop_id}` as any)}
               style={[styles.actionBtn, { borderColor: colors.primary, backgroundColor: Verandah.cardMuted }]}
             >
-              <Eye size={16} color={colors.primary} aria-hidden={true} />
+              <Eye size={14} color={colors.primary} aria-hidden={true} />
               <Text style={[styles.actionBtnText, { color: colors.primary }]}>View Drop</Text>
             </TouchableOpacity>
 
@@ -351,14 +355,14 @@ export default function MyOrdersScreen() {
                   onPress={() => handleCall(phone)}
                   style={[styles.actionBtn, { borderColor: colors.borderHair }]}
                 >
-                  <Phone01 size={16} color={colors.primary} aria-hidden={true} />
+                  <Phone01 size={14} color={colors.primary} aria-hidden={true} />
                   <Text style={[styles.actionBtnText, { color: colors.primary }]}>Call Host</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => handleWhatsApp(phone, dropTitle, itemsSummary, order.total_amount)}
                   style={[styles.actionBtn, { borderColor: colors.borderHair }]}
                 >
-                  <MessageCircle01 size={16} color={colors.secondary} aria-hidden={true} />
+                  <MessageCircle01 size={14} color={colors.secondary} aria-hidden={true} />
                   <Text style={[styles.actionBtnText, { color: colors.secondary }]}>WhatsApp</Text>
                 </TouchableOpacity>
               </>
@@ -374,8 +378,8 @@ export default function MyOrdersScreen() {
                   <ActivityIndicator size="small" color={colors.danger} />
                 ) : (
                   <>
-                    <XClose size={16} color={colors.danger} aria-hidden={true} />
-                    <Text style={[styles.cancelBtnText, { color: colors.danger }]}>Cancel pre-order</Text>
+                    <XClose size={14} color={colors.danger} aria-hidden={true} />
+                    <Text style={[styles.cancelBtnText, { color: colors.danger }]}>Cancel</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -450,37 +454,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: 12,
+    paddingBottom: 30,
   },
   orderCard: {
     borderRadius: VerandahRadius.md,
     borderWidth: 1,
-    padding: 14,
-    marginBottom: 12,
+    padding: 10,
+    marginBottom: 8,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   businessName: {
     ...VerandahType.title,
-    fontSize: 16,
+    fontSize: 15,
   },
   sellerInfo: {
     ...VerandahType.caption,
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 11,
+    marginTop: 1,
   },
   statusBadgeWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: VerandahRadius.pill,
-    gap: 4,
+    gap: 3,
   },
   badgeConfirmed: {
     backgroundColor: '#FEF3C7',
@@ -493,38 +497,39 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     ...VerandahType.captionBold,
-    fontSize: 11,
+    fontSize: 10,
   },
   deliveryBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Verandah.accentSoft,
-    padding: 8,
-    borderRadius: VerandahRadius.sm,
-    marginBottom: 8,
-    gap: 6,
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    borderRadius: 4,
+    marginBottom: 4,
+    gap: 4,
   },
   deliveryBannerText: {
     ...VerandahType.caption,
-    fontSize: 12,
+    fontSize: 11,
     color: '#065F46',
   },
   itemsList: {
-    marginVertical: 4,
+    marginVertical: 1,
   },
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 2,
+    paddingVertical: 1,
   },
   itemName: {
     ...VerandahType.body,
-    fontSize: 13,
+    fontSize: 12,
   },
   rowDivider: {
-    height: 1,
-    marginVertical: 8,
+    height: 0.5,
+    marginVertical: 4,
   },
   footerRow: {
     flexDirection: 'row',
@@ -533,62 +538,65 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     ...VerandahType.bodyBold,
-    fontSize: 13,
+    fontSize: 12,
   },
   dateText: {
     ...VerandahType.caption,
+    fontSize: 10,
+  },
+  notesBox: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginTop: 4,
+    gap: 2,
+  },
+  noteLine: {
+    ...VerandahType.caption,
     fontSize: 11,
+    lineHeight: 14,
   },
-  noteContainer: {
-    padding: 8,
-    borderRadius: VerandahRadius.sm,
-    marginTop: 8,
+  noteLineLabel: {
+    fontWeight: '600',
   },
-  noteLabel: {
-    ...VerandahType.captionBold,
-    fontSize: 11,
-  },
-  noteText: {
-    ...VerandahType.body,
-    fontSize: 12,
-    marginTop: 2,
+  noteLineText: {
     fontStyle: 'italic',
   },
   actionRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
+    gap: 6,
+    marginTop: 6,
     flexWrap: 'wrap',
   },
   actionBtn: {
     flex: 1,
-    minWidth: 90,
+    minWidth: 75,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: VerandahRadius.sm,
+    paddingVertical: 5,
+    borderRadius: VerandahRadius.pill,
     borderWidth: 1,
     gap: 4,
   },
   actionBtnText: {
     ...VerandahType.bodyBold,
-    fontSize: 12,
+    fontSize: 11,
   },
   cancelBtn: {
     flex: 1,
-    minWidth: 120,
+    minWidth: 85,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: VerandahRadius.sm,
+    paddingVertical: 5,
+    borderRadius: VerandahRadius.pill,
     borderWidth: 1,
     gap: 4,
   },
   cancelBtnText: {
     ...VerandahType.bodyBold,
-    fontSize: 12,
+    fontSize: 11,
   },
   emptyWrap: {
     paddingTop: 60,

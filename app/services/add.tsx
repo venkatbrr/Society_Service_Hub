@@ -28,8 +28,8 @@ import {
     mapServiceCategoryToProviderCategory,
     SERVICE_CATEGORIES,
     SERVICE_CATEGORY_DEFAULT_FREQUENCY,
-    SERVICE_CATEGORY_ICONS,
     SERVICE_CATEGORY_LABELS,
+    SERVICE_CATEGORY_UNTITLED_ICONS,
     ServiceCategory,
 } from '../../lib/serviceCategories';
 import { toImagesJson } from '../../lib/serviceReminderHelpers';
@@ -285,6 +285,7 @@ export default function AddServiceScreen() {
         <View style={styles.categoryGrid}>
           {SERVICE_CATEGORIES.map((cat) => {
             const selected = category === cat;
+            const CatIcon = SERVICE_CATEGORY_UNTITLED_ICONS[cat] ?? Tool01;
             return (
               <TouchableOpacity
                 key={cat}
@@ -298,7 +299,7 @@ export default function AddServiceScreen() {
                 onPress={() => handleCategorySelect(cat)}
                 activeOpacity={0.8}
               >
-                <Tool01
+                <CatIcon
                   size={16}
                   color={selected ? colors.primary : colors.textMuted}
                   style={{ marginRight: 6 }}

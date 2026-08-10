@@ -4,7 +4,6 @@ import { EyeOff } from '@untitledui/icons/EyeOff';
 import { Lock01 } from '@untitledui/icons/Lock01';
 import { Mail01 } from '@untitledui/icons/Mail01';
 import { User01 } from '@untitledui/icons/User01';
-import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -25,7 +24,6 @@ import { EMAIL_AUTH_UI_ENABLED } from '../constants/authFlags';
 import { Verandah } from '../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, signInWithEmail, signUpWithEmail } from '../lib/auth';
-import { siteUrl } from '../lib/siteUrl';
 import { supabase } from '../lib/supabase';
 
 // Google Sign-In native module — only available on Android/iOS.
@@ -305,7 +303,7 @@ export default function LoginScreen() {
                 </View>
                 <Text style={{ marginLeft: 8, fontSize: 13, color: 'rgba(240, 237, 227, 0.8)' }}>
                   I agree to the{' '}
-                  <Text style={{ color: Verandah.gold, textDecorationLine: 'underline' }} onPress={(e) => { e.stopPropagation(); Linking.openURL(siteUrl('/terms')); }}>Terms & Conditions</Text>
+                  <Text style={{ color: Verandah.gold, textDecorationLine: 'underline' }} onPress={(e) => { e.stopPropagation(); router.push('/legal?returnTo=login' as any); }}>Terms &amp; Privacy Policy</Text>
                 </Text>
               </TouchableOpacity>
             </>
@@ -342,9 +340,7 @@ export default function LoginScreen() {
           ) : (
             <View style={styles.toggleModeContainer}>
               <Text style={styles.toggleModeText}>By continuing you agree to our </Text>
-              <TouchableOpacity onPress={() => Linking.openURL(siteUrl('/terms'))}><Text style={styles.toggleModeLink}>Terms</Text></TouchableOpacity>
-              <Text style={styles.toggleModeText}> and </Text>
-              <TouchableOpacity onPress={() => Linking.openURL(siteUrl('/privacy'))}><Text style={styles.toggleModeLink}>Privacy Policy</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/legal?returnTo=login' as any)}><Text style={styles.toggleModeLink}>Terms &amp; Privacy Policy</Text></TouchableOpacity>
             </View>
           )}
         </View>

@@ -81,11 +81,15 @@ function RootLayoutNav() {
     // A session without a resolved profile is mid-hydration, not "signed in with no community"
     if (session && !profile && !isPlatformAdmin) return;
 
-    const inAuthGroup = segments[0] === 'login';
+    const inAuthGroup = segments[0] === 'login' || segments[0] === 'forgot-password';
     const isWebRootPath = Platform.OS === 'web' && pathname === '/';
     const isPublicFoodDropRoute =
       pathname === '/mcn/drops' ||
       pathname.startsWith('/mcn/drops/');
+    const isPublicLegalRoute =
+      segments[0] === 'legal' ||
+      pathname === '/legal' ||
+      pathname.startsWith('/legal?');
     const currentRoute = String(segments[0] ?? '');
     const isOnTabsRoute = currentRoute === '(tabs)';
     const isOnAdminRedirect = currentRoute === 'admin-redirect';
@@ -97,8 +101,8 @@ function RootLayoutNav() {
     let redirectTo: string | null = null;
 
     if (!session) {
-      // No session → login
-      if (!inAuthGroup && !isPublicFoodDropRoute && !isWebRootPath) {
+      // No session → login (except for public / auth routes)
+      if (!inAuthGroup && !isPublicLegalRoute && !isPublicFoodDropRoute && !isWebRootPath) {
         if (pathname && pathname !== '/' && pathname !== '/login') {
           savedTargetRouteRef.current = pathname;
           if (Platform.OS === 'web' && typeof window !== 'undefined') {

@@ -15,6 +15,7 @@ npm run android        # Native Android build (required to test Google Sign-In)
 npm run ios            # Native iOS build
 npm run build          # expo export --platform web + node build-admin.js (deploy artifact)
 npm run preview        # Serve ./dist
+npm run legal:html     # Regenerate public/terms.html & public/privacy.html from data/legal.ts
 
 npx tsc --noEmit       # Type check — THE validation gate. No test framework is configured.
 
@@ -94,6 +95,7 @@ Rule of thumb: **if the result belongs in a file, use the CLI; if the result is 
 | Personal reminder categories | `lib/serviceCategories.ts` | Labels, emoji, icons, default frequencies, provider-category mapping |
 | School review aspects | `constants/schoolReviewAspects.ts` | 8 aspects, emoji scale, grade options |
 | SOS vocabulary | `constants/sos.ts` | Blood groups, emergency categories |
+| Legal copy & policies | `data/legal.ts` | Single source for in-app `/legal` and public `public/*.html`. Run `npm run legal:html` after editing. |
 
 ### Navigation
 

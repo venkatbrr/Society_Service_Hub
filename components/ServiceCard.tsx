@@ -1,10 +1,9 @@
 import { ChevronRight } from '@untitledui/icons/ChevronRight';
-import { Tool01 } from '@untitledui/icons/Tool01';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
-import { SERVICE_CATEGORY_LABELS, ServiceCategory } from '../lib/serviceCategories';
+import { SERVICE_CATEGORY_LABELS, ServiceCategory, getServiceCategoryIcon } from '../lib/serviceCategories';
 import { parseNotesAndImages } from '../lib/serviceReminderHelpers';
 import { UrgencyBadge } from './UrgencyBadge';
 
@@ -25,6 +24,7 @@ interface ServiceCardProps {
 export function ServiceCard({ item, onPress }: ServiceCardProps) {
   const category = item.category as ServiceCategory;
   const categoryLabel = SERVICE_CATEGORY_LABELS[category] ?? item.category;
+  const CategoryIcon = getServiceCategoryIcon(item.category);
   const { cleanNotes } = parseNotesAndImages(item.notes);
 
   return (
@@ -34,7 +34,7 @@ export function ServiceCard({ item, onPress }: ServiceCardProps) {
       activeOpacity={0.82}
     >
       <View style={styles.iconWrap}>
-        <Tool01 size={20} color={Verandah.primary} aria-hidden={true} />
+        <CategoryIcon size={20} color={Verandah.primary} aria-hidden={true} />
       </View>
       <View style={styles.content}>
         <Text style={styles.name} numberOfLines={1}>

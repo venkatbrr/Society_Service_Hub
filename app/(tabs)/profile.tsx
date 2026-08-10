@@ -2,6 +2,7 @@ import { Bell01 } from '@untitledui/icons/Bell01';
 import { Building05 } from '@untitledui/icons/Building05';
 import { ChevronRight } from '@untitledui/icons/ChevronRight';
 import { Edit01 } from '@untitledui/icons/Edit01';
+import { File06 } from '@untitledui/icons/File06';
 import { LogOut01 } from '@untitledui/icons/LogOut01';
 import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
 import { Tool01 } from '@untitledui/icons/Tool01';
@@ -279,6 +280,23 @@ export default function ProfileScreen() {
             <View style={styles.adminContent}>
               <Text style={styles.adminTitle}>Notifications</Text>
               <Text style={styles.adminCopy}>Drops, visits &amp; funds</Text>
+            </View>
+            <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          <TouchableOpacity
+            onPress={() => router.push('/legal' as any)}
+            style={styles.menuRow}
+            activeOpacity={0.82}
+          >
+            <View style={[styles.adminIconWrap, { backgroundColor: Verandah.accentSoft }]}>
+              <File06 size={18} color={Verandah.accent} aria-hidden={true} />
+            </View>
+            <View style={styles.adminContent}>
+              <Text style={styles.adminTitle}>Terms &amp; privacy</Text>
+              <Text style={styles.adminCopy}>Terms of service &amp; privacy</Text>
             </View>
             <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
           </TouchableOpacity>
