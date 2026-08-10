@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../../components/BaseCard';
+import { ChipRowSlider } from '../../../components/ChipRowSlider';
 import { EmptyState } from '../../../components/EmptyState';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../../components/WebPullIndicator';
@@ -355,72 +356,38 @@ export default function SchoolsCatalogScreen() {
         )}
       </View>
 
-      {/* Locality Chips Filter */}
+      {/* Locality Filter Chips */}
       <View style={styles.filterSection}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
+        <ChipRowSlider<string>
+          chips={LOCALITY_OPTIONS.map((loc) => ({ key: loc, label: loc }))}
+          value={selectedLocality}
+          onChange={(loc) => setSelectedLocality(loc)}
           contentContainerStyle={styles.chipsScrollContainer}
-        >
-          {LOCALITY_OPTIONS.map((loc) => {
-            const isActive = selectedLocality === loc;
-            return (
-              <TouchableOpacity
-                key={loc}
-                style={[
-                  styles.filterChip,
-                  { borderColor: colors.border, backgroundColor: colors.card },
-                  isActive && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-                ]}
-                onPress={() => setSelectedLocality(loc)}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    { color: colors.textSecondary },
-                    isActive && { color: colors.accent, fontWeight: '500' },
-                  ]}
-                >
-                  {loc}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+          chipStyle={styles.filterChip}
+          inactiveChipStyle={{ borderColor: colors.border, backgroundColor: colors.card }}
+          pillStyle={{ borderColor: colors.accent, backgroundColor: colors.accentSoft }}
+          activeColor={colors.accent}
+          inactiveColor={colors.textSecondary}
+          textStyle={styles.chipText}
+          activeTextStyle={{ fontWeight: '500' }}
+        />
       </View>
 
       {/* Board Filter Chips */}
       <View style={styles.filterSection}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
+        <ChipRowSlider<string>
+          chips={BOARD_OPTIONS.map((b) => ({ key: b, label: b }))}
+          value={selectedBoard}
+          onChange={(b) => setSelectedBoard(b)}
           contentContainerStyle={styles.chipsScrollContainer}
-        >
-          {BOARD_OPTIONS.map((b) => {
-            const isActive = selectedBoard === b;
-            return (
-              <TouchableOpacity
-                key={b}
-                style={[
-                  styles.filterChipSm,
-                  { borderColor: colors.border, backgroundColor: colors.card },
-                  isActive && { borderColor: colors.primary, backgroundColor: colors.accentSoft },
-                ]}
-                onPress={() => setSelectedBoard(b)}
-              >
-                <Text
-                  style={[
-                    styles.chipTextSm,
-                    { color: colors.textSecondary },
-                    isActive && { color: colors.primary, fontWeight: '500' },
-                  ]}
-                >
-                  {b}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+          chipStyle={styles.filterChipSm}
+          inactiveChipStyle={{ borderColor: colors.border, backgroundColor: colors.card }}
+          pillStyle={{ borderColor: colors.primary, backgroundColor: colors.accentSoft }}
+          activeColor={colors.primary}
+          inactiveColor={colors.textSecondary}
+          textStyle={styles.chipTextSm}
+          activeTextStyle={{ fontWeight: '500' }}
+        />
       </View>
 
       {/* List Content */}

@@ -20,6 +20,8 @@ import { AppIcon } from '../../../components/AppIcon';
 import { EmptyState } from '../../../components/EmptyState';
 import { PreorderDropCard, PreorderDropItem } from '../../../components/PreorderDropCard';
 import { Rupees } from '../../../components/Rupees';
+import { SegmentedSlider } from '../../../components/SegmentedSlider';
+import { ChipRowSlider } from '../../../components/ChipRowSlider';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../../components/WebPullIndicator';
 import { Verandah } from '../../../constants/Colors';
@@ -320,57 +322,50 @@ export default function FoodDropsCatalogScreen() {
       />
 
       {/* Top Section Switcher Toggle */}
-      <View style={styles.masterToggleRow}>
-        <TouchableOpacity
-          style={[styles.masterToggleBtn, styles.masterToggleBtnActive]}
-          activeOpacity={0.9}
-        >
-          <Text style={styles.masterToggleTextActive}>Pre-order Food</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.masterToggleBtn}
-          // Sibling tab of this screen, not a child: replace so repeated
-          // toggling does not pile up browser history entries.
-          onPress={() => replaceTracked(router, '/mcn/business' as any)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.masterToggleText}>Businesses</Text>
-        </TouchableOpacity>
-      </View>
+      <SegmentedSlider<'drops' | 'business'>
+        value="drops"
+        enterFromIndex={1}
+        onChange={(val) => {
+          if (val === 'business') {
+            replaceTracked(router, '/mcn/business' as any);
+          }
+        }}
+        segments={[
+          { key: 'drops', label: 'Pre-order Food' },
+          { key: 'business', label: 'Businesses' },
+        ]}
+        trackStyle={styles.masterToggleRow}
+        segmentStyle={styles.masterToggleBtn}
+        pillStyle={styles.masterToggleBtnActive}
+        activeTextStyle={styles.masterToggleTextActive}
+        inactiveTextStyle={styles.masterToggleText}
+      />
 
       {/* Filter Pills */}
-      <View style={styles.tabsRow}>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'active' && styles.tabBtnActive]}
-          onPress={() => setActiveTab('active')}
-          activeOpacity={0.85}
-        >
-          <Text style={[styles.tabText, activeTab === 'active' && styles.tabTextActive]}>Open</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'closed' && styles.tabBtnActive]}
-          onPress={() => setActiveTab('closed')}
-          activeOpacity={0.85}
-        >
-          <Text style={[styles.tabText, activeTab === 'closed' && styles.tabTextActive]}>Past</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'my_drops' && styles.tabBtnActive]}
-          onPress={() => {
-            if (!user?.id) {
-              requireLoginForAction();
-              return;
-            }
-            setActiveTab('my_drops');
-          }}
-          activeOpacity={0.85}
-        >
-          <Text style={[styles.tabText, activeTab === 'my_drops' && styles.tabTextActive]}>Mine</Text>
-        </TouchableOpacity>
-      </View>
+      <ChipRowSlider<'active' | 'closed' | 'my_drops'>
+        value={activeTab}
+        onChange={(val) => {
+          if (val === 'my_drops' && !user?.id) {
+            requireLoginForAction();
+            return;
+          }
+          setActiveTab(val);
+        }}
+        chips={[
+          { key: 'active', label: 'Open' },
+          { key: 'closed', label: 'Past' },
+          { key: 'my_drops', label: 'Mine' },
+        ]}
+        scrollable={false}
+        containerStyle={styles.tabsRow}
+        chipStyle={styles.tabBtn}
+        inactiveChipStyle={{ backgroundColor: Verandah.card, borderWidth: 0.5, borderColor: Verandah.borderHair }}
+        pillStyle={styles.tabBtnActive}
+        activeColor={Verandah.primaryFg}
+        inactiveColor={Verandah.textPrimary}
+        textStyle={styles.tabText}
+        activeTextStyle={styles.tabTextActive}
+      />
 
       {/* My Food Drops Revenue & Earnings Card */}
       {activeTab === 'my_drops' && !loading ? (

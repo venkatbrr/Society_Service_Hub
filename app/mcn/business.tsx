@@ -20,6 +20,8 @@ import Toast from 'react-native-toast-message';
 import { AppIcon } from '../../components/AppIcon';
 import { EmptyState } from '../../components/EmptyState';
 import { McnListingCard, McnListingItem } from '../../components/McnListingCard';
+import { SegmentedSlider } from '../../components/SegmentedSlider';
+import { ChipRowSlider } from '../../components/ChipRowSlider';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
@@ -184,24 +186,24 @@ export default function BusinessListingsScreen() {
       />
 
       {/* Top Section Switcher Toggle */}
-      <View style={styles.masterToggleRow}>
-        <TouchableOpacity
-          style={styles.masterToggleBtn}
-          // Sibling tab of this screen, not a child: replace so repeated
-          // toggling does not pile up browser history entries.
-          onPress={() => replaceTracked(router, '/mcn/drops' as any)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.masterToggleText}>Pre-order Food</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.masterToggleBtn, styles.masterToggleBtnActive]}
-          activeOpacity={0.9}
-        >
-          <Text style={styles.masterToggleTextActive}>Businesses</Text>
-        </TouchableOpacity>
-      </View>
+      <SegmentedSlider<'drops' | 'business'>
+        value="business"
+        enterFromIndex={0}
+        onChange={(val) => {
+          if (val === 'drops') {
+            replaceTracked(router, '/mcn/drops' as any);
+          }
+        }}
+        segments={[
+          { key: 'drops', label: 'Pre-order Food' },
+          { key: 'business', label: 'Businesses' },
+        ]}
+        trackStyle={styles.masterToggleRow}
+        segmentStyle={styles.masterToggleBtn}
+        pillStyle={styles.masterToggleBtnActive}
+        activeTextStyle={styles.masterToggleTextActive}
+        inactiveTextStyle={styles.masterToggleText}
+      />
 
       <View style={styles.headerSubtitleWrap}>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -227,61 +229,23 @@ export default function BusinessListingsScreen() {
         )}
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryChipsWrap}
+      <ChipRowSlider<string>
+        chips={[
+          { key: 'all', label: 'All', icon: <AppIcon name="store" size={14} /> },
+          ...categories.map((cat) => ({ key: cat.id, label: cat.name })),
+        ]}
+        value={selectedCategoryId ?? 'all'}
+        onChange={(key) => handleToggleCategory(key === 'all' ? null : key)}
+        scrollable={true}
+        containerStyle={styles.categoryChipsWrap}
         contentContainerStyle={styles.categoryChipsScroll}
-      >
-        <TouchableOpacity
-          style={[
-            styles.categoryChip,
-            { borderColor: colors.borderHair, backgroundColor: colors.card },
-            selectedCategoryId === null && { borderColor: colors.primary, backgroundColor: colors.accentSoft },
-          ]}
-          onPress={() => handleToggleCategory(null)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.iconLabelRow}>
-            <AppIcon name="store" size={14} />
-            <Text
-              style={[
-                styles.categoryChipText,
-                { color: colors.textSecondary },
-                selectedCategoryId === null && { color: colors.primary },
-              ]}
-            >
-              All
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        {categories.map((category) => {
-          const isActive = selectedCategoryId === category.id;
-          return (
-            <TouchableOpacity
-              key={category.id}
-              style={[
-                styles.categoryChip,
-                { borderColor: colors.borderHair, backgroundColor: colors.card },
-                isActive && { borderColor: colors.primary, backgroundColor: colors.accentSoft },
-              ]}
-              onPress={() => handleToggleCategory(category.id)}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.categoryChipText,
-                  { color: colors.textSecondary },
-                  isActive && { color: colors.primary },
-                ]}
-              >
-                {category.name}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+        chipStyle={styles.categoryChip}
+        inactiveChipStyle={{ borderColor: colors.borderHair, backgroundColor: colors.card }}
+        pillStyle={{ borderColor: colors.primary, backgroundColor: colors.accentSoft }}
+        activeColor={colors.primary}
+        inactiveColor={colors.textSecondary}
+        textStyle={styles.categoryChipText}
+      />
 
       {loading ? (
         <View style={styles.loaderWrap}>

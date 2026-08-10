@@ -21,6 +21,7 @@ import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
+import { SegmentedSlider } from '../../components/SegmentedSlider';
 import { supabase } from '../../lib/supabase';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
@@ -502,43 +503,27 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <View style={styles.segmentedControl}>
-        {activeSegment === 'providers' ? (
-          <View style={[styles.segmentBtn, styles.segmentBtnActive]}>
-            <Text style={[styles.segmentText, { color: Verandah.primary, fontWeight: '700' }]}>Providers</Text>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.segmentBtn}
-            onPress={() => {
-              setActiveSegment('providers');
-              setSelectedCategory(null);
-              setSelectedGroupCategories(null);
-              setSearchQuery('');
-            }}
-          >
-            <Text style={[styles.segmentText, { color: Verandah.textMuted }]}>Providers</Text>
-          </TouchableOpacity>
-        )}
-        {activeSegment === 'visits' ? (
-          <View style={[styles.segmentBtn, styles.segmentBtnActive]}>
-            <Text style={[styles.segmentText, { color: Verandah.primary, fontWeight: '700' }]}>Visits</Text>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.segmentBtn}
-            onPress={() => {
-              setActiveSegment('visits');
-              setSelectedCategory(null);
-              setSelectedGroupCategories(null);
-              setSearchQuery('');
-              setVisitTab('upcoming');
-            }}
-          >
-            <Text style={[styles.segmentText, { color: Verandah.textMuted }]}>Visits</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <SegmentedSlider<'providers' | 'visits'>
+        value={activeSegment}
+        onChange={(seg) => {
+          setActiveSegment(seg);
+          setSelectedCategory(null);
+          setSelectedGroupCategories(null);
+          setSearchQuery('');
+          if (seg === 'visits') {
+            setVisitTab('upcoming');
+          }
+        }}
+        segments={[
+          { key: 'providers', label: 'Providers' },
+          { key: 'visits', label: 'Visits' },
+        ]}
+        trackStyle={styles.segmentedControl}
+        segmentStyle={styles.segmentBtn}
+        pillStyle={styles.segmentBtnActive}
+        activeTextStyle={{ color: Verandah.primary, fontWeight: '700' }}
+        inactiveTextStyle={{ color: Verandah.textMuted }}
+      />
 
       {activeSegment === 'providers' ? (
         <FlatList
@@ -676,31 +661,20 @@ export default function HomeScreen() {
               <UpcomingServicesCard />
 
               <View style={styles.filterSection}>
-                <View style={styles.subTabControl}>
-                  <TouchableOpacity style={[styles.subTabBtn, visitTab === 'upcoming' && { backgroundColor: Verandah.card }]}
-                    onPress={() => setVisitTab('upcoming')}
-                  >
-                    <Text style={[styles.subTabText, visitTab === 'upcoming' ? { color: Verandah.primary, fontWeight: '700' } : { color: Verandah.textMuted }]}>
-                      Upcoming ({visits.length})
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.subTabBtn, visitTab === 'past' && { backgroundColor: Verandah.card }]}
-                    onPress={() => setVisitTab('past')}
-                  >
-                    <Text style={[styles.subTabText, visitTab === 'past' ? { color: Verandah.primary, fontWeight: '700' } : { color: Verandah.textMuted }]}>
-                      Recent ({pastVisits.length})
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.subTabBtn, visitTab === 'archived' && { backgroundColor: Verandah.card }]}
-                    onPress={() => setVisitTab('archived')}
-                  >
-                    <Text style={[styles.subTabText, visitTab === 'archived' ? { color: Verandah.primary, fontWeight: '700' } : { color: Verandah.textMuted }]}>
-                      Archived ({archivedVisits.length})
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                <SegmentedSlider<'upcoming' | 'past' | 'archived'>
+                  value={visitTab}
+                  onChange={(tab) => setVisitTab(tab)}
+                  segments={[
+                    { key: 'upcoming', label: `Upcoming (${visits.length})` },
+                    { key: 'past', label: `Recent (${pastVisits.length})` },
+                    { key: 'archived', label: `Archived (${archivedVisits.length})` },
+                  ]}
+                  trackStyle={styles.subTabControl}
+                  segmentStyle={styles.subTabBtn}
+                  pillStyle={{ backgroundColor: Verandah.card, ...Verandah.shadowCard }}
+                  activeTextStyle={{ color: Verandah.primary, fontWeight: '700' }}
+                  inactiveTextStyle={{ color: Verandah.textMuted }}
+                />
                 <SearchBar
                   value={searchQuery}
                   onChangeText={setSearchQuery}

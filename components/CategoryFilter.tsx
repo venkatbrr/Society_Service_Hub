@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { CATEGORIES, CATEGORY_GROUPS, CategoryGroup } from '../constants/categories';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
+import { ChipRowSlider } from './ChipRowSlider';
 
 type CategoryFilterProps = {
   selectedCategory: string | null;
@@ -17,20 +18,9 @@ export const CategoryFilter = ({
   onSelectCategory,
   onSelectGroupCategories,
   isLightMode,
-  categories = CATEGORIES
+  categories = CATEGORIES,
 }: CategoryFilterProps) => {
-  const groupScrollRef = useRef<ScrollView | null>(null);
-  const categoryScrollRef = useRef<ScrollView | null>(null);
-  const groupOffsetRef = useRef(0);
-  const categoryOffsetRef = useRef(0);
-  const dragStateRef = useRef<{ active: boolean; startX: number; startOffset: number }>({
-    active: false,
-    startX: 0,
-    startOffset: 0,
-  });
-  const suppressPressRef = useRef(false);
-
-  const displayCategories = categories.filter(c => c !== 'All');
+  const displayCategories = categories.filter((c) => c !== 'All');
 
   const groups = useMemo(() => {
     const included = new Set(displayCategories);
@@ -80,119 +70,60 @@ export const CategoryFilter = ({
     return groups.find((group) => group.id === selectedGroupId)?.categories ?? displayCategories;
   }, [selectedGroupId, groups, displayCategories]);
 
-  const runChipPress = (onPress: () => void) => {
-    if (suppressPressRef.current) return;
-    onPress();
-  };
+  const groupChips = useMemo(() => {
+    return [
+      { key: 'all', label: 'All services' },
+      ...groups.map((group) => ({ key: group.id, label: group.label })),
+    ];
+  }, [groups]);
 
-  const buildWebDragHandlers = (scrollRef: React.RefObject<ScrollView | null>, offsetRef: React.MutableRefObject<number>) => {
-    if (Platform.OS !== 'web') {
-      return {};
-    }
-
-    return {
-      onMouseDown: (event: any) => {
-        dragStateRef.current = {
-          active: true,
-          startX: event.nativeEvent.pageX,
-          startOffset: offsetRef.current,
-        };
-      },
-      onMouseMove: (event: any) => {
-        if (!dragStateRef.current.active) return;
-
-        const delta = event.nativeEvent.pageX - dragStateRef.current.startX;
-        if (Math.abs(delta) > 4) {
-          suppressPressRef.current = true;
-        }
-
-        const nextX = Math.max(0, dragStateRef.current.startOffset - delta);
-        scrollRef.current?.scrollTo({ x: nextX, animated: false });
-      },
-      onMouseUp: () => {
-        dragStateRef.current.active = false;
-        if (suppressPressRef.current) {
-          setTimeout(() => {
-            suppressPressRef.current = false;
-          }, 0);
-        }
-      },
-      onMouseLeave: () => {
-        dragStateRef.current.active = false;
-      },
-    };
-  };
-
-  const renderChip = (label: string, isSelected: boolean, onPress: () => void) => {
-    return (
-      <TouchableOpacity
-        key={label}
-        style={[
-          styles.chip,
-          isSelected
-            ? styles.chipActive
-            : styles.chipInactive,
-        ]}
-        onPress={() => runChipPress(onPress)}
-      >
-        <Text
-          style={[
-            styles.chipText,
-            isSelected ? styles.chipTextActive : styles.chipTextInactive,
-          ]}
-        >
-          {label}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
+  const categoryChips = useMemo(() => {
+    return [
+      { key: 'all', label: 'All' },
+      ...categoriesInGroup.map((category) => ({ key: category, label: category })),
+    ];
+  }, [categoriesInGroup]);
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={groupScrollRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.groupScrollContent}
-        onScroll={(event) => {
-          groupOffsetRef.current = event.nativeEvent.contentOffset.x;
-        }}
-        scrollEventThrottle={16}
-        style={styles.dragScroll}
-        {...(buildWebDragHandlers(groupScrollRef, groupOffsetRef) as any)}
-      >
-        {renderChip('All services', selectedGroupId === 'all', () => {
-          setSelectedGroupId('all');
+      <ChipRowSlider<string>
+        chips={groupChips}
+        value={selectedGroupId}
+        onChange={(groupId) => {
+          setSelectedGroupId(groupId);
           onSelectCategory(null);
-          onSelectGroupCategories?.(null);
-        })}
-        {groups.map((group) =>
-          renderChip(group.label, selectedGroupId === group.id, () => {
-            setSelectedGroupId(group.id);
-            onSelectCategory(null);
-            onSelectGroupCategories?.(group.categories);
-          })
-        )}
-      </ScrollView>
-
-      <ScrollView
-        ref={categoryScrollRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        onScroll={(event) => {
-          categoryOffsetRef.current = event.nativeEvent.contentOffset.x;
+          if (groupId === 'all') {
+            onSelectGroupCategories?.(null);
+          } else {
+            const g = groups.find((item) => item.id === groupId);
+            onSelectGroupCategories?.(g?.categories ?? null);
+          }
         }}
-        scrollEventThrottle={16}
-        style={styles.dragScroll}
-        {...(buildWebDragHandlers(categoryScrollRef, categoryOffsetRef) as any)}
-      >
-        {renderChip('All', selectedCategory === null, () => onSelectCategory(null))}
+        containerStyle={styles.dragScroll}
+        contentContainerStyle={styles.groupScrollContent}
+        chipStyle={styles.chip}
+        inactiveChipStyle={styles.chipInactive}
+        pillStyle={styles.chipActive}
+        activeColor={Verandah.primaryFg}
+        inactiveColor={Verandah.textPrimary}
+        textStyle={styles.chipText}
+      />
 
-        {categoriesInGroup.map((category) =>
-          renderChip(category, selectedCategory === category, () => onSelectCategory(category))
-        )}
-      </ScrollView>
+      <ChipRowSlider<string>
+        chips={categoryChips}
+        value={selectedCategory ?? 'all'}
+        onChange={(catKey) => {
+          onSelectCategory(catKey === 'all' ? null : catKey);
+        }}
+        containerStyle={styles.dragScroll}
+        contentContainerStyle={styles.scrollContent}
+        chipStyle={styles.chip}
+        inactiveChipStyle={styles.chipInactive}
+        pillStyle={styles.chipActive}
+        activeColor={Verandah.primaryFg}
+        inactiveColor={Verandah.textPrimary}
+        textStyle={styles.chipText}
+      />
     </View>
   );
 };
@@ -211,9 +142,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     gap: 6,
   },
-  dragScroll: {
-    cursor: 'grab' as any,
-  },
+  dragScroll: {},
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 5,
@@ -223,6 +152,7 @@ const styles = StyleSheet.create({
   },
   chipActive: {
     backgroundColor: Verandah.primary,
+    borderColor: Verandah.primary,
   },
   chipInactive: {
     backgroundColor: Verandah.card,
@@ -233,11 +163,5 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontWeight: '500',
     fontFamily: VerandahType.sansFamily,
-  },
-  chipTextActive: {
-    color: Verandah.primaryFg,
-  },
-  chipTextInactive: {
-    color: Verandah.textPrimary,
   },
 });

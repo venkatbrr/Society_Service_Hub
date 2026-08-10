@@ -143,6 +143,8 @@ Reuse these instead of building local variants:
 | `EmptyState` | Standard empty / list-zero rendering |
 | `SearchBar` | Any list search input (36 px tall on the Help tab) |
 | `CategoryFilter` | The two-level provider/visit category picker |
+| `SegmentedSlider` | Contained segmented controls with sliding highlight (Family A) |
+| `ChipRowSlider` | Variable-width chip rows with 3-layer z-order sliding highlight & web drag-to-scroll (Family B) |
 | `HeaderBackButton` | Stack header back affordance |
 | `ImageUploader` | Any Cloudinary image upload |
 | `DateField` | Cross-platform date picker (`input[type=date]` on web, `DateTimePicker` modal on native) |
@@ -160,7 +162,7 @@ Reuse these instead of building local variants:
 | Active highlight | Arch-topped slab behind the active tab: fill `rgba(15,55,50,.07)`, border `rgba(15,55,50,.08)`, radius `18 18 14 14`, inset 6px vertically and 12px within the tab slot |
 | Centre MCN tab | 38×38 teal disc, radius 13, holding `assets/images/adaptive-icon.png` in a 44px box (`resizeMode: contain`) |
 
-Motion uses React Native's built-in `Animated` (**not** Reanimated — it is a dependency but unused, and unconfigured for web). The shared springy curve is `Easing.bezier(0.34, 1.5, 0.5, 1)`: highlight slide 460ms, icon scale 400ms, label opacity 300ms. While MCN is active its disc breathes between `translateY` −3 and −6 on a 3s loop; on deactivation it settles to 0. All animations run with `useNativeDriver: false` because the highlight animates layout-adjacent values and the web target cannot use the native driver at all.
+Motion uses React Native's built-in `Animated` (**not** Reanimated — it is a dependency but unused, and unconfigured for web). The shared springy curve is `Easing.bezier(0.34, 1.5, 0.5, 1)`: highlight slide 460ms (shared by bottom nav, `SegmentedSlider`, and `ChipRowSlider`), icon scale 400ms, label opacity 300ms. While MCN is active its disc breathes between `translateY` −3 and −6 on a 3s loop; on deactivation it settles to 0. All animations run with `useNativeDriver: false` because the highlight animates layout-adjacent values and the web target cannot use the native driver at all.
 
 The disc's drop shadow is the one sanctioned exception to the "no `shadow*` on surfaces" rule below — it is a brand affordance, not a card.
 

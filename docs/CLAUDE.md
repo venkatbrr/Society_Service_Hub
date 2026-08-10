@@ -294,5 +294,4 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | `wa.me` / `whatsapp://` URL built from bare 10-digit mobile | Stored numbers are 10 digits. `wa.me` requires international country code — prefix `91` at link time. |
 | `Share.share` on desktop web | Rejects when `navigator.share` is absent. Branch on `Platform.OS === 'web' && navigator.share` first with toast fallback. |
 | Assuming `pg_cron` is available for scheduled database tasks | `pg_cron` is not installed on this project. Do not write migrations assuming scheduled background database jobs. |
-
-
+| Hand-rolling new tab animations or painting highlights behind chips with opaque fill | Use `SegmentedSlider` for contained controls (Family A) and `ChipRowSlider` for variable-width chip rows (Family B). Painting a highlight behind chips with opaque card fill hides the pill during transit. |

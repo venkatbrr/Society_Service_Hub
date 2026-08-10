@@ -22,6 +22,7 @@ import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../../components/BaseCard';
 import { EmptyState } from '../../../components/EmptyState';
 import { Rupees } from '../../../components/Rupees';
+import { SegmentedSlider } from '../../../components/SegmentedSlider';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../../components/WebPullIndicator';
 import { Verandah } from '../../../constants/Colors';
@@ -254,47 +255,21 @@ export default function CarpoolListScreen() {
       </View>
 
       {/* Filter Tabs */}
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'all' && styles.tabBtnActive]}
-          onPress={() => setActiveTab('all')}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>
-            All rides
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'offering' && styles.tabBtnActive]}
-          onPress={() => setActiveTab('offering')}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.tabText, activeTab === 'offering' && styles.tabTextActive]}>
-            Offering seats
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'seeking' && styles.tabBtnActive]}
-          onPress={() => setActiveTab('seeking')}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.tabText, activeTab === 'seeking' && styles.tabTextActive]}>
-            Seeking ride
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'my' && styles.tabBtnActive]}
-          onPress={() => setActiveTab('my')}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.tabText, activeTab === 'my' && styles.tabTextActive]}>
-            My carpools
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <SegmentedSlider<'all' | 'offering' | 'seeking' | 'my'>
+        value={activeTab}
+        onChange={(tab) => setActiveTab(tab)}
+        segments={[
+          { key: 'all', label: 'All rides' },
+          { key: 'offering', label: 'Offering seats' },
+          { key: 'seeking', label: 'Seeking ride' },
+          { key: 'my', label: 'My carpools' },
+        ]}
+        trackStyle={styles.tabsContainer}
+        segmentStyle={styles.tabBtn}
+        pillStyle={styles.tabBtnActive}
+        activeTextStyle={styles.tabTextActive}
+        inactiveTextStyle={styles.tabText}
+      />
 
       {/* List */}
       {loading ? (

@@ -39,6 +39,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { AppIcon } from '../../../components/AppIcon';
 import { BaseCard } from '../../../components/BaseCard';
+import { ChipRowSlider } from '../../../components/ChipRowSlider';
 import { EmptyState } from '../../../components/EmptyState';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../../components/WebPullIndicator';
@@ -512,167 +513,91 @@ export default function ParentCornerScreen() {
 
       {/* Filter Row 1: Institution Types */}
       <View style={styles.filterSection}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
+        <ChipRowSlider<string>
+          chips={INSTITUTION_TYPES.map((t) => ({
+            key: t.id,
+            label: t.label,
+            icon: <AppIcon name={t.icon} size={12} />,
+          }))}
+          value={selectedType}
+          onChange={(typeId) => setSelectedType(typeId)}
           contentContainerStyle={styles.chipsScrollContainer}
-        >
-          {INSTITUTION_TYPES.map((t) => {
-            const isActive = selectedType === t.id;
-            return (
-              <TouchableOpacity
-                key={t.id}
-                style={[
-                  styles.filterChip,
-                  { borderColor: colors.border, backgroundColor: colors.card },
-                  isActive && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-                ]}
-                onPress={() => setSelectedType(t.id)}
-              >
-                <View style={styles.iconLabelRow}>
-                  <AppIcon name={t.icon} size={12} />
-                  <Text
-                    style={[
-                      styles.chipText,
-                      { color: colors.textSecondary },
-                      isActive && { color: colors.accent, fontWeight: '500' },
-                    ]}
-                  >
-                    {t.label}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+          chipStyle={styles.filterChip}
+          inactiveChipStyle={{ borderColor: colors.border, backgroundColor: colors.card }}
+          pillStyle={{ borderColor: colors.accent, backgroundColor: colors.accentSoft }}
+          activeColor={colors.accent}
+          inactiveColor={colors.textSecondary}
+          textStyle={styles.chipText}
+          activeTextStyle={{ fontWeight: '500' }}
+        />
       </View>
 
       {/* Filter Row 2: Boards */}
       <View style={styles.filterSection}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
+        <ChipRowSlider<string>
+          leading={<Text style={[styles.filterLabel, { color: colors.textMuted }]}>Board:</Text>}
+          chips={BOARD_OPTIONS.map((b) => ({ key: b, label: b }))}
+          value={selectedBoard}
+          onChange={(b) => setSelectedBoard(b)}
           contentContainerStyle={styles.chipsScrollContainer}
-        >
-          <Text style={[styles.filterLabel, { color: colors.textMuted }]}>Board:</Text>
-          {BOARD_OPTIONS.map((b) => {
-            const isActive = selectedBoard === b;
-            return (
-              <TouchableOpacity
-                key={b}
-                style={[
-                  styles.filterChipSm,
-                  { borderColor: colors.border, backgroundColor: colors.card },
-                  isActive && { borderColor: colors.primary, backgroundColor: colors.accentSoft },
-                ]}
-                onPress={() => setSelectedBoard(b)}
-              >
-                <Text
-                  style={[
-                    styles.chipTextSm,
-                    { color: colors.textSecondary },
-                    isActive && { color: colors.primary, fontWeight: '500' },
-                  ]}
-                >
-                  {b}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+          chipStyle={styles.filterChipSm}
+          inactiveChipStyle={{ borderColor: colors.border, backgroundColor: colors.card }}
+          pillStyle={{ borderColor: colors.primary, backgroundColor: colors.accentSoft }}
+          activeColor={colors.primary}
+          inactiveColor={colors.textSecondary}
+          textStyle={styles.chipTextSm}
+          activeTextStyle={{ fontWeight: '500' }}
+        />
       </View>
 
       {/* Filter Row 3: Looking For / Intent */}
       <View style={styles.filterSection}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
+        <ChipRowSlider<string>
+          leading={<Text style={[styles.filterLabel, { color: colors.textMuted }]}>Looking for:</Text>}
+          chips={INTENT_FILTER_OPTIONS.map((opt) => ({ key: opt.id, label: opt.label }))}
+          value={selectedIntent}
+          onChange={(optId) => setSelectedIntent(optId)}
           contentContainerStyle={styles.chipsScrollContainer}
-        >
-          <Text style={[styles.filterLabel, { color: colors.textMuted }]}>Looking for:</Text>
-          {INTENT_FILTER_OPTIONS.map((opt) => {
-            const isActive = selectedIntent === opt.id;
-            return (
-              <TouchableOpacity
-                key={opt.id}
-                style={[
-                  styles.filterChipSm,
-                  { borderColor: colors.border, backgroundColor: colors.card },
-                  isActive && { borderColor: colors.primary, backgroundColor: colors.accentSoft },
-                ]}
-                onPress={() => setSelectedIntent(opt.id)}
-              >
-                <Text
-                  style={[
-                    styles.chipTextSm,
-                    { color: colors.textSecondary },
-                    isActive && { color: colors.primary, fontWeight: '500' },
-                  ]}
-                >
-                  {opt.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+          chipStyle={styles.filterChipSm}
+          inactiveChipStyle={{ borderColor: colors.border, backgroundColor: colors.card }}
+          pillStyle={{ borderColor: colors.primary, backgroundColor: colors.accentSoft }}
+          activeColor={colors.primary}
+          inactiveColor={colors.textSecondary}
+          textStyle={styles.chipTextSm}
+          activeTextStyle={{ fontWeight: '500' }}
+        />
       </View>
 
       {/* Quick School Filter Chips (If present) */}
       {uniqueSchools.length > 0 && (
         <View style={styles.filterSection}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
+          <ChipRowSlider<string>
+            leading={<Text style={[styles.filterLabel, { color: colors.textMuted }]}>Schools:</Text>}
+            chips={[
+              { key: 'all', label: 'All Schools' },
+              ...uniqueSchools.map((s) => ({
+                key: s,
+                label: s,
+                icon: <AppIcon name="school" size={11} />,
+              })),
+            ]}
+            value={selectedSchool ?? 'all'}
+            onChange={(schoolKey) => {
+              if (schoolKey === 'all') {
+                setSelectedSchool(null);
+              } else {
+                setSelectedSchool((prev) => (prev === schoolKey ? null : schoolKey));
+              }
+            }}
             contentContainerStyle={styles.chipsScrollContainer}
-          >
-            <Text style={[styles.filterLabel, { color: colors.textMuted }]}>Schools:</Text>
-            <TouchableOpacity
-              style={[
-                styles.filterChipSm,
-                { borderColor: colors.border, backgroundColor: colors.card },
-                selectedSchool === null && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-              ]}
-              onPress={() => setSelectedSchool(null)}
-            >
-              <Text
-                style={[
-                  styles.chipTextSm,
-                  { color: colors.textSecondary },
-                  selectedSchool === null && { color: colors.accent, fontWeight: '500' },
-                ]}
-              >
-                All Schools
-              </Text>
-            </TouchableOpacity>
-
-            {uniqueSchools.map((s) => {
-              const isActive = selectedSchool === s;
-              return (
-                <TouchableOpacity
-                  key={s}
-                  style={[
-                    styles.filterChipSm,
-                    { borderColor: colors.border, backgroundColor: colors.card },
-                    isActive && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-                  ]}
-                  onPress={() => setSelectedSchool(isActive ? null : s)}
-                >
-                  <View style={styles.iconLabelRow}>
-                    <AppIcon name="school" size={11} />
-                    <Text
-                      style={[
-                        styles.chipTextSm,
-                        { color: colors.textSecondary },
-                        isActive && { color: colors.accent, fontWeight: '500' },
-                      ]}
-                    >
-                      {s}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+            chipStyle={styles.filterChipSm}
+            inactiveChipStyle={{ borderColor: colors.border, backgroundColor: colors.card }}
+            pillStyle={{ borderColor: colors.accent, backgroundColor: colors.accentSoft }}
+            activeColor={colors.accent}
+            inactiveColor={colors.textSecondary}
+            textStyle={styles.chipTextSm}
+            activeTextStyle={{ fontWeight: '500' }}
+          />
         </View>
       )}
 

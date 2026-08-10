@@ -21,6 +21,7 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { ChipRowSlider } from '../../components/ChipRowSlider';
 import { EmptyState } from '../../components/EmptyState';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
@@ -271,51 +272,43 @@ export default function MyPostsScreen() {
       />
 
       {/* Segmented Control Tabs */}
-      <View style={styles.segmentContainer}>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeSegment === 'business' && styles.segmentActive]}
-          onPress={() => setActiveSegment('business')}
-          activeOpacity={0.8}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <ShoppingBag01
-              size={15}
-              color={activeSegment === 'business' ? colors.primary : colors.textSecondary}
-              aria-hidden={true}
-            />
-            <Text
-              style={[
-                styles.segmentText,
-                activeSegment === 'business' && [styles.segmentTextActive, { color: colors.primary }],
-              ]}
-            >
-              Local businesses ({listings.length})
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeSegment === 'borrow' && styles.segmentActive]}
-          onPress={() => setActiveSegment('borrow')}
-          activeOpacity={0.8}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <SwitchHorizontal01
-              size={15}
-              color={activeSegment === 'borrow' ? colors.primary : colors.textSecondary}
-              aria-hidden={true}
-            />
-            <Text
-              style={[
-                styles.segmentText,
-                activeSegment === 'borrow' && [styles.segmentTextActive, { color: colors.primary }],
-              ]}
-            >
-              Borrow posts ({posts.length})
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </View>
+      <ChipRowSlider<'business' | 'borrow'>
+        value={activeSegment}
+        onChange={(seg) => setActiveSegment(seg)}
+        scrollable={false}
+        chips={[
+          {
+            key: 'business',
+            label: `Local businesses (${listings.length})`,
+            icon: (
+              <ShoppingBag01
+                size={15}
+                color={activeSegment === 'business' ? colors.primary : colors.textSecondary}
+                aria-hidden={true}
+              />
+            ),
+          },
+          {
+            key: 'borrow',
+            label: `Borrow posts (${posts.length})`,
+            icon: (
+              <SwitchHorizontal01
+                size={15}
+                color={activeSegment === 'borrow' ? colors.primary : colors.textSecondary}
+                aria-hidden={true}
+              />
+            ),
+          },
+        ]}
+        containerStyle={styles.segmentContainer}
+        chipStyle={styles.segmentBtn}
+        inactiveChipStyle={{ borderColor: Verandah.border, backgroundColor: Verandah.card }}
+        pillStyle={styles.segmentActive}
+        activeColor={colors.primary}
+        inactiveColor={colors.textSecondary}
+        textStyle={styles.segmentText}
+        activeTextStyle={styles.segmentTextActive}
+      />
 
       {loading ? (
         <View style={[styles.centerContainer, { backgroundColor: colors.paper }]}>
