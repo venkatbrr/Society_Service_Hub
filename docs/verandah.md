@@ -150,15 +150,15 @@ Reuse these instead of building local variants:
 
 ### Bottom navigation — "Threshold Rail"
 
-`GlobalBottomNav` is a light rail on `Verandah.paper` (`#FAF8F4`), **72px** tall, with the home-indicator inset padded *below* the bar rather than inside it. Each tab is a 56px column of two fixed-height rows — a 24px icon row and a 12px label row — so revealing the active label can never push the icons off their shared baseline.
+`GlobalBottomNav` is a light rail on `Verandah.paper` (`#FAF8F4`), **60px** tall, with the home-indicator inset padded *below* the bar rather than inside it. Each tab is a 48px column of two fixed-height rows — a 24px icon row and a 12px label row, 2px apart — so revealing the active label can never push the icons off their shared baseline. The bottom safe-area inset is **capped at 12px** (4px web / 10px native when the inset is 0): the raw inset is 34px+ on gesture-bar devices and left a visibly dead strip under the rail.
 
 | Element | Spec |
 |---------|------|
 | Active icon / label | `Verandah.primary` `#0F3732`, stroke 2.2, icon scaled 1.1 in place |
 | Inactive icon | `Verandah.textDisabled` `#9A988F`, stroke 1.9, scale 1 |
 | Label | 10px / 700 (800 on MCN), letter-spacing 0.3 — **opacity 1 on the active tab only**, but always occupying its row |
-| Active highlight | Arch-topped slab behind the active tab: fill `rgba(15,55,50,.07)`, border `rgba(15,55,50,.08)`, radius `18 18 14 14`, inset 8px vertically and 12px within the tab slot |
-| Centre MCN tab | 42×42 teal disc, radius 14, holding `assets/images/adaptive-icon.png` in a 48px box (`resizeMode: contain`) |
+| Active highlight | Arch-topped slab behind the active tab: fill `rgba(15,55,50,.07)`, border `rgba(15,55,50,.08)`, radius `18 18 14 14`, inset 6px vertically and 12px within the tab slot |
+| Centre MCN tab | 38×38 teal disc, radius 13, holding `assets/images/adaptive-icon.png` in a 44px box (`resizeMode: contain`) |
 
 Motion uses React Native's built-in `Animated` (**not** Reanimated — it is a dependency but unused, and unconfigured for web). The shared springy curve is `Easing.bezier(0.34, 1.5, 0.5, 1)`: highlight slide 460ms, icon scale 400ms, label opacity 300ms. While MCN is active its disc breathes between `translateY` −3 and −6 on a 3s loop; on deactivation it settles to 0. All animations run with `useNativeDriver: false` because the highlight animates layout-adjacent values and the web target cannot use the native driver at all.
 
@@ -166,7 +166,7 @@ The disc's drop shadow is the one sanctioned exception to the "no `shadow*` on s
 
 Four of the five glyphs live in `components/NavIcons.tsx` rather than `@untitledui/icons`, because two are bespoke: the house carries a heart, and the buildings pair is Wooru-specific. They keep Untitled UI geometry (24×24, round caps, `currentColor`) and render as DOM SVG, exactly as `@untitledui/icons` does.
 
-**The MCN mark is not a glyph** — it is `assets/images/adaptive-icon.png` rendered as an `Image`, per the "render the mark as an image, never as a substitute glyph" rule above. Do not re-draw it in SVG "to match the icon set": a traced arch silently drifts from the brand every time the logo is revised, and the disc then keeps showing a stale mark after the assets are updated. The asset is cream on transparent, so it needs no tint on the teal disc; it is inset to the safe zone, so its 48px box deliberately overhangs the 42px disc to bring the visible arch up to ~65% of it.
+**The MCN mark is not a glyph** — it is `assets/images/adaptive-icon.png` rendered as an `Image`, per the "render the mark as an image, never as a substitute glyph" rule above. Do not re-draw it in SVG "to match the icon set": a traced arch silently drifts from the brand every time the logo is revised, and the disc then keeps showing a stale mark after the assets are updated. The asset is cream on transparent, so it needs no tint on the teal disc; it is inset to the safe zone, so its 44px box deliberately overhangs the 38px disc to bring the visible arch up to ~65% of it.
 
 ### Platform-specific variants
 

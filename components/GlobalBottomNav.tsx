@@ -74,14 +74,14 @@ const TABS: TabDef[] = [
 // Geometry — every value here is load-bearing for the "nothing moves" rule: the icon row
 // and the label row are both fixed height, so revealing the active label cannot nudge the
 // icons off their shared baseline.
-const BAR_HEIGHT = 72;
-const COLUMN_HEIGHT = 56;
+const BAR_HEIGHT = 60;
+const COLUMN_HEIGHT = 48;
 const ICON_ROW_HEIGHT = 24;
 const LABEL_ROW_HEIGHT = 12;
-const ICON_LABEL_GAP = 4;
-const HIGHLIGHT_INSET_Y = (BAR_HEIGHT - COLUMN_HEIGHT) / 2; // 8
+const ICON_LABEL_GAP = 2;
+const HIGHLIGHT_INSET_Y = (BAR_HEIGHT - COLUMN_HEIGHT) / 2; // 6
 const HIGHLIGHT_INSET_X = 12;
-const DISC_SIZE = 42;
+const DISC_SIZE = 38;
 
 // Springy overshoot shared by the highlight slide and the icon pop.
 const SPRING = Easing.bezier(0.34, 1.5, 0.5, 1);
@@ -276,8 +276,11 @@ export function GlobalBottomNav() {
     return null;
   }
 
-  // Home-indicator padding sits below the 72px bar, never inside it.
-  const bottomInset = insets.bottom > 0 ? insets.bottom : Platform.OS === 'web' ? 8 : 22;
+  // Home-indicator padding sits below the 60px bar, never inside it. The raw safe-area
+  // inset (34px on gesture-bar iPhones, more on some Androids) leaves a visibly dead
+  // strip under the rail, so it is capped — enough to clear the indicator, no more.
+  const bottomInset =
+    insets.bottom > 0 ? Math.min(insets.bottom, 12) : Platform.OS === 'web' ? 4 : 10;
   const showHighlight = tabWidth > 0 && activeIndex >= 0;
 
   return (
@@ -362,14 +365,14 @@ const styles = StyleSheet.create({
   // The asset insets its mark to the inner ~58%, so the image box is oversized past the
   // disc to land the visible arch at ~65% of it. The overhang is transparent.
   discMark: {
-    width: 48,
-    height: 48,
+    width: 44,
+    height: 44,
   },
   disc: {
     position: 'absolute',
     width: DISC_SIZE,
     height: DISC_SIZE,
-    borderRadius: 14,
+    borderRadius: 13,
     backgroundColor: Verandah.primary,
     alignItems: 'center',
     justifyContent: 'center',
