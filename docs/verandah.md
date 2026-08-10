@@ -150,7 +150,7 @@ Reuse these instead of building local variants:
 
 ### Bottom navigation — "Threshold Rail"
 
-`GlobalBottomNav` is a light rail on `Verandah.paper` (`#FAF8F4`), **60px** tall, with the home-indicator inset padded *below* the bar rather than inside it. Each tab is a 48px column of two fixed-height rows — a 24px icon row and a 12px label row, 2px apart — so revealing the active label can never push the icons off their shared baseline. The bottom safe-area inset is **capped at 12px** (4px web / 10px native when the inset is 0): the raw inset is 34px+ on gesture-bar devices and left a visibly dead strip under the rail.
+`GlobalBottomNav` is a light rail on `Verandah.paper` (`#FAF8F4`), **60px** tall, with the home-indicator inset padded *below* the bar rather than inside it. Each tab is a 48px column of two fixed-height rows — a 24px icon row and a 12px label row, 2px apart — so revealing the active label can never push the icons off their shared baseline. The bottom safe-area inset is **capped at 5px** (and 5px flat when the reported inset is 0): the raw inset is 34px+ on gesture-bar devices and left a visibly dead strip under the rail. This is a deliberate override of the system inset — the rail sits closer to the gesture bar than the safe area asks for.
 
 | Element | Spec |
 |---------|------|

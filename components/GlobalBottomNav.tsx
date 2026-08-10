@@ -278,9 +278,9 @@ export function GlobalBottomNav() {
 
   // Home-indicator padding sits below the 60px bar, never inside it. The raw safe-area
   // inset (34px on gesture-bar iPhones, more on some Androids) leaves a visibly dead
-  // strip under the rail, so it is capped — enough to clear the indicator, no more.
-  const bottomInset =
-    insets.bottom > 0 ? Math.min(insets.bottom, 12) : Platform.OS === 'web' ? 4 : 10;
+  // strip under the rail, so it is capped hard at 5px — the rail deliberately sits
+  // closer to the gesture bar than the system inset asks for.
+  const bottomInset = insets.bottom > 0 ? Math.min(insets.bottom, 5) : 5;
   const showHighlight = tabWidth > 0 && activeIndex >= 0;
 
   return (
