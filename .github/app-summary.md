@@ -15,7 +15,7 @@ The product covers seven resident-facing capabilities:
 
 1. **Trusted provider discovery** — a community-curated directory of plumbers, electricians, maids, tutors, photographers, and ~40 other service categories, with ratings, private notes, and abuse reporting.
 2. **Shared service visits** — residents schedule a provider visit and neighbors join it, splitting cost and coordination.
-3. **My Community Network (MCN)** — the resident-to-resident economy: home businesses, pre-order food drops, carpooling, a parent directory, a schools catalog with parent report cards, and borrow-and-share posts.
+3. **My Community Network (MCN)** — the resident-to-resident economy: home businesses, pre-order food drops, carpooling, and a parent directory. A schools catalog with parent report cards and borrow-and-share posts are also built but **hidden from the UI since 2026-08-13** — see [`docs/hidden-features/`](../docs/hidden-features/README.md).
 4. **Community funds** — transparent, role-scoped ledgers for maintenance and event collections, gated behind platform approval.
 5. **Personal service reminders** — private appliance/service maintenance schedules with due-date notifications.
 6. **SOS** — emergency phone directory plus an opt-in blood donor registry.
@@ -158,14 +158,17 @@ Provider-only bookmarks from `favorites`. Unfavoriting removes the row from the 
 
 ### 7.3 MCN tab — My Community Network (`app/(tabs)/network.tsx`)
 
-A **hub of four section cards**, each with a live count, plus two quick-action buttons (My Orders, My Submissions):
+A **hub of three live section cards**, each with a live count, plus two quick-action buttons (My Orders, My Submissions):
 
 | Card | Route | Live count |
 |------|-------|-----------|
 | Pre-order Food & Community Business | `/mcn/drops` | open drops + active listings |
 | Community Carpooling | `/mcn/carpools` | active rides |
 | Parent Corner | `/mcn/parents` | children listed |
-| Schools Catalog & Compare | `/mcn/schools` | curated + community schools |
+| *Schools Catalog & Compare* | *`/mcn/schools`* | **hidden 2026-08-13** |
+| *Borrow & Share* | *`/mcn/my-posts?segment=borrow`* | **hidden 2026-08-13** |
+
+A non-pressable, animated **"Watch this space"** teaser card (`components/ComingSoonTile.tsx`) sits below the live ones while any section is hidden. Both hidden sections are gated by [`constants/featureFlags.ts`](../constants/featureFlags.ts) — fully built, nothing deleted, no schema change. Re-enable checklist: [`docs/hidden-features/mcn-schools-and-borrow.md`](../docs/hidden-features/mcn-schools-and-borrow.md).
 
 **Business listings** (`/mcn/business`) — resident-run businesses with a cover photo, a category from the `mcn_business_categories` lookup, and offerings split into products vs services. Prices are nullable (`NULL` renders "Price on request"). Listings are grouped by category and collapsible; active sort ahead of paused. **Browse-and-contact only — there is no in-app ordering.** Residents read the offerings and prices, then reach the owner via the Call / WhatsApp pair on the listing detail screen. Owner **or a community lead** can open the manage screen and delete the listing. The cart, order modal, and owner-side orders inbox were hidden on 2026-08-09; `mcn_orders`, `mcn_order_items`, and `place_mcn_order()` remain in the database, unused — see [`docs/disabled-features.md`](../docs/disabled-features.md) §2b.
 
@@ -175,9 +178,9 @@ A **hub of four section cards**, each with a live count, plus two quick-action b
 
 **Parent Corner** (`/mcn/parents`) — an opt-in directory of residents' children for study groups and school-run coordination. Each entry carries student name, institution type (school / college / preschool), school name, board (CBSE, ICSE, State Board, IB, IGCSE, PU Board, University, Other), grade, parent name, flat, and phone. Filter by type, board, and school; sort by school, grade, flat, or recency.
 
-**Schools catalog** (`/mcn/schools`) — a curated regional dataset (`data/westHyderabadSchools.ts`) merged with community-submitted schools. Each school carries syllabus, level, distance, fee range, facilities, and links. The **Parent Report Card** replaces star reviews with **8 emoji-scored dimensions** (Academics, Teachers, Infrastructure, Sports & Activities, Safety & Hygiene, Transport, Value for Money, Child's Happiness) on a 😟😕😐🙂🤩 scale, plus child grade, optional 140-char per-aspect notes, and an overall comment. Averages are maintained on `schools.avg_*` by trigger. Detail view renders an 8-axis radar chart; up to 3 schools can be compared side by side.
+**Schools catalog** (`/mcn/schools`) — **hidden from the UI on 2026-08-13** (`SCHOOLS_CATALOG_ENABLED`); routes and data intact, described here as it returns. A curated regional dataset (`data/westHyderabadSchools.ts`) merged with community-submitted schools. Each school carries syllabus, level, distance, fee range, facilities, and links. The **Parent Report Card** replaces star reviews with **8 emoji-scored dimensions** (Academics, Teachers, Infrastructure, Sports & Activities, Safety & Hygiene, Transport, Value for Money, Child's Happiness) on a 😟😕😐🙂🤩 scale, plus child grade, optional 140-char per-aspect notes, and an overall comment. Averages are maintained on `schools.avg_*` by trigger. Detail view renders an 8-axis radar chart; up to 3 schools can be compared side by side.
 
-**Borrow & Share** (`mcn_posts`, `/mcn/add`, `/mcn/my-posts`) — lightweight posts for borrowing or giving away items. Reached through My Submissions.
+**Borrow & Share** (`mcn_posts`, `/mcn/add`, `/mcn/my-posts`) — **hidden from the UI on 2026-08-13** (`BORROW_SHARE_ENABLED`); table, rows, and routes intact. Lightweight posts for borrowing or giving away items, previously reached through My Submissions — which is now a business-listings-only screen with no segmented control.
 
 **My Orders** (`/mcn/my-orders`) — the resident's own food pre-orders. The business-listings tab was removed on 2026-08-09 when in-app business ordering was hidden.
 
@@ -386,6 +389,7 @@ npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj   # Regenera
 ## 15. Product boundaries
 
 - The resident **marketplace is removed, not hidden**. `app/business/*` is gone and its tables were dropped. MCN replaced it.
+- The **schools catalog and borrow & share are hidden, not removed** (2026-08-13). Screens, tables, rows, and RLS are all intact behind flags in `constants/featureFlags.ts`; they are expected back. Anything user-facing — marketing copy included — must treat them as absent until the flags flip. See [`docs/hidden-features/`](../docs/hidden-features/README.md).
 - There is **no resident approval queue** — joining by code is immediate.
 - Personal reminders are **user-scoped**, never community-scoped.
 - Platform admins never appear inside a community and are barred from the mobile app surface.

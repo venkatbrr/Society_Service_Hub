@@ -26,7 +26,9 @@
 | Change roles/permissions | `architecture.md` §Role System → `features.md` §Role Access Matrix | everything else |
 | Work on the web admin console | `platform-admin.md` → `architecture.md` §Platform Admin RPCs | mobile-only docs |
 | Onboard / get oriented | `.github/app-summary.md` only | everything else |
-| Understand why a feature is missing | `disabled-features.md` | everything else |
+| Understand why a feature is missing | `disabled-features.md` → `hidden-features/` if it is listed as hidden | everything else |
+| Hide a feature, or bring a hidden one back | `hidden-features/README.md` → the feature's own doc there | everything else |
+| Write marketing copy / redesign the landing page | `hidden-features/mcn-schools-and-borrow.md` §Landing page redesign (the live-vs-do-not-advertise list) | everything else |
 | Touch federation / partnerships | `cross-community.md` → `decisions/0001-additive-rls-for-cross-community.md` | everything else |
 
 ---
@@ -43,7 +45,8 @@
 | [`features.md`](features.md) | Per-screen contract: purpose, tables, rules, roles, navigation | Any user-visible behavior change |
 | [`verandah.md`](verandah.md) | Design system: tokens, palette, type scale, component rules | Any design-token or shared-component change |
 | [`platform-admin.md`](platform-admin.md) | Web admin console: pages, RPCs, setup, verification | Any admin-console or platform RPC change |
-| [`disabled-features.md`](disabled-features.md) | Intentionally disabled/removed/deferred behavior | Any feature disabled or re-enabled |
+| [`disabled-features.md`](disabled-features.md) | Intentionally disabled/removed/deferred behavior, plus the index of hidden features | Any feature disabled or re-enabled |
+| [`hidden-features/`](hidden-features/README.md) | Built features flagged off in the UI, one doc each with a re-enable checklist | Any flag in `constants/featureFlags.ts` added or flipped |
 | [`fixes/`](fixes/) | Audits, implementation briefs, and verified fixes for edge cases | Created per deep-review pass |
 | [`supabase-mcp.md`](supabase-mcp.md) | Supabase MCP server: setup, per-IDE config, tools, security posture | MCP config, access mode, or enabled feature groups change |
 
@@ -75,7 +78,7 @@
    - admin console → `platform-admin.md`
    - a whole new module, tab, or role → also add a line to `.github/app-summary.md`
 3. **Never restate schema columns in `features.md`.** Name the table; `architecture.md` owns the columns.
-4. When you delete a feature, move its entry to `disabled-features.md` rather than deleting it silently.
+4. When you delete a feature, move its entry to `disabled-features.md` rather than deleting it silently. When you only **hide** one (built, flagged off, coming back), write its re-enable doc in `hidden-features/` and leave a pointer line in `disabled-features.md`.
 5. Federation changes require an entry in `cross-community-changelog.md` in the same change set.
 
 ---

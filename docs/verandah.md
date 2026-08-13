@@ -150,7 +150,26 @@ Reuse these instead of building local variants:
 | `HeaderBackButton` | Stack header back affordance |
 | `ImageUploader` | Any Cloudinary image upload |
 | `DateField` | Cross-platform date picker (`input[type=date]` on web, `DateTimePicker` modal on native) |
+| `ComingSoonTile` | The placeholder card standing in for a hidden section — see below |
 | `RatingStars` / `EmojiRating` | Provider star ratings / school aspect emoji scale |
+
+### Coming-soon tile — `ComingSoonTile`
+
+The card that occupies the slot of a feature hidden behind a flag ([`hidden-features/`](hidden-features/README.md)). Card geometry is identical to a real MCN section card — 40px icon circle in `accentSoft`, 12px gutter, 15px title, 12px subtitle, 12.5px description — so the row reads as part of the same list rather than as an error state.
+
+Two rules define it:
+
+- **Never pressable.** There is nothing to open. A card that looks tappable and does nothing reads as a bug, so it renders as a plain `BaseCard` with no `onPress`.
+- **The motion is the message.** A static placeholder reads as an empty slot; a moving one reads as something arriving.
+
+| Layer | Spec |
+|---|---|
+| Ping rings | Two 40px `accent`-stroked rings behind the circle, each scaling 1 → **1.65** while fading 0.5 → 0 over 2800ms, ring B offset by half a cycle so the ping never gaps. **1.65 is a ceiling, not a taste call** — `BaseCard` is `overflow: 'hidden'` and the slot sits at the card's 14px padding, so anything larger clips at the left border. |
+| Glyph | `Stars02` in `accent`, breathing scale 1 → 1.14 and rotate −7° → 7° on a 2800ms `Easing.inOut(Easing.sin)` loop |
+| Sparkles | Two dots (5px top-right, 3.5px bottom-left) twinkling opacity 0 → 1 → 0 over 1900ms, with 420ms / 1340ms offsets — deliberately off-beat, so the tile does not read as a metronome |
+| Subtitle | Cross-fades between teaser lines every 3400ms (200ms out, 280ms in) |
+
+Motion follows the same rules as the rail below: built-in `Animated`, `useNativeDriver: false`. **It also honours `AccessibilityInfo.isReduceMotionEnabled()`** — with reduce-motion on, the rings and sparkles are not rendered at all and the subtitle stays on its first line. A perpetual loop is precisely what that OS setting exists to stop; any future always-on animation should do the same.
 
 ### Bottom navigation — "Threshold Rail"
 

@@ -4,6 +4,19 @@ Behavior that is intentionally off, cut, or postponed. If a feature seems missin
 
 ---
 
+## Hidden — flagged off, coming back
+
+Fully built features whose entry points are gated behind a flag in [`constants/featureFlags.ts`](../constants/featureFlags.ts). Nothing was deleted and no database object was changed; re-enabling is a flag flip. Each one has its own re-enable doc in [`hidden-features/`](hidden-features/README.md) — that folder owns the detail, these lines are just the index.
+
+| Feature | Flag | Hidden | Detail |
+|---|---|---|---|
+| **Schools catalog & compare** — `app/mcn/schools/*` | `SCHOOLS_CATALOG_ENABLED` | 2026-08-13 | [`hidden-features/mcn-schools-and-borrow.md`](hidden-features/mcn-schools-and-borrow.md) |
+| **Borrow & share posts** — `app/mcn/add.tsx` + the My Submissions borrow tab | `BORROW_SHARE_ENABLED` | 2026-08-13 | [`hidden-features/mcn-schools-and-borrow.md`](hidden-features/mcn-schools-and-borrow.md) |
+
+Both were hidden from the MCN hub together; a non-pressable, animated **"Watch this space"** teaser card (`components/ComingSoonTile.tsx`) stands in for them. `data/westHyderabadSchools.ts` is **not** dead code while schools is hidden — Parent Corner's `SchoolPicker` still reads it.
+
+---
+
 ## Disabled
 
 ### 1. Email verification — ✅ RE-ENABLED 2026-08-08

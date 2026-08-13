@@ -24,6 +24,7 @@ import Toast from 'react-native-toast-message';
 import { ChipRowSlider } from '../../components/ChipRowSlider';
 import { EmptyState } from '../../components/EmptyState';
 import { Verandah } from '../../constants/Colors';
+import { BORROW_SHARE_ENABLED } from '../../constants/featureFlags';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
@@ -40,8 +41,10 @@ export default function MyPostsScreen() {
   const { user, communityId, isCommunityLead } = useAuth();
   const colors = Verandah;
 
+  // ?segment=borrow is ignored while the borrow surface is hidden — the tab it
+  // would select does not render. See constants/featureFlags.ts.
   const [activeSegment, setActiveSegment] = useState<'business' | 'borrow'>(
-    params.segment === 'borrow' ? 'borrow' : 'business'
+    BORROW_SHARE_ENABLED && params.segment === 'borrow' ? 'borrow' : 'business'
   );
   const [listings, setListings] = useState<Listing[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -271,44 +274,47 @@ export default function MyPostsScreen() {
         })}
       />
 
-      {/* Segmented Control Tabs */}
-      <ChipRowSlider<'business' | 'borrow'>
-        value={activeSegment}
-        onChange={(seg) => setActiveSegment(seg)}
-        scrollable={false}
-        chips={[
-          {
-            key: 'business',
-            label: `Local businesses (${listings.length})`,
-            icon: (
-              <ShoppingBag01
-                size={15}
-                color={activeSegment === 'business' ? colors.primary : colors.textSecondary}
-                aria-hidden={true}
-              />
-            ),
-          },
-          {
-            key: 'borrow',
-            label: `Borrow posts (${posts.length})`,
-            icon: (
-              <SwitchHorizontal01
-                size={15}
-                color={activeSegment === 'borrow' ? colors.primary : colors.textSecondary}
-                aria-hidden={true}
-              />
-            ),
-          },
-        ]}
-        containerStyle={styles.segmentContainer}
-        chipStyle={styles.segmentBtn}
-        inactiveChipStyle={{ borderColor: Verandah.border, backgroundColor: Verandah.card }}
-        pillStyle={styles.segmentActive}
-        activeColor={colors.primary}
-        inactiveColor={colors.textSecondary}
-        textStyle={styles.segmentText}
-        activeTextStyle={styles.segmentTextActive}
-      />
+      {/* Segmented Control Tabs — a lone tab is chrome with no choice in it, so
+          the control disappears entirely while borrow is hidden. */}
+      {BORROW_SHARE_ENABLED && (
+        <ChipRowSlider<'business' | 'borrow'>
+          value={activeSegment}
+          onChange={(seg) => setActiveSegment(seg)}
+          scrollable={false}
+          chips={[
+            {
+              key: 'business',
+              label: `Local businesses (${listings.length})`,
+              icon: (
+                <ShoppingBag01
+                  size={15}
+                  color={activeSegment === 'business' ? colors.primary : colors.textSecondary}
+                  aria-hidden={true}
+                />
+              ),
+            },
+            {
+              key: 'borrow',
+              label: `Borrow posts (${posts.length})`,
+              icon: (
+                <SwitchHorizontal01
+                  size={15}
+                  color={activeSegment === 'borrow' ? colors.primary : colors.textSecondary}
+                  aria-hidden={true}
+                />
+              ),
+            },
+          ]}
+          containerStyle={styles.segmentContainer}
+          chipStyle={styles.segmentBtn}
+          inactiveChipStyle={{ borderColor: Verandah.border, backgroundColor: Verandah.card }}
+          pillStyle={styles.segmentActive}
+          activeColor={colors.primary}
+          inactiveColor={colors.textSecondary}
+          textStyle={styles.segmentText}
+          activeTextStyle={styles.segmentTextActive}
+        />
+      )}
 
       {loading ? (
         <View style={[styles.centerContainer, { backgroundColor: colors.paper }]}>
@@ -468,7 +474,7 @@ export default function MyPostsScreen() {
         style={[styles.fab, { backgroundColor: colors.primary }]}
         activeOpacity={0.85}
         onPress={() => {
-          if (activeSegment === 'borrow') {
+          if (BORROW_SHARE_ENABLED && activeSegment === 'borrow') {
             router.push('/mcn/add?kind=borrow&source=my-posts' as any);
             return;
           }
@@ -522,6 +528,9 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 16,
+    // Without the segmented control above it (borrow hidden) the first card
+    // would otherwise butt straight against the header.
+    paddingTop: BORROW_SHARE_ENABLED ? 0 : 10,
     paddingBottom: 80,
   },
   emptyList: {

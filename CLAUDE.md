@@ -17,6 +17,7 @@ Wooru — a multi-tenant community app for gated residential societies. **Expo (
 | [docs/verandah.md](docs/verandah.md) | Writing any UI |
 | [docs/platform-admin.md](docs/platform-admin.md) | Working on the web admin console |
 | [docs/disabled-features.md](docs/disabled-features.md) | A feature seems missing |
+| [docs/hidden-features/](docs/hidden-features/README.md) | A feature is built but flagged off in the UI — or you are hiding one / bringing one back |
 | [docs/cross-community.md](docs/cross-community.md) | Touching federation objects (backend live, UI deferred) |
 | [docs/archive/](docs/archive/) | Historical context only — never a source of truth |
 
@@ -29,6 +30,7 @@ Wooru — a multi-tenant community app for gated residential societies. **Expo (
 - **`lib/database.types.ts` is generated.** Never hand-edit it.
 - **`Alert.alert` is a no-op on web.** Confirmations must split on `Platform.OS` and use `window.confirm` on web.
 - **Adding a route under `app/mcn/`** also requires a parent mapping in `getImmediateParentRoute()` (`lib/navigation.ts`), or back navigation breaks.
+- **The schools catalog and borrow & share are hidden, not deleted** (2026-08-13, `constants/featureFlags.ts`). `app/mcn/schools/*`, `app/mcn/add.tsx`, `schools`, `school_reviews`, and `mcn_posts` are all still live. `data/westHyderabadSchools.ts` is **not** dead code — Parent Corner's `SchoolPicker` reads it. See [docs/hidden-features/](docs/hidden-features/README.md).
 
 The full list is in [docs/CLAUDE.md](docs/CLAUDE.md) §9.
 
@@ -43,6 +45,7 @@ Docs are part of the change set, not a follow-up. Route each update to exactly *
 - Admin console → `docs/platform-admin.md`
 - A whole new module, tab, or role → also add a line to `.github/app-summary.md`
 - Feature disabled, removed, or re-enabled → `docs/disabled-features.md`
+- Feature hidden behind a flag (built, coming back) → a doc in `docs/hidden-features/` **plus** a pointer line in `docs/disabled-features.md`
 - Anything touching federation → `docs/cross-community-changelog.md` (mandatory)
 
 Do not restate schema columns in `docs/features.md` — `docs/architecture.md` owns them.

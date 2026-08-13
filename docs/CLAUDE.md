@@ -213,6 +213,7 @@ Docs are part of the change set. Route each update to exactly one home — dupli
 | Admin console | [`platform-admin.md`](platform-admin.md) |
 | A whole new module, tab, or role | also add a line to [`.github/app-summary.md`](../.github/app-summary.md) |
 | Feature disabled, removed, or re-enabled | [`disabled-features.md`](disabled-features.md) |
+| Feature **hidden** behind a flag (built, coming back) | a doc in [`hidden-features/`](hidden-features/README.md) **plus** a pointer line in `disabled-features.md` |
 | Anything touching federation | [`cross-community-changelog.md`](cross-community-changelog.md) (mandatory) |
 
 Do not restate schema columns in `features.md` — name the table and let `architecture.md` own the columns.
@@ -220,6 +221,8 @@ Do not restate schema columns in `features.md` — name the table and let `archi
 ---
 
 ## 8. Intentionally disabled
+
+**Hidden MCN sections (2026-08-13).** [`constants/featureFlags.ts`](../constants/featureFlags.ts) gates two fully-built features that are coming back: `SCHOOLS_CATALOG_ENABLED` (schools catalog & compare) and `BORROW_SHARE_ENABLED` (borrow & share posts, including the My Submissions borrow tab). Nothing was deleted and no migration was written. Before touching anything under `app/mcn/schools/`, `app/mcn/add.tsx`, or `data/westHyderabadSchools.ts`, read [`hidden-features/mcn-schools-and-borrow.md`](hidden-features/mcn-schools-and-borrow.md) — the curated schools dataset in particular is **still live**, because Parent Corner's `SchoolPicker` reads it.
 
 - **Email verification** — intended off, for lower-friction pilot onboarding. **Verified 2026-08-13 that it is currently ON in the Supabase project**: a fresh `/auth/v1/signup` account got `email_not_confirmed` on login until `auth.users.email_confirmed_at` was set directly. Either the Supabase Auth setting drifted from what this doc assumes, or it was never actually turned off — check the dashboard before trusting this line, and update it once confirmed either way.
 - **Password strength validation** — removed for a simpler signup flow.
@@ -302,4 +305,6 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Hand-rolling new tab animations or painting highlights behind chips with opaque fill | Use `SegmentedSlider` for contained controls (Family A) and `ChipRowSlider` for variable-width chip rows (Family B). Painting a highlight behind chips with opaque card fill hides the pill during transit. |
 | Assuming `public.events` is the community-events table | It is a **fund** (§5 Database work → `architecture.md` §4.4). The community-events module (cultural/sports/festival posts, added 2026-09-07) is deliberately named `community_events` / `community_event_contacts` / `community_event_organizers` throughout — never shorten to `events` in new code near this feature. |
 | Writing a cap-checking trigger without `SECURITY DEFINER` | Same failure mode as the food-drop caps (`20260823000000`): an invoker-rights `COUNT`/`SUM` runs under the caller's own RLS and can under-count rows owned by other users. The community-events contact cap and creator cap triggers are `SECURITY DEFINER` for this reason even though, in this particular case, the SELECT policies happen to be community-scoped rather than owner-scoped — make it a habit for any new cap trigger rather than re-deriving the RLS interaction each time. |
+| Treating `data/westHyderabadSchools.ts` or `app/mcn/schools/*` as dead code because the hub card is gone | The schools catalog is **hidden behind a flag, not removed** (`SCHOOLS_CATALOG_ENABLED`, 2026-08-13). The curated dataset is additionally a live dependency of Parent Corner's `SchoolPicker`, which is visible and shipping. Same for `mcn_posts` / `app/mcn/add.tsx` under `BORROW_SHARE_ENABLED`. See [`hidden-features/`](hidden-features/README.md). |
+| Hiding a feature by removing only its hub card | Entry points come in pairs. Borrow had two — the MCN hub card *and* the My Submissions borrow tab — so hiding just the card left the feature fully reachable. Grep the route (`grep -rn "/mcn/<route>" app/`) and gate every hit, deep-link params included. |
 | `ChipRowSlider` for an optional single-select field (nullable value) | It always renders its animated pill on some chip — `resolvedValue = value ?? chips[0].key` — so a `null` value still shows the first chip as "selected". Fine for tabs/segments that always have a real value; wrong for an optional field like an event's start/end time. Use a plain chip row (`TouchableOpacity` + local styles, see `TimeChipRow` in `app/events/add.tsx`) when "nothing selected" must be a real, visible state. |

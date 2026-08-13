@@ -15,10 +15,16 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BaseCard } from '../../components/BaseCard';
+import { ComingSoonTile } from '../../components/ComingSoonTile';
 import { NetworkTileIcon } from '../../components/NetworkTileIcon';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
+import {
+    BORROW_SHARE_ENABLED,
+    HAS_HIDDEN_MCN_SECTIONS,
+    SCHOOLS_CATALOG_ENABLED,
+} from '../../constants/featureFlags';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { WEST_HYDERABAD_SCHOOLS } from '../../data/westHyderabadSchools';
@@ -58,6 +64,8 @@ export default function NetworkScreen() {
       else setLoading(true);
 
       try {
+        // Hidden sections render no card, so their counts are never read — skip
+        // the round trip rather than paying for a number nothing displays.
         const [businessRes, preorderRes, carpoolRes, parentRes, schoolRes, postRes] = await Promise.all([
           supabase
             .from('mcn_listings')
@@ -79,20 +87,24 @@ export default function NetworkScreen() {
             .from('mcn_parent_corner')
             .select('id', { count: 'exact', head: true })
             .eq('community_id', communityId),
-          supabase
-            .from('schools')
-            .select('id', { count: 'exact', head: true })
-            .eq('community_id', communityId),
-          supabase
-            .from('mcn_posts')
-            .select('id', { count: 'exact', head: true })
-            .eq('community_id', communityId)
-            .eq('kind', 'borrow')
-            .eq('is_available', true),
+          SCHOOLS_CATALOG_ENABLED
+            ? supabase
+                .from('schools')
+                .select('id', { count: 'exact', head: true })
+                .eq('community_id', communityId)
+            : null,
+          BORROW_SHARE_ENABLED
+            ? supabase
+                .from('mcn_posts')
+                .select('id', { count: 'exact', head: true })
+                .eq('community_id', communityId)
+                .eq('kind', 'borrow')
+                .eq('is_available', true)
+            : null,
         ]);
 
         const firstError = [businessRes, preorderRes, carpoolRes, parentRes, schoolRes, postRes]
-          .map((r) => r.error)
+          .map((r) => r?.error)
           .find(Boolean);
         if (firstError) throw firstError;
 
@@ -100,8 +112,8 @@ export default function NetworkScreen() {
         setPreorderCount(preorderRes.count ?? 0);
         setCarpoolCount(carpoolRes.count ?? 0);
         setParentCount(parentRes.count ?? 0);
-        setSchoolCount(WEST_HYDERABAD_SCHOOLS.length + (schoolRes.count ?? 0));
-        setPostCount(postRes.count ?? 0);
+        setSchoolCount(schoolRes ? WEST_HYDERABAD_SCHOOLS.length + (schoolRes.count ?? 0) : null);
+        setPostCount(postRes ? postRes.count ?? 0 : null);
       } catch (err) {
         console.error('Error fetching MCN section stats:', err);
       } finally {
@@ -133,7 +145,9 @@ export default function NetworkScreen() {
           {HERO_TITLE}
         </Text>
         <Text style={styles.heroSubtitle}>
-          Neighbours, local businesses, school parents & sharing — all in one place.
+          {BORROW_SHARE_ENABLED
+            ? 'Neighbours, local businesses, school parents & sharing — all in one place.'
+            : 'Neighbours, local businesses, carpools & school parents — all in one place.'}
         </Text>
 
         <View style={styles.quickActionsRow}>
@@ -247,55 +261,63 @@ export default function NetworkScreen() {
           </Text>
         </BaseCard>
 
-        {/* 4. Schools Catalog Section Card */}
-        <BaseCard
-          padding={14}
-          onPress={() => router.push('/mcn/schools' as any)}
-          style={styles.sectionCard}
-        >
-          <View style={styles.cardHeaderRow}>
-            <View style={[styles.iconCircle, { backgroundColor: '#D1FAE5' }]}>
-              <NetworkTileIcon kind="schools" />
+        {/* 4. Schools Catalog Section Card — hidden, see constants/featureFlags.ts */}
+        {SCHOOLS_CATALOG_ENABLED && (
+          <BaseCard
+            padding={14}
+            onPress={() => router.push('/mcn/schools' as any)}
+            style={styles.sectionCard}
+          >
+            <View style={styles.cardHeaderRow}>
+              <View style={[styles.iconCircle, { backgroundColor: '#D1FAE5' }]}>
+                <NetworkTileIcon kind="schools" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Schools Catalog & Compare</Text>
+                {schoolCount !== null && (
+                  <Text style={[styles.badgeText, { color: Verandah.green600 }]}>
+                    {schoolCount} {schoolCount === 1 ? 'school cataloged' : 'schools cataloged'}
+                  </Text>
+                )}
+              </View>
+              <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Schools Catalog & Compare</Text>
-              {schoolCount !== null && (
-                <Text style={[styles.badgeText, { color: Verandah.green600 }]}>
-                  {schoolCount} {schoolCount === 1 ? 'school cataloged' : 'schools cataloged'}
-                </Text>
-              )}
-            </View>
-            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
-          </View>
-          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Browse and compare 50+ nearby schools, syllabus, distances, & fee structures curated by community residents.
-          </Text>
-        </BaseCard>
+            <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+              Browse and compare 50+ nearby schools, syllabus, distances, & fee structures curated by community residents.
+            </Text>
+          </BaseCard>
+        )}
 
-        {/* 5. Borrow & Share Section Card */}
-        <BaseCard
-          padding={14}
-          onPress={() => router.push('/mcn/my-posts?segment=borrow' as any)}
-          style={styles.sectionCard}
-        >
-          <View style={styles.cardHeaderRow}>
-            <View style={[styles.iconCircle, { backgroundColor: '#EDE9FE' }]}>
-              <NetworkTileIcon kind="borrow" />
+        {/* 5. Borrow & Share Section Card — hidden, see constants/featureFlags.ts */}
+        {BORROW_SHARE_ENABLED && (
+          <BaseCard
+            padding={14}
+            onPress={() => router.push('/mcn/my-posts?segment=borrow' as any)}
+            style={styles.sectionCard}
+          >
+            <View style={styles.cardHeaderRow}>
+              <View style={[styles.iconCircle, { backgroundColor: '#EDE9FE' }]}>
+                <NetworkTileIcon kind="borrow" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                  Borrow & Share
+                </Text>
+                <Text style={[styles.badgeText, { color: '#7C3AED' }]}>
+                  {postCount ?? 0} {postCount === 1 ? 'active borrow post' : 'active borrow posts'}
+                </Text>
+              </View>
+              <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-                Borrow & Share
-              </Text>
-              <Text style={[styles.badgeText, { color: '#7C3AED' }]}>
-                {postCount ?? 0} {postCount === 1 ? 'active borrow post' : 'active borrow posts'}
-              </Text>
-            </View>
-            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
-          </View>
-          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Borrow tools, ladders, board games, travel gear & books from neighbors in your society!
-          </Text>
-        </BaseCard>
+            <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+              Borrow tools, ladders, board games, travel gear & books from neighbors in your society!
+            </Text>
+          </BaseCard>
+        )}
+
+        {/* Teaser standing in for the hidden sections. Not pressable — there is
+            nothing to open yet, and a dead tap reads as a bug. */}
+        {HAS_HIDDEN_MCN_SECTIONS && <ComingSoonTile style={styles.sectionCard} />}
 
         <View style={{ height: 40 }} />
       </ScrollView>

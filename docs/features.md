@@ -14,7 +14,7 @@ Jump straight to what you need; skip the rest.
 | Auth & onboarding | login, forgot-password, community-select, community-request(+submitted), community-join-block | [§1](#1-authentication--onboarding) |
 | Help tab | providers, service visits | [§2](#2-help-tab--providers--visits) |
 | Saved tab | favorites | [§3](#3-saved-tab) |
-| MCN tab | hub, business, drops, carpools, parents, schools, posts, orders | [§4](#4-mcn--my-community-network) |
+| MCN tab | hub, business, drops, carpools, parents, orders (+ hidden: schools, borrow posts) | [§4](#4-mcn--my-community-network) |
 | Community tab | events, funds status, blocks, SOS, residents | [§5](#5-community-tab) |
 | Funds | list, add, detail, transactions, access request | [§6](#6-funds) |
 | Profile tab | profile, edit, reminders, hire feedback, legal | [§7](#7-profile-tab) |
@@ -159,9 +159,11 @@ Required: title, category, provider context, date. Categories use the same two-l
 | Aspect | Details |
 |--------|---------|
 | **Purpose** | Landing screen for the resident-to-resident economy |
-| **Tables** | Count-only reads: `mcn_listings`, `mcn_preorder_drops`, `mcn_carpools`, `mcn_parent_corner`, `schools`, `mcn_posts` |
-| **Rules** | Two quick actions (My Orders, My Submissions) above four section cards, each showing a live count fetched in a single `Promise.all`. The schools count adds curated `WEST_HYDERABAD_SCHOOLS` to community rows. Counts refresh on focus and on pull-to-refresh. |
-| **Cards** | Pre-order Food & Community Business → `/mcn/drops` (open drops **not yet past their cutoff** + active listings) · Community Carpooling → `/mcn/carpools` (active rides) · Parent Corner → `/mcn/parents` (children listed) · Schools Catalog & Compare → `/mcn/schools` (schools cataloged) |
+| **Tables** | Count-only reads: `mcn_listings`, `mcn_preorder_drops`, `mcn_carpools`, `mcn_parent_corner` (plus `schools` and `mcn_posts` only while those sections are un-hidden) |
+| **Rules** | Two quick actions (My Orders, My Submissions) above the section cards, each showing a live count fetched in a single `Promise.all`. Counts refresh on focus and on pull-to-refresh. A hidden section renders no card **and issues no count query** — its slot in the `Promise.all` is `null`. |
+| **Cards** | Pre-order Food & Community Business → `/mcn/drops` (open drops **not yet past their cutoff** + active listings) · Community Carpooling → `/mcn/carpools` (active rides) · Parent Corner → `/mcn/parents` (children listed) |
+| **Teaser card** | While any MCN section is hidden, a final **"Watch this space"** card sits below the live ones — `components/ComingSoonTile.tsx`, driven by `HAS_HIDDEN_MCN_SECTIONS`. It is **not pressable** — there is nothing to open yet. Animated: rings ping out from the glyph, the glyph breathes, two sparkles twinkle off-beat, and the subtitle cross-fades between three teaser lines. Falls back to static under reduce-motion. Spec in [`verandah.md`](verandah.md) §Coming-soon tile. |
+| **Hidden** | **Schools Catalog & Compare** and **Borrow & Share** cards were hidden on 2026-08-13 behind `constants/featureFlags.ts`. The hero subtitle drops "sharing" while borrow is off. See [`hidden-features/mcn-schools-and-borrow.md`](hidden-features/mcn-schools-and-borrow.md). |
 
 ### 4.2 Business listings — `app/mcn/business.tsx`
 
@@ -242,7 +244,11 @@ Routes: `index` (directory) · `add` (create/edit)
 | **School picker** | For `school`/`preschool`, the name field is `components/SchoolPicker.tsx` — a searchable modal over `data/westHyderabadSchools.ts` (81 curated West Hyderabad schools), filtered to the relevant `level` (pre-school vs. K-12) and grouped by locality. A pinned **"Other — my school isn't listed"** row reveals the old free-text input for anything not in the catalog. Picking a catalog entry also stores its id in `mcn_parent_corner.school_catalog_id` (nullable `TEXT`, no FK — the catalog lives in app code, not the database) and, when the school's `syllabus` string matches a `BOARD_OPTIONS` value exactly, pre-fills Board. `college` always uses free text — the catalog has no college entries. Switching institution type clears the current pick and returns to the picker (free text for college). |
 | **Roles** | Residents manage their own entries. **Owner or lead** can edit or delete any entry. Editing another resident's entry via URL checks ownership and returns to directory if unauthorized. |
 
-### 4.6 Schools catalog & parent report card — `app/mcn/schools/*`
+### 4.6 Schools catalog & parent report card — `app/mcn/schools/*` — **hidden**
+
+> **Hidden from the UI on 2026-08-13** behind `SCHOOLS_CATALOG_ENABLED` in [`constants/featureFlags.ts`](../constants/featureFlags.ts). The hub card is gone; the routes below still work by URL and the database is untouched. Behavior as described is exactly what returns when the flag flips. Re-enable checklist: [`hidden-features/mcn-schools-and-borrow.md`](hidden-features/mcn-schools-and-borrow.md).
+>
+> `data/westHyderabadSchools.ts` is **still in active use** while this is hidden — Parent Corner's `SchoolPicker` (§4.5) reads it.
 
 Routes: `index` · `[id]` · `review` · `add` · `compare`
 
@@ -256,12 +262,15 @@ Routes: `index` · `[id]` · `review` · `add` · `compare`
 | **Add school rules** | Required: name, distance (≥0), fee range. Phone, when supplied, must be 10 digits. |
 | **Roles** | All residents view, compare, add schools, and submit or edit **their own** report card. Leads can delete school listings. |
 
-### 4.7 Borrow & share posts — `app/mcn/add.tsx`, `app/mcn/my-posts.tsx`
+### 4.7 Borrow & share posts — `app/mcn/add.tsx`, `app/mcn/my-posts.tsx` — **hidden**
+
+> **Hidden from the UI on 2026-08-13** behind `BORROW_SHARE_ENABLED` in [`constants/featureFlags.ts`](../constants/featureFlags.ts). Both entry points are gated: the hub card, and the **Borrow posts** tab on My Submissions. `mcn_posts` and every existing row are untouched. Re-enable checklist: [`hidden-features/mcn-schools-and-borrow.md`](hidden-features/mcn-schools-and-borrow.md).
 
 | Aspect | Details |
 |--------|---------|
 | **Tables** | `mcn_posts` |
 | **Rules** | Title required (max 80), description optional (max 280). For `kind = 'borrow'` contact info is mandatory; business-kind posts keep it optional. A detected 10-digit number is normalized. My Posts groups the user's own posts into Active and Closed with close/delete actions. Launched from the hub's Borrow & Share entry, the screen runs in borrow-only community-feed mode: it shows the whole community's borrow posts, but close and delete stay limited to the signed-in user's own rows. |
+| **While hidden** | `app/mcn/my-posts.tsx` is **business listings only** — the segmented control does not render at all (a single chip is chrome with no choice in it), `?segment=borrow` is inert, and the FAB always opens `/mcn/listing-add`. Same shape My Orders took when business ordering was hidden ([`disabled-features.md`](disabled-features.md) §2b). |
 | **Roles** | Any resident posts. **Author or lead** can delete. |
 
 ### 4.8 My orders — `app/mcn/my-orders.tsx`
@@ -498,13 +507,15 @@ Name updates apply directly. Email updates send a verification link to the new a
 | View parent corner | ✅ | ✅ | — | — |
 | Add / edit child entry | own only | own **or any** | — | — |
 | Delete child entry | own only | own **or any** | — | — |
-| View / compare schools | ✅ | ✅ | — | — |
-| Add school | ✅ | ✅ | — | — |
-| Submit / edit report card | own only | own only | — | — |
-| Delete school listing | ❌ | ✅ | — | — |
+| View / compare schools *(hidden)* | ✅ | ✅ | — | — |
+| Add school *(hidden)* | ✅ | ✅ | — | — |
+| Submit / edit report card *(hidden)* | own only | own only | — | — |
+| Delete school listing *(hidden)* | ❌ | ✅ | — | — |
 | **MCN — posts** |
-| View / add borrow post | ✅ | ✅ | — | — |
-| Close / delete post | own only | own **or any** | — | — |
+| View / add borrow post *(hidden)* | ✅ | ✅ | — | — |
+| Close / delete post *(hidden)* | own only | own **or any** | — | — |
+
+*(hidden)* = the permission is unchanged in the database, but the UI that exercises it is flagged off — see [`hidden-features/`](hidden-features/README.md).
 | **Personal** |
 | Service reminders | ✅ own | ✅ own | ✅ own | ✅ own |
 | Hire feedback (private) | ✅ own | ✅ own | — | — |
