@@ -4,7 +4,6 @@ import {
     ActivityIndicator,
     Linking,
     Platform,
-    Share,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -17,6 +16,7 @@ import { VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { Tables } from '../lib/database.types';
 import { replaceTracked } from '../lib/navigation';
+import { shareOrCopy } from '../lib/share';
 import { supabase } from '../lib/supabase';
 
 type RequestDetail = Pick<
@@ -71,14 +71,10 @@ export default function CommunityRequestSubmittedScreen() {
   }, [user?.id]);
 
   const handleShareCode = async (code: string) => {
-    try {
-      await Share.share({
-        message: `Join my community on Wooru! Use code: ${code}`,
-        title: 'Community Join Code',
-      });
-    } catch {
-      // User dismissed
-    }
+    await shareOrCopy({
+      title: 'Community Join Code',
+      message: `Join my community on Wooru! Use code: ${code}`,
+    });
   };
 
   const handleShareWhatsApp = (code: string) => {

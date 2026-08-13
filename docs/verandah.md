@@ -69,6 +69,8 @@ From `Verandah`:
 - `textMuted`: `#B4B2A9`
 - `border`: `rgba(15, 55, 50, 0.08)`
 - `borderStrong`: `rgba(15, 55, 50, 0.15)`
+- `borderHair`: `rgba(15, 55, 50, 0.18)` — default tile/card border (raised from `0.10` 2026-08-13; the old value was too faint to read as a border against the paper/cream surfaces)
+- `borderWhisper`: `rgba(15, 55, 50, 0.06)` — deliberately fainter than `borderHair`, for controls that should recede rather than read as a bordered surface (unselected category/sub-category chips in `CategoryFilter`). Pair with `StyleSheet.hairlineWidth` instead of a fixed `0.5` — at DPR 1 on web, `0.5` rounds up to a full device pixel and looks heavier than intended.
 
 Avatar tint families:
 

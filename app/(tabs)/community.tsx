@@ -1,5 +1,6 @@
 import { BarChart01 } from '@untitledui/icons/BarChart01';
 import { Building01 } from '@untitledui/icons/Building01';
+import { CalendarDate } from '@untitledui/icons/CalendarDate';
 import { ChevronRight } from '@untitledui/icons/ChevronRight';
 import { LayersThree01 } from '@untitledui/icons/LayersThree01';
 import { Phone01 } from '@untitledui/icons/Phone01';
@@ -10,10 +11,11 @@ import { Wallet02 } from '@untitledui/icons/Wallet02';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../components/BaseCard';
+import { CommunityEventItem, EventCard } from '../../components/EventCard';
 import { Rupees } from '../../components/Rupees';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
@@ -22,6 +24,8 @@ import { VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Ver
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { formatRole } from '../../lib/fundRoles';
+import { shareOrCopy } from '../../lib/share';
+import { siteUrl } from '../../lib/siteUrl';
 import { supabase } from '../../lib/supabase';
 
 type PulseItem = {
@@ -80,9 +84,12 @@ const formatRelativePulseTime = (timestamp: string) => {
 export default function CommunityScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user, communityId, appRole, isCommunityLead, fundsEnabled, blockLabel, myFundsAccessRequest, refreshSession } = useAuth();
+  const { user, communityId, appRole, isCommunityLead, isEventOrganizer, fundsEnabled, blockLabel, myFundsAccessRequest, refreshSession } = useAuth();
+
+  const canPostEvents = isEventOrganizer || isCommunityLead;
 
   const [pulseItems, setPulseItems] = useState<PulseItem[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<CommunityEventItem[]>([]);
   const [overview, setOverview] = useState<FundsOverview | null>(null);
   const [communityDetails, setCommunityDetails] = useState<Pick<Tables<'communities'>, 'name' | 'code' | 'address'> | null>(null);
   const [fundRoles, setFundRoles] = useState<Tables<'fund_roles'>['role'][]>([]);
@@ -100,11 +107,13 @@ export default function CommunityScreen() {
       setFundRoles([]);
       setPendingFundsRequest(null);
       setHadHistoricalFunds(false);
+      setUpcomingEvents([]);
       return;
     }
 
     try {
-      const [pulseResult, overviewResult, communityResult, roleResult, pendingRequestResult, fundsHistoryResult] = await Promise.all([
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const [pulseResult, overviewResult, communityResult, roleResult, pendingRequestResult, fundsHistoryResult, eventsResult] = await Promise.all([
         supabase.rpc('get_community_pulse', { p_limit: 5 }),
         supabase.rpc('get_my_community_funds_overview'),
         supabase
@@ -131,6 +140,15 @@ export default function CommunityScreen() {
           .from('events')
           .select('id', { count: 'exact', head: true })
           .eq('community_id', communityId),
+        supabase
+          .from('community_events')
+          .select('id, title, category, image_url, venue, event_date, start_time, registration_last_date, status')
+          .eq('community_id', communityId)
+          .eq('status', 'published')
+          .gte('event_date', todayStr)
+          .order('event_date', { ascending: true })
+          .order('start_time', { ascending: true })
+          .limit(5),
       ]);
 
       if (pulseResult.error) throw pulseResult.error;
@@ -139,8 +157,10 @@ export default function CommunityScreen() {
       if (roleResult.error) throw roleResult.error;
       if (pendingRequestResult.error) throw pendingRequestResult.error;
       if (fundsHistoryResult.error) throw fundsHistoryResult.error;
+      if (eventsResult.error) throw eventsResult.error;
 
       setPulseItems((pulseResult.data ?? []) as PulseItem[]);
+      setUpcomingEvents((eventsResult.data ?? []) as CommunityEventItem[]);
       setOverview(((overviewResult.data ?? [null])[0] ?? null) as FundsOverview | null);
       setCommunityDetails(communityResult.data);
       setFundRoles(Array.from(new Set(((roleResult.data ?? []) as FundRoleRow[]).map((row) => row.role))));
@@ -207,18 +227,18 @@ export default function CommunityScreen() {
       return;
     }
 
-    try {
-      await Share.share({
-        message: `Join my community on Wooru!${communityDetails?.name ? `\nCommunity: ${communityDetails.name}` : ''}\nCode: ${code}`,
-      });
-    } catch (error) {
-      const err = error as any;
-      if (err && (err.name === 'AbortError' || err.message?.includes('abort') || err.message?.includes('cancel'))) {
-        return;
-      }
-      Toast.show({ type: 'error', text1: 'Share failed', text2: 'Could not open share options.' });
-    }
-  }, [communityDetails?.code, communityDetails?.name]);
+    const shareUrl = communityId ? siteUrl(`/api/share-community?id=${communityId}`) : null;
+    const message = [
+      `Join my community on Wooru!`,
+      communityDetails?.name ? `Community: ${communityDetails.name}` : null,
+      `Code: ${code}`,
+      shareUrl,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    await shareOrCopy({ message });
+  }, [communityDetails?.code, communityDetails?.name, communityId]);
 
   return (
     <View style={styles.container}>
@@ -237,6 +257,44 @@ export default function CommunityScreen() {
           <Text style={styles.heroMeta}>
             {communityDetails?.address ? `${communityDetails.address} · ` : ''}You are a {appRoleLabel}
           </Text>
+        </View>
+
+        <View style={styles.eventsSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Happening soon</Text>
+            {canPostEvents ? (
+              <TouchableOpacity
+                onPress={() => router.push('/events/add' as any)}
+                style={styles.createButton}
+                activeOpacity={0.85}
+              >
+                <Plus size={14} color={Verandah.primary} aria-hidden={true} />
+                <Text style={styles.createButtonText}>Post event</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
+          {upcomingEvents.length > 0 ? (
+            <>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.eventsCarousel}>
+                {upcomingEvents.map((event) => (
+                  <EventCard key={event.id} event={event} variant="compact" onPress={() => router.push(`/events/${event.id}` as any)} />
+                ))}
+              </ScrollView>
+              <TouchableOpacity onPress={() => router.push('/events' as any)} style={styles.viewAllRow} activeOpacity={0.7}>
+                <Text style={styles.viewAllText}>View all events</Text>
+                <ChevronRight size={14} color={Verandah.accent} aria-hidden={true} />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity onPress={() => router.push('/events' as any)} style={styles.eventsEmptyRow} activeOpacity={0.7}>
+              <CalendarDate size={16} color={Verandah.textTertiary} aria-hidden={true} />
+              <Text style={styles.eventsEmptyText}>
+                {canPostEvents ? 'No events scheduled — post the first one' : 'No events scheduled'}
+              </Text>
+              <ChevronRight size={14} color={Verandah.textTertiary} aria-hidden={true} />
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.fundsSection}>
@@ -365,6 +423,21 @@ export default function CommunityScreen() {
                 </View>
               </BaseCard>
             </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.push('/events/coordinators' as any)} activeOpacity={0.85}>
+              <BaseCard padding={14} style={styles.actionCard}>
+                <View style={styles.actionCardRow}>
+                  <View style={styles.actionCardIconWrap}>
+                    <CalendarDate size={16} color={Verandah.primary} aria-hidden={true} />
+                  </View>
+                  <View style={styles.actionCardTextWrap}>
+                    <Text style={styles.cardTitle}>Manage events coordinators</Text>
+                    <Text style={styles.cardCopy}>Choose who can post cultural, sports & festival events.</Text>
+                  </View>
+                  <ChevronRight size={16} color={Verandah.textMuted} aria-hidden={true} />
+                </View>
+              </BaseCard>
+            </TouchableOpacity>
           </View>
         ) : null}
 
@@ -450,6 +523,43 @@ const styles = StyleSheet.create({
   },
   fundsSection: {
     marginBottom: 0,
+  },
+  eventsSection: {
+    marginBottom: 0,
+  },
+  eventsCarousel: {
+    gap: 10,
+    paddingBottom: 2,
+  },
+  viewAllRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 4,
+    marginTop: 8,
+  },
+  viewAllText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: Verandah.accent,
+  },
+  eventsEmptyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    backgroundColor: Verandah.card,
+    borderRadius: VerandahRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  eventsEmptyText: {
+    flex: 1,
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    color: Verandah.textSecondary,
   },
   compactSection: {
     gap: 6,

@@ -7,7 +7,7 @@ import { Users01 } from '@untitledui/icons/Users01';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, RefreshControl, SectionList, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, RefreshControl, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { CategoryFilter } from '../../components/CategoryFilter';
 import { EmptyState } from '../../components/EmptyState';
@@ -19,8 +19,11 @@ import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { isFreeNow } from '../../lib/availability';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
 import { SegmentedSlider } from '../../components/SegmentedSlider';
+import { shareOrCopy } from '../../lib/share';
+import { siteUrl } from '../../lib/siteUrl';
 import { supabase } from '../../lib/supabase';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
@@ -57,12 +60,12 @@ export default function HomeScreen() {
   const [providers, setProviders] = useState<ProviderWithInteraction[]>([]);
   const [visits, setVisits] = useState<VisitWithJoinerData[]>([]);
   const [pastVisits, setPastVisits] = useState<VisitWithJoinerData[]>([]);
-  const [archivedVisits, setArchivedVisits] = useState<VisitWithJoinerData[]>([]);
-  const [visitTab, setVisitTab] = useState<'upcoming' | 'past' | 'archived'>('upcoming');
+  const [visitTab, setVisitTab] = useState<'upcoming' | 'past'>('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedGroupCategories, setSelectedGroupCategories] = useState<string[] | null>(null);
+  const [availableNowOnly, setAvailableNowOnly] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [providersLoading, setProvidersLoading] = useState(true);
   const [providersLoadError, setProvidersLoadError] = useState<string | null>(null);
@@ -141,24 +144,29 @@ export default function HomeScreen() {
     return full ? full.split(/\s+/)[0] : 'there';
   }, [user?.user_metadata?.full_name]);
 
+  const displayedProviders = useMemo(() => {
+    if (!availableNowOnly) return providers;
+    return providers.filter((p) => isFreeNow((p as any).details));
+  }, [providers, availableNowOnly]);
+
   const handleInviteNeighbors = useCallback(async () => {
     if (!communityInvite?.code) {
       Toast.show({ type: 'error', text1: 'Invite code unavailable', text2: 'Community code is not ready yet.' });
       return;
     }
 
-    try {
-      await Share.share({
-        message: `Join my community on Wooru!${communityInvite.name ? `\nCommunity: ${communityInvite.name}` : ''}\nCode: ${communityInvite.code}`,
-      });
-    } catch (error) {
-      const err = error as any;
-      if (err && (err.name === 'AbortError' || err.message?.includes('abort') || err.message?.includes('cancel'))) {
-        return;
-      }
-      Toast.show({ type: 'error', text1: 'Share failed', text2: 'Could not open share options.' });
-    }
-  }, [communityInvite]);
+    const shareUrl = communityId ? siteUrl(`/api/share-community?id=${communityId}`) : null;
+    const message = [
+      `Join my community on Wooru!`,
+      communityInvite.name ? `Community: ${communityInvite.name}` : null,
+      `Code: ${communityInvite.code}`,
+      shareUrl,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    await shareOrCopy({ message });
+  }, [communityInvite, communityId]);
 
   const fetchProviders = useCallback(async () => {
     if (!communityId) return;
@@ -267,7 +275,6 @@ export default function HomeScreen() {
       if (visits.length === 0) {
         setVisits([]);
         setPastVisits([]);
-        setArchivedVisits([]);
         return;
       }
 
@@ -330,27 +337,16 @@ export default function HomeScreen() {
         return visitDate >= today && status === 'upcoming';
       });
 
-      const thirtyDaysAgo = new Date(today);
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
       let pastData = allVisits.filter(v => {
         const visitDate = parseLocalDateOnly(v.visit_date);
         visitDate.setHours(0, 0, 0, 0);
         const status = normalizeVisitStatus(v.status);
-        return (visitDate < today || status === 'completed' || status === 'cancelled') && visitDate >= thirtyDaysAgo;
+        return visitDate < today || status === 'completed' || status === 'cancelled';
       });
 
-      let archivedData = allVisits.filter(v => {
-        const visitDate = parseLocalDateOnly(v.visit_date);
-        visitDate.setHours(0, 0, 0, 0);
-        const status = normalizeVisitStatus(v.status);
-        return (visitDate < today || status === 'completed' || status === 'cancelled') && visitDate < thirtyDaysAgo;
-      });
-
-      // Sort: upcoming ASC, past DESC, archived DESC
+      // Sort: upcoming ASC, past DESC
       upcomingData.sort((a, b) => parseLocalDateOnly(a.visit_date).getTime() - parseLocalDateOnly(b.visit_date).getTime());
       pastData.sort((a, b) => parseLocalDateOnly(b.visit_date).getTime() - parseLocalDateOnly(a.visit_date).getTime());
-      archivedData.sort((a, b) => parseLocalDateOnly(b.visit_date).getTime() - parseLocalDateOnly(a.visit_date).getTime());
 
       // Client-side filtering for search
       if (debouncedSearchQuery) {
@@ -361,12 +357,10 @@ export default function HomeScreen() {
           v.category.toLowerCase().includes(query);
         upcomingData = upcomingData.filter(filterFn);
         pastData = pastData.filter(filterFn);
-        archivedData = archivedData.filter(filterFn);
       }
 
       setVisits(upcomingData);
       setPastVisits(pastData);
-      setArchivedVisits(archivedData);
     } catch (error: any) {
       console.error(error);
       setVisitsLoadError('Failed to load visits');
@@ -396,8 +390,11 @@ export default function HomeScreen() {
       setActiveSegment(segment);
     }
 
-    if (visitTabParam === 'upcoming' || visitTabParam === 'past' || visitTabParam === 'archived') {
+    if (visitTabParam === 'upcoming' || visitTabParam === 'past') {
       setVisitTab(visitTabParam);
+    } else if (visitTabParam === 'archived') {
+      // Archived was merged into Past — map old deep links onto it.
+      setVisitTab('past');
     }
   }, [segment, visitTabParam]);
 
@@ -518,7 +515,7 @@ export default function HomeScreen() {
 
       {activeSegment === 'providers' ? (
         <FlatList
-          data={providers}
+          data={displayedProviders}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <ProviderCard
@@ -556,6 +553,15 @@ export default function HomeScreen() {
                   onSelectGroupCategories={setSelectedGroupCategories}
                   isLightMode={true}
                 />
+                <TouchableOpacity
+                  style={[styles.availableNowChip, availableNowOnly && styles.availableNowChipActive]}
+                  onPress={() => setAvailableNowOnly((prev) => !prev)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.availableNowChipText, availableNowOnly && styles.availableNowChipTextActive]}>
+                    Available now
+                  </Text>
+                </TouchableOpacity>
               </View>
             </>
           }
@@ -575,7 +581,7 @@ export default function HomeScreen() {
               <EmptyState
                 IconComponent={Users01}
                 title="No Providers Found"
-                message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to add a trusted service provider!"}
+                message={searchQuery || selectedCategory || availableNowOnly ? "Try adjusting your filters" : "Be the first to add a trusted service provider!"}
                 isLightMode={true}
               />
             )
@@ -583,11 +589,11 @@ export default function HomeScreen() {
         />
       ) : (
         <SectionList
-          sections={groupVisitsByCategory(visitTab === 'upcoming' ? visits : visitTab === 'past' ? pastVisits : archivedVisits)}
+          sections={groupVisitsByCategory(visitTab === 'upcoming' ? visits : pastVisits)}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => {
             const displayStatus =
-              (visitTab === 'past' || visitTab === 'archived') && item.status === 'upcoming'
+              visitTab === 'past' && item.status === 'upcoming'
                 ? 'completed'
                 : (item.status as 'upcoming' | 'in_progress' | 'completed' | 'cancelled');
             return (
@@ -652,13 +658,12 @@ export default function HomeScreen() {
               <UpcomingServicesCard />
 
               <View style={styles.filterSection}>
-                <SegmentedSlider<'upcoming' | 'past' | 'archived'>
+                <SegmentedSlider<'upcoming' | 'past'>
                   value={visitTab}
                   onChange={(tab) => setVisitTab(tab)}
                   segments={[
                     { key: 'upcoming', label: `Upcoming (${visits.length})` },
-                    { key: 'past', label: `Recent (${pastVisits.length})` },
-                    { key: 'archived', label: `Archived (${archivedVisits.length})` },
+                    { key: 'past', label: `Past (${pastVisits.length})` },
                   ]}
                   trackStyle={styles.subTabControl}
                   segmentStyle={styles.subTabBtn}
@@ -874,6 +879,29 @@ const styles = StyleSheet.create({
   filterSection: {
     marginTop: 2,
     marginBottom: 2,
+  },
+  availableNowChip: {
+    alignSelf: 'flex-start',
+    marginTop: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: VerandahRadius.pill,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    backgroundColor: Verandah.card,
+  },
+  availableNowChipActive: {
+    backgroundColor: Verandah.accentSoft,
+    borderColor: Verandah.accent,
+  },
+  availableNowChipText: {
+    fontSize: 12.5,
+    fontWeight: '500',
+    fontFamily: VerandahType.sansFamily,
+    color: Verandah.textPrimary,
+  },
+  availableNowChipTextActive: {
+    color: Verandah.accent,
   },
   listContent: {
     paddingBottom: 100,

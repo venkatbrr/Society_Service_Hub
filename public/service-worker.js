@@ -1,14 +1,19 @@
-// Wooru — PWA Service Worker (v5)
+// Wooru — PWA Service Worker (v6)
 // Provides offline caching for static assets and network-first strategy for navigation.
 
 // Bump CACHE_NAME whenever a cached asset changes — the fetch handler is
 // cache-first for images, so installed PWAs keep serving the old icons otherwise.
-const CACHE_NAME = 'wooru-pwa-v5';
+const CACHE_NAME = 'wooru-pwa-v6';
 
-// `/index.html` is the SPA shell every app route rewrites to (see vercel.json).
-// It is the offline fallback for in-app navigation; `/landing.html` is only
-// correct for the marketing root.
-const APP_SHELL = '/index.html';
+// `/app.html` is the SPA shell every app route rewrites to (see vercel.json).
+// It is the offline fallback for in-app navigation; `/` and `/landing.html`
+// serve the marketing page and are only correct for the root.
+//
+// v6 moved the shell off `/index.html` — the root is now the static landing
+// page so Google's OAuth brand review can read it without JavaScript. A stale
+// v5 cache would fall back to the marketing page for every app route, so this
+// rename must ship with the CACHE_NAME bump above.
+const APP_SHELL = '/app.html';
 const STATIC_ASSETS = [
   APP_SHELL,
   '/landing.html',

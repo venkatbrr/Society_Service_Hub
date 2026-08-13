@@ -21,9 +21,11 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { AppIcon } from '../../../components/AppIcon';
+import { SchoolPicker } from '../../../components/SchoolPicker';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
+import { WestHyderabadSchool } from '../../../data/westHyderabadSchools';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { normalizeIndianMobile, toLast10Digits } from '../../../lib/phone';
 import { supabase } from '../../../lib/supabase';
@@ -35,6 +37,13 @@ const INSTITUTION_TYPES = [
 ];
 
 const BOARD_OPTIONS = ['CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University', 'Other'];
+
+// data/westHyderabadSchools.ts levels relevant to each institution type. College
+// has no matches in the catalog, so it always falls straight to free text.
+const SCHOOL_LEVEL_FILTER: Record<'school' | 'preschool', WestHyderabadSchool['level'][]> = {
+  school: ['primary', 'high_school', 'all_in_one'],
+  preschool: ['pre_school'],
+};
 
 const INTENT_OPTIONS = [
   { id: 'carpool', label: 'Carpooling' },
@@ -59,15 +68,6 @@ const renderIntentAddIcon = (id: string, color: string) => {
   }
 };
 
-const POPULAR_SCHOOL_SUGGESTIONS = [
-  'Delhi Public School',
-  'National Public School',
-  "St. Joseph's School",
-  'Ryan International',
-  'Kendriya Vidyalaya',
-  'Orchids International',
-];
-
 export default function AddParentCornerScreen() {
   const router = useRouter();
   const { editId } = useLocalSearchParams<{ editId?: string }>();
@@ -77,6 +77,10 @@ export default function AddParentCornerScreen() {
   const [studentName, setStudentName] = useState('');
   const [institutionType, setInstitutionType] = useState<'school' | 'college' | 'preschool'>('school');
   const [schoolName, setSchoolName] = useState('');
+  const [schoolCatalogId, setSchoolCatalogId] = useState<string | null>(null);
+  // Starts on the searchable catalog picker; "Other" (or editing an entry with
+  // no catalog id) switches to the free-text field.
+  const [useFreeTextSchool, setUseFreeTextSchool] = useState(false);
   const [board, setBoard] = useState('CBSE');
   const [gradeClass, setGradeClass] = useState('');
   const [parentName, setParentName] = useState('');
@@ -140,6 +144,8 @@ export default function AddParentCornerScreen() {
         setStudentName(data.student_name);
         setInstitutionType(data.institution_type);
         setSchoolName(data.school_name);
+        setSchoolCatalogId((data as any).school_catalog_id ?? null);
+        setUseFreeTextSchool(!(data as any).school_catalog_id);
         setBoard(data.board);
         setGradeClass(data.grade_class);
         setParentName(data.parent_name);
@@ -164,6 +170,25 @@ export default function AddParentCornerScreen() {
 
   const toggleIntent = (id: string) => {
     setIntents((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+  };
+
+  const handleInstitutionTypeChange = (type: 'school' | 'college' | 'preschool') => {
+    if (type === institutionType) return;
+    setInstitutionType(type);
+    // The previously picked school may not fit the new type's catalog level —
+    // clear it and go back to the picker (college has no catalog entries, so
+    // it always lands on free text).
+    setSchoolCatalogId(null);
+    setSchoolName('');
+    setUseFreeTextSchool(type === 'college');
+  };
+
+  const handleSelectCatalogSchool = (school: WestHyderabadSchool) => {
+    setSchoolCatalogId(school.id);
+    setSchoolName(school.name);
+    if (BOARD_OPTIONS.includes(school.syllabus)) {
+      setBoard(school.syllabus);
+    }
   };
 
   const handleSubmit = async () => {
@@ -215,6 +240,7 @@ export default function AddParentCornerScreen() {
         student_name: studentName.trim(),
         institution_type: institutionType,
         school_name: schoolName.trim(),
+        school_catalog_id: institutionType === 'college' ? null : schoolCatalogId,
         board: board.trim(),
         grade_class: gradeClass.trim(),
         parent_name: parentName.trim(),
@@ -319,7 +345,7 @@ export default function AddParentCornerScreen() {
                     { borderColor: colors.border, backgroundColor: colors.card },
                     isActive && { backgroundColor: colors.accentSoft, borderColor: colors.accent },
                   ]}
-                  onPress={() => setInstitutionType(t.id as any)}
+                  onPress={() => handleInstitutionTypeChange(t.id as any)}
                 >
                   <View style={styles.iconLabelRow}>
                     <AppIcon name={t.icon} size={12} />
@@ -336,28 +362,43 @@ export default function AddParentCornerScreen() {
         {/* School / College Name */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.textPrimary }]}>School / College Name *</Text>
-          <TextInput
-            style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.textPrimary }]}
-            placeholder="e.g. Delhi Public School (East)"
-            placeholderTextColor={colors.textMuted}
-            value={schoolName}
-            onChangeText={setSchoolName}
-            maxLength={100}
-          />
-          {/* Popular Suggestions */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
-            <View style={{ flexDirection: 'row', gap: 6 }}>
-              {POPULAR_SCHOOL_SUGGESTIONS.map((suggestion) => (
+          {institutionType === 'college' || useFreeTextSchool ? (
+            <>
+              <TextInput
+                style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.textPrimary }]}
+                placeholder={institutionType === 'college' ? 'e.g. Osmania University' : 'e.g. Delhi Public School (East)'}
+                placeholderTextColor={colors.textMuted}
+                value={schoolName}
+                onChangeText={(text) => {
+                  setSchoolName(text);
+                  setSchoolCatalogId(null);
+                }}
+                maxLength={100}
+              />
+              {institutionType !== 'college' && (
                 <TouchableOpacity
-                  key={suggestion}
-                  style={[styles.suggestionChip, { borderColor: colors.border, backgroundColor: colors.cardMuted }]}
-                  onPress={() => setSchoolName(suggestion)}
+                  style={{ marginTop: 6 }}
+                  onPress={() => {
+                    setUseFreeTextSchool(false);
+                    setSchoolName('');
+                  }}
                 >
-                  <Text style={[styles.suggestionChipText, { color: colors.textSecondary }]}>+ {suggestion}</Text>
+                  <Text style={[styles.suggestionChipText, { color: colors.accent }]}>Choose from school list instead</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
+              )}
+            </>
+          ) : (
+            <SchoolPicker
+              value={schoolCatalogId}
+              displayName={schoolName}
+              levelFilter={SCHOOL_LEVEL_FILTER[institutionType]}
+              onSelect={handleSelectCatalogSchool}
+              onSelectOther={() => {
+                setUseFreeTextSchool(true);
+                setSchoolCatalogId(null);
+              }}
+            />
+          )}
         </View>
 
         {/* Board / Curriculum */}
@@ -601,12 +642,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-  },
-  suggestionChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: VerandahRadius.pill,
-    borderWidth: 1,
   },
   suggestionChipText: {
     ...VerandahType.caption,

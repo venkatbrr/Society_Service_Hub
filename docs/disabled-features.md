@@ -102,6 +102,13 @@ The old strings were written for the period when confirmation was off, where an 
 - **Status**: Replaced by per-item limits
 - **Details**: Pre-order food drops no longer expose an overall order cap. Capacity is set per item via `mcn_preorder_items.max_quantity` and enforced by a database trigger. The `mcn_preorder_drops.max_orders` column still exists but is not driven by the UI.
 
+### 7b. Profile photo upload
+
+- **Status**: Removed from the UI 2026-08-13
+- **Details**: `ImageUploader` was removed from `app/profile/edit.tsx` (upload) and the Avatar was removed from the Profile tab identity card (display). `profiles.avatar_url` is untouched — it still round-trips on every profile save and `components/Avatar.tsx` still renders it wherever people appear elsewhere in the app (residents list, provider/post cards), falling back to initials when absent.
+- **Reason**: Save vertical space on the Profile tab and Edit Profile screen.
+- **To re-enable**: restore the `ImageUploader` block in `app/profile/edit.tsx` (see git history around 2026-08-13) and the `Avatar` in the Profile tab identity card. No schema or data migration needed — the column and all rendering elsewhere were never touched.
+
 ### 7. Automatic visit completion sweep
 
 - **Status**: Removed / Dropped
@@ -129,7 +136,7 @@ The old strings were written for the period when confirmation was off, where an 
 ### 9. Supabase Storage uploads
 
 - **Status**: Unused
-- **Details**: The public `community-uploads` bucket still exists, but **no screen writes to it**. All image uploads go to Cloudinary via `lib/cloudinary.ts`. Profile avatars are deterministic initials — there is no avatar upload at all.
+- **Details**: The public `community-uploads` bucket still exists, but **no screen writes to it**. All image uploads go to Cloudinary via `lib/cloudinary.ts`. There is no avatar upload UI (§7b) — `Avatar` renders `profiles.avatar_url` when a row already has one (typically from Google OAuth), deterministic initials otherwise.
 
 ---
 

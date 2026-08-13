@@ -106,18 +106,41 @@ try {
   process.exit(1);
 }
 
-// Copy landing.html to dist so Vercel can serve it at the root route
+// Put the marketing page at dist/index.html and move the Expo SPA shell to
+// dist/app.html.
+//
+// A vercel.json rewrite of "/" cannot do this: Vercel resolves the filesystem
+// before rewrites, so an existing dist/index.html always wins and the root URL
+// served the empty SPA shell instead. Google's OAuth brand review reads
+// https://wooru.in with no JavaScript, so the root must be real static HTML
+// that names the app and explains what it does. vercel.json's catch-all
+// therefore rewrites app routes to /app.html, not /index.html.
 try {
-  const distLandingPath = path.join(__dirname, 'dist', 'landing.html');
+  const distDir = path.join(__dirname, 'dist');
   const publicLandingPath = path.join(__dirname, 'public', 'landing.html');
+  const shellPath = path.join(distDir, 'app.html');
+  const rootPath = path.join(distDir, 'index.html');
 
-  if (fs.existsSync(publicLandingPath)) {
-    fs.copyFileSync(publicLandingPath, distLandingPath);
-    console.log('Successfully copied public/landing.html to dist/landing.html');
-  } else {
-    console.warn('public/landing.html not found, skipping');
+  if (!fs.existsSync(publicLandingPath)) {
+    console.error('public/landing.html not found — refusing to ship a root that Google cannot read');
+    process.exit(1);
   }
+
+  // Guard on app.html so a re-run does not overwrite the shell with the
+  // landing page already sitting at index.html.
+  if (!fs.existsSync(shellPath)) {
+    if (!fs.existsSync(rootPath)) {
+      console.error('dist/index.html missing — did `expo export --platform web` run?');
+      process.exit(1);
+    }
+    fs.renameSync(rootPath, shellPath);
+    console.log('Moved Expo SPA shell to dist/app.html');
+  }
+
+  fs.copyFileSync(publicLandingPath, rootPath);
+  fs.copyFileSync(publicLandingPath, path.join(distDir, 'landing.html'));
+  console.log('Installed landing page at dist/index.html');
 } catch (err) {
-  console.error('Failed to copy landing.html:', err);
+  console.error('Failed to install landing page at root:', err);
   process.exit(1);
 }

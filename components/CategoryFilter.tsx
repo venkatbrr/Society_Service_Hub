@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
   },
   chipInactive: {
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
-    borderColor: Verandah.borderHair,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Verandah.borderWhisper,
   },
   chipText: {
     fontSize: 12.5,

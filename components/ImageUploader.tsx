@@ -56,7 +56,10 @@ export function ImageUploader({
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: compact ? [1, 1] : [16, 9],
-        quality: 0.8,
+        // Cloudinary's incoming transformation + q_auto on delivery both
+        // recompress anyway, so a full-quality upload only spends the
+        // resident's mobile data without a visible gain.
+        quality: 0.7,
       });
 
       if (result.canceled || !result.assets?.length) return;

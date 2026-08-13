@@ -1,4 +1,6 @@
 import { Car01 } from '@untitledui/icons/Car01';
+import { ChevronDown } from '@untitledui/icons/ChevronDown';
+import { ChevronUp } from '@untitledui/icons/ChevronUp';
 import { Clock } from '@untitledui/icons/Clock';
 import { Plus } from '@untitledui/icons/Plus';
 import { SearchLg } from '@untitledui/icons/SearchLg';
@@ -7,11 +9,11 @@ import { Users01 } from '@untitledui/icons/Users01';
 import { XClose } from '@untitledui/icons/XClose';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   RefreshControl,
+  SectionList,
   StyleSheet,
   Text,
   TextInput,
@@ -88,6 +90,7 @@ export default function CarpoolListScreen() {
               `)
               .eq('community_id', communityId)
               .eq('created_by', user.id)
+              .neq('status', 'cancelled')
               .order('created_at', { ascending: false }),
             supabase
               .from('mcn_carpool_requests')
@@ -118,6 +121,7 @@ export default function CarpoolListScreen() {
               `)
               .eq('community_id', communityId)
               .in('id', joinedCarpoolIds)
+              .neq('status', 'cancelled')
               .order('created_at', { ascending: false });
 
             if (joinedErr) throw joinedErr;
@@ -185,6 +189,38 @@ export default function CarpoolListScreen() {
       (item.creator_profile?.full_name && item.creator_profile.full_name.toLowerCase().includes(q))
     );
   });
+
+  // Paused and completed rides start collapsed — most residents only care about active ones.
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set(['paused', 'completed']));
+  const toggleGroup = (key: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const carpoolSections = useMemo(() => {
+    const groups: { key: string; title: string; items: Carpool[] }[] = [
+      { key: 'active', title: 'Active', items: [] },
+      { key: 'paused', title: 'Paused', items: [] },
+      { key: 'completed', title: 'Completed', items: [] },
+    ];
+    const byKey = new Map(groups.map((g) => [g.key, g]));
+    filteredCarpools.forEach((item) => {
+      byKey.get(item.status)?.items.push(item);
+    });
+
+    return groups
+      .filter((g) => g.items.length > 0)
+      .map((g) => ({
+        key: g.key,
+        title: g.title,
+        count: g.items.length,
+        data: collapsedGroups.has(g.key) ? [] : g.items,
+      }));
+  }, [filteredCarpools, collapsedGroups]);
 
   const renderStatusBadge = (status: Carpool['status']) => {
     switch (status) {
@@ -277,10 +313,11 @@ export default function CarpoolListScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <FlatList
+        <SectionList
           {...webPullProps.pullProps}
-          data={filteredCarpools}
+          sections={carpoolSections}
           keyExtractor={(item) => item.id}
+          stickySectionHeadersEnabled={false}
           contentContainerStyle={
             filteredCarpools.length === 0 ? styles.emptyList : styles.listContent
           }
@@ -309,6 +346,25 @@ export default function CarpoolListScreen() {
               onAction={loadError ? () => fetchCarpools(true) : undefined}
             />
           }
+          renderSectionHeader={({ section }) => {
+            const isCollapsed = collapsedGroups.has(section.key);
+            return (
+              <TouchableOpacity
+                style={styles.sectionHeader}
+                onPress={() => toggleGroup(section.key)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.sectionHeaderText, { color: colors.textPrimary }]}>
+                  {section.title} ({section.count})
+                </Text>
+                {isCollapsed ? (
+                  <ChevronDown size={16} color={colors.textSecondary} aria-hidden={true} />
+                ) : (
+                  <ChevronUp size={16} color={colors.textSecondary} aria-hidden={true} />
+                )}
+              </TouchableOpacity>
+            );
+          }}
           renderItem={({ item }) => {
             const isOwner = user?.id === item.created_by;
             const isJoined = item.is_joined;
@@ -557,6 +613,17 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Verandah.paper,
+    paddingVertical: 8,
+  },
+  sectionHeaderText: {
+    ...VerandahType.captionBold,
+    fontSize: 13,
   },
   card: {
     marginBottom: 8,

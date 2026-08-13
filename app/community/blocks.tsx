@@ -1,12 +1,14 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
 import { VerandahRadius, VerandahType , VerandahLayout } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { confirmAction } from '../../lib/confirm';
 import { Tables } from '../../lib/database.types';
+import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type BlockWithCounts = Tables<'community_blocks'> & {
@@ -20,6 +22,7 @@ export default function CommunityBlocksScreen() {
   const labelLower = blockLabel.toLowerCase();
 
   const [blocks, setBlocks] = useState<BlockWithCounts[]>([]);
+  const [blocksLoaded, setBlocksLoaded] = useState(false);
   const [newBlockName, setNewBlockName] = useState('');
   const [loading, setLoading] = useState(false);
   const [isBlocksEnabled, setIsBlocksEnabled] = useState(blocksEnabled);
@@ -45,6 +48,7 @@ export default function CommunityBlocksScreen() {
 
     if (blockError) {
       Toast.show({ type: 'error', text1: 'Unable to load blocks', text2: blockError.message });
+      setBlocksLoaded(true);
       return;
     }
 
@@ -67,6 +71,7 @@ export default function CommunityBlocksScreen() {
         inChargeCount: inChargesByBlock.get(block.id) ?? 0,
       }))
     );
+    setBlocksLoaded(true);
   }, [communityId]);
 
   useFocusEffect(
@@ -93,14 +98,12 @@ export default function CommunityBlocksScreen() {
     };
 
     if (!enabled) {
-      Alert.alert(
-        `Turn off ${labelLower}s?`,
-        `Turning ${labelLower}s off will unscope all residents and ${labelLower} in-charges. Existing fund contributions are kept. Continue?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Continue', style: 'destructive', onPress: perform },
-        ]
-      );
+      confirmAction({
+        title: `Turn off ${labelLower}s?`,
+        message: `Turning ${labelLower}s off will unscope all residents and ${labelLower} in-charges. Existing fund contributions are kept. Continue?`,
+        confirmLabel: 'Continue',
+        onConfirm: perform,
+      });
       return;
     }
 
@@ -130,27 +133,25 @@ export default function CommunityBlocksScreen() {
   };
 
   const archiveBlock = async (block: BlockWithCounts) => {
-    Alert.alert(`Archive ${labelLower}?`, `Archive ${block.name}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Archive',
-        style: 'destructive',
-        onPress: async () => {
-          const { error } = await supabase.rpc('archive_community_block', { p_block_id: block.id });
-          if (error) {
-            Toast.show({ type: 'error', text1: 'Unable to archive', text2: error.message });
-          } else {
-            await load();
-          }
-        },
+    confirmAction({
+      title: `Archive ${labelLower}?`,
+      message: `Archive ${block.name}?`,
+      confirmLabel: 'Archive',
+      onConfirm: async () => {
+        const { error } = await supabase.rpc('archive_community_block', { p_block_id: block.id });
+        if (error) {
+          Toast.show({ type: 'error', text1: 'Unable to archive', text2: error.message });
+        } else {
+          await load();
+        }
       },
-    ]);
+    });
   };
 
   return (
     <View style={styles.container}> 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => goBackSmart(router, '/community/blocks')}>
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Manage {labelLower}s</Text>
@@ -164,33 +165,39 @@ export default function CommunityBlocksScreen() {
           </View>
         </View>
 
-        {isBlocksEnabled ? (
+        {!blocksLoaded ? (
+          <ActivityIndicator color={Verandah.accent} style={{ marginTop: 12 }} />
+        ) : isBlocksEnabled || blocks.length > 0 ? (
           <>
-            <View style={styles.addRow}>
-              <TextInput
-                value={newBlockName}
-                onChangeText={setNewBlockName}
-                placeholder={`Add ${labelLower}`}
-                placeholderTextColor={Verandah.textTertiary}
-                style={styles.input}
-              />
-              <TouchableOpacity style={styles.addBtn} onPress={addBlock}>
-                <Text style={styles.addBtnText}>Add {labelLower}</Text>
-              </TouchableOpacity>
-            </View>
+            {isBlocksEnabled && (
+              <View style={styles.addRow}>
+                <TextInput
+                  value={newBlockName}
+                  onChangeText={setNewBlockName}
+                  placeholder={`Add ${labelLower}`}
+                  placeholderTextColor={Verandah.textTertiary}
+                  style={styles.input}
+                />
+                <TouchableOpacity style={styles.addBtn} onPress={addBlock}>
+                  <Text style={styles.addBtnText}>Add {labelLower}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {blocks.map((block) => (
-              <View key={block.id} style={styles.blockCard}> 
+              <View key={block.id} style={styles.blockCard}>
                 <Text style={styles.blockName}>{block.name}</Text>
                 <Text style={styles.blockMeta}>{block.residentCount} residents · {block.inChargeCount} in-charges</Text>
-                <View style={styles.blockActions}>
-                  <TouchableOpacity style={styles.actionBtn} onPress={() => renameBlock(block)}>
-                    <Text style={styles.actionText}>Rename</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionBtn} onPress={() => archiveBlock(block)}>
-                    <Text style={[styles.actionText, { color: Verandah.danger }]}>Archive</Text>
-                  </TouchableOpacity>
-                </View>
+                {isBlocksEnabled && (
+                  <View style={styles.blockActions}>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => renameBlock(block)}>
+                      <Text style={styles.actionText}>Rename</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => archiveBlock(block)}>
+                      <Text style={[styles.actionText, { color: Verandah.danger }]}>Archive</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             ))}
           </>

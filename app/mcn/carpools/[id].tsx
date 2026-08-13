@@ -3,11 +3,12 @@ import { Car01 } from '@untitledui/icons/Car01';
 import { CheckCircle } from '@untitledui/icons/CheckCircle';
 import { Clock } from '@untitledui/icons/Clock';
 import { Coins01 } from '@untitledui/icons/Coins01';
-import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
+import { MessageChatCircle } from '@untitledui/icons/MessageChatCircle';
 import { Minus } from '@untitledui/icons/Minus';
 import { PauseCircle } from '@untitledui/icons/PauseCircle';
 import { Pencil01 } from '@untitledui/icons/Pencil01';
 import { Phone01 } from '@untitledui/icons/Phone01';
+import { PhoneCall01 } from '@untitledui/icons/PhoneCall01';
 import { PlayCircle } from '@untitledui/icons/PlayCircle';
 import { Plus } from '@untitledui/icons/Plus';
 import { SwitchHorizontal01 } from '@untitledui/icons/SwitchHorizontal01';
@@ -668,15 +669,17 @@ export default function CarpoolDetailScreen() {
                   style={[styles.iconBtn, { backgroundColor: colors.accentSoft }]}
                   onPress={() => handleCallHost(carpool.contact_phone || carpool.creator_profile?.phone_number)}
                   activeOpacity={0.8}
+                  accessibilityLabel="Call"
                 >
-                  <Phone01 size={18} color={colors.primary} aria-hidden={true} />
+                  <PhoneCall01 size={18} color={colors.primary} aria-hidden={true} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.iconBtn, { backgroundColor: colors.accentSoft }]}
                   onPress={() => handleWhatsAppHost(carpool.contact_phone || carpool.creator_profile?.phone_number)}
                   activeOpacity={0.8}
+                  accessibilityLabel="WhatsApp"
                 >
-                  <MessageCircle01 size={18} color={colors.primary} aria-hidden={true} />
+                  <MessageChatCircle size={18} color={colors.primary} aria-hidden={true} />
                 </TouchableOpacity>
               </View>
             ) : null}

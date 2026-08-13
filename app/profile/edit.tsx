@@ -1,3 +1,4 @@
+import { Lock01 } from '@untitledui/icons/Lock01';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -14,7 +15,6 @@ import {
 import Toast from 'react-native-toast-message';
 import { FlatPicker } from '../../components/FlatPicker';
 import { HeaderBackButton } from '../../components/HeaderBackButton';
-import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
@@ -26,19 +26,54 @@ export default function EditProfileScreen() {
 
   const [fullName, setFullName] = useState(profile?.full_name || user?.user_metadata?.full_name || '');
   const [selectedFlatId, setSelectedFlatId] = useState<string | null>((profile as any)?.flat_id || null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || user?.user_metadata?.avatar_url || null);
+  // Captured once on load — this is what decides whether the flat picker is
+  // still open, not the (possibly just-picked) selectedFlatId above. A
+  // resident who arrives with no flat set must still be able to pick one.
+  const [isFlatLocked, setIsFlatLocked] = useState(!!(profile as any)?.flat_id);
+  // No UI writes this anymore (profile photos were removed, see item 5), but
+  // the existing value — often a Google OAuth avatar — is still round-tripped
+  // on save so it isn't silently wiped.
+  const [avatarUrl] = useState<string | null>(profile?.avatar_url || user?.user_metadata?.avatar_url || null);
   const [email, setEmail] = useState(user?.email || '');
   const [loading, setLoading] = useState(false);
 
   const colors = Verandah;
 
+  const [lockedFlatDisplay, setLockedFlatDisplay] = useState<string | null>(null);
+
   useEffect(() => {
     if (profile) {
       if (profile.full_name) setFullName(profile.full_name);
-      if (profile.avatar_url) setAvatarUrl(profile.avatar_url);
-      if ((profile as any).flat_id) setSelectedFlatId((profile as any).flat_id);
+      if ((profile as any).flat_id) {
+        setSelectedFlatId((profile as any).flat_id);
+        setIsFlatLocked(true);
+      }
     }
   }, [profile]);
+
+  useEffect(() => {
+    const flatId = (profile as any)?.flat_id;
+    if (!isFlatLocked || !communityId || !flatId) return;
+
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc('list_community_flats', {
+        p_community_id: communityId,
+        p_block_id: (profile as any)?.block_id ?? null,
+      });
+      if (cancelled) return;
+      const match = ((data ?? []) as any[]).find((f) => f.id === flatId);
+      if (match) {
+        setLockedFlatDisplay(match.block_name ? `${match.block_name}-${match.flat_number}` : match.flat_number);
+      } else if (profile?.flat_number) {
+        setLockedFlatDisplay(profile.flat_number);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isFlatLocked, communityId, profile]);
 
   const handleSave = async () => {
     if (!fullName.trim()) {
@@ -75,8 +110,9 @@ export default function EditProfileScreen() {
 
       if (profileError) throw profileError;
 
-      // Save flat if changed
-      if (selectedFlatId !== ((profile as any)?.flat_id || null)) {
+      // Save flat if changed. Locked once set — see isFlatLocked above — so
+      // this only ever fires for a resident picking a flat for the first time.
+      if (!isFlatLocked && selectedFlatId !== ((profile as any)?.flat_id || null)) {
         const { error: flatError } = await supabase.rpc('set_my_flat', {
           p_flat_id: selectedFlatId,
         });
@@ -112,17 +148,6 @@ export default function EditProfileScreen() {
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Profile Picture</Text>
-          <ImageUploader
-            currentImageUrl={avatarUrl}
-            onImageUploaded={(url) => setAvatarUrl(url)}
-            onImageRemoved={() => setAvatarUrl(null)}
-            subfolder="avatars"
-            aspectRatio={1}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
           <Text style={styles.label}>Full Name</Text>
           <TextInput
             style={styles.input}
@@ -136,16 +161,28 @@ export default function EditProfileScreen() {
 
         {communityId && (
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Flat / Unit Number</Text>
-            <FlatPicker
-              communityId={communityId}
-              value={selectedFlatId}
-              onChange={(flatId) => setSelectedFlatId(flatId)}
-              blockLabel={blockLabel}
-              allowClear={true}
-              required={false}
-              disabled={loading}
-            />
+            <Text style={styles.label}>{blockLabel} / Flat Number</Text>
+            {isFlatLocked ? (
+              <>
+                <View style={styles.lockedFlatRow}>
+                  <Text style={styles.lockedFlatText}>{lockedFlatDisplay ?? profile?.flat_number ?? '—'}</Text>
+                  <Lock01 size={16} color={colors.textTertiary} aria-hidden={true} />
+                </View>
+                <Text style={styles.helpText}>
+                  To change your {blockLabel.toLowerCase()} or flat, ask your president to update it.
+                </Text>
+              </>
+            ) : (
+              <FlatPicker
+                communityId={communityId}
+                value={selectedFlatId}
+                onChange={(flatId) => setSelectedFlatId(flatId)}
+                blockLabel={blockLabel}
+                allowClear={true}
+                required={false}
+                disabled={loading}
+              />
+            )}
           </View>
         )}
 
@@ -229,6 +266,22 @@ const styles = StyleSheet.create({
     color: Verandah.textTertiary,
     lineHeight: 16,
     fontFamily: VerandahType.sansFamily,
+  },
+  lockedFlatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    borderRadius: VerandahRadius.search,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: Verandah.cardMuted,
+  },
+  lockedFlatText: {
+    fontSize: 15,
+    fontFamily: VerandahType.sansFamily,
+    color: Verandah.textSecondary,
   },
   footer: {
     padding: 20,

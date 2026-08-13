@@ -91,9 +91,10 @@ Rule of thumb: **if the result belongs in a file, use the CLI; if the result is 
 | Domain | Source | Notes |
 |--------|--------|-------|
 | Provider & visit categories | `constants/categories.ts` | `CATEGORIES` plus `CATEGORY_GROUPS` for the two-level picker. **Never define a local category array in a screen.** |
-| Category-specific provider fields | `constants/providerDetails.ts` | Drives the JSONB `service_providers.details` |
+| Category-specific provider fields | `constants/providerDetails.ts` | Drives the JSONB `service_providers.details`. Maid/Cook additionally carry `freeSlots`/`weeklyOff` — see `lib/availability.ts` |
 | Personal reminder categories | `lib/serviceCategories.ts` | Labels, emoji, icons, default frequencies, provider-category mapping |
 | School review aspects | `constants/schoolReviewAspects.ts` | 8 aspects, emoji scale, grade options |
+| West Hyderabad schools catalog | `data/westHyderabadSchools.ts` | 81 curated schools; feeds the Schools module and `components/SchoolPicker.tsx` (Parent Corner) |
 | SOS vocabulary | `constants/sos.ts` | Blood groups, emergency categories |
 | Legal copy & policies | `data/legal.ts` | Single source for in-app `/legal` and public `public/*.html`. Run `npm run legal:html` after editing. |
 
@@ -145,7 +146,7 @@ Full reference: [`verandah.md`](verandah.md).
 - Font weights of 600 or above
 - Decorative emojis in navigation or settings chrome
 
-**Reuse instead of re-implementing**: `BaseCard` (card shells) · `Avatar` (people) · `Rupees` (currency) · `EmptyState` (empty lists) · `SearchBar` · `CategoryFilter` · `HeaderBackButton` · `ImageUploader`.
+**Reuse instead of re-implementing**: `BaseCard` (card shells) · `Avatar` (people) · `Rupees` (currency) · `EmptyState` (empty lists) · `SearchBar` · `CategoryFilter` · `HeaderBackButton` · `ImageUploader` · `SchoolPicker` (searchable catalog picker with an "Other" free-text escape hatch — model any future searchable-catalog field on this, not `FlatPicker`'s inline panel).
 
 Keep all user-facing copy in **sentence case**. Reserve serif/display type for the single largest title anchor on a screen.
 
@@ -220,7 +221,7 @@ Do not restate schema columns in `features.md` — name the table and let `archi
 
 ## 8. Intentionally disabled
 
-- **Email verification** — off in Supabase for lower-friction pilot onboarding.
+- **Email verification** — intended off, for lower-friction pilot onboarding. **Verified 2026-08-13 that it is currently ON in the Supabase project**: a fresh `/auth/v1/signup` account got `email_not_confirmed` on login until `auth.users.email_confirmed_at` was set directly. Either the Supabase Auth setting drifted from what this doc assumes, or it was never actually turned off — check the dashboard before trusting this line, and update it once confirmed either way.
 - **Password strength validation** — removed for a simpler signup flow.
 
 Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
@@ -262,7 +263,8 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Swapping a web icon without bumping `CACHE_NAME` in `public/service-worker.js` | The fetch handler is cache-first for images, so installed PWAs keep serving the old icon indefinitely. |
 | Pre-caching with `cache.addAll()` in the service worker | It is atomic — a single 404 rejects the whole install and the worker **never activates**, silently disabling offline support for everyone. Cache each entry with its own `cache.add().catch()`. |
 | Assuming the service worker's hostname skip-list covers our API | It only tests `url.hostname`, so same-origin `/api/*` (e.g. `/api/share-drop`) fell through to the cache-first branch and was replayed forever — nothing evicts an entry until `CACHE_NAME` changes. There is now an explicit same-origin `/api/` bail-out. |
-| Using `/landing.html` as the service worker's offline navigation fallback | That is the marketing page. An offline back/reload inside the app dropped users onto it. The SPA shell `/index.html` is the correct fallback for app routes; `/landing.html` only for the root. |
+| Using `/landing.html` as the service worker's offline navigation fallback | That is the marketing page. An offline back/reload inside the app dropped users onto it. The SPA shell is the correct fallback for app routes; `/landing.html` only for the root. |
+| Expecting a `vercel.json` rewrite of `/` to serve the landing page | Vercel resolves the filesystem **before** rewrites, so the exported `dist/index.html` always won and `wooru.in` served an empty SPA shell — which failed Google's OAuth brand review, since the reviewer reads the page without JavaScript. `build-admin.js` now renames the Expo shell to `dist/app.html` and copies `public/landing.html` over `dist/index.html`; the catch-all rewrite targets `/app.html`. The shell path is duplicated in `public/service-worker.js` (`APP_SHELL`) — changing one without the other, or without bumping `CACHE_NAME`, serves the marketing page for every app route. |
 | Expecting `goBackSmart(router, path)` to take the *destination* | The second argument is the **current** route — `goBackSmart` derives the parent from it. Passing the destination resolves one level too high (`/mcn/carpools` yielded `/network`) and, because previous ≠ parent, takes the `replace()` fallback and burns a history entry. Three screens had this bug; fixed 2026-08-09. |
 | Expecting `notifications` rows for hire feedback | It is a purely local `expo-notifications` schedule, not a table row. |
 | Testing Google Sign-In in Expo Go | Requires a dev build. |
@@ -292,6 +294,12 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Interpolating user text into a PostgREST `.or()` filter | `,` is the delimiter and `%` is a wildcard. Strip `,()%\.` before interpolating to avoid `PGRST100` 400 errors or wildcard injection. |
 | Assuming a `.delete()` matching zero rows throws an error | It does not. `supabase-js` returns `{ error: null }`. Chain `.select('id')` and assert `data?.length === 1`. |
 | `wa.me` / `whatsapp://` URL built from bare 10-digit mobile | Stored numbers are 10 digits. `wa.me` requires international country code — prefix `91` at link time. |
-| `Share.share` on desktop web | Rejects when `navigator.share` is absent. Branch on `Platform.OS === 'web' && navigator.share` first with toast fallback. |
+| `Share.share` on desktop web | Rejects when `navigator.share` is absent. Never call `Share.share` directly — use `shareOrCopy({ title, message })` from `lib/share.ts`, which branches on `Platform.OS === 'web' && navigator.share` and falls back to a clipboard copy + toast. Fixed at all 11 call sites 2026-08-13; keep new ones at zero raw `Share.share` calls (`grep -rn "Share\.share(" app/ components/`). |
+| A link-preview crawler reading a community/business table directly | `mcn_listings` and `communities` both scope `SELECT` to `get_user_community_id()`, which resolves to nothing for an unauthenticated crawler — a direct `.from(...)` read from a Vercel share endpoint (no session) returns `[]`, not an error, so the OG tags silently fall back to defaults. Route through `get_listing_og_card(p_id)` / `get_community_og_card(p_id)`, `SECURITY DEFINER` and granted to `anon`. `mcn_preorder_drops` is the exception — it already has a deliberate anon-readable policy for pre-signup browsing, so `api/share-drop.ts` reads it directly. |
+| `mcn_preorder_drops_select_public` (`USING (true)`) looking like an oversight | It's deliberate — `20260802010000_allow_public_food_drop_read.sql`, "Allow anonymous users to browse food drops and item menus" (so a shared drop link works logged-out). Don't narrow it without checking whether that pre-signup browse flow is still wanted. |
+| `flex: 1` + `height: N` on a button used outside a `flexDirection: 'row'` sibling pair | The `flex` shorthand sets `flexBasis: 0` on the main axis. Inside a `row` (e.g. two buttons split by `flex: 1` in a modal footer), that's fine — `height` independently sets the cross-axis size. Reuse the same style for a lone button in a plain `column` `View` and the main-axis `height` gets ignored in favor of flex-grow against whatever free space the parent happens to have — the button collapses to content height instead of 52px. Give a standalone button its own style with `height` and no `flex`. Hit this on the business-listing "Save details" button (`app/mcn/listing/manage/[id].tsx`) reusing `modalPrimaryBtn`, which was designed for the two-button modal footer. |
 | Assuming `pg_cron` is available for scheduled database tasks | `pg_cron` is not installed on this project. Do not write migrations assuming scheduled background database jobs. |
 | Hand-rolling new tab animations or painting highlights behind chips with opaque fill | Use `SegmentedSlider` for contained controls (Family A) and `ChipRowSlider` for variable-width chip rows (Family B). Painting a highlight behind chips with opaque card fill hides the pill during transit. |
+| Assuming `public.events` is the community-events table | It is a **fund** (§5 Database work → `architecture.md` §4.4). The community-events module (cultural/sports/festival posts, added 2026-09-07) is deliberately named `community_events` / `community_event_contacts` / `community_event_organizers` throughout — never shorten to `events` in new code near this feature. |
+| Writing a cap-checking trigger without `SECURITY DEFINER` | Same failure mode as the food-drop caps (`20260823000000`): an invoker-rights `COUNT`/`SUM` runs under the caller's own RLS and can under-count rows owned by other users. The community-events contact cap and creator cap triggers are `SECURITY DEFINER` for this reason even though, in this particular case, the SELECT policies happen to be community-scoped rather than owner-scoped — make it a habit for any new cap trigger rather than re-deriving the RLS interaction each time. |
+| `ChipRowSlider` for an optional single-select field (nullable value) | It always renders its animated pill on some chip — `resolvedValue = value ?? chips[0].key` — so a `null` value still shows the first chip as "selected". Fine for tabs/segments that always have a real value; wrong for an optional field like an event's start/end time. Use a plain chip row (`TouchableOpacity` + local styles, see `TimeChipRow` in `app/events/add.tsx`) when "nothing selected" must be a real, visible state. |

@@ -5,6 +5,8 @@
  * All images go to the `wooru` folder on Cloudinary.
  */
 
+import { Platform } from 'react-native';
+
 const CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
@@ -136,6 +138,15 @@ export function cloudinaryUrl(url: string, transform: CloudinaryTransform = {}):
   if (height) params.push(`h_${Math.round(height)}`);
   if (width || height) params.push(`c_${crop}`);
   if (quality) params.push(`q_${quality}`);
+  // Serves AVIF/WebP to clients that accept it (mainly web — the RN Image
+  // renderer on native doesn't send an Accept header Cloudinary can negotiate
+  // against), JPEG otherwise. Biggest single win on top of q_auto alone.
+  params.push('f_auto');
+  if (Platform.OS === 'web') {
+    // dpr_auto avoids shipping 3x pixel density to a 1x desktop display.
+    // Native skips this — RN doesn't send the client hints Cloudinary reads.
+    params.push('dpr_auto');
+  }
   if (!params.length) return url;
 
   const insertAt = markerIndex + DELIVERY_MARKER.length;

@@ -2,10 +2,11 @@ import { Share07 } from '@untitledui/icons/Share07';
 import { Star01 } from '@untitledui/icons/Star01';
 import { Image } from 'expo-image';
 import React from 'react';
-import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { cloudinaryUrl } from '../lib/cloudinary';
+import { shareOrCopy } from '../lib/share';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
@@ -56,7 +57,9 @@ export const McnListingCard = React.memo(({
     const flatNo = listing.profiles?.flat_number ? `Flat ${listing.profiles.flat_number}` : '';
     const catLabel = listing.category?.name || '';
 
-    const shareUrl = siteUrl(`/mcn/listing/${listing.id}`);
+    // Route through the OG-preview endpoint (api/share-listing.ts) so WhatsApp/
+    // Facebook/etc. crawlers render the listing's name, description, and photo.
+    const shareUrl = siteUrl(`/api/share-listing?id=${listing.id}`);
 
     const messageLines = [
       `*Community Business: ${listing.name}*`,
@@ -77,16 +80,7 @@ export const McnListingCard = React.memo(({
     messageLines.push(shareUrl);
 
     const message = messageLines.filter(Boolean).join('\n');
-
-    try {
-      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: listing.name, text: message });
-      } else {
-        await Share.share({ message, title: listing.name });
-      }
-    } catch (err) {
-      console.error('Error sharing business listing:', err);
-    }
+    await shareOrCopy({ title: listing.name, message });
   };
 
   return (

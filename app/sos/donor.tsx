@@ -20,7 +20,7 @@ import { BLOOD_GROUPS } from '../../constants/sos';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeIndianMobile, toLast10Digits } from '../../lib/phone';
-import { replaceTracked } from '../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 const MAX_NOTE_LENGTH = 140;
@@ -186,7 +186,7 @@ export default function DonorFormScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <HeaderBackButton onPress={() => router.back()} color={Verandah.primary} style={styles.backButton} />
+        <HeaderBackButton onPress={() => goBackSmart(router, '/sos/donor')} color={Verandah.primary} style={styles.backButton} />
         <View style={styles.headerCopy}>
           <Text style={styles.title}>{existingId ? 'Edit donor profile' : 'Register as donor'}</Text>
           <Text style={styles.subtitle}>Only your community members can view this number.</Text>

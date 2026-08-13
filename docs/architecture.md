@@ -178,6 +178,9 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 | `community_flats` | `community_id`, `block_id`, `flat_number`, `floor_label`, `archived_at` | Community |
 | `flat_addition_requests` | `community_id`, `block_id`, `requested_by`, `flat_number`, `status`, `rejection_reason`, `reviewed_by`, `reviewed_at` | Resident / lead / platform |
 | `profile_audit_log` | Audit trail for profile mutations | Platform |
+| `community_events` | ⚠️ Not the funds `events` table (§4.4) — deliberately renamed to avoid the collision. `title`, `category` (cultural/sports/festival/meeting/workshop/other), `description`, `image_url`, `venue`, `event_date` (local `YYYY-MM-DD`), `start_time`, `end_time`, `registration_last_date`, `entry_fee` (display only), `registration_link`, `status` (`published`/`cancelled`), `cancelled_at`, `cancellation_note`, `created_by` | Community |
+| `community_event_contacts` | `event_id`, `name`, `phone`, `role_label`, `sort_order` — max 3 per event, trigger-enforced | Scoped via parent event |
+| `community_event_organizers` | `community_id`, `user_id`, `granted_by` — the "events coordinator" grant. Not an `app_role` value; any number of residents can hold it alongside their existing role | Community |
 
 **Flat and Block Normalization Model** (migrations `20260904000000`–`20260904000300`):
 - `community_flats` is the canonical inventory of verified units in a community.
@@ -191,7 +194,7 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 |-------|-------------|-------|
 | `service_providers` | `name` (2-80), `phone`, `category`, `description` (≤1000), `details` (JSONB), `flat_block`, `avg_rating`, `rating_count`, `is_verified` (RPC locked), `is_trending`, `fraud_status` (`pass`/`queued_low`/`hidden`/`blocked`), `visibility`, `shared_by_community_id`, `created_by` | Community |
 | `favorites` | Saved providers | User |
-| `ratings` | 1–5 rating + `review_text` (≤1000), one per user/provider | Community read, owner write |
+| `ratings` | 1–5 rating + `review_text` (≤1000) + optional `image_url` (one photo, Cloudinary `subfolder="reviews"`), one per user/provider or user/listing (`provider_id`/`listing_id` — same table backs both provider ratings and business-listing reviews) | Community read, owner write |
 | `provider_hires` | Contact/hire log; `contact_date` generated column with unique index `(user_id, provider_id, contact_date)` | Community |
 | `provider_reports` | `reason` (wrong_info/spam/inappropriate/unavailable/other), `status` (pending/reviewed/dismissed), `details` (≤500), `reported_by`, `reviewed_by`, `reviewed_at` | Community |
 | `provider_personal_notes` | Private per-resident note (≤1000), one per user/provider pair | **User** |
@@ -280,7 +283,7 @@ Migration `20260824000000` fixed the app's code path but left the database open:
 
 | Table | Key columns |
 |-------|-------------|
-| `mcn_parent_corner` | `student_name`, `institution_type` (`school`/`college`/`preschool`), `school_name`, `board`, `grade_class`, `parent_name`, `flat_number`, `contact_phone`, `intents` (`TEXT[]`, GIN-indexed — structured tags: `carpool`, `study_group`, `homework_help`, `school_info`, `activities`, `playdate`, `other`), `notes`. Constrained by `mcn_parent_corner_text_lengths` (`student_name` ≤60, `school_name` ≤100, `board` ≤40, `grade_class` ≤40, `parent_name` ≤60, `flat_number` ≤12, `contact_phone` ≤15, `notes` ≤300) and `mcn_parent_corner_intents_valid` (`<= 7` items from the allowed set). |
+| `mcn_parent_corner` | `student_name`, `institution_type` (`school`/`college`/`preschool`), `school_name`, `school_catalog_id` (nullable `TEXT`, no FK — set when the parent picked from `data/westHyderabadSchools.ts` via `components/SchoolPicker.tsx` rather than typing free text), `board`, `grade_class`, `parent_name`, `flat_number`, `contact_phone`, `intents` (`TEXT[]`, GIN-indexed — structured tags: `carpool`, `study_group`, `homework_help`, `school_info`, `activities`, `playdate`, `other`), `notes`. Constrained by `mcn_parent_corner_text_lengths` (`student_name` ≤60, `school_name` ≤100, `board` ≤40, `grade_class` ≤40, `parent_name` ≤60, `flat_number` ≤12, `contact_phone` ≤15, `notes` ≤300) and `mcn_parent_corner_intents_valid` (`<= 7` items from the allowed set). |
 | `schools` | `name`, `level`, `syllabus`, `distance`, `fee_range`, `facilities` (`TEXT[]`), `area_locality`, `address`, `contact_phone`, `website`, `google_maps_link`, `google_rating`, plus trigger-maintained `avg_academics`, `avg_teachers`, `avg_infrastructure`, `avg_sports_activities`, `avg_safety`, `avg_transport`, `avg_value`, `avg_happiness`, `review_count` |
 | `school_reviews` | `school_id` (accepts text IDs for curated schools), `child_grade`, eight `*_score` columns, eight optional `*_comment` columns, `overall_comment` |
 | `mcn_posts` | `kind` (`business`/`borrow`), `title`, `description`, `contact_hint`, `is_available` |
@@ -334,7 +337,7 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 ### Predicates
 
-`is_admin(p_user_id?)` *(⚠️ alias for `is_community_lead` — NOT a platform-admin check)* · `is_platform_admin(p_user_id?)` *(`app_role = 'admin'` and `community_id IS NULL`)* · `is_community_lead(p_user_id?)` *(president or vice_president, `removed_at IS NULL`)* · `is_user_approved(p_user_id?)` · `is_funds_enabled(p_community_id)` · `is_blocks_enabled(p_community_id)` · `get_user_community_id()` · `get_my_block_id()`
+`is_admin(p_user_id?)` *(⚠️ alias for `is_community_lead` — NOT a platform-admin check)* · `is_platform_admin(p_user_id?)` *(`app_role = 'admin'` and `community_id IS NULL`)* · `is_community_lead(p_user_id?)` *(president or vice_president, `removed_at IS NULL`)* · `is_event_organizer(p_user_id?)` *(holds a `community_event_organizers` grant in their own community — pure "has the grant" check; call sites compose it with `OR is_community_lead()` for the lead override, the same way `fund_roles` capability checks stay separate from lead checks)* · `is_user_approved(p_user_id?)` · `is_funds_enabled(p_community_id)` · `is_blocks_enabled(p_community_id)` · `get_user_community_id()` · `get_my_block_id()`
 
 ### Providers and visits
 
@@ -352,6 +355,10 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 `get_community_insights(...)` · `get_community_pulse(p_limit)` · `get_all_communities()`
 
+### Community events
+
+`upsert_community_event(p_event_id, p_title, p_category, p_description, p_image_url, p_venue, p_event_date, p_start_time, p_end_time, p_registration_last_date, p_entry_fee, p_registration_link, p_contacts)` — the only supported way to create or edit an event; writes the event row and its 1–3 `community_event_contacts` in one transaction so a contact-cap rejection cannot leave an event with no way to reach its organizers (mirrors `place_mcn_preorder()`). `p_event_id NULL` creates, non-null edits (existing contacts are cleared and re-inserted). Derives scope from `auth.uid()`; caller must hold the `is_event_organizer()` grant or be a lead. Cancelling is not an RPC — it's a direct `UPDATE community_events SET status = 'cancelled'` under RLS, since it's a single-table change with no atomicity concern.
+
 ### MCN
 
 `place_mcn_preorder(p_drop_id, p_items, p_buyer_name, p_buyer_phone, p_flat_number, p_buyer_note, p_order_id)` — **the only supported way to place or edit a pre-order.** `p_items` is `[{"item_id": uuid, "quantity": numeric}]`, aggregated by item so a repeated id cannot bypass the cap; a non-null `p_order_id` edits that order (its existing lines are cleared first, so the buyer's own prior quantity is excluded from the cap sums rather than double-counted). Returns the order id. `check_mcn_drop_item_capacity(...)` — validates a drop's total `max_orders` cap. `check_mcn_drop_item_quantity_capacity(...)` — same idea, scoped to one item's `max_quantity` shared across every buyer. `get_mcn_drop_item_availability(p_drop_id)` — remaining stock per item, for display; the drop screen re-reads it on focus because another resident's order makes it stale.
@@ -360,6 +367,8 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 `get_mcn_carpool_seats(p_carpool_id)` — returns `(total_seats INT, booked_seats INT, remaining_seats INT)` dynamically derived from accepted requests.
 `get_mcn_carpool_passengers(p_carpool_id)` — returns `(passenger_name TEXT, passenger_flat TEXT, seats INT)` for society co-passenger roster visibility (excludes phone numbers).
+
+`get_listing_og_card(p_id)` / `get_community_og_card(p_id)` *(added `20260906000000`)* — `SECURITY DEFINER`, granted to `anon` and `authenticated`, each returning only the 2–3 columns a link-preview crawler needs (`name`/`description`/`image_url`; `name`/`address`). Exist because `mcn_listings_select` and `communities_select_own` are both scoped to `get_user_community_id()`, which resolves to nothing for an unauthenticated crawler — a direct table read from `api/share-listing.ts` / `api/share-community.ts` would silently return zero rows. `mcn_preorder_drops` needs no equivalent: it already has a deliberate anon-readable policy (`20260802010000_allow_public_food_drop_read.sql`, "Allow anonymous users to browse food drops"), so `api/share-drop.ts` reads the table directly.
 
 ### Platform admin console
 
@@ -412,6 +421,10 @@ All are `SECURITY DEFINER` and raise unless `is_platform_admin(auth.uid())`. **T
 | `on_mcn_carpool_status` | `mcn_carpools` | AFTER UPDATE | Emits `carpool_cancelled` / `carpool_paused` to confirmed passengers and cascades request cancellations |
 | `prevent_mcn_item_delete_with_orders` | `mcn_preorder_items` | BEFORE DELETE | Reject removing an item residents have pre-ordered. Skipped when the parent drop is itself being deleted, so whole-drop deletion still cascades |
 | `*_updated_at` triggers | `provider_personal_notes`, `blood_donors`, `emergency_contacts`, `mcn_carpools`, `mcn_carpool_requests`, `mcn_parent_corner`, and other MCN tables | BEFORE UPDATE | Refresh `updated_at` |
+| `trg_community_event_contact_cap` | `community_event_contacts` | BEFORE INSERT | Reject a 4th contact on the same event. `SECURITY DEFINER` |
+| `trg_community_event_immutables` | `community_events` | BEFORE UPDATE | Prevents mutating `community_id` or `created_by`; stamps `updated_at`. `SECURITY DEFINER` |
+| `trg_community_event_stamp_cancellation` | `community_events` | BEFORE UPDATE | Stamps/clears `cancelled_at` on a `status` transition to/from `cancelled` (mirrors `stamp_mcn_preorder_cancellation`). `SECURITY DEFINER` |
+| `trg_community_event_creator_cap` | `community_events` | BEFORE INSERT | Anti-spam: at most 5 published, future-dated events per creator at a time (same shape as the food-drop concurrent-open cap, `20260821000100`). `SECURITY DEFINER` |
 
 
 ---
@@ -430,6 +443,9 @@ RLS is enabled on every active table.
 | `provider_hires`, `provider_reports` | Community-scoped |
 | `favorites`, `hire_feedback`, `provider_personal_notes`, `provider_public_rating_nudges`, `user_services`, `user_service_history` | **User-owned only** — `auth.uid() = user_id`, no lead or admin override |
 | `events`, `event_transactions`, `fund_roles` | Community-scoped read, role-gated write, plus trigger guards |
+| `community_events` | Community-scoped read; insert/update requires `is_event_organizer()` OR `is_community_lead()` (plus `created_by = auth.uid()` on insert, creator-or-lead on update); delete adds `is_platform_admin()` |
+| `community_event_contacts` | Visibility and write both follow the parent event's community/creator-or-lead check — no independent policy of its own |
+| `community_event_organizers` | Community-scoped read; insert/delete lead-only |
 | `funds_access_requests`, `community_blocks` | Community-visible read; **writes are RPC-only** |
 | `funds_access_revocations` | Platform-admin read; RPC-only write |
 | `notifications` | User-owned read and mark-read |
@@ -534,6 +550,8 @@ This is exactly what broke MCN browser-back. `app/(tabs)/network.tsx` (the hub t
 
 To check for collisions after adding routes, build the linking config and run `getStateFromPath` over your new URLs; a collision throws with both conflicting screen names.
 
+**Not a collision, despite looking like one:** a tab file plus a same-named subdirectory (`app/(tabs)/community.tsx` owning `/community` alongside `app/community/blocks.tsx` and `app/community/flats.tsx` owning `/community/blocks` and `/community/flats`) is fine — the collision rule only bites when two files resolve to the **exact same** path, not when one is a sub-path of the other. `app/(tabs)/profile.tsx` + `app/profile/edit.tsx` is the same shape and has never caused a problem. When a president reported blocks/flats "not visible" (2026-08-13), this was the leading hypothesis and it was wrong — traced to a stale-render bug in the screens instead (see §5 in features.md and the block-list note above). Don't re-reach for this explanation without checking the actual URLs first.
+
 ### Back navigation (`lib/navigation.ts`)
 
 The app distinguishes **two different meanings of "back"**, and conflating them is what previously broke browser history.
@@ -552,7 +570,7 @@ The app distinguishes **two different meanings of "back"**, and conflating them 
 
 **API**
 
-- `getImmediateParentRoute(path)` — maps every `/mcn/*` route (plus `/services/*`, `/legal`, and `/funds/*`) to its logical parent, e.g. `/legal` → `/profile`, `/mcn/drops/manage/:id` → `/mcn/drops/:id` → `/mcn/drops` → `/network`, or `/funds/add-transaction?event_id=X` → `/funds/X` → `/funds` → `/community`. Accepts an optional query string because a few parents are context-dependent: `/mcn/schools/review?schoolId=X` → that school, `/mcn/add?source=my-posts` → My Submissions, and `/funds/add-transaction?event_id=X` → that fund.
+- `getImmediateParentRoute(path)` — maps every `/mcn/*` route (plus `/services/*`, `/legal`, `/funds/*`, `/sos/*`, `/events/*`, and `/community/blocks`+`/community/flats`) to its logical parent, e.g. `/legal` → `/profile`, `/mcn/drops/manage/:id` → `/mcn/drops/:id` → `/mcn/drops` → `/network`, `/funds/add-transaction?event_id=X` → `/funds/X` → `/funds` → `/community`, `/sos/donor` → `/sos` → `/community`, or `/events/add?id=X` → `/events/X` (edit) / `/events` (create) → `/community`. Accepts an optional query string because a few parents are context-dependent: `/mcn/schools/review?schoolId=X` → that school, `/mcn/add?source=my-posts` → My Submissions, `/funds/add-transaction?event_id=X` → that fund, and `/events/add?id=X` → that event.
 - `goBackSmart(router, path)` — what header back buttons call. Pops with `backTracked()` when the previous tracked route already **is** the logical parent (the common case, keeping history and forward in sync); otherwise falls back to `replaceTracked(parent)` for a cross-branch jump or a deep-link entry with nothing to pop. Its correctness rests entirely on the tracked stack matching real history — see the reducer below.
 - `normalizeRoute(route)` — canonical form for comparisons: strips query, hash, trailing slash, and expo-router group segments so `/(tabs)/network` and `/network` compare equal.
 - `getPreviousRoute()` — the previous entry in the tracked stack.
@@ -583,7 +601,7 @@ How the intent is resolved, strongest signal first:
 
 The popstate counter the reducer reads is deliberately separate from the `sawPopStateAt` flag that `consumeHistoryPop()` clears — effects in `app/_layout.tsx` may run first, and one shared flag means whichever ran first ate the signal.
 
-**When you add a `/mcn/*` or `/funds/*` route, add its parent mapping to `getImmediateParentRoute()`**, or back navigation falls through to the MCN hub. `app/funds/*` screens call `goBackSmart(router, path)` from their header back button the same way MCN screens do — plain `router.back()` silently does nothing on a deep-linked or freshly-loaded fund screen with no history to pop.
+**When you add a `/mcn/*`, `/funds/*`, or `/sos/*` route, add its parent mapping to `getImmediateParentRoute()`**, or back navigation falls through to the MCN hub. Every header back button — MCN, funds, SOS, or `/community/blocks`+`/community/flats` — must call `goBackSmart(router, path)`, not raw `router.back()`: a plain `router.back()` silently does nothing on a deep-linked or freshly-loaded screen with no history to pop. This was the exact bug on `/sos/index.tsx`, `/sos/donor.tsx`, and `/sos/manage-contacts.tsx` (fixed 2026-08-13, alongside adding the missing `/sos/*` mapping — it had none before, so even a correct `goBackSmart` call would have fallen through to `/network` instead of `/community`).
 
 ### Shared MCN header
 
@@ -715,9 +733,13 @@ Images go to **Cloudinary**, not Supabase Storage.
 
 Used by: `mcn_listings.image_url`, `mcn_products.image_url`, `mcn_preorder_drops.image_url`, `mcn_preorder_items.image_url`, `event_transactions.image_url`, `community_requests.proof_photo_url`.
 
-**Never render a stored `secure_url` directly.** The upload preset keeps the original at full camera resolution, so a raw URL ships a multi-megabyte image into a 40 px thumbnail. Wrap every `<Image source={{ uri }}>` in `cloudinaryUrl(url, transform?)` from `lib/cloudinary.ts`, which injects a delivery transformation after `/image/upload/`. Defaults are `w_800,c_scale,q_auto` — 800 px wide, no cropping, Cloudinary picking the smallest lossless-looking quality. Pass `{ width, height, crop: 'fill' }` for fixed-size thumbnails and avatars. The helper is idempotent and returns non-Cloudinary URLs (local `file://` picker previews, Google OAuth avatars) untouched, so it is safe to apply unconditionally.
+**Never render a stored `secure_url` directly.** The upload preset keeps the original at full camera resolution, so a raw URL ships a multi-megabyte image into a 40 px thumbnail. Wrap every `<Image source={{ uri }}>` in `cloudinaryUrl(url, transform?)` from `lib/cloudinary.ts`, which injects a delivery transformation after `/image/upload/`. Defaults are `w_800,c_scale,q_auto,f_auto` (plus `dpr_auto` on web only — native doesn't send the client hints Cloudinary reads) — 800 px wide, no cropping, auto quality, and auto format (AVIF/WebP where the client accepts it, JPEG otherwise). Pass `{ width, height, crop: 'fill' }` for fixed-size thumbnails. The helper is idempotent and returns non-Cloudinary URLs (local `file://` picker previews, Google OAuth avatars) untouched, so it is safe to apply unconditionally. `components/ImageUploader.tsx`'s picker asks for JPEG quality `0.7` — the incoming upload preset and delivery `q_auto` both recompress anyway, so a higher client-side quality only costs the resident's mobile data.
 
-The Supabase `community-uploads` bucket still exists but **no screen writes to it**. `app/profile/edit.tsx` uploads a profile picture to the `wooru/avatars` subfolder and stores it on `profiles.avatar_url`; `components/Avatar.tsx` renders that when present and otherwise falls back to deterministic initials tinted by `lib/avatarTint.ts`.
+**No profile-photo upload** — removed 2026-08-13 to save space on the Profile tab and Edit Profile (see `docs/features.md` §7). `profiles.avatar_url` is still read everywhere a person renders (`components/Avatar.tsx`, falling back to deterministic initials tinted by `lib/avatarTint.ts`) and still round-trips unchanged through every profile save, so a Google OAuth photo already on the row keeps showing — there is just no in-app way to set or change one anymore.
+
+The Supabase `community-uploads` bucket still exists but **no screen writes to it**.
+
+**Sharing / link previews** — every in-app share (food drops, business listings, provider contacts, visits, carpools, community invites) builds its message text itself, then hands off to `shareOrCopy({ title, message })` from `lib/share.ts` — never call `Share.share` directly. `Share.share` rejects on desktop web when `navigator.share` is absent; `shareOrCopy` branches on `Platform.OS === 'web' && navigator.share`, falls back to `expo-clipboard` with a "Link copied" toast on web without it, and swallows a user-dismissed share sheet without an error toast. Three Vercel serverless functions (`api/share-drop.ts`, `api/share-listing.ts`, `api/share-community.ts`, sharing helpers from `api/_og.ts`) exist because the web build is a client-rendered SPA with no per-page `<meta>` tags — a bare app URL has nothing for WhatsApp/Facebook/etc.'s crawler to read, so shared links route through these endpoints instead, which detect the crawler by user-agent, serve real `og:*` tags (image forced through `ogImageUrl()` to a 1200×630 JPEG crop — WhatsApp silently drops an untransformed multi-MB original), and redirect everyone else straight into the app.
 
 Bundled assets live in `assets/images/`. Keep import extensions matched to the real file type: the Community tab funds background is `funds_bg.jpg`, and importing it as `.png` breaks Android release resource compilation.
 

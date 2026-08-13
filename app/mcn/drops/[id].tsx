@@ -17,7 +17,6 @@ import {
     Modal,
     Platform,
     ScrollView,
-    Share,
     StyleSheet,
     Text,
     TextInput,
@@ -33,6 +32,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { cloudinaryUrl } from '../../../lib/cloudinary';
 import { confirmAction } from '../../../lib/confirm';
+import { shareOrCopy } from '../../../lib/share';
 import { siteUrl } from '../../../lib/siteUrl';
 import { supabase } from '../../../lib/supabase';
 
@@ -580,16 +580,7 @@ export default function PreorderDropDetailScreen() {
     ];
 
     const message = messageLines.join('\n');
-
-    try {
-      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: drop.title, text: message });
-      } else {
-        await Share.share({ message, title: drop.title });
-      }
-    } catch (err) {
-      console.error('Error sharing food drop:', err);
-    }
+    await shareOrCopy({ title: drop.title, message });
   };
 
   const handleBack = () => {

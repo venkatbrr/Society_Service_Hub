@@ -92,6 +92,10 @@ Because three app roles share that one capacity, **user-facing labels must name 
 
 These roles are **per fund**: a community with three funds has three independent treasurers.
 
+### Events coordinator grant (`community_event_organizers`) — independent of app role
+
+A community events role, deliberately **not** added to `app_role_type`: that column is single-valued per profile, so a new enum value would force a choice between "president" and "events coordinator" for the same person. Instead it's a grant table, mirroring `fund_roles`. Any number of residents can hold it; leads always can post without holding it. Managed by leads at `/events/coordinators`. See §7.4.
+
 ### Who can delete what (MCN)
 
 Deletion of **any** MCN entity is allowed for the **creator/owner OR a community lead OR a platform admin**, enforced by RLS on `mcn_preorder_drops`, `mcn_listings`, `mcn_carpools`, `mcn_parent_corner`, and `mcn_posts` (`20260814000000`, corrected in `20260822000100`). The same rule now covers **UPDATE** on those tables plus `schools` and `school_reviews` (`20260822000000`).
@@ -179,7 +183,9 @@ A **hub of four section cards**, each with a live count, plus two quick-action b
 
 ### 7.4 Community tab (`app/(tabs)/community.tsx`)
 
-Fixed section order: **funds → residents tile → SOS tile → community info**.
+Fixed section order: **events → funds → residents tile → SOS tile → community info**.
+
+**Community events** (`/events/*`, added 2026-09-07) — cultural, sports, and festival events posted by a designated **events coordinator** grant (`community_event_organizers`, managed by leads at `/events/coordinators`) or a lead; residents cannot post. Not a new `app_role` value — the role column is single-valued per profile, so this is a separate grant table instead. Each event carries a title, category, description, image, venue, date, optional start/end time, an optional "requires registration" last date, an optional entry fee (display only), and 1–3 call/WhatsApp contacts (`community_event_contacts`). No in-app RSVP. `⚠️ public.events` is unrelated — that table is the funds ledger (§7.4 below); the events module is deliberately named `community_events` to avoid the collision.
 
 **Funds** are activation-gated on `communities.funds_enabled`:
 
@@ -253,6 +259,9 @@ See [`docs/platform-admin.md`](../docs/platform-admin.md).
 ### SOS
 `/sos` · `/sos/donor` · `/sos/manage-contacts`
 
+### Community events
+`/events` · `/events/add` · `/events/[id]` · `/events/coordinators`
+
 ### MCN — `app/mcn/`
 `/mcn/business` · `/mcn/listing-add` · `/mcn/listing/[id]` · `/mcn/listing/manage/[id]` · `/mcn/listing/orders/[id]`
 `/mcn/drops` · `/mcn/drops/add` · `/mcn/drops/[id]` · `/mcn/drops/manage/[id]` · `/mcn/drops/manage/index`
@@ -275,6 +284,7 @@ Column-level detail lives in [`docs/architecture.md`](../docs/architecture.md) �
 | Providers | `service_providers`, `favorites`, `ratings`, `provider_hires`, `provider_reports`, `provider_personal_notes`, `provider_public_rating_nudges`, `hire_feedback`, `fraud_verdicts` |
 | Visits | `service_visits`, `visit_joiners` |
 | Funds | `events`, `event_transactions`, `fund_roles`, `funds_access_requests`, `funds_access_revocations` |
+| Community events | `community_events`, `community_event_contacts`, `community_event_organizers` |
 | MCN — business | `mcn_business_categories`, `mcn_listings`, `mcn_products`, `mcn_orders`\*, `mcn_order_items`\* (\*retained but no longer written — ordering UI hidden) |
 | MCN — food drops | `mcn_preorder_drops`, `mcn_preorder_items`, `mcn_preorder_orders`, `mcn_preorder_order_items` |
 | MCN — carpools | `mcn_carpools`, `mcn_carpool_requests` |

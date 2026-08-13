@@ -1,10 +1,11 @@
 import { Share07 } from '@untitledui/icons/Share07';
 import { Image } from 'expo-image';
 import React from 'react';
-import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { format12HourTime, getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { cloudinaryUrl } from '../lib/cloudinary';
+import { shareOrCopy } from '../lib/share';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
 
@@ -142,7 +143,9 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
 
   const handleShare = async (e: any) => {
     e.stopPropagation();
-    const shareUrl = siteUrl(`/mcn/drops?id=${drop.id}`);
+    // Route through the OG-preview endpoint (api/share-drop.ts) so WhatsApp/
+    // Facebook/etc. crawlers render the drop's title, description, and photo.
+    const shareUrl = siteUrl(`/api/share-drop?id=${drop.id}`);
 
     const messageLines = [
       `*Food Drop: ${drop.title}*`,
@@ -150,27 +153,13 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
       ``,
       `Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
       `Pre-Orders Close: ${cutoffFormatted}`,
+      ``,
+      `View Menu & Place Pre-Order:`,
+      shareUrl,
     ];
 
-    if (drop.image_url) {
-      messageLines.push(`Photo: ${drop.image_url}`);
-    }
-
-    messageLines.push(``);
-    messageLines.push(`View Menu & Place Pre-Order:`);
-    messageLines.push(shareUrl);
-
     const message = messageLines.join('\n');
-
-    try {
-      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: drop.title, text: message });
-      } else {
-        await Share.share({ message, title: drop.title });
-      }
-    } catch (err) {
-      console.error('Error sharing drop:', err);
-    }
+    await shareOrCopy({ title: drop.title, message });
   };
 
   return (

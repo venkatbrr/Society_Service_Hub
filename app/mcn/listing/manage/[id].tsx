@@ -568,7 +568,7 @@ export default function ManageListingScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.modalPrimaryBtn, { backgroundColor: colors.primary, marginTop: 6 }]}
+            style={[styles.saveDetailsBtn, { backgroundColor: colors.primary, marginTop: 6 }]}
             onPress={handleSaveListingDetails}
             disabled={savingListing}
             activeOpacity={0.85}
@@ -1280,6 +1280,16 @@ const styles = StyleSheet.create({
   },
   modalPrimaryBtn: {
     flex: 1,
+    borderRadius: VerandahRadius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 52,
+  },
+  // Standalone equivalent for a button that isn't paired with a sibling in a
+  // flexDirection:'row' footer. modalPrimaryBtn's flex:1 sets flexBasis:0 on
+  // the main axis, which fights its own height:52 once the button sits alone
+  // in a plain column View — it collapses toward content height instead.
+  saveDetailsBtn: {
     borderRadius: VerandahRadius.pill,
     alignItems: 'center',
     justifyContent: 'center',

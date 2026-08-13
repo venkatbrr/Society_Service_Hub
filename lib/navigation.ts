@@ -393,6 +393,22 @@ export function getImmediateParentRoute(pathname: string): string {
   if (cleanPath.startsWith('/funds/')) return '/funds';
   if (cleanPath === '/funds') return '/community';
 
+  // 9. Emergency & blood donors (SOS)
+  if (cleanPath.startsWith('/sos/')) return '/sos';
+  if (cleanPath === '/sos') return '/community';
+
+  // 10. Community blocks/flats management
+  if (cleanPath === '/community/blocks' || cleanPath === '/community/flats') return '/community';
+
+  // 11. Community events
+  if (cleanPath === '/events/add') {
+    const eventId = params.get('id');
+    return eventId ? `/events/${eventId}` : '/events';
+  }
+  if (cleanPath === '/events/coordinators') return '/community';
+  if (cleanPath.startsWith('/events/')) return '/events';
+  if (cleanPath === '/events') return '/community';
+
   // Default: the MCN hub.
   return '/network';
 }

@@ -528,7 +528,7 @@ export default function ServiceDetailScreen() {
                   activeOpacity={0.88}
                 >
                   <Image
-                    source={{ uri: cloudinaryUrl(img.url) }}
+                    source={{ uri: cloudinaryUrl(img.url, { width: 800, height: 360, crop: 'limit' }) }}
                     style={{ width: '100%', height: 120, borderRadius: 10, backgroundColor: colors.surface2 }}
                     contentFit="contain"
                   />

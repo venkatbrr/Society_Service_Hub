@@ -8,25 +8,7 @@
 // HTML document with real Open Graph tags for the requested drop, then sends
 // everyone else straight into the app.
 const { createClient } = require('@supabase/supabase-js');
-
-// Mirrors lib/siteUrl.ts, which this file cannot import — that module pulls in
-// react-native, and this runs in Vercel's plain Node runtime. Reads the same
-// EXPO_PUBLIC_SITE_URL the rest of the deployment uses, so preview deployments
-// emit preview URLs instead of production ones.
-const APP_ORIGIN = (process.env.EXPO_PUBLIC_SITE_URL || 'https://wooru.in').replace(/\/+$/, '');
-const DEFAULT_IMAGE = `${APP_ORIGIN}/images/icon.png`;
-
-const BOT_USER_AGENT_PATTERN =
-  /whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|telegrambot|slackbot|discordbot|pinterest|redditbot|skypeuripreview|vkshare|w3c_validator|google-inspectiontool|embedly|quora|outbrain|nuzzel|bitlybot|preview/i;
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+const { APP_ORIGIN, DEFAULT_OG_IMAGE, isBotRequest, ogImageUrl, renderOgPage, sendOgPage, sendRedirect } = require('./_og');
 
 module.exports = async function handler(req: any, res: any) {
   const rawId = req.query?.id;
@@ -39,61 +21,42 @@ module.exports = async function handler(req: any, res: any) {
   const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
   const userAgent = String(req.headers?.['user-agent'] || '');
-  const isBot = BOT_USER_AGENT_PATTERN.test(userAgent);
+  const isBot = isBotRequest(userAgent);
 
   // Real visitors (not a link-preview crawler) go straight into the app.
   if (!isBot || !id || !supabaseUrl || !supabaseAnonKey) {
-    res.writeHead(302, { Location: appUrl });
-    res.end();
+    sendRedirect(res, appUrl);
     return;
   }
 
-  let drop: { title?: string; description?: string | null; image_url?: string | null } | null = null;
+  let card: { title?: string; description?: string | null; image_url?: string | null } | null = null;
   try {
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // mcn_preorder_drops has a deliberate anon-readable SELECT policy
+    // (supabase/migrations/20260802010000_allow_public_food_drop_read.sql,
+    // "Allow anonymous users to browse food drops") so a direct read works
+    // here without a SECURITY DEFINER RPC.
     const { data } = await supabase
       .from('mcn_preorder_drops')
       .select('title, description, image_url')
       .eq('id', id)
       .maybeSingle();
-    drop = data;
+    card = data;
   } catch {
-    drop = null;
+    card = null;
   }
 
-  if (!drop) {
-    res.writeHead(302, { Location: appUrl });
-    res.end();
+  if (!card) {
+    sendRedirect(res, appUrl);
     return;
   }
 
-  const title = escapeHtml(drop.title || 'Food Drop');
-  const description = escapeHtml(
-    drop.description?.trim() || 'Pre-order fresh home-cooked food from your neighbors on Wooru.'
-  );
-  const image = escapeHtml(drop.image_url || DEFAULT_IMAGE);
-  const safeAppUrl = escapeHtml(appUrl);
+  const html = renderOgPage({
+    title: card.title || 'Food Drop',
+    description: card.description?.trim() || 'Pre-order fresh home-cooked food from your neighbors on Wooru.',
+    imageUrl: card.image_url ? ogImageUrl(card.image_url) : DEFAULT_OG_IMAGE,
+    targetUrl: appUrl,
+  });
 
-  const html = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>${title}</title>
-<meta property="og:title" content="${title}">
-<meta property="og:description" content="${description}">
-<meta property="og:image" content="${image}">
-<meta property="og:type" content="website">
-<meta property="og:url" content="${safeAppUrl}">
-<meta name="twitter:card" content="summary_large_image">
-<meta http-equiv="refresh" content="0;url=${safeAppUrl}">
-</head>
-<body>
-Redirecting to <a href="${safeAppUrl}">${title}</a>&hellip;
-</body>
-</html>`;
-
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=300');
-  res.statusCode = 200;
-  res.end(html);
+  sendOgPage(res, html);
 };

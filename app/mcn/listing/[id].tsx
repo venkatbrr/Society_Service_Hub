@@ -1,6 +1,6 @@
 import { Flag01 } from '@untitledui/icons/Flag01';
-import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
-import { Phone01 } from '@untitledui/icons/Phone01';
+import { MessageChatCircle } from '@untitledui/icons/MessageChatCircle';
+import { PhoneCall01 } from '@untitledui/icons/PhoneCall01';
 import { Star01 } from '@untitledui/icons/Star01';
 import { XClose } from '@untitledui/icons/XClose';
 import { Image } from 'expo-image';
@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../components/Avatar';
+import { ImageUploader } from '../../../components/ImageUploader';
 import { RatingStars } from '../../../components/RatingStars';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
@@ -59,6 +60,7 @@ export default function ListingDetailScreen() {
   const [userRating, setUserRating] = useState<number | null>(null);
   const [selectedRating, setSelectedRating] = useState<number>(0);
   const [reviewText, setReviewText] = useState('');
+  const [reviewImageUrl, setReviewImageUrl] = useState<string | null>(null);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
@@ -89,7 +91,7 @@ export default function ListingDetailScreen() {
     try {
       const { data, error } = await supabase
         .from('ratings')
-        .select('id, rating, review_text, created_at, user_id')
+        .select('id, rating, review_text, image_url, created_at, user_id')
         .eq('listing_id', listingId)
         .order('created_at', { ascending: false });
 
@@ -111,6 +113,7 @@ export default function ListingDetailScreen() {
             reviewer_flat: p?.flat_number || null,
             rating: r.rating,
             review_text: r.review_text,
+            image_url: r.image_url,
             created_at: r.created_at,
           };
         });
@@ -160,7 +163,7 @@ export default function ListingDetailScreen() {
       // 3. Fetch user's rating for this listing
       const { data: myRatingData, error: myRatingError } = await supabase
         .from('ratings')
-        .select('rating, review_text')
+        .select('rating, review_text, image_url')
         .eq('listing_id', listingId)
         .eq('user_id', user.id)
         .maybeSingle();
@@ -169,10 +172,12 @@ export default function ListingDetailScreen() {
         setUserRating(myRatingData.rating);
         setSelectedRating(myRatingData.rating);
         setReviewText(myRatingData.review_text || '');
+        setReviewImageUrl((myRatingData as any).image_url || null);
       } else {
         setUserRating(null);
         setSelectedRating(0);
         setReviewText('');
+        setReviewImageUrl(null);
       }
 
       // 4. Fetch public reviews
@@ -280,6 +285,7 @@ export default function ListingDetailScreen() {
             listing_id: listingId,
             rating: effectiveRating,
             review_text: reviewText.trim() || null,
+            image_url: reviewImageUrl,
             fraud_status: 'pass',
             fraud_rules_triggered: [],
           },
@@ -421,7 +427,7 @@ export default function ListingDetailScreen() {
             style={[styles.contactBtn, { borderColor: colors.borderHair, backgroundColor: colors.card }]}
             activeOpacity={0.85}
           >
-            <Phone01 size={18} color={colors.primary} aria-hidden={true} />
+            <PhoneCall01 size={18} color={colors.primary} aria-hidden={true} />
             <Text style={[styles.contactBtnText, { color: colors.primary }]}>Call</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -429,7 +435,7 @@ export default function ListingDetailScreen() {
             style={[styles.contactBtn, { borderColor: colors.primary, backgroundColor: colors.primary }]}
             activeOpacity={0.85}
           >
-            <MessageCircle01 size={18} color={colors.primaryFg} aria-hidden={true} />
+            <MessageChatCircle size={18} color={colors.primaryFg} aria-hidden={true} />
             <Text style={[styles.contactBtnText, { color: colors.primaryFg }]}>WhatsApp</Text>
           </TouchableOpacity>
         </View>
@@ -623,6 +629,20 @@ export default function ListingDetailScreen() {
                 {review.review_text ? (
                   <Text style={[styles.publicReviewText, { color: colors.textSecondary, marginTop: 8 }]}>{review.review_text}</Text>
                 ) : null}
+                {review.image_url ? (
+                  <TouchableOpacity
+                    onPress={() => setSelectedImageUrl(review.image_url)}
+                    activeOpacity={0.85}
+                    style={{ marginTop: 8 }}
+                  >
+                    <Image
+                      source={{ uri: cloudinaryUrl(review.image_url, { width: 120, height: 120, crop: 'fill' }) }}
+                      style={styles.reviewImageThumb}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                  </TouchableOpacity>
+                ) : null}
               </View>
             ))}
             {publicReviews.length > 3 ? (
@@ -658,6 +678,16 @@ export default function ListingDetailScreen() {
              numberOfLines={2}
              textAlignVertical="top"
            />
+           <View style={{ marginTop: 8 }}>
+             <ImageUploader
+               currentImageUrl={reviewImageUrl}
+               onImageUploaded={setReviewImageUrl}
+               onImageRemoved={() => setReviewImageUrl(null)}
+               subfolder="reviews"
+               aspectRatio={4 / 3}
+               placeholder="Add a photo (optional)"
+             />
+           </View>
            <TouchableOpacity
              onPress={handleSubmitReview}
              disabled={isReviewSubmitDisabled}
@@ -987,6 +1017,12 @@ const styles = StyleSheet.create({
   publicReviewText: {
     ...VerandahType.body,
     lineHeight: 18,
+  },
+  reviewImageThumb: {
+    width: 72,
+    height: 72,
+    borderRadius: VerandahRadius.md,
+    backgroundColor: Verandah.cardMuted,
   },
   loadMoreReviewsBtn: {
     borderWidth: 0.5,

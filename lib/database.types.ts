@@ -227,6 +227,168 @@ export type Database = {
           },
         ]
       }
+      community_event_contacts: {
+        Row: {
+          event_id: string
+          id: string
+          name: string
+          phone: string
+          role_label: string | null
+          sort_order: number
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          name: string
+          phone: string
+          role_label?: string | null
+          sort_order?: number
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          name?: string
+          phone?: string
+          role_label?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_event_contacts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "community_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_event_organizers: {
+        Row: {
+          community_id: string
+          created_at: string
+          granted_by: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_event_organizers_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_event_organizers_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_event_organizers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_events: {
+        Row: {
+          cancellation_note: string | null
+          cancelled_at: string | null
+          category: string
+          community_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          end_time: string | null
+          entry_fee: number | null
+          event_date: string
+          id: string
+          image_url: string | null
+          registration_last_date: string | null
+          registration_link: string | null
+          start_time: string | null
+          status: string
+          title: string
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          cancellation_note?: string | null
+          cancelled_at?: string | null
+          category?: string
+          community_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_time?: string | null
+          entry_fee?: number | null
+          event_date: string
+          id?: string
+          image_url?: string | null
+          registration_last_date?: string | null
+          registration_link?: string | null
+          start_time?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          cancellation_note?: string | null
+          cancelled_at?: string | null
+          category?: string
+          community_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_time?: string | null
+          entry_fee?: number | null
+          event_date?: string
+          id?: string
+          image_url?: string | null
+          registration_last_date?: string | null
+          registration_link?: string | null
+          start_time?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_events_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_flats: {
         Row: {
           archived_at: string | null
@@ -1453,6 +1615,7 @@ export type Database = {
           intents: string[]
           notes: string | null
           parent_name: string
+          school_catalog_id: string | null
           school_name: string
           student_name: string
           updated_at: string
@@ -1470,6 +1633,7 @@ export type Database = {
           intents?: string[]
           notes?: string | null
           parent_name: string
+          school_catalog_id?: string | null
           school_name: string
           student_name: string
           updated_at?: string
@@ -1487,6 +1651,7 @@ export type Database = {
           intents?: string[]
           notes?: string | null
           parent_name?: string
+          school_catalog_id?: string | null
           school_name?: string
           student_name?: string
           updated_at?: string
@@ -2207,6 +2372,7 @@ export type Database = {
           fraud_rules_triggered: Json | null
           fraud_status: string | null
           id: string
+          image_url: string | null
           listing_id: string | null
           provider_id: string | null
           rating: number
@@ -2218,6 +2384,7 @@ export type Database = {
           fraud_rules_triggered?: Json | null
           fraud_status?: string | null
           id?: string
+          image_url?: string | null
           listing_id?: string | null
           provider_id?: string | null
           rating: number
@@ -2229,6 +2396,7 @@ export type Database = {
           fraud_rules_triggered?: Json | null
           fraud_status?: string | null
           id?: string
+          image_url?: string | null
           listing_id?: string | null
           provider_id?: string | null
           rating?: number
@@ -2936,6 +3104,13 @@ export type Database = {
         Args: { p_community_id: string }
         Returns: Json
       }
+      get_community_og_card: {
+        Args: { p_id: string }
+        Returns: {
+          address: string
+          name: string
+        }[]
+      }
       get_community_pulse: {
         Args: { p_limit?: number }
         Returns: {
@@ -2986,6 +3161,14 @@ export type Database = {
           rejection_reason: string
           request_id: string
           status: string
+        }[]
+      }
+      get_listing_og_card: {
+        Args: { p_id: string }
+        Returns: {
+          description: string
+          image_url: string
+          name: string
         }[]
       }
       get_mcn_carpool_passengers: {
@@ -3136,6 +3319,7 @@ export type Database = {
       is_admin: { Args: { p_user_id?: string }; Returns: boolean }
       is_blocks_enabled: { Args: { p_community_id: string }; Returns: boolean }
       is_community_lead: { Args: { p_user_id?: string }; Returns: boolean }
+      is_event_organizer: { Args: { p_user_id?: string }; Returns: boolean }
       is_funds_enabled: { Args: { p_community_id: string }; Returns: boolean }
       is_platform_admin: { Args: { p_user_id?: string }; Returns: boolean }
       is_user_approved: { Args: { p_user_id?: string }; Returns: boolean }
@@ -3742,6 +3926,24 @@ export type Database = {
         Returns: string
       }
       today_ist: { Args: never; Returns: string }
+      upsert_community_event: {
+        Args: {
+          p_category: string
+          p_contacts: Json
+          p_description: string
+          p_end_time: string
+          p_entry_fee: number
+          p_event_date: string
+          p_event_id: string
+          p_image_url: string
+          p_registration_last_date: string
+          p_registration_link: string
+          p_start_time: string
+          p_title: string
+          p_venue: string
+        }
+        Returns: string
+      }
       withdraw_funds_access_request: {
         Args: { p_request_id: string }
         Returns: undefined
@@ -3915,4 +4117,3 @@ export type VisitJoinerWithProfile = Tables<'visit_joiners'> & {
   flat_number?: string | null
   joined_at?: string
 }
-

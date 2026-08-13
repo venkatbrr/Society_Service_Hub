@@ -4,8 +4,8 @@ import { CheckCircle } from '@untitledui/icons/CheckCircle';
 import { ChevronDown } from '@untitledui/icons/ChevronDown';
 import { ChevronUp } from '@untitledui/icons/ChevronUp';
 import { Flag01 } from '@untitledui/icons/Flag01';
-import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
-import { Phone01 } from '@untitledui/icons/Phone01';
+import { MessageChatCircle } from '@untitledui/icons/MessageChatCircle';
+import { PhoneCall01 } from '@untitledui/icons/PhoneCall01';
 import { Share07 } from '@untitledui/icons/Share07';
 import { Star01 } from '@untitledui/icons/Star01';
 import { Trash01 } from '@untitledui/icons/Trash01';
@@ -13,7 +13,7 @@ import * as Linking from 'expo-linking';
 import * as Notifications from 'expo-notifications';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../components/Avatar';
 import { BaseCard } from '../../components/BaseCard';
@@ -23,8 +23,10 @@ import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { getAvailabilityBadge } from '../../lib/availability';
 import { ProviderWithInteraction } from '../../lib/database.types';
 import { actionToFraudStatus, checkReviewFraud, getFraudActionMessage } from '../../lib/fraudCheck';
+import { shareOrCopy } from '../../lib/share';
 import { siteUrl } from '../../lib/siteUrl';
 import { supabase } from '../../lib/supabase';
 import { goBackSmart } from '../../lib/navigation';
@@ -287,19 +289,7 @@ export default function ProviderDetailScreen() {
     ];
 
     const message = messageLines.filter(Boolean).join('\n');
-    try {
-      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: provider.name, text: message });
-      } else {
-        await Share.share({ message, title: provider.name });
-      }
-    } catch (error) {
-      const err = error as any;
-      if (err && (err.name === 'AbortError' || err.message?.includes('abort') || err.message?.includes('cancel'))) {
-        return;
-      }
-      Toast.show({ type: 'error', text1: 'Error sharing contact' });
-    }
+    await shareOrCopy({ title: provider.name, message });
   };
 
   const handleToggleFavorite = async () => {
@@ -676,9 +666,11 @@ export default function ProviderDetailScreen() {
     );
   }
 
+  const availabilityBadge = getAvailabilityBadge((provider as any).details);
+
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.headerCard}> 
+      <View style={styles.headerCard}>
         <View style={styles.headerTop}>
            <HeaderBackButton onPress={() => goBackSmart(router, '/provider/' + id)} style={styles.backButtonInline} />
            <TouchableOpacity onPress={handleToggleFavorite} style={styles.iconButton}>
@@ -701,6 +693,11 @@ export default function ProviderDetailScreen() {
               {provider.is_verified && (
                 <View style={[styles.pill, { backgroundColor: Verandah.accentSoft }]}>
                   <Text style={[styles.pillText, { color: Verandah.accent }]}>Verified</Text>
+                </View>
+              )}
+              {availabilityBadge && (
+                <View style={[styles.pill, { backgroundColor: Verandah.accentSoft }]}>
+                  <Text style={[styles.pillText, { color: Verandah.accent }]}>{availabilityBadge}</Text>
                 </View>
               )}
               <View style={[styles.pill, { backgroundColor: Verandah.cautionSoft }]}>
@@ -818,11 +815,11 @@ export default function ProviderDetailScreen() {
 
       <View style={styles.actionGrid}>
         <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: colors.secondary }]} onPress={handleWhatsApp}>
-          <MessageCircle01 size={18} color="#FFFFFF" aria-hidden={true} style={{ marginRight: 6 }} />
+          <MessageChatCircle size={18} color="#FFFFFF" aria-hidden={true} style={{ marginRight: 6 }} />
           <Text style={styles.mainActionText}>WhatsApp</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.mainActionBtn, { backgroundColor: colors.primary }]} onPress={handleCall}>
-          <Phone01 size={18} color="#FFFFFF" aria-hidden={true} style={{ marginRight: 6 }} />
+          <PhoneCall01 size={18} color="#FFFFFF" aria-hidden={true} style={{ marginRight: 6 }} />
           <Text style={styles.mainActionText}>Call</Text>
         </TouchableOpacity>
       </View>

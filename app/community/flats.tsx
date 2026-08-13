@@ -22,6 +22,7 @@ import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type FlatRow = {
@@ -211,7 +212,7 @@ export default function CommunityFlatsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <HeaderBackButton onPress={() => router.back()} />
+        <HeaderBackButton onPress={() => goBackSmart(router, '/community/flats')} />
         <Text style={styles.title}>Manage Flats</Text>
         <View style={{ width: 40 }} />
       </View>
@@ -265,7 +266,11 @@ export default function CommunityFlatsScreen() {
         )}
 
         {/* Block Selector */}
-        {blocks.length === 0 ? (
+        {loading && blocks.length === 0 ? (
+          <View style={styles.loader}>
+            <ActivityIndicator color={Verandah.accent} />
+          </View>
+        ) : blocks.length === 0 ? (
           <View style={styles.emptyCard}>
             <Text style={styles.emptyTitle}>No {labelLower}s set up yet</Text>
             <Text style={styles.emptySubtitle}>

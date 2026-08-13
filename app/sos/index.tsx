@@ -30,6 +30,7 @@ import { Verandah } from '../../constants/Colors';
 import { BLOOD_GROUP_FILTERS, EMERGENCY_CATEGORY_META, EMERGENCY_CATEGORY_ORDER, EmergencyCategory } from '../../constants/sos';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type Segment = 'emergency' | 'donors';
@@ -363,7 +364,7 @@ export default function SosScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => goBackSmart(router, '/sos')}
           style={styles.backButton}
           activeOpacity={0.85}
         >

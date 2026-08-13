@@ -22,10 +22,6 @@
   ],
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/landing.html"
-    },
-    {
       "source": "/privacy",
       "destination": "/privacy.html"
     },
@@ -43,7 +39,7 @@
     },
     {
       "source": "/:path*",
-      "destination": "/index.html"
+      "destination": "/app.html"
     }
   ]
 }

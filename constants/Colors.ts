@@ -101,9 +101,12 @@ export const Verandah = {
 
   // Borders
   border: 'rgba(15, 55, 50, 0.08)',
-  borderHair: 'rgba(15, 55, 50, 0.10)',
+  borderHair: 'rgba(15, 55, 50, 0.18)',
   borderSoft: 'rgba(15, 55, 50, 0.08)',
   borderStrong: 'rgba(15, 55, 50, 0.14)',
+  // Fainter than borderHair — for controls (unselected chips) that should
+  // recede rather than read as a bordered surface like a card/tile.
+  borderWhisper: 'rgba(15, 55, 50, 0.06)',
 
   // Mock / Bezel
   phoneBezel: '#111614',

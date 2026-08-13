@@ -3,9 +3,10 @@ import { Link01 } from '@untitledui/icons/Link01';
 import { Share07 } from '@untitledui/icons/Share07';
 import { Users01 } from '@untitledui/icons/Users01';
 import React from 'react';
-import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
+import { shareOrCopy } from '../lib/share';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
@@ -92,15 +93,7 @@ export const VisitCard = React.memo(({
       ];
 
       const message = messageLines.filter(Boolean).join('\n');
-
-      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title, text: message });
-      } else {
-        await Share.share({
-          message,
-          title,
-        });
-      }
+      await shareOrCopy({ title, message });
     } catch (error: any) {
       console.error('Error sharing:', error);
     }

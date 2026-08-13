@@ -6,9 +6,9 @@ import { Edit01 } from '@untitledui/icons/Edit01';
 import { FaceSmile } from '@untitledui/icons/FaceSmile';
 import { Home02 } from '@untitledui/icons/Home02';
 import { Trophy01 } from '@untitledui/icons/Trophy01';
-import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
+import { MessageChatCircle } from '@untitledui/icons/MessageChatCircle';
 import { MessageSquare01 } from '@untitledui/icons/MessageSquare01';
-import { Phone01 } from '@untitledui/icons/Phone01';
+import { PhoneCall01 } from '@untitledui/icons/PhoneCall01';
 import { Plus } from '@untitledui/icons/Plus';
 import { PlusCircle } from '@untitledui/icons/PlusCircle';
 import { SearchLg } from '@untitledui/icons/SearchLg';
@@ -29,7 +29,6 @@ import {
     Platform,
     RefreshControl,
     ScrollView,
-    Share,
     StyleSheet,
     Text,
     TextInput,
@@ -48,6 +47,7 @@ import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { toLast10Digits } from '../../../lib/phone';
+import { shareOrCopy } from '../../../lib/share';
 import { supabase } from '../../../lib/supabase';
 
 import { isSupabaseSchemaError } from '../../../lib/supabaseErrors';
@@ -273,15 +273,7 @@ export default function ParentCornerScreen() {
     }
     const message = messageLines.join('\n');
 
-    try {
-      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: `Parent Corner: ${item.student_name}`, text: message });
-      } else {
-        await Share.share({ message, title: `Parent Corner: ${item.student_name}` });
-      }
-    } catch (err) {
-      console.error('Error sharing parent post:', err);
-    }
+    await shareOrCopy({ title: `Parent Corner: ${item.student_name}`, message });
   };
 
   const handleWhatsAppPress = (item: ParentCornerItem) => {
@@ -443,7 +435,7 @@ export default function ParentCornerScreen() {
             onPress={() => handleWhatsAppPress(item)}
             activeOpacity={0.8}
           >
-            <MessageCircle01 size={18} color="#FFFFFF" aria-hidden={true} style={{ marginRight: 6 }} />
+            <MessageChatCircle size={18} color="#FFFFFF" aria-hidden={true} style={{ marginRight: 6 }} />
             <Text style={styles.whatsappBtnText}>WhatsApp Parent</Text>
           </TouchableOpacity>
 
@@ -451,8 +443,9 @@ export default function ParentCornerScreen() {
             style={[styles.callBtn, { borderColor: colors.borderHair, backgroundColor: colors.card }]}
             onPress={() => handleCallPress(item.contact_phone)}
             activeOpacity={0.8}
+            accessibilityLabel="Call"
           >
-            <Phone01 size={18} color={colors.primary} aria-hidden={true} />
+            <PhoneCall01 size={18} color={colors.primary} aria-hidden={true} />
           </TouchableOpacity>
 
           <TouchableOpacity

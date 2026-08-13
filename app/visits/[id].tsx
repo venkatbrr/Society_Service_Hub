@@ -9,8 +9,9 @@ import { XClose } from '@untitledui/icons/XClose';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { shareOrCopy } from '../../lib/share';
 import { Avatar } from '../../components/Avatar';
 import { JoinerListItem } from '../../components/JoinerListItem';
 import { Rupees } from '../../components/Rupees';
@@ -405,18 +406,7 @@ export default function VisitDetailScreen() {
       `• Estimated Cost: ${visit.estimated_cost || 'Not specified'}\n\n` +
       `🔗 View Visit:\n${shareUrl}`;
 
-    try {
-      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: visit.title, text: message });
-      } else {
-        await Share.share({ message, title: visit.title });
-      }
-    } catch (error: any) {
-      if (error && (error.name === 'AbortError' || error.message?.includes('abort') || error.message?.includes('cancel'))) {
-        return;
-      }
-      Toast.show({ type: 'error', text1: 'Error sharing visit' });
-    }
+    await shareOrCopy({ title: visit.title, message });
   };
 
   if (loading) {

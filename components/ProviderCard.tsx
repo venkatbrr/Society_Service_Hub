@@ -3,10 +3,12 @@ import { CheckVerified01 } from '@untitledui/icons/CheckVerified01';
 import { Share07 } from '@untitledui/icons/Share07';
 import { Star01 } from '@untitledui/icons/Star01';
 import React from 'react';
-import { Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
+import { getAvailabilityBadge } from '../lib/availability';
 import { ProviderWithInteraction } from '../lib/database.types';
+import { shareOrCopy } from '../lib/share';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
@@ -37,17 +39,10 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite }:
     ];
 
     const message = messageLines.filter(Boolean).join('\n');
-
-    try {
-      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: provider.name, text: message });
-      } else {
-        await Share.share({ message, title: provider.name });
-      }
-    } catch (err) {
-      console.error('Error sharing provider contact:', err);
-    }
+    await shareOrCopy({ title: provider.name, message });
   };
+
+  const availabilityBadge = getAvailabilityBadge(provider.details as any);
 
   return (
     <BaseCard
@@ -67,6 +62,11 @@ export const ProviderCard = React.memo(({ provider, onPress, onToggleFavorite }:
               <View style={styles.pillVerified}>
                 <CheckVerified01 size={11} color={Verandah.accent} aria-hidden={true} style={{ marginRight: 3 }} />
                 <Text style={styles.pillVerifiedText}>Verified</Text>
+              </View>
+            )}
+            {availabilityBadge && (
+              <View style={styles.pillAvailable}>
+                <Text style={styles.pillAvailableText}>{availabilityBadge}</Text>
               </View>
             )}
           </View>
@@ -192,6 +192,17 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   pillVerifiedText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: Verandah.accent,
+  },
+  pillAvailable: {
+    backgroundColor: Verandah.accentSoft,
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  pillAvailableText: {
     fontSize: 10,
     fontWeight: '500',
     color: Verandah.accent,

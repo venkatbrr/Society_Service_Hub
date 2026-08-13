@@ -11,6 +11,8 @@
  *  - number  → numeric input (₹ prefix shown in UI)
  */
 
+import { AVAILABILITY_SLOT_OPTIONS, WEEKLY_OFF_OPTIONS } from '../lib/availability';
+
 export type DetailFieldType = 'chips' | 'radio' | 'text' | 'number';
 
 export interface DetailField {
@@ -26,12 +28,16 @@ export const CATEGORY_DETAIL_FIELDS: Record<string, DetailField[]> = {
   Maid: [
     { key: 'tasks', label: 'Tasks', type: 'chips', options: ['Cleaning', 'Laundry', 'Utensils', 'Mopping', 'Dusting', 'Childcare', 'Pet Care'] },
     { key: 'availability', label: 'Availability', type: 'radio', options: ['Full-time', 'Part-time', 'On-call'] },
+    { key: 'freeSlots', label: 'Free at (tap all that apply)', type: 'chips', options: AVAILABILITY_SLOT_OPTIONS },
+    { key: 'weeklyOff', label: 'Weekly off', type: 'radio', options: WEEKLY_OFF_OPTIONS },
     { key: 'salary', label: 'Salary', type: 'number', placeholder: 'e.g. 8000', suffix: '/month' },
   ],
   Cook: [
     { key: 'cuisine', label: 'Cuisine Specialty', type: 'chips', options: ['South Indian', 'North Indian', 'Chinese', 'Continental', 'Multi-cuisine'] },
     { key: 'mealType', label: 'Meal Type', type: 'chips', options: ['Breakfast', 'Lunch', 'Dinner', 'Tiffin / Snacks'] },
     { key: 'dietType', label: 'Diet Type', type: 'radio', options: ['Veg Only', 'Non-veg', 'Jain', 'Both'] },
+    { key: 'freeSlots', label: 'Free at (tap all that apply)', type: 'chips', options: AVAILABILITY_SLOT_OPTIONS },
+    { key: 'weeklyOff', label: 'Weekly off', type: 'radio', options: WEEKLY_OFF_OPTIONS },
     { key: 'salary', label: 'Salary', type: 'number', placeholder: 'e.g. 10000', suffix: '/month' },
   ],
   Electrician: [

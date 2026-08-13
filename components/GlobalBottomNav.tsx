@@ -60,7 +60,8 @@ const TABS: TabDef[] = [
       p.startsWith('/funds') ||
       p === '/sos' ||
       p === '/residents' ||
-      p.startsWith('/community/'),
+      p.startsWith('/community/') ||
+      p.startsWith('/events'),
   },
   {
     key: 'profile',

@@ -23,7 +23,7 @@ import { Verandah } from '../../constants/Colors';
 import { EMERGENCY_CATEGORY_META, EMERGENCY_CATEGORY_ORDER, EmergencyCategory } from '../../constants/sos';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
-import { replaceTracked } from '../../lib/navigation';
+import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type ScopeMode = 'community' | 'global';
@@ -257,7 +257,7 @@ export default function ManageEmergencyContactsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => goBackSmart(router, '/sos/manage-contacts')} style={styles.backButton}>
           <ArrowLeft size={18} color={Verandah.primary} aria-hidden={true} />
         </TouchableOpacity>
         <View style={styles.headerCopy}>

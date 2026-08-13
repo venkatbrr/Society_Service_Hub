@@ -11,7 +11,6 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Modal, Platform, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Avatar } from '../../components/Avatar';
 import { BlockPicker } from '../../components/BlockPicker';
 import { Rupees } from '../../components/Rupees';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
@@ -196,12 +195,6 @@ export default function ProfileScreen() {
         <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
         {/* Dark teal identity card */}
         <View style={styles.identityCard}>
-          <Avatar
-            name={String(user?.user_metadata?.full_name || 'User')}
-            url={user?.user_metadata?.avatar_url || (user as any)?.avatar_url}
-            size={56}
-            tint={{ bg: Verandah.gold, fg: Verandah.teal900 }}
-          />
           <View style={styles.profileInfo}>
             <Text style={styles.identityName}>
               {user?.user_metadata?.full_name || 'User'}

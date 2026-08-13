@@ -36,6 +36,7 @@ type AuthContextType = {
   blockLabel: string;
   myBlockId: string | null;
   flatId: string | null;
+  isEventOrganizer: boolean;
   myFundsAccessRequest: FundsAccessStatus;
   activeCommunityRequest: ActiveCommunityRequest;
   isLoading: boolean;
@@ -56,6 +57,7 @@ const AuthContext = createContext<AuthContextType>({
   blockLabel: 'Block',
   myBlockId: null,
   flatId: null,
+  isEventOrganizer: false,
   myFundsAccessRequest: null,
   activeCommunityRequest: null,
   isLoading: true,
@@ -75,6 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [blockLabel, setBlockLabel] = useState('Block');
   const [myBlockId, setMyBlockId] = useState<string | null>(null);
   const [flatId, setFlatId] = useState<string | null>(null);
+  const [isEventOrganizer, setIsEventOrganizer] = useState(false);
   const [myFundsAccessRequest, setMyFundsAccessRequest] = useState<FundsAccessStatus>(null);
   const [activeCommunityRequest, setActiveCommunityRequest] = useState<ActiveCommunityRequest>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,6 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setBlockLabel('Block');
     setMyBlockId(null);
     setFlatId(null);
+    setIsEventOrganizer(false);
     setMyFundsAccessRequest(null);
     setActiveCommunityRequest(null);
   };
@@ -119,6 +123,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setBlocksEnabled(false);
       setBlockLabel('Block');
       setMyBlockId(null);
+      setIsEventOrganizer(false);
       setMyFundsAccessRequest(null);
       setActiveCommunityRequest(null);
       return;
@@ -224,6 +229,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setFundsEnabled(false);
       setBlocksEnabled(false);
       setBlockLabel('Block');
+      setIsEventOrganizer(false);
       setMyFundsAccessRequest(null);
       return;
     }
@@ -236,7 +242,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', resolvedCommunityId)
         .maybeSingle(),
       supabase.rpc('get_funds_access_status'),
-    ]).then(([{ data: communityData, error: communityError }, { data: fundsRequestStatus, error: fundsStatusError }]) => {
+      supabase
+        .from('community_event_organizers')
+        .select('id')
+        .eq('community_id', resolvedCommunityId)
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]).then(([{ data: communityData, error: communityError }, { data: fundsRequestStatus, error: fundsStatusError }, { data: organizerRow, error: organizerError }]) => {
       if (communityError) {
         console.error('Error loading community activation status:', communityError);
         setFundsEnabled(false);
@@ -264,6 +276,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
             : null
         );
+      }
+
+      if (organizerError) {
+        console.error('Error loading events coordinator grant:', organizerError);
+        setIsEventOrganizer(false);
+      } else {
+        setIsEventOrganizer(!!organizerRow);
       }
     }).catch(err => {
       console.warn('Background community settings load warning:', err);
@@ -462,6 +481,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         blockLabel,
         myBlockId,
         flatId,
+        isEventOrganizer,
         myFundsAccessRequest,
         activeCommunityRequest,
         isLoading,
