@@ -1,7 +1,6 @@
 import { Stars02 } from '@untitledui/icons/Stars02';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  AccessibilityInfo,
   Animated,
   Easing,
   StyleProp,
@@ -13,6 +12,7 @@ import {
 import { Verandah } from '../constants/Colors';
 import { VerandahType } from '../constants/Verandah';
 import { BaseCard } from './BaseCard';
+import { useReduceMotion } from './useReduceMotion';
 
 /**
  * Placeholder card for a section that is built but hidden
@@ -29,12 +29,12 @@ import { BaseCard } from './BaseCard';
  * `useNativeDriver: false`, since the web target cannot use the native driver.
  */
 
-const PING_DURATION = 2800;
-const BREATHE_DURATION = 2800;
-const TWINKLE_DURATION = 1900;
-const COPY_INTERVAL = 3400;
-const COPY_FADE_OUT = 200;
-const COPY_FADE_IN = 280;
+const PING_DURATION = 1800;
+const BREATHE_DURATION = 1800;
+const TWINKLE_DURATION = 1250;
+const COPY_INTERVAL = 2600;
+const COPY_FADE_OUT = 180;
+const COPY_FADE_IN = 240;
 
 const DEFAULT_LINES = [
   'Something interesting is on the way',
@@ -60,18 +60,7 @@ export function ComingSoonTile({
 
   // A perpetual loop is exactly what a motion-sensitive user asks the OS to
   // stop, so honour the setting rather than animating regardless.
-  const [reduceMotion, setReduceMotion] = useState(false);
-  useEffect(() => {
-    let active = true;
-    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
-      if (active) setReduceMotion(enabled);
-    });
-    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
-    return () => {
-      active = false;
-      sub?.remove();
-    };
-  }, []);
+  const reduceMotion = useReduceMotion();
 
   const pingA = useRef(new Animated.Value(0)).current;
   const pingB = useRef(new Animated.Value(0)).current;
@@ -120,8 +109,8 @@ export function ComingSoonTile({
         ])
       ),
       // Off-beat delays keep the two sparkles from reading as a metronome.
-      ramp(twinkleA, TWINKLE_DURATION, 420),
-      ramp(twinkleB, TWINKLE_DURATION, 1340),
+      ramp(twinkleA, TWINKLE_DURATION, 280),
+      ramp(twinkleB, TWINKLE_DURATION, 880),
     ];
 
     loops.forEach((loop) => loop.start());

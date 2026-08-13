@@ -151,7 +151,36 @@ Reuse these instead of building local variants:
 | `ImageUploader` | Any Cloudinary image upload |
 | `DateField` | Cross-platform date picker (`input[type=date]` on web, `DateTimePicker` modal on native) |
 | `ComingSoonTile` | The placeholder card standing in for a hidden section — see below |
+| `AnimatedTileGlyph` | MCN section-card glyphs; wraps `NetworkTileIcon` in a per-kind idle motion |
+| `useReduceMotion()` | **Required** by any always-on animation — see below |
 | `RatingStars` / `EmojiRating` | Provider star ratings / school aspect emoji scale |
+
+### Idle motion — MCN section glyphs
+
+Every glyph in the MCN hub's icon circles carries a slow idle motion matched to its subject, via `AnimatedTileGlyph`:
+
+| Kind | Motion | Cycle | Delay |
+|---|---|---|---|
+| `food` | Rotate −5° → 5° with a 1px lift — a bag swinging in the hand | 2000ms | 0 |
+| `carpool` | `translateX` −2 → 2 — a car easing forward and back | 1600ms | 150ms |
+| `parents` | Scale 1 → 1.07 — a group drawing together | 1850ms | 300ms |
+| `schools` | `translateY` 1 → −2 — a cap tossed and caught *(hidden today)* | 1750ms | 100ms |
+| `borrow` | `translateX` 2 → −2 — two things trading places *(hidden today)* | 1700ms | 380ms |
+
+All on `Easing.inOut(Easing.sin)`, which has no hard stop at either end — the glyph never appears to hit a wall.
+
+Two constraints that are not stylistic preferences:
+
+- **Nothing exceeds 2px, 5°, or 7%.** These loop forever on a screen residents open with intent — to check a fund, look up a number. The bar is "alive when you look at it", not "asking for attention". If you can read the animation from across the room, it is too big.
+- **Never give two sibling glyphs the same cycle or phase.** The durations above are deliberately unequal and each starts on its own delay. Aligned loops make the whole screen pulse in unison, which is far more distracting than any single glyph.
+
+A new MCN section adds its entry to `MOTION_BY_KIND`; the two hidden kinds already have theirs, so a flag flip does not surface a dead glyph next to moving ones.
+
+### Reduce motion — `useReduceMotion()`
+
+**Any always-on animation must call it and render a static state when it returns true.** A perpetual loop is exactly what the OS setting exists to stop, and it is a real setting real residents turn on. `ComingSoonTile` drops its rings and sparkles entirely and freezes its subtitle; `AnimatedTileGlyph` renders a bare `NetworkTileIcon`.
+
+One-shot transitions — a highlight sliding to the tab you just tapped — are not the target and need no guard.
 
 ### Coming-soon tile — `ComingSoonTile`
 
@@ -164,10 +193,10 @@ Two rules define it:
 
 | Layer | Spec |
 |---|---|
-| Ping rings | Two 40px `accent`-stroked rings behind the circle, each scaling 1 → **1.65** while fading 0.5 → 0 over 2800ms, ring B offset by half a cycle so the ping never gaps. **1.65 is a ceiling, not a taste call** — `BaseCard` is `overflow: 'hidden'` and the slot sits at the card's 14px padding, so anything larger clips at the left border. |
-| Glyph | `Stars02` in `accent`, breathing scale 1 → 1.14 and rotate −7° → 7° on a 2800ms `Easing.inOut(Easing.sin)` loop |
-| Sparkles | Two dots (5px top-right, 3.5px bottom-left) twinkling opacity 0 → 1 → 0 over 1900ms, with 420ms / 1340ms offsets — deliberately off-beat, so the tile does not read as a metronome |
-| Subtitle | Cross-fades between teaser lines every 3400ms (200ms out, 280ms in) |
+| Ping rings | Two 40px `accent`-stroked rings behind the circle, each scaling 1 → **1.65** while fading 0.5 → 0 over 1800ms, ring B offset by half a cycle so the ping never gaps. **1.65 is a ceiling, not a taste call** — `BaseCard` is `overflow: 'hidden'` and the slot sits at the card's 14px padding, so anything larger clips at the left border. |
+| Glyph | `Stars02` in `accent`, breathing scale 1 → 1.14 and rotate −7° → 7° on a 1800ms `Easing.inOut(Easing.sin)` loop |
+| Sparkles | Two dots (5px top-right, 3.5px bottom-left) twinkling opacity 0 → 1 → 0 over 1250ms, with 280ms / 880ms offsets — deliberately off-beat, so the tile does not read as a metronome |
+| Subtitle | Cross-fades between teaser lines every 2600ms (180ms out, 240ms in) |
 
 Motion follows the same rules as the rail below: built-in `Animated`, `useNativeDriver: false`. **It also honours `AccessibilityInfo.isReduceMotionEnabled()`** — with reduce-motion on, the rings and sparkles are not rendered at all and the subtitle stays on its first line. A perpetual loop is precisely what that OS setting exists to stop; any future always-on animation should do the same.
 
@@ -187,7 +216,18 @@ Motion uses React Native's built-in `Animated` (**not** Reanimated — it is a d
 
 The disc's drop shadow is the one sanctioned exception to the "no `shadow*` on surfaces" rule below — it is a brand affordance, not a card.
 
-Four of the five glyphs live in `components/NavIcons.tsx` rather than `@untitledui/icons`, because two are bespoke: the house carries a heart, and the buildings pair is Wooru-specific. They keep Untitled UI geometry (24×24, round caps, `currentColor`) and render as DOM SVG, exactly as `@untitledui/icons` does.
+### Bespoke glyphs
+
+`@untitledui/icons` is the default for every control and indicator, but a handful of glyphs are hand-drawn because the set has no equivalent. All of them keep Untitled UI's drawing contract exactly — **24×24 viewBox, `strokeWidth: 2`, round caps and joins, `currentColor`, no fill, DOM SVG** — so they sit flush with their neighbours. Match that contract or the icon reads as imported from somewhere else.
+
+| Glyph | File | Why bespoke |
+|---|---|---|
+| Nav: house-with-heart, buildings pair, brand arch | `NavIcons.tsx` | Wooru-specific silhouettes |
+| `ParentChildIcon` (Parent Corner tile) | `ParentChildIcon.tsx` | Every `Users*` variant is two adults at the same height, which reads as "neighbours". A parent and a child needs a height difference — the child stands at **63% of the adult**, both on a shared baseline. |
+
+When drawing one, check the arcs are realizable (chord ≤ 2r) — renderers silently scale an impossible arc instead of failing, which is how a hand-written glyph comes out subtly wrong rather than visibly broken. Leave ≥3 units between separate figures: at `strokeWidth: 2` each outline eats 1 unit, and anything tighter smears two silhouettes into one shape at 20px.
+
+Four of the five bottom-nav glyphs live in `components/NavIcons.tsx` rather than `@untitledui/icons`, because two are bespoke: the house carries a heart, and the buildings pair is Wooru-specific. They keep Untitled UI geometry (24×24, round caps, `currentColor`) and render as DOM SVG, exactly as `@untitledui/icons` does.
 
 **The MCN mark is not a glyph** — it is `assets/images/adaptive-icon.png` rendered as an `Image`, per the "render the mark as an image, never as a substitute glyph" rule above. Do not re-draw it in SVG "to match the icon set": a traced arch silently drifts from the brand every time the logo is revised, and the disc then keeps showing a stale mark after the assets are updated. The asset is cream on transparent, so it needs no tint on the teal disc; it is inset to the safe zone, so its 44px box deliberately overhangs the 38px disc to bring the visible arch up to ~65% of it.
 

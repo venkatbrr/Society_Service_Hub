@@ -2,10 +2,10 @@ import { Car01 } from '@untitledui/icons/Car01';
 import { GraduationHat02 } from '@untitledui/icons/GraduationHat02';
 import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
 import { SwitchHorizontal01 } from '@untitledui/icons/SwitchHorizontal01';
-import { Users01 } from '@untitledui/icons/Users01';
 import React from 'react';
+import { ParentChildIcon } from './ParentChildIcon';
 
-type NetworkTileIconKind = 'food' | 'carpool' | 'parents' | 'schools' | 'borrow';
+export type NetworkTileIconKind = 'food' | 'carpool' | 'parents' | 'schools' | 'borrow';
 
 interface NetworkTileIconProps {
   kind: NetworkTileIconKind;
@@ -16,7 +16,8 @@ interface NetworkTileIconProps {
 const ICON_BY_KIND: Record<NetworkTileIconKind, React.ComponentType<{ size?: number; color?: string; 'aria-hidden'?: boolean }>> = {
   food: ShoppingBag01,
   carpool: Car01,
-  parents: Users01,
+  // Bespoke — Untitled UI's Users* are all same-height adults. See ParentChildIcon.
+  parents: ParentChildIcon,
   schools: GraduationHat02,
   borrow: SwitchHorizontal01,
 };

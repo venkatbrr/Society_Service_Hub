@@ -14,9 +14,9 @@ import {
     View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AnimatedTileGlyph } from '../../components/AnimatedTileGlyph';
 import { BaseCard } from '../../components/BaseCard';
 import { ComingSoonTile } from '../../components/ComingSoonTile';
-import { NetworkTileIcon } from '../../components/NetworkTileIcon';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
@@ -194,7 +194,7 @@ export default function NetworkScreen() {
         >
           <View style={styles.cardHeaderRow}>
             <View style={[styles.iconCircle, { backgroundColor: '#FEE2E2' }]}>
-              <NetworkTileIcon kind="food" />
+              <AnimatedTileGlyph kind="food" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
@@ -219,7 +219,7 @@ export default function NetworkScreen() {
         >
           <View style={styles.cardHeaderRow}>
             <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
-              <NetworkTileIcon kind="carpool" />
+              <AnimatedTileGlyph kind="carpool" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
@@ -244,7 +244,7 @@ export default function NetworkScreen() {
         >
           <View style={styles.cardHeaderRow}>
             <View style={[styles.iconCircle, { backgroundColor: '#E0E7FF' }]}>
-              <NetworkTileIcon kind="parents" />
+              <AnimatedTileGlyph kind="parents" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Parent Corner</Text>
@@ -270,7 +270,7 @@ export default function NetworkScreen() {
           >
             <View style={styles.cardHeaderRow}>
               <View style={[styles.iconCircle, { backgroundColor: '#D1FAE5' }]}>
-                <NetworkTileIcon kind="schools" />
+                <AnimatedTileGlyph kind="schools" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Schools Catalog & Compare</Text>
@@ -297,7 +297,7 @@ export default function NetworkScreen() {
           >
             <View style={styles.cardHeaderRow}>
               <View style={[styles.iconCircle, { backgroundColor: '#EDE9FE' }]}>
-                <NetworkTileIcon kind="borrow" />
+                <AnimatedTileGlyph kind="borrow" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
