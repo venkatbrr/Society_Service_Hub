@@ -1,5 +1,6 @@
 import { Calendar } from '@untitledui/icons/Calendar';
 import { Clock } from '@untitledui/icons/Clock';
+import { Sun } from '@untitledui/icons/Sun';
 import { Plus } from '@untitledui/icons/Plus';
 import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
 import { Trash01 } from '@untitledui/icons/Trash01';
@@ -652,7 +653,7 @@ export default function CreateOrEditFoodDropScreen() {
                     borderRadius: 8,
                     border: `0.5px solid ${colors.borderHair}`,
                     padding: '0 10px',
-                    fontSize: 14,
+                    fontSize: 15,
                     color: colors.textPrimary,
                     backgroundColor: colors.card,
                     fontFamily: 'inherit',
@@ -664,7 +665,7 @@ export default function CreateOrEditFoodDropScreen() {
                     style={[styles.input, { justifyContent: 'center' }]}
                     onPress={() => setShowFulfillDatePicker(true)}
                   >
-                    <Text style={{ fontSize: 14, color: colors.textPrimary }}>
+                    <Text style={{ fontSize: 15, color: colors.textPrimary }}>
                       {fulfillmentDate || 'Select Date'}
                     </Text>
                   </TouchableOpacity>
@@ -698,7 +699,7 @@ export default function CreateOrEditFoodDropScreen() {
                     borderRadius: 8,
                     border: `0.5px solid ${colors.borderHair}`,
                     padding: '0 10px',
-                    fontSize: 14,
+                    fontSize: 15,
                     color: colors.textPrimary,
                     backgroundColor: colors.card,
                     fontFamily: 'inherit',
@@ -710,7 +711,7 @@ export default function CreateOrEditFoodDropScreen() {
                     style={[styles.input, { justifyContent: 'center' }]}
                     onPress={() => setShowFulfillTimePicker(true)}
                   >
-                    <Text style={{ fontSize: 14, color: colors.textPrimary }}>
+                    <Text style={{ fontSize: 15, color: colors.textPrimary }}>
                       {fulfillmentTime ? formatDisplayTime(fulfillmentTime) : 'Select Time'}
                     </Text>
                   </TouchableOpacity>
@@ -730,36 +731,50 @@ export default function CreateOrEditFoodDropScreen() {
             </View>
           </View>
 
-          {/* Meal slot. Seeded from the delivery time above, but stored as the
-              host's own answer — residents filter the catalog on it, and the
-              clock cannot tell a late snack from an early dinner. */}
-          <View style={{ marginTop: 10 }}>
-            <Text style={styles.subLabel}>Which meal is this? *</Text>
-            <View style={styles.dietPickerRow}>
-              {MEAL_TYPES.map((m) => {
-                const sel = mealType === m;
-                return (
-                  <TouchableOpacity
-                    key={m}
-                    style={[styles.mealChip, sel && styles.mealChipSel]}
-                    onPress={() => {
-                      mealTouchedRef.current = true;
-                      setMealType(m);
-                    }}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: sel }}
-                    accessibilityLabel={MEAL_META[m].label}
-                  >
-                    <Text style={[styles.dietText, sel && styles.dietTextSel]}>
-                      {MEAL_META[m].label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <Text style={styles.hintText}>
-              Picked from your delivery time — change it if this is a late snack or an early dinner.
-            </Text>
+        </View>
+
+        {/* Meal slot. Seeded from the delivery time above, but stored as the
+            host's own answer — residents filter the catalog on it, and the
+            clock cannot tell a late snack from an early dinner.
+            It sits in its own card rather than tucked under the schedule
+            fields: as a sub-label it was the one required choice a host could
+            scroll past without noticing, because it was pre-filled and looked
+            answered. A full section with its own title and full-width chips
+            makes the wrong guess visible instead of silently shipping. */}
+        <View style={styles.cardSection}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <Sun size={16} color={Verandah.primary} aria-hidden={true} />
+            <Text style={styles.cardSectionTitle}>Which meal is this? *</Text>
+          </View>
+          <Text style={styles.cardSectionSub}>
+            We pre-fill this from your delivery time. Change it if this is a late snack or an
+            early dinner — residents filter the food list by meal.
+          </Text>
+
+          <View style={styles.mealPickerRow}>
+            {MEAL_TYPES.map((m) => {
+              const sel = mealType === m;
+              return (
+                <TouchableOpacity
+                  key={m}
+                  style={[styles.mealChip, sel && styles.mealChipSel]}
+                  onPress={() => {
+                    mealTouchedRef.current = true;
+                    setMealType(m);
+                  }}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: sel }}
+                  accessibilityLabel={`${MEAL_META[m].label} — ${MEAL_META[m].hint}`}
+                >
+                  <Text style={[styles.mealChipText, sel && styles.mealChipTextSel]}>
+                    {MEAL_META[m].label}
+                  </Text>
+                  <Text style={[styles.mealChipHint, sel && styles.mealChipHintSel]}>
+                    {MEAL_META[m].hint}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
@@ -787,7 +802,7 @@ export default function CreateOrEditFoodDropScreen() {
                     borderRadius: 8,
                     border: `0.5px solid ${colors.borderHair}`,
                     padding: '0 10px',
-                    fontSize: 14,
+                    fontSize: 15,
                     color: colors.textPrimary,
                     backgroundColor: colors.card,
                     fontFamily: 'inherit',
@@ -799,7 +814,7 @@ export default function CreateOrEditFoodDropScreen() {
                     style={[styles.input, { justifyContent: 'center' }]}
                     onPress={() => setShowCutoffDatePicker(true)}
                   >
-                    <Text style={{ fontSize: 14, color: colors.textPrimary }}>
+                    <Text style={{ fontSize: 15, color: colors.textPrimary }}>
                       {cutoffDate || 'Select Date'}
                     </Text>
                   </TouchableOpacity>
@@ -831,7 +846,7 @@ export default function CreateOrEditFoodDropScreen() {
                     borderRadius: 8,
                     border: `0.5px solid ${colors.borderHair}`,
                     padding: '0 10px',
-                    fontSize: 14,
+                    fontSize: 15,
                     color: colors.textPrimary,
                     backgroundColor: colors.card,
                     fontFamily: 'inherit',
@@ -843,7 +858,7 @@ export default function CreateOrEditFoodDropScreen() {
                     style={[styles.input, { justifyContent: 'center' }]}
                     onPress={() => setShowCutoffTimePicker(true)}
                   >
-                    <Text style={{ fontSize: 14, color: colors.textPrimary }}>
+                    <Text style={{ fontSize: 15, color: colors.textPrimary }}>
                       {cutoffTime || 'Select Time'}
                     </Text>
                   </TouchableOpacity>
@@ -1030,21 +1045,21 @@ const styles = StyleSheet.create({
   },
   label: {
     ...VerandahType.bodyBold,
-    fontSize: 12,
+    fontSize: 14,
     color: Verandah.textPrimary,
     marginBottom: 4,
   },
   subLabel: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '500',
     color: Verandah.textSecondary,
     marginBottom: 2,
   },
   hintText: {
-    fontSize: 10,
+    fontSize: 12,
     color: Verandah.textMuted,
     marginTop: 3,
-    lineHeight: 13,
+    lineHeight: 16,
   },
   input: {
     backgroundColor: Verandah.card,
@@ -1052,8 +1067,8 @@ const styles = StyleSheet.create({
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.md,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    fontSize: 13,
+    paddingVertical: 8,
+    fontSize: 15,
     color: Verandah.textPrimary,
   },
   multiline: {
@@ -1069,12 +1084,12 @@ const styles = StyleSheet.create({
   },
   cardSectionTitle: {
     ...VerandahType.title,
-    fontSize: 13,
+    fontSize: 15,
     color: Verandah.textPrimary,
     marginBottom: 2,
   },
   cardSectionSub: {
-    fontSize: 11,
+    fontSize: 13,
     color: Verandah.textSecondary,
     marginBottom: 8,
   },
@@ -1098,7 +1113,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   addItemBtnText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
     color: Verandah.accent,
   },
@@ -1117,7 +1132,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   itemFormTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
     color: Verandah.textPrimary,
   },
@@ -1142,20 +1157,49 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: '#D1D5DB',
   },
+  // Four chips sharing the row equally (`flex: 1` + `flexBasis: 0`), so the
+  // meal picker reads as one deliberate control the width of the card rather
+  // than four small pills the host's eye can skate over.
+  mealPickerRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
   mealChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: VerandahRadius.pill,
+    flex: 1,
+    flexBasis: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 9,
+    borderRadius: VerandahRadius.md,
     backgroundColor: '#FFFFFF',
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.control,
     borderColor: '#D1D5DB',
   },
   mealChipSel: {
     backgroundColor: Verandah.primary,
     borderColor: Verandah.primary,
   },
+  mealChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Verandah.textSecondary,
+    textAlign: 'center',
+  },
+  mealChipTextSel: {
+    color: '#FFFFFF',
+  },
+  mealChipHint: {
+    fontSize: 10,
+    color: Verandah.textMuted,
+    marginTop: 1,
+    textAlign: 'center',
+  },
+  mealChipHintSel: {
+    color: 'rgba(255, 255, 255, 0.75)',
+  },
   dietText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: Verandah.textSecondary,
   },
@@ -1175,7 +1219,7 @@ const styles = StyleSheet.create({
     borderColor: Verandah.accent,
   },
   unitText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '500',
     color: Verandah.textSecondary,
   },

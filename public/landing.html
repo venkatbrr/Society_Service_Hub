@@ -158,15 +158,26 @@
 
     /* ---------- Arch colonnade ---------- */
     .wn-colonnade-band { max-width: 1160px; margin: 0 auto; padding: 54px 32px 12px; }
-    .wn-colonnade { display: flex; align-items: flex-end; justify-content: center; gap: 20px; height: 170px; }
-    .wn-pillar { position: relative; }
+    /* Every pillar dimension below is in em, so this one font-size scales the
+       whole composition — and its layout box — in proportion. 6.24em is the
+       intrinsic width (5 pillars + 4 gaps); the 100px cap is full desktop size.
+       Without this the pillars kept fixed px widths, flex-shrank on narrow
+       screens, and the arches turned tall and thin. */
+    .wn-colonnade {
+      display: flex; align-items: flex-end; justify-content: center;
+      /* 72px = side padding + room for a classic scrollbar, which 100vw counts
+         but the content box does not. */
+      font-size: min(100px, (100vw - 72px) / 6.24);
+      gap: .2em; height: 1.7em;
+    }
+    .wn-pillar { position: relative; flex: 0 0 auto; }
     .wn-pillar span { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); }
-    .wn-pillar-sm { width: 98px; height: 96px; background: var(--cream); border: 1px solid rgba(15,55,50,.09); border-radius: 49px 49px 14px 14px; }
-    .wn-pillar-sm span { width: 44px; height: 52px; background: var(--page); border-radius: 22px 22px 0 0; }
-    .wn-pillar-md { width: 110px; height: 132px; border-radius: 55px 55px 14px 14px; }
-    .wn-pillar-md span { width: 50px; height: 74px; background: var(--page); border-radius: 25px 25px 0 0; }
-    .wn-pillar-lg { width: 128px; height: 168px; background: var(--ink); border-radius: 64px 64px 16px 16px; }
-    .wn-pillar-lg span { width: 58px; height: 96px; background: var(--gold); border-radius: 29px 29px 0 0; }
+    .wn-pillar-sm { width: .98em; height: .96em; background: var(--cream); border: 1px solid rgba(15,55,50,.09); border-radius: .49em .49em .14em .14em; }
+    .wn-pillar-sm span { width: .44em; height: .52em; background: var(--page); border-radius: .22em .22em 0 0; }
+    .wn-pillar-md { width: 1.1em; height: 1.32em; border-radius: .55em .55em .14em .14em; }
+    .wn-pillar-md span { width: .5em; height: .74em; background: var(--page); border-radius: .25em .25em 0 0; }
+    .wn-pillar-lg { width: 1.28em; height: 1.68em; background: var(--ink); border-radius: .64em .64em .16em .16em; }
+    .wn-pillar-lg span { width: .58em; height: .96em; background: var(--gold); border-radius: .29em .29em 0 0; }
     .wn-baseline { height: 1px; background: rgba(15,55,50,.10); margin-top: -1px; }
     .wn-colonnade-caption {
       text-align: center; font-size: 12.5px; font-weight: 600; letter-spacing: 1.6px;
@@ -355,8 +366,6 @@
       .wn-h1 br { display: none; }
       .wn-herobtns { flex-direction: column; align-items: stretch; }
       .wn-herobtns a { justify-content: center; }
-      .wn-colonnade { transform: scale(.6); transform-origin: top center; }
-      .wn-baseline { margin-top: -52px; }
       .wn-numeral { font-size: 60px; }
     }
     @media (prefers-reduced-motion: reduce) {
