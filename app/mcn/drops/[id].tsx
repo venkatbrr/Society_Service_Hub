@@ -31,7 +31,7 @@ import { PLACEHOLDER_COVER } from '../../../components/PreorderDropCard';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
 import { dietMeta } from '../../../constants/diet';
-import { format12HourTime, getMediaHeroHeight, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType, format12HourTime, getMediaHeroHeight } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { cloudinaryUrl } from '../../../lib/cloudinary';
@@ -1087,7 +1087,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
     padding: 8,
@@ -1527,7 +1527,7 @@ const styles = StyleSheet.create({
   loginPromptCard: {
     marginTop: 10,
     backgroundColor: '#F9FAFB',
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
     padding: 10,

@@ -16,7 +16,7 @@ import Toast from 'react-native-toast-message';
 import { EmojiRating } from '../../../components/EmojiRating';
 import { SchoolAspectIcon } from '../../../components/SchoolAspectIcon';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahRadius, VerandahType } from '../../../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { GRADE_OPTIONS, SCHOOL_ASPECTS } from '../../../constants/schoolReviewAspects';
 import { useAuth } from '../../../context/AuthContext';
 import { WEST_HYDERABAD_SCHOOLS } from '../../../data/westHyderabadSchools';
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
   introCard: {
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
     padding: 16,
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   },
   aspectCard: {
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
     padding: 16,

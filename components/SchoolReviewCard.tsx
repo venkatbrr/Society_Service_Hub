@@ -4,7 +4,7 @@ import { Edit01 } from '@untitledui/icons/Edit01';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahType } from '../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { SCHOOL_ASPECTS } from '../constants/schoolReviewAspects';
 import { Avatar } from './Avatar';
 import { SchoolAspectIcon } from './SchoolAspectIcon';
@@ -191,7 +191,7 @@ export const SchoolReviewCard: React.FC<SchoolReviewCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Verandah.card,
-    borderWidth: 1,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderStrong,
     borderRadius: VerandahRadius.lg,
     padding: 14,

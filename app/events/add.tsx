@@ -9,7 +9,7 @@ import { DateField, formatLocalDateForDb } from '../../components/DateField';
 import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { ImageUploader } from '../../components/ImageUploader';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { EVENT_CATEGORIES, EVENT_TIME_OPTIONS, EventCategory, eventCategoryMeta, formatEventTime } from '../../lib/events';
 import { goBackSmart } from '../../lib/navigation';
 import { isValidIndianMobile } from '../../lib/phone';
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   },
   cardSection: {
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     borderRadius: VerandahRadius.md,
     padding: 12,

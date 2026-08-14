@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahType, getNetworkTileImageHeight } from '../constants/Verandah';
 import { cloudinaryUrl } from '../lib/cloudinary';
 import { shareOrCopy } from '../lib/share';
 import { siteUrl } from '../lib/siteUrl';
@@ -150,7 +150,7 @@ export const McnListingCard = React.memo(({
 const styles = StyleSheet.create({
   card: {
     marginBottom: 8,
-    borderWidth: 1,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderStrong,
     overflow: 'hidden',
   },

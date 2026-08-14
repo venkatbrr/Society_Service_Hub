@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { format12HourTime, getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahType, format12HourTime, getNetworkTileImageHeight } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { cloudinaryUrl } from '../lib/cloudinary';
 import { shareOrCopy } from '../lib/share';
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 10,
     borderRadius: VerandahRadius.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     overflow: 'hidden',

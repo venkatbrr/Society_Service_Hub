@@ -14,7 +14,7 @@ import { ImageViewer } from '../../../components/ImageViewer';
 import { RatingStars } from '../../../components/RatingStars';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
-import { getMediaHeroHeight, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType, getMediaHeroHeight } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { cloudinaryUrl } from '../../../lib/cloudinary';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
@@ -933,7 +933,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: VerandahRadius.lg,
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     marginBottom: 10,
     ...Verandah.shadowCard,

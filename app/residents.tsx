@@ -11,7 +11,7 @@ import Toast from 'react-native-toast-message';
 import { Avatar } from '../components/Avatar';
 import { HeaderBackButton } from '../components/HeaderBackButton';
 import { Verandah } from '../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { confirmAction } from '../lib/confirm';
 import { replaceTracked } from '../lib/navigation';
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: VerandahRadius.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     marginTop: 8,
     marginBottom: 6,
     ...Verandah.shadowCard,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Platform, StyleSheet, TouchableOpacity, TouchableOpacityProps, View, ViewProps } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius } from '../constants/Verandah';
+import { VerandahBorder, VerandahRadius } from '../constants/Verandah';
 import { MotionWrapper } from './MotionWrapper';
 
 interface BaseCardProps extends ViewProps {
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.card,
     borderRadius: VerandahRadius.card, // 18px
     marginBottom: 8,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     borderStyle: 'solid',
     overflow: 'hidden',

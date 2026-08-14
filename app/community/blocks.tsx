@@ -5,7 +5,7 @@ import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { goBackSmart } from '../../lib/navigation';
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     alignItems: 'flex-start',
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     backgroundColor: Verandah.accentSoft,
     borderRadius: VerandahRadius.lg,
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   },
   noticeText: { flex: 1, ...VerandahType.caption, color: Verandah.textPrimary, lineHeight: 17 },
   blockCard: {
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     backgroundColor: Verandah.card,
     borderRadius: VerandahRadius.lg,

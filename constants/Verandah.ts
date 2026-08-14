@@ -169,6 +169,24 @@ export const VerandahRadius = {
 };
 
 /**
+ * Border widths.
+ *
+ * `tile` is the single source of truth for the outline of any card/tile
+ * surface — feed cards, section panels, grid tiles, stacked list rows. It was
+ * `0.5` until 2026-08-14; against the paper/cream background that read as
+ * barely-there, so a stack of tiles blurred into one another with no clear
+ * edge between the card above and the card below. Every tile uses this value
+ * so the stack reads as separate cards, not one continuous surface.
+ *
+ * `control` stays hairline-thin: chips, badges, inputs, icon buttons and
+ * segmented tracks sit *inside* a tile and must not compete with its outline.
+ */
+export const VerandahBorder = {
+  tile: 1,
+  control: 0.5,
+};
+
+/**
  * Layout tokens that differ between native and web.
  * On native, screens need top padding for the status bar.
  * On web, there is no status bar.

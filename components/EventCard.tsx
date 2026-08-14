@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahType, getNetworkTileImageHeight } from '../constants/Verandah';
 import { cloudinaryUrl } from '../lib/cloudinary';
 import {
   eventCategoryMeta,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   compactCard: {
     width: COMPACT_WIDTH,
     borderRadius: VerandahRadius.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     overflow: 'hidden',
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   // Full (events feed)
   fullCard: {
     borderRadius: VerandahRadius.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     overflow: 'hidden',

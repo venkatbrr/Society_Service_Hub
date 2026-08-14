@@ -14,7 +14,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
 import { APP_EMOJIS } from '../constants/emojis';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { POST_AUTH_LANDING_ROUTE, replaceTracked } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: VerandahRadius.lg,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     backgroundColor: Verandah.card,
     padding: VerandahSpace.lg,

@@ -135,11 +135,12 @@ Full reference: [`verandah.md`](verandah.md).
 
 **Token sources — the only allowed origin for visual values**
 - `constants/Colors.ts` → `Verandah`
-- `constants/Verandah.ts` → `VerandahType`, `VerandahSpace`, `VerandahRadius`, `VerandahLayout`
+- `constants/Verandah.ts` → `VerandahType`, `VerandahSpace`, `VerandahRadius`, `VerandahBorder`, `VerandahLayout`
 
 **Forbidden in feature UI**
 - Raw hex colors (bind to `Verandah` instead)
 - Ad-hoc font sizes when a `VerandahType` token fits
+- A numeric `borderWidth` on a card/tile or on a control — use `VerandahBorder.tile` (1) or `VerandahBorder.control` (0.5). See [`verandah.md`](verandah.md) §Border Widths.
 - Hand-written `shadowColor`/`shadowOffset`/`shadowOpacity`/`shadowRadius`/`elevation` values — spread `Verandah.shadowCard` / `shadowRaised` instead, and only on **big tiles** (feed cards, hub tiles, banners). Small tiles (provider name rows, chips, badges) stay flat. Never cancel a token with `shadowColor: 'transparent'`. See [`verandah.md`](verandah.md) §Elevation.
 - `LinearGradient` on cards, chrome, or button fills
 - Glassmorphism aliases (`colors.glass`, `colors.glassBorder`) — use `colors.card` and `colors.border`

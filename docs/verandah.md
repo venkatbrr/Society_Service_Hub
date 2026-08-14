@@ -13,7 +13,7 @@ This document is the canonical reference for the Verandah UI system used in Woor
 ## Token Sources
 
 - Color tokens: `constants/Colors.ts` (`Verandah`)
-- Type, spacing, radius, layout tokens: `constants/Verandah.ts` (`VerandahType`, `VerandahSpace`, `VerandahRadius`, `VerandahLayout`)
+- Type, spacing, radius, border, layout tokens: `constants/Verandah.ts` (`VerandahType`, `VerandahSpace`, `VerandahRadius`, `VerandahBorder`, `VerandahLayout`)
 
 No production UI should define parallel visual token sets.
 
@@ -120,6 +120,15 @@ From `VerandahRadius`:
 - `xl`: 20
 - `pill`: 999
 - `frame`: 32
+
+## Border Widths
+
+From `VerandahBorder`. Two values, and the split is what keeps a tile legible:
+
+- `tile`: **1** — the outline of any card/tile surface: feed cards, section panels, grid tiles, stacked list rows, `BaseCard`. Raised from `0.5` on 2026-08-14; paired with `borderHair` at 0.18 alpha, a half-pixel line was too weak to separate one tile from the next, so a scrolling stack read as a single continuous surface with no edge between the card above and the card below.
+- `control`: **0.5** — chips, badges, inputs, icon buttons, segmented tracks, counter steppers. These sit *inside* a tile; giving them the tile weight makes the tile stop reading as the outer container.
+
+Never hardcode the number. A new card gets `VerandahBorder.tile`, a new chip gets `VerandahBorder.control` — that is the whole decision. `borderWhisper` controls stay on `StyleSheet.hairlineWidth` (see the palette note above).
 
 ## Layout Tokens
 

@@ -21,7 +21,7 @@ import { Rupees } from '../../components/Rupees';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
 import { formatRole } from '../../lib/fundRoles';
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     borderRadius: VerandahRadius.md,
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
   },
   pendingCard: {
     borderRadius: VerandahRadius.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: 'rgba(133, 79, 11, 0.18)',
     backgroundColor: Verandah.sand,
     padding: 14,
@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
   tile: {
     flex: 1,
     borderRadius: VerandahRadius.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     padding: 14,
@@ -942,7 +942,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   codeTile: {
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.cardMuted,
     borderRadius: VerandahRadius.md,
@@ -1040,7 +1040,7 @@ const styles = StyleSheet.create({
   },
   noLeadCard: {
     borderRadius: VerandahRadius.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     backgroundColor: Verandah.sand,
     padding: 14,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 
 type Insight = {
   title: string;
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     minWidth: 180,
     gap: VerandahSpace.md,
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     ...Verandah.shadowCard,
   },

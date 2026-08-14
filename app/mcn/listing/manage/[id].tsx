@@ -10,7 +10,7 @@ import Toast from 'react-native-toast-message';
 import { ImageUploader } from '../../../../components/ImageUploader';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../../constants/Verandah';
 import { useAuth } from '../../../../context/AuthContext';
 import { cloudinaryUrl } from '../../../../lib/cloudinary';
 import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
   card: {
     padding: 10,
     borderRadius: VerandahRadius.lg,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     backgroundColor: Verandah.card,
     marginBottom: 8,
   },

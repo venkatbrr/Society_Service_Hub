@@ -17,7 +17,7 @@ import { Rupees } from '../../components/Rupees';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { replaceTracked } from '../../lib/navigation';
 import { goToLanding } from '../../lib/siteUrl';
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: VerandahRadius.card,
     marginBottom: 0,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     ...Verandah.shadowCard,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   },
   menuCard: {
     borderRadius: VerandahRadius.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     overflow: 'hidden',
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: VerandahRadius.card,
     marginBottom: 0,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     ...Verandah.shadowCard,
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     fontFamily: VerandahType.sansFamily,
   },
   adminCard: {
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     borderRadius: VerandahRadius.card,
     paddingVertical: 12,

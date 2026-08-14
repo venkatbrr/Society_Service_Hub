@@ -39,7 +39,7 @@ import { BaseCard } from '../../../components/BaseCard';
 import { EmptyState } from '../../../components/EmptyState';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { Tables } from '../../../lib/database.types';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
@@ -1210,7 +1210,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: VerandahRadius.md,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     gap: 10,
     marginTop: 4,
   },
@@ -1267,7 +1267,7 @@ const styles = StyleSheet.create({
   },
   reqCard: {
     padding: 10,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderRadius: VerandahRadius.md,
     marginBottom: 8,
   },

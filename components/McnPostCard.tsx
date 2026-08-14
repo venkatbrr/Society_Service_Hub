@@ -9,7 +9,7 @@ import Toast from 'react-native-toast-message';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahType } from '../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { Tables } from '../lib/database.types';
 
 export type McnPostWithProfile = Tables<'mcn_posts'> & {
@@ -125,7 +125,7 @@ export function McnPostCard({ post, currentUserId, isCommunityLead, onMarkUnavai
 const styles = StyleSheet.create({
   card: {
     marginBottom: 8,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
   },
   header: {

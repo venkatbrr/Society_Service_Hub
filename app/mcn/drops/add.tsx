@@ -24,7 +24,7 @@ import { ImageUploader } from '../../../components/ImageUploader';
 import { Verandah } from '../../../constants/Colors';
 import { DIET_META, DIET_TYPES, DietType } from '../../../constants/diet';
 import { MEAL_META, MEAL_TYPES, MealType, suggestMealFromTime } from '../../../constants/meal';
-import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
@@ -1061,7 +1061,7 @@ const styles = StyleSheet.create({
   },
   cardSection: {
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.md,
     padding: 10,

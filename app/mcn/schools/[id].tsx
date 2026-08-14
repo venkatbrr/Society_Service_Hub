@@ -17,7 +17,7 @@ import { AspectScores, SchoolRadarChart } from '../../../components/SchoolRadarC
 import { SchoolReviewCard, SchoolReviewItem } from '../../../components/SchoolReviewCard';
 import { ScoreSentimentIcon } from '../../../components/ScoreSentimentIcon';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { SCHOOL_ASPECTS } from '../../../constants/schoolReviewAspects';
 import { useAuth } from '../../../context/AuthContext';
 import { WEST_HYDERABAD_SCHOOLS } from '../../../data/westHyderabadSchools';
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
   },
   quickInfoCard: {
     flexDirection: 'row',
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderRadius: VerandahRadius.lg,
     paddingVertical: 8,
     marginBottom: 16,
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
   },
   contactCard: {
     flex: 1,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderRadius: VerandahRadius.lg,
     paddingVertical: 12,
     paddingHorizontal: 12,
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
   },
   emptyReportCard: {
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderRadius: VerandahRadius.lg,
     padding: 14,
     alignItems: 'center',

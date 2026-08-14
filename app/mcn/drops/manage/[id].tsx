@@ -28,7 +28,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../../constants/Verandah';
 import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
 import { supabase } from '../../../../lib/supabase';
 
@@ -884,7 +884,7 @@ const styles = StyleSheet.create({
   },
   headerCard: {
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
     padding: 8,
@@ -989,7 +989,7 @@ const styles = StyleSheet.create({
   metricCard: {
     flex: 1,
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
     padding: 6,
@@ -1012,7 +1012,7 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     backgroundColor: Verandah.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
     padding: 8,
@@ -1071,7 +1071,7 @@ const styles = StyleSheet.create({
   },
   orderCard: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: '#E5E7EB',
     borderRadius: 8,
     padding: 8,

@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { replaceTracked } from '../lib/navigation';
 import { goToLanding, siteUrl } from '../lib/siteUrl';
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Verandah.card,
     borderRadius: VerandahRadius.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     padding: 32,
     width: '100%',

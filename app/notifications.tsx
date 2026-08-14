@@ -18,7 +18,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { HeaderBackButton } from '../components/HeaderBackButton';
 import { Verandah } from '../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useNotifications } from '../context/NotificationContext';
 import { useWebPullToRefresh } from '../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../components/WebPullIndicator';
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 0,
     borderRadius: VerandahRadius.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     ...Verandah.shadowCard,
   },
   notificationItemUnread: {

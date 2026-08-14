@@ -2,7 +2,7 @@ import { ChevronRight } from '@untitledui/icons/ChevronRight';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { SERVICE_CATEGORY_LABELS, ServiceCategory, getServiceCategoryIcon } from '../lib/serviceCategories';
 import { parseNotesAndImages } from '../lib/serviceReminderHelpers';
 import { UrgencyBadge } from './UrgencyBadge';
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: VerandahRadius.card,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     marginBottom: 8,

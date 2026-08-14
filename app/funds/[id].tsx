@@ -28,7 +28,7 @@ import { BlockPicker } from '../../components/BlockPicker';
 import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
+import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { cloudinaryUrl } from '../../lib/cloudinary';
 import { Tables } from '../../lib/database.types';
@@ -1018,7 +1018,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 8,
     gap: 2,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
   },
   roleSummaryTitle: {
@@ -1036,7 +1036,7 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.card,
     borderRadius: 14,
     padding: 10,
-    borderWidth: 0.5,
+    borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
   },
   summaryItem: {
