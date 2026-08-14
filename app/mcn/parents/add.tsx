@@ -36,7 +36,9 @@ const INSTITUTION_TYPES = [
   { id: 'preschool', label: 'Pre-School', icon: 'baby' as const },
 ];
 
-const BOARD_OPTIONS = ['CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University', 'Other'];
+// 'NA' is for parents whose intent (carpooling, playdates) has nothing to do
+// with a syllabus — the field is required, so they need a way to opt out.
+const BOARD_OPTIONS = ['CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University', 'Other', 'NA'];
 
 // data/westHyderabadSchools.ts levels relevant to each institution type. College
 // has no matches in the catalog, so it always falls straight to free text.
@@ -424,6 +426,9 @@ export default function AddParentCornerScreen() {
               );
             })}
           </ScrollView>
+          <Text style={[styles.fieldHint, { color: colors.textMuted }]}>
+            Pick NA if the board isn't relevant — e.g. you're only here for carpooling.
+          </Text>
         </View>
 
         {/* Grade / Class & Section */}
@@ -646,6 +651,11 @@ const styles = StyleSheet.create({
   suggestionChipText: {
     ...VerandahType.caption,
     fontSize: 11,
+  },
+  fieldHint: {
+    ...VerandahType.caption,
+    fontSize: 11,
+    marginTop: 4,
   },
   intentGrid: {
     flexDirection: 'row',

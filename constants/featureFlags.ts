@@ -22,3 +22,15 @@ export const BORROW_SHARE_ENABLED = false;
  * "more on the way" teaser card in place of the missing sections.
  */
 export const HAS_HIDDEN_MCN_SECTIONS = !SCHOOLS_CATALOG_ENABLED || !BORROW_SHARE_ENABLED;
+
+/**
+ * "Most ordered" sort on the pre-order food catalog — `app/mcn/drops/index.tsx`.
+ *
+ * Built and working: `get_mcn_drop_order_counts` is deployed and the sort
+ * comparator is live, the option is simply not offered yet. Flip to `true` to
+ * put it back in the sort sheet; nothing else needs changing.
+ *
+ * The counts themselves are **not** behind this flag — the "spots still left"
+ * filter reads them too, so the RPC call stays unconditional.
+ */
+export const DROP_SORT_MOST_ORDERED_ENABLED = false;

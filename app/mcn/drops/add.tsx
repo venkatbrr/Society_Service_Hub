@@ -19,8 +19,11 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { DietDot } from '../../../components/DietDot';
 import { ImageUploader } from '../../../components/ImageUploader';
 import { Verandah } from '../../../constants/Colors';
+import { DIET_META, DIET_TYPES, DietType } from '../../../constants/diet';
+import { MEAL_META, MEAL_TYPES, MealType, suggestMealFromTime } from '../../../constants/meal';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
@@ -36,6 +39,7 @@ interface ItemForm {
   description: string;
   image_url?: string | null;
   max_quantity?: string;
+  diet_type: DietType;
 }
 
 const UNIT_OPTIONS: UnitOption[] = [
@@ -63,6 +67,18 @@ export default function CreateOrEditFoodDropScreen() {
   const [fulfillmentTime, setFulfillmentTime] = useState('13:00'); // HH:mm
   const [cutoffDate, setCutoffDate] = useState(''); // YYYY-MM-DD
   const [cutoffTime, setCutoffTime] = useState('21:00'); // HH:mm (e.g. 21:00 for 9 PM)
+  const [mealType, setMealType] = useState<MealType>('lunch');
+
+  // The meal follows the delivery time until the host picks one themselves.
+  // Most drops are the obvious meal for their slot, so tracking a live guess
+  // saves a tap — but once the host has said "this is a snack", moving the
+  // time must not silently overrule them.
+  const mealTouchedRef = React.useRef(false);
+
+  useEffect(() => {
+    if (mealTouchedRef.current) return;
+    setMealType(suggestMealFromTime(fulfillmentTime));
+  }, [fulfillmentTime]);
 
 
   // System Pickers State (Native iOS/Android)
@@ -131,7 +147,7 @@ export default function CreateOrEditFoodDropScreen() {
 
   // Items
   const [items, setItems] = useState<ItemForm[]>([
-    { id: '1', name: '', unit: 'piece', price: '', description: '', image_url: null, max_quantity: '' },
+    { id: '1', name: '', unit: 'piece', price: '', description: '', image_url: null, max_quantity: '', diet_type: 'veg' },
   ]);
 
   const [loadingDrop, setLoadingDrop] = useState(false);
@@ -200,6 +216,11 @@ export default function CreateOrEditFoodDropScreen() {
         setFulfillmentDate(loadedFulfillmentDate);
         setFulfillmentTime(loadedFulfillmentTime);
 
+        // An existing drop already has a host-chosen meal — treat it as
+        // touched so loading the form does not re-guess over their answer.
+        mealTouchedRef.current = true;
+        setMealType((dropData.meal_type as MealType) || suggestMealFromTime(loadedFulfillmentTime));
+
         let loadedCutoffDate = '';
         let loadedCutoffTime = '';
         if (dropData.cutoff_at) {
@@ -248,6 +269,7 @@ export default function CreateOrEditFoodDropScreen() {
             description: item.description || '',
             image_url: item.image_url || null,
             max_quantity: item.max_quantity ? String(item.max_quantity) : '',
+            diet_type: (item.diet_type as DietType) || 'veg',
           }))
         );
       }
@@ -266,7 +288,7 @@ export default function CreateOrEditFoodDropScreen() {
   const handleAddItem = () => {
     setItems((prev) => [
       ...prev,
-      { id: String(Date.now()), name: '', unit: 'piece', price: '', description: '', image_url: null, max_quantity: '' },
+      { id: String(Date.now()), name: '', unit: 'piece', price: '', description: '', image_url: null, max_quantity: '', diet_type: 'veg' },
     ]);
   };
 
@@ -412,6 +434,7 @@ export default function CreateOrEditFoodDropScreen() {
             image_url: imageUrl,
             fulfillment_date: fulfillmentDate.trim(),
             fulfillment_time: fulfillmentTime.trim(),
+            meal_type: mealType,
             cutoff_at: cutoffAtObj.toISOString(),
             updated_at: new Date().toISOString(),
           })
@@ -454,6 +477,7 @@ export default function CreateOrEditFoodDropScreen() {
             description: item.description.trim() || null,
             image_url: item.image_url || null,
             max_quantity: item.max_quantity ? parseInt(String(item.max_quantity), 10) : null,
+            diet_type: item.diet_type || 'veg',
           };
 
           // Lowering max_quantity below what is already pre-ordered is refused
@@ -495,6 +519,7 @@ export default function CreateOrEditFoodDropScreen() {
             image_url: imageUrl,
             fulfillment_date: fulfillmentDate.trim(),
             fulfillment_time: fulfillmentTime.trim(),
+            meal_type: mealType,
             cutoff_at: cutoffAtObj.toISOString(),
 
             status: 'open',
@@ -513,6 +538,7 @@ export default function CreateOrEditFoodDropScreen() {
           description: item.description.trim() || null,
           image_url: item.image_url || null,
           max_quantity: item.max_quantity ? parseInt(String(item.max_quantity), 10) : null,
+          diet_type: item.diet_type || 'veg',
         }));
 
         const { error: itemsErr } = await supabase
@@ -703,6 +729,38 @@ export default function CreateOrEditFoodDropScreen() {
               )}
             </View>
           </View>
+
+          {/* Meal slot. Seeded from the delivery time above, but stored as the
+              host's own answer — residents filter the catalog on it, and the
+              clock cannot tell a late snack from an early dinner. */}
+          <View style={{ marginTop: 10 }}>
+            <Text style={styles.subLabel}>Which meal is this? *</Text>
+            <View style={styles.dietPickerRow}>
+              {MEAL_TYPES.map((m) => {
+                const sel = mealType === m;
+                return (
+                  <TouchableOpacity
+                    key={m}
+                    style={[styles.mealChip, sel && styles.mealChipSel]}
+                    onPress={() => {
+                      mealTouchedRef.current = true;
+                      setMealType(m);
+                    }}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: sel }}
+                    accessibilityLabel={MEAL_META[m].label}
+                  >
+                    <Text style={[styles.dietText, sel && styles.dietTextSel]}>
+                      {MEAL_META[m].label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={styles.hintText}>
+              Picked from your delivery time — change it if this is a late snack or an early dinner.
+            </Text>
+          </View>
         </View>
 
         {/* Cut-off Deadline */}
@@ -849,6 +907,35 @@ export default function CreateOrEditFoodDropScreen() {
                     value={item.name}
                     onChangeText={(txt) => handleItemChange(item.id, 'name', txt)}
                   />
+                </View>
+              </View>
+
+              {/* Diet type — defaults to veg, so a host who never touches this
+                  row publishes a veg menu. Residents filter the catalog on it,
+                  so a wrong value here is worse than a missing photo. */}
+              <View style={{ marginTop: 8 }}>
+                <Text style={styles.subLabel}>Veg / Non-veg *</Text>
+                <View style={styles.dietPickerRow}>
+                  {DIET_TYPES.map((d) => {
+                    const sel = item.diet_type === d;
+                    const meta = DIET_META[d];
+                    return (
+                      <TouchableOpacity
+                        key={d}
+                        style={[
+                          styles.dietChip,
+                          sel && { backgroundColor: meta.color, borderColor: meta.color },
+                        ]}
+                        onPress={() => handleItemChange(item.id, 'diet_type', d)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected: sel }}
+                        accessibilityLabel={meta.label}
+                      >
+                        {sel ? null : <DietDot value={d} size={11} />}
+                        <Text style={[styles.dietText, sel && styles.dietTextSel]}>{meta.label}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
 
@@ -1038,6 +1125,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 4,
+  },
+  dietPickerRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  dietChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0.5,
+    borderColor: '#D1D5DB',
+  },
+  mealChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0.5,
+    borderColor: '#D1D5DB',
+  },
+  mealChipSel: {
+    backgroundColor: Verandah.primary,
+    borderColor: Verandah.primary,
+  },
+  dietText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Verandah.textSecondary,
+  },
+  dietTextSel: {
+    color: '#FFFFFF',
   },
   unitChip: {
     paddingHorizontal: 6,

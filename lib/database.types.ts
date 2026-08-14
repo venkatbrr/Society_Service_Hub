@@ -1741,6 +1741,7 @@ export type Database = {
           image_url: string | null
           listing_id: string | null
           max_orders: number | null
+          meal_type: string
           status: string
           title: string
           updated_at: string
@@ -1757,6 +1758,7 @@ export type Database = {
           image_url?: string | null
           listing_id?: string | null
           max_orders?: number | null
+          meal_type?: string
           status?: string
           title: string
           updated_at?: string
@@ -1773,6 +1775,7 @@ export type Database = {
           image_url?: string | null
           listing_id?: string | null
           max_orders?: number | null
+          meal_type?: string
           status?: string
           title?: string
           updated_at?: string
@@ -1805,6 +1808,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          diet_type: string
           drop_id: string
           id: string
           image_url: string | null
@@ -1816,6 +1820,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          diet_type?: string
           drop_id: string
           id?: string
           image_url?: string | null
@@ -1827,6 +1832,7 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          diet_type?: string
           drop_id?: string
           id?: string
           image_url?: string | null
@@ -3196,6 +3202,14 @@ export type Database = {
           sold_quantity: number
         }[]
       }
+      get_mcn_drop_order_counts: {
+        Args: { p_drop_ids: string[] }
+        Returns: {
+          drop_id: string
+          item_count: number
+          order_count: number
+        }[]
+      }
       get_my_block_id: { Args: never; Returns: string }
       get_my_community_funds_overview: {
         Args: never
@@ -4095,6 +4109,15 @@ export const Constants = {
     },
   },
 } as const
+
+// ---------------------------------------------------------------------------
+// HAND-MAINTAINED — everything above this line is generated, this block is not.
+//
+// `npm run types:preprod` / `types:prod` redirect over the whole file, so a
+// regen silently deletes the three types below and `npx tsc --noEmit` then
+// fails across ~7 unrelated screens. Re-append this block after every regen.
+// See docs/CLAUDE.md §6 step 3.
+// ---------------------------------------------------------------------------
 
 export type ProviderWithInteraction = Tables<'service_providers'> & {
   is_favorite?: boolean

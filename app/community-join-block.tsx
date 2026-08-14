@@ -16,7 +16,7 @@ import { HeaderBackButton } from '../components/HeaderBackButton';
 import { Verandah } from '../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
-import { replaceTracked } from '../lib/navigation';
+import { POST_AUTH_LANDING_ROUTE, replaceTracked } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
 
 export default function CommunityJoinBlockScreen() {
@@ -50,7 +50,7 @@ export default function CommunityJoinBlockScreen() {
 
       await refreshSession();
       Toast.show({ type: 'success', text1: 'Flat assigned successfully' });
-      replaceTracked(router, '/(tabs)');
+      replaceTracked(router, POST_AUTH_LANDING_ROUTE as any);
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Unable to save flat', text2: error.message });
     } finally {

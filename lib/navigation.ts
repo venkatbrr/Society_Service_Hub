@@ -38,6 +38,18 @@ const STACK_STORAGE_KEY = 'wooru_navigation_stack';
 const MAX_TRACKED_ROUTES = 25;
 
 /**
+ * Where a signed-in resident lands when no more specific destination applies:
+ * after login, after joining a community, and after picking a flat.
+ *
+ * The MCN hub, not the Help tab at `/` — MCN is the app's centre of gravity and
+ * is already the default parent in `getImmediateParentRoute()`. Written without
+ * the `(tabs)` group so it compares equal to `usePathname()`, which never
+ * includes group segments. A saved deep link (`wooru.pendingRoute`) still wins
+ * over this.
+ */
+export const POST_AUTH_LANDING_ROUTE = '/network';
+
+/**
  * Browser back/forward arrival detection.
  *
  * Redirect-only routes (the auth/community guard in `app/_layout.tsx`) navigate

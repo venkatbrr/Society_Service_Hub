@@ -66,10 +66,15 @@ isPlatformAdmin && web && !/admin*           → window.location.replace('/admin
 isPlatformAdmin && native                    → /admin-redirect
 !communityId && activeCommunityRequest       → /community-request-submitted
 !communityId && !activeCommunityRequest      → /community-select
-communityId && on login/select/request/…     → savedTargetRoute ?? /(tabs)
+communityId && on login/select/request/…     → savedTargetRoute ?? POST_AUTH_LANDING_ROUTE
+communityId && first resolution && at "/"    → savedTargetRoute ?? POST_AUTH_LANDING_ROUTE
 ```
 
 Two guards prevent redirect loops: `lastRedirectRef` blocks repeating the same target, and `alreadyOnTarget` skips navigation when the user is already there. Before bouncing an unauthenticated user to `/login`, the intended pathname is stored in `savedTargetRouteRef` and restored after sign-in — this is what makes deep links survive login.
+
+**`POST_AUTH_LANDING_ROUTE` (`lib/navigation.ts`) is `/network` — the MCN hub, not the Help tab.** It is the default destination for every "the user is now signed in and settled" transition: after login, after `join_community_by_code()`, and after picking a flat. A saved deep link always wins over it.
+
+The last rule above covers cold start and page load. With a live session the framework's initial route is `/`, which the user did not choose, so the guard sends them to the hub instead. It is one-shot (`hasResolvedInitialLandingRef`, flipped by the first completed auth resolution), so tapping **Help** later opens `/` normally. Because the route literal carries no `(tabs)` group, it compares equal to `usePathname()` — which is why `alreadyOnTarget` needs no group-aware special case.
 
 `/community-join-block` is **not** in the redirect tree. It is a post-join handoff from `app/community-select.tsx`, entered after `join_community_by_code()` succeeds when the community has `blocks_enabled = true`.
 
@@ -263,8 +268,8 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 
 | Table | Key columns |
 |-------|-------------|
-| `mcn_preorder_drops` | `title`, `description`, `image_url`, `listing_id` (nullable), `created_by`, `fulfillment_date`, `fulfillment_time`, `cutoff_at`, `max_orders`, `status` (`open`/`closed`/`completed`/`cancelled`) |
-| `mcn_preorder_items` | `drop_id`, `name`, `description`, `unit` (`piece`/`kg`/`box`/`pack`/`portion`/`litre`), `price`, `max_quantity`, `image_url` |
+| `mcn_preorder_drops` | `title`, `description`, `image_url`, `listing_id` (nullable), `created_by`, `fulfillment_date`, `fulfillment_time`, `meal_type` (`breakfast`/`lunch`/`snacks`/`dinner`, `NOT NULL DEFAULT 'lunch'`, CHECK-constrained; migration `20260909000100`), `cutoff_at`, `max_orders`, `status` (`open`/`closed`/`completed`/`cancelled`) |
+| `mcn_preorder_items` | `drop_id`, `name`, `description`, `unit` (`piece`/`kg`/`box`/`pack`/`portion`/`litre`), `price`, `max_quantity`, `image_url`, `diet_type` (`veg`/`egg`/`non_veg`, `NOT NULL DEFAULT 'veg'`, CHECK-constrained; migration `20260909000000`) |
 | `mcn_preorder_orders` | `drop_id`, `buyer_id`, `buyer_name`, `buyer_phone`, `flat_number`, `buyer_note`, `total_amount`, `status` (`confirmed`/`fulfilled`/`cancelled`), `cancelled_by`, `cancelled_at`, `cancellation_note` |
 | `mcn_preorder_order_items` | `order_id`, `item_id`, `item_name`, `quantity` (numeric — supports 0.5), `unit_price`. Unique on `(order_id, item_id)` — one line per item per order |
 
@@ -283,6 +288,14 @@ Migration `20260824000000` fixed the app's code path but left the database open:
 **All four pre-order capacity triggers must stay `SECURITY DEFINER`** (migration `20260823000000`). They were originally invoker-rights, so the `SUM(quantity)` they compare against the cap ran under the buyer's own RLS and counted only that buyer's orders — every other resident's quantity was invisible and both caps could be overshot. The pre-flight RPCs were always `SECURITY DEFINER`, which is why the caps looked correct until a second buyer ordered.
 
 `mcn_preorder_order_items` also needs UPDATE and DELETE policies (buyer's own `confirmed` order), added in the same migration. Editing a pre-order deletes the old lines and re-inserts them; with SELECT/INSERT policies only, the delete silently matched zero rows while the insert succeeded, so the order kept both the old and new line and its displayed items no longer matched `total_amount`. The `(order_id, item_id)` unique index makes that failure mode loud instead of silent.
+
+**Diet labelling** (migration `20260909000000`): `mcn_preorder_items.diet_type` is `veg` | `egg` | `non_veg`, `NOT NULL DEFAULT 'veg'` with a CHECK constraint, indexed as `(drop_id, diet_type)` because the catalog's diet filter scans items for every drop on screen. It is **per item, not per drop** — a single drop's menu is routinely mixed, so a drop-level column would be false on half the rows. The catalog rolls it up client-side (a drop matches when at least one item does). The `DEFAULT 'veg'` backfilled every pre-existing item to veg; this was a deliberate call, accepted because drops are short-lived enough that the mislabelled ones close within days.
+
+**Meal slot** (migration `20260909000100`): `mcn_preorder_drops.meal_type` is `breakfast` | `lunch` | `snacks` | `dinner`, `NOT NULL DEFAULT 'lunch'` with a CHECK constraint, indexed as `(community_id, meal_type)` for the catalog filter. Chosen by the host, not derived from `fulfillment_time` at read time — the clock cannot separate a late snack from an early dinner. Existing rows were backfilled with the same bucketing the client used, so nothing changed category on deploy.
+
+**`fulfillment_time` is `TEXT`, not `TIME`** — the first draft of that backfill compared it against `TIME '11:00'` and failed with `operator does not exist: text < time without time zone`. It holds the `'HH:mm'` the publish form writes, but older rows can carry `'1:00 PM'` shapes that would also fail a `::time` cast and abort the migration. The shipped backfill guards on `~ '^[0-9]{2}:[0-9]{2}'` and compares `substring(... FROM 1 FOR 5)` as a string, which is valid because zero-padded `HH:MM` sorts lexicographically exactly as it does chronologically; unparseable values fall to lunch. Any future SQL touching this column needs the same care.
+
+**Anon-safe order counts** (migration `20260909000000`): `get_mcn_drop_order_counts(p_drop_ids uuid[])` returns `drop_id`, `order_count`, and summed `item_count` for non-cancelled orders. `SECURITY DEFINER`, granted to `anon` and `authenticated`. It exists because the catalog needs per-drop counts but `mcn_preorder_orders` has no public SELECT policy — its rows carry buyer name, phone, and flat. The catalog previously read that table directly and gated the query on `user?.id`, so logged-out browsers saw every drop at zero orders. The RPC is deployed and granted, but the **call site is gated on `DROP_SORT_MOST_ORDERED_ENABLED`**: the parked Most ordered sort is currently its only consumer, so an ungated fetch would be a round trip per catalog load for something nothing renders. An earlier revision also fed the "spots still left" filter, which has since been removed — re-adding any consumer means ungating the call. The aggregate hands out counts alone, with no buyer identity leaving the table. Revenue figures still need `total_amount`, so the host's own metrics stay on a direct read, scoped to the Mine tab.
 
 **Anti-spam cap on concurrent open drops** (migration `20260821000100`): a host can have at most 3 drops with `status = 'open'` and `cutoff_at` in the future at the same time, enforced by a trigger on `mcn_preorder_drops`. Unlike business listings, drops have no "one per type" rule — hosting a new drop every week is the intended pattern; this only stops flooding the Open Pre-orders tab with many drops at once.
 
@@ -603,6 +616,7 @@ The app distinguishes **two different meanings of "back"**, and conflating them 
 - `goBackSmart(router, path)` — what header back buttons call. Pops with `backTracked()` when the previous tracked route already **is** the logical parent (the common case, keeping history and forward in sync); otherwise falls back to `replaceTracked(parent)` for a cross-branch jump or a deep-link entry with nothing to pop. Its correctness rests entirely on the tracked stack matching real history — see the reducer below.
 - `normalizeRoute(route)` — canonical form for comparisons: strips query, hash, trailing slash, and expo-router group segments so `/(tabs)/network` and `/network` compare equal.
 - `getPreviousRoute()` — the previous entry in the tracked stack.
+- `POST_AUTH_LANDING_ROUTE` — `/network`, the default landing for a settled signed-in resident. Consumed by the redirect guard in `app/_layout.tsx`, `app/community-select.tsx`, and `app/community-join-block.tsx`. See §2.
 - `replaceTracked(router, route)` / `pushTracked` / `backTracked` — thin wrappers that call `setNavIntent()` before delegating to the router. **Every `router.replace()` in `app/` goes through `replaceTracked`** (verified by grep; only `router.back()` is still called raw, which is safe — see below).
 - `useSyncedBackNavigation()` — runs in the root layout. Maintains the tracked stack and adds **one** Android guard: when `canGoBack()` is false (deep link into a nested screen), hardware back walks up the hierarchy instead of exiting the app. It observes `popstate` but never calls `preventDefault` and never navigates in response.
 

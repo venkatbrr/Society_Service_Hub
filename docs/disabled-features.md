@@ -12,6 +12,7 @@ Fully built features whose entry points are gated behind a flag in [`constants/f
 |---|---|---|---|
 | **Schools catalog & compare** — `app/mcn/schools/*` | `SCHOOLS_CATALOG_ENABLED` | 2026-08-13 | [`hidden-features/mcn-schools-and-borrow.md`](hidden-features/mcn-schools-and-borrow.md) |
 | **Borrow & share posts** — `app/mcn/add.tsx` + the My Submissions borrow tab | `BORROW_SHARE_ENABLED` | 2026-08-13 | [`hidden-features/mcn-schools-and-borrow.md`](hidden-features/mcn-schools-and-borrow.md) |
+| **"Most ordered" sort** — one row in the pre-order food Sort sheet | `DROP_SORT_MOST_ORDERED_ENABLED` | 2026-08-14 | [`hidden-features/drops-most-ordered-sort.md`](hidden-features/drops-most-ordered-sort.md) |
 
 Both were hidden from the MCN hub together; a non-pressable, animated **"Watch this space"** teaser card (`components/ComingSoonTile.tsx`) stands in for them. `data/westHyderabadSchools.ts` is **not** dead code while schools is hidden — Parent Corner's `SchoolPicker` still reads it.
 

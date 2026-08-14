@@ -5,10 +5,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { format12HourTime, getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
+import { useAuth } from '../context/AuthContext';
 import { cloudinaryUrl } from '../lib/cloudinary';
 import { shareOrCopy } from '../lib/share';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
+import { DietDot } from './DietDot';
 import { useReduceMotion } from './useReduceMotion';
 
 /**
@@ -153,6 +155,7 @@ export interface PreorderDropItem {
   description: string | null;
   fulfillment_date: string;
   fulfillment_time: string;
+  meal_type?: string | null;
   cutoff_at: string;
   max_orders: number | null;
   status: 'open' | 'closed' | 'completed' | 'cancelled';
@@ -169,6 +172,11 @@ export interface PreorderDropItem {
   } | null;
   item_count?: number;
   order_count?: number;
+  /** Derived by the catalog from the drop's menu items — used for filtering
+   *  and sorting, and for the diet dots beside the title. Absent on screens
+   *  that do not load the menu. */
+  min_price?: number | null;
+  diet_types?: string[];
 }
 
 interface PreorderDropCardProps {
@@ -182,6 +190,12 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
 }) => {
   const { height: windowHeight } = useWindowDimensions();
   const coverHeight = getNetworkTileImageHeight(windowHeight);
+  // Read from context rather than taking an `isCreator` prop: the card is the
+  // only thing that needs this, and a prop is one a caller can silently forget
+  // to pass. `user` is null for the anonymous browse path, which correctly
+  // means "not the host".
+  const { user } = useAuth();
+  const isHost = !!user?.id && user.id === drop.created_by;
   const now = new Date();
   const cutoffDate = new Date(drop.cutoff_at);
   const isCutoffPassed = now >= cutoffDate;
@@ -319,14 +333,21 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
 
           {/* CTA overlays the photo's bottom-right instead of taking a full
               row under the body — it keeps the affordance while costing the
-              tile no height. */}
-          <View style={styles.reserveSlot}>
-            <ReserveButton
-              label={isOpen ? 'Reserve now' : 'View menu'}
-              active={isOpen}
-              onPress={onPress}
-            />
-          </View>
+              tile no height.
+
+              Hidden for the host: you cannot pre-order your own drop, so a
+              shimmering "Reserve now" on your own card invites a tap that goes
+              nowhere useful. Hosts manage the drop from inside it, and tapping
+              the card still opens it. */}
+          {isHost ? null : (
+            <View style={styles.reserveSlot}>
+              <ReserveButton
+                label={isOpen ? 'Reserve now' : 'View menu'}
+                active={isOpen}
+                onPress={onPress}
+              />
+            </View>
+          )}
         </View>
 
         {/* Body */}
@@ -348,8 +369,15 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Title */}
-          <Text style={styles.title} numberOfLines={1}>{drop.title}</Text>
+          {/* Title, preceded by one dot per diet type the menu offers — a
+              mixed drop shows green and red together, which is the honest
+              summary of a menu the tile has no room to list. */}
+          <View style={styles.titleRow}>
+            {(drop.diet_types || []).map((d) => (
+              <DietDot key={d} value={d} size={11} />
+            ))}
+            <Text style={[styles.title, { flexShrink: 1 }]} numberOfLines={1}>{drop.title}</Text>
+          </View>
 
           {/* Cut-off + delivery, side by side */}
           <View style={styles.metaRow}>
@@ -422,6 +450,11 @@ const styles = StyleSheet.create({
     ...VerandahType.captionBold,
     color: Verandah.primaryFg,
     fontSize: 12.5,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   metaRow: {
     flexDirection: 'row',

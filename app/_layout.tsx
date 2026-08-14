@@ -23,7 +23,7 @@ LogBox.ignoreLogs([
   'AuthApiError',
 ]);
 
-import { consumeHistoryPop, replaceTracked, useSyncedBackNavigation } from '../lib/navigation';
+import { consumeHistoryPop, POST_AUTH_LANDING_ROUTE, replaceTracked, useSyncedBackNavigation } from '../lib/navigation';
 
 function RootLayoutNav() {
   const { session, profile, communityId, flatId, blocksEnabled, blockLabel, activeCommunityRequest, isPlatformAdmin, isLoading } = useAuth();
@@ -32,6 +32,9 @@ function RootLayoutNav() {
   const router = useRouter();
   const lastRedirectRef = useRef<string | null>(null);
   const savedTargetRouteRef = useRef<string | null>(null);
+  // Flipped by the first completed auth resolution of this launch / page load, so
+  // the "land on MCN" rule below fires once and never hijacks a later visit to `/`.
+  const hasResolvedInitialLandingRef = useRef(false);
 
   const takeSavedRoute = () => {
     let target = savedTargetRouteRef.current;
@@ -92,7 +95,6 @@ function RootLayoutNav() {
       pathname === '/legal' ||
       pathname.startsWith('/legal?');
     const currentRoute = String(segments[0] ?? '');
-    const isOnTabsRoute = currentRoute === '(tabs)';
     const isOnAdminRedirect = currentRoute === 'admin-redirect';
     const isOnCommunityRequest = currentRoute === 'community-request';
     const isOnCommunityRequestSubmitted = currentRoute === 'community-request-submitted';
@@ -132,7 +134,7 @@ function RootLayoutNav() {
         if (blocksEnabled && !flatId) {
           redirectTo = '/community-join-block';
         } else {
-          redirectTo = takeSavedRoute() || '/(tabs)';
+          redirectTo = takeSavedRoute() || POST_AUTH_LANDING_ROUTE;
         }
       } else if (activeCommunityRequest) {
         redirectTo = '/community-request-submitted';
@@ -156,7 +158,7 @@ function RootLayoutNav() {
       } else {
         // Flat selected or no blocks enabled
         if (isOnCommunityJoinBlock) {
-          redirectTo = '/(tabs)';
+          redirectTo = POST_AUTH_LANDING_ROUTE;
         } else if (inAuthGroup || isOnCommunitySelect || isOnCommunityRequest || isOnCommunityRequestSubmitted) {
           if (consumeHistoryPop()) {
             if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history.length > 1) {
@@ -164,10 +166,17 @@ function RootLayoutNav() {
             }
             return;
           }
-          redirectTo = takeSavedRoute() || '/(tabs)';
+          redirectTo = takeSavedRoute() || POST_AUTH_LANDING_ROUTE;
+        } else if (!hasResolvedInitialLandingRef.current && pathname === '/') {
+          // Cold start / page load with a live session: `/` here is the framework's
+          // initial route, not a screen the user chose, so send them to the MCN hub
+          // too. One-shot — tapping Help later still opens `/` normally.
+          redirectTo = takeSavedRoute() || POST_AUTH_LANDING_ROUTE;
         }
       }
     }
+
+    hasResolvedInitialLandingRef.current = true;
 
     if (!redirectTo) {
       lastRedirectRef.current = null;
@@ -180,9 +189,8 @@ function RootLayoutNav() {
     }
 
     const alreadyOnTarget =
-      (redirectTo === '/(tabs)' && isOnTabsRoute) ||
       (redirectTo === '/admin-redirect' && isOnAdminRedirect) ||
-      (redirectTo !== '/(tabs)' && redirectTo !== '/admin-redirect' && pathname === redirectTo);
+      (redirectTo !== '/admin-redirect' && pathname === redirectTo);
 
     if (!alreadyOnTarget) {
       lastRedirectRef.current = redirectTo;

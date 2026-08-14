@@ -108,6 +108,7 @@ Rule of thumb: **if the result belongs in a file, use the CLI; if the result is 
 - **Never intercept `popstate`.** expo-router already rebuilds state from the URL; racing it with a manual `router.replace()` is what previously corrupted browser back.
 - **Never let two route files resolve to the same URL.** React Navigation forbids it and expo-router fails silently, corrupting browser history at the boundary. The MCN hub tab owns `/network`, so its sub-routes live at `app/mcn/` → `/mcn/*`. A tab screen and a route directory cannot share a name. See [`architecture.md`](architecture.md) §9.
 - **When you add a route under `app/mcn/`, add its parent mapping to `getImmediateParentRoute()`** — otherwise the header arrow falls through to the MCN hub.
+- **Post-auth landings use `POST_AUTH_LANDING_ROUTE`** (`lib/navigation.ts`, currently `/network` — the MCN hub, not `/`). Never hardcode `'/(tabs)'` as the destination for "signed in and settled": that route resolves to the Help tab and it is now set in one place. Applies to the redirect guard, `community-select.tsx`, and `community-join-block.tsx`.
 - MCN stack headers come from `buildMcnHeaderOptions()` in `lib/mcnHeader.tsx`.
 
 ### Platform quirks

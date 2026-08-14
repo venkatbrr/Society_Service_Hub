@@ -79,7 +79,7 @@ const INSTITUTION_TYPES = [
   { id: 'preschool', label: 'Pre-School', icon: 'baby' as const },
 ];
 
-const BOARD_OPTIONS = ['All', 'CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University', 'Other'];
+const BOARD_OPTIONS = ['All', 'CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University', 'Other', 'NA'];
 
 const INTENT_LABELS: Record<string, string> = {
   carpool: 'Carpooling',

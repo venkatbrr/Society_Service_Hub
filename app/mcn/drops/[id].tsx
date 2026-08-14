@@ -26,9 +26,11 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../components/Avatar';
+import { DietDot } from '../../../components/DietDot';
 import { PLACEHOLDER_COVER } from '../../../components/PreorderDropCard';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
+import { dietMeta } from '../../../constants/diet';
 import { format12HourTime, getMediaHeroHeight, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
@@ -46,6 +48,7 @@ interface DropItem {
   price: number;
   image_url?: string | null;
   max_quantity?: number | null;
+  diet_type?: string | null;
 }
 
 interface DropDetails {
@@ -866,7 +869,10 @@ export default function PreorderDropDetailScreen() {
               ) : null}
 
               <View style={{ flex: 1 }}>
-                <Text style={styles.itemName}>{item.name}</Text>
+                <View style={styles.itemNameRow}>
+                  <DietDot value={item.diet_type} size={12} />
+                  <Text style={[styles.itemName, { flexShrink: 1 }]}>{item.name}</Text>
+                </View>
                 {item.description ? (
                   <Text style={styles.itemDesc}>{item.description}</Text>
                 ) : null}
@@ -1397,6 +1403,11 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.md,
     padding: 8,
     marginBottom: 6,
+  },
+  itemNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   itemName: {
     fontSize: 13,

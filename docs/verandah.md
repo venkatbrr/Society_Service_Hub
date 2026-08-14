@@ -213,6 +213,21 @@ Two rules define it:
 
 Motion follows the same rules as the rail below: built-in `Animated`, `useNativeDriver: false`. **It also honours `AccessibilityInfo.isReduceMotionEnabled()`** — with reduce-motion on, the rings and sparkles are not rendered at all and the subtitle stays on its first line. A perpetual loop is precisely what that OS setting exists to stop; any future always-on animation should do the same.
 
+### Diet mark — `DietDot`
+
+The square-outline-with-a-filled-dot that Indian menus use for veg / non-veg. Renders from `mcn_preorder_items.diet_type` (`veg` | `egg` | `non_veg`) and appears beside each item on a drop's menu, beside the title on each catalog tile, and inside the diet filter chips.
+
+Drawn as two nested `View`s rather than imported as an icon — it is a bordered box around a circle, and every packaged version of it is a raster that goes soft at 11–12px.
+
+| Aspect | Spec |
+|---|---|
+| Colours | veg `Verandah.green600` · egg `#B45309` · non-veg `Verandah.danger`. Sourced from `DIET_META` in [`constants/diet.ts`](../constants/diet.ts) — never re-declare them at a call site |
+| Geometry | Square, `borderWidth: 1.5`, `borderRadius: 2.5`; inner dot is half the outer size, fully round |
+| Sizes in use | 11px on tiles and chips, 12px on the menu row |
+| Fallback | `dietMeta()` returns veg for anything unrecognised or null, matching the column's `DEFAULT 'veg'` |
+
+**It is always `aria-hidden`.** The mark never appears without its diet label as text beside it — on the filter chips the label is the chip, and on a menu row the item's own name carries the accessible content. Labelling the dot as well would make a screen reader announce the diet twice. Colour alone is also why: a red/green pair is the single most common confusion in the palette, so the text is the real signal and the dot is the fast visual index.
+
 ### Bottom navigation — "Threshold Rail"
 
 `GlobalBottomNav` is a light rail on `Verandah.paper` (`#FAF8F4`), **60px** tall, with the home-indicator inset padded *below* the bar rather than inside it. Each tab is a 48px column of two fixed-height rows — a 24px icon row and a 12px label row, 2px apart — so revealing the active label can never push the icons off their shared baseline. The bottom safe-area inset is **capped at 5px** (and 5px flat when the reported inset is 0): the raw inset is 34px+ on gesture-bar devices and left a visibly dead strip under the rail. This is a deliberate override of the system inset — the rail sits closer to the gesture bar than the safe area asks for.
