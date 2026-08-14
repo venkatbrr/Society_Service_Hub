@@ -89,23 +89,17 @@ const Router = {
           break;
         case '#communities':
           if (window.CommunitiesPage) {
-            // Check if loading specific community detail
-            if (params.id) {
-              window.CommunitiesPage.selectedCommunityId = params.id;
-            } else if (!window.location.hash.includes('?id=')) {
-              window.CommunitiesPage.selectedCommunityId = null;
-            }
+            // The hash is the single source of truth for which community and
+            // which tab are open, so the detail view is linkable and the back
+            // button leaves it.
+            window.CommunitiesPage.selectedCommunityId = params.id || null;
+            window.CommunitiesPage.activeTab = params.tab || 'overview';
             await window.CommunitiesPage.load();
           }
           break;
         case '#providers':
           if (window.ProvidersPage) {
-            // Check if loading specific provider detail
-            if (params.id) {
-              window.ProvidersPage.selectedProviderId = params.id;
-            } else if (!window.location.hash.includes('?id=')) {
-              window.ProvidersPage.selectedProviderId = null;
-            }
+            window.ProvidersPage.selectedProviderId = params.id || null;
             // Check if loading with community filter from dashboard click
             if (params.communityId) {
               window.ProvidersPage.selectedCommunityId = params.communityId;

@@ -4,8 +4,24 @@ const FundsRequestsPage = {
   selectedRequestId: null,
   residents: [],
   leadUserId: null,
+  statusFilter: 'pending',
+  filterBound: false,
+
+  bindFilter() {
+    if (this.filterBound) return;
+    const select = document.getElementById('funds-requests-status-filter');
+    if (!select) return;
+    this.filterBound = true;
+    select.value = this.statusFilter;
+    select.addEventListener('change', (e) => {
+      this.statusFilter = e.target.value;
+      this.selectedRequestId = null;
+      this.load();
+    });
+  },
 
   async load() {
+    this.bindFilter();
     const listContainer = document.getElementById('funds-requests-list-view');
     const detailContainer = document.getElementById('funds-requests-detail-view');
     const loadingEl = document.getElementById('funds-requests-loading');
@@ -29,50 +45,54 @@ const FundsRequestsPage = {
     tbody.innerHTML = '';
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('funds_access_requests')
-        .select('id, community_id, requested_by, contact_name, contact_phone, purpose, status, created_at, communities(name, code), profiles!funds_access_requests_requested_by_fkey(full_name)')
-        .order('created_at', { ascending: false });
+        .select('id, community_id, requested_by, contact_name, contact_phone, purpose, status, created_at, decided_at, decided_by, rejection_reason, communities(name, code, funds_enabled), profiles!funds_access_requests_requested_by_fkey(full_name)')
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if (this.statusFilter) {
+        query = query.eq('status', this.statusFilter);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       this.requests = data || [];
 
       if (this.requests.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-3" style="text-align: center;">No funds requests found.</td></tr>';
+        tbody.innerHTML = emptyRow(7, 'No funds requests with that status.');
         return;
       }
 
       this.requests.forEach(r => {
-        const formattedDate = new Date(r.created_at).toLocaleDateString();
-        
-        let statusBadge = '';
-        if (r.status === 'pending') {
-          statusBadge = '<span class="badge-pill badge-pending">Pending</span>';
-        } else if (r.status === 'approved') {
-          statusBadge = '<span class="badge-pill badge-approved">Approved</span>';
-        } else if (r.status === 'withdrawn') {
-          // A withdrawn request was pulled by the requester, not refused by us.
-          statusBadge = '<span class="badge-pill badge-rejected">Withdrawn</span>';
-        } else {
-          statusBadge = `<span class="badge-pill badge-rejected">Rejected</span>`;
-        }
-
         const tr = document.createElement('tr');
+        // A decided request used to show only its status — no who, when or why.
+        const decision = r.status === 'pending'
+          ? '<span class="text-3">—</span>'
+          : `<span class="text-3" style="font-size: 0.8rem;">${esc(fmtDate(r.decided_at))}</span>` +
+            (r.rejection_reason
+              ? `<br><span class="text-3" style="font-size: 0.78rem;">${esc(r.rejection_reason)}</span>`
+              : (r.communities && r.communities.funds_enabled
+                  ? '<br><span class="text-3" style="font-size: 0.78rem;">Funds active</span>'
+                  : ''));
+
         tr.innerHTML = `
-          <td style="font-weight: 500;">${r.communities?.name || 'N/A'}<br><span class="text-3" style="font-size: 0.8rem;">CODE: ${r.communities?.code || 'N/A'}</span></td>
-          <td>${r.profiles?.full_name || 'N/A'}</td>
-          <td>${r.contact_name}<br><span class="text-3" style="font-size: 0.8rem;">${r.contact_phone}</span></td>
-          <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.purpose || 'N/A'}</td>
-          <td>${statusBadge}</td>
-          <td>
-            <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="FundsRequestsPage.viewRequestDetail('${r.id}')">View</button>
-          </td>
+          <td style="font-weight: 500;">${esc(r.communities?.name || 'N/A')}<br><span class="text-3" style="font-size: 0.8rem;">CODE: ${esc(r.communities?.code || 'N/A')}</span></td>
+          <td>${esc(r.profiles?.full_name || 'N/A')}</td>
+          <td>${esc(r.contact_name)}<br><span class="text-3" style="font-size: 0.8rem;">${esc(r.contact_phone)}</span></td>
+          <td style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(r.purpose || 'Not specified')}</td>
+          <td>${statusBadge(r.status)}</td>
+          <td>${decision}</td>
+          <td><button class="btn btn-secondary btn-sm" data-action="view">View</button></td>
         `;
+        tr.querySelector('[data-action="view"]')
+          .addEventListener('click', () => this.viewRequestDetail(r.id));
         tbody.appendChild(tr);
       });
     } catch (err) {
       console.error('Error loading funds requests list:', err);
-      tbody.innerHTML = '<tr><td colspan="6" class="alert alert-danger" style="text-align: center;">Failed to load requests.</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="7">${errorBanner(err.message, 'funds requests')}</td></tr>`;
     } finally {
       loadingEl.classList.add('hidden');
     }
@@ -90,7 +110,7 @@ const FundsRequestsPage = {
     try {
       const { data: req, error } = await supabase
         .from('funds_access_requests')
-        .select('id, community_id, requested_by, contact_name, contact_phone, purpose, status, created_at, communities(name, code, address), profiles!funds_access_requests_requested_by_fkey(full_name)')
+        .select('id, community_id, requested_by, contact_name, contact_phone, purpose, status, created_at, decided_at, decided_by, rejection_reason, designated_lead_id, communities(name, code, address, funds_enabled), profiles!funds_access_requests_requested_by_fkey(full_name)')
         .eq('id', requestId)
         .maybeSingle();
 
@@ -133,99 +153,109 @@ const FundsRequestsPage = {
       residentOptions = '<option value="">No active residents found in this community</option>';
     } else {
       this.residents.forEach(r => {
-        residentOptions += `
-          <option value="${r.id}" ${this.leadUserId === r.id ? 'selected' : ''}>
-            ${r.full_name || 'Resident'} (${r.flat_number || 'No flat'})
-          </option>
-        `;
+        residentOptions += `<option value="${escAttr(r.id)}" ${this.leadUserId === r.id ? 'selected' : ''}>` +
+          `${esc(r.full_name || 'Resident')} (${esc(r.flat_number || 'No flat')})</option>`;
       });
     }
 
-    const formattedDate = new Date(req.created_at).toLocaleString();
-    
-    let statusLabel = '';
-    if (req.status === 'pending') {
-      statusLabel = '<span class="badge-pill badge-pending">Pending Review</span>';
-    } else if (req.status === 'approved') {
-      statusLabel = '<span class="badge-pill badge-approved">Approved</span>';
-    } else if (req.status === 'withdrawn') {
-      // A withdrawn request was pulled by the requester, not refused by us.
-      statusLabel = '<span class="badge-pill badge-rejected">Withdrawn</span>';
-    } else {
-      statusLabel = '<span class="badge-pill badge-rejected">Rejected</span>';
-    }
+    const isPending = req.status === 'pending';
 
     container.innerHTML = `
-      <div style="background-color: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <div class="section-card">
+        <div class="row-between" style="margin-bottom: 24px;">
           <h2 style="font-size: 1.5rem; color: var(--primary);">Request Overview</h2>
-          ${statusLabel}
+          ${statusBadge(req.status)}
         </div>
 
         <div class="approval-details-grid" style="margin-bottom: 28px;">
           <div>
             <div class="approval-label">Community Details</div>
             <div style="font-size: 0.9rem; margin-top: 8px; line-height: 1.6;">
-              <strong>Name:</strong> ${req.communities?.name || 'N/A'}<br>
-              <strong>Code:</strong> ${req.communities?.code || 'N/A'}<br>
-              <strong>Address:</strong> ${req.communities?.address || 'N/A'}
+              <strong>Name:</strong> ${esc(req.communities?.name || 'N/A')}<br>
+              <strong>Code:</strong> ${esc(req.communities?.code || 'N/A')}<br>
+              <strong>Address:</strong> ${esc(req.communities?.address || 'N/A')}<br>
+              <strong>Funds currently:</strong> ${req.communities?.funds_enabled ? badge('Active', 'approved') : badge('Inactive', 'muted')}
             </div>
           </div>
           <div>
-            <div class="approval-label">Requester & Contact</div>
+            <div class="approval-label">Requester &amp; Contact</div>
             <div style="font-size: 0.9rem; margin-top: 8px; line-height: 1.6;">
-              <strong>User Account:</strong> ${req.profiles?.full_name || 'N/A'}<br>
-              <strong>Contact Name:</strong> ${req.contact_name}<br>
-              <strong>Contact Phone:</strong> ${req.contact_phone}<br>
-              <span class="badge-pill badge-muted" style="margin-top: 8px;">Submitted: ${formattedDate}</span>
+              <strong>User Account:</strong> ${esc(req.profiles?.full_name || 'N/A')}<br>
+              <strong>Contact Name:</strong> ${esc(req.contact_name)}<br>
+              <strong>Contact Phone:</strong> ${esc(req.contact_phone)}<br>
+              <span class="badge-pill badge-muted" style="margin-top: 8px;">Submitted: ${esc(fmtDateTime(req.created_at))}</span>
             </div>
           </div>
         </div>
 
         <div style="margin-bottom: 28px; padding-top: 20px; border-top: 1px solid var(--border);">
-          <div class="approval-label" style="margin-bottom: 8px;">Purpose & Description</div>
+          <div class="approval-label" style="margin-bottom: 8px;">Purpose &amp; Description</div>
           <div style="padding: 16px; background-color: var(--card-muted); border-radius: 8px; font-size: 0.95rem; line-height: 1.5;">
-            ${req.purpose || '<span class="text-3">No purpose specified</span>'}
+            ${req.purpose ? esc(req.purpose) : '<span class="text-3">No purpose specified</span>'}
           </div>
         </div>
 
-        ${req.status === 'pending' ? `
+        ${isPending ? `
           <div style="padding-top: 20px; border-top: 1px solid var(--border);">
             <div class="form-group">
-              <label for="designated-lead">Designate Community Lead</label>
+              <label for="designated-lead-select">Designate Community Lead</label>
               <p class="text-3" style="font-size: 0.8rem; margin-top: 2px; margin-bottom: 8px;">
-                Select the resident who will be set as Community Lead upon approval (defaults to requester if eligible).
+                This resident becomes President when the request is approved (defaults to the requester if eligible).
               </p>
               <select class="form-control" id="designated-lead-select">${residentOptions}</select>
             </div>
 
             <div style="display: flex; gap: 12px; margin-top: 20px;">
-              <button class="btn btn-primary" onclick="FundsRequestsPage.approveRequest('${req.id}')" style="flex: 1;">
-                Approve & Assign Lead
-              </button>
+              <button class="btn btn-primary" id="approve-request-btn" style="flex: 1;">Approve &amp; Assign Lead</button>
             </div>
           </div>
 
           <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);">
             <div class="form-group">
-              <label for="reject-reason">Rejection Reason</label>
+              <label for="reject-reason-textarea">Rejection Reason</label>
               <textarea class="form-control" id="reject-reason-textarea" placeholder="Explain why this request is being rejected (max 280 characters)..." maxlength="280" style="height: 80px; resize: none;"></textarea>
             </div>
-            <button class="btn btn-secondary" onclick="FundsRequestsPage.rejectRequest('${req.id}')" style="color: var(--danger); border-color: var(--danger); background-color: var(--danger-soft);">
-              Reject Request
-            </button>
+            <button class="btn btn-secondary danger-outline" id="reject-request-btn">Reject Request</button>
           </div>
-        ` : ''}
+        ` : `
+          <div style="padding-top: 20px; border-top: 1px solid var(--border);">
+            <div class="approval-label" style="margin-bottom: 8px;">Decision</div>
+            <div style="font-size: 0.9rem; line-height: 1.6;">
+              <strong>Outcome:</strong> ${statusBadge(req.status)}<br>
+              <strong>Decided:</strong> ${esc(fmtDateTime(req.decided_at))}<br>
+              ${req.rejection_reason ? `<strong>Reason:</strong> ${esc(req.rejection_reason)}<br>` : ''}
+              ${req.designated_lead_id ? `<strong>Designated lead:</strong> ${esc(this.leadNameFor(req.designated_lead_id))}<br>` : ''}
+            </div>
+            <button class="btn btn-secondary btn-sm" id="open-community-btn" style="margin-top: 14px;">Open community →</button>
+          </div>
+        `}
       </div>
     `;
 
-    // Listen to lead select change
     const leadSelect = document.getElementById('designated-lead-select');
     if (leadSelect) {
-      leadSelect.addEventListener('change', (e) => {
-        this.leadUserId = e.target.value;
+      leadSelect.addEventListener('change', (e) => { this.leadUserId = e.target.value; });
+    }
+
+    const approveBtn = document.getElementById('approve-request-btn');
+    if (approveBtn) approveBtn.addEventListener('click', () => this.approveRequest(req.id));
+
+    const rejectBtn = document.getElementById('reject-request-btn');
+    if (rejectBtn) rejectBtn.addEventListener('click', () => this.rejectRequest(req.id));
+
+    const openBtn = document.getElementById('open-community-btn');
+    if (openBtn) {
+      openBtn.addEventListener('click', () => {
+        window.location.hash = '#communities?id=' + req.community_id;
       });
     }
+  },
+
+  leadNameFor(userId) {
+    const match = this.residents.find(r => r.id === userId);
+    // The designee is a president by now, so they are no longer in the
+    // plain-resident list this page loads.
+    return match ? (match.full_name || 'Resident') : 'Now a community lead';
   },
 
   async approveRequest(requestId) {

@@ -75,31 +75,39 @@ const Auth = {
       document.getElementById('login-view').classList.add('hidden');
       document.getElementById('loading-overlay').classList.remove('hidden');
 
-      // Fetch user profile to verify role
+      const isCanonicalAdmin = user.email && user.email.trim().toLowerCase() === 'thewooru@gmail.com';
+
+      // The server is the authority. `is_platform_admin()` requires BOTH
+      // app_role = 'admin' AND community_id IS NULL — checking app_role alone
+      // let an admin who still carried a community through the gate, after
+      // which every platform_* RPC raised and the console filled with errors.
+      const { data: isAdminRpc, error: rpcError } = await supabase.rpc('is_platform_admin');
+      if (rpcError) {
+        console.error('is_platform_admin check failed:', rpcError);
+      }
+
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
-
-      const isCanonicalAdmin = user.email && user.email.trim().toLowerCase() === 'thewooru@gmail.com';
+        .maybeSingle();
 
       if (error) {
-        // Fallback: check RPC or canonical email if profile select fails
-        const { data: isAdminRpc } = await supabase.rpc('is_platform_admin');
-        if (!isAdminRpc && !isCanonicalAdmin) {
-          throw new Error('Access restricted. Only platform admins are allowed.');
-        }
-        
-        // Mock profile for admin
-        this.profile = { id: user.id, email: user.email, app_role: 'admin' };
-      } else {
-        // Check if role is admin or email is canonical platform admin
-        if (profile.app_role !== 'admin' && !isCanonicalAdmin) {
-          throw new Error('Access restricted. Only platform admins are allowed.');
-        }
-        this.profile = { ...profile, app_role: 'admin' };
+        console.error('Profile lookup failed:', error);
       }
+
+      if (!isAdminRpc && !isCanonicalAdmin) {
+        if (profile && profile.app_role === 'admin' && profile.community_id) {
+          throw new Error(
+            'This admin account is still attached to a community. A platform admin must have no community — clear profiles.community_id and sign in again.'
+          );
+        }
+        throw new Error('Access restricted. Only platform admins are allowed.');
+      }
+
+      this.profile = profile
+        ? { ...profile, app_role: 'admin' }
+        : { id: user.id, email: user.email, app_role: 'admin' };
 
       this.currentUser = user;
       

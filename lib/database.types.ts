@@ -184,6 +184,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "community_announcements_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "community_announcements_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
@@ -300,11 +307,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "community_event_organizers_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "community_event_organizers_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_event_organizers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -386,6 +407,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -509,6 +537,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "community_groups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       community_partnerships: {
@@ -554,6 +589,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "community_partnerships_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "community_partnerships_community_a_id_fkey"
             columns: ["community_a_id"]
             isOneToOne: false
@@ -573,6 +615,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_partnerships_initiated_by_fkey"
+            columns: ["initiated_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -649,6 +698,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "community_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "community_requests_resulting_community_id_fkey"
             columns: ["resulting_community_id"]
             isOneToOne: false
@@ -661,6 +717,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -770,6 +833,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_transactions_contributor_user_id_fkey"
+            columns: ["contributor_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "event_transactions_event_id_fkey"
@@ -939,11 +1009,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "flat_addition_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "flat_addition_requests_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flat_addition_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1026,6 +1110,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fund_roles_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "fund_roles_block_id_fkey"
             columns: ["block_id"]
             isOneToOne: false
@@ -1045,6 +1136,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1107,8 +1205,29 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "funds_access_requests_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "funds_access_requests_designated_lead_id_fkey"
             columns: ["designated_lead_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funds_access_requests_designated_lead_id_fkey"
+            columns: ["designated_lead_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "funds_access_requests_requested_by_fkey"
+            columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1117,8 +1236,8 @@ export type Database = {
             foreignKeyName: "funds_access_requests_requested_by_fkey"
             columns: ["requested_by"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1158,6 +1277,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funds_access_revocations_revoked_by_fkey"
+            columns: ["revoked_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1295,6 +1421,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "mcn_carpool_requests_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       mcn_carpools: {
@@ -1382,6 +1515,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "mcn_carpools_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       mcn_listing_reports: {
@@ -1432,6 +1572,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_listing_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1499,6 +1646,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_listings_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1587,6 +1741,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "mcn_orders_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "mcn_orders_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
@@ -1672,6 +1833,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "mcn_parent_corner_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       mcn_posts: {
@@ -1725,6 +1893,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1794,6 +1969,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_preorder_drops_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "mcn_preorder_drops_listing_id_fkey"
@@ -1957,6 +2139,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "mcn_preorder_orders_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "mcn_preorder_orders_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
@@ -2095,11 +2284,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profile_audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "profile_audit_log_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_audit_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -2116,6 +2319,7 @@ export type Database = {
           flat_number: string | null
           full_name: string | null
           id: string
+          last_active_at: string | null
           phone_number: string | null
           removed_at: string | null
           removed_by: string | null
@@ -2132,6 +2336,7 @@ export type Database = {
           flat_number?: string | null
           full_name?: string | null
           id: string
+          last_active_at?: string | null
           phone_number?: string | null
           removed_at?: string | null
           removed_by?: string | null
@@ -2148,6 +2353,7 @@ export type Database = {
           flat_number?: string | null
           full_name?: string | null
           id?: string
+          last_active_at?: string | null
           phone_number?: string | null
           removed_at?: string | null
           removed_by?: string | null
@@ -2180,6 +2386,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_removed_by_fkey"
+            columns: ["removed_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -2328,6 +2541,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "provider_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       provider_shares: {
@@ -2369,6 +2589,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_shares_shared_by_fkey"
+            columns: ["shared_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -2520,6 +2747,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "school_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       schools: {
@@ -2624,6 +2858,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schools_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -2983,7 +3224,29 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_last_seen: {
+        Row: {
+          community_id: string | null
+          last_seen_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_user_activity: {
+        Row: {
+          created_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_community_partnership: {
@@ -3570,6 +3833,16 @@ export type Database = {
         Args: { p_reason?: string; p_target_user_id: string }
         Returns: undefined
       }
+      platform_get_activity_trend: {
+        Args: { p_community_id?: string; p_days?: number }
+        Returns: {
+          active_users: number
+          contributions: number
+          day: string
+          orders: number
+          signups: number
+        }[]
+      }
       platform_get_all_providers: {
         Args: { p_community_id?: string; p_search?: string }
         Returns: {
@@ -3584,6 +3857,70 @@ export type Database = {
           phone: string
           rating_count: number
           report_count: number
+        }[]
+      }
+      platform_get_business_categories: {
+        Args: { p_community_id?: string }
+        Returns: {
+          active_count: number
+          avg_rating: number
+          category_emoji: string
+          category_id: string
+          category_name: string
+          listing_count: number
+          owner_count: number
+          product_count: number
+          rating_count: number
+        }[]
+      }
+      platform_get_business_owners: {
+        Args: { p_community_id?: string }
+        Returns: {
+          avg_rating: number
+          categories: string
+          community_id: string
+          community_name: string
+          first_listing_at: string
+          flagged_count: number
+          listings_active: number
+          listings_total: number
+          owner_email: string
+          owner_flat: string
+          owner_id: string
+          owner_name: string
+          products_total: number
+          rating_count: number
+        }[]
+      }
+      platform_get_communities_overview: {
+        Args: never
+        Returns: {
+          area: string
+          balance: number
+          blocks_enabled: boolean
+          city: string
+          code: string
+          collected: number
+          community_type: string
+          created_at: string
+          drops: number
+          events: number
+          food_revenue: number
+          funds: number
+          funds_enabled: boolean
+          id: string
+          last_activity_at: string
+          leads: number
+          listings: number
+          mau_30d: number
+          members: number
+          name: string
+          new_members_30d: number
+          orders: number
+          organizers: number
+          pincode: string
+          providers: number
+          spent: number
         }[]
       }
       platform_get_community_businesses: {
@@ -3650,6 +3987,73 @@ export type Database = {
           visits_planned: number
         }[]
       }
+      platform_get_community_dashboard_v3: {
+        Args: { p_community_id?: string }
+        Returns: {
+          active_businesses: number
+          active_food_drops: number
+          active_funds: number
+          avg_provider_rating: number
+          cancelled_events: number
+          contributing_residents: number
+          dau_today: number
+          distinct_business_owners: number
+          distinct_food_buyers: number
+          distinct_food_hosts: number
+          hires_past_30d: number
+          mau_30d: number
+          new_residents_30d: number
+          total_business_products: number
+          total_businesses: number
+          total_collected: number
+          total_communities: number
+          total_event_organizers: number
+          total_events: number
+          total_food_drops: number
+          total_food_revenue: number
+          total_funds: number
+          total_hires: number
+          total_preorders: number
+          total_providers: number
+          total_ratings: number
+          total_residents: number
+          total_spent: number
+          upcoming_events: number
+          visits_completed: number
+          visits_past_30d: number
+          visits_planned: number
+          wau_7d: number
+        }[]
+      }
+      platform_get_community_events: {
+        Args: { p_community_id?: string }
+        Returns: {
+          cancellation_note: string
+          cancelled_at: string
+          category: string
+          community_id: string
+          community_name: string
+          contact_count: number
+          contacts: Json
+          created_at: string
+          description: string
+          end_time: string
+          entry_fee: number
+          event_date: string
+          event_id: string
+          image_url: string
+          poster_flat: string
+          poster_id: string
+          poster_name: string
+          poster_role: string
+          registration_last_date: string
+          registration_link: string
+          start_time: string
+          status: string
+          title: string
+          venue: string
+        }[]
+      }
       platform_get_community_funds: {
         Args: { p_community_id: string }
         Returns: {
@@ -3684,12 +4088,80 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      platform_get_event_organizers: {
+        Args: { p_community_id?: string }
+        Returns: {
+          app_role: string
+          community_id: string
+          community_name: string
+          created_at: string
+          email: string
+          events_posted: number
+          flat_number: string
+          full_name: string
+          grant_id: string
+          granted_by_name: string
+          user_id: string
+        }[]
+      }
+      platform_get_fund_collection_coverage: {
+        Args: { p_event_id: string }
+        Returns: {
+          block_id: string
+          block_name: string
+          collected: number
+          contributors: number
+          residents: number
+        }[]
+      }
+      platform_get_fund_ledger: {
+        Args: { p_event_id: string }
+        Returns: {
+          amount: number
+          category: string
+          contributor_block: string
+          contributor_flat: string
+          contributor_id: string
+          contributor_name: string
+          created_at: string
+          description: string
+          entry_kind: string
+          image_url: string
+          recorded_by_name: string
+          running_balance: number
+          sponsor_name: string
+          sponsor_note: string
+          sponsor_phone: string
+          title: string
+          transaction_id: string
+          type: string
+        }[]
+      }
+      platform_get_preorder_hosts: {
+        Args: { p_community_id?: string }
+        Returns: {
+          avg_order_value: number
+          community_id: string
+          community_name: string
+          distinct_buyers: number
+          drops_open: number
+          drops_total: number
+          first_drop_at: string
+          host_email: string
+          host_flat: string
+          host_id: string
+          host_name: string
+          last_drop_at: string
+          orders_total: number
+          revenue_total: number
+        }[]
+      }
       platform_get_provider_details: {
         Args: { p_provider_id: string }
         Returns: Json
       }
       platform_get_providers_by_category: {
-        Args: { p_community_id: string }
+        Args: { p_community_id?: string }
         Returns: {
           category: string
           provider_count: number
@@ -3716,8 +4188,16 @@ export type Database = {
         Args: { p_target_user_id: string }
         Returns: undefined
       }
+      platform_remove_event_organizer: {
+        Args: { p_community_id: string; p_target_user_id: string }
+        Returns: undefined
+      }
       platform_remove_resident_from_community: {
         Args: { p_reason?: string; p_target_profile_id: string }
+        Returns: undefined
+      }
+      platform_resolve_provider_report: {
+        Args: { p_report_id: string; p_status: string }
         Returns: undefined
       }
       platform_revoke_funds_access: {
@@ -3749,6 +4229,10 @@ export type Database = {
           p_role: string
           p_target_user_id: string
         }
+        Returns: undefined
+      }
+      platform_set_event_organizer: {
+        Args: { p_community_id: string; p_target_user_id: string }
         Returns: undefined
       }
       platform_set_fund_treasurer: {
@@ -3856,6 +4340,7 @@ export type Database = {
           flat_number: string | null
           full_name: string | null
           id: string
+          last_active_at: string | null
           phone_number: string | null
           removed_at: string | null
           removed_by: string | null
@@ -3898,6 +4383,7 @@ export type Database = {
           flat_number: string | null
           full_name: string | null
           id: string
+          last_active_at: string | null
           phone_number: string | null
           removed_at: string | null
           removed_by: string | null
@@ -3940,6 +4426,7 @@ export type Database = {
         Returns: string
       }
       today_ist: { Args: never; Returns: string }
+      touch_last_active: { Args: never; Returns: undefined }
       upsert_community_event: {
         Args: {
           p_category: string

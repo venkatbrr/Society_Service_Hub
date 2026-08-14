@@ -5,25 +5,49 @@ const ApprovalsPage = {
   blockNames: {},  // request_id -> string[]
   blockFlatsPayload: {}, // request_id -> JSON
   rejectingRequestId: null,
+  statusFilter: 'pending',
+  filterBound: false,
+
+  bindFilter() {
+    if (this.filterBound) return;
+    const select = document.getElementById('approvals-status-filter');
+    if (!select) return;
+    this.filterBound = true;
+    select.value = this.statusFilter;
+    select.addEventListener('change', (e) => {
+      this.statusFilter = e.target.value;
+      this.load();
+    });
+  },
 
   async load() {
     const listContainer = document.getElementById('approvals-list');
     const loadingEl = document.getElementById('approvals-loading');
-    
+
     listContainer.innerHTML = '';
     loadingEl.classList.remove('hidden');
-    
+    this.bindFilter();
+
     try {
-      const { data: requestRows, error } = await supabase
+      // Decided requests stay browsable — the page used to show only `pending`,
+      // so there was no way to see what had already been approved or refused.
+      let query = supabase
         .from('community_requests')
-        .select('id, name, community_type, city, pincode, area, address, approximate_units, requester_flat_number, requested_by, created_at, block_label, block_details')
-        .eq('status', 'pending')
+        .select('id, name, community_type, city, pincode, area, address, approximate_units, requester_flat_number, requested_by, created_at, block_label, block_details, status, rejection_reason, reviewed_at, resulting_community_id')
         .order('created_at', { ascending: false });
 
+      if (this.statusFilter) {
+        query = query.eq('status', this.statusFilter);
+      }
+
+      const { data: requestRows, error } = await query;
+
       if (error) throw error;
-      
+
       if (!requestRows || requestRows.length === 0) {
-        listContainer.innerHTML = '<div class="alert alert-success">No pending community requests at this time.</div>';
+        listContainer.innerHTML = this.statusFilter === 'pending'
+          ? '<div class="alert alert-success">No pending community requests at this time.</div>'
+          : emptyState('No community requests with that status.');
         this.requests = [];
         loadingEl.classList.add('hidden');
         return;
@@ -77,85 +101,120 @@ const ApprovalsPage = {
       const card = document.createElement('div');
       card.className = 'approval-card';
       
-      const formattedDate = new Date(req.created_at).toLocaleString();
-      const unitStr = req.approximate_units ? `${req.approximate_units} units` : 'Not specified';
-      
+      const formattedDate = fmtDateTime(req.created_at);
+      const unitStr = req.approximate_units ? `${esc(req.approximate_units)} units` : 'Not specified';
+      const isPending = req.status === 'pending';
+
       card.innerHTML = `
         <div class="approval-details-grid">
           <div>
             <div class="approval-label">Community Details</div>
-            <div class="form-group" style="margin-top: 8px;">
-              <label>Community Name (Editable)</label>
-              <input type="text" class="form-control" id="name-input-${req.id}" value="${req.name}">
-            </div>
+            ${isPending ? `
+              <div class="form-group" style="margin-top: 8px;">
+                <label>Community Name (Editable)</label>
+                <input type="text" class="form-control" id="name-input-${escAttr(req.id)}" value="${escAttr(req.name)}">
+              </div>
+            ` : `
+              <div style="margin-top: 8px;"><strong style="font-size: 1.05rem;">${esc(req.name)}</strong></div>
+            `}
             <div style="font-size: 0.85rem; color: var(--text-2); margin-top: 8px;">
-              <strong>Type:</strong> ${req.community_type}<br>
-              <strong>Location:</strong> ${req.area || 'N/A'}, ${req.city} - ${req.pincode}<br>
-              <strong>Address:</strong> ${req.address || 'N/A'}<br>
+              <strong>Type:</strong> ${esc(req.community_type)}<br>
+              <strong>Location:</strong> ${esc(req.area || 'N/A')}, ${esc(req.city)} - ${esc(req.pincode)}<br>
+              <strong>Address:</strong> ${esc(req.address || 'N/A')}<br>
               <strong>Approx. Size:</strong> ${unitStr}
             </div>
           </div>
           <div>
             <div class="approval-label">Requester Info</div>
             <div style="margin-top: 8px; font-size: 0.9rem;">
-              <strong>Name:</strong> ${req.requester_name || 'N/A'}<br>
-              <strong>Email:</strong> ${req.requester_email || 'N/A'}<br>
-              <strong>Phone:</strong> ${req.requester_phone || 'N/A'}<br>
-              <strong>Flat Number:</strong> ${req.requester_flat_number || 'N/A'}<br>
-              <span class="badge-pill badge-muted" style="margin-top: 8px;">Submitted: ${formattedDate}</span>
+              <strong>Name:</strong> ${esc(req.requester_name || 'N/A')}<br>
+              <strong>Email:</strong> ${esc(req.requester_email || 'N/A')}<br>
+              <strong>Phone:</strong> ${esc(req.requester_phone || 'N/A')}<br>
+              <strong>Flat Number:</strong> ${esc(req.requester_flat_number || 'N/A')}<br>
+              <span class="badge-pill badge-muted" style="margin-top: 8px;">Submitted: ${esc(formattedDate)}</span>
             </div>
           </div>
         </div>
 
-        <div class="block-seeding-section">
-          <div class="approval-label">Block / Tower Seeding</div>
-          <p class="text-3" style="font-size: 0.8rem; margin-top: 4px; margin-bottom: 8px;">Optionally seed blocks/towers to enable them automatically for this community.</p>
-          
-          <div class="form-row" style="grid-template-columns: 120px 1fr; align-items: end;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label>Label</label>
-              <select class="form-control" id="label-select-${req.id}">
-                <option value="Block" ${this.blockLabels[req.id] === 'Block' ? 'selected' : ''}>Block</option>
-                <option value="Tower" ${this.blockLabels[req.id] === 'Tower' ? 'selected' : ''}>Tower</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label>Add Block Name</label>
-              <div style="display: flex; gap: 8px;">
-                <input type="text" class="form-control" id="block-input-${req.id}" placeholder="e.g. A, B, C">
-                <button type="button" class="btn btn-secondary" onclick="ApprovalsPage.addBlockName('${req.id}')">Add</button>
+        ${isPending ? `
+          <div class="block-seeding-section">
+            <div class="approval-label">Block / Tower Seeding</div>
+            <p class="text-3" style="font-size: 0.8rem; margin-top: 4px; margin-bottom: 8px;">Optionally seed blocks/towers to enable them automatically for this community.</p>
+
+            <div class="form-row" style="grid-template-columns: 120px 1fr; align-items: end;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Label</label>
+                <select class="form-control" id="label-select-${escAttr(req.id)}">
+                  <option value="Block" ${this.blockLabels[req.id] === 'Block' ? 'selected' : ''}>Block</option>
+                  <option value="Tower" ${this.blockLabels[req.id] === 'Tower' ? 'selected' : ''}>Tower</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Add Block Name</label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" class="form-control" id="block-input-${escAttr(req.id)}" placeholder="e.g. A, B, C">
+                  <button type="button" class="btn btn-secondary" data-action="add-block-name">Add</button>
+                </div>
               </div>
             </div>
+
+            <div class="chip-container" id="chips-container-${escAttr(req.id)}"></div>
           </div>
 
-          <div class="chip-container" id="chips-container-${req.id}"></div>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px;">
-          <button class="btn btn-secondary" onclick="ApprovalsPage.openRejectionModal('${req.id}')">Reject</button>
-          <button class="btn btn-primary" onclick="ApprovalsPage.approveRequest('${req.id}')">Approve Community</button>
-        </div>
+          <div class="approval-actions">
+            <button class="btn btn-secondary" data-action="reject">Reject</button>
+            <button class="btn btn-primary" data-action="approve">Approve Community</button>
+          </div>
+        ` : `
+          <div class="approval-decision">
+            <div class="row-between">
+              <div>
+                ${statusBadge(req.status)}
+                <span class="text-3" style="font-size: 0.85rem; margin-left: 8px;">
+                  Decided ${esc(fmtDateTime(req.reviewed_at))}
+                </span>
+              </div>
+              ${req.resulting_community_id
+                ? `<button class="btn btn-secondary btn-sm" data-action="open-community">Open community →</button>`
+                : ''}
+            </div>
+            ${req.rejection_reason
+              ? `<p class="text-2" style="margin-top: 10px; font-size: 0.88rem;"><strong>Reason:</strong> ${esc(req.rejection_reason)}</p>`
+              : ''}
+          </div>
+        `}
       `;
 
       listContainer.appendChild(card);
-      
-      // Render chips initially
-      this.renderChips(req.id);
 
-      // Listen to label change
-      const labelSelect = card.querySelector(`#label-select-${req.id}`);
-      labelSelect.addEventListener('change', (e) => {
-        this.blockLabels[req.id] = e.target.value;
-      });
-      
-      // Add enter key listener on block name input
-      const blockInput = card.querySelector(`#block-input-${req.id}`);
-      blockInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          this.addBlockName(req.id);
-        }
-      });
+      if (isPending) {
+        this.renderChips(req.id);
+
+        card.querySelector('[data-action="add-block-name"]')
+          .addEventListener('click', () => this.addBlockName(req.id));
+        card.querySelector('[data-action="reject"]')
+          .addEventListener('click', () => this.openRejectionModal(req.id));
+        card.querySelector('[data-action="approve"]')
+          .addEventListener('click', () => this.approveRequest(req.id));
+
+        const labelSelect = card.querySelector(`#label-select-${CSS.escape(req.id)}`);
+        labelSelect.addEventListener('change', (e) => {
+          this.blockLabels[req.id] = e.target.value;
+        });
+
+        const blockInput = card.querySelector(`#block-input-${CSS.escape(req.id)}`);
+        blockInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            this.addBlockName(req.id);
+          }
+        });
+      } else if (req.resulting_community_id) {
+        card.querySelector('[data-action="open-community"]')
+          .addEventListener('click', () => {
+            window.location.hash = '#communities?id=' + req.resulting_community_id;
+          });
+      }
     });
   },
 
@@ -182,6 +241,7 @@ const ApprovalsPage = {
 
   renderChips(requestId) {
     const container = document.getElementById(`chips-container-${requestId}`);
+    if (!container) return;
     container.innerHTML = '';
 
     const list = this.blockNames[requestId];
@@ -193,10 +253,9 @@ const ApprovalsPage = {
     list.forEach((name, idx) => {
       const chip = document.createElement('span');
       chip.className = 'chip';
-      chip.innerHTML = `
-        ${name}
-        <span class="chip-remove" onclick="ApprovalsPage.removeBlockName('${requestId}', ${idx})">&times;</span>
-      `;
+      chip.innerHTML = `${esc(name)} <span class="chip-remove" title="Remove">&times;</span>`;
+      chip.querySelector('.chip-remove')
+        .addEventListener('click', () => this.removeBlockName(requestId, idx));
       container.appendChild(chip);
     });
   },

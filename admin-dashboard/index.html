@@ -27,7 +27,7 @@
       errorDiv.style.top = '0';
       errorDiv.style.left = '0';
       errorDiv.style.width = '100%';
-      errorDiv.style.backgroundColor = '#A32D2D';
+      errorDiv.style.backgroundColor = 'var(--danger, #A32D2D)';
       errorDiv.style.color = 'white';
       errorDiv.style.padding = '10px';
       errorDiv.style.zIndex = '99999';
@@ -139,19 +139,31 @@
           <p>Loading community metrics...</p>
         </div>
 
+        <!-- A failed read must surface here, never as a page full of zeroes. -->
+        <div id="dashboard-error"></div>
+
         <div id="dashboard-content" class="hidden">
           <!-- Metric Grid Row -->
           <div class="metrics-grid">
-            <div class="metric-card" style="cursor: pointer;" onclick="DashboardPage.onCardClick('residents')">
+            <div class="metric-card clickable" data-card="residents">
               <div class="metric-header">
-                <span>Residents & DAU</span>
+                <span>Residents &amp; Activity</span>
                 <span class="metric-icon">🌐</span>
               </div>
-              <div class="metric-value" id="metric-dau">0 DAU</div>
-              <div class="metric-subtitle"><span id="metric-residents">0</span> total, <span id="metric-mau">0</span> MAU</div>
+              <div class="metric-value" id="metric-dau">0</div>
+              <div class="metric-subtitle" id="metric-residents-sub">0 residents · 0 WAU · 0 MAU</div>
             </div>
 
-            <div class="metric-card" style="cursor: pointer;" onclick="DashboardPage.onCardClick('food')">
+            <div class="metric-card">
+              <div class="metric-header">
+                <span>Growth</span>
+                <span class="metric-icon">📈</span>
+              </div>
+              <div class="metric-value" id="metric-growth">0</div>
+              <div class="metric-subtitle" id="metric-growth-sub">new residents in 30 days</div>
+            </div>
+
+            <div class="metric-card clickable" data-card="food">
               <div class="metric-header">
                 <span>Pre-Order Food</span>
                 <span class="metric-icon">🍲</span>
@@ -160,22 +172,31 @@
               <div class="metric-subtitle" id="metric-food-sub">0 drops · 0 pre-orders</div>
             </div>
 
-            <div class="metric-card" style="cursor: pointer;" onclick="DashboardPage.onCardClick('business')">
+            <div class="metric-card clickable" data-card="business">
               <div class="metric-header">
                 <span>Local Businesses</span>
                 <span class="metric-icon">🏪</span>
               </div>
               <div class="metric-value" id="metric-active-businesses">0 Active</div>
-              <div class="metric-subtitle" id="metric-business-sub">0 total listings</div>
+              <div class="metric-subtitle" id="metric-business-sub">0 listings · 0 products</div>
             </div>
 
-            <div class="metric-card" style="cursor: pointer;" onclick="DashboardPage.onCardClick('providers')">
+            <div class="metric-card clickable" data-card="providers">
               <div class="metric-header">
                 <span>Providers</span>
                 <span class="metric-icon">🔧</span>
               </div>
               <div class="metric-value" id="metric-providers">0</div>
-              <div class="metric-subtitle">Registered service providers</div>
+              <div class="metric-subtitle" id="metric-providers-sub">Registered service providers</div>
+            </div>
+
+            <div class="metric-card clickable" data-card="events">
+              <div class="metric-header">
+                <span>Community Events</span>
+                <span class="metric-icon">🎪</span>
+              </div>
+              <div class="metric-value" id="metric-events">0</div>
+              <div class="metric-subtitle" id="metric-events-sub">0 total · 0 coordinators</div>
             </div>
 
             <div class="metric-card">
@@ -205,13 +226,24 @@
               <div class="metric-subtitle" id="metric-contacts-sub">0 this month</div>
             </div>
 
-            <div class="metric-card" style="cursor: pointer;" onclick="DashboardPage.onCardClick('funds')">
+            <div class="metric-card clickable" data-card="funds">
               <div class="metric-header">
                 <span>Funds Health</span>
                 <span class="metric-icon">💰</span>
               </div>
               <div class="metric-value" id="metric-funds">₹0</div>
               <div class="metric-subtitle" id="metric-funds-sub">₹0 spent across 0 funds</div>
+            </div>
+          </div>
+
+          <!-- Activity trend -->
+          <div class="section-card">
+            <div class="section-card-header">
+              <h2>Activity — last 90 days</h2>
+              <span class="text-3" style="font-size: 0.8rem;">Signups · orders · contributions · active residents</span>
+            </div>
+            <div style="height: 260px; position: relative;">
+              <canvas id="trend-chart-canvas"></canvas>
             </div>
           </div>
 
@@ -237,6 +269,35 @@
               </div>
             </div>
           </div>
+
+          <!-- Per-community comparison -->
+          <div class="section-card">
+            <div class="section-card-header">
+              <h2>All Communities</h2>
+              <button class="btn btn-secondary btn-sm" id="export-communities-btn">Export CSV</button>
+            </div>
+            <div class="table-container">
+              <table class="sortable-table" id="communities-overview-table">
+                <thead>
+                  <tr>
+                    <th data-sort="name">Community</th>
+                    <th data-sort="members">Members</th>
+                    <th data-sort="mau_30d">MAU</th>
+                    <th data-sort="providers">Providers</th>
+                    <th data-sort="drops">Drops</th>
+                    <th data-sort="food_revenue">Food ₹</th>
+                    <th data-sort="listings">Listings</th>
+                    <th data-sort="balance">Fund balance</th>
+                    <th data-sort="events">Events</th>
+                    <th data-sort="last_activity_at">Last active</th>
+                  </tr>
+                </thead>
+                <tbody id="communities-overview-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -246,6 +307,14 @@
           <div>
             <h1>Community Approvals</h1>
             <p class="text-2" style="margin-top: 4px;">Review onboarding requests and seed buildings/blocks for new communities.</p>
+          </div>
+          <div>
+            <select id="approvals-status-filter" class="form-control" style="min-width: 180px; font-weight: 500; border-color: var(--border-strong);">
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="">All statuses</option>
+            </select>
           </div>
         </header>
 
@@ -273,7 +342,7 @@
 
           <div class="toolbar">
             <div class="search-input-wrapper">
-              <input type="text" id="communities-search" class="form-control" placeholder="Search communities by name, city, pincode..." oninput="CommunitiesPage.loadCommunitiesList()">
+              <input type="text" id="communities-search" class="form-control" placeholder="Search communities by name, city, pincode...">
             </div>
           </div>
 
@@ -313,6 +382,14 @@
               <h1>Funds Access Requests</h1>
               <p class="text-2" style="margin-top: 4px;">Approve or reject community fund accounts and appoint designated local treasurers.</p>
             </div>
+            <div>
+              <select id="funds-requests-status-filter" class="form-control" style="min-width: 180px; font-weight: 500; border-color: var(--border-strong);">
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="">All statuses</option>
+              </select>
+            </div>
           </header>
 
           <div class="table-container">
@@ -324,6 +401,7 @@
                   <th>Contact Info</th>
                   <th>Purpose</th>
                   <th>Status</th>
+                  <th>Decision</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -386,6 +464,7 @@
                   <th>Contact Info</th>
                   <th>Community</th>
                   <th>Rating</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -481,7 +560,7 @@
 
   <!-- Community Fund Details Modal -->
   <div id="fund-modal" class="modal-backdrop hidden">
-    <div class="modal-content" style="max-width: 540px;">
+    <div class="modal-content" style="max-width: 720px;">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
         <h3 id="fund-modal-title">Fund Details</h3>
         <button onclick="CommunitiesPage.closeFundModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-3);">&times;</button>
@@ -501,7 +580,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- App Custom Logic -->
+  <!-- App Custom Logic. utils.js must load first — every controller uses it. -->
+  <script src="/admin/js/utils.js"></script>
   <script src="/admin/js/supabase-config.js"></script>
   <script src="/admin/js/auth.js"></script>
   <script src="/admin/js/router.js"></script>

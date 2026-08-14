@@ -200,7 +200,7 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 | Table | Key columns | Scope |
 |-------|-------------|-------|
 | `communities` | `name`, `code` (6-char join code), `funds_enabled`, `blocks_enabled`, `block_label`, `city`, `area`, `pincode`, `address`, `community_type`, `approximate_units` | Community |
-| `profiles` | `id` (= `auth.users.id`), `full_name`, `email`, `phone_number`, `flat_id`, `flat_number`, `app_role`, `community_id`, `block_id`, `avatar_url`, `expo_push_token`, `removed_at`, `removed_by` | Self / community |
+| `profiles` | `id` (= `auth.users.id`), `full_name`, `email`, `phone_number`, `flat_id`, `flat_number`, `app_role`, `community_id`, `block_id`, `avatar_url`, `expo_push_token`, `last_active_at`, `removed_at`, `removed_by` | Self / community |
 | `community_requests` | `name`, `city`, `pincode`, `area`, `address`, `community_type`, `approximate_units`, `requester_flat_number`, `proof_photo_url`, `requested_by`, `status`, `rejection_reason`, `reviewed_by`, `reviewed_at`, `resulting_community_id`, `block_label`, `block_details` | Requester / platform |
 | `community_blocks` | `community_id`, `name`, `archived_at` | Community |
 | `community_flats` | `community_id`, `block_id`, `flat_number`, `floor_label`, `archived_at` | Community |
@@ -209,6 +209,18 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 | `community_events` | ⚠️ Not the funds `events` table (§4.4) — deliberately renamed to avoid the collision. `title`, `category` (cultural/sports/festival/meeting/workshop/other), `description`, `image_url`, `venue`, `event_date` (local `YYYY-MM-DD`), `start_time`, `end_time`, `registration_last_date`, `entry_fee` (display only), `registration_link`, `status` (`published`/`cancelled`), `cancelled_at`, `cancellation_note`, `created_by` | Community |
 | `community_event_contacts` | `event_id`, `name`, `phone`, `role_label`, `sort_order` — max 3 per event, trigger-enforced | Scoped via parent event |
 | `community_event_organizers` | `community_id`, `user_id`, `granted_by` — the "events coordinator" grant. Not an `app_role` value; any number of residents can hold it alongside their existing role | Community |
+
+**Activity tracking** (migration `20260910000000`) — there is **no `profiles.updated_at`**, and there never was. Anything needing "when was this user last active" uses:
+
+| Object | What it is |
+|--------|-----------|
+| `profiles.last_active_at` | Heartbeat column, written **only** by `touch_last_active()` — a no-argument `SECURITY DEFINER` RPC that stamps `auth.uid()` and nothing else. A definer function taking a user id would be an RLS bypass. |
+| `public.v_user_activity` (view) | Derived stream: `(user_id, created_at)` UNIONed across `mcn_preorder_orders`, `mcn_preorder_drops`, `mcn_listings`, `ratings`, `provider_hires`, `service_visits`, `community_events`, `event_transactions`. Gives DAU/MAU history predating the heartbeat. Excludes `profiles.created_at` — signing up is not recurring activity. |
+| `public.user_last_seen` (view) | `GREATEST(last_active_at, MAX(activity))` per active profile. This is what the dashboard RPCs read. |
+
+Both views are **`WITH (security_invoker = true)`**. A plain Postgres view runs with its *owner's* rights, which would have handed every authenticated user the whole platform's activity stream; with invoker rights the caller's own RLS applies, while the `platform_*` definer functions still read them in full. Always set this on a view over community-scoped tables.
+
+> Nothing calls `touch_last_active()` yet — the mobile app still needs a foreground ping in `context/AuthContext.tsx`. Until then the metric rests entirely on the derived view.
 
 **Flat and Block Normalization Model** (migrations `20260904000000`–`20260904000300`):
 - `community_flats` is the canonical inventory of verified units in a community.
@@ -410,9 +422,25 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 ### Platform admin console
 
-`platform_get_community_dashboard(...)` · `platform_get_community_dashboard_v2(...)` · `platform_get_community_funds(...)` · `platform_get_community_businesses(...)` · `platform_get_community_preorders(...)` · `platform_get_resident_details(...)` · `platform_approve_funds_access_request(p_request_id, p_lead_user_id)` · `platform_reject_funds_access_request(...)` · `platform_revoke_funds_access(...)` · `platform_set_community_lead(...)` · `platform_remove_community_lead(...)` · `platform_set_fund_treasurer(p_event_id, p_target_user_id)` · `platform_set_blocks_enabled(...)` · `platform_set_block_label(...)` · `platform_add_community_block(...)` · `platform_archive_community_block(...)` · `platform_assign_block_in_charge(...)` · `platform_remove_block_in_charge(...)`
+`platform_get_community_dashboard(...)` · `platform_get_community_dashboard_v2(...)` · `platform_get_community_dashboard_v3(...)` · `platform_get_activity_trend(p_community_id, p_days)` · `platform_get_communities_overview()` · `platform_get_providers_by_category(...)` · `platform_get_community_funds(...)` · `platform_get_fund_ledger(p_event_id)` · `platform_get_fund_collection_coverage(p_event_id)` · `platform_get_community_businesses(...)` · `platform_get_business_owners(...)` · `platform_get_business_categories(...)` · `platform_get_community_preorders(...)` · `platform_get_preorder_hosts(...)` · `platform_get_community_events(...)` · `platform_get_event_organizers(...)` · `platform_set_event_organizer(p_community_id, p_target_user_id)` · `platform_remove_event_organizer(p_community_id, p_target_user_id)` · `platform_resolve_provider_report(p_report_id, p_status)` · `platform_get_resident_details(...)` · `platform_approve_funds_access_request(p_request_id, p_lead_user_id)` · `platform_reject_funds_access_request(...)` · `platform_revoke_funds_access(...)` · `platform_set_community_lead(...)` · `platform_remove_community_lead(...)` · `platform_set_fund_treasurer(p_event_id, p_target_user_id)` · `platform_set_blocks_enabled(...)` · `platform_set_block_label(...)` · `platform_add_community_block(...)` · `platform_archive_community_block(...)` · `platform_add_community_flats(p_community_id, p_block_id, p_flat_numbers)` · `platform_archive_community_flat(...)` · `platform_assign_block_in_charge(...)` · `platform_remove_block_in_charge(...)`
 
 All are `SECURITY DEFINER` and raise unless `is_platform_admin(auth.uid())`. **They exist because a platform admin has no RLS grant on community-scoped tables** — `is_platform_admin()` requires `community_id IS NULL`, so every policy keyed on `get_user_community_id()` matches nothing for them. A direct `supabase.from('<table>')` read from the admin console therefore returns `[]` silently rather than erroring. See [`platform-admin.md`](platform-admin.md) §1a.
+
+**`p_community_id` defaults to `NULL`, meaning *every* community**, on every read RPC that takes it. `platform_get_providers_by_category` was the exception — a strict `sp.community_id = p_community_id` meant the console's "All Communities" overview always rendered an empty chart. Fixed in `20260910000100`; keep the `(p_community_id IS NULL OR … = p_community_id)` form when adding new ones.
+
+`platform_get_community_dashboard_v3(...)` *(added `20260910000100`)* supersedes v2, which **raised on every call**: its DAU/MAU subqueries read `profiles.updated_at`, a column that has never existed on `public.profiles`. Because the console destructured only `data`, the failure surfaced as a dashboard full of zeroes rather than an error. v3 reads `public.user_last_seen` instead (§4) and adds events, coordinator, rating and funds-participation columns. v1 and v2 are left in place for a stale cached console and should be dropped once no deployment references them.
+
+`platform_get_preorder_hosts(...)` / `platform_get_business_owners(...)` / `platform_get_business_categories(...)` *(added `20260910000200`, identity columns `20260910000500`)* — per-resident and per-category rollups. The host rollup aggregates orders **per drop first**, then per host: joining drops to orders and aggregating in one pass multiplies every drop count by that drop's order count, and distinct buyers must be counted across the host's drops rather than summed per drop.
+
+`platform_get_communities_overview()` *(added `20260910000200`)* — one row per community. Replaces a console-side read of every `profiles` row on the platform that existed only to count members per card.
+
+`platform_get_fund_ledger(p_event_id)` *(added `20260910000200`)* — the full `event_transactions` ledger with a running balance, classifying each row as `resident_contribution` / `sponsor_contribution` / `other_income` / `expense`. `platform_get_community_funds`'s `contributions` array does not make that distinction and renders sponsor income as a nameless "Resident".
+
+`platform_resolve_provider_report(p_report_id, p_status)` *(added `20260910000400`)* — the only way a platform admin can resolve a report. The direct `UPDATE provider_reports` it replaced could never succeed: that table's UPDATE policy requires `is_user_approved()`, which requires `community_id IS NOT NULL` — the exact opposite of what `is_platform_admin()` requires.
+
+`platform_set_event_organizer` / `platform_remove_event_organizer` *(added `20260910000300`)* — grant and revoke the **events coordinator** role (`community_event_organizers`). Same guard shape as `platform_set_fund_treasurer`. Granting is idempotent; revoking raises when the resident does not hold the grant, because a `DELETE` matching zero rows returns success. See [`platform-admin.md`](platform-admin.md) §3a.
+
+**`list_community_blocks` / `list_community_flats` are now authorised.** Both are `SECURITY DEFINER` taking a caller-supplied `p_community_id` and had **no authorisation check at all**, letting any authenticated user enumerate any society's block and flat inventory. `20260910000400` added `is_platform_admin(auth.uid()) OR p_community_id = get_user_community_id()`; `20260910000700` removed the `PUBLIC` grant that was giving `anon` a reachable entry point. Note that revoking from `anon` alone does nothing when the privilege is held by `PUBLIC`.
 
 `platform_set_fund_treasurer(p_event_id, p_target_user_id)` *(added `20260820000000`)* — assigns or replaces a fund's treasurer. Deletes the existing `fund_roles` treasurer row and inserts the new one in one transaction, keeping the one-treasurer-per-fund invariant in `validate_fund_role_change` satisfied. Rejects a target who is removed, in another community, or holds `admin`/`president`/`vice_president`. Community leads manage their own funds' treasurers through `fund_roles` RLS instead; those policies key on `get_user_community_id()` and never apply to a platform admin.
 

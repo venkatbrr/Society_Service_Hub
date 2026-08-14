@@ -1,18 +1,12 @@
 // Providers Page Controller
-const esc = (str) => {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-};
+//
+// `esc` and the other helpers come from utils.js, which index.html loads first.
 
 const ProvidersPage = {
   communities: [],
   selectedCommunityId: null,
   selectedProviderId: null,
+  searchBound: false,
 
   async load() {
     const listContainer = document.getElementById('providers-list-view');
@@ -26,6 +20,7 @@ const ProvidersPage = {
     if (this.communities.length === 0) {
       await this.loadCommunitiesFilter(filterSelect);
     }
+    this.bindSearch();
 
     if (this.selectedProviderId) {
       listContainer.classList.add('hidden');
@@ -36,6 +31,15 @@ const ProvidersPage = {
       detailContainer.classList.add('hidden');
       await this.loadProvidersList();
     }
+  },
+
+  // The search box had no listener at all — typing in it did nothing.
+  bindSearch() {
+    if (this.searchBound) return;
+    const input = document.getElementById('providers-search');
+    if (!input) return;
+    this.searchBound = true;
+    input.addEventListener('input', debounce(() => this.loadProvidersList(), 250));
   },
 
   async loadCommunitiesFilter(selector) {
@@ -355,22 +359,15 @@ const ProvidersPage = {
 
   async resolveReport(reportId, newStatus) {
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData?.user?.id;
-
-      const { data, error } = await supabase
-        .from('provider_reports')
-        .update({
-          status: newStatus,
-          reviewed_by: userId,
-          reviewed_at: new Date().toISOString()
-        })
-        .eq('id', reportId)
-        .select('id');
-
-      if (error || !data || data.length !== 1) {
-        throw error || new Error('Update failed');
-      }
+      // Must go through the RPC. The direct UPDATE this replaced could never
+      // succeed: the provider_reports UPDATE policy requires is_user_approved(),
+      // which requires community_id IS NOT NULL — the exact opposite of what
+      // is_platform_admin() requires.
+      const { error } = await supabase.rpc('platform_resolve_provider_report', {
+        p_report_id: reportId,
+        p_status: newStatus
+      });
+      if (error) throw error;
 
       await this.loadProviderDetail(this.selectedProviderId);
     } catch (err) {
