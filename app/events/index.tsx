@@ -114,18 +114,29 @@ export default function CommunityEventsScreen() {
         trackStyle={styles.scopeTrack}
       />
 
+      {/* The slider must sit inside a fixed-height slot. Its root is a
+          horizontal ScrollView, and a ScrollView dropped straight into this
+          flex-1 column has no intrinsic height to hold it — it takes whatever
+          the column gives it, so the chips (centred inside it) and the animated
+          pill land at a different vertical offset than the measured chip boxes
+          and the row visibly jumps between selections. Every other chip row in
+          the app pins this: business.tsx via `maxHeight`, CategoryFilter via a
+          wrapper View. */}
       {availableCategories.length > 1 ? (
-        <ChipRowSlider<EventCategory | 'all'>
-          value={category}
-          onChange={setCategory}
-          chips={[
-            { key: 'all', label: 'All' },
-            ...availableCategories.map((c) => ({ key: c, label: eventCategoryMeta(c).label })),
-          ]}
-          containerStyle={styles.chipsRow}
-          activeColor={Verandah.primaryFg}
-          inactiveColor={Verandah.textPrimary}
-        />
+        <View style={styles.chipsSlot}>
+          <ChipRowSlider<EventCategory | 'all'>
+            value={category}
+            onChange={setCategory}
+            chips={[
+              { key: 'all', label: 'All' },
+              ...availableCategories.map((c) => ({ key: c, label: eventCategoryMeta(c).label })),
+            ]}
+            containerStyle={styles.chipsRow}
+            contentContainerStyle={styles.chipsRowContent}
+            activeColor={Verandah.primaryFg}
+            inactiveColor={Verandah.textPrimary}
+          />
+        </View>
       ) : null}
 
       {loading ? (
@@ -172,6 +183,9 @@ export default function CommunityEventsScreen() {
   );
 }
 
+/** Chip box is 12.5px text (~16 line) + 5px padding top/bottom + hairline border. */
+const CHIP_ROW_HEIGHT = 30;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -204,8 +218,17 @@ const styles = StyleSheet.create({
   scopeTrack: {
     marginBottom: 10,
   },
-  chipsRow: {
+  chipsSlot: {
+    height: CHIP_ROW_HEIGHT,
+    justifyContent: 'center',
     marginBottom: 12,
+  },
+  chipsRow: {
+    maxHeight: CHIP_ROW_HEIGHT,
+  },
+  chipsRowContent: {
+    alignItems: 'center',
+    gap: 6,
   },
   loaderWrap: {
     flex: 1,

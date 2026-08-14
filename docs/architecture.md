@@ -27,7 +27,7 @@ There is **no data-fetching library and no global store**. Every screen owns its
 | `context/` | `AuthContext`, `NotificationContext` — the only global state |
 | `lib/` | Supabase client, auth helpers, generated types, fund logic, phone/Cloudinary/fraud/navigation helpers |
 | `constants/` | Design tokens (`Colors`, `Verandah`) and domain vocabularies (`categories`, `providerDetails`, `schoolReviewAspects`, `sos`, `emojis`) |
-| `supabase/migrations/` | Ordered SQL migrations, applied with `npm run db:push` |
+| `supabase/migrations/` | Ordered SQL migrations, applied with `npm run db:push:prod` (or `:preprod`) — there is no unsuffixed variant |
 | `supabase/functions/` | Edge Functions: `check_due_services`, `fraud-check` |
 | `admin-dashboard/` | Vanilla-JS platform admin console (separate app) |
 | `data/` | Static seed data — notably `westHyderabadSchools.ts` |

@@ -21,13 +21,15 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    useWindowDimensions,
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../components/Avatar';
+import { PLACEHOLDER_COVER } from '../../../components/PreorderDropCard';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
-import { format12HourTime, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
+import { format12HourTime, getMediaHeroHeight, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { cloudinaryUrl } from '../../../lib/cloudinary';
@@ -72,6 +74,8 @@ export default function PreorderDropDetailScreen() {
   const { id: dropId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user, profile, isCommunityLead } = useAuth();
+  const { height: windowHeight } = useWindowDimensions();
+  const heroHeight = getMediaHeroHeight(windowHeight);
   const colors = Verandah;
 
   const [drop, setDrop] = useState<DropDetails | null>(null);
@@ -618,13 +622,32 @@ export default function PreorderDropDetailScreen() {
         {/* Cover Hero Banner */}
         {drop.image_url ? (
           <TouchableOpacity
-            style={styles.heroImageWrap}
+            style={[styles.heroImageWrap, { height: heroHeight }]}
             onPress={() => setSelectedImageUrl(drop.image_url || null)}
             activeOpacity={0.9}
           >
-            <Image source={{ uri: cloudinaryUrl(drop.image_url) }} style={styles.heroImage} contentFit="cover" transition={200} />
+            <Image
+              source={{ uri: cloudinaryUrl(drop.image_url) }}
+              style={styles.heroImage}
+              contentFit="cover"
+              contentPosition="top"
+              transition={200}
+            />
           </TouchableOpacity>
-        ) : null}
+        ) : (
+          /* Same illustrated fallback the feed tile uses, so a photoless drop
+             does not open to a blank slab of text. Not tappable — there is no
+             real photo to inspect full-screen. */
+          <View style={[styles.heroImageWrap, { height: heroHeight }]}>
+            <Image
+              source={PLACEHOLDER_COVER}
+              style={styles.heroImage}
+              contentFit="cover"
+              contentPosition="center"
+              transition={200}
+            />
+          </View>
+        )}
 
         {/* Host Header */}
         <View style={styles.hostCard}>
@@ -1590,7 +1613,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   heroImageWrap: {
-    height: 140,
     borderRadius: VerandahRadius.lg,
     overflow: 'hidden',
     marginBottom: 8,

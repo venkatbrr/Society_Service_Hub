@@ -54,8 +54,10 @@ Do not restate schema columns in `docs/features.md` — `docs/architecture.md` o
 
 When you create or modify a file in `supabase/migrations/`, finish the loop yourself:
 
-1. `npm run db:push` — apply migrations to Supabase
-2. `npx supabase gen types typescript --project-id mbzvcaoulawdugfearmj` — regenerate `lib/database.types.ts`
+1. `npm run db:push:prod` — apply migrations to Supabase
+2. `npm run types:prod` — regenerate `lib/database.types.ts`
 3. `npx tsc --noEmit` — verify
+
+**There is deliberately no unsuffixed `db:push` or `types:*` script.** Every database command is environment-suffixed (`:preprod` / `:prod`), because an unqualified push is how preprod work reaches prod by accident. The `:preprod` variants still carry a literal `PREPROD_REF_TODO` placeholder and fail loudly until that project exists — see [docs/new_features_to_implement/two-environment-setup-plan.md](docs/new_features_to_implement/two-environment-setup-plan.md).
 
 Do not leave a migration unapplied or types unregenerated. Write idempotent SQL, enable RLS with explicit policies on every new table, and end schema-changing migrations with `NOTIFY pgrst, 'reload schema';`.

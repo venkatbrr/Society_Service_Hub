@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     overflow: 'hidden',
-    marginBottom: 12,
+    marginBottom: 10,
     ...Verandah.shadowCard,
   },
   fullCardCancelled: {
@@ -292,14 +292,14 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.cream,
   },
   fullBody: {
-    padding: 12,
+    padding: 10,
   },
   fullTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 6,
-    marginBottom: 6,
+    marginBottom: 5,
   },
   categoryChip: {
     flexDirection: 'row',
@@ -330,8 +330,8 @@ const styles = StyleSheet.create({
   },
   fullTitle: {
     fontFamily: VerandahType.serifFamily,
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 18,
+    lineHeight: 22,
     fontWeight: '400',
     letterSpacing: -0.3,
     color: Verandah.textPrimary,

@@ -8,13 +8,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../components/BaseCard';
 import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { ImageViewer } from '../../components/ImageViewer';
 import { Verandah } from '../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
+import { getMediaHeroHeight, VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { cloudinaryUrl } from '../../lib/cloudinary';
 import { confirmAction } from '../../lib/confirm';
@@ -54,6 +54,8 @@ export default function CommunityEventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user, isCommunityLead, isPlatformAdmin } = useAuth();
+  const { height: windowHeight } = useWindowDimensions();
+  const heroHeight = getMediaHeroHeight(windowHeight);
 
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [contacts, setContacts] = useState<EventContact[]>([]);
@@ -206,7 +208,7 @@ export default function CommunityEventDetailScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {event.image_url ? (
           <TouchableOpacity
-            style={styles.imageWrap}
+            style={[styles.imageWrap, { height: heroHeight }]}
             onPress={() => setViewerUri(event.image_url)}
             activeOpacity={0.92}
             accessibilityRole="imagebutton"
@@ -219,7 +221,7 @@ export default function CommunityEventDetailScreen() {
             </View>
           </TouchableOpacity>
         ) : (
-          <View style={styles.imageWrap}>
+          <View style={[styles.imageWrap, { height: heroHeight }]}>
             <View style={[styles.placeholder, { backgroundColor: meta.tintSoft }]}>
               <meta.Icon size={40} color={meta.tint} aria-hidden={true} />
             </View>
@@ -370,7 +372,6 @@ const styles = StyleSheet.create({
   },
   imageWrap: {
     width: '100%',
-    height: 240,
     borderRadius: VerandahRadius.card,
     overflow: 'hidden',
     backgroundColor: Verandah.cream,

@@ -103,7 +103,7 @@ Notes:
 | Community Leads | Active `president` / `vice_president` with a **Demote** action. Blocked from demoting the last remaining lead. |
 | Funds Activation | Status, per-fund balance cards (click → fund modal with financial summary, treasurer, collectors, contributions), and **Revoke Funds Access** |
 | Community Lead Management | Appoint any active plain resident as **President** or **VP**. `platform_set_community_lead` auto-demotes the current holder of that role first, so appointing is also how you *replace*. Shown only when funds are enabled. |
-| Blocks / Towers | Enable toggle, Block/Tower label switch, add/archive blocks |
+| Blocks / Towers | Enable toggle, Block/Tower label switch, add/archive blocks. **This is the only path** — as of 2026-08-14 (`20260908000200`) the president's in-app screen is read-plus-rename, and `set_community_blocks_enabled` / `add_community_block` / `archive_community_block` are revoked from `authenticated`. See [`features.md`](features.md) §Blocks / towers. |
 | **Flats Inventory** | Canonical list of units grouped by block, total flat counts, bulk add flat numbers, and individual flat archival |
 | **Fund Roles** | **One card per fund**, each listing that fund's **Treasurer** and its **Block Collectors** (name, flat, block scope). Collectors have a Remove action; the treasurer has an **Assign / Replace** picker. Grouped per fund because both roles are fund-scoped, not community-scoped — a community with three funds has three independent treasurers. |
 | Pre-Order Food Drops & Statistics | Per-drop table (title, host, fulfillment date/time, status, orders, revenue) with totals and a ₹ sales badge |

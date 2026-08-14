@@ -459,7 +459,6 @@ export default function FoodDropsCatalogScreen() {
             return (
               <PreorderDropCard
                 drop={item}
-                isCreator={item.created_by === user?.id}
                 onPress={() => router.push(`/mcn/drops/${item.id}` as any)}
               />
             );

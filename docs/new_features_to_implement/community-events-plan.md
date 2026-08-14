@@ -1,5 +1,12 @@
 # Community events — implementation plan (2026-08-13)
 
+**Status:** shipped 2026-09-07. The optional extras are in too — resident-wide
+post/cancel notifications landed 2026-08-14 (`20260908000000`), and the poster
+card treatment plus full-screen `ImageViewer` hero followed the same day.
+Live behaviour is documented in [`../features.md`](../features.md) §Community
+events; this file is kept for the reasoning behind the decisions, not as a
+description of the current app.
+
 Cultural / sports / festival events posted by a designated role, visible to every
 resident on the Community tab, with per-event contact people reachable by call or
 WhatsApp.

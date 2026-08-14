@@ -130,7 +130,8 @@ From `VerandahLayout` — these differ by platform because web has no status bar
 
 Also exported from `constants/Verandah.ts`:
 
-- `getNetworkTileImageHeight()` → 108. Shared image height for network tiles (Pre-order Food, Community Business).
+- `getNetworkTileImageHeight(windowHeight?)` → ~11.5% of viewport (clamp 84–130). Cover height on a **feed tile** (Pre-order Food, Community Business, Community Events). It is a *consequence* of the card body, not a free dial — the tile budget is `(viewport − ~270px chrome) / 3`, so every ~65px added to the photo drops a card off the fold.
+- `getMediaHeroHeight(windowHeight?)` → 30% of viewport (clamp 150–280). Cover height on a **detail-screen hero**. See [Component Rules](#component-rules) for why the two differ so much.
 - `format12HourTime(timeStr)` → converts `"13:00"` to `"01:00 pm"`. Use this rather than hand-rolling AM/PM formatting; it passes through strings that already carry am/pm.
 
 ## Component Rules
@@ -150,6 +151,17 @@ Reuse these instead of building local variants:
 | `HeaderBackButton` | Stack header back affordance |
 | `ImageUploader` | Any Cloudinary image upload |
 | `ImageViewer` | Full-screen tap-to-dismiss photo viewer. Pair it with **every** cropped cover image — a `contentFit="cover"` thumbnail hides part of the photo, and residents need a way to see the whole thing |
+
+**Cover photo heights** are two tokens in `constants/Verandah.ts`, both viewport-relative and both fed the live height from `useWindowDimensions()`:
+
+| Token | Height | Where |
+|---|---|---|
+| `getNetworkTileImageHeight()` | ~11.5% of viewport (clamp 84–130) | Feed tiles — `PreorderDropCard`, `McnListingCard`, `EventCard`. Sized backwards from "three tiles on the fold", not chosen visually — see the source comment before changing it |
+| `getMediaHeroHeight()` | 30% of viewport (clamp 150–280) | Detail-screen heroes — food drop, business listing, event |
+
+The tile is deliberately shorter than the hero: on a tile the photo competes with the next card and the second card should peek above the fold; on a detail screen the photo is what the resident came to look at. Both use `contentPosition="top"` — `contentFit="cover"` centre-crops, which beheads people and cuts the top off a plated dish.
+
+`ChipRowSlider` needs a **bounded height slot** — its root is a horizontal `ScrollView` with no intrinsic height, so in a `flex: 1` column it stretches and its centred chips drift out of alignment with the animated pill. Wrap it in a fixed-height `View` or set `maxHeight` on `containerStyle`.
 | `DateField` | Cross-platform date picker (`input[type=date]` on web, `DateTimePicker` modal on native) |
 | `ComingSoonTile` | The placeholder card standing in for a hidden section — see below |
 | `AnimatedTileGlyph` | MCN section-card glyphs; wraps `NetworkTileIcon` in a per-kind idle motion |
@@ -316,4 +328,8 @@ Each entry should list:
 
 Current entries:
 
-- None recorded in this revision.
+- **`components/PreorderDropCard.tsx` → `ReserveButton`**
+  - *Deviation*: uses `LinearGradient`, which the general constraints tell you to avoid on card/chrome/button surfaces.
+  - *Why*: the gradient is not the button's **surface** — the fill stays a flat `Verandah.primary`. It paints only the travelling highlight (transparent → 42% white → transparent) that drifts continuously across the pill (two bands, half a cycle apart, 2.6s per traversal) to draw the eye to the CTA in a scrolling feed. A hard-edged translucent bar was tried first and reads as a glitch; soft edges are what make it look like light rather than a rectangle.
+  - *Scope*: one 44px-wide `Animated.View` clipped inside the pill's `overflow: 'hidden'`. Gated on `useReduceMotion()` and only rendered while the drop is open, so it is neither always-on nor present on muted/closed states.
+  - *Follow-up*: none required. If a second shimmering CTA appears anywhere, extract `ReserveButton` into a shared component rather than copying the gradient.

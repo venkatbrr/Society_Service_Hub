@@ -178,21 +178,47 @@ export const VerandahLayout = {
   mcnHeaderToContentGap: 4,
 };
 
+const viewportHeight = (windowHeight?: number): number =>
+  windowHeight ?? Dimensions.get('window').height;
+
 /**
- * Shared height token for image-based network tiles
- * (used by Pre-order Food and Community Business cards) and for the hero photo
- * on the matching detail screens.
+ * Cover-photo height on a **feed tile** — Pre-order Food, Community Business,
+ * and Community Events cards.
  *
- * The cover is 30% of the viewport height rather than a fixed pixel count, so a
- * food photo reads as the subject of the card on a phone instead of a thin
- * strip above the text. Clamped so it neither disappears on a short device nor
- * eats a whole tablet screen. Pass the live height from `useWindowDimensions()`
- * so the tile re-measures on rotation and on browser resize.
+ * Sized backwards from a hard requirement: **at least three tiles visible at
+ * once**. Screen chrome above and below the list (header, segmented control,
+ * chip row, bottom nav) costs a roughly fixed ~270px, so on a phone the list
+ * viewport is about `H - 270` and each tile gets `(H - 270) / 3` — around 195px
+ * on a 853px screen, including its 10px gap. Whatever the card body does not
+ * spend, the photo gets.
+ *
+ * That makes the photo height a *consequence of the body*, not a free dial.
+ * The body was cut to ~72px (host row + one-line title; the timing chips moved
+ * onto the photo as an overlay, and the description and the redundant CTA
+ * button were dropped) which is what pays for ~14% of viewport here. Growing
+ * the photo further now costs a tile: every ~65px added drops one card off the
+ * fold. The detail screen is where the photo gets real room — see
+ * `getMediaHeroHeight()`.
+ *
+ * Pass the live height from `useWindowDimensions()` so the tile re-measures on
+ * rotation and on browser resize — the no-argument form reads `Dimensions` once
+ * and will not update.
  */
-export const getNetworkTileImageHeight = (windowHeight?: number): number => {
-  const height = windowHeight ?? Dimensions.get('window').height;
-  return Math.round(Math.min(280, Math.max(150, height * 0.3)));
-};
+export const getNetworkTileImageHeight = (windowHeight?: number): number =>
+  Math.round(Math.min(130, Math.max(84, viewportHeight(windowHeight) * 0.115)));
+
+/**
+ * Cover-photo height on a **detail screen** hero — the same photo after the
+ * resident has chosen to open it.
+ *
+ * Deliberately much taller than the tile (30% vs ~9%): a tile is competing with
+ * the two below it for the fold, a detail screen is the thing you came to look
+ * at and has nothing to compete with.
+ * Every hero using this must be tappable and paired with `ImageViewer`, since
+ * `contentFit="cover"` still crops.
+ */
+export const getMediaHeroHeight = (windowHeight?: number): number =>
+  Math.round(Math.min(280, Math.max(150, viewportHeight(windowHeight) * 0.3)));
 
 /**
  * Formats a 24-hour time string (e.g. "13:00", "09:30")

@@ -70,6 +70,9 @@
       --serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
       --sans:  'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --ease:  cubic-bezier(.16, 1, .3, 1);
+      /* Gentler curve for shadows. --ease front-loads ~80% of the change into the
+         first 100ms, which reads as the shadow popping in rather than growing. */
+      --ease-shadow: cubic-bezier(.33, .1, .38, 1);
 
       --shadow-soft:  0 6px 20px rgba(15,55,50,.10);
       --shadow-lift:  0 20px 44px rgba(15,55,50,.20);
@@ -109,7 +112,9 @@
     .wn-btn {
       display: inline-flex; align-items: center; gap: 8px;
       border-radius: 14px; font-weight: 600; font-size: 15.5px;
-      padding: 15px 28px; transition: all .2s ease; white-space: nowrap;
+      padding: 15px 28px; white-space: nowrap;
+      transition: background .2s ease, border-color .2s ease, color .2s ease,
+                  transform .2s ease, box-shadow .5s var(--ease-shadow);
     }
     .wn-btn-primary { background: var(--ink); color: var(--on-dark); }
     .wn-btn-primary:hover { background: var(--ink-hover); color: var(--on-dark); transform: translateY(-2px); box-shadow: 0 14px 30px rgba(15,55,50,.22); }
@@ -181,7 +186,7 @@
       position: relative; overflow: hidden; border-radius: 24px; padding: 34px;
       min-height: 230px; display: flex; flex-direction: column; justify-content: space-between;
       box-shadow: var(--shadow-soft);
-      transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+      transition: transform .35s var(--ease), box-shadow .6s var(--ease-shadow);
     }
     .wn-tile:hover { transform: translateY(-6px); }
     .wn-tile-wide { padding: 38px; min-height: 250px; }
@@ -193,6 +198,17 @@
     .wn-tile-gold:hover { box-shadow: 0 20px 44px rgba(133,79,11,.26); }
     .wn-tile-cream { background: var(--cream); border: 1px solid var(--hair); box-shadow: 0 6px 20px rgba(15,55,50,.08); }
     .wn-tile-cream:hover { box-shadow: 0 20px 44px rgba(15,55,50,.16); }
+    .wn-tile-emerald { background: var(--emerald); box-shadow: 0 6px 20px rgba(15,110,86,.14); }
+    .wn-tile-emerald:hover { box-shadow: 0 20px 44px rgba(15,110,86,.26); }
+
+    /* Full-width closing tile — icon and copy side by side rather than stacked */
+    .wn-span3 { grid-column: span 3; }
+    .wn-tile-row {
+      flex-direction: row; align-items: flex-start; justify-content: flex-start;
+      gap: 26px; min-height: 0; padding: 34px 38px;
+    }
+    /* Optically aligns the icon chip with the serif heading's cap height */
+    .wn-tile-row .wn-tile-icon { margin-top: 5px; }
 
     .wn-tile-icon {
       position: relative; width: 50px; height: 50px; border-radius: 14px;
@@ -209,7 +225,7 @@
     .wn-card {
       background: #fff; border: 1px solid rgba(15,55,50,.09); border-radius: 20px; padding: 28px;
       box-shadow: var(--shadow-card);
-      transition: transform .35s var(--ease), box-shadow .35s var(--ease), border-color .35s ease;
+      transition: transform .35s var(--ease), box-shadow .6s var(--ease-shadow), border-color .35s ease;
     }
     .wn-card:hover { transform: translateY(-5px); box-shadow: 0 16px 34px rgba(15,55,50,.13); border-color: var(--hair-strong); }
     .wn-chip {
@@ -326,7 +342,8 @@
       .wn-h2 { font-size: 30px !important; letter-spacing: -.5px !important; }
       .wn-grid3, .wn-grid2, .wn-roles { grid-template-columns: 1fr; }
       .wn-roles { gap: 16px; }
-      .wn-span2 { grid-column: auto; }
+      .wn-span2, .wn-span3 { grid-column: auto; }
+      .wn-tile-row { flex-direction: column; align-items: flex-start; gap: 18px; padding: 34px; }
       .wn-panel { padding: 44px 26px; }
       .wn-panel-ink { padding: 44px 26px; }
       .wn-panel-cream { padding: 44px 26px; }
@@ -464,6 +481,18 @@
         <p style="color:#5B6360;max-width:440px">Resident-run businesses, carpooling, and a parent corner — the day-to-day coordination of your society, brought into one tab.</p>
       </div>
     </div>
+
+    <!-- Service reminders -->
+    <div data-reveal class="wn-tile wn-tile-row wn-tile-emerald wn-span3">
+      <svg class="wn-mark" width="240" height="240" viewBox="0 0 60 60" data-parallax="0.05" style="right:-30px;top:-64px;opacity:.09" aria-hidden="true"><path d="M13 52 L13 30 A17 17 0 0 1 47 30 L47 52 L41 52 L41 30 A11 11 0 0 0 19 30 L19 52 Z" fill="#F0EDE3"/></svg>
+      <div class="wn-tile-icon wn-tile-icon-lg" style="background:rgba(240,237,227,.14)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#DDA94A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </div>
+      <div class="wn-tile-body">
+        <h3 class="wn-h3-serif" style="color:#F5F3EE">Service reminders, kept private</h3>
+        <p style="color:rgba(240,237,227,.78);max-width:720px;font-size:15.5px;line-height:1.6">Water purifier, AC service, gas refill, pest control — set a schedule once and Wooru nudges you before it falls due. Your reminders are yours alone: no neighbour, committee member or admin ever sees them.</p>
+      </div>
+    </div>
   </div>
 
   <!-- Secondary grid -->
@@ -484,9 +513,9 @@
       <p>An emergency contact directory plus an opt-in blood-donor registry, filterable by group.</p>
     </div>
     <div data-reveal class="wn-card">
-      <div class="wn-chip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
-      <h3>Service reminders</h3>
-      <p>Private appliance and maintenance schedules with due-date alerts — yours alone, never shared.</p>
+      <div class="wn-chip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></div>
+      <h3>Installs like an app</h3>
+      <p>Add Wooru to your home screen straight from the browser — no app store download needed.</p>
     </div>
     <div data-reveal data-reveal-delay="60" class="wn-card">
       <div class="wn-chip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/></svg></div>

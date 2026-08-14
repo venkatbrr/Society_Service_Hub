@@ -6,7 +6,7 @@ import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../components/Avatar';
 import { ImageUploader } from '../../../components/ImageUploader';
@@ -14,7 +14,7 @@ import { ImageViewer } from '../../../components/ImageViewer';
 import { RatingStars } from '../../../components/RatingStars';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
-import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
+import { getMediaHeroHeight, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { cloudinaryUrl } from '../../../lib/cloudinary';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
@@ -48,6 +48,8 @@ export default function ListingDetailScreen() {
   const { id: listingId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user, communityId, refreshSession, isCommunityLead } = useAuth();
+  const { height: windowHeight } = useWindowDimensions();
+  const heroHeight = getMediaHeroHeight(windowHeight);
   const colors = Verandah;
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -372,8 +374,9 @@ export default function ListingDetailScreen() {
         >
           <Image
             source={{ uri: cloudinaryUrl(listing.image_url) }}
-            style={styles.heroImage}
+            style={[styles.heroImage, { height: heroHeight }]}
             contentFit="cover"
+            contentPosition="top"
             transition={300}
           />
         </TouchableOpacity>
@@ -800,7 +803,6 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: '100%',
-    height: 105,
     borderRadius: VerandahRadius.md,
     marginBottom: 6,
   },

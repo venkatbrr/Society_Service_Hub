@@ -1,13 +1,151 @@
 import { Share07 } from '@untitledui/icons/Share07';
 import { Image } from 'expo-image';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { format12HourTime, getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { cloudinaryUrl } from '../lib/cloudinary';
 import { shareOrCopy } from '../lib/share';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
+import { useReduceMotion } from './useReduceMotion';
+
+/**
+ * Cover shown when a host publishes a drop without a photo.
+ *
+ * An **illustration, not a photograph** — that is the point. A realistic photo
+ * of a thali on a paid listing reads as a picture of the food you are about to
+ * buy; a drawn tiffin spread cannot be mistaken for the host's actual dish, so
+ * it fills the space honestly.
+ *
+ * Bundled rather than remote so it renders offline and costs no request. The
+ * source was 1568×964 PNG / 2.1 MB; it ships at 1200×657 JPEG / 143 KB with the
+ * dead background margin trimmed top and bottom, which keeps the food filling
+ * the frame once a tile centre-crops it into a wide band. Re-encode rather than
+ * dropping the full-size original back in — and keep the `.jpg` extension
+ * matching the real file, or Android release builds fail to compile the
+ * resource (see docs/CLAUDE.md §9).
+ */
+export const PLACEHOLDER_COVER = require('../assets/images/food-drop-placeholder.jpg');
+
+/** Width of the travelling highlight, in px. */
+const SHEEN_WIDTH = 44;
+
+/**
+ * One full traversal. Two bands run half a cycle apart, so a highlight crosses
+ * the pill every `SHEEN_DURATION / 2` — slow enough to read as a drifting glow
+ * rather than a spinner.
+ */
+const SHEEN_DURATION = 2600;
+
+/**
+ * The drop's call to action, sitting on the bottom-right of the cover photo.
+ *
+ * While the drop is open a soft highlight sweeps across it every few seconds —
+ * enough to catch the eye in a scrolling feed, short of blinking at the user.
+ * The button fill stays a flat `Verandah.primary`; the gradient is only the
+ * moving highlight, never the surface (see verandah.md's out-of-register note).
+ *
+ * Closed and completed drops get a muted, static version: there is nothing to
+ * reserve, so animating it would be advertising a dead end.
+ */
+function ReserveButton({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const reduceMotion = useReduceMotion();
+  const [width, setWidth] = useState(0);
+  const drive = useRef(new Animated.Value(0)).current;
+
+  const animate = active && !reduceMotion && width > 0;
+
+  useEffect(() => {
+    if (!animate) return;
+
+    drive.setValue(0);
+    // No pause between passes, and `Easing.linear` — an in/out curve slows at
+    // the ends, which reintroduces the stop-start rhythm a delay would.
+    const loop = Animated.loop(
+      Animated.timing(drive, {
+        toValue: 1,
+        duration: SHEEN_DURATION,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [animate, drive]);
+
+  const travelStart = -SHEEN_WIDTH;
+  const travelEnd = width + SHEEN_WIDTH;
+  const travelMid = (travelStart + travelEnd) / 2;
+
+  return (
+    <TouchableOpacity
+      style={[styles.reserveBtn, !active && styles.reserveBtnMuted]}
+      onPress={onPress}
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <Text style={[styles.reserveText, !active && styles.reserveTextMuted]} numberOfLines={1}>
+        {label}
+      </Text>
+
+      {animate ? (
+        <>
+          {/* Band A: start -> end across the full cycle. */}
+          <SheenBand
+            translateX={drive.interpolate({
+              inputRange: [0, 1],
+              outputRange: [travelStart, travelEnd],
+            })}
+          />
+          {/* Band B: the same travel, offset half a cycle, so light is always
+              on the pill. A single band is off-screen for ~40% of its cycle
+              (it has to fully clear both edges), which is the gap that reads as
+              "the glow is late coming back". The jump from end to start at the
+              half-way mark happens beyond the clip, so it is never seen. Same
+              trick as the MCN disc's two ping rings. */}
+          <SheenBand
+            translateX={drive.interpolate({
+              inputRange: [0, 0.5, 0.5001, 1],
+              outputRange: [travelMid, travelEnd, travelStart, travelMid],
+            })}
+          />
+        </>
+      ) : null}
+    </TouchableOpacity>
+  );
+}
+
+function SheenBand({ translateX }: { translateX: Animated.AnimatedInterpolation<number> }) {
+  return (
+    <Animated.View
+      pointerEvents="none"
+      aria-hidden={true}
+      style={[
+        styles.sheen,
+        { width: SHEEN_WIDTH, transform: [{ translateX }, { rotate: '18deg' }] },
+      ]}
+    >
+      <LinearGradient
+        colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.38)', 'rgba(255,255,255,0)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={StyleSheet.absoluteFill}
+      />
+    </Animated.View>
+  );
+}
 
 export interface PreorderDropItem {
   id: string;
@@ -35,13 +173,11 @@ export interface PreorderDropItem {
 
 interface PreorderDropCardProps {
   drop: PreorderDropItem;
-  isCreator?: boolean;
   onPress: () => void;
 }
 
 export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
   drop,
-  isCreator = false,
   onPress,
 }) => {
   const { height: windowHeight } = useWindowDimensions();
@@ -141,6 +277,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
     .filter(Boolean)
     .join(' · ');
 
+
   const handleShare = async (e: any) => {
     e.stopPropagation();
     // Route through the OG-preview endpoint (api/share-drop.ts) so WhatsApp/
@@ -167,26 +304,36 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
       <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
         {/* Cover photo with overlaid cut-off badge */}
         <View style={[styles.coverImageWrap, { height: coverHeight }]}>
-          {drop.image_url ? (
-            <Image
-              source={{ uri: cloudinaryUrl(drop.image_url) }}
-              style={styles.coverImage}
-              contentFit="cover"
-              contentPosition="top"
-              transition={200}
+          {/* A host who uploads nothing gets the bundled thali rather than an
+              empty grey box reading "food photo", which looked like an
+              unfinished screen. Real photos crop from the top (that is where
+              the dish usually sits); the placeholder crops from the centre,
+              which is where its plate is. */}
+          <Image
+            source={drop.image_url ? { uri: cloudinaryUrl(drop.image_url) } : PLACEHOLDER_COVER}
+            style={styles.coverImage}
+            contentFit="cover"
+            contentPosition={drop.image_url ? 'top' : 'center'}
+            transition={200}
+          />
+
+          {/* CTA overlays the photo's bottom-right instead of taking a full
+              row under the body — it keeps the affordance while costing the
+              tile no height. */}
+          <View style={styles.reserveSlot}>
+            <ReserveButton
+              label={isOpen ? 'Reserve now' : 'View menu'}
+              active={isOpen}
+              onPress={onPress}
             />
-          ) : (
-            <View style={styles.coverPlaceholder}>
-              <Text style={styles.coverPlaceholderText}>food photo</Text>
-            </View>
-          )}
+          </View>
         </View>
 
         {/* Body */}
         <View style={styles.body}>
           {/* Host row */}
           <View style={styles.header}>
-            <Avatar name={creatorName} size={32} />
+            <Avatar name={creatorName} size={28} />
             <View style={styles.headerText}>
               <Text style={styles.creatorName} numberOfLines={1}>
                 {creatorName}
@@ -202,7 +349,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
           </View>
 
           {/* Title */}
-          <Text style={styles.title}>{drop.title}</Text>
+          <Text style={styles.title} numberOfLines={1}>{drop.title}</Text>
 
           {/* Cut-off + delivery, side by side */}
           <View style={styles.metaRow}>
@@ -217,31 +364,11 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
                 Delivery {deliveryFormatted}
               </Text>
             </View>
-
           </View>
 
-          {drop.description ? (
-            <Text style={styles.description} numberOfLines={2}>
-              {drop.description}
-            </Text>
-          ) : null}
-
-          {/* Hosts manage their own drop from inside the detail screen, so the
-              card carries no action for them — tapping it opens the drop. */}
-          {isCreator ? null : (
-            <>
-              <View style={styles.divider} />
-              <TouchableOpacity
-                style={[styles.actionBtn, !isOpen && styles.actionBtnDisabled]}
-                onPress={onPress}
-                activeOpacity={0.85}
-              >
-                <Text style={[styles.actionBtnText, !isOpen && styles.actionBtnTextDisabled]}>
-                  {isOpen ? 'Reserve now' : 'View Menu Details'}
-                </Text>
-              </TouchableOpacity>
-            </>
-          )}
+          {/* No description on the tile — it is one tap away, and leaving it in
+              made card heights inconsistent (many drops have none) as well as
+              costing a tile off the fold. */}
         </View>
       </TouchableOpacity>
     </View>
@@ -250,7 +377,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 12,
+    marginBottom: 10,
     borderRadius: VerandahRadius.card,
     borderWidth: 0.5,
     borderColor: Verandah.borderHair,
@@ -259,12 +386,12 @@ const styles = StyleSheet.create({
     ...Verandah.shadowCard,
   },
   body: {
-    padding: 12,
+    padding: 8,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   headerText: {
     flex: 1,
@@ -296,49 +423,72 @@ const styles = StyleSheet.create({
     color: Verandah.primaryFg,
     fontSize: 12.5,
   },
-  coverPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: Verandah.cream,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  coverPlaceholderText: {
-    ...VerandahType.caption,
-    fontSize: 11.5,
-    color: Verandah.textFaint,
-    backgroundColor: Verandah.card,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: VerandahRadius.pill,
-    overflow: 'hidden',
-  },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 6,
+    gap: 6,
+    marginTop: 5,
+  },
+  reserveSlot: {
+    position: 'absolute',
+    right: 8,
+    bottom: 8,
+  },
+  reserveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: Verandah.primary,
+    // Clips the travelling highlight to the pill.
+    overflow: 'hidden',
+    ...Verandah.shadowRaised,
+  },
+  reserveBtnMuted: {
+    backgroundColor: Verandah.cardMuted,
+  },
+  reserveText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 13,
+    fontWeight: '700',
+    color: Verandah.primaryFg,
+  },
+  reserveTextMuted: {
+    color: Verandah.textSecondary,
+  },
+  sheen: {
+    position: 'absolute',
+    // Overshoots vertically so the 18deg rotation still covers the pill's
+    // full height at both ends of its travel.
+    top: -14,
+    bottom: -14,
+    left: 0,
   },
   cutoffBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: VerandahRadius.pill,
+    // Overlaid on the photo now, so the row is width-bounded (left/right: 8).
+    // Both chips must shrink or a long cut-off label pushes delivery off-card.
+    flexShrink: 1,
   },
   cutoffBadgeText: {
     fontSize: 11,
     fontWeight: '700',
     fontFamily: VerandahType.sansFamily,
+    flexShrink: 1,
   },
   deliveryChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: VerandahRadius.pill,
     backgroundColor: Verandah.accentSoft,
     flexShrink: 1,
@@ -349,23 +499,6 @@ const styles = StyleSheet.create({
     color: Verandah.green600,
     fontFamily: VerandahType.sansFamily,
     flexShrink: 1,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Verandah.borderHair,
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  manageBadgeBtn: {
-    backgroundColor: '#EEF2FF',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: VerandahRadius.pill,
-  },
-  manageBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Verandah.accent,
   },
   coverImageWrap: {
     width: '100%',
@@ -378,67 +511,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: VerandahType.serifFamily,
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 18,
+    lineHeight: 22,
     fontWeight: '400',
     letterSpacing: -0.3,
     color: Verandah.textPrimary,
-  },
-  description: {
-    ...VerandahType.body,
-    fontSize: 12.5,
-    color: Verandah.textSecondary,
-    marginTop: 6,
-    lineHeight: 17,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderTopWidth: 0.5,
-    borderTopColor: Verandah.border,
-    paddingTop: 6,
-  },
-  footerLeft: {
-    flex: 1,
-    paddingRight: 8,
-  },
-  orderStats: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Verandah.textSecondary,
-    fontFamily: VerandahType.sansFamily,
-    flexShrink: 1,
-  },
-  shareInlineBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    marginTop: 2,
-    alignSelf: 'flex-start',
-  },
-  shareInlineText: {
-    ...VerandahType.captionBold,
-    color: Verandah.accent,
-    fontSize: 10,
-  },
-  actionBtn: {
-    backgroundColor: Verandah.primary,
-    paddingVertical: 11,
-    borderRadius: VerandahRadius.button,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionBtnDisabled: {
-    backgroundColor: Verandah.cardMuted,
-  },
-  actionBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Verandah.primaryFg,
-    fontFamily: VerandahType.sansFamily,
-  },
-  actionBtnTextDisabled: {
-    color: Verandah.textSecondary,
   },
 });

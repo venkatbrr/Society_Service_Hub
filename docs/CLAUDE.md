@@ -41,7 +41,7 @@ A **Supabase MCP server** is also configured (read-write, pinned to `mbzvcaoulaw
 
 | Task | Use | Why |
 |------|-----|-----|
-| Apply a schema change | CLI: `npm run db:push` | MCP `apply_migration` writes to the remote DB with no local file, desyncing `supabase/migrations/` from deployed schema. Git stays the source of truth. |
+| Apply a schema change | CLI: `npm run db:push:preprod` / `:prod` | MCP `apply_migration` writes to the remote DB with no local file, desyncing `supabase/migrations/` from deployed schema. Git stays the source of truth. |
 | Regenerate types | CLI: `npx supabase gen types ...` | Writes to disk. MCP `generate_typescript_types` returns all of `lib/database.types.ts` into context — by far the most expensive call available. |
 | Bulk output of any kind | CLI, redirected to a file | Then read only the slice you need. |
 | Inspect live schema / RLS policies | MCP `list_tables` | Short answer, no script to write. |
@@ -61,7 +61,7 @@ Rule of thumb: **if the result belongs in a file, use the CLI; if the result is 
 4. **Use `.maybeSingle()`, not `.single()`**, for single-row reads. `.single()` throws when zero rows match.
 5. **Deploy migrations in the same change set** — see §6.
 6. **Update docs in the same change set** — see §7.
-7. **Verandah tokens only.** No raw hex, no ad-hoc font sizes, no shadows or elevation. See §4.
+7. **Verandah tokens only.** No raw hex, no ad-hoc font sizes, no hand-written shadow/elevation values (spread `Verandah.shadowCard` / `shadowRaised` instead). See §4.
 
 ---
 
@@ -310,6 +310,7 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Hardcoding `/landing.html` for a signed-out redirect | In a deployed build the landing page **is** the origin (`build-admin.js` copies it to `dist/index.html` and moves the Expo shell to `dist/app.html`), so `/landing.html` shows a second, uglier URL for the same page. Use `goToLanding()` from [`lib/siteUrl.ts`](../lib/siteUrl.ts), which returns `/` in production and `/landing.html` under `__DEV__` — the dev server has no such swap, so redirecting to `/` there loads the SPA, which finds no session and redirects to `/` again, forever. |
 | Calling `add_community_block()` / `set_community_blocks_enabled()` / `archive_community_block()` from the app | `EXECUTE` was revoked from `authenticated` on 2026-08-14 (`20260908000200`). Block inventory is platform-admin-only; the admin console's `platform_add_community_block` / `platform_set_blocks_enabled` / `platform_archive_community_block` are the only path. `rename_community_block()` is still granted — it is cosmetic and reversible. |
 | Assuming `communityHasLead` is correct on first render | Like `fundsEnabled`, it loads in `AuthContext`'s second, non-blocking phase. `false` on the first frame means "not known yet", not "no president". Its lookup deliberately **fails open** (`true` on error) so a transient failure cannot hide an established community's funds behind a "no president" notice. |
-| Reading `getNetworkTileImageHeight()` with no argument inside a component | It falls back to `Dimensions.get('window')`, captured once. Pass the live height from `useWindowDimensions()` so the cover re-measures on rotation and browser resize. |
+| Reading `getNetworkTileImageHeight()` with no argument inside a component | It falls back to `Dimensions.get('window')`, captured once. Pass the live height from `useWindowDimensions()` so the cover re-measures on rotation and browser resize. Two tokens, don't mix them: `getNetworkTileImageHeight()` = ~11.5% (clamp 84–130) for a **feed tile**, `getMediaHeroHeight()` = 30% (clamp 150–280) for a **detail-screen hero**. The tile's 9% looks arbitrarily small in isolation — it is derived from a hard "at least three tiles on the fold" requirement, so raising it silently pushes the third tile off screen. Read the comment above the token before retuning it. |
+| Putting a `ChipRowSlider` straight into a `flex: 1` column | Its root is a horizontal `ScrollView`, which has **no intrinsic height** — in a flex column it stretches to whatever space is going, and because `contentRow` centres its chips the measured chip boxes and the animated pill end up at different vertical offsets, so the row visibly jumps as you change selection. Always give it a bounded slot: a wrapper `View` with a fixed `height` (see `chipsSlot` in `app/events/index.tsx`) or `maxHeight` on `containerStyle` (see `app/mcn/business.tsx`). |
 | A `contentFit="cover"` image with no `contentPosition` | Cover centre-crops, which beheads people and cuts the top off food. Cover photos use `contentPosition="top"` and are paired with `ImageViewer` so the full photo is still reachable. |
 | `ChipRowSlider` for an optional single-select field (nullable value) | It always renders its animated pill on some chip — `resolvedValue = value ?? chips[0].key` — so a `null` value still shows the first chip as "selected". Fine for tabs/segments that always have a real value; wrong for an optional field like an event's start/end time. Use a plain chip row (`TouchableOpacity` + local styles, see `TimeChipRow` in `app/events/add.tsx`) when "nothing selected" must be a real, visible state. |
