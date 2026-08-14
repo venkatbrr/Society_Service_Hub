@@ -1,17 +1,19 @@
 import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
+import { Award01 } from '@untitledui/icons/Award01';
 import { ChevronDown } from '@untitledui/icons/ChevronDown';
 import { ChevronUp } from '@untitledui/icons/ChevronUp';
 import { SearchLg } from '@untitledui/icons/SearchLg';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, RefreshControl, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../components/Avatar';
 import { HeaderBackButton } from '../components/HeaderBackButton';
 import { Verandah } from '../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
+import { confirmAction } from '../lib/confirm';
 import { replaceTracked } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
 import { useWebPullToRefresh } from '../components/useWebPullToRefresh';
@@ -32,7 +34,7 @@ export default function ResidentsScreen() {
   const router = useRouter();
   const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
   const colors = Verandah;
-  const { communityId, appRole, isPlatformAdmin, isCommunityLead, blocksEnabled } = useAuth();
+  const { communityId, appRole, isPlatformAdmin, isCommunityLead, blocksEnabled, communityHasLead } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -141,34 +143,28 @@ export default function ResidentsScreen() {
 
   const handleRemoveResident = () => {
     if (!selectedResident) return;
-    Alert.alert(
-      'Remove resident?',
-      `Remove ${selectedResident.full_name || 'this resident'} from the community? They will need to use a code to rejoin.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            setRemoving(true);
-            try {
-              const { error } = await supabase.rpc('community_lead_remove_resident', {
-                p_target_profile_id: selectedResident.id,
-              });
-              if (error) throw error;
+    confirmAction({
+      title: 'Remove resident?',
+      message: `Remove ${selectedResident.full_name || 'this resident'} from the community? They will need to use a code to rejoin.`,
+      confirmLabel: 'Remove',
+      onConfirm: async () => {
+        setRemoving(true);
+        try {
+          const { error } = await supabase.rpc('community_lead_remove_resident', {
+            p_target_profile_id: selectedResident.id,
+          });
+          if (error) throw error;
 
-              Toast.show({ type: 'success', text1: 'Resident removed' });
-              setSelectedResident(null);
-              await loadResidents(false);
-            } catch (error: any) {
-              Toast.show({ type: 'error', text1: 'Failed to remove resident', text2: error.message });
-            } finally {
-              setRemoving(false);
-            }
-          },
-        },
-      ]
-    );
+          Toast.show({ type: 'success', text1: 'Resident removed' });
+          setSelectedResident(null);
+          await loadResidents(false);
+        } catch (error: any) {
+          Toast.show({ type: 'error', text1: 'Failed to remove resident', text2: error.message });
+        } finally {
+          setRemoving(false);
+        }
+      },
+    });
   };
 
   const pullToRefresh = useWebPullToRefresh(() => loadResidents(true), refreshing);
@@ -182,6 +178,18 @@ export default function ResidentsScreen() {
           <Text style={styles.subtitle}>{residents.length} neighbors in community</Text>
         </View>
       </View>
+
+      {/* The directory is where residents look to find out who is in charge.
+          When the seat is empty, say so here rather than leaving them to infer
+          it from the absence of a President badge on every row. */}
+      {!loading && !communityHasLead ? (
+        <View style={styles.noLeadNotice}>
+          <Award01 size={15} color={Verandah.goldInk} aria-hidden={true} />
+          <Text style={styles.noLeadNoticeText}>
+            No president or vice president has been appointed for your community yet.
+          </Text>
+        </View>
+      ) : null}
 
       <View style={styles.searchWrap}>
         <SearchLg size={16} color={Verandah.textTertiary} aria-hidden={true} />
@@ -352,6 +360,25 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: Verandah.textSecondary,
     marginTop: 2,
+  },
+  noLeadNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    borderRadius: VerandahRadius.md,
+    backgroundColor: Verandah.sand,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  noLeadNoticeText: {
+    flex: 1,
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12,
+    lineHeight: 16,
+    color: Verandah.goldInk,
   },
   searchWrap: {
     flexDirection: 'row',

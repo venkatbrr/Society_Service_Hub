@@ -3,13 +3,14 @@ import { Building05 } from '@untitledui/icons/Building05';
 import { ChevronRight } from '@untitledui/icons/ChevronRight';
 import { Edit01 } from '@untitledui/icons/Edit01';
 import { File06 } from '@untitledui/icons/File06';
+import { ShieldTick } from '@untitledui/icons/ShieldTick';
 import { LogOut01 } from '@untitledui/icons/LogOut01';
 import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
 import { Tool01 } from '@untitledui/icons/Tool01';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Modal, Platform, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BlockPicker } from '../../components/BlockPicker';
 import { Rupees } from '../../components/Rupees';
@@ -19,6 +20,7 @@ import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { replaceTracked } from '../../lib/navigation';
+import { goToLanding } from '../../lib/siteUrl';
 import { supabase } from '../../lib/supabase';
 
 export default function ProfileScreen() {
@@ -130,7 +132,10 @@ export default function ProfileScreen() {
 
   const handleSignOut = async () => {
     await signOut();
-    if (Platform.OS !== 'web') replaceTracked(router, '/login');
+    // Web users land on the public home page, not the login form — signing out
+    // means "I'm done", not "log me in as someone else". Native has no landing
+    // page, so it goes to /login.
+    if (!goToLanding()) replaceTracked(router, '/login');
   };
 
   const saveMyBlock = async () => {
@@ -279,8 +284,11 @@ export default function ProfileScreen() {
 
           <View style={styles.menuDivider} />
 
+          {/* Two rows, not one combined "Terms & privacy": each document has
+              its own public URL (wooru.in/terms, wooru.in/privacy) and residents
+              look for them by name. `?doc=` opens the right tab directly. */}
           <TouchableOpacity
-            onPress={() => router.push('/legal' as any)}
+            onPress={() => router.push('/legal?doc=terms' as any)}
             style={styles.menuRow}
             activeOpacity={0.82}
           >
@@ -288,8 +296,25 @@ export default function ProfileScreen() {
               <File06 size={18} color={Verandah.accent} aria-hidden={true} />
             </View>
             <View style={styles.adminContent}>
-              <Text style={styles.adminTitle}>Terms &amp; privacy</Text>
-              <Text style={styles.adminCopy}>Terms of service &amp; privacy</Text>
+              <Text style={styles.adminTitle}>Terms of service</Text>
+              <Text style={styles.adminCopy}>What you agree to by using Wooru</Text>
+            </View>
+            <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          <TouchableOpacity
+            onPress={() => router.push('/legal?doc=privacy' as any)}
+            style={styles.menuRow}
+            activeOpacity={0.82}
+          >
+            <View style={[styles.adminIconWrap, { backgroundColor: Verandah.accentSoft }]}>
+              <ShieldTick size={18} color={Verandah.accent} aria-hidden={true} />
+            </View>
+            <View style={styles.adminContent}>
+              <Text style={styles.adminTitle}>Privacy policy</Text>
+              <Text style={styles.adminCopy}>What we collect and why</Text>
             </View>
             <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
           </TouchableOpacity>

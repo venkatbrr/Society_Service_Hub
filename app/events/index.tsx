@@ -1,7 +1,7 @@
 import { Plus } from '@untitledui/icons/Plus';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { ChipRowSlider } from '../../components/ChipRowSlider';
@@ -77,6 +77,21 @@ export default function CommunityEventsScreen() {
     return events.filter((e) => e.category === category);
   }, [events, category]);
 
+  // Only offer the categories this community actually posts in. Showing all six
+  // every time made an empty screen look like a filter problem.
+  const availableCategories = useMemo(() => {
+    const present = new Set(events.map((e) => e.category));
+    return EVENT_CATEGORIES.filter((c) => present.has(c));
+  }, [events]);
+
+  // A stale category filter after switching scope would show an empty list with
+  // no obvious cause, so drop back to "All" when the chip disappears.
+  useEffect(() => {
+    if (category !== 'all' && !availableCategories.includes(category)) {
+      setCategory('all');
+    }
+  }, [availableCategories, category]);
+
   const handleBack = () => goBackSmart(router, '/events');
 
   return (
@@ -99,17 +114,19 @@ export default function CommunityEventsScreen() {
         trackStyle={styles.scopeTrack}
       />
 
-      <ChipRowSlider<EventCategory | 'all'>
-        value={category}
-        onChange={setCategory}
-        chips={[
-          { key: 'all', label: 'All' },
-          ...EVENT_CATEGORIES.map((c) => ({ key: c, label: eventCategoryMeta(c).label })),
-        ]}
-        containerStyle={styles.chipsRow}
-        activeColor={Verandah.primaryFg}
-        inactiveColor={Verandah.textPrimary}
-      />
+      {availableCategories.length > 1 ? (
+        <ChipRowSlider<EventCategory | 'all'>
+          value={category}
+          onChange={setCategory}
+          chips={[
+            { key: 'all', label: 'All' },
+            ...availableCategories.map((c) => ({ key: c, label: eventCategoryMeta(c).label })),
+          ]}
+          containerStyle={styles.chipsRow}
+          activeColor={Verandah.primaryFg}
+          inactiveColor={Verandah.textPrimary}
+        />
+      ) : null}
 
       {loading ? (
         <View style={styles.loaderWrap}>

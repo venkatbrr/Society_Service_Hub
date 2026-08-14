@@ -7,7 +7,6 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     ScrollView,
     StyleSheet,
     Switch,
@@ -23,6 +22,7 @@ import { Verandah } from '../../constants/Colors';
 import { EMERGENCY_CATEGORY_META, EMERGENCY_CATEGORY_ORDER, EmergencyCategory } from '../../constants/sos';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { confirmAction } from '../../lib/confirm';
 import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
@@ -215,23 +215,21 @@ export default function ManageEmergencyContactsScreen() {
   };
 
   const onDelete = (row: EmergencyContactRow) => {
-    Alert.alert('Delete emergency contact?', `${row.name} will be removed from SOS listings.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const { error } = await supabase.from('emergency_contacts').delete().eq('id', row.id);
-            if (error) throw error;
-            Toast.show({ type: 'success', text1: 'Emergency contact deleted' });
-            await loadContacts(0, true);
-          } catch (error: any) {
-            Toast.show({ type: 'error', text1: 'Unable to delete contact', text2: error.message });
-          }
-        },
+    confirmAction({
+      title: 'Delete emergency contact?',
+      message: `${row.name} will be removed from SOS listings.`,
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase.from('emergency_contacts').delete().eq('id', row.id);
+          if (error) throw error;
+          Toast.show({ type: 'success', text1: 'Emergency contact deleted' });
+          await loadContacts(0, true);
+        } catch (error: any) {
+          Toast.show({ type: 'error', text1: 'Unable to delete contact', text2: error.message });
+        }
       },
-    ]);
+    });
   };
 
   const loadMore = async () => {

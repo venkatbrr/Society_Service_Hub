@@ -1,12 +1,12 @@
+import { InfoCircle } from '@untitledui/icons/InfoCircle';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../constants/Colors';
-import { VerandahRadius, VerandahType , VerandahLayout } from '../../constants/Verandah';
+import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
-import { confirmAction } from '../../lib/confirm';
 import { Tables } from '../../lib/database.types';
 import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
@@ -16,22 +16,24 @@ type BlockWithCounts = Tables<'community_blocks'> & {
   inChargeCount: number;
 };
 
+/**
+ * Block inventory is structural: residents' flats, fund collection scopes and
+ * collector caps all hang off it. Creating, archiving and switching blocks on
+ * or off is therefore a platform-admin action (admin console -> community ->
+ * blocks), not something a president can do mid-year. This screen shows the
+ * president what exists and lets them correct a name; everything else is a
+ * support request.
+ */
 export default function CommunityBlocksScreen() {
   const router = useRouter();
-  const { communityId, blocksEnabled, blockLabel, refreshSession } = useAuth();
+  const { communityId, blocksEnabled, blockLabel } = useAuth();
   const labelLower = blockLabel.toLowerCase();
 
   const [blocks, setBlocks] = useState<BlockWithCounts[]>([]);
   const [blocksLoaded, setBlocksLoaded] = useState(false);
-  const [newBlockName, setNewBlockName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [isBlocksEnabled, setIsBlocksEnabled] = useState(blocksEnabled);
   const [renameBlockId, setRenameBlockId] = useState<string | null>(null);
   const [renameBlockName, setRenameBlockName] = useState('');
-
-  useEffect(() => {
-    setIsBlocksEnabled(blocksEnabled);
-  }, [blocksEnabled]);
+  const [renaming, setRenaming] = useState(false);
 
   const load = useCallback(async () => {
     if (!communityId) return;
@@ -80,129 +82,75 @@ export default function CommunityBlocksScreen() {
     }, [load])
   );
 
-  const toggleBlocks = async (enabled: boolean) => {
-    const perform = async () => {
-      setLoading(true);
-      try {
-        const { error } = await supabase.rpc('set_community_blocks_enabled', { p_enabled: enabled });
-        if (error) throw error;
-        setIsBlocksEnabled(enabled);
-        await refreshSession();
-        Toast.show({ type: 'success', text1: enabled ? `${blockLabel}s enabled` : `${blockLabel}s disabled` });
-        await load();
-      } catch (error: any) {
-        Toast.show({ type: 'error', text1: 'Unable to update', text2: error.message });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const submitRename = async () => {
+    if (!renameBlockName.trim() || !renameBlockId) return;
 
-    if (!enabled) {
-      confirmAction({
-        title: `Turn off ${labelLower}s?`,
-        message: `Turning ${labelLower}s off will unscope all residents and ${labelLower} in-charges. Existing fund contributions are kept. Continue?`,
-        confirmLabel: 'Continue',
-        onConfirm: perform,
-      });
-      return;
-    }
-
-    perform();
-  };
-
-  const addBlock = async () => {
-    if (!newBlockName.trim()) return;
-
-    setLoading(true);
-    try {
-      const { error } = await supabase.rpc('add_community_block', { p_name: newBlockName.trim() });
-      if (error) throw error;
-      setNewBlockName('');
-      await load();
-      Toast.show({ type: 'success', text1: `${blockLabel} added` });
-    } catch (error: any) {
-      Toast.show({ type: 'error', text1: `Unable to add ${labelLower}`, text2: error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renameBlock = (block: BlockWithCounts) => {
-    setRenameBlockId(block.id);
-    setRenameBlockName(block.name);
-  };
-
-  const archiveBlock = async (block: BlockWithCounts) => {
-    confirmAction({
-      title: `Archive ${labelLower}?`,
-      message: `Archive ${block.name}?`,
-      confirmLabel: 'Archive',
-      onConfirm: async () => {
-        const { error } = await supabase.rpc('archive_community_block', { p_block_id: block.id });
-        if (error) {
-          Toast.show({ type: 'error', text1: 'Unable to archive', text2: error.message });
-        } else {
-          await load();
-        }
-      },
+    setRenaming(true);
+    const { error } = await supabase.rpc('rename_community_block', {
+      p_block_id: renameBlockId,
+      p_new_name: renameBlockName.trim(),
     });
+    setRenaming(false);
+    setRenameBlockId(null);
+    setRenameBlockName('');
+
+    if (error) {
+      Toast.show({ type: 'error', text1: 'Unable to rename', text2: error.message });
+    } else {
+      Toast.show({ type: 'success', text1: `${blockLabel} renamed` });
+      await load();
+    }
   };
 
   return (
-    <View style={styles.container}> 
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => goBackSmart(router, '/community/blocks')}>
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Manage {labelLower}s</Text>
+        <Text style={styles.title}>{blockLabel}s</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.toggleCard}> 
-          <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>Use {labelLower}s for fund collection</Text>
-            <Switch value={isBlocksEnabled} onValueChange={toggleBlocks} disabled={loading} />
-          </View>
+        <View style={styles.noticeCard}>
+          <InfoCircle size={16} color={Verandah.accent} aria-hidden={true} />
+          <Text style={styles.noticeText}>
+            {blockLabel}s are set up by the Wooru team so resident flats, fund scopes and in-charge limits stay
+            consistent. To add a {labelLower}, remove one, or turn {labelLower}s off, contact support. You can
+            correct a name here.
+          </Text>
         </View>
 
         {!blocksLoaded ? (
           <ActivityIndicator color={Verandah.accent} style={{ marginTop: 12 }} />
-        ) : isBlocksEnabled || blocks.length > 0 ? (
-          <>
-            {isBlocksEnabled && (
-              <View style={styles.addRow}>
-                <TextInput
-                  value={newBlockName}
-                  onChangeText={setNewBlockName}
-                  placeholder={`Add ${labelLower}`}
-                  placeholderTextColor={Verandah.textTertiary}
-                  style={styles.input}
-                />
-                <TouchableOpacity style={styles.addBtn} onPress={addBlock}>
-                  <Text style={styles.addBtnText}>Add {labelLower}</Text>
+        ) : blocks.length === 0 ? (
+          <Text style={styles.emptyText}>
+            {blocksEnabled
+              ? `No ${labelLower}s have been set up for your community yet. Contact support to add them.`
+              : `${blockLabel}s are turned off for your community. Contact support if you want ${labelLower}-wise fund collection.`}
+          </Text>
+        ) : (
+          blocks.map((block) => (
+            <View key={block.id} style={styles.blockCard}>
+              <View style={styles.blockRow}>
+                <View style={styles.blockInfo}>
+                  <Text style={styles.blockName}>{block.name}</Text>
+                  <Text style={styles.blockMeta}>
+                    {block.residentCount} residents · {block.inChargeCount} in-charges
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => {
+                    setRenameBlockId(block.id);
+                    setRenameBlockName(block.name);
+                  }}
+                >
+                  <Text style={styles.actionText}>Rename</Text>
                 </TouchableOpacity>
               </View>
-            )}
-
-            {blocks.map((block) => (
-              <View key={block.id} style={styles.blockCard}>
-                <Text style={styles.blockName}>{block.name}</Text>
-                <Text style={styles.blockMeta}>{block.residentCount} residents · {block.inChargeCount} in-charges</Text>
-                {isBlocksEnabled && (
-                  <View style={styles.blockActions}>
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => renameBlock(block)}>
-                      <Text style={styles.actionText}>Rename</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => archiveBlock(block)}>
-                      <Text style={[styles.actionText, { color: Verandah.danger }]}>Archive</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            ))}
-          </>
-        ) : (
-          <Text style={styles.disabledText}>Turn on {labelLower}s to manage {labelLower}-wise collection scopes.</Text>
+            </View>
+          ))
         )}
       </ScrollView>
 
@@ -218,27 +166,16 @@ export default function CommunityBlocksScreen() {
               placeholderTextColor={Verandah.textTertiary}
             />
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalSecondaryBtn} onPress={() => { setRenameBlockId(null); setRenameBlockName(''); }}>
+              <TouchableOpacity
+                style={styles.modalSecondaryBtn}
+                onPress={() => { setRenameBlockId(null); setRenameBlockName(''); }}
+              >
                 <Text style={styles.modalSecondaryText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalPrimaryBtn}
-                onPress={async () => {
-                  if (!renameBlockName.trim() || !renameBlockId) return;
-                  const { error } = await supabase.rpc('rename_community_block', {
-                    p_block_id: renameBlockId,
-                    p_new_name: renameBlockName.trim(),
-                  });
-                  setRenameBlockId(null);
-                  setRenameBlockName('');
-                  if (error) {
-                    Toast.show({ type: 'error', text1: 'Unable to rename', text2: error.message });
-                  } else {
-                    await load();
-                  }
-                }}
-              >
-                <Text style={styles.modalPrimaryText}>Save</Text>
+              <TouchableOpacity style={styles.modalPrimaryBtn} onPress={submitRename} disabled={renaming}>
+                {renaming
+                  ? <ActivityIndicator color={Verandah.primaryFg} />
+                  : <Text style={styles.modalPrimaryText}>Save</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -254,20 +191,32 @@ const styles = StyleSheet.create({
   backText: { ...VerandahType.captionBold, color: Verandah.accent },
   title: { ...VerandahType.display, color: Verandah.textPrimary, marginTop: 6 },
   content: { paddingBottom: 24, gap: 12 },
-  toggleCard: { borderWidth: 0.5, borderColor: Verandah.border, backgroundColor: Verandah.card, borderRadius: VerandahRadius.lg, padding: 14 },
-  toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
-  toggleLabel: { flex: 1, ...VerandahType.bodyBold, color: Verandah.textPrimary },
-  addRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  input: { flex: 1, borderWidth: 0.5, borderColor: Verandah.borderStrong, backgroundColor: Verandah.card, color: Verandah.textPrimary, borderRadius: VerandahRadius.md, paddingHorizontal: 12, height: 44, ...VerandahType.body },
-  addBtn: { borderRadius: VerandahRadius.md, backgroundColor: Verandah.primary, paddingHorizontal: 12, paddingVertical: 11 },
-  addBtnText: { color: Verandah.primaryFg, ...VerandahType.captionBold },
-  blockCard: { borderWidth: 0.5, borderColor: Verandah.border, backgroundColor: Verandah.card, borderRadius: VerandahRadius.lg, padding: 14 },
+  noticeCard: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    backgroundColor: Verandah.accentSoft,
+    borderRadius: VerandahRadius.lg,
+    padding: 14,
+  },
+  noticeText: { flex: 1, ...VerandahType.caption, color: Verandah.textPrimary, lineHeight: 17 },
+  blockCard: {
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    backgroundColor: Verandah.card,
+    borderRadius: VerandahRadius.lg,
+    padding: 14,
+    ...Verandah.shadowCard,
+  },
+  blockRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  blockInfo: { flex: 1 },
   blockName: { ...VerandahType.bodyBold, color: Verandah.textPrimary },
   blockMeta: { marginTop: 4, ...VerandahType.caption, color: Verandah.textSecondary },
-  blockActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
   actionBtn: { borderWidth: 0.5, borderColor: Verandah.borderStrong, borderRadius: VerandahRadius.sm + 2, paddingHorizontal: 12, paddingVertical: 8 },
   actionText: { ...VerandahType.captionBold, color: Verandah.textPrimary },
-  disabledText: { marginTop: 6, ...VerandahType.body, color: Verandah.textSecondary },
+  emptyText: { marginTop: 6, ...VerandahType.body, color: Verandah.textSecondary },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' },
   modalCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 12, backgroundColor: Verandah.card },
   modalTitle: { ...VerandahType.bodyBold, color: Verandah.textPrimary, fontSize: 18 },

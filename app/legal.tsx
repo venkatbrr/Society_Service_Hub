@@ -1,4 +1,6 @@
 import { File06 } from '@untitledui/icons/File06';
+import { LinkExternal02 } from '@untitledui/icons/LinkExternal02';
+import { Share07 } from '@untitledui/icons/Share07';
 import { ShieldTick } from '@untitledui/icons/ShieldTick';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -23,6 +25,8 @@ import {
 import { PRIVACY, TERMS, type LegalBlock, type LegalDocument } from '../data/legal';
 import { parseInlineMarkup } from '../lib/legalMarkup';
 import { goBackSmart } from '../lib/navigation';
+import { shareOrCopy } from '../lib/share';
+import { siteUrl } from '../lib/siteUrl';
 
 type DocTab = 'terms' | 'privacy';
 
@@ -183,6 +187,16 @@ export default function LegalScreen() {
   const currentDoc: LegalDocument = activeDoc === 'privacy' ? PRIVACY : TERMS;
   const selfPath = params.returnTo ? `/legal?returnTo=${params.returnTo}` : '/legal';
 
+  const publicUrl = siteUrl(activeDoc === 'privacy' ? '/privacy' : '/terms');
+
+  const openPublicPage = () => {
+    Linking.openURL(publicUrl).catch(() => {});
+  };
+
+  const sharePublicPage = () => {
+    shareOrCopy({ title: currentDoc.title, message: `${currentDoc.title} — Wooru\n${publicUrl}` });
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -278,6 +292,23 @@ export default function LegalScreen() {
 
         {/* Footer */}
         <View style={styles.footerWrap}>
+          {/* Each document also has a standalone public URL (wooru.in/terms,
+              wooru.in/privacy) served as static HTML, so it can be linked from
+              an app store listing, an OAuth consent screen, or a WhatsApp
+              message without sending anyone through the app. */}
+          <Text style={styles.footerLabel}>Public link</Text>
+          <Text style={styles.footerUrl} selectable>{publicUrl}</Text>
+          <View style={styles.footerActions}>
+            <TouchableOpacity style={styles.footerBtn} onPress={openPublicPage} activeOpacity={0.85}>
+              <LinkExternal02 size={14} color={Verandah.primary} aria-hidden={true} />
+              <Text style={styles.footerBtnText}>Open in browser</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.footerBtn} onPress={sharePublicPage} activeOpacity={0.85}>
+              <Share07 size={14} color={Verandah.primary} aria-hidden={true} />
+              <Text style={styles.footerBtnText}>Share link</Text>
+            </TouchableOpacity>
+          </View>
+
           <Text style={styles.footerText}>
             © 2026 Wooru. See also our{' '}
             <Text
@@ -496,6 +527,40 @@ const styles = StyleSheet.create({
     borderTopColor: Verandah.border,
     marginTop: 32,
     paddingTop: 20,
+  },
+  footerLabel: {
+    ...VerandahType.sectionLabel,
+    color: Verandah.textTertiary,
+    marginBottom: 4,
+  },
+  footerUrl: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 13,
+    color: Verandah.primary,
+  },
+  footerActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+    marginBottom: 18,
+  },
+  footerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderStrong,
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: Verandah.card,
+  },
+  footerBtnText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: Verandah.primary,
   },
   footerText: {
     ...VerandahType.caption,

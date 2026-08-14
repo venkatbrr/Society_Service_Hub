@@ -36,6 +36,17 @@ type AuthContextType = {
   blockLabel: string;
   myBlockId: string | null;
   flatId: string | null;
+  /**
+   * Whether this community has anyone in the president / vice-president seat.
+   *
+   * A community can exist without one — it is created from a join request
+   * before anyone is appointed. Features that need a trusted signatory (funds,
+   * fund roles, block-wise collection) stay closed until it is filled;
+   * neighbourhood features (MCN, providers, visits, SOS) do not depend on it
+   * and stay open. Loaded in the same non-blocking second phase as
+   * `fundsEnabled`, so treat `false` on first render as "not known yet".
+   */
+  communityHasLead: boolean;
   isEventOrganizer: boolean;
   myFundsAccessRequest: FundsAccessStatus;
   activeCommunityRequest: ActiveCommunityRequest;
@@ -57,6 +68,7 @@ const AuthContext = createContext<AuthContextType>({
   blockLabel: 'Block',
   myBlockId: null,
   flatId: null,
+  communityHasLead: false,
   isEventOrganizer: false,
   myFundsAccessRequest: null,
   activeCommunityRequest: null,
@@ -77,6 +89,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [blockLabel, setBlockLabel] = useState('Block');
   const [myBlockId, setMyBlockId] = useState<string | null>(null);
   const [flatId, setFlatId] = useState<string | null>(null);
+  const [communityHasLead, setCommunityHasLead] = useState(false);
   const [isEventOrganizer, setIsEventOrganizer] = useState(false);
   const [myFundsAccessRequest, setMyFundsAccessRequest] = useState<FundsAccessStatus>(null);
   const [activeCommunityRequest, setActiveCommunityRequest] = useState<ActiveCommunityRequest>(null);
@@ -99,6 +112,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setBlockLabel('Block');
     setMyBlockId(null);
     setFlatId(null);
+    setCommunityHasLead(false);
     setIsEventOrganizer(false);
     setMyFundsAccessRequest(null);
     setActiveCommunityRequest(null);
@@ -229,6 +243,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setFundsEnabled(false);
       setBlocksEnabled(false);
       setBlockLabel('Block');
+      setCommunityHasLead(false);
       setIsEventOrganizer(false);
       setMyFundsAccessRequest(null);
       return;
@@ -248,7 +263,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('community_id', resolvedCommunityId)
         .eq('user_id', userId)
         .maybeSingle(),
-    ]).then(([{ data: communityData, error: communityError }, { data: fundsRequestStatus, error: fundsStatusError }, { data: organizerRow, error: organizerError }]) => {
+      // head+count: we only need "is the seat filled", never the rows.
+      supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('community_id', resolvedCommunityId)
+        .in('app_role', ['president', 'vice_president'])
+        .is('removed_at', null),
+    ]).then(([{ data: communityData, error: communityError }, { data: fundsRequestStatus, error: fundsStatusError }, { data: organizerRow, error: organizerError }, { count: leadCount, error: leadError }]) => {
       if (communityError) {
         console.error('Error loading community activation status:', communityError);
         setFundsEnabled(false);
@@ -283,6 +305,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsEventOrganizer(false);
       } else {
         setIsEventOrganizer(!!organizerRow);
+      }
+
+      if (leadError) {
+        // Fail open: a lookup failure must not make an established community
+        // look leaderless and hide its funds behind a "no president" notice.
+        console.error('Error loading community leadership status:', leadError);
+        setCommunityHasLead(true);
+      } else {
+        setCommunityHasLead((leadCount ?? 0) > 0);
       }
     }).catch(err => {
       console.warn('Background community settings load warning:', err);
@@ -481,6 +512,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         blockLabel,
         myBlockId,
         flatId,
+        communityHasLead,
         isEventOrganizer,
         myFundsAccessRequest,
         activeCommunityRequest,

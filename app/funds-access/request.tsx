@@ -11,7 +11,7 @@ import { supabase } from '../../lib/supabase';
 export default function FundsAccessRequestScreen() {
   const router = useRouter();
   const colors = Verandah;
-  const { profile, user, refreshSession } = useAuth();
+  const { profile, user, communityHasLead, refreshSession } = useAuth();
 
   const [contactName, setContactName] = useState(profile?.full_name ?? '');
   const [contactPhone, setContactPhone] = useState((profile as any)?.phone_number ?? user?.phone ?? '');
@@ -44,8 +44,29 @@ export default function FundsAccessRequestScreen() {
     }
   };
 
+  // The community-tab CTA is already hidden without a lead, but this route is
+  // deep-linkable and reachable from a stale notification, so it guards itself
+  // rather than trusting its entry point.
+  if (!communityHasLead) {
+    return (
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.surface }]}>
+        <Text style={styles.title}>Request funds support</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          Community funds need a president or vice president to appoint a treasurer and collectors. Once your
+          community has one, come back here to request funds support.
+        </Text>
+        <TouchableOpacity
+          style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+          onPress={() => replaceTracked(router, '/(tabs)/community')}
+        >
+          <Text style={styles.primaryButtonText}>Back to community</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  }
+
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.surface }]}> 
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.surface }]}>
       <Text style={styles.title}>Request funds support</Text>
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Tell us who to contact to activate funds in your community.</Text>
 

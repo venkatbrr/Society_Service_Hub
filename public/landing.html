@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <!-- SEO -->
   <title>Wooru — The Operating System for Modern Residential Communities</title>
   <meta name="description" content="Wooru is the all-in-one platform for gated communities. Hire trusted service providers, pre-order food from neighbors, track cultural funds, and coordinate community life with total transparency.">
   <meta name="keywords" content="society management, gated community, service provider, community funds, cultural events, neighborhood network, food drops, residential platform, proptech">
-  
+
   <!-- Social Meta -->
   <meta property="og:title" content="Wooru">
   <meta property="og:description" content="The all-in-one platform for modern residential communities.">
@@ -17,20 +17,17 @@
   <meta property="og:url" content="https://wooru.in">
   <!-- Absolute: most crawlers ignore relative og:image URLs. -->
   <meta property="og:image" content="https://wooru.in/images/icon.png">
-  
+
   <!-- Favicon -->
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
   <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-180.png">
-  
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Motion JS -->
-  <script src="https://cdn.jsdelivr.net/npm/motion@11.11.17/dist/motion.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Auth redirect handler -->
   <script>
@@ -38,1506 +35,803 @@
       if (window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
         window.location.replace('/login' + window.location.search + window.location.hash);
       }
+      // Marks that JS is available. Scroll-reveal hides content until observed,
+      // so it must only ever engage when the script that reveals it can run —
+      // Google's OAuth brand review reads this page with JS disabled.
+      document.documentElement.className += ' wn-js';
     })();
   </script>
 
   <style>
-    /* ============================================
-       DESIGN SYSTEM — Clean Professional Theme
-       ============================================ */
+    /* ============================================================
+       WOORU LANDING — design tokens
+       ============================================================ */
     :root {
-      --bg:           #FAFAFA;
-      --bg-alt:       #F3F4F6;
-      --surface:      #FFFFFF;
-      --primary:      #0F3732;
-      --primary-hover:#0A2925;
-      --accent:       #10B981;
-      --accent-soft:  #ECFDF5;
-      --text-primary: #111827;
-      --text-secondary:#4B5563;
-      --text-muted:   #9CA3AF;
-      --border:       #E5E7EB;
-      --border-hover: #D1D5DB;
-      --shadow-sm:    0 1px 2px rgba(0,0,0,0.05);
-      --shadow-md:    0 4px 16px rgba(0,0,0,0.06);
-      --shadow-lg:    0 12px 40px rgba(0,0,0,0.08);
-      --shadow-xl:    0 24px 60px rgba(0,0,0,0.10);
-      --radius-sm:    8px;
-      --radius-md:    12px;
-      --radius-lg:    16px;
-      --radius-xl:    24px;
+      --ink:          #0F3732;  /* primary teal */
+      --ink-hover:    #0A2925;
+      --emerald:      #0F6E56;
+      --emerald-tint: #E7F0EC;
+      --gold:         #DDA94A;
+      --amber:        #854F0B;
+      --sand:         #FBEAD0;
+      --sand-deep:    #3E2A0B;
+      --sand-mid:     #7A5B2E;
+      --cream:        #F0EDE3;
+      --page:         #FAF8F4;
+      --text:         #1F2A28;
+      --heading:      #14201E;
+      --muted:        #5B6360;
+      --faint:        #7A7E7B;
+      --faint-2:      #A9A498;
+      --on-dark:      #F5F3EE;
+      --hair:         rgba(15,55,50,.08);
+      --hair-strong:  rgba(15,55,50,.14);
+
+      --serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+      --sans:  'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --ease:  cubic-bezier(.16, 1, .3, 1);
+
+      --shadow-soft:  0 6px 20px rgba(15,55,50,.10);
+      --shadow-lift:  0 20px 44px rgba(15,55,50,.20);
+      --shadow-card:  0 4px 14px rgba(15,55,50,.06);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
+    html { scroll-behavior: smooth; scroll-padding-top: 92px; }
     body {
-      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: var(--bg);
-      color: var(--text-primary);
+      font-family: var(--sans);
+      background: var(--page);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      overflow-x: hidden;
-      line-height: 1.6;
     }
-
-    /* ============================================
-       NAVBAR
-       ============================================ */
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      z-index: 100;
-      background: rgba(250, 250, 250, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-      transition: box-shadow 0.3s ease;
-    }
-
-    header.scrolled {
-      box-shadow: var(--shadow-sm);
-    }
-
-    .nav-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px;
-      height: 64px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: var(--text-primary);
-    }
-
-    .logo-icon {
-      width: 36px;
-      height: 36px;
-      background: var(--primary);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .logo-icon img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .logo-text {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-      color: var(--text-primary);
-    }
-
-    nav {
-      display: flex;
-      align-items: center;
-      gap: 32px;
-    }
-
-    nav a {
-      text-decoration: none;
-      color: var(--text-secondary);
-      font-weight: 500;
-      font-size: 14px;
-      transition: color 0.2s ease;
-    }
-
-    nav a:hover {
-      color: var(--text-primary);
-    }
-
-    .nav-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--primary);
-      color: #fff;
-      padding: 9px 20px;
-      border-radius: var(--radius-sm);
-      font-weight: 600;
-      font-size: 14px;
-      text-decoration: none;
-      transition: all 0.2s ease;
-      border: none;
-      cursor: pointer;
-    }
-
-    .nav-cta:hover {
-      background: var(--primary-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(15, 55, 50, 0.2);
-    }
-
-    /* Mobile hamburger */
-    .mobile-menu-btn {
-      display: none;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px;
-    }
-
-    /* ============================================
-       HERO
-       ============================================ */
-    .hero {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 140px 24px 80px;
-      display: flex;
-      align-items: center;
-      gap: 60px;
-    }
-
-    .hero-content {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .hero-visual {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--accent-soft);
-      color: #065F46;
-      padding: 6px 14px;
-      border-radius: 100px;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 20px;
-      border: 1px solid #D1FAE5;
-    }
-
-    .hero-badge-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--accent);
-      border-radius: 50%;
-      animation: pulse-dot 2s infinite;
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    .hero-title {
-      font-size: 56px;
-      font-weight: 800;
-      line-height: 1.08;
-      letter-spacing: -2px;
-      color: var(--text-primary);
-      margin-bottom: 20px;
-    }
-
-    .hero-title .accent {
-      color: var(--accent);
-    }
-
-    .hero-subtitle {
-      font-size: 18px;
-      line-height: 1.7;
-      color: var(--text-secondary);
-      max-width: 520px;
-      margin-bottom: 36px;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 48px;
-    }
-
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      padding: 14px 28px;
-      border-radius: var(--radius-md);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      font-family: inherit;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(15, 55, 50, 0.2);
-    }
-
-    .btn-primary svg {
-      transition: transform 0.2s ease;
-    }
-
-    .btn-primary:hover svg {
-      transform: translateX(3px);
-    }
-
-    .btn-secondary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      padding: 14px 28px;
-      border-radius: var(--radius-md);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      font-family: inherit;
-    }
-
-    .btn-secondary:hover {
-      background: var(--bg-alt);
-      border-color: var(--border-hover);
-      transform: translateY(-1px);
-    }
-
-    /* Trust indicators */
-    .trust-row {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-    }
-
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .trust-item svg {
-      color: var(--accent);
-      flex-shrink: 0;
-    }
-
-    /* Hero sandbox (right side) */
-    .hero-sandbox {
-      width: 100%;
-      max-width: 520px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-xl);
-      overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .hero-sandbox:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 32px 72px rgba(0,0,0,0.12);
-    }
-
-    .sandbox-bar {
-      background: var(--bg-alt);
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .sandbox-dots {
-      display: flex;
-      gap: 6px;
-    }
-
-    .sandbox-dots span {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-    }
-
-    .dot-r { background: #FCA5A5; }
-    .dot-y { background: #FCD34D; }
-    .dot-g { background: #6EE7B7; }
-
-    .sandbox-tabs {
-      display: flex;
-      gap: 4px;
-      background: var(--surface);
-      padding: 3px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
-    }
-
-    .sandbox-tab-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-family: inherit;
-      white-space: nowrap;
-    }
-
-    .sandbox-tab-btn.active {
-      background: var(--primary);
-      color: #fff;
-    }
-
-    .sandbox-tab-btn:not(.active):hover {
-      color: var(--text-primary);
-      background: var(--bg-alt);
-    }
-
-    .sandbox-body {
-      padding: 24px;
-      min-height: 260px;
-    }
-
-    .sandbox-pane {
-      display: none;
-    }
-
-    .sandbox-pane.active {
-      display: block;
-    }
-
-    /* Demo cards inside sandbox */
-    .demo-food-card {
-      background: var(--bg-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      display: flex;
-      gap: 20px;
-      align-items: center;
-    }
-
-    .demo-food-icon {
-      width: 80px;
-      height: 80px;
-      border-radius: var(--radius-md);
-      background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      flex-shrink: 0;
-    }
-
-    .demo-food-info { flex: 1; }
-
-    .demo-food-name {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .demo-food-meta {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-    }
-
-    .demo-counter {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .counter-btn {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text-primary);
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
-      font-family: inherit;
-    }
-
-    .counter-btn:hover {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-
-    .counter-val {
-      font-size: 15px;
-      font-weight: 700;
-      min-width: 24px;
-      text-align: center;
-    }
-
-    .demo-price {
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--accent);
-    }
-
-    .demo-reserve-btn {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-family: inherit;
-      margin-left: auto;
-    }
-
-    .demo-reserve-btn:hover {
-      background: #059669;
-      transform: scale(1.03);
-    }
-
-    .demo-progress {
-      width: 100%;
-      height: 6px;
-      background: var(--border);
-      border-radius: 3px;
-      overflow: hidden;
-      margin-top: 14px;
-    }
-
-    .demo-progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), #6EE7B7);
-      width: 70%;
-      border-radius: 3px;
-      transition: width 0.4s ease;
-    }
-
-    /* Provider demo */
-    .demo-providers {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .demo-provider-card {
-      background: var(--bg-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .demo-provider-card:hover,
-    .demo-provider-card.selected {
-      border-color: var(--accent);
-      background: var(--accent-soft);
-    }
-
-    .demo-provider-card.selected {
-      box-shadow: 0 0 0 1px var(--accent);
-    }
-
-    .provider-icon {
-      width: 36px;
-      height: 36px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
-    .provider-name {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 2px;
-    }
-
-    .provider-meta {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    .provider-rating {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #D97706;
-      background: #FFFBEB;
-      padding: 2px 8px;
-      border-radius: 4px;
-      border: 1px solid #FEF3C7;
-    }
-
-    /* Funds demo */
-    .demo-funds-box {
-      background: var(--bg-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-    }
-
-    .demo-funds-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 16px;
-    }
-
-    .demo-fund-name {
-      font-size: 16px;
-      font-weight: 700;
-    }
-
-    .demo-fund-target {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .demo-fund-amount {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--accent);
-    }
-
-    .demo-fund-slider {
-      width: 100%;
-      accent-color: var(--accent);
-      cursor: pointer;
-      margin: 12px 0;
-    }
-
-    .demo-fund-footer {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .demo-fund-footer strong {
-      color: var(--accent);
-    }
-
-    /* ============================================
-       SOCIAL PROOF BAR
-       ============================================ */
-    .social-proof {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px 80px;
-    }
-
-    .proof-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }
-
-    .proof-item {
-      background: var(--surface);
-      padding: 28px 24px;
-      text-align: center;
-    }
-
-    .proof-number {
-      font-size: 32px;
-      font-weight: 800;
-      color: var(--text-primary);
-      letter-spacing: -1px;
-      margin-bottom: 4px;
-    }
-
-    .proof-label {
-      font-size: 13px;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    /* ============================================
-       FEATURES
-       ============================================ */
-    .features-section {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 80px 24px;
-    }
-
-    .section-header {
-      text-align: center;
-      margin-bottom: 56px;
-    }
-
-    .section-label {
-      display: inline-block;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-
-    .section-title {
-      font-size: 40px;
-      font-weight: 800;
-      letter-spacing: -1.5px;
-      color: var(--text-primary);
-      margin-bottom: 12px;
-      line-height: 1.15;
-    }
-
-    .section-desc {
-      font-size: 17px;
-      color: var(--text-secondary);
-      max-width: 560px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      padding: 36px;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .feature-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--accent), #6EE7B7);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
-      border-color: var(--border-hover);
-    }
-
-    .feature-card:hover::before {
-      opacity: 1;
-    }
-
-    .feature-icon {
-      width: 48px;
-      height: 48px;
-      background: var(--accent-soft);
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .feature-icon svg {
-      width: 24px;
-      height: 24px;
-      color: var(--accent);
-    }
-
-    .feature-name {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      letter-spacing: -0.3px;
-    }
-
-    .feature-desc {
-      font-size: 15px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-
-    /* ============================================
-       HOW IT WORKS
-       ============================================ */
-    .how-section {
-      background: var(--bg-alt);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .how-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 80px 24px;
-    }
-
-    .steps-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-    }
-
-    .step-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      padding: 36px 28px;
-      text-align: center;
-      position: relative;
-      transition: all 0.3s ease;
-    }
-
-    .step-card:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .step-num {
-      width: 44px;
-      height: 44px;
-      background: var(--primary);
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      font-weight: 800;
-      margin: 0 auto 20px;
-    }
-
-    .step-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      letter-spacing: -0.2px;
-    }
-
-    .step-desc {
-      font-size: 14px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-
-    /* Step connectors */
-    .steps-grid .step-card:not(:last-child)::after {
-      content: '';
-      position: absolute;
-      right: -14px;
-      top: 54px;
-      width: 28px;
-      height: 2px;
-      background: var(--border);
-      z-index: 1;
-    }
-
-    /* ============================================
-       TESTIMONIAL
-       ============================================ */
-    .testimonial-section {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 80px 24px;
-    }
-
-    .testimonial-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      padding: 48px;
-      max-width: 760px;
-      margin: 0 auto;
-      text-align: center;
-      box-shadow: var(--shadow-md);
-    }
-
-    .testimonial-quote {
-      font-size: 20px;
-      line-height: 1.7;
-      color: var(--text-primary);
-      font-weight: 400;
-      font-style: italic;
-      margin-bottom: 28px;
-    }
-
-    .testimonial-author {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-    }
-
-    .author-avatar {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 16px;
-    }
-
-    .author-info { text-align: left; }
-
-    .author-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .author-role {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    /* ============================================
-       CTA SECTION
-       ============================================ */
-    .cta-section {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px 80px;
-    }
-
-    .cta-card {
-      background: var(--primary);
-      border-radius: var(--radius-xl);
-      padding: 72px 40px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cta-card::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .cta-title {
-      font-size: 40px;
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: -1.5px;
-      margin-bottom: 16px;
-      position: relative;
-    }
-
-    .cta-desc {
-      font-size: 17px;
-      color: rgba(255,255,255,0.7);
-      max-width: 520px;
-      margin: 0 auto 36px;
-      line-height: 1.6;
-      position: relative;
-    }
-
-    .btn-cta-white {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #fff;
-      color: var(--primary);
-      border: none;
-      padding: 14px 32px;
-      border-radius: var(--radius-md);
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      font-family: inherit;
-      position: relative;
-    }
-
-    .btn-cta-white:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.2);
-    }
-
-    /* ============================================
-       FOOTER
-       ============================================ */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 32px 24px;
-      background: var(--surface);
-    }
-
-    .footer-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .footer-links {
-      display: flex;
-      gap: 24px;
-    }
-
-    .footer-links a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      transition: color 0.2s ease;
-    }
-
-    .footer-links a:hover {
-      color: var(--text-primary);
-    }
-
-    .footer-copy {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    /* ============================================
-       TOAST
-       ============================================ */
-    .toast-popup {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--primary);
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: var(--radius-md);
-      font-weight: 600;
-      font-size: 13px;
-      box-shadow: var(--shadow-lg);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 1000;
-    }
-
-    .toast-popup.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    /* ============================================
-       MOTION: Hidden initially for reveal
-       ============================================ */
-    .reveal {
-      opacity: 0;
-      transform: translateY(24px);
-    }
-
-    /* ============================================
-       RESPONSIVE
-       ============================================ */
-    @media (max-width: 1024px) {
-      .hero {
-        flex-direction: column;
-        padding-top: 120px;
-        gap: 48px;
-        text-align: center;
-      }
-
-      .hero-subtitle { margin-left: auto; margin-right: auto; }
-      .hero-actions { justify-content: center; }
-      .trust-row { justify-content: center; }
-
-      .hero-sandbox {
-        max-width: 100%;
-      }
-
-      .features-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 768px) {
-      nav { display: none; }
-
-      .mobile-menu-btn { display: block; }
-
-      .hero-title {
-        font-size: 36px;
-        letter-spacing: -1px;
-      }
-
-      .hero-subtitle { font-size: 16px; }
-
-      .hero-actions {
-        flex-direction: column;
-        width: 100%;
-        max-width: 320px;
-        margin-left: auto;
-        margin-right: auto;
-      }
-
-      .btn-primary, .btn-secondary {
-        justify-content: center;
-        width: 100%;
-      }
-
-      .proof-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .section-title { font-size: 28px; }
-
-      .steps-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .steps-grid .step-card::after {
-        display: none !important;
-      }
-
-      .demo-food-card { flex-direction: column; text-align: center; }
-      .demo-counter { justify-content: center; flex-wrap: wrap; }
-      .demo-reserve-btn { margin-left: 0; }
-      .demo-providers { grid-template-columns: 1fr; }
-
-      .footer-inner { flex-direction: column; gap: 16px; }
-
-      .trust-row { flex-direction: column; gap: 12px; }
-
-      .testimonial-card { padding: 32px 24px; }
+    a { color: var(--emerald); text-decoration: none; }
+    a:hover { color: var(--ink); }
+    img { max-width: 100%; }
+    ::selection { background: var(--ink); color: var(--cream); }
+    :focus-visible { outline: 2px solid var(--emerald); outline-offset: 3px; border-radius: 6px; }
+
+    .wn-wrap { max-width: 1160px; margin: 0 auto; padding-left: 32px; padding-right: 32px; }
+
+    /* Serif display headings */
+    .wn-h1, .wn-h2, .wn-h3-serif { font-family: var(--serif); font-weight: 400; }
+    .wn-h1 { font-size: 82px; line-height: 1.02; letter-spacing: -1.8px; color: var(--heading); margin-bottom: 26px; }
+    .wn-h1 .wn-accent { font-style: italic; color: var(--emerald); }
+    .wn-h2 { font-size: 44px; line-height: 1.08; letter-spacing: -1px; color: var(--heading); }
+    .wn-eyebrow {
+      font-size: 12px; font-weight: 700; letter-spacing: 1.4px;
+      text-transform: uppercase; color: var(--amber); margin-bottom: 14px;
+    }
+
+    /* ---------- Buttons ---------- */
+    .wn-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      border-radius: 14px; font-weight: 600; font-size: 15.5px;
+      padding: 15px 28px; transition: all .2s ease; white-space: nowrap;
+    }
+    .wn-btn-primary { background: var(--ink); color: var(--on-dark); }
+    .wn-btn-primary:hover { background: var(--ink-hover); color: var(--on-dark); transform: translateY(-2px); box-shadow: 0 14px 30px rgba(15,55,50,.22); }
+    .wn-btn-ghost { background: #fff; color: var(--text); border: 1px solid var(--hair-strong); }
+    .wn-btn-ghost:hover { color: var(--text); border-color: rgba(15,55,50,.30); transform: translateY(-1px); }
+
+    /* ---------- Header ---------- */
+    .wn-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(250,248,244,.85);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--hair);
+      transition: box-shadow .3s ease;
+    }
+    .wn-header.is-scrolled { box-shadow: 0 1px 12px rgba(15,55,50,.08); }
+    .wn-header-inner { height: 72px; display: flex; align-items: center; justify-content: space-between; }
+    .wn-brand { display: flex; align-items: center; gap: 11px; color: var(--ink); }
+    .wn-brand:hover { color: var(--ink); }
+    .wn-brand img { border-radius: 11px; display: block; }
+    .wn-wordmark { font-family: var(--serif); font-size: 27px; letter-spacing: -.5px; color: var(--ink); line-height: 1; }
+    .wn-navlinks { display: flex; align-items: center; gap: 34px; }
+    .wn-navlinks a { color: var(--muted); font-weight: 500; font-size: 14.5px; }
+    .wn-navlinks a:hover { color: var(--text); }
+    .wn-header-actions { display: flex; align-items: center; gap: 14px; }
+    .wn-signin { color: var(--text); font-weight: 600; font-size: 14.5px; }
+    .wn-signin:hover { color: var(--ink); }
+    .wn-btn-sm { padding: 10px 18px; border-radius: 12px; font-size: 14.5px; gap: 7px; }
+    .wn-btn-sm:hover { transform: translateY(-1px); box-shadow: none; }
+
+    /* ---------- Hero ---------- */
+    .wn-hero { position: relative; max-width: 1000px; margin: 0 auto; padding: 96px 32px 20px; text-align: center; }
+    .wn-hero-eyebrow {
+      font-size: 12.5px; font-weight: 700; letter-spacing: 2.4px;
+      text-transform: uppercase; color: var(--amber); margin-bottom: 26px;
+    }
+    .wn-lead { font-size: 19px; line-height: 1.6; color: var(--muted); max-width: 620px; margin: 0 auto 36px; }
+    .wn-herobtns { display: flex; gap: 13px; justify-content: center; }
+    .wn-assure { display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; margin-top: 26px; }
+    .wn-assure-item { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 500; color: var(--faint); }
+    .wn-dot { width: 4px; height: 4px; border-radius: 50%; background: #CFC9BB; }
+
+    /* ---------- Arch colonnade ---------- */
+    .wn-colonnade-band { max-width: 1160px; margin: 0 auto; padding: 54px 32px 12px; }
+    .wn-colonnade { display: flex; align-items: flex-end; justify-content: center; gap: 20px; height: 170px; }
+    .wn-pillar { position: relative; }
+    .wn-pillar span { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); }
+    .wn-pillar-sm { width: 98px; height: 96px; background: var(--cream); border: 1px solid rgba(15,55,50,.09); border-radius: 49px 49px 14px 14px; }
+    .wn-pillar-sm span { width: 44px; height: 52px; background: var(--page); border-radius: 22px 22px 0 0; }
+    .wn-pillar-md { width: 110px; height: 132px; border-radius: 55px 55px 14px 14px; }
+    .wn-pillar-md span { width: 50px; height: 74px; background: var(--page); border-radius: 25px 25px 0 0; }
+    .wn-pillar-lg { width: 128px; height: 168px; background: var(--ink); border-radius: 64px 64px 16px 16px; }
+    .wn-pillar-lg span { width: 58px; height: 96px; background: var(--gold); border-radius: 29px 29px 0 0; }
+    .wn-baseline { height: 1px; background: rgba(15,55,50,.10); margin-top: -1px; }
+    .wn-colonnade-caption {
+      text-align: center; font-size: 12.5px; font-weight: 600; letter-spacing: 1.6px;
+      text-transform: uppercase; color: var(--faint-2); margin-top: 16px;
+    }
+
+    /* ---------- Watermarks ---------- */
+    .wn-mark { position: absolute; pointer-events: none; }
+
+    /* ---------- Bento ---------- */
+    .wn-section { max-width: 1160px; margin: 0 auto; padding: 64px 32px 20px; }
+    .wn-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .wn-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .wn-span2 { grid-column: span 2; }
+
+    .wn-tile {
+      position: relative; overflow: hidden; border-radius: 24px; padding: 34px;
+      min-height: 230px; display: flex; flex-direction: column; justify-content: space-between;
+      box-shadow: var(--shadow-soft);
+      transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+    }
+    .wn-tile:hover { transform: translateY(-6px); }
+    .wn-tile-wide { padding: 38px; min-height: 250px; }
+    .wn-tile-ink { background: var(--ink); }
+    .wn-tile-ink:hover { box-shadow: var(--shadow-lift); }
+    .wn-tile-sand { background: var(--sand); min-height: 250px; box-shadow: 0 6px 20px rgba(133,79,11,.12); }
+    .wn-tile-sand:hover { box-shadow: 0 20px 44px rgba(133,79,11,.22); }
+    .wn-tile-gold { background: var(--gold); box-shadow: 0 6px 20px rgba(133,79,11,.14); }
+    .wn-tile-gold:hover { box-shadow: 0 20px 44px rgba(133,79,11,.26); }
+    .wn-tile-cream { background: var(--cream); border: 1px solid var(--hair); box-shadow: 0 6px 20px rgba(15,55,50,.08); }
+    .wn-tile-cream:hover { box-shadow: 0 20px 44px rgba(15,55,50,.16); }
+
+    .wn-tile-icon {
+      position: relative; width: 50px; height: 50px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .wn-tile-icon-lg { width: 52px; height: 52px; }
+    .wn-tile-body { position: relative; }
+    .wn-h3-serif { font-size: 28px; letter-spacing: -.4px; margin-bottom: 8px; }
+    .wn-h3-serif-lg { font-size: 32px; letter-spacing: -.5px; }
+    .wn-tile p { line-height: 1.55; font-size: 14.5px; }
+    .wn-tile-wide p { font-size: 15.5px; line-height: 1.6; }
+
+    /* Secondary white cards */
+    .wn-card {
+      background: #fff; border: 1px solid rgba(15,55,50,.09); border-radius: 20px; padding: 28px;
+      box-shadow: var(--shadow-card);
+      transition: transform .35s var(--ease), box-shadow .35s var(--ease), border-color .35s ease;
+    }
+    .wn-card:hover { transform: translateY(-5px); box-shadow: 0 16px 34px rgba(15,55,50,.13); border-color: var(--hair-strong); }
+    .wn-chip {
+      width: 44px; height: 44px; border-radius: 12px; background: var(--emerald-tint);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 16px;
+    }
+    .wn-card h3 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 6px; letter-spacing: -.2px; }
+    .wn-card p { font-size: 13.5px; color: var(--muted); line-height: 1.55; }
+
+    /* ---------- Panels ---------- */
+    .wn-panel { position: relative; overflow: hidden; border-radius: 28px; padding: 56px; }
+    .wn-panel-sand { background: var(--sand); }
+    .wn-panel-ink { background: var(--ink); padding: 72px 56px; text-align: center; }
+    .wn-panel-cream { background: var(--cream); border: 1px solid var(--hair); padding: 76px 40px; text-align: center; }
+
+    .wn-pill {
+      display: inline-flex; align-items: center; gap: 9px; background: #fff;
+      border-radius: 100px; padding: 7px 15px 7px 11px; margin-bottom: 20px;
+    }
+    .wn-pill span { font-size: 12.5px; font-weight: 700; letter-spacing: .4px; color: var(--amber); text-transform: uppercase; }
+
+    .wn-subcard { background: #fff; border-radius: 20px; padding: 32px; }
+    .wn-subcard-ink { background: var(--ink); border-radius: 20px; padding: 32px; }
+    .wn-subcard-icon { width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+    .wn-bullets { display: flex; flex-direction: column; gap: 11px; }
+    .wn-bullet { display: flex; gap: 10px; font-size: 14.5px; line-height: 1.5; color: var(--muted); }
+    .wn-bullet b { flex-shrink: 0; font-weight: 800; color: var(--amber); }
+    .wn-bullet-dark { color: rgba(240,237,227,.75); }
+    .wn-bullet-dark b { color: var(--gold); }
+
+    /* Transparency glass cards */
+    .wn-glass-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; max-width: 860px; margin: 0 auto; }
+    .wn-glass {
+      flex: 1; min-width: 220px; background: rgba(240,237,227,.06);
+      border: 1px solid rgba(240,237,227,.12); border-radius: 18px; padding: 26px 24px; text-align: left;
+    }
+    .wn-glass svg { margin-bottom: 14px; }
+    .wn-glass-title { font-size: 17px; font-weight: 700; color: var(--on-dark); margin-bottom: 5px; }
+    .wn-glass-body { font-size: 13.5px; color: rgba(240,237,227,.68); line-height: 1.55; }
+
+    /* ---------- How it works ---------- */
+    .wn-step { text-align: center; }
+    .wn-numeral { font-family: var(--serif); font-size: 72px; color: var(--gold); line-height: 1; margin-bottom: 14px; }
+    .wn-step h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 9px; letter-spacing: -.3px; }
+    .wn-step p { font-size: 14.5px; color: var(--muted); line-height: 1.6; max-width: 300px; margin: 0 auto; }
+
+    /* ---------- Who it's for ---------- */
+    .wn-roles {
+      display: grid; grid-template-columns: 320px 1fr; gap: 22px;
+      background: #fff; border: 1px solid rgba(15,55,50,.09); border-radius: 24px;
+      padding: 20px; box-shadow: 0 6px 22px rgba(15,55,50,.07);
+    }
+    .wn-rolerail { display: flex; flex-direction: column; gap: 6px; }
+    .wn-roletab {
+      position: relative; display: block; width: 100%; text-align: left;
+      padding: 16px 18px 16px 20px; border-radius: 14px; border: none; cursor: pointer;
+      font-family: inherit; background: transparent; box-shadow: none;
+      transition: background .2s ease, box-shadow .2s ease;
+    }
+    .wn-roletab:hover { background: rgba(240,237,227,.55); }
+    .wn-roletab[aria-selected="true"] { background: var(--cream); box-shadow: inset 3px 0 0 var(--gold); }
+    .wn-roletab-title { font-size: 16px; font-weight: 700; color: var(--heading); margin-bottom: 3px; }
+    .wn-roletab-sub { font-size: 13px; color: var(--muted); line-height: 1.4; }
+    .wn-rolepanel { position: relative; overflow: hidden; background: var(--ink); border-radius: 18px; padding: 40px 40px 36px; min-height: 300px; }
+    .wn-rolepanel h3 { font-family: var(--serif); font-weight: 400; font-size: 30px; letter-spacing: -.5px; color: var(--on-dark); margin-bottom: 22px; }
+    .wn-rolepanel .wn-bullets { gap: 14px; }
+    .wn-rolepanel .wn-bullet { font-size: 15px; gap: 12px; color: rgba(240,237,227,.82); }
+    .wn-rolepanel .wn-bullet b { color: var(--gold); }
+    .wn-roleview[hidden] { display: none; }
+
+    /* ---------- FAQ ---------- */
+    .wn-faq-section { max-width: 820px; margin: 0 auto; padding: 44px 32px 24px; }
+    .wn-faq { background: #fff; border: 1px solid rgba(15,55,50,.09); border-radius: 22px; padding: 8px 26px; box-shadow: 0 6px 22px rgba(15,55,50,.06); }
+    .wn-faq-row { border-bottom: 1px solid var(--hair); }
+    .wn-faq-row:last-child { border-bottom: none; }
+    .wn-faq-q {
+      width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 18px;
+      padding: 22px 4px; background: none; border: none; cursor: pointer; text-align: left; font-family: inherit;
+    }
+    .wn-faq-q span.wn-faq-label { font-size: 17.5px; font-weight: 600; color: var(--heading); letter-spacing: -.2px; }
+    .wn-faq-toggle {
+      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--cream);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .wn-faq-toggle .wn-minus { display: none; }
+    .wn-faq-q[aria-expanded="true"] .wn-minus { display: block; }
+    .wn-faq-q[aria-expanded="true"] .wn-plus { display: none; }
+    .wn-faq-a { padding: 0 4px 24px; font-size: 15px; color: var(--muted); line-height: 1.65; max-width: 660px; }
+    .wn-faq-a[hidden] { display: none; }
+
+    /* ---------- CTA / Footer ---------- */
+    .wn-cta-section { padding-top: 64px; padding-bottom: 84px; }
+    .wn-cta-logo { border-radius: 16px; display: block; margin: 0 auto 24px; }
+    .wn-footer { border-top: 1px solid var(--hair); background: #fff; }
+    .wn-footer-inner { max-width: 1160px; margin: 0 auto; padding: 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; }
+    .wn-footer-links { display: flex; gap: 26px; flex-wrap: wrap; }
+    .wn-footer-links a { color: var(--faint); font-size: 14px; font-weight: 500; }
+    .wn-footer-links a:hover { color: var(--text); }
+    .wn-copy { font-size: 13px; color: var(--faint-2); }
+
+    /* ---------- Scroll reveal (JS only) ---------- */
+    .wn-js [data-reveal] {
+      opacity: 0; transform: translateY(22px);
+      transition: opacity .7s var(--ease), transform .7s var(--ease);
+    }
+    .wn-js [data-reveal].is-revealed { opacity: 1; transform: none; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 860px) {
+      .wn-navlinks { display: none; }
+      .wn-hero { padding: 52px 22px 8px; }
+      .wn-h1 { font-size: 46px; letter-spacing: -1px; margin-bottom: 18px; }
+      .wn-lead { font-size: 16px; }
+      .wn-h2 { font-size: 30px !important; letter-spacing: -.5px !important; }
+      .wn-grid3, .wn-grid2, .wn-roles { grid-template-columns: 1fr; }
+      .wn-roles { gap: 16px; }
+      .wn-span2 { grid-column: auto; }
+      .wn-panel { padding: 44px 26px; }
+      .wn-panel-ink { padding: 44px 26px; }
+      .wn-panel-cream { padding: 44px 26px; }
+      .wn-wrap, .wn-section, .wn-faq-section, .wn-colonnade-band { padding-left: 22px; padding-right: 22px; }
+      .wn-rolepanel { padding: 32px 26px 30px; min-height: 0; }
+    }
+    @media (max-width: 560px) {
+      .wn-h1 { font-size: 38px; }
+      .wn-h1 br { display: none; }
+      .wn-herobtns { flex-direction: column; align-items: stretch; }
+      .wn-herobtns a { justify-content: center; }
+      .wn-colonnade { transform: scale(.6); transform-origin: top center; }
+      .wn-baseline { margin-top: -52px; }
+      .wn-numeral { font-size: 60px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .wn-js [data-reveal] { opacity: 1; transform: none; transition: none; }
+      .wn-tile:hover, .wn-card:hover, .wn-btn:hover { transform: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Toast -->
-  <div id="toast" class="toast-popup">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-    <span>Reserved in live demo!</span>
+<!-- ===================== HEADER ===================== -->
+<header class="wn-header" data-site-header>
+  <div class="wn-wrap wn-header-inner">
+    <a href="#top" class="wn-brand">
+      <img src="/images/icon-512.png" alt="Wooru" width="37" height="37">
+      <span class="wn-wordmark">wooru</span>
+    </a>
+    <nav class="wn-navlinks" aria-label="Primary">
+      <a href="#platform">Platform</a>
+      <a href="#funds">Transparency</a>
+      <a href="#how">How it works</a>
+    </nav>
+    <div class="wn-header-actions">
+      <a href="/login" class="wn-signin">Sign in</a>
+      <a href="/login" class="wn-btn wn-btn-primary wn-btn-sm">
+        Get started
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section id="top" class="wn-hero">
+  <div data-reveal class="wn-hero-eyebrow">The community operating system</div>
+  <h1 data-reveal data-reveal-delay="60" class="wn-h1">
+    Everything your society <br>does together — <span class="wn-accent">in one&nbsp;place</span>.
+  </h1>
+  <p data-reveal data-reveal-delay="120" class="wn-lead">
+    Hire neighbour-verified providers, pre-order from home kitchens, split shared visits, and track community funds — transparently, in a single app instead of five WhatsApp groups.
+  </p>
+  <div data-reveal data-reveal-delay="180" class="wn-herobtns">
+    <a href="/login" class="wn-btn wn-btn-primary">
+      Get started free
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+    <a href="#platform" class="wn-btn wn-btn-ghost">See what's inside</a>
+  </div>
+  <div data-reveal data-reveal-delay="240" class="wn-assure">
+    <span class="wn-assure-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Free for residents</span>
+    <span class="wn-dot" aria-hidden="true"></span>
+    <span class="wn-assure-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Set up your society in minutes</span>
+    <span class="wn-dot" aria-hidden="true"></span>
+    <span class="wn-assure-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>One app, no more group chats</span>
+  </div>
+</section>
+
+<!-- ===================== ARCH COLONNADE ===================== -->
+<div data-reveal class="wn-colonnade-band">
+  <div class="wn-colonnade" aria-hidden="true">
+    <div class="wn-pillar wn-pillar-sm"><span></span></div>
+    <div class="wn-pillar wn-pillar-md" style="background:#FBEAD0"><span></span></div>
+    <div class="wn-pillar wn-pillar-lg"><span></span></div>
+    <div class="wn-pillar wn-pillar-md" style="background:#0F6E56"><span></span></div>
+    <div class="wn-pillar wn-pillar-sm"><span></span></div>
+  </div>
+  <div class="wn-baseline"></div>
+  <div class="wn-colonnade-caption">Ooru — our neighbourhood, under one roof</div>
+</div>
+
+<!-- ===================== FEATURE BENTO ===================== -->
+<section id="platform" class="wn-section">
+  <div data-reveal style="max-width:640px;margin-bottom:40px">
+    <div class="wn-eyebrow">What Wooru runs</div>
+    <h2 class="wn-h2">One app for the everyday work of community life.</h2>
   </div>
 
-  <!-- Navbar -->
-  <header id="site-header">
-    <div class="nav-container">
-      <a href="#" class="logo">
-        <div class="logo-icon">
-          <img src="/images/icon-512.png" alt="Wooru">
+  <div class="wn-grid3">
+    <!-- Trusted providers -->
+    <div data-reveal class="wn-tile wn-tile-wide wn-tile-ink wn-span2">
+      <svg class="wn-mark" width="300" height="300" viewBox="0 0 60 60" data-parallax="0.05" style="right:-52px;bottom:-70px;opacity:.09" aria-hidden="true"><path d="M13 52 L13 30 A17 17 0 0 1 47 30 L47 52 L41 52 L41 30 A11 11 0 0 0 19 30 L19 52 Z" fill="#F0EDE3"/></svg>
+      <div class="wn-tile-icon wn-tile-icon-lg" style="background:rgba(240,237,227,.12)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#DDA94A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+      </div>
+      <div class="wn-tile-body">
+        <h3 class="wn-h3-serif wn-h3-serif-lg" style="color:#F5F3EE">Trusted providers</h3>
+        <p style="color:rgba(240,237,227,.72);max-width:420px">Plumbers, electricians, maids, tutors and dozens more categories — rated by residents in your own society, with private notes and a fraud check on every new listing.</p>
+      </div>
+    </div>
+
+    <!-- Food drops -->
+    <div data-reveal data-reveal-delay="80" class="wn-tile wn-tile-sand">
+      <div class="wn-tile-icon" style="background:#fff">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#854F0B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      </div>
+      <div class="wn-tile-body">
+        <h3 class="wn-h3-serif" style="color:#3E2A0B">Food drops</h3>
+        <p style="color:#7A5B2E">Pre-order from home kitchens before the cutoff, with live counts and a delivery roster for hosts.</p>
+      </div>
+    </div>
+
+    <!-- Community funds -->
+    <div data-reveal class="wn-tile wn-tile-gold">
+      <div class="wn-tile-icon" style="background:rgba(15,55,50,.12)">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#0F3732" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      </div>
+      <div class="wn-tile-body">
+        <h3 class="wn-h3-serif" style="color:#14201E">Community funds</h3>
+        <p style="color:#4A3A12">Transparent ledgers for maintenance and festival collections — income against expense, in full view.</p>
+      </div>
+    </div>
+
+    <!-- My Community Network -->
+    <div data-reveal data-reveal-delay="80" class="wn-tile wn-tile-wide wn-tile-cream wn-span2">
+      <svg class="wn-mark" width="260" height="260" viewBox="0 0 60 60" data-parallax="0.05" style="right:-42px;bottom:-58px;opacity:.06" aria-hidden="true"><path d="M13 52 L13 30 A17 17 0 0 1 47 30 L47 52 L41 52 L41 30 A11 11 0 0 0 19 30 L19 52 Z" fill="#0F3732"/></svg>
+      <div class="wn-tile-icon wn-tile-icon-lg" style="background:#fff">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div class="wn-tile-body">
+        <h3 class="wn-h3-serif wn-h3-serif-lg" style="color:#14201E">My Community Network</h3>
+        <p style="color:#5B6360;max-width:440px">Resident-run businesses, carpooling, and a parent corner — the day-to-day coordination of your society, brought into one tab.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secondary grid -->
+  <div class="wn-grid3" style="margin-top:18px">
+    <div data-reveal class="wn-card">
+      <div class="wn-chip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-1.5-1.5"/></svg></div>
+      <h3>Shared service visits</h3>
+      <p>Schedule a provider visit and let neighbours join — split the cost and the coordination.</p>
+    </div>
+    <div data-reveal data-reveal-delay="60" class="wn-card">
+      <div class="wn-chip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+      <h3>Community events</h3>
+      <p>Cultural, sports and festival events posted by coordinators — venue, timing and contacts in one card.</p>
+    </div>
+    <div data-reveal data-reveal-delay="120" class="wn-card">
+      <div class="wn-chip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <h3>Emergency SOS</h3>
+      <p>An emergency contact directory plus an opt-in blood-donor registry, filterable by group.</p>
+    </div>
+    <div data-reveal class="wn-card">
+      <div class="wn-chip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+      <h3>Service reminders</h3>
+      <p>Private appliance and maintenance schedules with due-date alerts — yours alone, never shared.</p>
+    </div>
+    <div data-reveal data-reveal-delay="60" class="wn-card">
+      <div class="wn-chip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/></svg></div>
+      <h3>Residents directory</h3>
+      <p>Verified neighbours grouped by block or tower, with contact details scoped to your role.</p>
+    </div>
+    <div data-reveal data-reveal-delay="120" class="wn-card">
+      <div class="wn-chip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+      <h3>Realtime notifications</h3>
+      <p>Visit updates, fund approvals and reminders arrive the moment they happen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOD DROPS SPOTLIGHT ===================== -->
+<section class="wn-wrap" style="margin:64px auto">
+  <div data-reveal class="wn-panel wn-panel-sand">
+    <svg class="wn-mark" width="300" height="300" viewBox="0 0 60 60" data-parallax="0.07" style="right:-56px;top:-70px;opacity:.08" aria-hidden="true"><path d="M13 52 L13 30 A17 17 0 0 1 47 30 L47 52 L41 52 L41 30 A11 11 0 0 0 19 30 L19 52 Z" fill="#854F0B"/></svg>
+    <div style="position:relative;max-width:640px;margin-bottom:38px">
+      <div class="wn-pill">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#854F0B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span>Food drops</span>
+      </div>
+      <h2 class="wn-h2" style="letter-spacing:-.9px;color:#3E2A0B;margin-bottom:14px">The home kitchen next door, finally organised.</h2>
+      <p style="font-size:16.5px;line-height:1.6;color:#7A5B2E">A resident chef opens a drop, sets a fulfilment window and a cutoff, and neighbours pre-order before it closes. No delivery apps, no commissions — just food made a few doors away.</p>
+    </div>
+    <div class="wn-grid2" style="position:relative">
+      <div class="wn-subcard">
+        <div class="wn-subcard-icon" style="background:#FBEAD0">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#854F0B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/></svg>
         </div>
-        <span class="logo-text">Wooru</span>
-      </a>
-      <nav>
-        <a href="#features">Features</a>
-        <a href="#demo">Live Demo</a>
-        <a href="#how-it-works">How It Works</a>
-        <a href="#reviews">Reviews</a>
-      </nav>
-      <a href="/login" class="nav-cta">
-        Get Started
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </a>
-      <button class="mobile-menu-btn" onclick="document.querySelector('nav').style.display=document.querySelector('nav').style.display==='flex'?'none':'flex'" aria-label="Menu">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111827" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <h3 class="wn-h3-serif" style="font-size:25px;color:#3E2A0B;margin-bottom:14px">For residents</h3>
+        <div class="wn-bullets">
+          <div class="wn-bullet"><b>·</b>Fresh, home-cooked food from people you actually know</div>
+          <div class="wn-bullet"><b>·</b>Reserve before the cutoff and edit or cancel while a drop is open</div>
+          <div class="wn-bullet"><b>·</b>Pay the chef directly — no markup, no delivery fees</div>
+        </div>
+      </div>
+      <div class="wn-subcard-ink">
+        <div class="wn-subcard-icon" style="background:rgba(240,237,227,.12)">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#DDA94A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l1-5h16l1 5"/><path d="M4 9v11a1 1 0 001 1h14a1 1 0 001-1V9"/><path d="M9 21v-6h6v6"/></svg>
+        </div>
+        <h3 class="wn-h3-serif" style="font-size:25px;color:#F5F3EE;margin-bottom:14px">For home businesses</h3>
+        <div class="wn-bullets">
+          <div class="wn-bullet wn-bullet-dark"><b>·</b>Take orders from a captive, trusting audience in your own society</div>
+          <div class="wn-bullet wn-bullet-dark"><b>·</b>Set per-item limits and a cutoff, then cook to the exact count</div>
+          <div class="wn-bullet wn-bullet-dark"><b>·</b>A delivery roster does the coordination — no group-chat chaos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TRANSPARENCY ===================== -->
+<section id="funds" class="wn-wrap" style="margin:64px auto">
+  <div data-reveal class="wn-panel wn-panel-ink">
+    <svg class="wn-mark" width="340" height="340" viewBox="0 0 60 60" data-parallax="0.08" data-parallax-base="translateY(-50%)" style="left:-70px;top:50%;transform:translateY(-50%);opacity:.06" aria-hidden="true"><path d="M13 52 L13 30 A17 17 0 0 1 47 30 L47 52 L41 52 L41 30 A11 11 0 0 0 19 30 L19 52 Z" fill="#F0EDE3"/></svg>
+    <svg class="wn-mark" width="340" height="340" viewBox="0 0 60 60" data-parallax="-0.08" data-parallax-base="translateY(-50%) scaleX(-1)" style="right:-70px;top:50%;transform:translateY(-50%) scaleX(-1);opacity:.06" aria-hidden="true"><path d="M13 52 L13 30 A17 17 0 0 1 47 30 L47 52 L41 52 L41 30 A11 11 0 0 0 19 30 L19 52 Z" fill="#F0EDE3"/></svg>
+    <div style="position:relative">
+      <div class="wn-eyebrow" style="color:#DDA94A;letter-spacing:1.6px;margin-bottom:20px">Transparency, by default</div>
+      <h2 class="wn-h2" style="font-size:46px;line-height:1.15;letter-spacing:-.8px;color:#F5F3EE;max-width:760px;margin:0 auto 40px">The committee finally has nothing left to explain.</h2>
+      <div class="wn-glass-row">
+        <div class="wn-glass">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DDA94A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+          <div class="wn-glass-title">Income against expense</div>
+          <div class="wn-glass-body">Every contribution and payout posts to one ledger the whole community can read.</div>
+        </div>
+        <div class="wn-glass">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DDA94A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/></svg>
+          <div class="wn-glass-title">Roles that fit large societies</div>
+          <div class="wn-glass-body">One treasurer per fund, with block-scoped collectors for bigger communities.</div>
+        </div>
+        <div class="wn-glass">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DDA94A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+          <div class="wn-glass-title">Close a fund to lock it</div>
+          <div class="wn-glass-body">When a collection ends, leads close the books so nothing changes after the fact.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section id="how" class="wn-section" style="padding-top:20px;padding-bottom:24px">
+  <div data-reveal style="text-align:center;max-width:580px;margin:0 auto 52px">
+    <div class="wn-eyebrow">How it works</div>
+    <h2 class="wn-h2" style="font-size:42px;line-height:1.1;letter-spacing:-.8px">From join code to first booking in two minutes.</h2>
+  </div>
+  <div class="wn-grid3" style="gap:28px">
+    <div data-reveal class="wn-step">
+      <div class="wn-numeral">01</div>
+      <h3>Join your society</h3>
+      <p>Enter your community's six-character code and link your flat. No approval queue — you're in instantly.</p>
+    </div>
+    <div data-reveal data-reveal-delay="80" class="wn-step">
+      <div class="wn-numeral">02</div>
+      <h3>Coordinate &amp; reserve</h3>
+      <p>Hire a rated provider, reserve a food drop, join a carpool or contribute to a fund — from one home screen.</p>
+    </div>
+    <div data-reveal data-reveal-delay="160" class="wn-step">
+      <div class="wn-numeral">03</div>
+      <h3>Stay in sync</h3>
+      <p>Realtime notifications keep visits, funds and reminders current — for you and the whole community.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== WHO IT'S FOR ===================== -->
+<section id="roles" class="wn-section" style="padding-top:20px;padding-bottom:24px">
+  <div data-reveal style="text-align:center;max-width:600px;margin:0 auto 40px">
+    <div class="wn-eyebrow">Who it's for</div>
+    <h2 class="wn-h2" style="font-size:42px;line-height:1.1;letter-spacing:-.8px;margin-bottom:10px">Built for everyone under the roof.</h2>
+    <p style="font-size:16px;color:#5B6360;line-height:1.6">Pick your role to see what Wooru does for you.</p>
+  </div>
+  <div data-reveal class="wn-roles">
+    <div class="wn-rolerail" role="tablist" aria-label="Who it's for">
+      <button type="button" class="wn-roletab" role="tab" id="role-tab-0" aria-controls="role-panel-0" aria-selected="true" data-role-tab="0">
+        <div class="wn-roletab-title">Residents</div>
+        <div class="wn-roletab-sub">Find trusted help, and join in</div>
+      </button>
+      <button type="button" class="wn-roletab" role="tab" id="role-tab-1" aria-controls="role-panel-1" aria-selected="false" data-role-tab="1">
+        <div class="wn-roletab-title">Committees &amp; treasurers</div>
+        <div class="wn-roletab-sub">Run the society, transparently</div>
+      </button>
+      <button type="button" class="wn-roletab" role="tab" id="role-tab-2" aria-controls="role-panel-2" aria-selected="false" data-role-tab="2">
+        <div class="wn-roletab-title">Home businesses</div>
+        <div class="wn-roletab-sub">Reach your neighbours directly</div>
       </button>
     </div>
-  </header>
-
-  <!-- Hero -->
-  <section class="hero" id="demo">
-    <div class="hero-content">
-      <div class="hero-badge reveal">
-        <span class="hero-badge-dot"></span>
-        Trusted by 100+ societies
-      </div>
-      <h1 class="hero-title reveal">Wooru — The Operating System for Modern <span class="accent">Communities</span></h1>
-      <p class="hero-subtitle reveal">
-        Hire neighbor-verified providers, pre-order food drops, track cultural funds, and coordinate community life — all in one transparent platform.
-      </p>
-      <div class="hero-actions reveal">
-        <a href="/login" class="btn-primary">
-          Get Started Free
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </a>
-        <a href="#features" class="btn-secondary">Learn More</a>
-      </div>
-      <div class="trust-row reveal">
-        <span class="trust-item">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Verified communities
-        </span>
-        <span class="trust-item">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          4.9 avg rating
-        </span>
-        <span class="trust-item">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
-          Setup in minutes
-        </span>
-      </div>
-    </div>
-
-    <!-- Interactive Sandbox -->
-    <div class="hero-visual">
-      <div class="hero-sandbox reveal">
-        <div class="sandbox-bar">
-          <div class="sandbox-dots">
-            <span class="dot-r"></span>
-            <span class="dot-y"></span>
-            <span class="dot-g"></span>
-          </div>
-          <div class="sandbox-tabs">
-            <button class="sandbox-tab-btn active" onclick="switchTab(0)">Food Drops</button>
-            <button class="sandbox-tab-btn" onclick="switchTab(1)">Hire Provider</button>
-            <button class="sandbox-tab-btn" onclick="switchTab(2)">Cultural Funds</button>
+    <div class="wn-rolepanel">
+      <svg class="wn-mark" width="300" height="300" viewBox="0 0 60 60" data-parallax="0.05" style="right:-56px;bottom:-70px;opacity:.08" aria-hidden="true"><path d="M13 52 L13 30 A17 17 0 0 1 47 30 L47 52 L41 52 L41 30 A11 11 0 0 0 19 30 L19 52 Z" fill="#F0EDE3"/></svg>
+      <div style="position:relative">
+        <div class="wn-roleview" role="tabpanel" id="role-panel-0" aria-labelledby="role-tab-0" data-role-view="0">
+          <h3>Find trusted help, and join in</h3>
+          <div class="wn-bullets">
+            <div class="wn-bullet"><b>·</b>Hire providers your neighbours already rate — and keep private notes</div>
+            <div class="wn-bullet"><b>·</b>Reserve food drops from home kitchens before the cutoff</div>
+            <div class="wn-bullet"><b>·</b>Split shared service visits and carpool with your block</div>
+            <div class="wn-bullet"><b>·</b>Contribute to community funds and see exactly where the money goes</div>
           </div>
         </div>
-
-        <div class="sandbox-body">
-          <!-- Pane 1: Food -->
-          <div class="sandbox-pane active" id="pane-0">
-            <div class="demo-food-card">
-              <div class="demo-food-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#065F46" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></div>
-              <div class="demo-food-info">
-                <div class="demo-food-name">Fresh Dosa & Idli Batter</div>
-                <div class="demo-food-meta">Hosted by Ira (Flat A123) · Cutoff: Today, 8 PM</div>
-                <div class="demo-counter">
-                  <button class="counter-btn" onclick="updateQty(-1)">−</button>
-                  <span class="counter-val" id="qty-val">1</span>
-                  <button class="counter-btn" onclick="updateQty(1)">+</button>
-                  <span class="demo-price" id="price-val">₹10</span>
-                  <button class="demo-reserve-btn" onclick="triggerToast()">Reserve</button>
-                </div>
-                <div class="demo-progress"><div class="demo-progress-fill" id="progress-fill"></div></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Pane 2: Providers -->
-          <div class="sandbox-pane" id="pane-1">
-            <div class="demo-providers">
-              <div class="demo-provider-card selected" onclick="selectProvider(this)">
-                <div class="provider-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-                <div class="provider-name">Ramesh Electrician</div>
-                <div class="provider-meta">Rated by 42 neighbors</div>
-                <span class="provider-rating">★ 4.9</span>
-              </div>
-              <div class="demo-provider-card" onclick="selectProvider(this)">
-                <div class="provider-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
-                <div class="provider-name">Suresh Plumbing</div>
-                <div class="provider-meta">Rated by 28 neighbors</div>
-                <span class="provider-rating">★ 4.8</span>
-              </div>
-              <div class="demo-provider-card" onclick="selectProvider(this)">
-                <div class="provider-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="M4.93 10.93l2.83 2.83"/><path d="M2 18h20"/><path d="M7 18v3"/><path d="M17 18v3"/><circle cx="12" cy="12" r="2"/></svg></div>
-                <div class="provider-name">Deep Clean Squad</div>
-                <div class="provider-meta">Rated by 65 neighbors</div>
-                <span class="provider-rating">★ 5.0</span>
-              </div>
-              <div class="demo-provider-card" onclick="selectProvider(this)">
-                <div class="provider-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 6v12"/><path d="M2 12h20"/></svg></div>
-                <div class="provider-name">Vijay Carpenter</div>
-                <div class="provider-meta">Rated by 19 neighbors</div>
-                <span class="provider-rating">★ 4.7</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Pane 3: Funds -->
-          <div class="sandbox-pane" id="pane-2">
-            <div class="demo-funds-box">
-              <div class="demo-funds-header">
-                <div>
-                  <div class="demo-fund-name">Ganesh Utsav Fund</div>
-                  <div class="demo-fund-target">Target: ₹1,00,000</div>
-                </div>
-                <div class="demo-fund-amount" id="fund-total">₹75,000</div>
-              </div>
-              <input type="range" min="1000" max="10000" value="5000" step="500" class="demo-fund-slider" id="fund-slider" oninput="updateFund(this.value)">
-              <div class="demo-fund-footer">
-                <span>Simulate: <strong id="contrib-val">₹5,000</strong></span>
-                <span>Collected: 75%</span>
-              </div>
-            </div>
+        <div class="wn-roleview" role="tabpanel" id="role-panel-1" aria-labelledby="role-tab-1" data-role-view="1">
+          <h3>Run the society, transparently</h3>
+          <div class="wn-bullets">
+            <div class="wn-bullet"><b>·</b>Onboard your whole society with a single join code</div>
+            <div class="wn-bullet"><b>·</b>Manage maintenance and festival funds on role-scoped ledgers</div>
+            <div class="wn-bullet"><b>·</b>Add block collectors, then close funds to lock the books</div>
+            <div class="wn-bullet"><b>·</b>Post events and verify the providers residents can see</div>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Social Proof -->
-  <div class="social-proof reveal">
-    <div class="proof-grid">
-      <div class="proof-item">
-        <div class="proof-number" data-count="100">100%</div>
-        <div class="proof-label">Verified Societies</div>
-      </div>
-      <div class="proof-item">
-        <div class="proof-number">500+</div>
-        <div class="proof-label">Trusted Providers</div>
-      </div>
-      <div class="proof-item">
-        <div class="proof-number">&lt;10s</div>
-        <div class="proof-label">To Book a Service</div>
-      </div>
-      <div class="proof-item">
-        <div class="proof-number">100%</div>
-        <div class="proof-label">Transparent Audits</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Features -->
-  <section class="features-section" id="features">
-    <div class="section-header reveal">
-      <div class="section-label">Platform</div>
-      <h2 class="section-title">Everything your community needs</h2>
-      <p class="section-desc">Built for the way modern residential societies actually work — practical, transparent, and neighbor-first.</p>
-    </div>
-
-    <div class="features-grid">
-      <div class="feature-card reveal">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-        </div>
-        <h3 class="feature-name">Neighbor-Verified Providers</h3>
-        <p class="feature-desc">Hire plumbers, electricians, and cleaners rated by residents in your own society. Real trust, not anonymous reviews.</p>
-      </div>
-
-      <div class="feature-card reveal">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-        </div>
-        <h3 class="feature-name">Food Drops & Pre-Orders</h3>
-        <p class="feature-desc">Discover home-cooked food drops by resident hosts. Reserve before cutoff — no delivery apps, just neighbor-to-neighbor freshness.</p>
-      </div>
-
-      <div class="feature-card reveal">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-        </div>
-        <h3 class="feature-name">Cultural Fund Tracking</h3>
-        <p class="feature-desc">Monitor festival collections, event budgets, and community spending with complete financial transparency. Every rupee accounted for.</p>
-      </div>
-
-      <div class="feature-card reveal">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-        </div>
-        <h3 class="feature-name">Community Network</h3>
-        <p class="feature-desc">Share rides with neighbors, discover resident-run businesses, and connect with other parents. Build real community bonds.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- How It Works -->
-  <div class="how-section" id="how-it-works">
-    <div class="how-inner">
-      <div class="section-header reveal">
-        <div class="section-label">How it works</div>
-        <h2 class="section-title">Get started in three steps</h2>
-        <p class="section-desc">From sign-up to your first booking in under two minutes.</p>
-      </div>
-
-      <div class="steps-grid">
-        <div class="step-card reveal">
-          <div class="step-num">1</div>
-          <h3 class="step-title">Join Your Society</h3>
-          <p class="step-desc">Sign up, select your verified residential society, and link your flat to the community network.</p>
-        </div>
-        <div class="step-card reveal">
-          <div class="step-num">2</div>
-          <h3 class="step-title">Coordinate & Reserve</h3>
-          <p class="step-desc">Pre-order food drops, hire trusted providers, or contribute to cultural event funds — all in one place.</p>
-        </div>
-        <div class="step-card reveal">
-          <div class="step-num">3</div>
-          <h3 class="step-title">Stay Connected</h3>
-          <p class="step-desc">Get real-time notifications, track service history, and stay connected with your community effortlessly.</p>
+        <div class="wn-roleview" role="tabpanel" id="role-panel-2" aria-labelledby="role-tab-2" data-role-view="2">
+          <h3>Reach your neighbours directly</h3>
+          <div class="wn-bullets">
+            <div class="wn-bullet"><b>·</b>List your service in My Community Network for the whole society</div>
+            <div class="wn-bullet"><b>·</b>Open food drops with per-item limits and a cutoff</div>
+            <div class="wn-bullet"><b>·</b>Take orders from a trusting, in-society audience — no commissions</div>
+            <div class="wn-bullet"><b>·</b>Let a delivery roster handle the coordination for you</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- Testimonial -->
-  <section class="testimonial-section" id="reviews">
-    <div class="section-header reveal">
-      <div class="section-label">Testimonials</div>
-      <h2 class="section-title">Loved by residents</h2>
+<!-- ===================== FAQ ===================== -->
+<section id="faq" class="wn-faq-section">
+  <div data-reveal style="text-align:center;margin-bottom:40px">
+    <div class="wn-eyebrow">Questions</div>
+    <h2 class="wn-h2" style="font-size:42px;line-height:1.1;letter-spacing:-.8px">Answered, honestly.</h2>
+  </div>
+  <div data-reveal class="wn-faq">
+    <div class="wn-faq-row">
+      <button type="button" class="wn-faq-q" aria-expanded="true" aria-controls="faq-a-0" data-faq="0">
+        <span class="wn-faq-label">Is my data private?</span>
+        <span class="wn-faq-toggle" aria-hidden="true">
+          <svg class="wn-minus" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F3732" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg class="wn-plus" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F3732" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="wn-faq-a" id="faq-a-0">Contact details are scoped to your role in the society, and your service reminders stay private to you — never shared with neighbours.</div>
     </div>
-
-    <div class="testimonial-card reveal">
-      <p class="testimonial-quote">
-        "Wooru replaced three WhatsApp groups and a shared spreadsheet. Our maintenance coordination is seamless, food pre-orders save us time daily, and the fund tracking finally brought real transparency."
-      </p>
-      <div class="testimonial-author">
-        <div class="author-avatar">A</div>
-        <div class="author-info">
-          <div class="author-name">Anand Sharma</div>
-          <div class="author-role">Resident Committee Head, Verandah Heights</div>
-        </div>
-      </div>
+    <div class="wn-faq-row">
+      <button type="button" class="wn-faq-q" aria-expanded="false" aria-controls="faq-a-1" data-faq="1">
+        <span class="wn-faq-label">How do community funds stay transparent?</span>
+        <span class="wn-faq-toggle" aria-hidden="true">
+          <svg class="wn-minus" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F3732" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg class="wn-plus" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F3732" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="wn-faq-a" id="faq-a-1">Every contribution and expense posts to one ledger the whole community can read, with income balanced against expense. When a collection ends, leads close the fund to lock the books.</div>
     </div>
-  </section>
+    <div class="wn-faq-row">
+      <button type="button" class="wn-faq-q" aria-expanded="false" aria-controls="faq-a-2" data-faq="2">
+        <span class="wn-faq-label">How do I get my society on Wooru?</span>
+        <span class="wn-faq-toggle" aria-hidden="true">
+          <svg class="wn-minus" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F3732" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg class="wn-plus" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F3732" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="wn-faq-a" id="faq-a-2">Join with your six-character society code and link your flat — no approval queue. Committees can set up the society and invite residents in minutes.</div>
+    </div>
+    <div class="wn-faq-row">
+      <button type="button" class="wn-faq-q" aria-expanded="false" aria-controls="faq-a-3" data-faq="3">
+        <span class="wn-faq-label">Are the service providers safe to hire?</span>
+        <span class="wn-faq-toggle" aria-hidden="true">
+          <svg class="wn-minus" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F3732" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg class="wn-plus" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F3732" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="wn-faq-a" id="faq-a-3">Providers are rated by residents in your own society, and every new listing clears a fraud check before it appears in the directory.</div>
+    </div>
+    <div class="wn-faq-row">
+      <button type="button" class="wn-faq-q" aria-expanded="false" aria-controls="faq-a-4" data-faq="4">
+        <span class="wn-faq-label">What does Wooru cost?</span>
+        <span class="wn-faq-toggle" aria-hidden="true">
+          <svg class="wn-minus" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F3732" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg class="wn-plus" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F3732" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
+      </button>
+      <div class="wn-faq-a" id="faq-a-4">Wooru is free for residents to join their society and use the everyday features — providers, food drops, funds, events and more.</div>
+    </div>
+  </div>
+</section>
 
-  <!-- CTA -->
-  <section class="cta-section">
-    <div class="cta-card reveal">
-      <h2 class="cta-title">Ready to transform your community?</h2>
-      <p class="cta-desc">Join hundreds of residential societies already using Wooru to simplify daily community life.</p>
-      <a href="/login" class="btn-cta-white">
-        Get Started Free
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+<!-- ===================== CTA ===================== -->
+<section class="wn-section wn-cta-section">
+  <div data-reveal class="wn-panel wn-panel-cream">
+    <svg class="wn-mark" width="240" height="240" viewBox="0 0 60 60" data-parallax="0.08" style="right:6%;bottom:-56px;opacity:.08" aria-hidden="true"><path d="M13 52 L13 30 A17 17 0 0 1 47 30 L47 52 L41 52 L41 30 A11 11 0 0 0 19 30 L19 52 Z" fill="#0F3732"/></svg>
+    <svg class="wn-mark" width="180" height="180" viewBox="0 0 60 60" data-parallax="-0.06" style="left:6%;bottom:-40px;opacity:.06" aria-hidden="true"><path d="M13 52 L13 30 A17 17 0 0 1 47 30 L47 52 L41 52 L41 30 A11 11 0 0 0 19 30 L19 52 Z" fill="#0F3732"/></svg>
+    <div style="position:relative">
+      <img src="/images/icon-512.png" alt="Wooru" width="56" height="56" class="wn-cta-logo">
+      <h2 class="wn-h2" style="font-size:48px;line-height:1.06;margin-bottom:16px">Bring your community home.</h2>
+      <p style="font-size:17px;color:#5B6360;max-width:480px;margin:0 auto 34px;line-height:1.6">Set up your society in minutes and run maintenance, funds and daily coordination on one transparent platform.</p>
+      <a href="/login" class="wn-btn wn-btn-primary" style="padding:16px 34px;font-size:16px;font-weight:700">
+        Get started free
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </a>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Footer -->
-  <footer>
-    <div class="footer-inner">
-      <div class="footer-links">
-        <a href="#features">Features</a>
-        <a href="#demo">Live Demo</a>
-        <a href="#how-it-works">How It Works</a>
-        <a href="/login">Sign In</a>
-      </div>
-      <p class="footer-copy">&copy; 2026 Wooru. All rights reserved.</p>
+<!-- ===================== FOOTER ===================== -->
+<footer class="wn-footer">
+  <div class="wn-footer-inner">
+    <a href="#top" class="wn-brand">
+      <img src="/images/icon-512.png" alt="Wooru" width="30" height="30" style="border-radius:9px">
+      <span class="wn-wordmark" style="font-size:22px">wooru</span>
+    </a>
+    <div class="wn-footer-links">
+      <a href="#platform">Platform</a>
+      <a href="#funds">Transparency</a>
+      <a href="#how">How it works</a>
+      <a href="/login">Sign in</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
     </div>
-  </footer>
+    <p class="wn-copy">© 2026 Wooru · Our neighbourhood</p>
+  </div>
+</footer>
 
-  <!-- JavaScript -->
-  <script>
-    // ── Navbar scroll effect ──
-    const header = document.getElementById('site-header');
-    window.addEventListener('scroll', () => {
-      header.classList.toggle('scrolled', window.scrollY > 10);
+<script>
+(function () {
+  'use strict';
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- Header shadow + decorative parallax on scroll ----
+  var header = document.querySelector('[data-site-header]');
+  var marks = reduceMotion ? [] : Array.prototype.slice.call(document.querySelectorAll('[data-parallax]'));
+  marks.forEach(function (el) { el.dataset.base = el.getAttribute('data-parallax-base') || ''; });
+
+  var ticking = false;
+  function onScroll() {
+    if (header) header.classList.toggle('is-scrolled', window.scrollY > 8);
+    if (!marks.length) return;
+    var vh = window.innerHeight;
+    for (var i = 0; i < marks.length; i++) {
+      var el = marks[i];
+      var r = el.getBoundingClientRect();
+      if (r.bottom < -200 || r.top > vh + 200) continue;
+      var off = (vh / 2 - (r.top + r.height / 2)) * parseFloat(el.getAttribute('data-parallax'));
+      el.style.transform = (el.dataset.base + ' translateY(' + off.toFixed(1) + 'px)').trim();
+    }
+  }
+  window.addEventListener('scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(function () { onScroll(); ticking = false; });
+  }, { passive: true });
+  onScroll();
+
+  // ---- Scroll reveal ----
+  var revealables = Array.prototype.slice.call(document.querySelectorAll('[data-reveal]'));
+  function revealAll() { revealables.forEach(function (el) { el.classList.add('is-revealed'); }); }
+
+  if (reduceMotion || !('IntersectionObserver' in window)) {
+    revealAll();
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var delay = parseInt(e.target.getAttribute('data-reveal-delay') || '0', 10);
+        setTimeout(function () { e.target.classList.add('is-revealed'); }, delay);
+        io.unobserve(e.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+    revealables.forEach(function (el) { io.observe(el); });
+    // Safety net — content is never allowed to stay invisible.
+    setTimeout(revealAll, 2600);
+  }
+
+  // ---- Who it's for: tab rail ----
+  var roleTabs = Array.prototype.slice.call(document.querySelectorAll('[data-role-tab]'));
+  var roleViews = Array.prototype.slice.call(document.querySelectorAll('[data-role-view]'));
+  function selectRole(index) {
+    roleTabs.forEach(function (tab) {
+      tab.setAttribute('aria-selected', String(Number(tab.getAttribute('data-role-tab')) === index));
     });
-
-    // ── Motion.dev scroll reveal animations ──
-    if (typeof Motion !== 'undefined') {
-      // Staggered reveal for all .reveal elements as they scroll into view
-      document.querySelectorAll('.reveal').forEach((el, i) => {
-        Motion.inView(el, () => {
-          Motion.animate(el, { opacity: [0, 1], y: [24, 0] }, {
-            duration: 0.6,
-            delay: 0.05 * (i % 4),
-            easing: [0.16, 1, 0.3, 1]
-          });
-        }, { amount: 0.15 });
-      });
-    } else {
-      // Fallback: just show everything
-      document.querySelectorAll('.reveal').forEach(el => {
-        el.style.opacity = '1';
-        el.style.transform = 'none';
-      });
-    }
-
-    // ── Sandbox tab switching ──
-    function switchTab(index) {
-      document.querySelectorAll('.sandbox-tab-btn').forEach((tab, i) => {
-        tab.classList.toggle('active', i === index);
-      });
-      document.querySelectorAll('.sandbox-pane').forEach((pane, i) => {
-        pane.classList.toggle('active', i === index);
-      });
-    }
-
-    // ── Food demo ──
-    let qty = 1;
-    function updateQty(delta) {
-      qty = Math.max(1, qty + delta);
-      document.getElementById('qty-val').innerText = qty;
-      document.getElementById('price-val').innerText = `₹${qty * 10}`;
-      document.getElementById('progress-fill').style.width = `${Math.min(100, 70 + qty * 5)}%`;
-    }
-
-    function triggerToast() {
-      const t = document.getElementById('toast');
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2200);
-    }
-
-    function selectProvider(el) {
-      document.querySelectorAll('.demo-provider-card').forEach(c => c.classList.remove('selected'));
-      el.classList.add('selected');
-      triggerToast();
-    }
-
-    function updateFund(val) {
-      document.getElementById('contrib-val').innerText = `₹${Number(val).toLocaleString('en-IN')}`;
-      const total = 70000 + Number(val);
-      document.getElementById('fund-total').innerText = `₹${total.toLocaleString('en-IN')}`;
-    }
-
-    // ── Feature card hover spotlight (subtle) ──
-    document.querySelectorAll('.feature-card').forEach(card => {
-      card.addEventListener('mousemove', e => {
-        const rect = card.getBoundingClientRect();
-        card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-        card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-      });
+    roleViews.forEach(function (view) {
+      view.hidden = Number(view.getAttribute('data-role-view')) !== index;
     });
-  </script>
+  }
+  roleTabs.forEach(function (tab) {
+    tab.addEventListener('click', function () { selectRole(Number(tab.getAttribute('data-role-tab'))); });
+  });
+  selectRole(0);
+
+  // ---- FAQ: one open at a time ----
+  var faqButtons = Array.prototype.slice.call(document.querySelectorAll('[data-faq]'));
+  function openFaq(index) {
+    faqButtons.forEach(function (btn) {
+      var i = Number(btn.getAttribute('data-faq'));
+      var isOpen = i === index;
+      btn.setAttribute('aria-expanded', String(isOpen));
+      var answer = document.getElementById(btn.getAttribute('aria-controls'));
+      if (answer) answer.hidden = !isOpen;
+    });
+  }
+  faqButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var i = Number(btn.getAttribute('data-faq'));
+      openFaq(btn.getAttribute('aria-expanded') === 'true' ? -1 : i);
+    });
+  });
+  openFaq(0);
+})();
+</script>
 </body>
 </html>

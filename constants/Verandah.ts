@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
 
 /**
  * Verandah Design Language — Non-Color Tokens
@@ -180,9 +180,19 @@ export const VerandahLayout = {
 
 /**
  * Shared height token for image-based network tiles
- * (used by Pre-order Food and Community Business cards).
+ * (used by Pre-order Food and Community Business cards) and for the hero photo
+ * on the matching detail screens.
+ *
+ * The cover is 30% of the viewport height rather than a fixed pixel count, so a
+ * food photo reads as the subject of the card on a phone instead of a thin
+ * strip above the text. Clamped so it neither disappears on a short device nor
+ * eats a whole tablet screen. Pass the live height from `useWindowDimensions()`
+ * so the tile re-measures on rotation and on browser resize.
  */
-export const getNetworkTileImageHeight = (): number => 108;
+export const getNetworkTileImageHeight = (windowHeight?: number): number => {
+  const height = windowHeight ?? Dimensions.get('window').height;
+  return Math.round(Math.min(280, Math.max(150, height * 0.3)));
+};
 
 /**
  * Formats a 24-hour time string (e.g. "13:00", "09:30")

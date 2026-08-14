@@ -1,11 +1,17 @@
 import { MarkerPin01 } from '@untitledui/icons/MarkerPin01';
 import { Image } from 'expo-image';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahRadius, VerandahType } from '../constants/Verandah';
+import { getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { cloudinaryUrl } from '../lib/cloudinary';
-import { eventCategoryMeta, formatEventDateShort, formatEventWhen, isRegistrationOpen } from '../lib/events';
+import {
+  eventCategoryMeta,
+  eventDayLabel,
+  formatEventDateShort,
+  formatEventWhen,
+  isRegistrationOpen,
+} from '../lib/events';
 
 export interface CommunityEventItem {
   id: string;
@@ -26,25 +32,33 @@ interface EventCardProps {
 }
 
 export function EventCard({ event, onPress, variant = 'full' }: EventCardProps) {
+  const { height: windowHeight } = useWindowDimensions();
   const meta = eventCategoryMeta(event.category);
   const { day, month } = formatEventDateShort(event.event_date);
   const regOpen = isRegistrationOpen(event.registration_last_date);
   const isCancelled = event.status === 'cancelled';
+  const dayLabel = eventDayLabel(event.event_date);
 
   if (variant === 'compact') {
     return (
       <TouchableOpacity style={styles.compactCard} onPress={onPress} activeOpacity={0.88}>
         <View style={styles.compactImageWrap}>
           {event.image_url ? (
-            <Image source={{ uri: cloudinaryUrl(event.image_url) }} style={styles.compactImage} contentFit="cover" transition={200} />
+            <Image
+              source={{ uri: cloudinaryUrl(event.image_url) }}
+              style={styles.fillImage}
+              contentFit="cover"
+              contentPosition="top"
+              transition={200}
+            />
           ) : (
-            <View style={[styles.compactPlaceholder, { backgroundColor: meta.tintSoft }]}>
+            <View style={[styles.placeholder, { backgroundColor: meta.tintSoft }]}>
               <meta.Icon size={26} color={meta.tint} aria-hidden={true} />
             </View>
           )}
-          <View style={styles.compactDateBadge}>
-            <Text style={styles.compactDateDay}>{day}</Text>
-            <Text style={styles.compactDateMonth}>{month}</Text>
+          <View style={styles.dateBadge}>
+            <Text style={styles.dateBadgeDay}>{day}</Text>
+            <Text style={styles.dateBadgeMonth}>{month}</Text>
           </View>
           {isCancelled ? (
             <View style={styles.cancelledBadge}>
@@ -55,48 +69,87 @@ export function EventCard({ event, onPress, variant = 'full' }: EventCardProps) 
         <View style={styles.compactBody}>
           <Text style={styles.compactTitle} numberOfLines={2}>{event.title}</Text>
           {event.venue ? (
-            <View style={styles.compactMetaRow}>
+            <View style={styles.metaRow}>
               <MarkerPin01 size={11} color={Verandah.textTertiary} aria-hidden={true} />
-              <Text style={styles.compactMetaText} numberOfLines={1}>{event.venue}</Text>
+              <Text style={styles.metaText} numberOfLines={1}>{event.venue}</Text>
             </View>
           ) : null}
           {regOpen ? (
-            <Text style={styles.compactRegOpen} numberOfLines={1}>Register by {formatEventDateShort(event.registration_last_date!).day} {formatEventDateShort(event.registration_last_date!).month}</Text>
+            <Text style={styles.compactRegOpen} numberOfLines={1}>
+              Register by {formatEventDateShort(event.registration_last_date!).day} {formatEventDateShort(event.registration_last_date!).month}
+            </Text>
           ) : null}
         </View>
       </TouchableOpacity>
     );
   }
 
+  // Full variant: a poster card. An event is a thing residents decide to attend
+  // from a photo and a date, so the cover leads and the date badge sits on it —
+  // the old 96px thumbnail row read as a settings list, not a "what's on" feed.
+  const coverHeight = getNetworkTileImageHeight(windowHeight);
+
   return (
-    <TouchableOpacity style={styles.fullCard} onPress={onPress} activeOpacity={0.9}>
-      <View style={styles.fullImageWrap}>
+    <TouchableOpacity
+      style={[styles.fullCard, isCancelled && styles.fullCardCancelled]}
+      onPress={onPress}
+      activeOpacity={0.92}
+    >
+      <View style={[styles.fullImageWrap, { height: coverHeight }]}>
         {event.image_url ? (
-          <Image source={{ uri: cloudinaryUrl(event.image_url) }} style={styles.fullImage} contentFit="cover" transition={200} />
+          <Image
+            source={{ uri: cloudinaryUrl(event.image_url) }}
+            style={styles.fillImage}
+            contentFit="cover"
+            contentPosition="top"
+            transition={200}
+          />
         ) : (
-          <View style={[styles.fullPlaceholder, { backgroundColor: meta.tintSoft }]}>
-            <meta.Icon size={30} color={meta.tint} aria-hidden={true} />
+          <View style={[styles.placeholder, { backgroundColor: meta.tintSoft }]}>
+            <meta.Icon size={44} color={meta.tint} aria-hidden={true} />
           </View>
         )}
+
+        <View style={styles.dateBadge}>
+          <Text style={styles.dateBadgeDay}>{day}</Text>
+          <Text style={styles.dateBadgeMonth}>{month}</Text>
+        </View>
+
+        <View style={styles.overlayRight}>
+          {isCancelled ? (
+            <View style={styles.cancelledBadge}>
+              <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+            </View>
+          ) : dayLabel ? (
+            <View style={styles.dayLabelBadge}>
+              <Text style={styles.dayLabelText}>{dayLabel}</Text>
+            </View>
+          ) : null}
+        </View>
       </View>
+
       <View style={styles.fullBody}>
         <View style={styles.fullTopRow}>
           <View style={[styles.categoryChip, { backgroundColor: meta.tintSoft }]}>
             <meta.Icon size={11} color={meta.tint} aria-hidden={true} />
             <Text style={[styles.categoryChipText, { color: meta.tint }]}>{meta.label}</Text>
           </View>
-          {isCancelled ? (
-            <View style={styles.cancelledBadgeInline}>
-              <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+          {!isCancelled && regOpen ? (
+            <View style={styles.regChip}>
+              <Text style={styles.regChipText}>
+                Register by {formatEventDateShort(event.registration_last_date!).day} {formatEventDateShort(event.registration_last_date!).month}
+              </Text>
             </View>
           ) : null}
         </View>
+
         <Text style={styles.fullTitle} numberOfLines={2}>{event.title}</Text>
         <Text style={styles.fullWhen}>{formatEventWhen(event.event_date, event.start_time)}</Text>
+
         {event.venue ? (
-          <View style={styles.compactMetaRow}>
+          <View style={styles.metaRow}>
             <MarkerPin01 size={12} color={Verandah.textTertiary} aria-hidden={true} />
-            <Text style={styles.compactMetaText} numberOfLines={1}>{event.venue}</Text>
+            <Text style={styles.metaText} numberOfLines={1}>{event.venue}</Text>
           </View>
         ) : null}
       </View>
@@ -108,6 +161,85 @@ const COMPACT_WIDTH = 168;
 const COMPACT_IMAGE_HEIGHT = 92;
 
 const styles = StyleSheet.create({
+  fillImage: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholder: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: Verandah.card,
+    borderRadius: VerandahRadius.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignItems: 'center',
+    ...Verandah.shadowCard,
+  },
+  dateBadgeDay: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 17,
+    color: Verandah.textPrimary,
+  },
+  dateBadgeMonth: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 9,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    color: Verandah.textSecondary,
+  },
+  overlayRight: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    alignItems: 'flex-end',
+  },
+  dayLabelBadge: {
+    backgroundColor: Verandah.primary,
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  dayLabelText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: Verandah.primaryFg,
+  },
+  cancelledBadge: {
+    backgroundColor: Verandah.dangerSoft,
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  cancelledBadgeText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 10,
+    fontWeight: '700',
+    color: Verandah.danger,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  metaText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 11.5,
+    color: Verandah.textSecondary,
+    flexShrink: 1,
+  },
+
+  // Compact (horizontal rail on the Community tab)
   compactCard: {
     width: COMPACT_WIDTH,
     borderRadius: VerandahRadius.card,
@@ -123,60 +255,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     backgroundColor: Verandah.cream,
   },
-  compactImage: {
-    width: '100%',
-    height: '100%',
-  },
-  compactPlaceholder: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  compactDateBadge: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-    backgroundColor: Verandah.card,
-    borderRadius: VerandahRadius.sm,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    alignItems: 'center',
-  },
-  compactDateDay: {
-    fontFamily: VerandahType.sansFamily,
-    fontSize: 13,
-    fontWeight: '700',
-    lineHeight: 15,
-    color: Verandah.textPrimary,
-  },
-  compactDateMonth: {
-    fontFamily: VerandahType.sansFamily,
-    fontSize: 8.5,
-    fontWeight: '600',
-    color: Verandah.textSecondary,
-  },
-  cancelledBadge: {
-    position: 'absolute',
-    bottom: 6,
-    right: 6,
-    backgroundColor: Verandah.dangerSoft,
-    borderRadius: VerandahRadius.pill,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  cancelledBadgeInline: {
-    backgroundColor: Verandah.dangerSoft,
-    borderRadius: VerandahRadius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  cancelledBadgeText: {
-    fontFamily: VerandahType.sansFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    color: Verandah.danger,
-  },
   compactBody: {
     padding: 8,
   },
@@ -187,18 +265,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: Verandah.textPrimary,
   },
-  compactMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
-  },
-  compactMetaText: {
-    fontFamily: VerandahType.sansFamily,
-    fontSize: 10.5,
-    color: Verandah.textSecondary,
-    flexShrink: 1,
-  },
   compactRegOpen: {
     fontFamily: VerandahType.sansFamily,
     fontSize: 10,
@@ -206,41 +272,34 @@ const styles = StyleSheet.create({
     color: Verandah.accent,
     marginTop: 4,
   },
+
+  // Full (events feed)
   fullCard: {
-    flexDirection: 'row',
     borderRadius: VerandahRadius.card,
     borderWidth: 0.5,
     borderColor: Verandah.borderHair,
     backgroundColor: Verandah.card,
     overflow: 'hidden',
-    marginBottom: 10,
+    marginBottom: 12,
     ...Verandah.shadowCard,
   },
+  fullCardCancelled: {
+    opacity: 0.72,
+  },
   fullImageWrap: {
-    width: 96,
-    height: 96,
+    width: '100%',
+    position: 'relative',
     backgroundColor: Verandah.cream,
   },
-  fullImage: {
-    width: '100%',
-    height: '100%',
-  },
-  fullPlaceholder: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   fullBody: {
-    flex: 1,
-    padding: 10,
-    justifyContent: 'center',
-    gap: 3,
+    padding: 12,
   },
   fullTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 6,
+    marginBottom: 6,
   },
   categoryChip: {
     flexDirection: 'row',
@@ -249,22 +308,39 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     borderRadius: VerandahRadius.pill,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
   },
   categoryChipText: {
     fontFamily: VerandahType.sansFamily,
     fontSize: 10,
     fontWeight: '600',
   },
-  fullTitle: {
+  regChip: {
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: Verandah.sand,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    flexShrink: 1,
+  },
+  regChipText: {
     fontFamily: VerandahType.sansFamily,
-    fontSize: 14.5,
+    fontSize: 10,
     fontWeight: '600',
+    color: Verandah.goldInk,
+  },
+  fullTitle: {
+    fontFamily: VerandahType.serifFamily,
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '400',
+    letterSpacing: -0.3,
     color: Verandah.textPrimary,
   },
   fullWhen: {
     fontFamily: VerandahType.sansFamily,
-    fontSize: 12,
-    color: Verandah.textSecondary,
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: Verandah.accent,
+    marginTop: 3,
   },
 });

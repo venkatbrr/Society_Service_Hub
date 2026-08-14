@@ -635,6 +635,7 @@ const styles = StyleSheet.create({
     borderColor: '#A7F3D0',
     borderRadius: VerandahRadius.lg,
     padding: 10,
+    ...Verandah.shadowCard,
   },
   revenueCardTitle: {
     fontSize: 12,

@@ -1063,6 +1063,7 @@ const styles = StyleSheet.create({
     borderRadius: VerandahRadius.lg,
     padding: 8,
     marginBottom: 8,
+    ...Verandah.shadowCard,
   },
   hostMeta: {
     flex: 1,

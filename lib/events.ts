@@ -97,6 +97,22 @@ export function isRegistrationOpen(registrationLastDate: string | null | undefin
   return todayStr <= registrationLastDate;
 }
 
+/**
+ * "Today" / "Tomorrow" for the two days residents actually need to act on,
+ * `null` for everything else so the card falls back to the full date line.
+ */
+export function eventDayLabel(eventDate: string, today: Date = new Date()): string | null {
+  const toKey = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  if (eventDate === toKey(today)) return 'Today';
+
+  const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+  if (eventDate === toKey(tomorrow)) return 'Tomorrow';
+
+  return null;
+}
+
 export function isEventPast(eventDate: string, today: Date = new Date()): boolean {
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   return eventDate < todayStr;

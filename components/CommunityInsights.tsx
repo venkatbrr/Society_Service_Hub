@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
     borderColor: Verandah.border,
+    ...Verandah.shadowCard,
   },
   iconContainer: {
     width: 36,

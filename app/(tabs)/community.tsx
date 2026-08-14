@@ -1,3 +1,4 @@
+import { Award01 } from '@untitledui/icons/Award01';
 import { BarChart01 } from '@untitledui/icons/BarChart01';
 import { Building01 } from '@untitledui/icons/Building01';
 import { CalendarDate } from '@untitledui/icons/CalendarDate';
@@ -84,7 +85,7 @@ const formatRelativePulseTime = (timestamp: string) => {
 export default function CommunityScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user, communityId, appRole, isCommunityLead, isEventOrganizer, fundsEnabled, blockLabel, myFundsAccessRequest, refreshSession } = useAuth();
+  const { user, communityId, appRole, isCommunityLead, isEventOrganizer, fundsEnabled, blockLabel, communityHasLead, myFundsAccessRequest, refreshSession } = useAuth();
 
   const canPostEvents = isEventOrganizer || isCommunityLead;
 
@@ -259,6 +260,27 @@ export default function CommunityScreen() {
           </Text>
         </View>
 
+        {/* A community can be approved and full of residents before anyone is
+            appointed president. Say so plainly rather than letting lead-only
+            sections silently not appear. Neighbourhood features (MCN, providers,
+            visits, SOS) work regardless — only money and roles wait. */}
+        {!communityHasLead ? (
+          <View style={styles.noLeadCard}>
+            <View style={styles.noLeadHeaderRow}>
+              <Award01 size={16} color={Verandah.goldInk} aria-hidden={true} />
+              <Text style={styles.noLeadTitle}>No president yet</Text>
+            </View>
+            <Text style={styles.noLeadCopy}>
+              Your community has no president or vice president appointed. Everything neighbourly still works —
+              services, food drops, businesses, rides and emergency numbers. Community funds and block in-charges
+              open up once a president is in place.
+            </Text>
+            <TouchableOpacity onPress={() => router.push('/residents' as any)} activeOpacity={0.8}>
+              <Text style={styles.inlineLink}>See who is in your community</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
         <View style={styles.eventsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Happening soon</Text>
@@ -377,6 +399,21 @@ export default function CommunityScreen() {
                 <Text style={styles.ctaButtonText}>Request again</Text>
               </TouchableOpacity>
             </BaseCard>
+          ) : !communityHasLead ? (
+            /* Funds are money held on the community's behalf, with a treasurer
+               and per-block collectors appointed by the president. Without one
+               there is nobody to appoint them or answer for the balance, so the
+               request CTA is withheld rather than shown and then failing. */
+            <BaseCard padding={14}>
+              <Text style={styles.cardTitle}>Funds support</Text>
+              <Text style={styles.cardCopy}>
+                Community funds need a president or vice president to appoint a treasurer and collectors.
+                Once your community has one, you can request funds support from here.
+              </Text>
+              {hadHistoricalFunds ? (
+                <Text style={styles.cardCopy}>Funds were previously active in this community.</Text>
+              ) : null}
+            </BaseCard>
           ) : (
             <BaseCard padding={14}>
               <Text style={styles.cardTitle}>Funds support</Text>
@@ -401,8 +438,8 @@ export default function CommunityScreen() {
                     <LayersThree01 size={16} color={Verandah.primary} aria-hidden={true} />
                   </View>
                   <View style={styles.actionCardTextWrap}>
-                    <Text style={styles.cardTitle}>Manage {blockLabel.toLowerCase()}s</Text>
-                    <Text style={styles.cardCopy}>Set up {blockLabel.toLowerCase()}s and block in-charges.</Text>
+                    <Text style={styles.cardTitle}>{blockLabel}s</Text>
+                    <Text style={styles.cardCopy}>See {blockLabel.toLowerCase()}s, residents and in-charges.</Text>
                   </View>
                   <ChevronRight size={16} color={Verandah.textMuted} aria-hidden={true} />
                 </View>
@@ -1000,5 +1037,31 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Verandah.accent,
     fontFamily: VerandahType.sansFamily,
+  },
+  noLeadCard: {
+    borderRadius: VerandahRadius.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.border,
+    backgroundColor: Verandah.sand,
+    padding: 14,
+    ...Verandah.shadowCard,
+  },
+  noLeadHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  noLeadTitle: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 14,
+    fontWeight: '700',
+    color: Verandah.goldInk,
+  },
+  noLeadCopy: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    lineHeight: 17,
+    color: Verandah.goldInk,
   },
 });

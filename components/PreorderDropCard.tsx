@@ -1,15 +1,13 @@
 import { Share07 } from '@untitledui/icons/Share07';
 import { Image } from 'expo-image';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { format12HourTime, getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { cloudinaryUrl } from '../lib/cloudinary';
 import { shareOrCopy } from '../lib/share';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
-
-const NETWORK_TILE_IMAGE_HEIGHT = getNetworkTileImageHeight();
 
 export interface PreorderDropItem {
   id: string;
@@ -46,6 +44,8 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
   isCreator = false,
   onPress,
 }) => {
+  const { height: windowHeight } = useWindowDimensions();
+  const coverHeight = getNetworkTileImageHeight(windowHeight);
   const now = new Date();
   const cutoffDate = new Date(drop.cutoff_at);
   const isCutoffPassed = now >= cutoffDate;
@@ -166,9 +166,15 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
     <View style={styles.card}>
       <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
         {/* Cover photo with overlaid cut-off badge */}
-        <View style={styles.coverImageWrap}>
+        <View style={[styles.coverImageWrap, { height: coverHeight }]}>
           {drop.image_url ? (
-            <Image source={{ uri: cloudinaryUrl(drop.image_url) }} style={styles.coverImage} contentFit="cover" transition={200} />
+            <Image
+              source={{ uri: cloudinaryUrl(drop.image_url) }}
+              style={styles.coverImage}
+              contentFit="cover"
+              contentPosition="top"
+              transition={200}
+            />
           ) : (
             <View style={styles.coverPlaceholder}>
               <Text style={styles.coverPlaceholderText}>food photo</Text>
@@ -362,7 +368,6 @@ const styles = StyleSheet.create({
     color: Verandah.accent,
   },
   coverImageWrap: {
-    height: NETWORK_TILE_IMAGE_HEIGHT,
     width: '100%',
     position: 'relative',
     backgroundColor: Verandah.cream,

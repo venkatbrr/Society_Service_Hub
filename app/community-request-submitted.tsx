@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Linking,
-    Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -16,6 +15,7 @@ import { VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { Tables } from '../lib/database.types';
 import { replaceTracked } from '../lib/navigation';
+import { goToLanding } from '../lib/siteUrl';
 import { shareOrCopy } from '../lib/share';
 import { supabase } from '../lib/supabase';
 
@@ -215,7 +215,7 @@ export default function CommunityRequestSubmittedScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={async () => { await signOut(); if (Platform.OS !== 'web') replaceTracked(router, '/login'); }}
+            onPress={async () => { await signOut(); if (!goToLanding()) replaceTracked(router, '/login'); }}
             style={styles.textButton}
             activeOpacity={0.75}
           >
@@ -259,7 +259,7 @@ export default function CommunityRequestSubmittedScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={async () => { await signOut(); if (Platform.OS !== 'web') replaceTracked(router, '/login'); }}
+          onPress={async () => { await signOut(); if (!goToLanding()) replaceTracked(router, '/login'); }}
           style={styles.textButton}
           activeOpacity={0.75}
         >

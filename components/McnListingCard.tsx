@@ -2,7 +2,7 @@ import { Share07 } from '@untitledui/icons/Share07';
 import { Star01 } from '@untitledui/icons/Star01';
 import { Image } from 'expo-image';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { getNetworkTileImageHeight, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { cloudinaryUrl } from '../lib/cloudinary';
@@ -10,8 +10,6 @@ import { shareOrCopy } from '../lib/share';
 import { siteUrl } from '../lib/siteUrl';
 import { Avatar } from './Avatar';
 import { BaseCard } from './BaseCard';
-
-const NETWORK_TILE_IMAGE_HEIGHT = getNetworkTileImageHeight();
 
 export interface McnListingItem {
   id: string;
@@ -47,6 +45,8 @@ export const McnListingCard = React.memo(({
   listing,
   onPress,
 }: McnListingCardProps) => {
+  const { height: windowHeight } = useWindowDimensions();
+  const coverHeight = getNetworkTileImageHeight(windowHeight);
   const ratings = listing.ratings || [];
   const ratingCount = ratings.length;
   const avgRating = ratingCount > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
@@ -92,8 +92,9 @@ export const McnListingCard = React.memo(({
       {listing.image_url ? (
         <Image
           source={{ uri: cloudinaryUrl(listing.image_url) }}
-          style={styles.coverImage}
+          style={[styles.coverImage, { height: coverHeight }]}
           contentFit="cover"
+          contentPosition="top"
           transition={200}
         />
       ) : null}
@@ -151,8 +152,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: Verandah.borderStrong,
-    shadowColor: 'transparent',
-    elevation: 0,
     overflow: 'hidden',
   },
   inactiveCard: {
@@ -160,7 +159,6 @@ const styles = StyleSheet.create({
   },
   coverImage: {
     width: '100%',
-    height: 95,
   },
   cardContentWithImage: {
     padding: 8,
@@ -229,32 +227,5 @@ const styles = StyleSheet.create({
     ...VerandahType.body,
     marginBottom: 8,
     lineHeight: 18,
-  },
-  viewerOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.92)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  viewerImage: {
-    width: '100%',
-    height: '100%',
-  },
-  viewerImageWrap: {
-    width: '100%',
-    height: '100%',
-  },
-  viewerCloseBtn: {
-    position: 'absolute',
-    top: 48,
-    right: 20,
-    zIndex: 2,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

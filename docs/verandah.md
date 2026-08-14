@@ -5,7 +5,7 @@ This document is the canonical reference for the Verandah UI system used in Woor
 ## Principles
 
 1. **Warm over cold**: Embrace soft, warm neutral surfaces (`#FAF8F4` / `surface`) over sterile white or harsh grays to create an inviting, human environment.
-2. **Restraint over decoration**: Prioritize calm utility and content structure. Eliminate unnecessary design fluff like drop shadows, complex gradients, or decorative emojis.
+2. **Restraint over decoration**: Prioritize calm utility and content structure. Eliminate design fluff like complex gradients and decorative emojis. Depth is allowed but rationed — only the three elevation tokens, only on the surfaces listed under [Elevation](#elevation).
 3. **Numbers with respect**: Format currency (e.g., using `<Rupees>`), counts, dates, and times with meticulous attention. Never prepend signs like `+` unless explicitly representing transaction ledgers.
 4. **Serif moments sans body**: Reserve serif/display typography (Georgia/display) for the single largest, most prominent title anchor on the screen. All other titles, secondary headings, and body copy must remain sans-serif.
 5. **Sentence case everywhere**: Write all user-facing strings, actions, headers, and form labels in clean sentence case (e.g., "Email address" instead of "EMAIL ADDRESS" or "Email Address").
@@ -149,6 +149,7 @@ Reuse these instead of building local variants:
 | `ChipRowSlider` | Variable-width chip rows with 3-layer z-order sliding highlight & web drag-to-scroll (Family B) |
 | `HeaderBackButton` | Stack header back affordance |
 | `ImageUploader` | Any Cloudinary image upload |
+| `ImageViewer` | Full-screen tap-to-dismiss photo viewer. Pair it with **every** cropped cover image — a `contentFit="cover"` thumbnail hides part of the photo, and residents need a way to see the whole thing |
 | `DateField` | Cross-platform date picker (`input[type=date]` on web, `DateTimePicker` modal on native) |
 | `ComingSoonTile` | The placeholder card standing in for a hidden section — see below |
 | `AnimatedTileGlyph` | MCN section-card glyphs; wraps `NetworkTileIcon` in a per-kind idle motion |
@@ -214,7 +215,7 @@ Motion follows the same rules as the rail below: built-in `Animated`, `useNative
 
 Motion uses React Native's built-in `Animated` (**not** Reanimated — it is a dependency but unused, and unconfigured for web). The shared springy curve is `Easing.bezier(0.34, 1.5, 0.5, 1)`: highlight slide 460ms (shared by bottom nav, `SegmentedSlider`, and `ChipRowSlider`), icon scale 400ms, label opacity 300ms. While MCN is active its disc breathes between `translateY` −3 and −6 on a 3s loop; on deactivation it settles to 0. All animations run with `useNativeDriver: false` because the highlight animates layout-adjacent values and the web target cannot use the native driver at all.
 
-The disc's drop shadow is the one sanctioned exception to the "no `shadow*` on surfaces" rule below — it is a brand affordance, not a card.
+The disc's drop shadow is `Verandah.shadowRaised` — see [Elevation](#elevation).
 
 ### Bespoke glyphs
 
@@ -240,9 +241,31 @@ Some components ship a `.web.tsx` sibling because their native rendering does no
 General constraints:
 
 - Avoid `LinearGradient` for card/chrome/button surfaces.
-- Avoid `shadow*` and `elevation` on cards.
+- Never hand-roll `shadow*` / `elevation` values — use the elevation tokens below.
 - Keep copy in sentence case.
 - Prefer tokenized semantic color meanings over ad-hoc visual accents.
+
+## Elevation
+
+Verandah is a flat language, but "flat" was over-applied: full-width content cards
+sat on the same paper as the page with only a 0.5px hairline separating them, and
+on a phone in daylight the boundary disappeared. Depth is therefore **tokenized,
+not banned** — three tokens in `constants/Colors.ts`, and nothing else.
+
+| Token | Use on | Not on |
+|---|---|---|
+| `Verandah.shadowCard` | **Big tiles**: anything a resident taps to open a screen or that is the subject of its row — feed cards (`PreorderDropCard`, `McnListingCard`, `EventCard`, `BaseCard`), hub tiles, notice/banner cards, search bars | Dense list rows |
+| `Verandah.shadowRaised` | Floating and inverted surfaces: FABs, the teal info panel, the MCN nav disc | Ordinary cards |
+| `Verandah.shadowDevice` | The landing page's device mockup only | Anything in-app |
+
+**Small tiles stay flat.** Provider name tiles on the Help tab, chips, category
+pills, badges, avatars, segmented-control segments, and any row inside an
+already-elevated card keep the hairline border and no shadow — stacking shadows
+inside a shadowed card is what makes a screen look muddy.
+
+`BaseCard` already carries `shadowCard`; do not cancel it with
+`shadowColor: 'transparent'` / `elevation: 0` (this is what `McnListingCard` did,
+and it was the one card in the network feed that looked unclickable).
 
 ## Avatar Tint Algorithm Rationale
 
@@ -275,7 +298,7 @@ Do not hand-build currency strings in UI when `Rupees` can be used.
 To maintain strict conformance to the Verandah design language, be vigilant against these frequent design anti-patterns:
 
 - **Ad-hoc uppercase styling**: Do not define custom uppercase form labels (e.g., `<Text>NAME</Text>`) or use `textTransform: 'uppercase'` on regular body/title texts. Let the design system's `sectionLabel` token handle uppercase transformations under precise hierarchy.
-- **Shadow and elevation overrides**: Never manually configure `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`, or `elevation` on cards, panels, or buttons. All surfaces should leverage flat hairline outlines (`0.5px` border width with `Verandah.border`) or standard `BaseCard` components.
+- **Hand-rolled shadow values**: Never write raw `shadowColor` / `shadowOffset` / `shadowOpacity` / `shadowRadius` / `elevation` in a stylesheet. Spread an elevation token (`...Verandah.shadowCard`) instead, and only on the surfaces listed under [Elevation](#elevation) — small tiles keep the flat `0.5px` hairline. Equally, never *cancel* a token with `shadowColor: 'transparent'` or `elevation: 0`.
 - **Custom color mappings**: Avoid hardcoding hex color values (e.g., `#FAF8F4` or `#0F3732`) directly inside stylesheets. Always map colors through the local `colors` object bound to `Verandah` tokens, or read from `Verandah` directly to guarantee visual consistency and theme compliance.
 - **Legacy glassmorphism variables**: Do not declare or use legacy aliases like `colors.glass` or `colors.glassBorder` inside component local color maps. Replace all glassmorphism references with canonical tokens: use `colors.card` (`Verandah.card`) for background panels and `colors.border` (`Verandah.border`) for hairline frames.
 - **Decorative emojis in core UI chrome**: Do not use random emojis as decorative bullets in profile screens, list items, or navigation bars (e.g., "⚙️ Settings"). Rely on elegant outline icon packages (such as `Ionicons` 18px in `Verandah.textTertiary`) for consistent and restrained chrome illustration. Emojis are reserved only for dynamic category tags (like AC or Pest Control category icons).

@@ -162,6 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.card,
     padding: VerandahSpace.lg,
     marginBottom: VerandahSpace.md,
+    ...Verandah.shadowCard,
   },
   cardHeader: {
     flexDirection: 'row',

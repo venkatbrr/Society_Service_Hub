@@ -88,6 +88,7 @@ type AuthContextType = {
   blocksEnabled: boolean
   blockLabel: string                        // 'Block' | 'Tower'
   myBlockId: string | null
+  communityHasLead: boolean                 // any president/vice_president in the community
   myFundsAccessRequest: { id, status, rejection_reason, decided_at } | null
   activeCommunityRequest: { id, status, created_at, name } | null
   isLoading: boolean
@@ -98,7 +99,8 @@ type AuthContextType = {
 
 Behaviors worth knowing before you touch this file:
 
-- **Two-phase load.** `loadProfile()` sets profile/community/`isLoading=false` first, then fires a non-blocking `Promise.all` for community settings (`funds_enabled`, `blocks_enabled`, `block_label`) and `get_funds_access_status()`. Screens can therefore render before `fundsEnabled` settles — never assume it is final on first paint.
+- **Two-phase load.** `loadProfile()` sets profile/community/`isLoading=false` first, then fires a non-blocking `Promise.all` for community settings (`funds_enabled`, `blocks_enabled`, `block_label`), `get_funds_access_status()`, the events-coordinator grant, and the `communityHasLead` count. Screens can therefore render before `fundsEnabled` or `communityHasLead` settle — never assume either is final on first paint.
+- **`communityHasLead` fails open.** It is a `head: true, count: 'exact'` query for `profiles` in the community with `app_role IN ('president','vice_president')` and `removed_at IS NULL`. On error it is set to **`true`**, not `false`: a transient failure must not hide an established community's funds behind a "no president yet" notice. See §Leaderless communities below.
 - **Self-healing profiles.** If the session is valid but the `profiles` row is missing, the provider recreates it from auth metadata. If recreation fails, it clears the local session.
 - **Server-side validation on launch.** `getSession()` only reads the cached JWT, so `fetchSession()` also calls `getUser()` to catch deleted or banned users, then signs them out locally.
 - **Community ID resolution**: `profile.community_id` → `user_metadata.community_id` → `app_metadata.community_id` → `null`. Forced to `null` for platform admins regardless of stale linkage.
@@ -133,6 +135,27 @@ isCommunityLead = (appRole === 'president' || appRole === 'vice_president') && !
 > ⚠️ **`public.is_admin()` is a misnomer** — it is only an alias that calls `is_community_lead()`, so it grants a platform admin *nothing*. A policy reading `is_community_lead() OR is_admin()` has a duplicated clause and no admin override. Always use `is_platform_admin()` for the platform-admin escape hatch.
 
 Constraints: `admin` must have `community_id = NULL`. `president`/`vice_president` are only meaningful where `communities.funds_enabled = true` — funds activation is what promotes a resident to `president`.
+
+### Leaderless communities
+
+A community can exist, be approved, and fill with residents **before anyone holds
+`president` or `vice_president`** — the seat is filled by the platform admin, not
+by the join flow. `AuthContext.communityHasLead` exposes this to the UI.
+
+The split is deliberate and should be preserved when adding features:
+
+| Stays open without a lead | Waits for a lead |
+|---|---|
+| MCN (business directory, food drops, carpools, parent corner), service providers, visits, SOS and emergency numbers, community events, residents directory | Community funds (`/funds-access/request` and the request CTA), fund roles, block-wise collection |
+
+The rule is *who answers for the money*: anything needing a trusted signatory —
+a treasurer, a collector, a balance someone is accountable for — has nobody to
+appoint it, so it is withheld rather than shown and then failing. Neighbourly
+features need no such authority and stay on.
+
+Surfaces: a `sand` notice card at the top of the Community tab, a matching strip
+above the residents directory list, and a self-guard on `/funds-access/request`
+(deep-linkable, so it re-checks rather than trusting its entry point).
 
 ### Fund roles — `fund_roles.role`
 
@@ -349,7 +372,9 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 ### Funds and blocks
 
-`get_fund_role(p_event_id, p_user_id)` · `get_my_community_funds_overview()` · `set_fund_closed(p_event_id, p_is_closed)` · `delete_community_fund(...)` · `submit_funds_access_request(...)` · `withdraw_funds_access_request(...)` · `get_funds_access_status(p_community_id)` · `list_eligible_contributors_for_collector(...)` · `list_community_blocks(...)` · `set_community_blocks_enabled(...)` · `add_community_block(...)` · `rename_community_block(...)` · `archive_community_block(...)` · `set_resident_block(...)` · `set_my_block(...)` · `assign_block_in_charge(...)` · `remove_block_in_charge(...)`
+`get_fund_role(p_event_id, p_user_id)` · `get_my_community_funds_overview()` · `set_fund_closed(p_event_id, p_is_closed)` · `delete_community_fund(...)` · `submit_funds_access_request(...)` · `withdraw_funds_access_request(...)` · `get_funds_access_status(p_community_id)` · `list_eligible_contributors_for_collector(...)` · `list_community_blocks(...)` · `rename_community_block(...)` · `set_resident_block(...)` · `set_my_block(...)` · `assign_block_in_charge(...)` · `remove_block_in_charge(...)`
+
+**Block inventory is platform-admin-only (2026-08-14, `20260908000200`).** `set_community_blocks_enabled(BOOLEAN)`, `add_community_block(TEXT)` and `archive_community_block(UUID)` still exist but `EXECUTE` is revoked from `authenticated`, `anon` and `PUBLIC` — calling them from the app raises a permission error. Blocks define resident flat scoping, fund collection scopes and the per-block collector cap, and turning them off unscopes every resident and in-charge in one tap, so creating/archiving/toggling belongs to the admin console via `platform_add_community_block(...)`, `platform_archive_community_block(...)` and `platform_set_blocks_enabled(...)`. `rename_community_block(...)` is still granted to community leads: it is cosmetic and reversible, and is the one correction a president legitimately needs. `app/community/blocks.tsx` is therefore a read-plus-rename screen.
 
 ### Community aggregates
 
@@ -425,6 +450,8 @@ All are `SECURITY DEFINER` and raise unless `is_platform_admin(auth.uid())`. **T
 | `trg_community_event_immutables` | `community_events` | BEFORE UPDATE | Prevents mutating `community_id` or `created_by`; stamps `updated_at`. `SECURITY DEFINER` |
 | `trg_community_event_stamp_cancellation` | `community_events` | BEFORE UPDATE | Stamps/clears `cancelled_at` on a `status` transition to/from `cancelled` (mirrors `stamp_mcn_preorder_cancellation`). `SECURITY DEFINER` |
 | `trg_community_event_creator_cap` | `community_events` | BEFORE INSERT | Anti-spam: at most 5 published, future-dated events per creator at a time (same shape as the food-drop concurrent-open cap, `20260821000100`). `SECURITY DEFINER` |
+| `on_community_event_published` | `community_events` | AFTER INSERT | Emits `community_event_posted` to every non-removed profile in the community except the poster. `SECURITY DEFINER` so the fan-out sees all profiles, not just the ones the poster's RLS grants. Fires once per event — `upsert_community_event()` edits with an UPDATE, so editing never re-notifies (`20260908000000`) |
+| `on_community_event_cancelled` | `community_events` | AFTER UPDATE OF `status` | Emits `community_event_cancelled` to the same audience when `status` first becomes `cancelled`, appending `cancellation_note` when set. `SECURITY DEFINER` (`20260908000000`) |
 
 
 ---
@@ -514,7 +541,9 @@ Migration `20260616000001` renamed the roles but left **12 call sites still comp
 
 On arrival: prepend to local state → increment `unreadCount` → schedule a local device notification on iOS/Android.
 
-**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `community_lead_removed` · `funds_access_revoked` · `new_community_request` · `provider_reported`
+**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `community_lead_removed` · `funds_access_revoked` · `new_community_request` · `provider_reported` · `community_event_posted` · `community_event_cancelled`
+
+> `community_event_posted` / `community_event_cancelled` carry `data.event_id` and `data.category`, and `app/notifications.tsx` deep-links them to `/events/[id]`.
 
 > `community_lead_appointed` / `community_lead_removed` are notification **type strings**, unrelated to the removed `community_lead` role value.
 >

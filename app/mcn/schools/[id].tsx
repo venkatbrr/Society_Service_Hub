@@ -7,9 +7,10 @@ import { Phone01 } from '@untitledui/icons/Phone01';
 import { Trash01 } from '@untitledui/icons/Trash01';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { confirmAction } from '../../../lib/confirm';
 import { goBackSmart } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SchoolAspectIcon } from '../../../components/SchoolAspectIcon';
 import { AspectScores, SchoolRadarChart } from '../../../components/SchoolRadarChart';
@@ -187,32 +188,26 @@ export default function SchoolDetailScreen() {
 
   const handleDelete = () => {
     if (!school) return;
-    Alert.alert(
-      'Delete school listing',
-      'Are you sure you want to remove this school listing from the community directory?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { error } = await supabase
-                .from('schools')
-                .delete()
-                .eq('id', school.id);
+    confirmAction({
+      title: 'Delete school listing',
+      message: 'Are you sure you want to remove this school listing from the community directory?',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase
+            .from('schools')
+            .delete()
+            .eq('id', school.id);
 
-              if (error) throw error;
-              Toast.show({ type: 'success', text1: 'School listing deleted' });
-              router.back();
-            } catch (error) {
-              console.error(error);
-              Toast.show({ type: 'error', text1: 'Failed to delete school' });
-            }
-          },
-        },
-      ]
-    );
+          if (error) throw error;
+          Toast.show({ type: 'success', text1: 'School listing deleted' });
+          router.back();
+        } catch (error) {
+          console.error(error);
+          Toast.show({ type: 'error', text1: 'Failed to delete school' });
+        }
+      },
+    });
   };
 
   if (loading) {

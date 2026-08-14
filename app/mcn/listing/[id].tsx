@@ -2,7 +2,6 @@ import { Flag01 } from '@untitledui/icons/Flag01';
 import { MessageChatCircle } from '@untitledui/icons/MessageChatCircle';
 import { PhoneCall01 } from '@untitledui/icons/PhoneCall01';
 import { Star01 } from '@untitledui/icons/Star01';
-import { XClose } from '@untitledui/icons/XClose';
 import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -11,6 +10,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, Text
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../components/Avatar';
 import { ImageUploader } from '../../../components/ImageUploader';
+import { ImageViewer } from '../../../components/ImageViewer';
 import { RatingStars } from '../../../components/RatingStars';
 import { Rupees } from '../../../components/Rupees';
 import { Verandah } from '../../../constants/Colors';
@@ -711,32 +711,7 @@ export default function ListingDetailScreen() {
         </View>
       )}
 
-      <Modal
-        visible={!!selectedImageUrl}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSelectedImageUrl(null)}
-      >
-        <Pressable style={styles.viewerOverlay} onPress={() => setSelectedImageUrl(null)}>
-          <TouchableOpacity
-            style={styles.viewerCloseBtn}
-            onPress={(e) => {
-              e.stopPropagation();
-              setSelectedImageUrl(null);
-            }}
-          >
-            <XClose size={24} color={colors.surface} />
-          </TouchableOpacity>
-          <Pressable onPress={(e) => e.stopPropagation()} style={styles.viewerImageWrap}>
-            <Image
-              source={{ uri: cloudinaryUrl(selectedImageUrl || '') }}
-              style={styles.viewerImage}
-              contentFit="contain"
-              transition={200}
-            />
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <ImageViewer uri={selectedImageUrl} onClose={() => setSelectedImageUrl(null)} />
 
       <Modal
         visible={showReportModal}
@@ -959,33 +934,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: Verandah.border,
     marginBottom: 10,
-  },
-  viewerOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.92)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  viewerImage: {
-    width: '100%',
-    height: '100%',
-  },
-  viewerImageWrap: {
-    width: '100%',
-    height: '100%',
-  },
-  viewerCloseBtn: {
-    position: 'absolute',
-    top: 48,
-    right: 20,
-    zIndex: 2,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    ...Verandah.shadowCard,
   },
   publicReviewList: {
     gap: 12,

@@ -51,7 +51,7 @@ The hub card was not the only door into borrow; the **My Submissions** quick act
 
 ### 4. `public/landing.html`
 
-The Community Network feature card claimed *"Borrow household items…"*. Rewritten to name live features (rides, resident businesses, parent connections). The page is slated for a full redesign — see [Landing page redesign](#landing-page-redesign) below.
+The Community Network feature card claimed *"Borrow household items…"*. Rewritten to name live features (rides, resident businesses, parent connections). **The full redesign landed on 2026-08-14** — see [Landing page redesign](#landing-page-redesign) below.
 
 ---
 
@@ -85,7 +85,7 @@ Nothing needs to be deployed, migrated, or backfilled. The database was never ch
 
 ## Landing page redesign
 
-The public landing page (`public/landing.html`, served at `/` — see the `vercel.json` / `build-admin.js` note in [`../CLAUDE.md`](../CLAUDE.md) §9) is being redesigned around the **actually active** feature set. As of 2026-08-13 that is:
+The public landing page (`public/landing.html`, served at `/` — see the `vercel.json` / `build-admin.js` note in [`../CLAUDE.md`](../CLAUDE.md) §9) was redesigned around the **actually active** feature set. **The redesign shipped on 2026-08-14**; page structure and editing rules now live in [`../features.md`](../features.md) §12, and the two lists below remain the source of truth for what its copy may claim. As of 2026-08-13 that is:
 
 **Live and advertisable**
 
@@ -109,5 +109,5 @@ The public landing page (`public/landing.html`, served at `/` — see the `verce
 - Web push notifications — designed, not built ([`../disabled-features.md`](../disabled-features.md) §8)
 - Email/password sign-up — UI hidden; Google is the only visible path ([`../disabled-features.md`](../disabled-features.md) §1b)
 
-When the redesign lands, keep this list as the source of truth for what the marketing copy may claim, and update it in the same change set as any flag flip.
+Keep this list as the source of truth for what the marketing copy may claim, and update it in the same change set as any flag flip. When a hidden feature returns, the redesigned page needs its card back — the bento grid and the "Home businesses" role panel are where it would go.
 </content>

@@ -1,3 +1,4 @@
+import { Expand01 } from '@untitledui/icons/Expand01';
 import { MarkerPin01 } from '@untitledui/icons/MarkerPin01';
 import { MessageChatCircle } from '@untitledui/icons/MessageChatCircle';
 import { PhoneCall01 } from '@untitledui/icons/PhoneCall01';
@@ -11,6 +12,7 @@ import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpac
 import Toast from 'react-native-toast-message';
 import { BaseCard } from '../../components/BaseCard';
 import { HeaderBackButton } from '../../components/HeaderBackButton';
+import { ImageViewer } from '../../components/ImageViewer';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
@@ -57,6 +59,7 @@ export default function CommunityEventDetailScreen() {
   const [contacts, setContacts] = useState<EventContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [viewerUri, setViewerUri] = useState<string | null>(null);
 
   const loadEvent = useCallback(async () => {
     if (!id) return;
@@ -201,15 +204,27 @@ export default function CommunityEventDetailScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.imageWrap}>
-          {event.image_url ? (
+        {event.image_url ? (
+          <TouchableOpacity
+            style={styles.imageWrap}
+            onPress={() => setViewerUri(event.image_url)}
+            activeOpacity={0.92}
+            accessibilityRole="imagebutton"
+            accessibilityLabel={`Open photo for ${event.title}`}
+          >
             <Image source={{ uri: cloudinaryUrl(event.image_url) }} style={styles.image} contentFit="cover" transition={200} />
-          ) : (
+            <View style={styles.expandHint}>
+              <Expand01 size={13} color={Verandah.surface} aria-hidden={true} />
+              <Text style={styles.expandHintText}>Tap to view</Text>
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.imageWrap}>
             <View style={[styles.placeholder, { backgroundColor: meta.tintSoft }]}>
               <meta.Icon size={40} color={meta.tint} aria-hidden={true} />
             </View>
-          )}
-        </View>
+          </View>
+        )}
 
         <View style={styles.topRow}>
           <View style={[styles.categoryChip, { backgroundColor: meta.tintSoft }]}>
@@ -307,6 +322,8 @@ export default function CommunityEventDetailScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      <ImageViewer uri={viewerUri} onClose={() => setViewerUri(null)} />
     </View>
   );
 }
@@ -353,15 +370,34 @@ const styles = StyleSheet.create({
   },
   imageWrap: {
     width: '100%',
-    height: 200,
+    height: 240,
     borderRadius: VerandahRadius.card,
     overflow: 'hidden',
     backgroundColor: Verandah.cream,
     marginBottom: 12,
+    position: 'relative',
   },
   image: {
     width: '100%',
     height: '100%',
+  },
+  expandHint: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  expandHintText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 11,
+    fontWeight: '600',
+    color: Verandah.surface,
   },
   placeholder: {
     width: '100%',

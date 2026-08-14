@@ -4,6 +4,7 @@ import { Award01 } from '@untitledui/icons/Award01';
 import { Bell01 } from '@untitledui/icons/Bell01';
 import { BellOff01 } from '@untitledui/icons/BellOff01';
 import { Calendar } from '@untitledui/icons/Calendar';
+import { CalendarDate } from '@untitledui/icons/CalendarDate';
 import { Car01 } from '@untitledui/icons/Car01';
 import { CheckCircle } from '@untitledui/icons/CheckCircle';
 import { File02 } from '@untitledui/icons/File02';
@@ -71,6 +72,9 @@ export default function NotificationsScreen() {
         return Car01;
       case 'provider_reported':
         return Flag01;
+      case 'community_event_posted':
+      case 'community_event_cancelled':
+        return CalendarDate;
       default:
         return Bell01;
     }
@@ -100,6 +104,15 @@ export default function NotificationsScreen() {
       notification.data?.carpool_id
     ) {
       router.push(`/mcn/carpools/${notification.data.carpool_id}` as any);
+      return;
+    }
+
+    if (
+      (notification.type === 'community_event_posted' ||
+       notification.type === 'community_event_cancelled') &&
+      notification.data?.event_id
+    ) {
+      router.push(`/events/${notification.data.event_id}` as any);
       return;
     }
 

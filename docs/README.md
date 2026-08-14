@@ -28,7 +28,7 @@
 | Onboard / get oriented | `.github/app-summary.md` only | everything else |
 | Understand why a feature is missing | `disabled-features.md` → `hidden-features/` if it is listed as hidden | everything else |
 | Hide a feature, or bring a hidden one back | `hidden-features/README.md` → the feature's own doc there | everything else |
-| Write marketing copy / redesign the landing page | `hidden-features/mcn-schools-and-borrow.md` §Landing page redesign (the live-vs-do-not-advertise list) | everything else |
+| Write marketing copy / edit the landing page | `features.md` §12 (structure + editing rules) → `hidden-features/mcn-schools-and-borrow.md` §Landing page redesign (the live-vs-do-not-advertise list) | everything else |
 | Touch federation / partnerships | `cross-community.md` → `decisions/0001-additive-rls-for-cross-community.md` | everything else |
 
 ---

@@ -10,6 +10,7 @@ import { Verandah } from '../constants/Colors';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import { configureGoogleSignIn } from '../lib/auth';
+import { goToLanding } from '../lib/siteUrl';
 
 // Notifications module — native only (Android/iOS).
 let Notifications: typeof import('expo-notifications') | null = null;
@@ -112,7 +113,7 @@ function RootLayoutNav() {
         redirectTo = '/login';
       } else if (isWebRootPath && typeof window !== 'undefined') {
         if (!consumeHistoryPop()) {
-          window.location.replace('/landing.html');
+          goToLanding();
         }
         return;
       }

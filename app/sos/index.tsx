@@ -30,6 +30,7 @@ import { Verandah } from '../../constants/Colors';
 import { BLOOD_GROUP_FILTERS, EMERGENCY_CATEGORY_META, EMERGENCY_CATEGORY_ORDER, EmergencyCategory } from '../../constants/sos';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { confirmAction } from '../../lib/confirm';
 import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
@@ -256,10 +257,15 @@ export default function SosScreen() {
       }
     };
 
-    Alert.alert(`Call ${name}?`, phone, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Call', onPress: performCall },
-    ]);
+    // Alert.alert is a no-op on web, which left the Call button on every
+    // emergency number doing nothing at all in the PWA.
+    confirmAction({
+      title: `Call ${name}?`,
+      message: phone,
+      confirmLabel: 'Call',
+      destructive: false,
+      onConfirm: performCall,
+    });
   }, []);
 
   const handleWhatsApp = useCallback((name: string, phone: string) => {
