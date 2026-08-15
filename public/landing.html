@@ -432,8 +432,8 @@
         <span class="wn-install-label">Install app</span>
       </button>
       <a href="/login" class="wn-signin">Sign in</a>
-      <a href="/login" class="wn-btn wn-btn-primary wn-btn-sm">
-        Get started
+      <a href="/login" class="wn-btn wn-btn-primary wn-btn-sm" data-cta="app-entry">
+        <span class="wn-cta-label">Get started</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </a>
     </div>
@@ -450,8 +450,8 @@
     Hire neighbour-verified providers, pre-order from home kitchens, split shared visits, and track community funds — transparently, in a single app instead of five WhatsApp groups.
   </p>
   <div data-reveal data-reveal-delay="180" class="wn-herobtns">
-    <a href="/login" class="wn-btn wn-btn-primary">
-      Get started free
+    <a href="/login" class="wn-btn wn-btn-primary" data-cta="app-entry">
+      <span class="wn-cta-label">Get started free</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </a>
     <a href="#platform" class="wn-btn wn-btn-ghost">See what's inside</a>
@@ -799,8 +799,8 @@
       <img src="/images/icon-512.png" alt="Wooru" width="56" height="56" class="wn-cta-logo">
       <h2 class="wn-h2" style="font-size:48px;line-height:1.06;margin-bottom:16px">Bring your community home.</h2>
       <p style="font-size:17px;color:#5B6360;max-width:480px;margin:0 auto 34px;line-height:1.6">Set up your society in minutes and run maintenance, funds and daily coordination on one transparent platform.</p>
-      <a href="/login" class="wn-btn wn-btn-primary" style="padding:16px 34px;font-size:16px;font-weight:700">
-        Get started free
+      <a href="/login" class="wn-btn wn-btn-primary" style="padding:16px 34px;font-size:16px;font-weight:700" data-cta="app-entry">
+        <span class="wn-cta-label">Get started free</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </a>
     </div>
@@ -932,7 +932,28 @@
     }
   }
 
-  // 2. Capture the install prompt and put it behind the header button.
+  // 2. Once the app is installed, swap "Get started" for "Open app" so a
+  // returning visitor is sent straight into the installed PWA's start_url
+  // instead of clicking back through the marketing page. `display-mode:
+  // standalone` / `navigator.standalone` only catch it when THIS load is
+  // already the installed window; the localStorage flag (set below on
+  // `appinstalled`) is what catches it on a later visit to this same tab.
+  var INSTALLED_KEY = 'wooru_pwa_installed';
+  function isInstalled() {
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+    if (window.navigator && window.navigator.standalone === true) return true;
+    return localStorage.getItem(INSTALLED_KEY) === '1';
+  }
+  function showOpenApp() {
+    Array.prototype.slice.call(document.querySelectorAll('[data-cta="app-entry"]')).forEach(function (a) {
+      a.href = '/network';
+      var label = a.querySelector('.wn-cta-label');
+      if (label) label.textContent = 'Open app';
+    });
+  }
+  if (isInstalled()) showOpenApp();
+
+  // 3. Capture the install prompt and put it behind the header button.
   var deferredPrompt = null;
   var btn = document.getElementById('wn-install');
   if (!btn) return;
@@ -960,6 +981,8 @@
   window.addEventListener('appinstalled', function () {
     deferredPrompt = null;
     btn.hidden = true;
+    localStorage.setItem(INSTALLED_KEY, '1');
+    showOpenApp();
   });
 })();
 </script>
