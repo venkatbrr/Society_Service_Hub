@@ -473,12 +473,16 @@ export function useSyncedBackNavigation() {
     if (Platform.OS !== 'android' || !pathname) return;
 
     const onBackPress = () => {
-      // Let React Navigation pop normally whenever it has somewhere to pop to,
-      // but declare the pop first — on native nothing else distinguishes the
-      // resulting pathname change from a forward push.
+      // Drive the pop ourselves and swallow the event (`return true`) instead
+      // of deferring to React Navigation's own hardwareBackPress listener
+      // (`return false`). `/mcn` is a Stack nested under the root Stack — a
+      // shape React Navigation's hardware-back handling has a known bug with
+      // (github.com/expo/expo/issues/33489): deferring can pop the wrong
+      // navigator and drop straight to the root instead of the previous
+      // nested screen. Handling it explicitly here sidesteps that.
       if (typeof router.canGoBack === 'function' && router.canGoBack()) {
-        setNavIntent('back');
-        return false;
+        backTracked(router);
+        return true;
       }
 
       // Nothing to pop: the user deep-linked straight into a nested screen.

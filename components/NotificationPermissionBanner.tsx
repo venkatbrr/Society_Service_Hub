@@ -1,22 +1,9 @@
 import { Bell01 } from '@untitledui/icons/Bell01';
-import { XClose } from '@untitledui/icons/XClose';
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { isRunningAsInstalledPwa } from '../lib/pwaInstall';
-
-/** How many days to wait before re-showing the banner after dismissal */
-const DISMISS_COOLDOWN_DAYS = 3;
-
-/** Check if the cooldown period since last dismissal has elapsed */
-function isDismissCooldownOver(): boolean {
-  if (typeof localStorage === 'undefined') return true;
-  const dismissedAt = localStorage.getItem('notif_permission_dismissed_at');
-  if (!dismissedAt) return true;
-  const elapsed = Date.now() - Number(dismissedAt);
-  return elapsed >= DISMISS_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
-}
 
 export function NotificationPermissionBanner() {
   const [visible, setVisible] = useState(false);
@@ -26,7 +13,6 @@ export function NotificationPermissionBanner() {
     if (typeof Notification === 'undefined') return;
     // Already granted, denied, or the browser doesn't support asking again
     if (Notification.permission !== 'default') return;
-    if (!isDismissCooldownOver()) return;
 
     // iOS never fires `appinstalled` — being in standalone mode at all,
     // on any launch, is the only install signal it gives us.
@@ -51,13 +37,6 @@ export function NotificationPermissionBanner() {
     setVisible(false);
   };
 
-  const handleDismiss = () => {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('notif_permission_dismissed_at', String(Date.now()));
-    }
-    setVisible(false);
-  };
-
   if (!visible) return null;
 
   return (
@@ -72,9 +51,6 @@ export function NotificationPermissionBanner() {
         </View>
         <TouchableOpacity style={styles.enableBtn} onPress={handleEnable}>
           <Text style={styles.enableBtnText}>Enable</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.closeBtn} onPress={handleDismiss} hitSlop={8}>
-          <XClose size={16} color={Verandah.textMuted} aria-hidden={true} />
         </TouchableOpacity>
       </View>
     </View>
@@ -126,8 +102,5 @@ const styles = StyleSheet.create({
     color: Verandah.primaryFg,
     fontSize: 12,
     fontWeight: '600',
-  },
-  closeBtn: {
-    padding: 4,
   },
 });
