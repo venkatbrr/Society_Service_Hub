@@ -286,6 +286,7 @@ function RootLayoutNav() {
 }
 
 import { PwaInstallBanner } from '../components/PwaInstallBanner';
+import { NotificationPermissionBanner } from '../components/NotificationPermissionBanner';
 
 export default function RootLayout() {
   return (
@@ -294,6 +295,7 @@ export default function RootLayout() {
         <NotificationProvider>
           <WebDesktopFrame>
             <PwaInstallBanner />
+            <NotificationPermissionBanner />
             <RootLayoutNav />
             <Toast />
             <StatusBar style="dark" />

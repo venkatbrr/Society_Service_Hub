@@ -1,4 +1,4 @@
-import { Download01 } from '@untitledui/icons/Download01';
+import { Bell01 } from '@untitledui/icons/Bell01';
 import { XClose } from '@untitledui/icons/XClose';
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -6,77 +6,72 @@ import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { isRunningAsInstalledPwa } from '../lib/pwaInstall';
 
-/** How many days to wait before re-showing the install banner after dismissal */
+/** How many days to wait before re-showing the banner after dismissal */
 const DISMISS_COOLDOWN_DAYS = 3;
 
 /** Check if the cooldown period since last dismissal has elapsed */
 function isDismissCooldownOver(): boolean {
   if (typeof localStorage === 'undefined') return true;
-  const dismissedAt = localStorage.getItem('pwa_install_dismissed_at');
+  const dismissedAt = localStorage.getItem('notif_permission_dismissed_at');
   if (!dismissedAt) return true;
   const elapsed = Date.now() - Number(dismissedAt);
   return elapsed >= DISMISS_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 }
 
-export function PwaInstallBanner() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+export function NotificationPermissionBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
-    // Don't show if already installed as PWA
-    if (isRunningAsInstalledPwa()) return;
+    if (typeof Notification === 'undefined') return;
+    // Already granted, denied, or the browser doesn't support asking again
+    if (Notification.permission !== 'default') return;
+    if (!isDismissCooldownOver()) return;
 
-    const handleBeforeInstallPrompt = (e: Event) => {
-      // Prevent automatic browser prompt bar
-      e.preventDefault();
-      setDeferredPrompt(e);
-      // Show banner if cooldown has elapsed since last dismiss
-      if (isDismissCooldownOver()) {
-        setVisible(true);
-      }
-    };
+    // iOS never fires `appinstalled` — being in standalone mode at all,
+    // on any launch, is the only install signal it gives us.
+    if (isRunningAsInstalledPwa()) {
+      setVisible(true);
+      return;
+    }
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
+    // Android / desktop: fires in the same tab right after the user accepts
+    // the install prompt, before the page has switched to standalone.
+    const handleAppInstalled = () => setVisible(true);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    return () => window.removeEventListener('appinstalled', handleAppInstalled);
   }, []);
 
-  const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const choiceResult = await deferredPrompt.userChoice;
-    if (choiceResult.outcome === 'accepted') {
-      console.log('User accepted the PWA install prompt');
+  const handleEnable = async () => {
+    try {
+      await Notification.requestPermission();
+    } catch (err) {
+      console.warn('[Notifications] permission request failed:', err);
     }
-    setDeferredPrompt(null);
     setVisible(false);
   };
 
   const handleDismiss = () => {
     if (typeof localStorage !== 'undefined') {
-      // Store the timestamp of dismissal for cooldown-based re-prompting
-      localStorage.setItem('pwa_install_dismissed_at', String(Date.now()));
+      localStorage.setItem('notif_permission_dismissed_at', String(Date.now()));
     }
     setVisible(false);
   };
 
-  if (!visible || !deferredPrompt) return null;
+  if (!visible) return null;
 
   return (
     <View style={styles.bannerContainer}>
       <View style={styles.contentRow}>
         <View style={styles.iconWrap}>
-          <Download01 size={18} color={Verandah.primaryFg} aria-hidden={true} />
+          <Bell01 size={18} color={Verandah.primaryFg} aria-hidden={true} />
         </View>
         <View style={styles.textWrap}>
-          <Text style={styles.title}>Install Wooru</Text>
-          <Text style={styles.subtitle}>Install app on your device for fast access</Text>
+          <Text style={styles.title}>Stay in the loop</Text>
+          <Text style={styles.subtitle}>Enable notifications for visit updates, fund approvals and reminders</Text>
         </View>
-        <TouchableOpacity style={styles.installBtn} onPress={handleInstall}>
-          <Text style={styles.installBtnText}>Install</Text>
+        <TouchableOpacity style={styles.enableBtn} onPress={handleEnable}>
+          <Text style={styles.enableBtnText}>Enable</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.closeBtn} onPress={handleDismiss} hitSlop={8}>
           <XClose size={16} color={Verandah.textMuted} aria-hidden={true} />
@@ -121,13 +116,13 @@ const styles = StyleSheet.create({
     color: Verandah.textSecondary,
     fontSize: 11,
   },
-  installBtn: {
+  enableBtn: {
     backgroundColor: Verandah.primary,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: VerandahRadius.pill,
   },
-  installBtnText: {
+  enableBtnText: {
     color: Verandah.primaryFg,
     fontSize: 12,
     fontWeight: '600',
