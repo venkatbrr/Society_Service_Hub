@@ -222,6 +222,19 @@ Two rules define it:
 
 Motion follows the same rules as the rail below: built-in `Animated`, `useNativeDriver: false`. **It also honours `AccessibilityInfo.isReduceMotionEnabled()`** — with reduce-motion on, the rings and sparkles are not rendered at all and the subtitle stays on its first line. A perpetual loop is precisely what that OS setting exists to stop; any future always-on animation should do the same.
 
+### Destructive host action — `DangerZone`
+
+The one shared way to offer delete on a host-owned object (food drops, business listings). Never hand-roll a delete button beside the routine actions.
+
+| Aspect | Spec |
+|---|---|
+| Placement | **Bottom of the scroll view, always last.** Delete previously sat inline in header action rows next to Edit and Mark completed — one mis-tap from routine work, and it is the only action on those screens that cannot be undone. Reaching the bottom is the friction. |
+| Frame | `dangerSoft` fill, `danger` border at `VerandahBorder.tile`, `VerandahRadius.md`, 12px padding, 18px top margin |
+| Content | `AlertTriangle` + title, then a **specific** consequence line (name the object and what else dies with it), then the shared spam caution, then the button |
+| Button | Full-width, 44px, `card` fill with a `danger` border and `danger` label — outlined, not filled: a solid red slab at the foot of every host screen reads as an error state |
+| Confirmation | Owned by the component via `confirmAction`, so callers pass a plain `onDelete` that runs only after the user has confirmed. Do not wrap `onDelete` in a second confirm. |
+| Copy | `SPAM_CAUTION` is exported and shared — deliberately identical everywhere, so the warning reads as a platform rule rather than one screen's opinion |
+
 ### Diet mark — `DietDot`
 
 The square-outline-with-a-filled-dot that Indian menus use for veg / non-veg. Renders from `mcn_preorder_items.diet_type` (`veg` | `egg` | `non_veg`) and appears beside each item on a drop's menu, beside the title on each catalog tile, and inside the diet filter chips.

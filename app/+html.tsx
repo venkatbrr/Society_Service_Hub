@@ -4,6 +4,25 @@ import { Wallet02 } from '@untitledui/icons/Wallet02';
 import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
 import { ScrollViewStyleReset } from 'expo-router/html';
 
+// ⚠️ INERT IN THIS PROJECT — DO NOT ADD ANYTHING HERE EXPECTING IT TO SHIP.
+//
+// `+html.tsx` is only rendered under static rendering (`web.output: 'static'`).
+// `app.config.js` sets `web.output: 'single'`, so Expo Router emits its own
+// minimal boilerplate shell and never calls this component. Nothing below
+// reaches a deployed page.
+//
+// It went unnoticed because Expo's default reset happens to carry the same
+// `html/body { height: 100% }` and `#root { display: flex }` rules this file
+// declares, so the layout looked right — while the manifest link, the service
+// worker registration, the Google Fonts, and every icon/meta tag were silently
+// missing from every app page in production.
+//
+// The real app-shell head is `APP_SHELL_HEAD` in `build-admin.js`, injected
+// into `dist/app.html` after export. `public/landing.html` keeps its own copy
+// because it is a static file Expo never processes. Change the head in those
+// two places; this file is kept only so a future switch to `output: 'static'`
+// has a starting point.
+//
 // This file is web-only and used to configure the root HTML for every
 // web page during static rendering.
 export default function Root({ children }: { children: React.ReactNode }) {

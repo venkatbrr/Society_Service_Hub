@@ -5,7 +5,6 @@ import { Edit01 } from '@untitledui/icons/Edit01';
 import { Lock01 } from '@untitledui/icons/Lock01';
 import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
 import { Phone01 } from '@untitledui/icons/Phone01';
-import { Trash01 } from '@untitledui/icons/Trash01';
 import { XCircle } from '@untitledui/icons/XCircle';
 import { XClose } from '@untitledui/icons/XClose';
 import * as Linking from 'expo-linking';
@@ -26,6 +25,7 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { DangerZone } from '../../../../components/DangerZone';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
 import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../../constants/Verandah';
@@ -359,31 +359,17 @@ export default function ManagePreorderDropScreen() {
   const fulfilledOrders = orders.filter((o) => o.status === 'fulfilled');
   const cancelledOrders = orders.filter((o) => o.status === 'cancelled');
 
-  const handleDeleteDrop = () => {
+  // `DangerZone` owns the confirmation (consequence + spam caution, platform-split
+  // via `confirmAction`), so this only runs once the host has already confirmed.
+  const handleDeleteDrop = async () => {
     if (!drop) return;
-    const confirmDelete = async () => {
-      try {
-        const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
-        if (error) throw error;
-        Toast.show({ type: 'success', text1: 'Food drop deleted' });
-        replaceTracked(router, '/mcn/drops' as any);
-      } catch (err: any) {
-        Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
-      }
-    };
-
-    const title = 'Delete Food Drop?';
-    const message = `Are you sure you want to delete "${drop.title}"? All items and pre-orders will be deleted. This cannot be undone.`;
-
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.confirm(`${title}\n${message}`)) {
-        void confirmDelete();
-      }
-    } else {
-      Alert.alert(title, message, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: confirmDelete },
-      ]);
+    try {
+      const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
+      if (error) throw error;
+      Toast.show({ type: 'success', text1: 'Food drop deleted' });
+      replaceTracked(router, '/mcn/drops' as any);
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
     }
   };
 
@@ -437,10 +423,6 @@ export default function ManagePreorderDropScreen() {
               </View>
             )}
 
-            <TouchableOpacity style={[styles.closeBtn, { backgroundColor: '#FEE2E2', borderColor: '#F87171' }]} onPress={handleDeleteDrop}>
-              <Trash01 size={14} color="#DC2626" aria-hidden={true} />
-              <Text style={[styles.closeBtnText, { color: '#DC2626' }]} numberOfLines={1}>Delete</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -726,6 +708,13 @@ export default function ManagePreorderDropScreen() {
             ) : null}
           </View>
         ) : null}
+
+        <DangerZone
+          title="Delete this food drop"
+          consequence={`"${drop.title}" and ${confirmedOrders.length + fulfilledOrders.length === 1 ? '1 pre-order' : `${confirmedOrders.length + fulfilledOrders.length} pre-orders`} will be permanently removed. Buyers are not notified, and this cannot be undone.`}
+          actionLabel="Delete food drop"
+          onDelete={handleDeleteDrop}
+        />
       </ScrollView>
 
       {/* Host Cancel Pre-Order Modal */}

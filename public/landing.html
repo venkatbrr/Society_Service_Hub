@@ -24,6 +24,20 @@
   <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-180.png">
 
+  <!-- PWA. This page IS the site root in production (build-admin.js copies it
+       over dist/index.html), so it is where most first-time visitors land and
+       therefore the only place Chrome can offer to install the app. Without a
+       manifest link AND a registered service worker on THIS page, the install
+       criteria are never met and `beforeinstallprompt` never fires — which is
+       why "Install app" appeared to do nothing. The in-app banner
+       (components/PwaInstallBanner.tsx) only mounts inside the SPA at
+       /app.html, so it could never cover the root URL. -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0F3732">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Wooru">
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -113,6 +127,10 @@
       display: inline-flex; align-items: center; gap: 8px;
       border-radius: 14px; font-weight: 600; font-size: 15.5px;
       padding: 15px 28px; white-space: nowrap;
+      /* There is no global button reset on this page (the FAQ buttons set these
+         one by one), and #wn-install is a <button> among anchors — without
+         these it renders in the UA default font with an arrow cursor. */
+      font-family: inherit; cursor: pointer;
       transition: background .2s ease, border-color .2s ease, color .2s ease,
                   transform .2s ease, box-shadow .5s var(--ease-shadow);
     }
@@ -390,6 +408,15 @@
       <a href="#how">How it works</a>
     </nav>
     <div class="wn-header-actions">
+      <!-- Revealed only once the browser has fired `beforeinstallprompt`, i.e.
+           only when an install is genuinely available. Chrome will not fire it
+           on iOS Safari (no support), in an already-installed window, or before
+           the install criteria are met — so a button that is always visible is
+           a button that is usually dead. -->
+      <button type="button" id="wn-install" class="wn-btn wn-btn-ghost wn-btn-sm" hidden>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Install app
+      </button>
       <a href="/login" class="wn-signin">Sign in</a>
       <a href="/login" class="wn-btn wn-btn-primary wn-btn-sm">
         Get started
@@ -869,6 +896,57 @@
     });
   });
   openFaq(0);
+})();
+</script>
+
+<!-- ===================== PWA INSTALL ===================== -->
+<script>
+(function () {
+  // 1. Register the service worker. Chrome requires a controlling worker with a
+  //    fetch handler before it will treat the page as installable, so without
+  //    this the manifest link above is not enough on its own.
+  if ('serviceWorker' in navigator) {
+    var register = function () {
+      navigator.serviceWorker.register('/service-worker.js').catch(function (err) {
+        console.warn('[PWA] Service Worker registration failed:', err);
+      });
+    };
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      register();
+    } else {
+      window.addEventListener('load', register);
+    }
+  }
+
+  // 2. Capture the install prompt and put it behind the header button.
+  var deferredPrompt = null;
+  var btn = document.getElementById('wn-install');
+  if (!btn) return;
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    // Stop Chrome's own mini-infobar so the prompt fires from our button
+    // instead — a captured event stays valid until it is used or the page
+    // unloads.
+    e.preventDefault();
+    deferredPrompt = e;
+    btn.hidden = false;
+  });
+
+  btn.addEventListener('click', function () {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function () {
+      // The event is single-use whatever the outcome; a dismissed prompt can
+      // only be re-offered after the browser fires a fresh one.
+      deferredPrompt = null;
+      btn.hidden = true;
+    });
+  });
+
+  window.addEventListener('appinstalled', function () {
+    deferredPrompt = null;
+    btn.hidden = true;
+  });
 })();
 </script>
 </body>

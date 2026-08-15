@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
@@ -23,8 +23,17 @@ export default function CommunitySelectScreen() {
   const router = useRouter();
   const { refreshSession } = useAuth();
 
+  const { code: codeParam } = useLocalSearchParams<{ code?: string }>();
+
   const [code, setCode] = useState('');
   const [joining, setJoining] = useState(false);
+
+  // Pre-fill code when arriving via an invite link.
+  useEffect(() => {
+    if (codeParam && typeof codeParam === 'string') {
+      setCode(codeParam.toUpperCase().slice(0, 6));
+    }
+  }, [codeParam]);
 
   const handleJoinByCode = async () => {
     const trimmedCode = code.trim().toUpperCase();
@@ -80,7 +89,9 @@ export default function CommunitySelectScreen() {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Join your community</Text>
         <Text style={styles.subtitle}>
-          Enter the 6-character code shared by your community lead, or request a new community.
+          {codeParam
+            ? `Your neighbour's community code is ready — just tap "Join community" below.`
+            : `Enter the 6-character code shared by your community lead, or request a new community.`}
         </Text>
 
         <View style={styles.card}>
@@ -91,6 +102,12 @@ export default function CommunitySelectScreen() {
               <Text style={styles.cardCopy}>Use your community code to join instantly.</Text>
             </View>
           </View>
+
+          {codeParam ? (
+            <View style={styles.inviteBanner}>
+              <Text style={styles.inviteBannerText}>🔗 Code filled from your invite link</Text>
+            </View>
+          ) : null}
 
           <Text style={styles.label}>Community code</Text>
           <TextInput
@@ -242,5 +259,18 @@ const styles = StyleSheet.create({
     color: Verandah.textTertiary,
     fontSize: 18,
     lineHeight: 20,
+  },
+  inviteBanner: {
+    backgroundColor: Verandah.accentSoft,
+    borderRadius: VerandahRadius.md,
+    paddingHorizontal: VerandahSpace.md,
+    paddingVertical: VerandahSpace.sm,
+    marginBottom: VerandahSpace.md,
+    alignItems: 'center',
+  },
+  inviteBannerText: {
+    ...VerandahType.caption,
+    color: Verandah.accent ?? Verandah.primary,
+    fontWeight: '600',
   },
 });

@@ -228,7 +228,7 @@ export default function CommunityScreen() {
       return;
     }
 
-    const shareUrl = communityId ? siteUrl(`/api/share-community?id=${communityId}`) : null;
+    const shareUrl = communityId ? siteUrl(`/api/share-community?id=${communityId}&code=${encodeURIComponent(code)}`) : null;
     const message = [
       `Join my community on Wooru!`,
       communityDetails?.name ? `Community: ${communityDetails.name}` : null,

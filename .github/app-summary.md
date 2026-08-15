@@ -228,12 +228,15 @@ Residents join instantly by code — there is **no resident approval queue**. Cr
 
 Hash-routed SPA with five pages — `#dashboard`, `#approvals`, `#communities`, `#providers`, `#funds-requests`. Covers community metrics and charts, community-creation approvals with block seeding, community/lead/block/resident management, provider moderation, and funds-activation decisions.
 
-`#communities` detail additionally shows **Fund Roles** (one card per fund, each with its own treasurer and block collectors, plus treasurer assign/replace), **Pre-Order Food Drops & Statistics**, and **Businesses Available in Community**.
+`#dashboard` aggregates a single community **or the whole platform** (the dropdown's `ALL` option passes `NULL`), with DAU/WAU/MAU, a 90-day activity trend, providers by category, and a sortable per-community comparison table.
 
-Two rules govern all console work:
+`#communities` detail is **tabbed** — Overview · People & Roles · Commerce · Funds · Events — behind a persistent stat strip, addressed as `#communities?id=<uuid>&tab=<key>`. It manages all three role systems: community leads (`president`/`vice_president`), fund roles (per-fund treasurer and block collectors), and the **events coordinator** grant (`community_event_organizers` — appoint and revoke). Commerce and Funds report per-resident and per-category rollups (food drops by host, businesses by owner and category, full fund ledgers with per-block collection coverage), all CSV-exportable.
+
+Three rules govern all console work:
 
 1. **Read community data only through `platform_*` `SECURITY DEFINER` RPCs.** A platform admin has no RLS grant on community-scoped tables (`is_platform_admin()` requires `community_id IS NULL`), so a direct table read returns `[]` with no error and the page renders silent zeroes.
-2. **`admin-dashboard/` is source.** `node build-admin.js` copies it to `dist/admin/` and the committed, actually-served `public/admin/`. Editing source alone ships nothing.
+2. **Always check `error`, never just `data`.** A swallowed authorisation failure is indistinguishable from an empty community — this is exactly how the dashboard read zero for months while `platform_get_community_dashboard_v2` raised on every call.
+3. **`admin-dashboard/` is source.** `node build-admin.js` copies it to `dist/admin/`, which is gitignored and rebuilt on deploy. Editing source alone ships nothing until you rebuild and hard-refresh. (`public/admin/` was a second copy; it is now untracked.)
 
 See [`docs/platform-admin.md`](../docs/platform-admin.md).
 

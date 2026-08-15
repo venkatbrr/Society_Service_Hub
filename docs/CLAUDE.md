@@ -35,6 +35,10 @@ The `:preprod` scripts contain a literal `PREPROD_REF_TODO` placeholder until th
 
 There is no lint script and no test suite. `npx tsc --noEmit` must pass before you call any change done.
 
+**Data reset (destructive, hand-run only).** [`scripts/db/`](../scripts/db/README.md) holds `reset-community-data.sql` — deletes residents and everything they created, keeping the schema, `mcn_business_categories` and platform admin accounts; its `wooru.keep_community_shell` flag also spares `communities`/`community_blocks`/`community_flats`/`emergency_contacts` so the signup flow still works. Companion `reset-cloudinary-uploads.mjs` clears the orphaned images. Neither is in `package.json` on purpose: a data wipe must not be one `npm run` away. Run the SQL as `postgres`/service role, never through PostgREST — the profile guard triggers only bypass when `auth.uid()` is `NULL`.
+
+**Uploads go to Cloudinary, not Supabase storage.** `lib/cloudinary.ts` posts to Cloudinary under `wooru/` with an unsigned preset and the DB stores only the `secure_url`. The `community-uploads` bucket exists but is unused and empty — don't write cleanup or migration code against it.
+
 A **Supabase MCP server** is also configured (read-write, pinned to `mbzvcaoulawdugfearmj`). Setup and per-client config: [`supabase-mcp.md`](supabase-mcp.md).
 
 **Choosing CLI vs MCP — route by output size, not by preference:**
@@ -113,8 +117,8 @@ Rule of thumb: **if the result belongs in a file, use the CLI; if the result is 
 
 ### Platform quirks
 
-- **Web viewport** — `html`, `body`, `#root` are `height: 100%` and `#root` is `display: flex` in `app/+html.tsx`. Changing this pushes the tab bar off-screen.
-- **Web focus outlines** — reset via `input:focus, textarea:focus, select:focus { outline: none; }` in `app/+html.tsx`.
+- **Web viewport** — `html`, `body`, `#root` are `height: 100%` and `#root` is `display: flex`. These come from Expo’s own default shell (`web.output: 'single'` ignores `app/+html.tsx` — see §9), which is the only reason the layout survived that file being inert. `100vh` is unreliable with dynamic browser chrome and lets the tab bar scroll off-screen.
+- **Web focus outlines** — reset via `input:focus, textarea:focus, select:focus { outline: none; }` in `APP_SHELL_HEAD` (`build-admin.js`), **not** `app/+html.tsx`, which never ships.
 - **Web pull-to-refresh** — `RefreshControl` is a native no-op, so scrollable lists use `useWebPullToRefresh` + `WebPullIndicator`. Nested scroll containers mean the browser's own native pull-to-refresh never fires, so the hook also has a second, longer-pull tier (`HARD_RELOAD_THRESHOLD`) that runs a real `window.location.reload()` — the only way a web user gets a true browser refresh (e.g. to pick up a new deployed build) rather than just an in-app data refetch.
 - **Global bottom nav** — the visible tab bar is `components/GlobalBottomNav.tsx`, rendered once in `app/_layout.tsx`, not `(tabs)/_layout.tsx`'s own `Tabs` bar (hidden via `tabBarStyle: { display: 'none' }`). This is what makes the bar show up on non-tab routes like `/funds/*` and `/mcn/*`. Add new tab-adjacent routes to its `TABS[].isActive` matcher so the right tab highlights. Its glyphs come from `components/NavIcons.tsx`, not `@untitledui/icons` — see `docs/verandah.md` for the rail's geometry and motion spec.
 - **Vercel serverless functions** (`api/*.ts`) — excluded from `tsconfig.json` like `supabase/functions`, since they run in a separate Node runtime Vercel builds independently. Used for things a client-rendered SPA can't do itself, e.g. `api/share-drop.ts` serves per-drop Open Graph tags to link-preview crawlers (WhatsApp, etc.) since the app's static `index.html` has no per-page meta tags.
@@ -148,7 +152,7 @@ Full reference: [`verandah.md`](verandah.md).
 - Font weights of 600 or above
 - Decorative emojis in navigation or settings chrome
 
-**Reuse instead of re-implementing**: `BaseCard` (card shells) · `Avatar` (people) · `Rupees` (currency) · `EmptyState` (empty lists) · `SearchBar` · `CategoryFilter` · `HeaderBackButton` · `ImageUploader` · `ImageViewer` (full-screen photo viewer — pair it with every cropped cover image) · `SchoolPicker` (searchable catalog picker with an "Other" free-text escape hatch — model any future searchable-catalog field on this, not `FlatPicker`'s inline panel).
+**Reuse instead of re-implementing**: `BaseCard` (card shells) · `DangerZone` (bottom-of-screen delete for a host-owned object — owns its own confirmation, never hand-roll a delete button beside the routine actions) · `Avatar` (people) · `Rupees` (currency) · `EmptyState` (empty lists) · `SearchBar` · `CategoryFilter` · `HeaderBackButton` · `ImageUploader` · `ImageViewer` (full-screen photo viewer — pair it with every cropped cover image) · `SchoolPicker` (searchable catalog picker with an "Other" free-text escape hatch — model any future searchable-catalog field on this, not `FlatPicker`'s inline panel).
 
 Keep all user-facing copy in **sentence case**. Reserve serif/display type for the single largest title anchor on a screen.
 
@@ -299,6 +303,10 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Cascading ride cancellation firing request-transition triggers | Trigger `enforce_mcn_carpool_request_transition` must permit lead and admin actions and legal `accepted -> cancelled` cascades. |
 | Calling `Alert.alert` for confirmation on web | `Alert.alert` is a no-op on web. Always use `confirmAction` from `lib/confirm.ts`. |
 | Using `whatsapp://` URL scheme directly | `whatsapp://` fails on web/PWA. Always use `buildWhatsAppUrl` from `lib/phone.ts`. |
+| Expecting the PWA to be installable from `wooru.in` | `/` serves `public/landing.html`, a static page that had no manifest link and no service-worker registration — so Chrome never fired `beforeinstallprompt` there and "Install app" was impossible at the URL most visitors actually open. `components/PwaInstallBanner.tsx` lives inside the SPA (`/app.html`) and cannot cover the root. The landing page now registers the worker and links the manifest itself; keep both if you touch that file. |
+| Leaving `manifest.json` `start_url` at `/` | `/` is the marketing page in production, so an installed PWA launched into marketing instead of the app. It is `/network` (`POST_AUTH_LANDING_ROUTE`) with an explicit `"scope": "/"` — without that, scope narrows to `/network/` and the rest of the app falls outside the installed window — and a pinned `"id": "/"` so existing installs are not treated as a new app. |
+| Editing `manifest.json` without bumping `CACHE_NAME` | It is in the service worker's `STATIC_ASSETS`, so installed clients keep the old manifest and keep launching to the old `start_url`. Same rule as icons. |
+| Adding a `<meta>`, `<link>`, font, or script to `app/+html.tsx` | **It never ships.** `web.output: 'single'` means Expo Router emits its own boilerplate shell and never renders `+html.tsx` (that file is `output: 'static'` only). It looked fine because Expo's default reset carries the same height/flex rules, while the manifest, service worker, and Google Fonts were missing from every app page in production. The real head is `APP_SHELL_HEAD` in `build-admin.js`, injected into `dist/app.html`; `public/landing.html` carries its own copy for the root. |
 | Placing or updating pre-orders via direct table writes | Mutating money or ownership outside the atomic RPC trips `enforce_mcn_preorder_order_immutable_fields`. Always call `place_mcn_preorder()`. The business-order equivalent, `place_mcn_order()`, still exists but has **no caller** — in-app business ordering was hidden on 2026-08-09 ([`disabled-features.md`](disabled-features.md) §2b). Don't wire up a new direct write to `mcn_orders`; if ordering returns, go back through the RPC. |
 | An RLS `UPDATE` policy with `USING` but no `WITH CHECK` | Postgres reuses `USING` for the new row. If `USING` does not mention `community_id`, a resident can move their own row into another community. Always write both, and always pin the tenant column. |
 | `public.is_community_lead()` in a policy without a `community_id` predicate | It only asks "is this person a lead *anywhere*". A president of another society then matches every row on the platform. Pair it with `community_id = get_user_community_id()`. |

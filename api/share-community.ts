@@ -10,7 +10,11 @@ const { APP_ORIGIN, DEFAULT_OG_IMAGE, isBotRequest, renderOgPage, sendOgPage, se
 module.exports = async function handler(req: any, res: any) {
   const rawId = req.query?.id;
   const id = Array.isArray(rawId) ? rawId[0] : rawId;
-  const appUrl = `${APP_ORIGIN}/community-select`;
+  const rawCode = req.query?.code;
+  const code = Array.isArray(rawCode) ? rawCode[0] : rawCode;
+  const appUrl = code
+    ? `${APP_ORIGIN}/community-select?code=${encodeURIComponent(String(code).toUpperCase())}`
+    : `${APP_ORIGIN}/community-select`;
 
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;

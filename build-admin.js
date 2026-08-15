@@ -144,3 +144,79 @@ try {
   console.error('Failed to install landing page at root:', err);
   process.exit(1);
 }
+
+// Inject the web <head> into the SPA shell.
+//
+// `app.config.js` sets `web.output: 'single'`, and under that mode Expo Router
+// emits its own minimal boilerplate index.html and **never renders
+// `app/+html.tsx`** — that file only applies to static rendering. It looked
+// like it was working because Expo's default reset happens to include the same
+// `html/body { height: 100% }` and `#root { display: flex }` rules, so the
+// layout was fine and nothing obviously broke. Everything else it declares was
+// silently absent from every deployed app page:
+//
+//   - no manifest link and no service worker, so `beforeinstallprompt` could
+//     never fire inside the app and `components/PwaInstallBanner.tsx` was dead
+//     code — and the entire offline/caching layer never registered at all
+//   - no Google Fonts, so Instrument Serif and Plus Jakarta Sans never loaded
+//     and the whole Verandah type scale fell back to Georgia / system sans
+//   - no theme-color, apple-touch-icon, apple-mobile-web-app meta, or the
+//     16/32/48 favicons
+//
+// This is therefore the real source of truth for the app shell's head. Keep it
+// in sync with `public/landing.html`, which carries its own copy because it is
+// a static file Expo never touches. `app/+html.tsx` is inert under
+// `output: 'single'` — do not add anything there expecting it to ship.
+const APP_SHELL_HEAD = `
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0F3732" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Wooru" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-180.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      /* Focus rings on web inputs read as a browser artifact against Verandah's
+         soft surfaces; the fields carry their own focus treatment. */
+      input:focus, textarea:focus, select:focus { outline: none; }
+    </style>
+    <script>
+      if ('serviceWorker' in navigator) {
+        var wooruRegisterSW = function () {
+          navigator.serviceWorker.register('/service-worker.js').catch(function (error) {
+            console.warn('[PWA] Service Worker registration failed:', error);
+          });
+        };
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          wooruRegisterSW();
+        } else {
+          window.addEventListener('load', wooruRegisterSW);
+        }
+      }
+    </script>
+`;
+
+try {
+  const shellPath = path.join(__dirname, 'dist', 'app.html');
+  let shell = fs.readFileSync(shellPath, 'utf8');
+
+  if (shell.includes('rel="manifest"')) {
+    console.log('App shell head already injected — skipping');
+  } else {
+    if (!shell.includes('</head>')) {
+      console.error('dist/app.html has no </head> — cannot inject the web head');
+      process.exit(1);
+    }
+    shell = shell.replace('</head>', `${APP_SHELL_HEAD}  </head>`);
+    fs.writeFileSync(shellPath, shell);
+    console.log('Injected PWA + font head into dist/app.html');
+  }
+} catch (err) {
+  console.error('Failed to inject head into dist/app.html:', err);
+  process.exit(1);
+}

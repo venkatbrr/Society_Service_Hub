@@ -1,5 +1,22 @@
 # Platform Admin Console — Bug Fixes, Stats Rebuild, and UI Rework
 
+> **Status: implemented 2026-08-15.** All three phases landed. Eight migrations
+> (`20260910000000`–`20260910000700`) are applied to prod, `lib/database.types.ts`
+> is regenerated, and `npx tsc --noEmit` passes. Live behaviour is documented in
+> [`../platform-admin.md`](../platform-admin.md); this file is kept for the
+> reasoning and the evidence behind each fix, not as a description of the console.
+>
+> **One item was deliberately not done**, per the agreed scope (console + DB only):
+> nothing calls `touch_last_active()` yet. The mobile app needs a
+> `supabase.rpc('touch_last_active')` on foreground in `context/AuthContext.tsx`.
+> Until that ships, DAU/WAU/MAU rest entirely on the derived `v_user_activity`
+> signal, which counts users who *wrote* something and undercounts passive browsing.
+>
+> **Two migrations record a mistake worth keeping:** `20260910000600` revoked
+> `EXECUTE` from `anon` and changed nothing, because the privilege was held by
+> `PUBLIC`. `20260910000700` is the actual fix. Verified after the fact:
+> `has_function_privilege('anon', …)` is now `false` and `authenticated` is `true`.
+
 ## Context
 
 The platform admin console at `/admin` is the artefact investors will be shown, but it currently

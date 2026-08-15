@@ -12,7 +12,6 @@ import { goBackSmart, replaceTracked } from '../../../lib/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -26,6 +25,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Avatar } from '../../../components/Avatar';
+import { DangerZone } from '../../../components/DangerZone';
 import { DietDot } from '../../../components/DietDot';
 import { PLACEHOLDER_COVER } from '../../../components/PreorderDropCard';
 import { Rupees } from '../../../components/Rupees';
@@ -539,31 +539,17 @@ export default function PreorderDropDetailScreen() {
     minute: '2-digit',
   });
 
-  const handleDeleteDrop = () => {
+  // `DangerZone` owns the confirmation (consequence + spam caution, platform-split
+  // via `confirmAction`), so this only runs once the host has already confirmed.
+  const handleDeleteDrop = async () => {
     if (!drop) return;
-    const confirmDelete = async () => {
-      try {
-        const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
-        if (error) throw error;
-        Toast.show({ type: 'success', text1: 'Food drop deleted' });
-        replaceTracked(router, '/mcn/drops' as any);
-      } catch (err: any) {
-        Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
-      }
-    };
-
-    const title = 'Delete Food Drop?';
-    const message = `Are you sure you want to delete "${drop.title}"? All items and pre-orders will be deleted. This cannot be undone.`;
-
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.confirm(`${title}\n${message}`)) {
-        void confirmDelete();
-      }
-    } else {
-      Alert.alert(title, message, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: confirmDelete },
-      ]);
+    try {
+      const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
+      if (error) throw error;
+      Toast.show({ type: 'success', text1: 'Food drop deleted' });
+      replaceTracked(router, '/mcn/drops' as any);
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
     }
   };
 
@@ -915,17 +901,6 @@ export default function PreorderDropDetailScreen() {
           );
         })}
 
-        {canManageDrop ? (
-          <TouchableOpacity
-            style={styles.hostDeleteBtn}
-            onPress={handleDeleteDrop}
-            activeOpacity={0.8}
-          >
-            <Trash01 size={13} color={colors.danger} aria-hidden={true} />
-            <Text style={styles.hostDeleteBtnText}>Delete Drop</Text>
-          </TouchableOpacity>
-        ) : null}
-
         {/* Resident Order Form (if open and not creator) */}
         {isOpen && !isCreator && user?.id ? (
           <View style={styles.formSection}>
@@ -1039,6 +1014,15 @@ export default function PreorderDropDetailScreen() {
               <Text style={styles.loginPromptBtnText}>Go to login</Text>
             </TouchableOpacity>
           </View>
+        ) : null}
+
+        {canManageDrop ? (
+          <DangerZone
+            title="Delete this food drop"
+            consequence={`"${drop.title}" and every pre-order placed on it will be permanently removed. Buyers are not notified, and this cannot be undone.`}
+            actionLabel="Delete food drop"
+            onDelete={handleDeleteDrop}
+          />
         ) : null}
       </ScrollView>
 
@@ -1590,23 +1574,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: '#FFFFFF',
-  },
-  hostDeleteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    alignSelf: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 0.5,
-    borderColor: Verandah.danger,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: VerandahRadius.pill,
-  },
-  hostDeleteBtnText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Verandah.danger,
   },
   submitBtn: {
     backgroundColor: Verandah.accent,

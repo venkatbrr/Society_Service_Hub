@@ -7,6 +7,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { DangerZone } from '../../../../components/DangerZone';
 import { ImageUploader } from '../../../../components/ImageUploader';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
@@ -408,47 +409,32 @@ export default function ManageListingScreen() {
     }
   };
 
-  const handleDeleteListing = () => {
+  // `DangerZone` owns the confirmation (consequence + spam caution, platform-split
+  // via `confirmAction`), so this only runs once the owner has already confirmed.
+  const handleDeleteListing = async () => {
     if (!listing) return;
-    const doDelete = async () => {
-      try {
-        const { error } = await supabase
-          .from('mcn_listings')
-          .delete()
-          .eq('id', listing.id);
+    try {
+      const { error } = await supabase
+        .from('mcn_listings')
+        .delete()
+        .eq('id', listing.id);
 
-        if (error) {
-          if (error.code === '23503') {
-            Toast.show({
-              type: 'error',
-              text1: 'Cannot delete this business',
-              text2: 'It has orders in its history. Pause it instead.',
-            });
-            return;
-          }
-          throw error;
+      if (error) {
+        if (error.code === '23503') {
+          Toast.show({
+            type: 'error',
+            text1: 'Cannot delete this business',
+            text2: 'It has orders in its history. Pause it instead.',
+          });
+          return;
         }
-        Toast.show({ type: 'success', text1: 'Listing deleted' });
-        replaceTracked(router, '/mcn/business' as any);
-      } catch (error: any) {
-        console.error(error);
-        Toast.show({ type: 'error', text1: 'Failed to delete listing', text2: error?.message });
+        throw error;
       }
-    };
-
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      if (window.confirm('Delete business listing?\n\nAre you sure you want to delete this business listing? This action cannot be undone.')) {
-        doDelete();
-      }
-    } else {
-      Alert.alert(
-        'Delete business listing',
-        'Are you sure you want to delete this business listing? This action cannot be undone.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: doDelete },
-        ]
-      );
+      Toast.show({ type: 'success', text1: 'Listing deleted' });
+      replaceTracked(router, '/mcn/business' as any);
+    } catch (error: any) {
+      console.error(error);
+      Toast.show({ type: 'error', text1: 'Failed to delete listing', text2: error?.message });
     }
   };
 
@@ -697,16 +683,12 @@ export default function ManageListingScreen() {
           )}
         </View>
 
-        <View style={styles.deleteListingWrap}>
-          <TouchableOpacity
-            style={[styles.deleteListingBtn, { borderColor: colors.dangerSoft, backgroundColor: colors.dangerSoft }]}
-            onPress={handleDeleteListing}
-            activeOpacity={0.8}
-          >
-            <Trash01 size={18} color={colors.danger} aria-hidden={true} />
-            <Text style={[styles.deleteListingBtnText, { color: colors.danger }]}>Delete business listing</Text>
-          </TouchableOpacity>
-        </View>
+        <DangerZone
+          title="Delete this business"
+          consequence={`"${listing.name}" and all of its products will be permanently removed from your community's business directory. This cannot be undone. If you are only closing for a while, pause the listing instead.`}
+          actionLabel="Delete business listing"
+          onDelete={handleDeleteListing}
+        />
       </ScrollView>
 
       {/* MODAL 1: Listing Details Editor */}
@@ -1298,23 +1280,5 @@ const styles = StyleSheet.create({
   modalPrimaryBtnText: {
     fontSize: 14,
     fontWeight: '500',
-  },
-  deleteListingWrap: {
-    marginTop: 32,
-    marginBottom: 16,
-  },
-  deleteListingBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderRadius: VerandahRadius.pill,
-    height: 48,
-    paddingHorizontal: 20,
-  },
-  deleteListingBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
   },
 });
