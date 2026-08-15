@@ -61,8 +61,8 @@ function generateHtml(doc) {
     ? '<a href="/privacy">Privacy</a><a href="/">Home</a>'
     : '<a href="/terms">Terms</a><a href="/">Home</a>';
   const footerAlt = isTerms
-    ? '<p>© 2026 Wooru. See also our <a href="/privacy">Privacy Policy</a>.</p>'
-    : '<p>© 2026 Wooru. See also our <a href="/terms">Terms of Service</a>.</p>';
+    ? '<p>© 2026 Wooru Technologies. See also our <a href="/privacy">Privacy Policy</a>.</p>'
+    : '<p>© 2026 Wooru Technologies. See also our <a href="/terms">Terms of Service</a>.</p>';
   const description = isTerms
     ? 'The terms governing use of Wooru by residents of gated communities.'
     : 'How Wooru collects, uses, stores and protects personal data of residents of gated communities.';

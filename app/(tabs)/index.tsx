@@ -155,7 +155,9 @@ export default function HomeScreen() {
       return;
     }
 
-    const shareUrl = communityId ? siteUrl(`/api/share-community?id=${communityId}`) : null;
+    const shareUrl = communityId
+      ? siteUrl(`/api/share-community?id=${communityId}&code=${encodeURIComponent(communityInvite.code)}`)
+      : null;
     const message = [
       `Join my community on Wooru!`,
       communityInvite.name ? `Community: ${communityInvite.name}` : null,

@@ -58,6 +58,7 @@ export default function FundDetailScreen() {
   const { id } = useLocalSearchParams();
   const [fund, setFund] = useState<FundDetail | null>(null);
   const [members, setMembers] = useState<CommunityMember[]>([]);
+  const [flats, setFlats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
   const [pendingCollectorId, setPendingCollectorId] = useState<string | null>(null);
@@ -90,11 +91,12 @@ export default function FundDetailScreen() {
 
       if (error) throw error;
 
-      const [transactionsResult, rolesResult, profilesResult, blocksResult] = await Promise.all([
-        supabase.from('event_transactions').select('*').eq('event_id', data.id),
-        supabase.from('fund_roles').select('*').eq('event_id', data.id),
+      const [transactionsResult, rolesResult, profilesResult, blocksResult, flatsResult] = await Promise.all([
+        supabase.from('event_transactions').select('*').eq('event_id', id as string),
+        supabase.from('fund_roles').select('*').eq('event_id', id as string),
         supabase.from('profiles').select('id, full_name, app_role, email, flat_number').eq('community_id', data.community_id).order('full_name', { ascending: true }),
         supabase.rpc('list_community_blocks', { p_community_id: data.community_id }),
+        supabase.rpc('list_community_flats', { p_community_id: data.community_id }),
       ]);
 
       if (transactionsResult.error && !isMissingFundSchemaError(transactionsResult.error)) {
@@ -116,6 +118,7 @@ export default function FundDetailScreen() {
       });
       setMembers(profilesResult.data ?? []);
       setBlockNames(new Map(((blocksResult.data ?? []) as Tables<'community_blocks'>[]).map((block) => [block.id, block.name])));
+      setFlats(flatsResult.data ?? []);
 
       if (transactionsResult.error || rolesResult.error) {
         Toast.show({ type: 'error', text1: 'Funds partially loaded', text2: getMissingFundSchemaMessage() });
@@ -158,6 +161,13 @@ export default function FundDetailScreen() {
   const profileFlats = useMemo(
     () => new Map(members.map((member) => [member.id, member.flat_number?.trim() || ''])),
     [members]
+  );
+  const flatLabels = useMemo(
+    () => new Map(flats.map((flat) => [
+      flat.id,
+      flat.block_name ? `${flat.block_name}-${flat.flat_number}` : flat.flat_number
+    ])),
+    [flats]
   );
 
   if (loading || !fund) {
@@ -710,7 +720,9 @@ export default function FundDetailScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Contributions</Text>
-            <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>{incomeTransactions.length} entries</Text>
+            <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>
+              {incomeTransactions.length} of {flats.length} flats collected
+            </Text>
           </View>
           {incomeTransactions.map((transaction) => {
             // A sponsor row has no contributor profile — the payer's name lives
@@ -726,9 +738,10 @@ export default function FundDetailScreen() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={[styles.transName, { color: colors.text }]}>
                       {sponsorName ??
-                        (transaction.contributor_user_id
-                          ? profileNames.get(transaction.contributor_user_id) ?? 'Resident'
-                          : transaction.title || 'Contribution')}
+                        ((transaction as any).contributor_name ??
+                          (transaction.contributor_user_id
+                            ? profileNames.get(transaction.contributor_user_id) ?? 'Resident'
+                            : transaction.title || 'Contribution'))}
                     </Text>
                     {canEditRow && (
                       <Pencil01 size={13} color={colors.textMuted} />
@@ -742,12 +755,11 @@ export default function FundDetailScreen() {
                         return `Outside sponsor · ${dateText}`;
                       }
 
-                      if (!transaction.contributor_user_id) {
-                        return dateText;
-                      }
+                      const flatLabel = (transaction as any).contributor_flat_id
+                        ? flatLabels.get((transaction as any).contributor_flat_id)
+                        : (transaction.contributor_user_id ? profileFlats.get(transaction.contributor_user_id) : null);
 
-                      const flat = profileFlats.get(transaction.contributor_user_id);
-                      return flat ? `Flat ${flat} · ${dateText}` : dateText;
+                      return flatLabel ? `Flat ${flatLabel} · ${dateText}` : dateText;
                     })()}
                   </Text>
                 </View>

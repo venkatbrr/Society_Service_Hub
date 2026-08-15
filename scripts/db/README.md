@@ -55,6 +55,36 @@ schema (`events`, `service_providers`, `profiles` → `communities`;
 `mcn_order_items` → `mcn_products`; `community_events.created_by` →
 `profiles`). Re-check `pg_constraint` before reordering it.
 
+## `delete-resident.sql`
+
+Hard-deletes **one** account — the `auth.users` row, its profile, and everything
+cascading off them. Set `wooru.target_email` (or `wooru.target_user_id`) in the
+CONFIG block.
+
+Defaults to a **preview**: it prints the account, its role and flat, and a count
+of every piece of content that would go, then deletes nothing. Set
+`wooru.confirm` to `DELETE` to apply.
+
+Guards: refuses platform admins outright, and refuses a community's only
+president/VP unless `wooru.allow_last_lead` is `true`.
+
+**To remove someone from a community but keep their account, don't use this** —
+the admin console's `platform_soft_remove_resident()`,
+`platform_remove_resident_from_community()` and `community_lead_remove_resident()`
+do that reversibly.
+
+> **Known bug in `platform_delete_user()`** (the admin console's delete path, as
+> of 2026-08-15). It clears `fund_roles`, `notifications`, `ratings` and
+> `favorites` — all of which already cascade from `auth.users`, so those deletes
+> are redundant — while leaving the five relations that actually block the
+> delete with `ON DELETE NO ACTION`: `events.created_by`,
+> `event_transactions.created_by`, `service_providers.created_by`,
+> `community_events.created_by`, `community_event_organizers.granted_by`. It
+> therefore raises a foreign-key violation for any user who created an event,
+> recorded a fund transaction, added a service provider, or granted organizer
+> rights. `delete-resident.sql` handles all five plus the `RESTRICT` edge on
+> `mcn_order_items.product_id`; the RPC still needs fixing.
+
 ## `reset-cloudinary-uploads.mjs`
 
 Uploaded images do **not** live in Supabase storage. `lib/cloudinary.ts` sends

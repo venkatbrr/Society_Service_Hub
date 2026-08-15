@@ -40,14 +40,23 @@ import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib
 type FundContext = Pick<Tables<'events'>, 'id' | 'community_id' | 'title' | 'is_closed'> & {
   community: Pick<Tables<'communities'>, 'funds_enabled' | 'blocks_enabled'> | null;
   fund_roles: Tables<'fund_roles'>[];
-  event_transactions: Pick<Tables<'event_transactions'>, 'id' | 'contributor_user_id' | 'type'>[];
+  event_transactions: Pick<Tables<'event_transactions'>, 'id' | 'contributor_user_id' | 'contributor_flat_id' | 'contributor_name' | 'type'>[];
 };
 
-type EligibleContributor = {
-  user_id: string;
-  full_name: string;
-  flat_no: string | null;
+type CollectionTarget = {
+  flat_id: string;
+  block_id: string | null;
+  block_name: string | null;
+  flat_number: string;
+  floor_label: string | null;
+  flat_label: string;
+  resident_user_id: string | null;
+  resident_name: string | null;
+  occupant_name: string | null;
+  resident_count: number;
   has_contributed: boolean;
+  contributed_amount: number | null;
+  contribution_id: string | null;
 };
 
 const extractImageUrl = (
@@ -102,8 +111,11 @@ export default function AddTransactionScreen() {
 
   const [type, setType] = useState<'income' | 'expense'>((initialType as 'income' | 'expense') || 'income');
   const [fund, setFund] = useState<FundContext | null>(null);
-  const [members, setMembers] = useState<EligibleContributor[]>([]);
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [members, setMembers] = useState<CollectionTarget[]>([]);
+  const [selectedTarget, setSelectedTarget] = useState<CollectionTarget | null>(null);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [contributorName, setContributorName] = useState('');
+  const [existingTransaction, setExistingTransaction] = useState<any | null>(null);
   const [amount, setAmount] = useState('');
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
@@ -135,8 +147,8 @@ export default function AddTransactionScreen() {
 
         const [rolesResult, transactionsResult, contributorsResult, existingTxResult] = await Promise.all([
           supabase.from('fund_roles').select('*').eq('event_id', data.id),
-          supabase.from('event_transactions').select('id, contributor_user_id, type').eq('event_id', data.id),
-          supabase.rpc('list_eligible_contributors_for_collector', { p_event_id: data.id }),
+          supabase.from('event_transactions').select('id, contributor_user_id, contributor_flat_id, contributor_name, type').eq('event_id', data.id),
+          supabase.rpc('list_collection_targets_for_collector', { p_event_id: data.id }),
           transaction_id
             ? supabase.from('event_transactions').select('*').eq('id', transaction_id as string).single()
             : Promise.resolve({ data: null, error: null } as any),
@@ -153,7 +165,7 @@ export default function AddTransactionScreen() {
         if (contributorsResult.error) throw contributorsResult.error;
         if (existingTxResult.error) throw existingTxResult.error;
 
-        const visibleMembers = (contributorsResult.data ?? []) as EligibleContributor[];
+        const visibleMembers = (contributorsResult.data ?? []) as CollectionTarget[];
         setFund({
           ...data,
           community: (data as any).community ?? null,
@@ -163,6 +175,7 @@ export default function AddTransactionScreen() {
         setMembers(visibleMembers);
 
         const existingTx = existingTxResult.data;
+        setExistingTransaction(existingTx);
         if (existingTx) {
           setAmount(existingTx.amount.toString());
           setType(existingTx.type as 'income' | 'expense');
@@ -179,18 +192,28 @@ export default function AddTransactionScreen() {
               setSponsorName(existingSponsorName);
               setSponsorPhone(((existingTx as any).sponsor_phone as string | null) ?? '');
               setSponsorNote(((existingTx as any).sponsor_note as string | null) ?? '');
-              setSelectedMemberId(null);
+              setSelectedTarget(null);
             } else {
               setPayerMode('member');
-              setSelectedMemberId(existingTx.contributor_user_id);
+              const target = visibleMembers.find((m) => m.flat_id === existingTx.contributor_flat_id);
+              if (target) {
+                setSelectedTarget(target);
+                if (target.block_id) {
+                  setSelectedBlockId(target.block_id);
+                }
+              }
+              setContributorName(existingTx.contributor_name || '');
             }
           }
         } else {
-          const paidMemberIdsSet = new Set(
-            visibleMembers.filter((member) => member.has_contributed).map((member) => member.user_id)
-          );
-          const defaultMember = visibleMembers.find((member) => !paidMemberIdsSet.has(member.user_id));
-          setSelectedMemberId(defaultMember?.user_id ?? null);
+          const defaultTarget = visibleMembers.find((member) => !member.has_contributed);
+          if (defaultTarget) {
+            setSelectedTarget(defaultTarget);
+            setContributorName(defaultTarget.resident_name ?? defaultTarget.occupant_name ?? '');
+            if (defaultTarget.block_id) {
+              setSelectedBlockId(defaultTarget.block_id);
+            }
+          }
         }
 
         if (rolesResult.error || transactionsResult.error) {
@@ -229,15 +252,67 @@ export default function AddTransactionScreen() {
   // Only the fund-admin capacity (president / vice president / platform admin)
   // may bring in money from outside the community.
   const canRecordSponsor = permissions.canManageTreasurers;
-  const paidMemberIds = useMemo(
+  const paidFlatIds = useMemo(
     () =>
       new Set(
         (fund?.event_transactions ?? [])
-          .filter((transaction) => transaction.type === 'income' && transaction.contributor_user_id && transaction.id !== transaction_id)
-          .map((transaction) => transaction.contributor_user_id as string)
+          .filter((transaction) => transaction.type === 'income' && transaction.contributor_flat_id && transaction.id !== transaction_id)
+          .map((transaction) => transaction.contributor_flat_id as string)
       ),
     [fund?.event_transactions, transaction_id]
   );
+
+  const blocks = useMemo(() => {
+    const blockMap = new Map<string, string>();
+    members.forEach((m) => {
+      if (m.block_id && m.block_name) {
+        blockMap.set(m.block_id, m.block_name);
+      }
+    });
+    return Array.from(blockMap.entries()).map(([id, name]) => ({ id, name }));
+  }, [members]);
+
+  // Set default block when blocks load and none selected
+  useEffect(() => {
+    if (blocks.length > 0 && !selectedBlockId) {
+      if (myBlockId) {
+        const matchingBlock = blocks.find((b) => b.id === myBlockId);
+        if (matchingBlock) {
+          setSelectedBlockId(myBlockId);
+          return;
+        }
+      }
+      setSelectedBlockId(blocks[0].id);
+    }
+  }, [blocks, selectedBlockId, myBlockId]);
+
+  const filteredTargets = useMemo(() => {
+    return members.filter((m) => {
+      if (selectedBlockId && m.block_id !== selectedBlockId) return false;
+      if (searchMember.trim()) {
+        const q = searchMember.trim().toLowerCase();
+        return (
+          m.flat_number.toLowerCase().includes(q) ||
+          (m.resident_name || '').toLowerCase().includes(q) ||
+          (m.occupant_name || '').toLowerCase().includes(q) ||
+          (m.flat_label || '').toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [members, selectedBlockId, searchMember]);
+
+  const groupedByFloor = useMemo(() => {
+    const groups = new Map<string, CollectionTarget[]>();
+    filteredTargets.forEach((t) => {
+      const floorKey = t.floor_label ? (t.floor_label.toUpperCase().startsWith('G') ? 'Ground Floor' : `Floor ${t.floor_label}`) : 'Units';
+      if (!groups.has(floorKey)) {
+        groups.set(floorKey, []);
+      }
+      groups.get(floorKey)!.push(t);
+    });
+    return Array.from(groups.entries());
+  }, [filteredTargets]);
 
   const fundsInactive = Boolean(fund && !fund.community?.funds_enabled);
 
@@ -288,6 +363,8 @@ export default function AddTransactionScreen() {
     setType(nextType);
     setTitle('');
     setNotes('');
+    setSelectedTarget(null);
+    setContributorName('');
 
     if (nextType === 'expense') {
       setPayerMode('member');
@@ -396,13 +473,18 @@ export default function AddTransactionScreen() {
     }
 
     if (type === 'income' && payerMode === 'member') {
-      if (!selectedMemberId) {
-        Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Select a resident to mark as paid.' });
+      if (!selectedTarget) {
+        Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Select a flat to mark as paid.' });
         return;
       }
 
-      if (paidMemberIds.has(selectedMemberId)) {
-        Toast.show({ type: 'error', text1: 'Already paid', text2: 'This resident is already marked as paid.' });
+      if (paidFlatIds.has(selectedTarget.flat_id)) {
+        Toast.show({ type: 'error', text1: 'Already paid', text2: 'This flat has already contributed.' });
+        return;
+      }
+
+      if (!contributorName.trim()) {
+        Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Payer name is required.' });
         return;
       }
     }
@@ -414,7 +496,7 @@ export default function AddTransactionScreen() {
 
     setIsLoading(true);
     try {
-      const memberName = members.find((member) => member.user_id === selectedMemberId)?.full_name?.trim() || 'Resident';
+      const memberName = contributorName.trim();
       const isSponsorContribution = type === 'income' && payerMode === 'sponsor';
       const payerName = isSponsorContribution ? sponsorName.trim() : memberName;
       let notesText = notes.trim();
@@ -431,7 +513,9 @@ export default function AddTransactionScreen() {
               title: payerName,
               description: notes.trim() || null,
               category: isSponsorContribution ? 'Sponsor contribution' : 'Contribution',
-              contributor_user_id: isSponsorContribution ? null : selectedMemberId,
+              contributor_user_id: isSponsorContribution ? null : selectedTarget?.resident_user_id,
+              contributor_flat_id: isSponsorContribution ? null : selectedTarget?.flat_id,
+              contributor_name: isSponsorContribution ? null : contributorName.trim(),
               sponsor_name: isSponsorContribution ? sponsorName.trim() : null,
               sponsor_phone: isSponsorContribution ? sponsorPhone.trim() || null : null,
               sponsor_note: isSponsorContribution ? sponsorNote.trim() || null : null,
@@ -444,6 +528,8 @@ export default function AddTransactionScreen() {
               description: notesText || null,
               category: 'Expense',
               contributor_user_id: null,
+              contributor_flat_id: null,
+              contributor_name: null,
               sponsor_name: null,
               sponsor_phone: null,
               sponsor_note: null,
@@ -476,10 +562,14 @@ export default function AddTransactionScreen() {
       });
       router.back();
     } catch (error: any) {
+      let msg = error.message;
+      if (error.code === '23505' || (error.message && error.message.includes('unique_income_contribution_per_flat'))) {
+        msg = 'This flat has already contributed to this fund.';
+      }
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: isMissingFundSchemaError(error) ? getMissingFundSchemaMessage() : error.message,
+        text2: isMissingFundSchemaError(error) ? getMissingFundSchemaMessage() : msg,
       });
     } finally {
       setIsLoading(false);
@@ -619,7 +709,7 @@ export default function AddTransactionScreen() {
               ) : null}
 
               <Text style={[styles.label, { color: colors.text }]}>
-                {payerMode === 'sponsor' ? 'Sponsor name' : 'Select resident'}
+                {payerMode === 'sponsor' ? 'Sponsor name' : 'Select resident flat'}
               </Text>
               {payerMode === 'sponsor' ? (
                 <>
@@ -658,24 +748,85 @@ export default function AddTransactionScreen() {
                 </>
               ) : transaction_id ? (
                 (() => {
-                  const member = members.find((m) => m.user_id === selectedMemberId);
-                  if (!member) {
-                    return <Text style={{ color: colors.textMuted }}>Resident data unavailable</Text>;
+                  if (!existingTransaction) {
+                    return <ActivityIndicator size="small" color={colors.primary} />;
                   }
+                  const target = members.find((m) => m.flat_id === existingTransaction.contributor_flat_id);
+                  const flatLabel = target ? target.flat_label : 'Flat not set';
                   return (
-                    <View style={[styles.memberRow, { backgroundColor: colors.card, borderColor: colors.border, opacity: 0.8 }]}>
-                      <View style={styles.memberInfo}>
-                        <Text style={[styles.memberName, { color: colors.text }]}>{member.full_name?.trim() || 'Resident'}</Text>
-                        <Text style={[styles.memberMeta, { color: colors.textMuted }]}>{member.flat_no ? `Flat ${member.flat_no}` : 'Flat not set'}</Text>
+                    <>
+                      <View style={[styles.memberRow, { backgroundColor: colors.card, borderColor: colors.border, opacity: 0.8 }]}>
+                        <View style={styles.memberInfo}>
+                          <Text style={[styles.memberName, { color: colors.text }]}>
+                            {existingTransaction.contributor_name || 'Resident'}
+                          </Text>
+                          <Text style={[styles.memberMeta, { color: colors.textMuted }]}>
+                            Flat {flatLabel}
+                          </Text>
+                        </View>
+                        <View style={[styles.memberStatus, styles.memberStatusPaid]}>
+                          <Text style={[styles.memberStatusText, styles.memberStatusTextPaid]}>PAID</Text>
+                        </View>
                       </View>
-                      <View style={[styles.memberStatus, styles.memberStatusPaid]}>
-                        <Text style={[styles.memberStatusText, styles.memberStatusTextPaid]}>PAID</Text>
-                      </View>
-                    </View>
+
+                      <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>Payer name</Text>
+                      <TextInput
+                        style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                        placeholder="Prefilled occupant name (editable)"
+                        placeholderTextColor={colors.textMuted}
+                        value={contributorName}
+                        onChangeText={setContributorName}
+                      />
+                    </>
                   );
                 })()
               ) : (
                 <>
+                  {/* Block Chips Selector */}
+                  {blocks.length > 0 ? (
+                    <View style={{ marginBottom: 12 }}>
+                      <Text style={[styles.label, { color: colors.text }]}>Choose block</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', gap: 8, paddingVertical: 2 }}>
+                        {blocks.map((b) => {
+                          const isSelected = selectedBlockId === b.id;
+                          return (
+                            <TouchableOpacity
+                              key={b.id}
+                              style={{
+                                borderColor: isSelected ? colors.primary : colors.border,
+                                backgroundColor: isSelected ? colors.primary + '0c' : colors.card,
+                                paddingHorizontal: 14,
+                                paddingVertical: 8,
+                                borderRadius: 9999,
+                                borderWidth: isSelected ? 1.5 : 1,
+                              }}
+                              onPress={() => setSelectedBlockId(b.id)}
+                              activeOpacity={0.8}
+                            >
+                              <Text style={{ color: isSelected ? colors.primary : colors.text, fontWeight: '600', fontSize: 12 }}>
+                                {fund?.community?.block_label || 'Block'} {b.name}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+                  ) : null}
+
+                  {/* Selected Target Banner */}
+                  {selectedTarget && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.primary + '08', borderColor: colors.primary + '40', borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 }}>
+                      <Text style={{ fontSize: 12, color: colors.textMuted }}>Selected Flat:</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.primary, flex: 1 }}>
+                        {selectedTarget.flat_label}
+                      </Text>
+                      <TouchableOpacity onPress={() => { setSelectedTarget(null); setContributorName(''); }} style={{ paddingHorizontal: 8, paddingVertical: 2 }}>
+                        <Text style={{ fontSize: 12, color: colors.textMuted }}>Clear</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* Search Input */}
                   <TextInput
                     style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background, marginBottom: 8, height: 42, fontSize: 14 }]}
                     placeholder="Search by name or flat..."
@@ -683,74 +834,72 @@ export default function AddTransactionScreen() {
                     value={searchMember}
                     onChangeText={setSearchMember}
                   />
-                  {!searchMember.trim() && members.length > 3 && (
-                    <Text style={{ color: colors.textMuted, fontSize: 12, marginBottom: 8, marginLeft: 4 }}>
-                      Type to search all residents...
-                    </Text>
+
+                  {/* Flat grid grouped by floor */}
+                  {groupedByFloor.length === 0 ? (
+                    <View style={{ padding: 16, borderWidth: 0.5, borderColor: colors.border, borderRadius: 10, backgroundColor: colors.surface2, alignItems: 'center', marginBottom: 12 }}>
+                      <Text style={{ color: colors.textMuted, fontSize: 13 }}>No matching flats found.</Text>
+                    </View>
+                  ) : (
+                    <ScrollView style={{ maxHeight: 240, marginBottom: 12 }} nestedScrollEnabled={true}>
+                      {groupedByFloor.map(([floorTitle, floorTargets]) => (
+                        <View key={floorTitle} style={{ marginBottom: 12 }}>
+                          <Text style={{ fontSize: 11, color: colors.textMuted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{floorTitle}</Text>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                            {floorTargets.map((target) => {
+                              const isPaid = target.has_contributed;
+                              const isSelected = selectedTarget?.flat_id === target.flat_id;
+                              return (
+                                <TouchableOpacity
+                                  key={target.flat_id}
+                                  style={{
+                                    borderColor: isSelected ? colors.primary : colors.border,
+                                    backgroundColor: isSelected ? colors.primary + '08' : colors.card,
+                                    opacity: isPaid ? 0.55 : 1,
+                                    borderWidth: isSelected ? 1.5 : 1,
+                                    paddingVertical: 8,
+                                    paddingHorizontal: 12,
+                                    borderRadius: 8,
+                                    minWidth: 64,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                  onPress={() => {
+                                    if (isPaid) {
+                                      Toast.show({ type: 'error', text1: 'Already paid', text2: 'This flat has already contributed.' });
+                                      return;
+                                    }
+                                    setSelectedTarget(target);
+                                    setContributorName(target.resident_name ?? target.occupant_name ?? '');
+                                  }}
+                                  activeOpacity={0.8}
+                                >
+                                  <Text style={{ color: isSelected ? colors.primary : colors.text, fontWeight: '700', fontSize: 13 }}>
+                                    {target.flat_number}
+                                  </Text>
+                                  {(target.resident_name || target.occupant_name) ? (
+                                    <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 2, textAlign: 'center' }} numberOfLines={1}>
+                                      {target.resident_name ?? target.occupant_name}
+                                    </Text>
+                                  ) : null}
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </View>
+                        </View>
+                      ))}
+                    </ScrollView>
                   )}
-                  {members
-                    .filter(
-                      (member) =>
-                        !searchMember.trim() ||
-                        (member.full_name || '').toLowerCase().includes(searchMember.toLowerCase()) ||
-                        (member.flat_no || '').toLowerCase().includes(searchMember.toLowerCase())
-                    )
-                    .slice(0, searchMember.trim() ? undefined : 3)
-                    .map((member) => {
-                    const isPaid = paidMemberIds.has(member.user_id);
-                    const isSelected = selectedMemberId === member.user_id;
 
-                    return (
-                      <TouchableOpacity
-                        key={member.user_id}
-                        style={[
-                          styles.memberRow,
-                          {
-                            backgroundColor: isSelected ? colors.primary + '08' : colors.card,
-                            borderColor: isSelected ? colors.primary : colors.border,
-                            opacity: isPaid ? 0.55 : 1,
-                          },
-                        ]}
-                        onPress={() => {
-                          if (isPaid) {
-                            Toast.show({ type: 'error', text1: 'Already paid', text2: 'This resident is already marked as paid.' });
-                            return;
-                          }
-
-                          setSelectedMemberId(member.user_id);
-                        }}
-                        activeOpacity={0.85}
-                      >
-                        <View style={styles.memberInfo}>
-                          <Text style={[styles.memberName, { color: colors.text }]}>{member.full_name?.trim() || 'Resident'}</Text>
-                          <Text style={[styles.memberMeta, { color: colors.textMuted }]}>{member.flat_no ? `Flat ${member.flat_no}` : 'Flat not set'}</Text>
-                        </View>
-                        <View
-                          style={[
-                            styles.memberStatus,
-                            isPaid
-                              ? styles.memberStatusPaid
-                              : isSelected
-                                ? styles.memberStatusSelected
-                                : styles.memberStatusPending,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.memberStatusText,
-                              isPaid
-                                ? styles.memberStatusTextPaid
-                                : isSelected
-                                  ? styles.memberStatusTextSelected
-                                  : styles.memberStatusTextPending,
-                            ]}
-                          >
-                            {isPaid ? 'Paid' : isSelected ? 'Selected' : 'Pending'}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
+                  {/* Payer name input - always visible and editable */}
+                  <Text style={[styles.label, { color: colors.text, marginTop: 4 }]}>Payer name</Text>
+                  <TextInput
+                    style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                    placeholder="Prefilled occupant name (editable)"
+                    placeholderTextColor={colors.textMuted}
+                    value={contributorName}
+                    onChangeText={setContributorName}
+                  />
                 </>
               )}
             </View>

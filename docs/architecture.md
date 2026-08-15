@@ -174,7 +174,7 @@ Resolution goes through `lib/fundRoles.ts` — see §12. `is_funds_enabled(commu
 
 **Who can change a treasurer:** community leads and admins go through `fund_roles` RLS (`20260813000000`). Those policies are keyed on `get_user_community_id()` and therefore never match a platform admin, who instead uses `platform_set_fund_treasurer()` (§5).
 
-`list_eligible_contributors_for_collector(p_event_id)` (redefined in migration `20260816000000`) returns `resident`, `president`, and `vice_president` profiles — a lead can record a contribution for themselves, not just other residents. A block-scoped collector (`fund_roles.block_id` set) only sees profiles in that block; a collector with no block, the treasurer, and leads see the whole community.
+`list_collection_targets_for_collector(p_event_id)` (defined in migration `20260911000000`) returns all community flats (including resident name, occupant name, and contribution state) — a lead can record a contribution for any flat. A block-scoped collector (`fund_roles.block_id` set) only sees flats in that block; a collector with no block, the treasurer, and leads see the whole community.
 
 ### Who paid — member vs outside sponsor
 
@@ -203,7 +203,7 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 | `profiles` | `id` (= `auth.users.id`), `full_name`, `email`, `phone_number`, `flat_id`, `flat_number`, `app_role`, `community_id`, `block_id`, `avatar_url`, `expo_push_token`, `last_active_at`, `removed_at`, `removed_by` | Self / community |
 | `community_requests` | `name`, `city`, `pincode`, `area`, `address`, `community_type`, `approximate_units`, `requester_flat_number`, `proof_photo_url`, `requested_by`, `status`, `rejection_reason`, `reviewed_by`, `reviewed_at`, `resulting_community_id`, `block_label`, `block_details` | Requester / platform |
 | `community_blocks` | `community_id`, `name`, `archived_at` | Community |
-| `community_flats` | `community_id`, `block_id`, `flat_number`, `floor_label`, `archived_at` | Community |
+| `community_flats` | `community_id`, `block_id`, `flat_number`, `floor_label`, `occupant_name` (best-known current occupant), `archived_at` | Community |
 | `flat_addition_requests` | `community_id`, `block_id`, `requested_by`, `flat_number`, `status`, `rejection_reason`, `reviewed_by`, `reviewed_at` | Resident / lead / platform |
 | `profile_audit_log` | Audit trail for profile mutations | Platform |
 | `community_events` | ⚠️ Not the funds `events` table (§4.4) — deliberately renamed to avoid the collision. `title`, `category` (cultural/sports/festival/meeting/workshop/other), `description`, `image_url`, `venue`, `event_date` (local `YYYY-MM-DD`), `start_time`, `end_time`, `registration_last_date`, `entry_fee` (display only), `registration_link`, `status` (`published`/`cancelled`), `cancelled_at`, `cancellation_note`, `created_by` | Community |
@@ -254,7 +254,7 @@ Both views are **`WITH (security_invoker = true)`**. A plain Postgres view runs 
 | Table | Key columns |
 |-------|-------------|
 | `events` | A fund. `title`, `description`, `event_date`, `goal_amount`, `is_closed`, `fund_scope`, `group_id`, `partnership_id` |
-| `event_transactions` | `event_id`, `type` (`income`/`expense`), `amount`, `title`, `description`, `category`, `contributor_user_id` (member income only), `sponsor_name` / `sponsor_phone` / `sponsor_note` (outside-sponsor income only), `image_url` |
+| `event_transactions` | `event_id`, `type` (`income`/`expense`), `amount`, `title`, `description`, `category`, `contributor_user_id` (member income only), `contributor_flat_id` (flat money came from), `contributor_name` (payer snapshot name), `sponsor_name` / `sponsor_phone` / `sponsor_note` (outside-sponsor income only), `image_url` |
 | `fund_roles` | `event_id`, `user_id`, `role`, `block_id` (nullable = whole community), `assigned_by` |
 | `funds_access_requests` | `community_id`, `requested_by`, `contact_name`, `contact_phone`, `purpose`, `designated_lead_id`, `status`, `rejection_reason`, `decided_by`, `decided_at` |
 | `funds_access_revocations` | Platform-admin revocation audit trail |
@@ -397,7 +397,7 @@ Full reference: [`cross-community.md`](cross-community.md).
 
 ### Funds and blocks
 
-`get_fund_role(p_event_id, p_user_id)` · `get_my_community_funds_overview()` · `set_fund_closed(p_event_id, p_is_closed)` · `delete_community_fund(...)` · `submit_funds_access_request(...)` · `withdraw_funds_access_request(...)` · `get_funds_access_status(p_community_id)` · `list_eligible_contributors_for_collector(...)` · `list_community_blocks(...)` · `rename_community_block(...)` · `set_resident_block(...)` · `set_my_block(...)` · `assign_block_in_charge(...)` · `remove_block_in_charge(...)`
+`get_fund_role(p_event_id, p_user_id)` · `get_my_community_funds_overview()` · `set_fund_closed(p_event_id, p_is_closed)` · `delete_community_fund(...)` · `submit_funds_access_request(...)` · `withdraw_funds_access_request(...)` · `get_funds_access_status(p_community_id)` · `list_collection_targets_for_collector(...)` · `list_community_blocks(...)` · `rename_community_block(...)` · `set_resident_block(...)` · `set_my_block(...)` · `assign_block_in_charge(...)` · `remove_block_in_charge(...)`
 
 **Block inventory is platform-admin-only (2026-08-14, `20260908000200`).** `set_community_blocks_enabled(BOOLEAN)`, `add_community_block(TEXT)` and `archive_community_block(UUID)` still exist but `EXECUTE` is revoked from `authenticated`, `anon` and `PUBLIC` — calling them from the app raises a permission error. Blocks define resident flat scoping, fund collection scopes and the per-block collector cap, and turning them off unscopes every resident and in-charge in one tap, so creating/archiving/toggling belongs to the admin console via `platform_add_community_block(...)`, `platform_archive_community_block(...)` and `platform_set_blocks_enabled(...)`. `rename_community_block(...)` is still granted to community leads: it is cosmetic and reversible, and is the one correction a president legitimately needs. `app/community/blocks.tsx` is therefore a read-plus-rename screen.
 

@@ -187,7 +187,8 @@ export default function LegalScreen() {
   const currentDoc: LegalDocument = activeDoc === 'privacy' ? PRIVACY : TERMS;
   const selfPath = params.returnTo ? `/legal?returnTo=${params.returnTo}` : '/legal';
 
-  const publicUrl = siteUrl(activeDoc === 'privacy' ? '/privacy' : '/terms');
+  const publicPath = activeDoc === 'privacy' ? '/privacy' : '/terms';
+  const publicUrl = siteUrl(__DEV__ ? `${publicPath}.html` : publicPath);
 
   const openPublicPage = () => {
     Linking.openURL(publicUrl).catch(() => {});
@@ -310,7 +311,7 @@ export default function LegalScreen() {
           </View>
 
           <Text style={styles.footerText}>
-            © 2026 Wooru. See also our{' '}
+            © 2026 Wooru Technologies. See also our{' '}
             <Text
               style={styles.linkText}
               onPress={() => handleTabChange(activeDoc === 'terms' ? 'privacy' : 'terms')}

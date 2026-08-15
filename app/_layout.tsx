@@ -1,4 +1,4 @@
-import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
+import { Stack, useGlobalSearchParams, usePathname, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 import { ActivityIndicator, LogBox, Platform, View } from 'react-native';
@@ -29,9 +29,14 @@ function RootLayoutNav() {
   const { session, profile, communityId, flatId, blocksEnabled, blockLabel, activeCommunityRequest, isPlatformAdmin, isLoading } = useAuth();
   const segments = useSegments();
   const pathname = usePathname();
+  const globalParams = useGlobalSearchParams<{ code?: string }>();
   const router = useRouter();
   const lastRedirectRef = useRef<string | null>(null);
   const savedTargetRouteRef = useRef<string | null>(null);
+  // Holds a community invite code seen on a route visited while signed out (e.g.
+  // `/community-select?code=X`), since `pathname` above never carries the query
+  // string. Reapplied once the user has authenticated and needs to join a community.
+  const pendingCommunityCodeRef = useRef<string | null>(null);
   // Flipped by the first completed auth resolution of this launch / page load, so
   // the "land on MCN" rule below fires once and never hijacks a later visit to `/`.
   const hasResolvedInitialLandingRef = useRef(false);
@@ -46,6 +51,18 @@ function RootLayoutNav() {
       try { window.sessionStorage.removeItem('wooru.pendingRoute'); } catch {}
     }
     return target;
+  };
+
+  const takeSavedCommunityCode = () => {
+    let code = pendingCommunityCodeRef.current;
+    if (!code && Platform.OS === 'web' && typeof window !== 'undefined') {
+      try { code = window.sessionStorage.getItem('wooru.pendingCommunityCode'); } catch {}
+    }
+    pendingCommunityCodeRef.current = null;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try { window.sessionStorage.removeItem('wooru.pendingCommunityCode'); } catch {}
+    }
+    return code;
   };
 
   // Synchronize browser back button and mobile back button to immediate parent routes
@@ -112,6 +129,13 @@ function RootLayoutNav() {
             try { window.sessionStorage.setItem('wooru.pendingRoute', pathname); } catch {}
           }
         }
+        const inviteCode = typeof globalParams.code === 'string' ? globalParams.code.trim() : '';
+        if (inviteCode) {
+          pendingCommunityCodeRef.current = inviteCode;
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            try { window.sessionStorage.setItem('wooru.pendingCommunityCode', inviteCode); } catch {}
+          }
+        }
         redirectTo = '/login';
       } else if (isWebRootPath && typeof window !== 'undefined') {
         if (!consumeHistoryPop()) {
@@ -139,14 +163,16 @@ function RootLayoutNav() {
       } else if (activeCommunityRequest) {
         redirectTo = '/community-request-submitted';
       } else {
-        redirectTo = '/community-select';
+        const pendingCode = takeSavedCommunityCode();
+        redirectTo = pendingCode ? `/community-select?code=${encodeURIComponent(pendingCode)}` : '/community-select';
       }
     } else if (!communityId && activeCommunityRequest && !isOnCommunityRequestSubmitted) {
       // Has pending request, show status screen
       redirectTo = '/community-request-submitted';
     } else if (!communityId && !activeCommunityRequest && !isOnCommunitySelect && !isOnCommunityRequest) {
       // No community, no request → select/request community
-      redirectTo = '/community-select';
+      const pendingCode = takeSavedCommunityCode();
+      redirectTo = pendingCode ? `/community-select?code=${encodeURIComponent(pendingCode)}` : '/community-select';
     } else if (communityId) {
       const needsFlatSelection = Boolean(blocksEnabled && !flatId);
 
@@ -208,6 +234,7 @@ function RootLayoutNav() {
     isLoading,
     segments,
     pathname,
+    globalParams.code,
   ]);
 
   useEffect(() => {

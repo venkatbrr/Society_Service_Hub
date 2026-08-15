@@ -20,26 +20,21 @@ export type LegalDocument = {
 };
 
 export const LEGAL_ENTITY = {
-  name: '[LEGAL ENTITY NAME]',
-  address: '[REGISTERED ADDRESS]',
-  email: '[CONTACT EMAIL]',
-  grievanceOfficer: '[GRIEVANCE OFFICER NAME]',
-  jurisdiction: '[JURISDICTION CITY]',
-  liabilityCap: '[LIABILITY CAP]',
+  name: 'Wooru Technologies',
+  email: 'thewooru@gmail.com',
+  grievanceOfficer: 'Proprietor, Wooru',
+  jurisdiction: 'Hyderabad',
+  liabilityCap: '₹5,000',
 };
 
 export const TERMS: LegalDocument = {
   id: 'terms',
   title: 'Terms of Service',
-  lastUpdated: '8 August 2026',
+  lastUpdated: '15 August 2026',
   intro: [
     {
-      kind: 'callout',
-      text: '**Draft pending legal review.** Placeholders in square brackets must be completed before these terms are relied upon.',
-    },
-    {
       kind: 'para',
-      text: `These terms govern your use of Wooru, operated by **${LEGAL_ENTITY.name}**, **${LEGAL_ENTITY.address}**. By creating an account or using the app, you agree to them. If you do not agree, please do not use Wooru.`,
+      text: `These terms govern your use of Wooru, operated by **${LEGAL_ENTITY.name}**. By creating an account or using the app, you agree to them. If you do not agree, please do not use Wooru.`,
     },
   ],
   sections: [
@@ -272,7 +267,7 @@ export const TERMS: LegalDocument = {
       blocks: [
         {
           kind: 'para',
-          text: `Questions about these terms: [${LEGAL_ENTITY.email}](mailto:${LEGAL_ENTITY.email})`,
+          text: `Questions or support: [${LEGAL_ENTITY.email}](mailto:${LEGAL_ENTITY.email})`,
         },
       ],
     },
@@ -282,12 +277,8 @@ export const TERMS: LegalDocument = {
 export const PRIVACY: LegalDocument = {
   id: 'privacy',
   title: 'Privacy Policy',
-  lastUpdated: '8 August 2026',
+  lastUpdated: '15 August 2026',
   intro: [
-    {
-      kind: 'callout',
-      text: '**Draft pending legal review.** Placeholders in square brackets must be completed before this policy is relied upon.',
-    },
     {
       kind: 'para',
       text: 'Wooru is an application for residents of gated residential communities. It helps neighbours find and rate domestic service providers, coordinate visits, run community funds, buy from neighbours, and share rides.',
@@ -298,7 +289,7 @@ export const PRIVACY: LegalDocument = {
     },
     {
       kind: 'para',
-      text: `In this policy, "we" and "Wooru" mean **${LEGAL_ENTITY.name}**, **${LEGAL_ENTITY.address}**, the Data Fiduciary responsible for your data.`,
+      text: `In this policy, "we" and "Wooru" mean **${LEGAL_ENTITY.name}**, the Data Fiduciary responsible for your data.`,
     },
   ],
   sections: [
@@ -521,7 +512,6 @@ export const PRIVACY: LegalDocument = {
           items: [
             `**Email:** [${LEGAL_ENTITY.email}](mailto:${LEGAL_ENTITY.email})`,
             `**Grievance Officer:** ${LEGAL_ENTITY.grievanceOfficer}`,
-            `**Address:** ${LEGAL_ENTITY.address}`,
           ],
         },
         {

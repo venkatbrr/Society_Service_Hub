@@ -426,6 +426,7 @@ export type Database = {
           flat_number: string
           floor_label: string | null
           id: string
+          occupant_name: string | null
           updated_at: string
         }
         Insert: {
@@ -436,6 +437,7 @@ export type Database = {
           flat_number: string
           floor_label?: string | null
           id?: string
+          occupant_name?: string | null
           updated_at?: string
         }
         Update: {
@@ -446,6 +448,7 @@ export type Database = {
           flat_number?: string
           floor_label?: string | null
           id?: string
+          occupant_name?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -781,6 +784,8 @@ export type Database = {
         Row: {
           amount: number
           category: string
+          contributor_flat_id: string | null
+          contributor_name: string | null
           contributor_user_id: string | null
           created_at: string | null
           created_by: string
@@ -797,6 +802,8 @@ export type Database = {
         Insert: {
           amount: number
           category: string
+          contributor_flat_id?: string | null
+          contributor_name?: string | null
           contributor_user_id?: string | null
           created_at?: string | null
           created_by: string
@@ -813,6 +820,8 @@ export type Database = {
         Update: {
           amount?: number
           category?: string
+          contributor_flat_id?: string | null
+          contributor_name?: string | null
           contributor_user_id?: string | null
           created_at?: string | null
           created_by?: string
@@ -827,6 +836,13 @@ export type Database = {
           type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "event_transactions_contributor_flat_id_fkey"
+            columns: ["contributor_flat_id"]
+            isOneToOne: false
+            referencedRelation: "community_flats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "event_transactions_contributor_user_id_fkey"
             columns: ["contributor_user_id"]
@@ -3601,6 +3617,24 @@ export type Database = {
       is_platform_admin: { Args: { p_user_id?: string }; Returns: boolean }
       is_user_approved: { Args: { p_user_id?: string }; Returns: boolean }
       join_community_by_code: { Args: { p_code: string }; Returns: Json }
+      list_collection_targets_for_collector: {
+        Args: { p_event_id: string }
+        Returns: {
+          block_id: string
+          block_name: string
+          contributed_amount: number
+          contribution_id: string
+          flat_id: string
+          flat_label: string
+          flat_number: string
+          floor_label: string
+          has_contributed: boolean
+          occupant_name: string
+          resident_count: number
+          resident_name: string
+          resident_user_id: string
+        }[]
+      }
       list_community_blocks: {
         Args: { p_community_id: string }
         Returns: {
@@ -4235,6 +4269,13 @@ export type Database = {
         Args: { p_community_id: string; p_target_user_id: string }
         Returns: undefined
       }
+      platform_set_flat_occupant_names: {
+        Args: { p_community_id: string; p_rows: Json }
+        Returns: {
+          matched: number
+          unmatched: string[]
+        }[]
+      }
       platform_set_fund_treasurer: {
         Args: { p_event_id: string; p_target_user_id: string }
         Returns: undefined
@@ -4596,34 +4637,3 @@ export const Constants = {
     },
   },
 } as const
-
-// ---------------------------------------------------------------------------
-// HAND-MAINTAINED — everything above this line is generated, this block is not.
-//
-// `npm run types:preprod` / `types:prod` redirect over the whole file, so a
-// regen silently deletes the three types below and `npx tsc --noEmit` then
-// fails across ~7 unrelated screens. Re-append this block after every regen.
-// See docs/CLAUDE.md §6 step 3.
-// ---------------------------------------------------------------------------
-
-export type ProviderWithInteraction = Tables<'service_providers'> & {
-  is_favorite?: boolean
-  hire_count?: number
-  user_rating?: number | null
-}
-
-export type VisitWithJoinerData = Tables<'service_visits'> & {
-  creator_name?: string | null
-  creator_flat?: string | null
-  creator_avatar_url?: string | null
-  joiner_count?: number
-  has_user_joined?: boolean
-}
-
-export type VisitJoinerWithProfile = Tables<'visit_joiners'> & {
-  user_name?: string | null
-  full_name?: string | null
-  avatar_url?: string | null
-  flat_number?: string | null
-  joined_at?: string
-}
