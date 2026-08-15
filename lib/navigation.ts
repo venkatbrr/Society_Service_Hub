@@ -187,6 +187,26 @@ export function setNavIntent(intent: NavIntent) {
 let lastSeenPopSeq = 0;
 
 /**
+ * Route we just correctly landed on via a genuine browser-back, and when.
+ * Armed by the reducer's `locate`-with-truncation case (a real pop), read by
+ * the spurious-drift guard below, and cleared by any subsequent explicit
+ * navigation. See that guard for why this exists.
+ */
+let lastPopLandedRoute: string | null = null;
+let lastPopLandedAt = 0;
+
+/**
+ * How long after a genuine pop we still treat an unexplained jump to
+ * `POST_AUTH_LANDING_ROUTE` as the drift bug below, rather than a real user
+ * navigation. Measured drift lands ~180ms after the popstate in local
+ * testing (three `history.replaceState` calls back to back); this leaves
+ * headroom for slower devices while staying well under normal human
+ * click-reaction time, so a deliberate tap of the Network tab right after
+ * pressing back is very unlikely to be swallowed by this guard.
+ */
+const SPURIOUS_DRIFT_WINDOW_MS = 600;
+
+/**
  * Resolve how we arrived, preferring hard signals over guesses:
  *
  *   1. An explicit intent from `pushTracked`/`replaceTracked`/`backTracked`.
@@ -228,8 +248,12 @@ function resolveIntent(route: string, stack: string[]): NavIntent | 'locate' {
 /**
  * Reconcile the tracked stack with the route we just landed on, applying the
  * resolved intent rather than guessing from the pathname.
+ *
+ * `router` is optional only so the function stays callable without one; pass
+ * it (as `useSyncedBackNavigation` does) to enable the spurious-drift guard
+ * below. Without it, that guard is inert and everything else is unchanged.
  */
-function syncNavigationStack(pathname: string): string[] {
+function syncNavigationStack(pathname: string, router?: ReturnType<typeof useRouter>): string[] {
   const route = normalizeRoute(pathname);
   if (!route) return readStack();
 
@@ -239,6 +263,7 @@ function syncNavigationStack(pathname: string): string[] {
   if (!stack.length) {
     lastSeenPopSeq = popStateSeq;
     pendingIntent = null;
+    lastPopLandedRoute = null;
     writeStack([route]);
     return [route];
   }
@@ -247,25 +272,62 @@ function syncNavigationStack(pathname: string): string[] {
   // would eat a signal meant for the navigation that follows.
   if (stack[stack.length - 1] === route) return stack;
 
+  const hadExplicitIntent = pendingIntent !== null;
   const intent = resolveIntent(route, stack);
+
+  // Spurious post-pop drift guard (web only — confirmed upstream expo-router
+  // bug, see docs/CLAUDE.md known traps: "browser-back from a nested /mcn/*
+  // screen"). A genuine browser-back can resolve the URL correctly for one
+  // render and then, ~180ms later with no new popstate and nothing in this
+  // app declaring a navigation, expo-router's own web history sync
+  // independently re-resolves to POST_AUTH_LANDING_ROUTE on its own. That
+  // fingerprint — unexplained, un-popstated, lands specifically on the
+  // default landing route, shortly after a real pop to somewhere else — is
+  // narrow enough to safely reverse. This does not race expo-router mid-pop
+  // the way the historical popstate-interception bug did: it only acts once
+  // expo-router's own (wrong) resolution has already fully committed.
+  if (
+    router &&
+    Platform.OS === 'web' &&
+    !hadExplicitIntent &&
+    intent === 'push' &&
+    lastPopLandedRoute &&
+    route === normalizeRoute(POST_AUTH_LANDING_ROUTE) &&
+    route !== lastPopLandedRoute &&
+    Date.now() - lastPopLandedAt < SPURIOUS_DRIFT_WINDOW_MS
+  ) {
+    const correctTo = lastPopLandedRoute;
+    lastPopLandedRoute = null;
+    replaceTracked(router, correctTo as any);
+    return stack;
+  }
 
   let next: string[];
   switch (intent) {
     case 'replace':
+      lastPopLandedRoute = null;
       next = [...stack.slice(0, -1), route];
       break;
     case 'back':
+      lastPopLandedRoute = null;
       next = stack.slice(0, -1);
       // Defensive: if we popped to something other than expected, trust the URL.
       if (next[next.length - 1] !== route) next = [...next.slice(0, -1), route];
       break;
     case 'locate': {
       const existingIndex = stack.lastIndexOf(route);
+      if (existingIndex >= 0) {
+        lastPopLandedRoute = route;
+        lastPopLandedAt = Date.now();
+      } else {
+        lastPopLandedRoute = null;
+      }
       next = existingIndex >= 0 ? stack.slice(0, existingIndex + 1) : [...stack, route];
       break;
     }
     case 'push':
     default:
+      lastPopLandedRoute = null;
       next = [...stack, route];
       break;
   }
@@ -466,8 +528,8 @@ export function useSyncedBackNavigation() {
 
   useEffect(() => {
     if (!pathname) return;
-    syncNavigationStack(pathname);
-  }, [pathname]);
+    syncNavigationStack(pathname, router);
+  }, [pathname, router]);
 
   useEffect(() => {
     if (Platform.OS !== 'android' || !pathname) return;

@@ -24,6 +24,7 @@ import { EMAIL_AUTH_UI_ENABLED } from '../constants/authFlags';
 import { Verandah } from '../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, signInWithEmail, signUpWithEmail } from '../lib/auth';
+import { goToLanding } from '../lib/siteUrl';
 import { supabase } from '../lib/supabase';
 
 // Google Sign-In native module — only available on Android/iOS.
@@ -343,6 +344,11 @@ export default function LoginScreen() {
               <TouchableOpacity onPress={() => router.push('/legal?returnTo=login' as any)}><Text style={styles.toggleModeLink}>Terms &amp; Privacy Policy</Text></TouchableOpacity>
             </View>
           )}
+          {Platform.OS === 'web' && (
+            <TouchableOpacity onPress={() => goToLanding()} style={styles.homeButton} activeOpacity={0.85}>
+              <Text style={styles.homeButtonText}>Back to home</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -358,6 +364,17 @@ const styles = StyleSheet.create({
     paddingTop: VerandahLayout.screenPaddingTop,
     paddingBottom: 28,
   },
+  homeButton: {
+    marginTop: 18,
+    height: 46,
+    borderRadius: VerandahRadius.button,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  homeButtonText: { fontSize: 14, fontWeight: '600', color: Verandah.cream, fontFamily: VerandahType.sansFamily },
   header: { alignItems: 'center', marginBottom: 24 },
   logoContainer: { width: 78, height: 78, borderRadius: 22, backgroundColor: 'rgba(255, 255, 255, 0.08)', borderWidth: 1, borderColor: 'rgba(221, 169, 74, 0.3)', justifyContent: 'center', alignItems: 'center', marginBottom: 12, overflow: 'hidden' },
   logoImage: { width: '100%', height: '100%' },
