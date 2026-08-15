@@ -162,6 +162,14 @@
     .wn-btn-sm { padding: 10px 18px; border-radius: 12px; font-size: 14.5px; gap: 7px; }
     .wn-btn-sm:hover { transform: translateY(-1px); box-shadow: none; }
 
+    /* Draws the eye to Install app the moment it becomes available — pulses
+       the button's own fill rather than a ring bleeding past its border. */
+    @keyframes wn-pulse-fill {
+      0%, 100% { background: #fff; }
+      50%      { background: var(--emerald-tint); }
+    }
+    #wn-install.wn-pulse { animation: wn-pulse-fill 1.6s ease-in-out infinite; }
+
     /* ---------- Hero ---------- */
     .wn-hero { position: relative; max-width: 1000px; margin: 0 auto; padding: 96px 32px 20px; text-align: center; }
     .wn-hero-eyebrow {
@@ -426,6 +434,7 @@
       html { scroll-behavior: auto; }
       .wn-js [data-reveal] { opacity: 1; transform: none; transition: none; }
       .wn-tile:hover, .wn-card:hover, .wn-btn:hover { transform: none; }
+      #wn-install.wn-pulse { animation: none; }
     }
   </style>
 </head>
@@ -1023,9 +1032,11 @@
     e.preventDefault();
     deferredPrompt = e;
     btn.hidden = false;
+    btn.classList.add('wn-pulse');
   });
 
   btn.addEventListener('click', function () {
+    btn.classList.remove('wn-pulse');
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(function () {
