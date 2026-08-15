@@ -24,6 +24,7 @@ export default function AddListingScreen() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ name?: boolean; category?: boolean; phone?: boolean }>({});
 
   const handleGoBack = () => {
     goBackSmart(router, '/mcn/listing-add');
@@ -50,13 +51,29 @@ export default function AddListingScreen() {
   }, []);
 
   const handleSubmit = async () => {
+    const newErrors: { name?: boolean; category?: boolean; phone?: boolean } = {};
     const trimmedName = name.trim();
     if (!trimmedName) {
+      newErrors.name = true;
+    }
+
+    if (!selectedCategoryId) {
+      newErrors.category = true;
+    }
+
+    let finalPhone = contactPhone.trim().replace(/\D/g, '');
+    if (!finalPhone || finalPhone.length !== 10) {
+      newErrors.phone = true;
+    }
+
+    setErrors(newErrors);
+
+    if (newErrors.name) {
       Toast.show({ type: 'error', text1: 'Business name required' });
       return;
     }
 
-    if (!selectedCategoryId) {
+    if (newErrors.category) {
       Toast.show({ type: 'error', text1: 'Business category is required' });
       return;
     }
@@ -66,20 +83,17 @@ export default function AddListingScreen() {
       return;
     }
 
+    if (!finalPhone) {
+      Toast.show({ type: 'error', text1: 'WhatsApp / phone number is required' });
+      return;
+    }
+    if (finalPhone.length !== 10) {
+      Toast.show({ type: 'error', text1: 'Phone number must be 10 digits' });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      let finalPhone = contactPhone.trim().replace(/\D/g, '');
-      if (!finalPhone) {
-        Toast.show({ type: 'error', text1: 'WhatsApp / phone number is required' });
-        setIsSubmitting(false);
-        return;
-      }
-      if (finalPhone.length !== 10) {
-        Toast.show({ type: 'error', text1: 'Phone number must be 10 digits' });
-        setIsSubmitting(false);
-        return;
-      }
-
       const { data: listing, error } = await supabase
         .from('mcn_listings')
         .insert({
@@ -144,13 +158,24 @@ export default function AddListingScreen() {
             Business name <Text style={{ color: colors.danger }}>*</Text>
           </Text>
           <TextInput
-            style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+            style={[
+              styles.input,
+              {
+                borderColor: errors.name ? '#DC2626' : colors.border,
+                backgroundColor: errors.name ? '#FEF2F2' : colors.card,
+                color: colors.textPrimary,
+              },
+            ]}
             placeholder="e.g. Ramana's Mango Corner, Lakshmi's Pickles"
             placeholderTextColor={colors.textMuted}
             value={name}
-            onChangeText={setName}
+            onChangeText={(txt) => {
+              setName(txt);
+              if (errors.name) setErrors((prev) => ({ ...prev, name: false }));
+            }}
             maxLength={80}
           />
+          {errors.name ? <Text style={styles.errorText}>Business name is required</Text> : null}
         </View>
 
         <View style={styles.field}>
@@ -170,7 +195,7 @@ export default function AddListingScreen() {
 
         <View style={styles.field}>
           <Text style={[styles.label, { color: colors.textPrimary }]}>Business category <Text style={{ color: colors.danger }}>*</Text></Text>
-          <View style={styles.categoryGrid}>
+          <View style={[styles.categoryGrid, errors.category && styles.categoryGridError]}>
             {categories.map((category) => {
               const isSelected = selectedCategoryId === category.id;
               return (
@@ -181,7 +206,10 @@ export default function AddListingScreen() {
                     { borderColor: colors.border, backgroundColor: colors.card },
                     isSelected && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
                   ]}
-                  onPress={() => setSelectedCategoryId(category.id)}
+                  onPress={() => {
+                    setSelectedCategoryId(category.id);
+                    if (errors.category) setErrors((prev) => ({ ...prev, category: false }));
+                  }}
                   activeOpacity={0.85}
                 >
                   <Text
@@ -198,6 +226,7 @@ export default function AddListingScreen() {
               );
             })}
           </View>
+          {errors.category ? <Text style={styles.errorText}>Please select a business category</Text> : null}
         </View>
 
         <View style={styles.field}>
@@ -205,14 +234,25 @@ export default function AddListingScreen() {
             WhatsApp / phone number <Text style={{ color: colors.danger }}>*</Text>
           </Text>
           <TextInput
-            style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+            style={[
+              styles.input,
+              {
+                borderColor: errors.phone ? '#DC2626' : colors.border,
+                backgroundColor: errors.phone ? '#FEF2F2' : colors.card,
+                color: colors.textPrimary,
+              },
+            ]}
             placeholder="10-digit number. Customers will use this to contact you."
             placeholderTextColor={colors.textMuted}
             keyboardType="phone-pad"
             value={contactPhone}
-            onChangeText={setContactPhone}
+            onChangeText={(txt) => {
+              setContactPhone(txt);
+              if (errors.phone) setErrors((prev) => ({ ...prev, phone: false }));
+            }}
             maxLength={15}
           />
+          {errors.phone ? <Text style={styles.errorText}>Valid 10-digit phone number is required</Text> : null}
         </View>
 
         <TouchableOpacity
@@ -260,6 +300,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+  },
+  categoryGridError: {
+    padding: 6,
+    borderRadius: VerandahRadius.md,
+    borderWidth: 1,
+    borderColor: '#DC2626',
+    backgroundColor: '#FEF2F2',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#DC2626',
+    marginTop: 3,
+    fontWeight: '500',
   },
   categoryChip: {
     width: '49%',

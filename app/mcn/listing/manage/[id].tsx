@@ -71,6 +71,7 @@ export default function ManageListingScreen() {
   const [editListingCategoryId, setEditListingCategoryId] = useState<string | null>(null);
   const [editListingImageUrl, setEditListingImageUrl] = useState<string | null>(null);
   const [savingListing, setSavingListing] = useState(false);
+  const [editListingErrors, setEditListingErrors] = useState<{ name?: boolean; category?: boolean; phone?: boolean }>({});
 
   // Product editor state
   const [showProductModal, setShowProductModal] = useState(false);
@@ -82,6 +83,7 @@ export default function ManageListingScreen() {
   const [prodDesc, setProdDesc] = useState('');
   const [prodImageUrl, setProdImageUrl] = useState<string | null>(null);
   const [savingProduct, setSavingProduct] = useState(false);
+  const [prodErrors, setProdErrors] = useState<{ name?: boolean; price?: boolean }>({});
   const listingModalScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -227,30 +229,41 @@ export default function ManageListingScreen() {
 
   const handleSaveListingDetails = async () => {
     if (!listing) return;
+    const newErrors: { name?: boolean; category?: boolean; phone?: boolean } = {};
     const trimmedName = editListingName.trim();
     if (!trimmedName) {
+      newErrors.name = true;
+    }
+    if (!editListingCategoryId) {
+      newErrors.category = true;
+    }
+
+    let finalPhone = editListingPhone.trim().replace(/\D/g, '');
+    if (!finalPhone || finalPhone.length !== 10) {
+      newErrors.phone = true;
+    }
+
+    setEditListingErrors(newErrors);
+
+    if (newErrors.name) {
       Toast.show({ type: 'error', text1: 'Business name is required' });
       return;
     }
-    if (!editListingCategoryId) {
+    if (newErrors.category) {
       Toast.show({ type: 'error', text1: 'Business category is required' });
+      return;
+    }
+    if (!finalPhone) {
+      Toast.show({ type: 'error', text1: 'WhatsApp / phone number is required' });
+      return;
+    }
+    if (finalPhone.length !== 10) {
+      Toast.show({ type: 'error', text1: 'Phone number must be 10 digits' });
       return;
     }
 
     setSavingListing(true);
     try {
-      let finalPhone = editListingPhone.trim().replace(/\D/g, '');
-      if (!finalPhone) {
-        Toast.show({ type: 'error', text1: 'WhatsApp / phone number is required' });
-        setSavingListing(false);
-        return;
-      }
-      if (finalPhone.length !== 10) {
-        Toast.show({ type: 'error', text1: 'Phone number must be 10 digits' });
-        setSavingListing(false);
-        return;
-      }
-
       const { error } = await supabase
         .from('mcn_listings')
         .update({
@@ -284,6 +297,7 @@ export default function ManageListingScreen() {
 
   const handleOpenProductModal = (product: Product | null) => {
     setEditingProduct(product);
+    setProdErrors({});
     if (product) {
       setProdName(product.name);
       setProdUnit(product.unit);
@@ -306,12 +320,22 @@ export default function ManageListingScreen() {
     const trimmedName = prodName.trim();
     const trimmedPrice = prodPrice.trim();
     const parsedPrice = trimmedPrice ? parseFloat(trimmedPrice) : null;
+    const newErrors: { name?: boolean; price?: boolean } = {};
 
     if (!trimmedName) {
+      newErrors.name = true;
+    }
+    if (trimmedPrice && (parsedPrice == null || Number.isNaN(parsedPrice) || parsedPrice < 0)) {
+      newErrors.price = true;
+    }
+
+    setProdErrors(newErrors);
+
+    if (newErrors.name) {
       Toast.show({ type: 'error', text1: 'Item name is required' });
       return;
     }
-    if (trimmedPrice && (parsedPrice == null || Number.isNaN(parsedPrice) || parsedPrice < 0)) {
+    if (newErrors.price) {
       Toast.show({ type: 'error', text1: 'Enter a valid price >= 0' });
       return;
     }
@@ -710,13 +734,24 @@ export default function ManageListingScreen() {
             />
 
             <View style={styles.field}>
-              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Business name</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Business name <Text style={{ color: colors.danger }}>*</Text></Text>
               <TextInput
-                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: editListingErrors.name ? '#DC2626' : colors.border,
+                    backgroundColor: editListingErrors.name ? '#FEF2F2' : colors.surface,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 value={editListingName}
-                onChangeText={setEditListingName}
+                onChangeText={(txt) => {
+                  setEditListingName(txt);
+                  if (editListingErrors.name) setEditListingErrors((prev) => ({ ...prev, name: false }));
+                }}
                 maxLength={80}
               />
+              {editListingErrors.name ? <Text style={styles.errorText}>Business name is required</Text> : null}
             </View>
 
             <View style={styles.field}>
@@ -734,7 +769,7 @@ export default function ManageListingScreen() {
 
             <View style={styles.field}>
               <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Business category <Text style={{ color: colors.danger }}>*</Text></Text>
-              <View style={styles.categoryGrid}>
+              <View style={[styles.categoryGrid, editListingErrors.category && styles.categoryGridError]}>
                 {categories.map((category) => {
                   const isSelected = editListingCategoryId === category.id;
                   return (
@@ -745,7 +780,10 @@ export default function ManageListingScreen() {
                         { borderColor: colors.border, backgroundColor: colors.surface },
                         isSelected && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
                       ]}
-                      onPress={() => setEditListingCategoryId(category.id)}
+                      onPress={() => {
+                        setEditListingCategoryId(category.id);
+                        if (editListingErrors.category) setEditListingErrors((prev) => ({ ...prev, category: false }));
+                      }}
                       activeOpacity={0.85}
                     >
                       <Text
@@ -762,6 +800,7 @@ export default function ManageListingScreen() {
                   );
                 })}
               </View>
+              {editListingErrors.category ? <Text style={styles.errorText}>Please select a business category</Text> : null}
             </View>
 
             <View style={styles.field}>
@@ -769,12 +808,23 @@ export default function ManageListingScreen() {
                 WhatsApp / phone number <Text style={{ color: colors.danger }}>*</Text>
               </Text>
               <TextInput
-                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: editListingErrors.phone ? '#DC2626' : colors.border,
+                    backgroundColor: editListingErrors.phone ? '#FEF2F2' : colors.surface,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 value={editListingPhone}
-                onChangeText={setEditListingPhone}
+                onChangeText={(txt) => {
+                  setEditListingPhone(txt);
+                  if (editListingErrors.phone) setEditListingErrors((prev) => ({ ...prev, phone: false }));
+                }}
                 keyboardType="phone-pad"
                 maxLength={15}
               />
+              {editListingErrors.phone ? <Text style={styles.errorText}>Valid 10-digit phone number is required</Text> : null}
             </View>
 
             <View style={styles.modalActions}>
@@ -854,28 +904,50 @@ export default function ManageListingScreen() {
             />
 
             <View style={styles.field}>
-              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Name</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Name <Text style={{ color: colors.danger }}>*</Text></Text>
               <TextInput
-                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: prodErrors.name ? '#DC2626' : colors.border,
+                    backgroundColor: prodErrors.name ? '#FEF2F2' : colors.surface,
+                    color: colors.textPrimary,
+                  },
+                ]}
                 placeholder="e.g. Banginapalli, Chocolate cake, Mango pickle"
                 placeholderTextColor={colors.textMuted}
                 value={prodName}
-                onChangeText={setProdName}
+                onChangeText={(txt) => {
+                  setProdName(txt);
+                  if (prodErrors.name) setProdErrors((prev) => ({ ...prev, name: false }));
+                }}
                 maxLength={80}
               />
+              {prodErrors.name ? <Text style={styles.errorText}>Item name is required</Text> : null}
             </View>
 
             <View style={styles.rowFields}>
               <View style={[styles.field, { flex: 1.2, marginRight: 10 }]}>
                 <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Price per unit (optional)</Text>
                 <TextInput
-                  style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: prodErrors.price ? '#DC2626' : colors.border,
+                      backgroundColor: prodErrors.price ? '#FEF2F2' : colors.surface,
+                      color: colors.textPrimary,
+                    },
+                  ]}
                   placeholder="Leave empty if price varies"
                   placeholderTextColor={colors.textMuted}
                   value={prodPrice}
-                  onChangeText={setProdPrice}
+                  onChangeText={(txt) => {
+                    setProdPrice(txt);
+                    if (prodErrors.price) setProdErrors((prev) => ({ ...prev, price: false }));
+                  }}
                   keyboardType="numeric"
                 />
+                {prodErrors.price ? <Text style={styles.errorText}>Enter a valid price (0 or higher)</Text> : null}
                 <Text style={[styles.priceHintText, { color: colors.textMuted }]}>Leave empty if price varies or is free.</Text>
               </View>
 
@@ -1189,6 +1261,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+  },
+  categoryGridError: {
+    padding: 6,
+    borderRadius: VerandahRadius.md,
+    borderWidth: 1,
+    borderColor: '#DC2626',
+    backgroundColor: '#FEF2F2',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#DC2626',
+    marginTop: 3,
+    fontWeight: '500',
   },
   categoryChip: {
     width: '49%',

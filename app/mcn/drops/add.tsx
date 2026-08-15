@@ -88,6 +88,10 @@ export default function CreateOrEditFoodDropScreen() {
   const [showCutoffDatePicker, setShowCutoffDatePicker] = useState(false);
   const [showCutoffTimePicker, setShowCutoffTimePicker] = useState(false);
 
+  // Field validation errors
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: boolean }>({});
+  const [itemErrors, setItemErrors] = useState<{ [id: string]: { name?: boolean; price?: boolean; max_quantity?: boolean } }>({});
+
   const parseDateStr = (str: string): Date => {
     if (!str) return new Date();
     const parts = str.split('-');
@@ -305,6 +309,12 @@ export default function CreateOrEditFoodDropScreen() {
     setItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
     );
+    if (itemErrors[id]?.[field as 'name' | 'price' | 'max_quantity']) {
+      setItemErrors((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], [field]: false },
+      }));
+    }
   };
 
   const handleSubmit = async () => {
@@ -313,17 +323,64 @@ export default function CreateOrEditFoodDropScreen() {
       return;
     }
 
+    const errors: { [key: string]: boolean } = {};
+    const newItemErrors: { [id: string]: { name?: boolean; price?: boolean; max_quantity?: boolean } } = {};
+
     if (!title.trim()) {
+      errors.title = true;
+    }
+    if (!fulfillmentDate) {
+      errors.fulfillmentDate = true;
+    }
+    if (!fulfillmentTime) {
+      errors.fulfillmentTime = true;
+    }
+    if (!cutoffDate) {
+      errors.cutoffDate = true;
+    }
+    if (!cutoffTime) {
+      errors.cutoffTime = true;
+    }
+
+    let hasItemError = false;
+    items.forEach((item) => {
+      const err: { name?: boolean; price?: boolean; max_quantity?: boolean } = {};
+      if (!item.name.trim()) {
+        err.name = true;
+        hasItemError = true;
+      }
+      const p = parseFloat(item.price);
+      if (!item.price.trim() || isNaN(p) || p <= 0) {
+        err.price = true;
+        hasItemError = true;
+      }
+      const rawCap = String(item.max_quantity ?? '').trim();
+      if (rawCap) {
+        const cap = Number(rawCap);
+        if (!Number.isInteger(cap) || cap <= 0) {
+          err.max_quantity = true;
+          hasItemError = true;
+        }
+      }
+      if (err.name || err.price || err.max_quantity) {
+        newItemErrors[item.id] = err;
+      }
+    });
+
+    setFieldErrors(errors);
+    setItemErrors(newItemErrors);
+
+    if (errors.title) {
       Toast.show({ type: 'error', text1: 'Please enter a drop title' });
       return;
     }
 
-    if (!fulfillmentDate || !fulfillmentTime) {
+    if (errors.fulfillmentDate || errors.fulfillmentTime) {
       Toast.show({ type: 'error', text1: 'Please set delivery date & time' });
       return;
     }
 
-    if (!cutoffDate || !cutoffTime) {
+    if (errors.cutoffDate || errors.cutoffTime) {
       Toast.show({ type: 'error', text1: 'Please set pre-order cut-off date & time' });
       return;
     }
@@ -332,11 +389,13 @@ export default function CreateOrEditFoodDropScreen() {
     const fulfillAtObj = new Date(`${fulfillmentDate}T${fulfillmentTime}:00`);
 
     if (isNaN(cutoffAtObj.getTime())) {
+      setFieldErrors((prev) => ({ ...prev, cutoffDate: true, cutoffTime: true }));
       Toast.show({ type: 'error', text1: 'Invalid cut-off deadline timestamp' });
       return;
     }
 
     if (isNaN(fulfillAtObj.getTime())) {
+      setFieldErrors((prev) => ({ ...prev, fulfillmentDate: true, fulfillmentTime: true }));
       Toast.show({ type: 'error', text1: 'Invalid delivery time timestamp' });
       return;
     }
@@ -352,6 +411,7 @@ export default function CreateOrEditFoodDropScreen() {
       loadedSchedule.cutoffTime !== cutoffTime;
 
     if (cutoffChanged && cutoffAtObj <= now) {
+      setFieldErrors((prev) => ({ ...prev, cutoffDate: true, cutoffTime: true }));
       Toast.show({
         type: 'error',
         text1: 'Cut-off must be in the future',
@@ -366,6 +426,7 @@ export default function CreateOrEditFoodDropScreen() {
       loadedSchedule.fulfillmentTime !== fulfillmentTime;
 
     if (fulfillmentChanged && fulfillAtObj <= now) {
+      setFieldErrors((prev) => ({ ...prev, fulfillmentDate: true, fulfillmentTime: true }));
       Toast.show({
         type: 'error',
         text1: 'Delivery time must be in the future',
@@ -375,6 +436,13 @@ export default function CreateOrEditFoodDropScreen() {
     }
 
     if (fulfillAtObj <= cutoffAtObj) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        fulfillmentDate: true,
+        fulfillmentTime: true,
+        cutoffDate: true,
+        cutoffTime: true,
+      }));
       Toast.show({
         type: 'error',
         text1: 'Delivery time must be after cut-off deadline',
@@ -383,44 +451,16 @@ export default function CreateOrEditFoodDropScreen() {
       return;
     }
 
-    // Validate Items
-    const validItems = items.filter((i) => i.name.trim() && i.price.trim());
-    if (validItems.length === 0) {
+    if (hasItemError) {
       Toast.show({
         type: 'error',
-        text1: 'Add at least one complete item',
-        text2: 'Each item requires a name and a valid price.',
+        text1: 'Please fill all mandatory item fields',
+        text2: 'Each item requires a name and a valid positive price.',
       });
       return;
     }
 
-    for (const item of validItems) {
-      const p = parseFloat(item.price);
-      if (isNaN(p) || p <= 0) {
-        Toast.show({
-          type: 'error',
-          text1: `Invalid price for "${item.name}"`,
-          text2: 'Price must be a positive number.',
-        });
-        return;
-      }
-
-      // Max quantity is optional, but a blank-or-valid rule is the only safe
-      // one: 0 would publish an item nobody can ever order, and a non-numeric
-      // entry reaches the insert as NaN.
-      const rawCap = String(item.max_quantity ?? '').trim();
-      if (rawCap) {
-        const cap = Number(rawCap);
-        if (!Number.isInteger(cap) || cap <= 0) {
-          Toast.show({
-            type: 'error',
-            text1: `Invalid max quantity for "${item.name}"`,
-            text2: 'Leave it blank for no limit, or enter a whole number above zero.',
-          });
-          return;
-        }
-      }
-    }
+    const validItems = items.filter((i) => i.name.trim() && i.price.trim());
 
     setSubmitting(true);
     try {
@@ -610,13 +650,17 @@ export default function CreateOrEditFoodDropScreen() {
         <View style={styles.section}>
           <Text style={styles.label}>Drop Title *</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, fieldErrors.title && styles.inputError]}
             placeholder="e.g. Saturday dinner special, Sunday dum biryani"
             placeholderTextColor={colors.textMuted}
             value={title}
-            onChangeText={setTitle}
+            onChangeText={(txt) => {
+              setTitle(txt);
+              if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: false }));
+            }}
             maxLength={80}
           />
+          {fieldErrors.title ? <Text style={styles.errorText}>Please enter a drop title</Text> : null}
         </View>
 
         <View style={styles.section}>
@@ -634,103 +678,120 @@ export default function CreateOrEditFoodDropScreen() {
 
         {/* Fulfillment Schedule */}
         <View style={styles.cardSection}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-            <Calendar size={16} color={Verandah.primary} aria-hidden={true} />
-            <Text style={styles.cardSectionTitle}>Delivery / Fulfillment Schedule</Text>
-          </View>
-
-          <View style={styles.row}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subLabel}>Fulfillment Date *</Text>
-              {Platform.OS === 'web' ? (
-                <input
-                  type="date"
-                  value={fulfillmentDate}
-                  min={cutoffDate && cutoffDate > todayStr ? cutoffDate : todayStr}
-                  onChange={(e) => setFulfillmentDate(e.target.value)}
-                  style={{
-                    height: 42,
-                    borderRadius: 8,
-                    border: `0.5px solid ${colors.borderHair}`,
-                    padding: '0 10px',
-                    fontSize: 15,
-                    color: colors.textPrimary,
-                    backgroundColor: colors.card,
-                    fontFamily: 'inherit',
-                  }}
-                />
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={[styles.input, { justifyContent: 'center' }]}
-                    onPress={() => setShowFulfillDatePicker(true)}
-                  >
-                    <Text style={{ fontSize: 15, color: colors.textPrimary }}>
-                      {fulfillmentDate || 'Select Date'}
-                    </Text>
-                  </TouchableOpacity>
-                  {showFulfillDatePicker && (
-                    <DateTimePicker
-                      value={parseDateStr(fulfillmentDate)}
-                      mode="date"
-                      display="default"
-                      minimumDate={parseDateStr(
-                        cutoffDate && cutoffDate > todayStr ? cutoffDate : todayStr
-                      )}
-                      onChange={(event: DateTimePickerEvent, date?: Date) => {
-                        setShowFulfillDatePicker(Platform.OS === 'ios');
-                        if (date) setFulfillmentDate(formatDateStr(date));
-                      }}
-                    />
-                  )}
-                </>
-              )}
-            </View>
-
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subLabel}>Delivery Time Slot *</Text>
-              {Platform.OS === 'web' ? (
-                <input
-                  type="time"
-                  value={fulfillmentTime}
-                  onChange={(e) => setFulfillmentTime(e.target.value)}
-                  style={{
-                    height: 42,
-                    borderRadius: 8,
-                    border: `0.5px solid ${colors.borderHair}`,
-                    padding: '0 10px',
-                    fontSize: 15,
-                    color: colors.textPrimary,
-                    backgroundColor: colors.card,
-                    fontFamily: 'inherit',
-                  }}
-                />
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={[styles.input, { justifyContent: 'center' }]}
-                    onPress={() => setShowFulfillTimePicker(true)}
-                  >
-                    <Text style={{ fontSize: 15, color: colors.textPrimary }}>
-                      {fulfillmentTime ? formatDisplayTime(fulfillmentTime) : 'Select Time'}
-                    </Text>
-                  </TouchableOpacity>
-                  {showFulfillTimePicker && (
-                    <DateTimePicker
-                      value={parseTimeStr(fulfillmentTime)}
-                      mode="time"
-                      display="default"
-                      onChange={(event: DateTimePickerEvent, date?: Date) => {
-                        setShowFulfillTimePicker(Platform.OS === 'ios');
-                        if (date) setFulfillmentTime(formatTimeStr(date));
-                      }}
-                    />
-                  )}
-                </>
-              )}
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderTitleRow}>
+              <Calendar size={16} color={Verandah.primary} aria-hidden={true} />
+              <Text style={styles.cardSectionTitle}>Delivery / Fulfillment Schedule</Text>
             </View>
           </View>
 
+          <View style={styles.cardBody}>
+            <View style={styles.row}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.subLabel}>Fulfillment Date *</Text>
+                {Platform.OS === 'web' ? (
+                  <input
+                    type="date"
+                    value={fulfillmentDate}
+                    min={cutoffDate && cutoffDate > todayStr ? cutoffDate : todayStr}
+                    onChange={(e) => {
+                      setFulfillmentDate(e.target.value);
+                      if (fieldErrors.fulfillmentDate) setFieldErrors((prev) => ({ ...prev, fulfillmentDate: false }));
+                    }}
+                    style={{
+                      height: 42,
+                      borderRadius: 8,
+                      border: `1px solid ${fieldErrors.fulfillmentDate ? '#DC2626' : colors.borderHair}`,
+                      padding: '0 10px',
+                      fontSize: 15,
+                      color: colors.textPrimary,
+                      backgroundColor: fieldErrors.fulfillmentDate ? '#FEF2F2' : colors.card,
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      style={[styles.input, { justifyContent: 'center' }, fieldErrors.fulfillmentDate && styles.inputError]}
+                      onPress={() => setShowFulfillDatePicker(true)}
+                    >
+                      <Text style={{ fontSize: 15, color: colors.textPrimary }}>
+                        {fulfillmentDate || 'Select Date'}
+                      </Text>
+                    </TouchableOpacity>
+                    {showFulfillDatePicker && (
+                      <DateTimePicker
+                        value={parseDateStr(fulfillmentDate)}
+                        mode="date"
+                        display="default"
+                        minimumDate={parseDateStr(
+                          cutoffDate && cutoffDate > todayStr ? cutoffDate : todayStr
+                        )}
+                        onChange={(event: DateTimePickerEvent, date?: Date) => {
+                          setShowFulfillDatePicker(Platform.OS === 'ios');
+                          if (date) {
+                            setFulfillmentDate(formatDateStr(date));
+                            if (fieldErrors.fulfillmentDate) setFieldErrors((prev) => ({ ...prev, fulfillmentDate: false }));
+                          }
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+                {fieldErrors.fulfillmentDate ? <Text style={styles.errorText}>Date required</Text> : null}
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Text style={styles.subLabel}>Delivery Time Slot *</Text>
+                {Platform.OS === 'web' ? (
+                  <input
+                    type="time"
+                    value={fulfillmentTime}
+                    onChange={(e) => {
+                      setFulfillmentTime(e.target.value);
+                      if (fieldErrors.fulfillmentTime) setFieldErrors((prev) => ({ ...prev, fulfillmentTime: false }));
+                    }}
+                    style={{
+                      height: 42,
+                      borderRadius: 8,
+                      border: `1px solid ${fieldErrors.fulfillmentTime ? '#DC2626' : colors.borderHair}`,
+                      padding: '0 10px',
+                      fontSize: 15,
+                      color: colors.textPrimary,
+                      backgroundColor: fieldErrors.fulfillmentTime ? '#FEF2F2' : colors.card,
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      style={[styles.input, { justifyContent: 'center' }, fieldErrors.fulfillmentTime && styles.inputError]}
+                      onPress={() => setShowFulfillTimePicker(true)}
+                    >
+                      <Text style={{ fontSize: 15, color: colors.textPrimary }}>
+                        {fulfillmentTime ? formatDisplayTime(fulfillmentTime) : 'Select Time'}
+                      </Text>
+                    </TouchableOpacity>
+                    {showFulfillTimePicker && (
+                      <DateTimePicker
+                        value={parseTimeStr(fulfillmentTime)}
+                        mode="time"
+                        display="default"
+                        onChange={(event: DateTimePickerEvent, date?: Date) => {
+                          setShowFulfillTimePicker(Platform.OS === 'ios');
+                          if (date) {
+                            setFulfillmentTime(formatTimeStr(date));
+                            if (fieldErrors.fulfillmentTime) setFieldErrors((prev) => ({ ...prev, fulfillmentTime: false }));
+                          }
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+                {fieldErrors.fulfillmentTime ? <Text style={styles.errorText}>Time required</Text> : null}
+              </View>
+            </View>
+          </View>
         </View>
 
         {/* Meal slot. Seeded from the delivery time above, but stored as the
@@ -742,157 +803,182 @@ export default function CreateOrEditFoodDropScreen() {
             answered. A full section with its own title and full-width chips
             makes the wrong guess visible instead of silently shipping. */}
         <View style={styles.cardSection}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-            <Sun size={16} color={Verandah.primary} aria-hidden={true} />
-            <Text style={styles.cardSectionTitle}>Which meal is this? *</Text>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderTitleRow}>
+              <Sun size={16} color={Verandah.primary} aria-hidden={true} />
+              <Text style={styles.cardSectionTitle}>Which meal is this? *</Text>
+            </View>
           </View>
-          <Text style={styles.cardSectionSub}>
-            We pre-fill this from your delivery time. Change it if this is a late snack or an
-            early dinner — residents filter the food list by meal.
-          </Text>
 
-          <View style={styles.mealPickerRow}>
-            {MEAL_TYPES.map((m) => {
-              const sel = mealType === m;
-              return (
-                <TouchableOpacity
-                  key={m}
-                  style={[styles.mealChip, sel && styles.mealChipSel]}
-                  onPress={() => {
-                    mealTouchedRef.current = true;
-                    setMealType(m);
-                  }}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: sel }}
-                  accessibilityLabel={`${MEAL_META[m].label} — ${MEAL_META[m].hint}`}
-                >
-                  <Text style={[styles.mealChipText, sel && styles.mealChipTextSel]}>
-                    {MEAL_META[m].label}
-                  </Text>
-                  <Text style={[styles.mealChipHint, sel && styles.mealChipHintSel]}>
-                    {MEAL_META[m].hint}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+          <View style={styles.cardBody}>
+            <Text style={styles.cardSectionSub}>
+              We pre-fill this from your delivery time. Change it if this is a late snack or an
+              early dinner — residents filter the food list by meal.
+            </Text>
+
+            <View style={styles.mealPickerRow}>
+              {MEAL_TYPES.map((m) => {
+                const sel = mealType === m;
+                return (
+                  <TouchableOpacity
+                    key={m}
+                    style={[styles.mealChip, sel && styles.mealChipSel]}
+                    onPress={() => {
+                      mealTouchedRef.current = true;
+                      setMealType(m);
+                    }}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: sel }}
+                    accessibilityLabel={`${MEAL_META[m].label} — ${MEAL_META[m].hint}`}
+                  >
+                    <Text style={[styles.mealChipText, sel && styles.mealChipTextSel]}>
+                      {MEAL_META[m].label}
+                    </Text>
+                    <Text style={[styles.mealChipHint, sel && styles.mealChipHintSel]}>
+                      {MEAL_META[m].hint}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
         </View>
 
         {/* Cut-off Deadline */}
         <View style={styles.cardSection}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-            <Clock size={16} color={Verandah.primary} aria-hidden={true} />
-            <Text style={styles.cardSectionTitle}>Pre-Order Cut-off Deadline</Text>
-          </View>
-          <Text style={styles.cardSectionSub}>
-            Orders automatically close at this time so you can prepare ingredients.
-          </Text>
-
-          <View style={styles.row}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subLabel}>Cut-off Date *</Text>
-              {Platform.OS === 'web' ? (
-                <input
-                  type="date"
-                  value={cutoffDate}
-                  min={todayStr}
-                  onChange={(e) => setCutoffDate(e.target.value)}
-                  style={{
-                    height: 42,
-                    borderRadius: 8,
-                    border: `0.5px solid ${colors.borderHair}`,
-                    padding: '0 10px',
-                    fontSize: 15,
-                    color: colors.textPrimary,
-                    backgroundColor: colors.card,
-                    fontFamily: 'inherit',
-                  }}
-                />
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={[styles.input, { justifyContent: 'center' }]}
-                    onPress={() => setShowCutoffDatePicker(true)}
-                  >
-                    <Text style={{ fontSize: 15, color: colors.textPrimary }}>
-                      {cutoffDate || 'Select Date'}
-                    </Text>
-                  </TouchableOpacity>
-                  {showCutoffDatePicker && (
-                    <DateTimePicker
-                      value={parseDateStr(cutoffDate)}
-                      mode="date"
-                      display="default"
-                      minimumDate={parseDateStr(todayStr)}
-                      onChange={(event: DateTimePickerEvent, date?: Date) => {
-                        setShowCutoffDatePicker(Platform.OS === 'ios');
-                        if (date) setCutoffDate(formatDateStr(date));
-                      }}
-                    />
-                  )}
-                </>
-              )}
-            </View>
-
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subLabel}>Cut-off Time *</Text>
-              {Platform.OS === 'web' ? (
-                <input
-                  type="time"
-                  value={cutoffTime}
-                  onChange={(e) => setCutoffTime(e.target.value)}
-                  style={{
-                    height: 42,
-                    borderRadius: 8,
-                    border: `0.5px solid ${colors.borderHair}`,
-                    padding: '0 10px',
-                    fontSize: 15,
-                    color: colors.textPrimary,
-                    backgroundColor: colors.card,
-                    fontFamily: 'inherit',
-                  }}
-                />
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={[styles.input, { justifyContent: 'center' }]}
-                    onPress={() => setShowCutoffTimePicker(true)}
-                  >
-                    <Text style={{ fontSize: 15, color: colors.textPrimary }}>
-                      {cutoffTime || 'Select Time'}
-                    </Text>
-                  </TouchableOpacity>
-                  {showCutoffTimePicker && (
-                    <DateTimePicker
-                      value={parseTimeStr(cutoffTime)}
-                      mode="time"
-                      display="default"
-                      onChange={(event: DateTimePickerEvent, date?: Date) => {
-                        setShowCutoffTimePicker(Platform.OS === 'ios');
-                        if (date) setCutoffTime(formatTimeStr(date));
-                      }}
-                    />
-                  )}
-                </>
-              )}
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderTitleRow}>
+              <Clock size={16} color={Verandah.primary} aria-hidden={true} />
+              <Text style={styles.cardSectionTitle}>Pre-Order Cut-off Deadline</Text>
             </View>
           </View>
 
+          <View style={styles.cardBody}>
+            <Text style={styles.cardSectionSub}>
+              Orders automatically close at this time so you can prepare ingredients.
+            </Text>
+
+            <View style={styles.row}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.subLabel}>Cut-off Date *</Text>
+                {Platform.OS === 'web' ? (
+                  <input
+                    type="date"
+                    value={cutoffDate}
+                    min={todayStr}
+                    onChange={(e) => {
+                      setCutoffDate(e.target.value);
+                      if (fieldErrors.cutoffDate) setFieldErrors((prev) => ({ ...prev, cutoffDate: false }));
+                    }}
+                    style={{
+                      height: 42,
+                      borderRadius: 8,
+                      border: `1px solid ${fieldErrors.cutoffDate ? '#DC2626' : colors.borderHair}`,
+                      padding: '0 10px',
+                      fontSize: 15,
+                      color: colors.textPrimary,
+                      backgroundColor: fieldErrors.cutoffDate ? '#FEF2F2' : colors.card,
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      style={[styles.input, { justifyContent: 'center' }, fieldErrors.cutoffDate && styles.inputError]}
+                      onPress={() => setShowCutoffDatePicker(true)}
+                    >
+                      <Text style={{ fontSize: 15, color: colors.textPrimary }}>
+                        {cutoffDate || 'Select Date'}
+                      </Text>
+                    </TouchableOpacity>
+                    {showCutoffDatePicker && (
+                      <DateTimePicker
+                        value={parseDateStr(cutoffDate)}
+                        mode="date"
+                        display="default"
+                        minimumDate={parseDateStr(todayStr)}
+                        onChange={(event: DateTimePickerEvent, date?: Date) => {
+                          setShowCutoffDatePicker(Platform.OS === 'ios');
+                          if (date) {
+                            setCutoffDate(formatDateStr(date));
+                            if (fieldErrors.cutoffDate) setFieldErrors((prev) => ({ ...prev, cutoffDate: false }));
+                          }
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+                {fieldErrors.cutoffDate ? <Text style={styles.errorText}>Date required</Text> : null}
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Text style={styles.subLabel}>Cut-off Time *</Text>
+                {Platform.OS === 'web' ? (
+                  <input
+                    type="time"
+                    value={cutoffTime}
+                    onChange={(e) => {
+                      setCutoffTime(e.target.value);
+                      if (fieldErrors.cutoffTime) setFieldErrors((prev) => ({ ...prev, cutoffTime: false }));
+                    }}
+                    style={{
+                      height: 42,
+                      borderRadius: 8,
+                      border: `1px solid ${fieldErrors.cutoffTime ? '#DC2626' : colors.borderHair}`,
+                      padding: '0 10px',
+                      fontSize: 15,
+                      color: colors.textPrimary,
+                      backgroundColor: fieldErrors.cutoffTime ? '#FEF2F2' : colors.card,
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      style={[styles.input, { justifyContent: 'center' }, fieldErrors.cutoffTime && styles.inputError]}
+                      onPress={() => setShowCutoffTimePicker(true)}
+                    >
+                      <Text style={{ fontSize: 15, color: colors.textPrimary }}>
+                        {cutoffTime || 'Select Time'}
+                      </Text>
+                    </TouchableOpacity>
+                    {showCutoffTimePicker && (
+                      <DateTimePicker
+                        value={parseTimeStr(cutoffTime)}
+                        mode="time"
+                        display="default"
+                        onChange={(event: DateTimePickerEvent, date?: Date) => {
+                          setShowCutoffTimePicker(Platform.OS === 'ios');
+                          if (date) {
+                            setCutoffTime(formatTimeStr(date));
+                            if (fieldErrors.cutoffTime) setFieldErrors((prev) => ({ ...prev, cutoffTime: false }));
+                          }
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+                {fieldErrors.cutoffTime ? <Text style={styles.errorText}>Time required</Text> : null}
+              </View>
+            </View>
+          </View>
         </View>
 
 
         {/* Drop Items Menu */}
         <View style={styles.cardSection}>
-          <View style={styles.itemsHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderTitleRow}>
               <ShoppingBag01 size={16} color={Verandah.primary} aria-hidden={true} />
               <Text style={styles.cardSectionTitle}>Items offered for this drop</Text>
             </View>
             <TouchableOpacity style={styles.addItemBtn} onPress={handleAddItem}>
-              <Plus size={16} color={colors.primary} aria-hidden={true} />
+              <Plus size={15} color={colors.primary} aria-hidden={true} />
               <Text style={styles.addItemBtnText}>Add Item</Text>
             </TouchableOpacity>
           </View>
+
+          <View style={styles.cardBody}>
 
           {items.map((item, idx) => (
             <View key={item.id} style={styles.itemFormBox}>
@@ -916,12 +1002,15 @@ export default function CreateOrEditFoodDropScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.subLabel}>Item Name *</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, itemErrors[item.id]?.name && styles.inputError]}
                     placeholder="e.g. Millet khichdi bowl"
                     placeholderTextColor={colors.textMuted}
                     value={item.name}
                     onChangeText={(txt) => handleItemChange(item.id, 'name', txt)}
                   />
+                  {itemErrors[item.id]?.name ? (
+                    <Text style={styles.errorText}>Item name required</Text>
+                  ) : null}
                 </View>
               </View>
 
@@ -958,13 +1047,16 @@ export default function CreateOrEditFoodDropScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.subLabel}>Price (₹) *</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, itemErrors[item.id]?.price && styles.inputError]}
                     placeholder="350"
                     placeholderTextColor={colors.textMuted}
                     value={item.price}
                     onChangeText={(txt) => handleItemChange(item.id, 'price', txt)}
                     keyboardType="numeric"
                   />
+                  {itemErrors[item.id]?.price ? (
+                    <Text style={styles.errorText}>Valid price required</Text>
+                  ) : null}
                 </View>
 
                 <View style={{ flex: 1 }}>
@@ -990,13 +1082,16 @@ export default function CreateOrEditFoodDropScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.subLabel}>Max quantity — total for all orders combined (optional)</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, itemErrors[item.id]?.max_quantity && styles.inputError]}
                     placeholder="No limit"
                     placeholderTextColor={colors.textMuted}
                     value={item.max_quantity || ''}
                     onChangeText={(txt) => handleItemChange(item.id, 'max_quantity', txt)}
                     keyboardType="numeric"
                   />
+                  {itemErrors[item.id]?.max_quantity ? (
+                    <Text style={styles.errorText}>Enter a valid number above 0</Text>
+                  ) : null}
                   <Text style={styles.hintText}>
                     This is the total you can prepare, shared across every resident's order — not a per-order limit.
                   </Text>
@@ -1004,6 +1099,7 @@ export default function CreateOrEditFoodDropScreen() {
               </View>
             </View>
           ))}
+          </View>
         </View>
 
         {/* Submit CTA */}
@@ -1071,22 +1167,51 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Verandah.textPrimary,
   },
+  inputError: {
+    borderColor: '#DC2626',
+    borderWidth: 1,
+    backgroundColor: '#FEF2F2',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#DC2626',
+    marginTop: 3,
+    fontWeight: '500',
+  },
   multiline: {
     minHeight: 52,
   },
   cardSection: {
     backgroundColor: Verandah.card,
-    borderWidth: VerandahBorder.tile,
-    borderColor: Verandah.border,
+    borderWidth: 1,
+    borderColor: '#CBE5D9',
     borderRadius: VerandahRadius.md,
-    padding: 10,
-    marginBottom: 10,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  cardHeader: {
+    backgroundColor: '#D8EFE4',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: '#C2E2D2',
+  },
+  cardHeaderTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   cardSectionTitle: {
     ...VerandahType.title,
-    fontSize: 15,
-    color: Verandah.textPrimary,
-    marginBottom: 2,
+    fontSize: 14,
+    fontWeight: '700',
+    color: Verandah.primary,
+  },
+  cardBody: {
+    padding: 12,
   },
   cardSectionSub: {
     fontSize: 13,
@@ -1097,25 +1222,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  itemsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
   addItemBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#EEF2FF',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 9,
+    paddingVertical: 3,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#A8D6C0',
   },
   addItemBtnText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    color: Verandah.accent,
+    color: Verandah.primary,
   },
   itemFormBox: {
     backgroundColor: '#F9FAFB',
