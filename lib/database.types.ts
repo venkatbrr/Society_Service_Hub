@@ -1578,6 +1578,64 @@ export type Database = {
           },
         ]
       }
+      mcn_drop_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          drop_id: string
+          id: string
+          reason: string
+          reported_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          drop_id: string
+          id?: string
+          reason: string
+          reported_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          drop_id?: string
+          id?: string
+          reason?: string
+          reported_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcn_drop_reports_drop_id_fkey"
+            columns: ["drop_id"]
+            isOneToOne: false
+            referencedRelation: "mcn_preorder_drops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_drop_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_drop_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       mcn_listing_reports: {
         Row: {
           created_at: string
@@ -1964,6 +2022,10 @@ export type Database = {
           created_by: string
           cutoff_at: string
           description: string | null
+          flagged_by: string | null
+          flagged_for_review_at: string | null
+          flagged_prev_status: string | null
+          flagged_reason: string | null
           fulfillment_date: string
           fulfillment_time: string
           id: string
@@ -1981,6 +2043,10 @@ export type Database = {
           created_by: string
           cutoff_at: string
           description?: string | null
+          flagged_by?: string | null
+          flagged_for_review_at?: string | null
+          flagged_prev_status?: string | null
+          flagged_reason?: string | null
           fulfillment_date: string
           fulfillment_time: string
           id?: string
@@ -1998,6 +2064,10 @@ export type Database = {
           created_by?: string
           cutoff_at?: string
           description?: string | null
+          flagged_by?: string | null
+          flagged_for_review_at?: string | null
+          flagged_prev_status?: string | null
+          flagged_reason?: string | null
           fulfillment_date?: string
           fulfillment_time?: string
           id?: string
@@ -2027,6 +2097,20 @@ export type Database = {
           {
             foreignKeyName: "mcn_preorder_drops_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_last_seen"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mcn_preorder_drops_flagged_by_fkey"
+            columns: ["flagged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcn_preorder_drops_flagged_by_fkey"
+            columns: ["flagged_by"]
             isOneToOne: false
             referencedRelation: "user_last_seen"
             referencedColumns: ["user_id"]
@@ -4173,6 +4257,23 @@ export type Database = {
           full_name: string
           grant_id: string
           granted_by_name: string
+          user_id: string
+        }[]
+      }
+      platform_get_feedback_reports: {
+        Args: { p_community_id?: string; p_kind?: string }
+        Returns: {
+          community_id: string
+          community_name: string
+          created_at: string
+          flat_number: string
+          id: string
+          image_url: string
+          kind: string
+          message: string
+          resident_email: string
+          resident_name: string
+          resident_phone: string
           user_id: string
         }[]
       }

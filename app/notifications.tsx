@@ -71,6 +71,12 @@ export default function NotificationsScreen() {
       case 'carpool_paused':
         return Car01;
       case 'provider_reported':
+      case 'listing_reported':
+      case 'listing_auto_hidden':
+      case 'drop_reported':
+      case 'drop_auto_hidden':
+      case 'drop_hidden_host':
+      case 'drop_hidden_buyer':
         return Flag01;
       case 'community_event_posted':
       case 'community_event_cancelled':
@@ -91,6 +97,29 @@ export default function NotificationsScreen() {
 
     if (notification.type === 'visit_rescheduled' && notification.data?.visit_id) {
       router.push(`/visits/${notification.data.visit_id}`);
+      return;
+    }
+
+    // Moderation notices are the only route back to a hidden object: a hidden
+    // drop is filtered out of the public catalog, and a hidden listing is
+    // is_active = false. Without these the notification was a dead end.
+    if (
+      (notification.type === 'drop_reported' ||
+       notification.type === 'drop_auto_hidden' ||
+       notification.type === 'drop_hidden_host' ||
+       notification.type === 'drop_hidden_buyer') &&
+      notification.data?.drop_id
+    ) {
+      router.push(`/mcn/drops/${notification.data.drop_id}` as any);
+      return;
+    }
+
+    if (
+      (notification.type === 'listing_reported' ||
+       notification.type === 'listing_auto_hidden') &&
+      notification.data?.listing_id
+    ) {
+      router.push(`/mcn/listing/${notification.data.listing_id}` as any);
       return;
     }
 

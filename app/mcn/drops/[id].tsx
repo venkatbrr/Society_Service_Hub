@@ -1,6 +1,8 @@
 import { CheckCircle } from '@untitledui/icons/CheckCircle';
 import { Clock } from '@untitledui/icons/Clock';
 import { Edit01 } from '@untitledui/icons/Edit01';
+import { EyeOff } from '@untitledui/icons/EyeOff';
+import { Flag01 } from '@untitledui/icons/Flag01';
 import { InfoCircle } from '@untitledui/icons/InfoCircle';
 import { Lock01 } from '@untitledui/icons/Lock01';
 import { Share07 } from '@untitledui/icons/Share07';
@@ -15,6 +17,7 @@ import {
     KeyboardAvoidingView,
     Modal,
     Platform,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -39,6 +42,7 @@ import { confirmAction } from '../../../lib/confirm';
 import { shareOrCopy } from '../../../lib/share';
 import { siteUrl } from '../../../lib/siteUrl';
 import { supabase } from '../../../lib/supabase';
+import { useWebBackToClose } from '../../../lib/useWebBackToClose';
 
 interface DropItem {
   id: string;
@@ -63,6 +67,8 @@ interface DropDetails {
   max_orders: number | null;
   status: 'open' | 'closed' | 'completed' | 'cancelled';
   created_by: string;
+  flagged_for_review_at: string | null;
+  flagged_reason: string | null;
   profiles?: {
     full_name: string | null;
     flat_number: string | null;
@@ -76,7 +82,7 @@ interface DropDetails {
 export default function PreorderDropDetailScreen() {
   const { id: dropId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user, profile, isCommunityLead } = useAuth();
+  const { user, profile, isCommunityLead, isPlatformAdmin } = useAuth();
   const { height: windowHeight } = useWindowDimensions();
   const heroHeight = getMediaHeroHeight(windowHeight);
   const colors = Verandah;
@@ -97,10 +103,29 @@ export default function PreorderDropDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  // Browser back closes the photo instead of leaving the screen. This modal is
+  // hand-rolled rather than <ImageViewer/>, so it must opt in explicitly.
+  useWebBackToClose(!!selectedImageUrl, useCallback(() => setSelectedImageUrl(null), []));
   const [itemAvailability, setItemAvailability] = useState<
     Record<string, { remaining: number | null; sold: number }>
   >({});
   const [editingOriginalQuantities, setEditingOriginalQuantities] = useState<Record<string, number>>({});
+
+  // Report / moderation state
+  const [hasReported, setHasReported] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedReportReason, setSelectedReportReason] = useState<string | null>(null);
+  const [reportDetails, setReportDetails] = useState('');
+  const [isReporting, setIsReporting] = useState(false);
+  const [isModerating, setIsModerating] = useState(false);
+
+  const REPORT_REASONS = [
+    { key: 'not_food', label: 'Not a food drop' },
+    { key: 'spam', label: 'Spam' },
+    { key: 'inappropriate', label: 'Inappropriate' },
+    { key: 'unsafe', label: 'Food safety concern' },
+    { key: 'other', label: 'Other' },
+  ];
 
   const fetchDropDetails = useCallback(async () => {
     if (!dropId) return;
@@ -203,6 +228,15 @@ export default function PreorderDropDetailScreen() {
         } else {
           setUserOrders([]);
         }
+
+        // 4. Has the current user already reported this drop?
+        const { data: reportRow } = await supabase
+          .from('mcn_drop_reports')
+          .select('id')
+          .eq('drop_id', dropId)
+          .eq('reported_by', user.id)
+          .maybeSingle();
+        setHasReported(!!reportRow);
       }
     } catch (err) {
       console.error('Error fetching drop details:', err);
@@ -520,7 +554,18 @@ export default function PreorderDropDetailScreen() {
   }
 
   const isCreator = drop?.created_by === user?.id;
-  const canManageDrop = isCreator || isCommunityLead;
+  const isHidden = !!drop?.flagged_for_review_at;
+  // Leads moderate by hiding, not deleting — deleting cascades to every
+  // pre-order on the drop. Delete is the host's own call, or a platform-admin
+  // last resort (RLS enforces this too, migration 20260915000100).
+  const canDeleteDrop = isCreator || isPlatformAdmin;
+  // A lead hosting their own drop has no reason to hide it — they can close or
+  // delete it outright. But their drop can still be auto-hidden by three
+  // resident reports, and `enforce_flagged_drop_reactivation` lets a lead clear
+  // that flag, so they must be offered Restore or a one-president society has
+  // no way back.
+  const canModerateDrop = (isCommunityLead || isPlatformAdmin) && (!isCreator || isHidden);
+  const canReportDrop = !!user?.id && !isCreator && !isCommunityLead && !isPlatformAdmin;
   const rawHostName = drop?.profiles?.full_name?.trim() || drop?.mcn_listings?.name?.trim() || 'Local Food Host';
   const hostName = rawHostName === 'Host' ? 'Local Food Host' : rawHostName;
   const hostFlat = drop?.profiles?.flat_number ? `Flat ${drop.profiles.flat_number}` : '';
@@ -550,6 +595,121 @@ export default function PreorderDropDetailScreen() {
     } catch (err: any) {
       Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
     }
+  };
+
+  const handleSubmitReport = async () => {
+    if (!dropId || !user || !selectedReportReason) return;
+    setIsReporting(true);
+    try {
+      const detailsValue = selectedReportReason === 'other' ? reportDetails.trim() : null;
+      if (selectedReportReason === 'other' && !detailsValue) {
+        Toast.show({ type: 'error', text1: 'Details required', text2: 'Please explain the issue.' });
+        setIsReporting(false);
+        return;
+      }
+
+      const { error } = await supabase.from('mcn_drop_reports').insert({
+        drop_id: dropId,
+        reported_by: user.id,
+        reason: selectedReportReason,
+        details: detailsValue,
+      });
+
+      if (error) {
+        if (error.code === '23505') {
+          setHasReported(true);
+          Toast.show({ type: 'info', text1: 'Already reported', text2: 'You have already reported this food drop.' });
+          setShowReportModal(false);
+        } else {
+          throw error;
+        }
+      } else {
+        setHasReported(true);
+        Toast.show({ type: 'success', text1: 'Report submitted', text2: 'Community leads will review this food drop.' });
+        setShowReportModal(false);
+        setSelectedReportReason(null);
+        setReportDetails('');
+        // Three pending reports auto-hide the drop, so this report may have just
+        // changed what the screen should show.
+        fetchDropDetails();
+      }
+    } catch (err) {
+      console.error('Error submitting drop report:', err);
+      Toast.show({ type: 'error', text1: 'Failed to submit report' });
+    } finally {
+      setIsReporting(false);
+    }
+  };
+
+  // Leads hide rather than delete: the drop keeps its orders, the host and every
+  // buyer get told, and another lead can undo it. See migration 20260915000000.
+  const handleHideForReview = () => {
+    if (!drop) return;
+    confirmAction({
+      title: 'Hide this food drop?',
+      message:
+        `"${drop.title}" will be removed from the catalogue and stop taking new orders. ` +
+        `${hostName} and anyone who already ordered will be notified. You can restore it later.`,
+      confirmLabel: 'Hide for review',
+      onConfirm: async () => {
+        setIsModerating(true);
+        try {
+          const { error } = await supabase
+            .from('mcn_preorder_drops')
+            // Status is not set here: trg_sync_flagged_drop_status records the
+            // drop's current status and force-closes it, so restoring can put
+            // it back exactly where it was (migration 20260915000200).
+            .update({
+              flagged_for_review_at: new Date().toISOString(),
+              flagged_by: user?.id ?? null,
+              flagged_reason: 'Hidden by a community lead',
+            })
+            .eq('id', drop.id);
+          if (error) throw error;
+          Toast.show({ type: 'success', text1: 'Food drop hidden for review' });
+          fetchDropDetails();
+        } catch (err: any) {
+          Toast.show({ type: 'error', text1: 'Failed to hide food drop', text2: err.message });
+        } finally {
+          setIsModerating(false);
+        }
+      },
+    });
+  };
+
+  const handleRestoreDrop = () => {
+    if (!drop) return;
+    confirmAction({
+      title: 'Restore this food drop?',
+      message: `"${drop.title}" becomes visible again and returns to the state it was in before it was hidden. If its cut-off has since passed it stays closed.`,
+      confirmLabel: 'Restore',
+      destructive: false,
+      onConfirm: async () => {
+        setIsModerating(true);
+        try {
+          const { error } = await supabase
+            .from('mcn_preorder_drops')
+            .update({ flagged_for_review_at: null, flagged_by: null, flagged_reason: null })
+            .eq('id', drop.id);
+          if (error) throw error;
+
+          // Clearing the pending reports is what stops the auto-hide trigger
+          // from firing again on the next report and undoing this decision.
+          await supabase
+            .from('mcn_drop_reports')
+            .update({ status: 'dismissed', reviewed_by: user?.id ?? null, reviewed_at: new Date().toISOString() })
+            .eq('drop_id', drop.id)
+            .eq('status', 'pending');
+
+          Toast.show({ type: 'success', text1: 'Food drop restored' });
+          fetchDropDetails();
+        } catch (err: any) {
+          Toast.show({ type: 'error', text1: 'Failed to restore food drop', text2: err.message });
+        } finally {
+          setIsModerating(false);
+        }
+      },
+    });
   };
 
   const handleShareDrop = async () => {
@@ -592,21 +752,39 @@ export default function PreorderDropDetailScreen() {
         options={buildMcnHeaderOptions({
           title: drop.title,
           onBack: handleBack,
-          headerRight: canManageDrop && !isCreator
-            ? () => (
-                <TouchableOpacity
-                  onPress={() => router.push(`/mcn/drops/manage/${drop.id}` as any)}
-                >
-                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary }}>
-                    Dashboard
-                  </Text>
-                </TouchableOpacity>
-              )
-            : undefined,
         })}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Hidden-for-review notice. Deliberately scoped rather than public: the
+            host is told why, buyers are told their order is on hold, and leads
+            see the moderation state. A passer-by never sees an accusation
+            attached to a neighbour's name and flat number — hidden drops are
+            filtered out of the catalogue instead. */}
+        {isHidden && (isCreator || userOrders.length > 0 || canModerateDrop) ? (
+          <View style={styles.hiddenBanner}>
+            <EyeOff size={16} color="#92400E" aria-hidden={true} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.hiddenBannerTitle}>
+                {isCreator
+                  ? 'Hidden for review'
+                  : canModerateDrop
+                  ? 'Hidden for review'
+                  : 'This drop was withdrawn'}
+              </Text>
+              <Text style={styles.hiddenBannerBody}>
+                {isCreator
+                  ? `This food drop is not visible to neighbours and cannot take new orders${
+                      drop.flagged_reason ? ` — ${drop.flagged_reason.toLowerCase()}` : ''
+                    }. A community lead will review it.`
+                  : canModerateDrop
+                  ? drop.flagged_reason || 'Hidden pending review.'
+                  : 'This food drop has been withdrawn pending review. Please contact the host about your pre-order.'}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         {/* Cover Hero Banner */}
         {drop.image_url ? (
           <TouchableOpacity
@@ -1015,7 +1193,58 @@ export default function PreorderDropDetailScreen() {
           </View>
         ) : null}
 
-        {canManageDrop ? (
+        {canReportDrop ? (
+          <TouchableOpacity
+            style={styles.reportLink}
+            onPress={() => (hasReported ? undefined : setShowReportModal(true))}
+            disabled={hasReported}
+            activeOpacity={0.7}
+          >
+            <Flag01
+              size={13}
+              color={hasReported ? colors.textMuted : colors.textTertiary}
+              aria-hidden={true}
+            />
+            <Text
+              style={[
+                styles.reportLinkText,
+                { color: hasReported ? colors.textMuted : colors.textTertiary },
+              ]}
+            >
+              {hasReported ? 'Reported' : 'Report this food drop'}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+
+        {canModerateDrop ? (
+          <View style={styles.moderationCard}>
+            <View style={styles.moderationHeaderRow}>
+              <EyeOff size={15} color={Verandah.textSecondary} aria-hidden={true} />
+              <Text style={styles.moderationTitle}>Community lead controls</Text>
+            </View>
+            <Text style={styles.moderationBody}>
+              {isHidden
+                ? 'This food drop is hidden from the catalogue and cannot take new orders. Restoring it makes it visible again and dismisses the open reports.'
+                : 'Hiding removes this drop from the catalogue and stops new orders. The host and anyone who already ordered are notified, and you can undo it.'}
+            </Text>
+            <TouchableOpacity
+              style={[styles.moderationBtn, isHidden && styles.moderationBtnRestore]}
+              onPress={isHidden ? handleRestoreDrop : handleHideForReview}
+              disabled={isModerating}
+              activeOpacity={0.85}
+            >
+              {isModerating ? (
+                <ActivityIndicator color={Verandah.primaryFg} size="small" />
+              ) : (
+                <Text style={styles.moderationBtnText}>
+                  {isHidden ? 'Restore food drop' : 'Hide for review'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {canDeleteDrop ? (
           <DangerZone
             title="Delete this food drop"
             consequence={`"${drop.title}" and every pre-order placed on it will be permanently removed. Buyers are not notified, and this cannot be undone.`}
@@ -1049,6 +1278,93 @@ export default function PreorderDropDetailScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* Report Modal */}
+      <Modal
+        visible={showReportModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReportModal(false)}
+      >
+        <Pressable style={styles.reportOverlay} onPress={() => setShowReportModal(false)}>
+          <Pressable
+            style={[styles.reportCard, { backgroundColor: colors.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={styles.reportCardTitle}>Report this food drop</Text>
+            <View style={styles.reportReasonList}>
+              {REPORT_REASONS.map((reason) => {
+                const isSelected = selectedReportReason === reason.key;
+                return (
+                  <TouchableOpacity
+                    key={reason.key}
+                    style={[
+                      styles.reportReasonChip,
+                      { borderColor: colors.border },
+                      isSelected && { borderColor: colors.danger, backgroundColor: colors.dangerSoft },
+                    ]}
+                    onPress={() => setSelectedReportReason(reason.key)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: isSelected }}
+                  >
+                    <Text
+                      style={[
+                        styles.reportReasonText,
+                        { color: isSelected ? colors.danger : colors.textSecondary },
+                      ]}
+                    >
+                      {reason.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {selectedReportReason === 'other' ? (
+              <TextInput
+                style={[
+                  styles.reportDetailsInput,
+                  { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surface },
+                ]}
+                placeholder="Briefly explain the issue"
+                placeholderTextColor={colors.textMuted}
+                value={reportDetails}
+                onChangeText={setReportDetails}
+                multiline
+              />
+            ) : null}
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+              <TouchableOpacity
+                style={[styles.reportCancelBtn, { borderColor: colors.border }]}
+                onPress={() => setShowReportModal(false)}
+              >
+                <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '500' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.reportSubmitBtn,
+                  { backgroundColor: selectedReportReason ? colors.danger : colors.cardMuted },
+                ]}
+                onPress={handleSubmitReport}
+                disabled={!selectedReportReason || isReporting}
+              >
+                {isReporting ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text
+                    style={{
+                      color: selectedReportReason ? '#FFFFFF' : colors.textMuted,
+                      fontSize: 14,
+                      fontWeight: '600',
+                    }}
+                  >
+                    Submit report
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -1062,6 +1378,140 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  hiddenBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 12,
+    padding: 10,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: VerandahRadius.md,
+  },
+  hiddenBannerTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#92400E',
+    marginBottom: 2,
+  },
+  hiddenBannerBody: {
+    fontSize: 11.5,
+    lineHeight: 16,
+    color: '#92400E',
+  },
+  reportLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  reportLinkText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  moderationCard: {
+    marginTop: 14,
+    padding: 12,
+    backgroundColor: Verandah.card,
+    borderWidth: 0.5,
+    borderColor: Verandah.borderHair,
+    borderRadius: VerandahRadius.lg,
+  },
+  moderationHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  moderationTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Verandah.textPrimary,
+    fontFamily: VerandahType.sansFamily,
+  },
+  moderationBody: {
+    fontSize: 11.5,
+    lineHeight: 16,
+    color: Verandah.textSecondary,
+    marginBottom: 10,
+  },
+  moderationBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 40,
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: Verandah.textSecondary,
+  },
+  moderationBtnRestore: {
+    backgroundColor: Verandah.primary,
+  },
+  moderationBtnText: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: Verandah.primaryFg,
+    fontFamily: VerandahType.sansFamily,
+  },
+  reportOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  reportCard: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: VerandahRadius.lg,
+    padding: 16,
+  },
+  reportCardTitle: {
+    ...VerandahType.title,
+    fontSize: 15,
+    color: Verandah.textPrimary,
+  },
+  reportReasonList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+  },
+  reportReasonChip: {
+    borderWidth: 1,
+    borderRadius: VerandahRadius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  reportReasonText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  reportDetailsInput: {
+    borderWidth: 1,
+    borderRadius: VerandahRadius.md,
+    padding: 10,
+    fontSize: 13,
+    marginTop: 10,
+    minHeight: 60,
+    textAlignVertical: 'top',
+  },
+  reportCancelBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: VerandahRadius.pill,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reportSubmitBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: VerandahRadius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   scrollContent: {
     padding: 10,
     paddingBottom: 30,
@@ -1072,7 +1522,9 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.card,
     borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
-    borderRadius: VerandahRadius.lg,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: VerandahRadius.lg,
+    borderBottomRightRadius: VerandahRadius.lg,
     padding: 8,
     marginBottom: 8,
     ...Verandah.shadowCard,
@@ -1589,10 +2041,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  // The hero and the host card below it read as a single slab: only the hero's
+  // top corners are rounded and it carries no bottom border, so the photo runs
+  // straight into `hostCard` (which rounds only its bottom corners).
   heroImageWrap: {
-    borderRadius: VerandahRadius.lg,
+    borderTopLeftRadius: VerandahRadius.lg,
+    borderTopRightRadius: VerandahRadius.lg,
+    borderWidth: VerandahBorder.tile,
+    borderBottomWidth: 0,
+    borderColor: Verandah.border,
     overflow: 'hidden',
-    marginBottom: 8,
   },
   heroImage: {
     width: '100%',

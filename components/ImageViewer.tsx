@@ -4,6 +4,7 @@ import React from 'react';
 import { Modal, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { cloudinaryUrl } from '../lib/cloudinary';
+import { useWebBackToClose } from '../lib/useWebBackToClose';
 
 interface ImageViewerProps {
   /** Cloudinary public id or absolute URL. `null` keeps the viewer closed. */
@@ -15,8 +16,14 @@ interface ImageViewerProps {
  * Full-screen tap-to-dismiss photo viewer. Any card or detail screen that shows
  * a cropped cover image should pair it with this so residents can open the
  * photo and read what is actually in it.
+ *
+ * Browser back closes the photo rather than leaving the screen — see
+ * `useWebBackToClose`. Any hand-rolled full-screen image modal must call that
+ * hook too, or back will skip a screen on web.
  */
 export function ImageViewer({ uri, onClose }: ImageViewerProps) {
+  useWebBackToClose(!!uri, onClose);
+
   return (
     <Modal visible={!!uri} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>

@@ -29,6 +29,7 @@ import { DangerZone } from '../../../../components/DangerZone';
 import { Rupees } from '../../../../components/Rupees';
 import { Verandah } from '../../../../constants/Colors';
 import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../../constants/Verandah';
+import { useAuth } from '../../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../../lib/mcnHeader';
 import { supabase } from '../../../../lib/supabase';
 
@@ -63,6 +64,7 @@ interface DropItem {
 export default function ManagePreorderDropScreen() {
   const { id: dropId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const colors = Verandah;
 
   const [drop, setDrop] = useState<any | null>(null);
@@ -89,6 +91,21 @@ export default function ManagePreorderDropScreen() {
         .maybeSingle();
 
       if (dropErr) throw dropErr;
+
+      // Host-only. RLS on mcn_preorder_orders already limits order rows to the
+      // buyer or the host, so anyone else who reached this URL would get the
+      // dashboard shell with zero orders and no explanation — which reads as
+      // "nobody ordered" rather than "you cannot see this".
+      if (dropData && user?.id && dropData.created_by !== user.id) {
+        Toast.show({
+          type: 'info',
+          text1: 'Host only',
+          text2: 'Only the host can see the orders for this food drop.',
+        });
+        replaceTracked(router, `/mcn/drops/${dropId}` as any);
+        return;
+      }
+
       setDrop(dropData);
 
       // 2. Fetch drop items
@@ -121,7 +138,7 @@ export default function ManagePreorderDropScreen() {
     } finally {
       setLoading(false);
     }
-  }, [dropId]);
+  }, [dropId, user?.id, router]);
 
   useEffect(() => {
     fetchDropManagerData();

@@ -52,6 +52,7 @@ import {
     toImagesJson,
 } from '../../lib/serviceReminderHelpers';
 import { supabase } from '../../lib/supabase';
+import { useWebBackToClose } from '../../lib/useWebBackToClose';
 
 const extractImageUrl = (
   imageUrl: string | null | undefined,
@@ -152,6 +153,9 @@ export default function ServiceDetailScreen() {
     { title: '', url: null },
   ]);
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
+  // Browser back closes the photo instead of leaving the screen. This modal is
+  // hand-rolled rather than <ImageViewer/>, so it must opt in explicitly.
+  useWebBackToClose(!!previewImage, useCallback(() => setPreviewImage(null), []));
 
   const fetchService = useCallback(async () => {
     if (!id) return;

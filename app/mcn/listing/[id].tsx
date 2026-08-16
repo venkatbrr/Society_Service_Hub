@@ -370,11 +370,12 @@ export default function ListingDetailScreen() {
       {listing.image_url ? (
         <TouchableOpacity
           activeOpacity={0.9}
+          style={[styles.heroImageWrap, { height: heroHeight }]}
           onPress={() => setSelectedImageUrl(listing.image_url || null)}
         >
           <Image
             source={{ uri: cloudinaryUrl(listing.image_url) }}
-            style={[styles.heroImage, { height: heroHeight }]}
+            style={styles.heroImage}
             contentFit="cover"
             contentPosition="top"
             transition={300}
@@ -382,7 +383,10 @@ export default function ListingDetailScreen() {
         </TouchableOpacity>
       ) : null}
 
-      <View style={styles.ownerCard}>
+      {/* Merged into the hero above when there is a photo (matching the food
+          drop detail screen); a listing with no photo keeps all four corners
+          rounded so the card does not read as clipped. */}
+      <View style={[styles.ownerCard, listing.image_url ? styles.ownerCardMerged : null]}>
         <Avatar name={listing.profiles?.full_name || 'Resident'} size={48} />
         <View style={styles.ownerInfo}>
           <Text style={[styles.ownerName, { color: colors.textPrimary }]}>
@@ -801,10 +805,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  heroImageWrap: {
+    borderTopLeftRadius: VerandahRadius.lg,
+    borderTopRightRadius: VerandahRadius.lg,
+    borderWidth: VerandahBorder.tile,
+    borderBottomWidth: 0,
+    borderColor: Verandah.border,
+    overflow: 'hidden',
+  },
   heroImage: {
     width: '100%',
-    borderRadius: VerandahRadius.md,
-    marginBottom: 6,
+    height: '100%',
   },
   productThumb: {
     width: 40,
@@ -815,7 +826,18 @@ const styles = StyleSheet.create({
   ownerCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: Verandah.card,
+    borderWidth: VerandahBorder.tile,
+    borderColor: Verandah.border,
+    borderRadius: VerandahRadius.lg,
+    padding: 8,
     marginBottom: 6,
+    ...Verandah.shadowCard,
+  },
+  ownerCardMerged: {
+    borderTopWidth: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
   },
   ownerInfo: {
     flex: 1,

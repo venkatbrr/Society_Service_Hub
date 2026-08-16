@@ -168,12 +168,15 @@ function FilterGroup<T extends string>({
 export default function FoodDropsCatalogScreen() {
   const router = useRouter();
   const { id: targetDropId, tab: initialTab } = useLocalSearchParams<{ id?: string; tab?: string }>();
-  const { user, communityId } = useAuth();
+  const { user, communityId, isCommunityLead, isPlatformAdmin } = useAuth();
+  // Hiding a drop takes it out of every other tab, so without a surface of its
+  // own a lead would have no way back to the thing they just hid.
+  const canReviewHidden = !!isCommunityLead || !!isPlatformAdmin;
   const colors = Verandah;
   const redirectedRef = React.useRef<string | null>(null);
 
   const [drops, setDrops] = useState<PreorderDropItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'active' | 'closed' | 'my_drops'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'closed' | 'my_drops' | 'review'>('active');
   const [preparingCollapsed, setPreparingCollapsed] = useState(false);
   const [completedCollapsed, setCompletedCollapsed] = useState(false);
 
@@ -228,6 +231,15 @@ export default function FoodDropsCatalogScreen() {
 
         if (activeTab === 'my_drops' && user?.id) {
           query = query.eq('created_by', user?.id);
+        } else if (activeTab === 'review') {
+          query = query.not('flagged_for_review_at', 'is', null);
+        } else {
+          // A drop hidden for review leaves the catalogue entirely — that is what
+          // "hidden" means, and it is why moderation does not need a public spam
+          // badge next to the host's name and flat. The host still sees it under
+          // "Mine", leads under "Hidden", and existing buyers still reach it from
+          // My Orders.
+          query = query.is('flagged_for_review_at', null);
         }
 
         if (activeTab === 'active' && isAnonymousView) {
@@ -580,7 +592,7 @@ export default function FoodDropsCatalogScreen() {
           pill as Open/Past/Mine, just icon-width, so five affordances still
           fit a narrow phone without the row scrolling. */}
       <View style={styles.controlsRow}>
-        <ChipRowSlider<'active' | 'closed' | 'my_drops'>
+        <ChipRowSlider<'active' | 'closed' | 'my_drops' | 'review'>
           value={activeTab}
           onChange={(val) => {
             if (val === 'my_drops' && !user?.id) {
@@ -593,8 +605,19 @@ export default function FoodDropsCatalogScreen() {
             { key: 'active', label: 'Open' },
             { key: 'closed', label: 'Past' },
             { key: 'my_drops', label: 'Mine' },
+            // President / VP only — the queue of drops hidden pending review.
+            // Residents can do nothing with it, so they never see the chip.
+            ...(canReviewHidden ? ([{ key: 'review' as const, label: 'Review' }]) : []),
           ]}
-          scrollable={false}
+          // A fourth chip no longer fits beside the filter and sort pills on a
+          // narrow phone, so the lead's row scrolls internally. It needs a
+          // bounded slot to do that: ChipRowSlider's scrollable root is a
+          // horizontal ScrollView, which has no intrinsic width and collapses
+          // when dropped straight into a `flexDirection: 'row'` parent — that
+          // is why the chip did not appear at all. `flex: 1` gives it the
+          // leftover width and doubles as the spacer the icon pills need.
+          scrollable={canReviewHidden}
+          containerStyle={canReviewHidden ? styles.tabsScrollSlot : undefined}
           chipStyle={styles.tabBtn}
           inactiveChipStyle={{ backgroundColor: Verandah.card, borderWidth: 0.5, borderColor: Verandah.borderHair }}
           pillStyle={styles.tabBtnActive}
@@ -604,7 +627,7 @@ export default function FoodDropsCatalogScreen() {
           activeTextStyle={styles.tabTextActive}
         />
 
-        <View style={{ flex: 1 }} />
+        {!canReviewHidden ? <View style={{ flex: 1 }} /> : null}
 
         <TouchableOpacity
           style={[styles.iconPill, activeFilterCount > 0 && styles.iconPillActive]}
@@ -904,11 +927,15 @@ export default function FoodDropsCatalogScreen() {
                     ? 'No active pre-order drops'
                     : activeTab === 'my_drops'
                     ? 'You haven’t published any pre-order food'
+                    : activeTab === 'review'
+                    ? 'Nothing waiting for review'
                     : 'No past pre-order food'
                 }
                 message={
                   activeTab === 'active'
                     ? 'No local pre-order food open right now. Check back soon or host your own food pop-up!'
+                    : activeTab === 'review'
+                    ? 'Drops you hide, and drops auto-hidden after three resident reports, collect here.'
                     : 'Publish a pre-order drop to let neighbors order your weekend specials!'
                 }
               />
@@ -1109,6 +1136,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  // Bounded slot for the lead's scrollable four-chip row — see the comment at
+  // the ChipRowSlider call site.
+  tabsScrollSlot: {
+    flex: 1,
   },
   tabBtn: {
     paddingVertical: 7,

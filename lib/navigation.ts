@@ -83,6 +83,27 @@ if (Platform.OS === 'web' && typeof window !== 'undefined') {
   });
 }
 
+/**
+ * Tell the tracker that the popstate it just observed belonged to a UI overlay
+ * (see `components/ImageViewer.tsx`), not to a route change.
+ *
+ * An overlay that wants the browser back button to dismiss it has to own a real
+ * history entry, so popping that entry fires a genuine `popstate` at the SAME
+ * url. The listener above cannot tell that apart from a route pop, and because
+ * the pathname never changes, `syncNavigationStack` never runs to re-sync
+ * `lastSeenPopSeq`. Left alone, the counter stays permanently ahead: the next
+ * undeclared `router.push()` resolves as `locate` instead of `push`, and a push
+ * to a route already in the stack then truncates it — the exact desync class
+ * documented in `docs/CLAUDE.md`.
+ *
+ * Call this from the overlay's own popstate handler, i.e. AFTER the listener
+ * above has already counted the event.
+ */
+export function noteOverlayHistoryPop() {
+  lastSeenPopSeq = popStateSeq;
+  sawPopStateAt = 0;
+}
+
 /** True when the current route was reached via browser back/forward. */
 export function arrivedViaHistoryPop(): boolean {
   return sawPopStateAt !== 0 && Date.now() - sawPopStateAt < POP_ARRIVAL_WINDOW_MS;

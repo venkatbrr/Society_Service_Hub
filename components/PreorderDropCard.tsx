@@ -172,6 +172,10 @@ export interface PreorderDropItem {
   } | null;
   item_count?: number;
   order_count?: number;
+  /** Set while the drop is hidden pending lead review. Only ever populated on
+   *  the host's own "Mine" tab and the lead-only "Hidden" tab — the public
+   *  catalog filters these rows out entirely. */
+  flagged_for_review_at?: string | null;
   /** Derived by the catalog from the drop's menu items — used for filtering
    *  and sorting, and for the diet dots beside the title. Absent on screens
    *  that do not load the menu. */
@@ -200,8 +204,18 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
   const cutoffDate = new Date(drop.cutoff_at);
   const isCutoffPassed = now >= cutoffDate;
   const isOpen = drop.status === 'open' && !isCutoffPassed;
+  const isHiddenForReview = !!drop.flagged_for_review_at;
 
   const getCutoffBadge = () => {
+    // Outranks every lifecycle state: whoever can see this tile at all needs to
+    // know the drop is withheld before they read its timing.
+    if (isHiddenForReview) {
+      return {
+        label: 'Hidden for review',
+        color: '#92400E',
+        bgColor: '#FEF3C7',
+      };
+    }
     if (drop.status === 'completed') {
       return {
         label: 'Delivered & Completed',
@@ -383,7 +397,11 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
           <View style={styles.metaRow}>
             <View style={[styles.cutoffBadge, { backgroundColor: badge.bgColor }]}>
               <Text style={[styles.cutoffBadgeText, { color: badge.color }]} numberOfLines={1}>
-                {drop.status === 'completed' ? 'Completed' : `Closes ${cutoffFormatted}`}
+                {isHiddenForReview
+                  ? 'Hidden for review'
+                  : drop.status === 'completed'
+                  ? 'Completed'
+                  : `Closes ${cutoffFormatted}`}
               </Text>
             </View>
 
