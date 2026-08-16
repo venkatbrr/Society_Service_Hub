@@ -145,6 +145,7 @@ The old strings were written for the period when confirmation was off, where an 
 
 - **Status**: Designed, not built
 - **Details**: Notifications are Supabase Realtime plus local `expo-notifications`. There is no web push subscription table, no push handler in the service worker, and no dispatch Edge Function. `profiles.expo_push_token` is stored but no server-side fan-out consumes it.
+- **iOS specifically**: Safari only grants web push to an **installed** PWA (16.4+) — never to a normal browser tab, where `Notification` is undefined. `NotificationPermissionBanner` already reflects this (it only shows once installed), but the install step itself is the harder gate on iOS, since there is no programmatic install prompt there at all. See [`features.md`](features.md) §12 "PWA install banners" for the instructional Add-to-Home-Screen nudge (`IosInstallBanner` / `#wn-ios-install`) that is the prerequisite path — it does not, by itself, enable any push delivery.
 - **Design doc**: [`archive/pwa-web-push-notifications-plan.md`](archive/pwa-web-push-notifications-plan.md)
 
 ### 9. Supabase Storage uploads

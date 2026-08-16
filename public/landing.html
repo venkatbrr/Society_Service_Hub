@@ -396,6 +396,19 @@
       background: var(--cream); border: none; cursor: pointer; padding: 0;
     }
 
+    /* iOS has no install prompt to hook — #wn-install (below) never appears
+       there, since beforeinstallprompt doesn't exist in Safari — so this is
+       the separate instructional nudge. Shares .wn-open-toast's fixed-bottom
+       position with #wn-open-toast above; the two can never be visible
+       together (this one requires iOS Safari + not yet installed, that one
+       requires a real `appinstalled` event, which Safari never fires). */
+    .wn-ios-share-glyph { vertical-align: -2px; margin: 0 1px; }
+    .wn-ios-install-added {
+      display: block; margin-top: 5px; padding: 0; border: none; background: none;
+      font-family: inherit; font-size: 11.5px; font-weight: 600; color: var(--emerald);
+      cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+    }
+
     /* ---------- Scroll reveal (JS only) ---------- */
     .wn-js [data-reveal] {
       opacity: 0; transform: translateY(22px);
@@ -456,6 +469,8 @@
         border-color: var(--emerald);
         box-shadow: inset 0 0 0 1.5px rgba(15,110,86,.35);
       }
+      /* Covers both #wn-open-toast and #wn-ios-install — they share this class. */
+      .wn-open-toast { transition: none; }
     }
   </style>
 </head>
@@ -891,6 +906,26 @@
   </button>
 </div>
 
+<!-- ===================== iOS "ADD TO HOME SCREEN" NUDGE ===================== -->
+<!-- iOS Safari never fires beforeinstallprompt, so #wn-install above never
+     appears there. This is the separate, instructional surface iOS needs —
+     see docs/new_features_to_implement/ios-add-to-home-screen-plan.md. -->
+<div id="wn-ios-install" class="wn-open-toast" role="status" aria-live="polite">
+  <img src="/images/icon-512.png" alt="" width="40" height="40" class="wn-open-toast-icon">
+  <div class="wn-open-toast-body">
+    <div class="wn-open-toast-title">Add Wooru to your home screen</div>
+    <div class="wn-open-toast-sub">
+      Tap
+      <svg class="wn-ios-share-glyph" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Share" role="img"><path d="M21 15v1.2c0 1.68 0 2.52-.327 3.162a3 3 0 0 1-1.311 1.311C18.72 21 17.88 21 16.2 21H7.8c-1.68 0-2.52 0-3.162-.327a3 3 0 0 1-1.311-1.311C3 18.72 3 17.88 3 16.2V15"/><path d="m17 8-5-5m0 0L7 8m5-5v12"/></svg>
+      Share, then "Add to Home Screen"
+    </div>
+    <button type="button" id="wn-ios-install-added" class="wn-ios-install-added">Already added</button>
+  </div>
+  <button type="button" id="wn-ios-install-close" class="wn-open-toast-close" aria-label="Dismiss">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5B6360" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/></svg>
+  </button>
+</div>
+
 <script>
 (function () {
   'use strict';
@@ -1018,7 +1053,74 @@
   }
   if (isInstalled()) showOpenApp();
 
-  // 3. Right when install finishes, confirm it with a bottom snackbar —
+  // 3. iOS Safari never fires beforeinstallprompt, so #wn-install (step 5
+  // below) never appears there — this is the separate, instructional nudge
+  // Safari needs. See docs/new_features_to_implement/ios-add-to-home-screen-plan.md.
+  var IOS_DISMISS_KEY = 'wooru_ios_install_dismissed_at';
+  var IOS_DISMISS_PERMANENT_KEY = 'wooru_ios_install_dismissed_permanently';
+  var IOS_DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
+  // iPadOS 13+ reports itself as macOS, so UA alone misses iPads — a "Mac"
+  // that also has touch points is actually an iPad.
+  function isIOSDevice() {
+    var ua = navigator.userAgent;
+    return /iPad|iPhone|iPod/.test(ua) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  // Every iOS browser is WebKit, but only Safari's UA lacks a vendor marker —
+  // Chrome=CriOS, Firefox=FxiOS, Edge=EdgiOS, Opera=OPiOS. Add to Home Screen
+  // behaves differently (or is unavailable) there, so we gate to Safari
+  // rather than show instructions that don't match the browser in front of
+  // the user.
+  function isIOSSafari() {
+    var ua = navigator.userAgent;
+    return isIOSDevice() && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+  }
+
+  // iOS gives no way to detect an existing install from a Safari tab —
+  // `navigator.standalone` reads false in the tab even once the icon is on
+  // the home screen — so a manual "I already added it" escape hatch is the
+  // only way to stop nagging a user who has already installed.
+  function tryStorage(fn) {
+    try { return fn(); } catch (err) { return null; }
+  }
+
+  var iosInstall = document.getElementById('wn-ios-install');
+  function hideIosInstall() {
+    if (iosInstall) iosInstall.classList.remove('is-visible');
+  }
+
+  if (iosInstall && isIOSSafari() && !isInstalled()) {
+    var iosPermanentlyDismissed = tryStorage(function () {
+      return localStorage.getItem(IOS_DISMISS_PERMANENT_KEY) === '1';
+    });
+    var iosDismissedAt = tryStorage(function () {
+      return localStorage.getItem(IOS_DISMISS_KEY);
+    });
+    var iosCooldownOver = !iosDismissedAt || (Date.now() - Number(iosDismissedAt)) >= IOS_DISMISS_COOLDOWN_MS;
+
+    if (!iosPermanentlyDismissed && iosCooldownOver) {
+      // Delayed so it doesn't compete with the hero for attention on load.
+      setTimeout(function () { iosInstall.classList.add('is-visible'); }, 1500);
+    }
+  }
+
+  var iosInstallClose = document.getElementById('wn-ios-install-close');
+  if (iosInstallClose) {
+    iosInstallClose.addEventListener('click', function () {
+      tryStorage(function () { localStorage.setItem(IOS_DISMISS_KEY, String(Date.now())); });
+      hideIosInstall();
+    });
+  }
+  var iosInstallAdded = document.getElementById('wn-ios-install-added');
+  if (iosInstallAdded) {
+    iosInstallAdded.addEventListener('click', function () {
+      tryStorage(function () { localStorage.setItem(IOS_DISMISS_PERMANENT_KEY, '1'); });
+      hideIosInstall();
+    });
+  }
+
+  // 4. Right when install finishes, confirm it with a bottom snackbar —
   // the same "Open" moment Play Store shows after an install completes.
   var openToast = document.getElementById('wn-open-toast');
   var openToastTimer = null;
@@ -1041,7 +1143,7 @@
     showOpenToast();
   });
 
-  // 4. Capture the install prompt and put it behind the header button.
+  // 5. Capture the install prompt and put it behind the header button.
   var deferredPrompt = null;
   var btn = document.getElementById('wn-install');
   if (!btn) return;

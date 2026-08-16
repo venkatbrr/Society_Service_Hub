@@ -582,3 +582,14 @@ Name updates apply directly. Email updates send a verification link to the new a
 - Self-contained: the only external requests are the two Google Fonts families (Instrument Serif + Plus Jakarta Sans). No CDN scripts.
 - The logo is the app's own `/images/icon-512.png`. Do not add a second copy of the mark.
 - Verandah tokens do **not** apply here — the page has its own `--wn` CSS custom properties in `:root`, matching the Verandah palette by value. [`verandah.md`](verandah.md) governs the app, not this file.
+
+**PWA install banners** — Android/Chrome and iOS Safari have no shared install API, so each gets its own surface, on both the landing page and inside the app:
+
+| Platform | Landing page (`public/landing.html`) | In-app (mounted in `app/_layout.tsx`) |
+|---|---|---|
+| Android / desktop Chrome | `#wn-install` header button, revealed on `beforeinstallprompt` with a pulsing highlight (static colour fallback under `prefers-reduced-motion`); a bottom "Wooru installed / Open" snackbar (`#wn-open-toast`) appears on `appinstalled` and auto-hides after 8s; every "Get started" CTA on the page swaps to "Open app" → `/network` once installed. | `PwaInstallBanner` — same `beforeinstallprompt` gate, dismissible with a 3-day cooldown. |
+| iOS Safari | `#wn-ios-install` — Safari never fires `beforeinstallprompt`, so this is a purely instructional bottom banner ("Add Wooru to your home screen — Tap Share, then \"Add to Home Screen\""), shown ~1.5s after load and left open (no auto-hide) so the user has time to find the Share button. | `IosInstallBanner` — same copy and gating, mounted alongside `PwaInstallBanner`. |
+
+Both iOS surfaces gate on Safari specifically (`isIOSSafari()` — excludes `CriOS`/`FxiOS`/`EdgiOS`/`OPiOS`, whose Add to Home Screen flow differs) and offer **two** dismiss paths, because iOS gives no way to detect an existing install from a Safari tab (`navigator.standalone` reads `false` there even once installed): a **×** sets a 7-day cooldown, and a separate **"Already added"** action sets a permanent flag so a user who has already installed is never nagged again. `lib/pwaInstall.ts` (`isIOSSafari`, `isRunningAsInstalledPwa`) is the shared source for the in-app banner; the landing page duplicates the same detection logic since it is a static file outside the bundle — see the comment at each site pointing at the other.
+
+`NotificationPermissionBanner` (also mounted in `_layout.tsx`) is a related but separate concern — it asks for `Notification` permission once installed, on any platform. See [`disabled-features.md`](disabled-features.md) §8 for why granting it does not yet result in any delivered notification.

@@ -287,6 +287,7 @@ function RootLayoutNav() {
 
 import { PwaInstallBanner } from '../components/PwaInstallBanner';
 import { NotificationPermissionBanner } from '../components/NotificationPermissionBanner';
+import { IosInstallBanner } from '../components/IosInstallBanner';
 
 export default function RootLayout() {
   return (
@@ -295,6 +296,7 @@ export default function RootLayout() {
         <NotificationProvider>
           <WebDesktopFrame>
             <PwaInstallBanner />
+            <IosInstallBanner />
             <NotificationPermissionBanner />
             <RootLayoutNav />
             <Toast />

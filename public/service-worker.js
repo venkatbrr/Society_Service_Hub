@@ -1,4 +1,4 @@
-// Wooru — PWA Service Worker (v7)
+// Wooru — PWA Service Worker (v9)
 // Provides offline caching for static assets and network-first strategy for navigation.
 
 // Bump CACHE_NAME whenever a cached asset changes — the fetch handler is
@@ -8,7 +8,11 @@
 // page, onto `/network`; explicit id and scope added). manifest.json is in
 // STATIC_ASSETS below, so without this bump an already-installed client would
 // keep the old manifest and keep launching into the landing page.
-const CACHE_NAME = 'wooru-pwa-v8';
+// v8: landing.html's Install app button gained a reduced-motion fallback.
+// v9: landing.html gained the iOS "Add to Home Screen" nudge (#wn-ios-install).
+// landing.html is in STATIC_ASSETS below and is precached, so without this
+// bump an already-installed client keeps serving the old page and never sees it.
+const CACHE_NAME = 'wooru-pwa-v9';
 
 // `/app.html` is the SPA shell every app route rewrites to (see vercel.json).
 // It is the offline fallback for in-app navigation; `/` and `/landing.html`
