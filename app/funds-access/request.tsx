@@ -50,10 +50,9 @@ export default function FundsAccessRequestScreen() {
   if (!communityHasLead) {
     return (
       <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.surface }]}>
-        <Text style={styles.title}>Request funds support</Text>
+        <Text style={styles.title}>Funds aren't active</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Community funds need a president or vice president to appoint a treasurer and collectors. Once your
-          community has one, come back here to request funds support.
+          Funds aren't active in this community yet. They'll switch on once a president or vice president is appointed.
         </Text>
         <TouchableOpacity
           style={[styles.primaryButton, { backgroundColor: colors.primary }]}

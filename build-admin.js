@@ -39,6 +39,8 @@ function copyFolderSync(from, to) {
 try {
   copyFolderSync('admin-dashboard', 'dist/admin');
   console.log('Successfully copied admin-dashboard to dist/admin');
+  copyFolderSync('admin-dashboard', 'public/admin');
+  console.log('Successfully copied admin-dashboard to public/admin');
 } catch (err) {
   console.error('Failed to copy admin-dashboard:', err);
   process.exit(1);
@@ -46,7 +48,7 @@ try {
 
 // The admin console is plain files with no bundler, so it cannot read
 // process.env at runtime. Substitute the environment's config into the copy
-// under dist/ — never into the admin-dashboard/ source.
+// under dist/ and public/ — never into the admin-dashboard/ source.
 //
 // Every entry here is a publishable value: the Supabase URL and anon key are
 // protected by RLS, and an OAuth web client ID ships to every browser by
@@ -62,6 +64,19 @@ const ADMIN_SUBSTITUTIONS = [
   },
   {
     file: path.join('dist', 'admin', 'js', 'auth.js'),
+    replacements: {
+      __GOOGLE_WEB_CLIENT_ID__: 'EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID',
+    },
+  },
+  {
+    file: path.join('public', 'admin', 'js', 'supabase-config.js'),
+    replacements: {
+      __SUPABASE_URL__: 'EXPO_PUBLIC_SUPABASE_URL',
+      __SUPABASE_ANON_KEY__: 'EXPO_PUBLIC_SUPABASE_ANON_KEY',
+    },
+  },
+  {
+    file: path.join('public', 'admin', 'js', 'auth.js'),
     replacements: {
       __GOOGLE_WEB_CLIENT_ID__: 'EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID',
     },
@@ -99,7 +114,7 @@ try {
   }
 
   console.log(
-    `Injected admin config into dist/admin (${process.env.EXPO_PUBLIC_SUPABASE_URL})`
+    `Injected admin config into dist/admin & public/admin (${process.env.EXPO_PUBLIC_SUPABASE_URL})`
   );
 } catch (err) {
   console.error('Failed to inject config into admin build:', err);

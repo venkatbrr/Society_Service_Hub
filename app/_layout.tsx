@@ -1,3 +1,5 @@
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import { Stack, useGlobalSearchParams, usePathname, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
@@ -11,6 +13,11 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import { configureGoogleSignIn } from '../lib/auth';
 import { goToLanding } from '../lib/siteUrl';
+
+// Prevent splash screen from auto hiding until fonts are loaded
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // Ignore error if splash screen was already prevented or running in non-supported env
+});
 
 // Notifications module — native only (Android/iOS).
 let Notifications: typeof import('expo-notifications') | null = null;
@@ -290,6 +297,28 @@ import { NotificationPermissionBanner } from '../components/NotificationPermissi
 import { IosInstallBanner } from '../components/IosInstallBanner';
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    'Instrument Serif': require('../assets/fonts/InstrumentSerif-Regular.ttf'),
+    'InstrumentSerif-Regular': require('../assets/fonts/InstrumentSerif-Regular.ttf'),
+    'InstrumentSerif-Italic': require('../assets/fonts/InstrumentSerif-Italic.ttf'),
+    'Plus Jakarta Sans': require('../assets/fonts/PlusJakartaSans-Regular.ttf'),
+    'PlusJakartaSans-Regular': require('../assets/fonts/PlusJakartaSans-Regular.ttf'),
+    'PlusJakartaSans-Medium': require('../assets/fonts/PlusJakartaSans-Medium.ttf'),
+    'PlusJakartaSans-SemiBold': require('../assets/fonts/PlusJakartaSans-SemiBold.ttf'),
+    'PlusJakartaSans-Bold': require('../assets/fonts/PlusJakartaSans-Bold.ttf'),
+    'PlusJakartaSans-ExtraBold': require('../assets/fonts/PlusJakartaSans-ExtraBold.ttf'),
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <SafeAreaProvider>
       <AuthProvider>

@@ -345,6 +345,7 @@ Migration `20260824000000` fixed the app's code path but left the database open:
 | `user_service_history` | `service_id`, `serviced_on`, `provider_id`, `provider_name_snapshot`, `cost_paid`, `note` | **User** |
 | `blood_donors` | `blood_group`, `contact_phone`, `is_available`, `note` — one per user per community | Community |
 | `emergency_contacts` | `name`, `phone`, `category`, `description`, `is_active`, `sort_order`; `community_id IS NULL` = global default | Community + global |
+| `feedback_reports` | `user_id`, `community_id` (nullable context), `kind` (`bug`/`feature`), `message`, `image_url` (nullable), `created_at` | **User** (INSERT & SELECT own) |
 | `notifications` | `user_id`, `type`, `title`, `body`, `data` (JSONB), `is_read` | **User** |
 
 **Service reminder backend logic** (migration `20260827000000`):
@@ -641,7 +642,7 @@ The app distinguishes **two different meanings of "back"**, and conflating them 
 
 **API**
 
-- `getImmediateParentRoute(path)` — maps every `/mcn/*` route (plus `/services/*`, `/legal`, `/funds/*`, `/sos/*`, `/events/*`, and `/community/blocks`+`/community/flats`) to its logical parent, e.g. `/legal` → `/profile`, `/mcn/drops/manage/:id` → `/mcn/drops/:id` → `/mcn/drops` → `/network`, `/funds/add-transaction?event_id=X` → `/funds/X` → `/funds` → `/community`, `/sos/donor` → `/sos` → `/community`, or `/events/add?id=X` → `/events/X` (edit) / `/events` (create) → `/community`. Accepts an optional query string because a few parents are context-dependent: `/mcn/schools/review?schoolId=X` → that school, `/mcn/add?source=my-posts` → My Submissions, `/funds/add-transaction?event_id=X` → that fund, and `/events/add?id=X` → that event.
+- `getImmediateParentRoute(path)` — maps every `/mcn/*` route (plus `/services/*`, `/legal`, `/feedback`, `/funds/*`, `/sos/*`, `/events/*`, and `/community/blocks`+`/community/flats`) to its logical parent, e.g. `/feedback` → `/legal` → `/profile`, `/mcn/drops/manage/:id` → `/mcn/drops/:id` → `/mcn/drops` → `/network`, `/funds/add-transaction?event_id=X` → `/funds/X` → `/funds` → `/community`, `/sos/donor` → `/sos` → `/community`, or `/events/add?id=X` → `/events/X` (edit) / `/events` (create) → `/community`. Accepts an optional query string because a few parents are context-dependent: `/mcn/schools/review?schoolId=X` → that school, `/mcn/add?source=my-posts` → My Submissions, `/funds/add-transaction?event_id=X` → that fund, and `/events/add?id=X` → that event.
 - `goBackSmart(router, path)` — what header back buttons call. Pops with `backTracked()` when the previous tracked route already **is** the logical parent (the common case, keeping history and forward in sync); otherwise falls back to `replaceTracked(parent)` for a cross-branch jump or a deep-link entry with nothing to pop. Its correctness rests entirely on the tracked stack matching real history — see the reducer below.
 - `normalizeRoute(route)` — canonical form for comparisons: strips query, hash, trailing slash, and expo-router group segments so `/(tabs)/network` and `/network` compare equal.
 - `getPreviousRoute()` — the previous entry in the tracked stack.

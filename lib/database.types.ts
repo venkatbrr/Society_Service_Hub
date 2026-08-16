@@ -962,6 +962,44 @@ export type Database = {
           },
         ]
       }
+      feedback_reports: {
+        Row: {
+          community_id: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          kind: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          community_id?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          kind: string
+          message: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          kind?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_reports_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flat_addition_requests: {
         Row: {
           block_id: string

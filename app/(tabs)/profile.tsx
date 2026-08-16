@@ -3,8 +3,8 @@ import { Building05 } from '@untitledui/icons/Building05';
 import { ChevronRight } from '@untitledui/icons/ChevronRight';
 import { Edit01 } from '@untitledui/icons/Edit01';
 import { File06 } from '@untitledui/icons/File06';
-import { ShieldTick } from '@untitledui/icons/ShieldTick';
 import { LogOut01 } from '@untitledui/icons/LogOut01';
+import { MessageChatCircle } from '@untitledui/icons/MessageChatCircle';
 import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
 import { Tool01 } from '@untitledui/icons/Tool01';
 import { useFocusEffect } from '@react-navigation/native';
@@ -326,9 +326,6 @@ export default function ProfileScreen() {
 
           <View style={styles.menuDivider} />
 
-          {/* Two rows, not one combined "Terms & privacy": each document has
-              its own public URL (wooru.in/terms, wooru.in/privacy) and residents
-              look for them by name. `?doc=` opens the right tab directly. */}
           <TouchableOpacity
             onPress={() => router.push('/legal?doc=terms' as any)}
             style={styles.menuRow}
@@ -338,8 +335,8 @@ export default function ProfileScreen() {
               <File06 size={18} color={Verandah.accent} aria-hidden={true} />
             </View>
             <View style={styles.adminContent}>
-              <Text style={styles.adminTitle}>Terms of service</Text>
-              <Text style={styles.adminCopy}>What you agree to by using Wooru</Text>
+              <Text style={styles.adminTitle}>Terms &amp; Privacy</Text>
+              <Text style={styles.adminCopy}>What you agree to and what we collect</Text>
             </View>
             <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
           </TouchableOpacity>
@@ -347,16 +344,16 @@ export default function ProfileScreen() {
           <View style={styles.menuDivider} />
 
           <TouchableOpacity
-            onPress={() => router.push('/legal?doc=privacy' as any)}
+            onPress={() => router.push('/feedback' as any)}
             style={styles.menuRow}
             activeOpacity={0.82}
           >
             <View style={[styles.adminIconWrap, { backgroundColor: Verandah.accentSoft }]}>
-              <ShieldTick size={18} color={Verandah.accent} aria-hidden={true} />
+              <MessageChatCircle size={18} color={Verandah.accent} aria-hidden={true} />
             </View>
             <View style={styles.adminContent}>
-              <Text style={styles.adminTitle}>Privacy policy</Text>
-              <Text style={styles.adminCopy}>What we collect and why</Text>
+              <Text style={styles.adminTitle}>Bug or feature request</Text>
+              <Text style={styles.adminCopy}>Something broken? Have an idea?</Text>
             </View>
             <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
           </TouchableOpacity>

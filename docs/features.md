@@ -305,7 +305,7 @@ Routes: `index` · `[id]` · `review` · `add` · `compare`
 | **Tables / RPCs** | `communities`, `community_events`, `events`, `event_transactions`, `fund_roles`, `profiles`, `funds_access_requests`; RPCs `get_my_community_funds_overview()`, `withdraw_funds_access_request(...)` |
 | **Rules** | Section order is fixed: **events ("Happening soon") → funds → manage rows (lead only) → residents/SOS tiles → community info**. The events section shows up to 5 upcoming published events in a horizontal carousel sorted by date, above funds — timely content earns the fold ahead of a funds summary that reads ₹0 for most communities. The hero shows only the community name; the "going around the building" pulse line was intentionally removed. Community info includes a join-code tile with an Invite-neighbors share action; the shared message includes `/api/share-community?id=…` (`api/share-community.ts`) so WhatsApp renders a branded preview card (`get_community_og_card(p_id)` RPC — `communities` has no anon SELECT policy, and the join code itself is never put in the RPC response, only in the plain-text message). The funds request CTA exists only in this section. |
 | **Roles** | All residents view. Create-fund and post-event are visible to leads, platform admins, and (for events) the events-coordinator grant. |
-| **No president yet** | When `communityHasLead` is false, a notice card sits directly under the hero: "No president yet", stating that neighbourly features all still work and that funds and block in-charges open up once a president is in place, with a link to the residents directory. The funds section replaces its "Request funds support" CTA with an explanation instead. See `architecture.md` §3 → Leaderless communities for what is and is not gated. |
+| **No president yet** | When `communityHasLead` is false, a notice card sits directly under the hero: "No president yet", stating "Funds and block in-charges aren't active yet. They switch on once a president or vice president is appointed.", with a link to the residents directory. The funds section replaces its "Request funds support" CTA with "Funds aren't active in this community yet. They'll switch on once a president or vice president is appointed." See `architecture.md` §3 → Leaderless communities for what is and is not gated. |
 
 ### Community events — `app/events/*`
 
@@ -424,9 +424,9 @@ Title required. **Exactly one treasurer must be selected** (leads and platform a
 |--------|---------|
 | **Purpose** | Account-level hub only — identity, reminders, submissions, sign-out |
 | **RPCs** | `get_my_due_soon_count()`, `get_my_recent_service_history(p_limit)` |
-| **Rules** | **No building-level content here** — community metadata and the residents directory belong to the Community tab. The settings card shows the community role and, when applicable, a separate fund-access badge (Treasurer or Collector) so fund permissions are explicit. A block picker appears only while blocks are active. The identity card no longer shows a profile photo — removed to save space; see Edit profile. Legal is two rows, "Terms of service" and "Privacy policy", each deep-linking to its own tab. |
+| **Rules** | **No building-level content here** — community metadata and the residents directory belong to the Community tab. The settings card shows the community role and, when applicable, a separate fund-access badge (Treasurer or Collector) so fund permissions are explicit. A block picker appears only while blocks are active. The identity card no longer shows a profile photo — removed to save space; see Edit profile. Legal is a single "Terms & Privacy" row opening the merged legal screen. |
 | **Sign-out destination** | **Web lands on the public home page at `/`, not the login form** — signing out means "I'm done", not "log me in as someone else", and the deployed root already serves the marketing page (`build-admin.js` puts `public/landing.html` at `dist/index.html`). Native has no landing page and goes to `/login`. Both paths go through `goToLanding()` in `lib/siteUrl.ts`, which returns `false` on native so the caller falls through — and which returns `/landing.html` instead of `/` under `__DEV__`, because the Expo dev server serves the SPA at `/` and redirecting there would loop. The same helper is used by `/admin-redirect` and `/community-request-submitted`. |
-| **Navigation** | → `/profile/edit`, `/services`, `/mcn/my-posts`, `/legal?doc=terms`, `/legal?doc=privacy`; `/` (web) or `/login` (native) after sign-out |
+| **Navigation** | → `/profile/edit`, `/services`, `/mcn/my-posts`, `/legal?doc=terms`; `/` (web) or `/login` (native) after sign-out |
 
 ### Edit profile — `app/profile/edit.tsx`
 
@@ -454,9 +454,18 @@ Name updates apply directly. Email updates send a verification link to the new a
 | **Purpose** | In-app reading surface for Terms of Service and Privacy Policy |
 | **Data** | Single source of truth in `data/legal.ts` (DPDP Act 2023 compliant) |
 | **Rules** | Segmented control switches between Terms of Service and Privacy Policy. Deep-linkable via `?doc=privacy` or `?doc=terms`. Scroll position resets on tab change. Full Verandah styling with support for callouts, tables, bullet lists, subheadings, and tappable contact/internal links. |
-| **Public links** | Each document also has a standalone public URL — `wooru.in/terms` and `wooru.in/privacy`, static HTML generated from `data/legal.ts` by `npm run legal:html` and served via the `vercel.json` rewrites. The in-app footer shows the URL for the active document with "Open in browser" and "Share link" actions, so it can be handed to an app store listing, an OAuth consent screen, or a WhatsApp message without routing anyone through the app. |
-| **Navigation** | Reachable post-auth via **two** Profile menu rows — "Terms of service" (`/legal?doc=terms`) and "Privacy policy" (`/legal?doc=privacy`) — rather than one combined "Terms & privacy" row, since each document has its own public URL and residents look for them by name. Pre-auth from the Login screen (`/legal?returnTo=login`). Header back button maps to `/profile` via `goBackSmart`. |
+| **Public links** | Each document also has a standalone public URL — `wooru.in/terms` and `wooru.in/privacy`, static HTML generated from `data/legal.ts` by `npm run legal:html` and served via the `vercel.json` rewrites. The in-app footer shows the URL for the active document with "Open in browser" and "Share link" actions, and a "Send feedback" link routing to `/feedback`. |
+| **Navigation** | Reachable post-auth via the Profile "Terms & Privacy" row (`/legal?doc=terms`). Pre-auth from the Login screen (`/legal?returnTo=login`). Header back button maps to `/profile` via `goBackSmart`. Footer links to `/feedback`. |
 | **Placeholders** | `LEGAL_ENTITY` in `data/legal.ts` still holds bracketed placeholders (`[LEGAL ENTITY NAME]`, `[REGISTERED ADDRESS]`, `[CONTACT EMAIL]`, `[GRIEVANCE OFFICER NAME]`, `[JURISDICTION CITY]`, `[LIABILITY CAP]`) and both documents carry a "Draft pending legal review" callout. This is deliberate and unresolved — the copy needs real values before launch. Run `npm run legal:html` after filling them in, or the public pages will keep serving the draft. |
+
+### Send feedback — `app/feedback.tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Bug reports and feature idea submissions from residents |
+| **Tables** | `feedback_reports` (RLS enabled: user INSERT own and SELECT own) |
+| **Fields** | `kind` ('bug' \| 'feature', via `SegmentedSlider`), `message` (required description), optional screenshot attachment (`image_url` via `ImageUploader` with `subfolder="feedback"`). |
+| **Navigation** | Reachable from `/legal` screen's footer. Header back returns via `goBackSmart(router, '/legal')`. |
 
 ---
 

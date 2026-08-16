@@ -24,6 +24,7 @@ admin-dashboard/
     communities.js      # #communities
     providers.js        # #providers
     funds-requests.js   # #funds-requests
+    feedback.js         # #feedback
 ```
 
 `utils.js` is loaded before every controller and owns the shared helpers: `esc`/`escAttr`, the `fmt*` formatters, `badge`/`statusBadge`/`roleLabel`, `buildWhatsAppUrl`, `errorBanner`/`emptyState`/`emptyRow`, `unwrap`, `exportCsv`, `debounce`, `sortRows`, and `normalizeCommunityId`. Do not redeclare any of them in a page controller — a top-level `const` in a second file collides with the global and throws a `SyntaxError` that blanks the whole console.
@@ -165,6 +166,13 @@ Guards on the write RPCs mirror `platform_set_fund_treasurer`: the target must e
 |--------|---------|
 | **Tables / RPCs** | Reads `funds_access_requests`, `communities`, `profiles`; writes via `platform_approve_funds_access_request`, `platform_reject_funds_access_request` |
 | **Behavior** | A status filter (Pending / Approved / Rejected / All, default Pending) replaces the old unfiltered, unbounded list. Approval requires designating an **active resident** as community lead — it defaults to the requester and, in one transaction, sets `funds_enabled = true` and promotes that resident to `president`. The RPC rejects a designee who is not an active `resident` of the request's community. Rejection supports a 280-character reason. A decided request shows its outcome, decision date, rejection reason, and current `funds_enabled` state, with a link into the community. |
+
+### `#feedback` — bug reports & feature ideas
+
+| Aspect | Details |
+|--------|---------|
+| **RPCs** | `platform_get_feedback_reports(p_community_id, p_kind)` |
+| **Behavior** | Lists all bug reports and feature ideas submitted by residents across communities. Filterable by Type (All / Bugs / Features) and Community, plus a real-time debounced search bar matching resident name, email, community, or message text. Displays submission timestamp, resident contact info, community/flat, complete message text, and clickable screenshot previews. |
 
 Unknown hashes fall back to `#dashboard`.
 

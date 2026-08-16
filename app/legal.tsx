@@ -1,5 +1,6 @@
 import { File06 } from '@untitledui/icons/File06';
 import { LinkExternal02 } from '@untitledui/icons/LinkExternal02';
+import { MessageChatCircle } from '@untitledui/icons/MessageChatCircle';
 import { Share07 } from '@untitledui/icons/Share07';
 import { ShieldTick } from '@untitledui/icons/ShieldTick';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -307,6 +308,10 @@ export default function LegalScreen() {
             <TouchableOpacity style={styles.footerBtn} onPress={sharePublicPage} activeOpacity={0.85}>
               <Share07 size={14} color={Verandah.primary} aria-hidden={true} />
               <Text style={styles.footerBtnText}>Share link</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.footerBtn} onPress={() => router.push('/feedback' as any)} activeOpacity={0.85}>
+              <MessageChatCircle size={14} color={Verandah.primary} aria-hidden={true} />
+              <Text style={styles.footerBtnText}>Send feedback</Text>
             </TouchableOpacity>
           </View>
 

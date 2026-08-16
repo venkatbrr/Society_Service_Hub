@@ -11,13 +11,13 @@ import { Dimensions, Platform } from 'react-native';
 export const VerandahType = {
   serifFamily: Platform.select({
     ios: 'Instrument Serif',
-    android: 'serif',
+    android: 'Instrument Serif',
     web: "'Instrument Serif', Georgia, serif",
     default: 'serif',
   }),
   sansFamily: Platform.select({
     ios: 'Plus Jakarta Sans',
-    android: 'sans-serif',
+    android: 'Plus Jakarta Sans',
     web: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     default: 'System',
   }),
@@ -31,35 +31,35 @@ export const VerandahType = {
 
   // Display & Heading scale (Instrument Serif)
   hero: {
-    fontFamily: Platform.select({ ios: 'Instrument Serif', android: 'serif', web: "'Instrument Serif', Georgia, serif", default: 'serif' }),
+    fontFamily: Platform.select({ ios: 'Instrument Serif', android: 'Instrument Serif', web: "'Instrument Serif', Georgia, serif", default: 'serif' }),
     fontSize: 46,
     lineHeight: 50,
     letterSpacing: -0.4,
     fontWeight: '400' as const,
   },
   screenTitle: {
-    fontFamily: Platform.select({ ios: 'Instrument Serif', android: 'serif', web: "'Instrument Serif', Georgia, serif", default: 'serif' }),
+    fontFamily: Platform.select({ ios: 'Instrument Serif', android: 'Instrument Serif', web: "'Instrument Serif', Georgia, serif", default: 'serif' }),
     fontSize: 28,
     lineHeight: 32,
     letterSpacing: -0.4,
     fontWeight: '400' as const,
   },
   cardTitle: {
-    fontFamily: Platform.select({ ios: 'Instrument Serif', android: 'serif', web: "'Instrument Serif', Georgia, serif", default: 'serif' }),
+    fontFamily: Platform.select({ ios: 'Instrument Serif', android: 'Instrument Serif', web: "'Instrument Serif', Georgia, serif", default: 'serif' }),
     fontSize: 24,
     lineHeight: 28,
     letterSpacing: -0.3,
     fontWeight: '400' as const,
   },
   section: {
-    fontFamily: Platform.select({ ios: 'Instrument Serif', android: 'serif', web: "'Instrument Serif', Georgia, serif", default: 'serif' }),
+    fontFamily: Platform.select({ ios: 'Instrument Serif', android: 'Instrument Serif', web: "'Instrument Serif', Georgia, serif", default: 'serif' }),
     fontSize: 22,
     lineHeight: 26,
     letterSpacing: -0.3,
     fontWeight: '400' as const,
   },
   display: {
-    fontFamily: Platform.select({ ios: 'Instrument Serif', android: 'serif', web: "'Instrument Serif', Georgia, serif", default: 'serif' }),
+    fontFamily: Platform.select({ ios: 'Instrument Serif', android: 'Instrument Serif', web: "'Instrument Serif', Georgia, serif", default: 'serif' }),
     fontSize: 28,
     lineHeight: 32,
     letterSpacing: -0.4,
@@ -68,55 +68,55 @@ export const VerandahType = {
 
   // UI / Body / Labels scale (Plus Jakarta Sans)
   title: {
-    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'sans-serif', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
+    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
     fontSize: 18,
     lineHeight: 24,
     fontWeight: '600' as const,
   },
   body: {
-    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'sans-serif', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
+    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '400' as const,
   },
   bodyBold: {
-    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'sans-serif', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
+    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '600' as const,
   },
   caption: {
-    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'sans-serif', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
+    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '400' as const,
   },
   captionBold: {
-    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'sans-serif', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
+    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '600' as const,
   },
   meta: {
-    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'sans-serif', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
+    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
     fontSize: 11,
     lineHeight: 14,
     fontWeight: '400' as const,
   },
   micro: {
-    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'sans-serif', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
+    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
     fontSize: 10,
     lineHeight: 13,
     fontWeight: '500' as const,
   },
   navLabel: {
-    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'sans-serif', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
+    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
     fontSize: 10,
     lineHeight: 12,
     fontWeight: '600' as const,
   },
   button: {
-    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'sans-serif', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
+    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
     fontSize: 16,
     lineHeight: 20,
     fontWeight: '700' as const,
@@ -124,7 +124,7 @@ export const VerandahType = {
 
   // Section labels in small caps
   sectionLabel: {
-    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'sans-serif', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
+    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
     fontSize: 11,
     fontWeight: '600' as const,
     letterSpacing: 0.5,

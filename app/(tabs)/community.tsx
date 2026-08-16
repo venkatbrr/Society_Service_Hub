@@ -271,9 +271,7 @@ export default function CommunityScreen() {
               <Text style={styles.noLeadTitle}>No president yet</Text>
             </View>
             <Text style={styles.noLeadCopy}>
-              Your community has no president or vice president appointed. Everything neighbourly still works —
-              services, food drops, businesses, rides and emergency numbers. Community funds and block in-charges
-              open up once a president is in place.
+              Funds and block in-charges aren't active yet. They switch on once a president or vice president is appointed.
             </Text>
             <TouchableOpacity onPress={() => router.push('/residents' as any)} activeOpacity={0.8}>
               <Text style={styles.inlineLink}>See who is in your community</Text>
@@ -407,8 +405,7 @@ export default function CommunityScreen() {
             <BaseCard padding={14}>
               <Text style={styles.cardTitle}>Funds support</Text>
               <Text style={styles.cardCopy}>
-                Community funds need a president or vice president to appoint a treasurer and collectors.
-                Once your community has one, you can request funds support from here.
+                Funds aren't active in this community yet. They'll switch on once a president or vice president is appointed.
               </Text>
               {hadHistoricalFunds ? (
                 <Text style={styles.cardCopy}>Funds were previously active in this community.</Text>

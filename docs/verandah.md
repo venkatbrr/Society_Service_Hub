@@ -82,6 +82,11 @@ Avatar tint families:
 
 ## Typography Scale
 
+Font families:
+- Headings & display: `Instrument Serif` (`VerandahType.serifFamily`, regular & italic)
+- UI & body: `Plus Jakarta Sans` (`VerandahType.sansFamily`, 400/500/600/700/800)
+- Loaded via Google Fonts link on web, and via `expo-font` `useFonts()` from bundled `.ttf` files in `assets/fonts/` on native iOS and Android.
+
 From `VerandahType`:
 
 - `display`: 26/30, weight 500

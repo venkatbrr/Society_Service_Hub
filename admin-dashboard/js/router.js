@@ -5,7 +5,8 @@ const Router = {
     '#approvals': 'approvals-page',
     '#communities': 'communities-page',
     '#providers': 'providers-page',
-    '#funds-requests': 'funds-requests-page'
+    '#funds-requests': 'funds-requests-page',
+    '#feedback': 'feedback-page'
   },
   
   hasInitialized: false,
@@ -114,6 +115,11 @@ const Router = {
         case '#funds-requests':
           if (window.FundsRequestsPage) {
             await window.FundsRequestsPage.load();
+          }
+          break;
+        case '#feedback':
+          if (window.FeedbackPage) {
+            await window.FeedbackPage.load();
           }
           break;
       }

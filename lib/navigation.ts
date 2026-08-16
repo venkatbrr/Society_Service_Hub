@@ -451,6 +451,9 @@ export function getImmediateParentRoute(pathname: string): string {
   if (cleanPath === '/legal') {
     return params.get('returnTo') === 'login' ? '/login' : '/profile';
   }
+  if (cleanPath === '/feedback') {
+    return '/profile';
+  }
 
   // 7b. Providers & visits (Help tab)
   if (cleanPath === '/provider/add') return '/';

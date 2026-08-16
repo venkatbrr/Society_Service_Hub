@@ -104,6 +104,9 @@
           <a href="#funds-requests">
             <span style="font-size: 1.15rem;">💰</span> Funds Requests
           </a>
+          <a href="#feedback">
+            <span style="font-size: 1.15rem;">💬</span> Bug & Feedback
+          </a>
         </nav>
 
         <div class="sidebar-footer">
@@ -496,6 +499,50 @@
         </div>
       </section>
 
+      <!-- PAGE 6: BUG & FEEDBACK -->
+      <section id="feedback-page" class="hidden">
+        <header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h1>Bug & Feature Requests</h1>
+            <p class="text-2" style="margin-top: 4px;">Review bug reports and feature ideas submitted by residents.</p>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="feedback-search-input" class="form-control" placeholder="Search resident, email, message..." style="min-width: 240px;" />
+            <select id="feedback-kind-filter" class="form-control" style="min-width: 150px; font-weight: 500; border-color: var(--border-strong);">
+              <option value="">All Types</option>
+              <option value="bug">🐛 Bugs only</option>
+              <option value="feature">💡 Features only</option>
+            </select>
+            <select id="feedback-community-filter" class="form-control" style="min-width: 200px; font-weight: 500; border-color: var(--border-strong);">
+              <option value="">All Communities</option>
+            </select>
+          </div>
+        </header>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 130px;">Date</th>
+                <th style="width: 110px;">Type</th>
+                <th style="width: 200px;">Resident</th>
+                <th style="width: 170px;">Community</th>
+                <th>Details & Message</th>
+                <th style="width: 100px; text-align: center;">Attachment</th>
+              </tr>
+            </thead>
+            <tbody id="feedback-tbody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="feedback-loading" class="loading-container hidden">
+          <div class="spinner"></div>
+          <p>Loading reports...</p>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -591,6 +638,7 @@
   <script src="/admin/js/communities.js"></script>
   <script src="/admin/js/funds-requests.js"></script>
   <script src="/admin/js/providers.js"></script>
+  <script src="/admin/js/feedback.js"></script>
 
   <!-- Bootstrap App -->
   <script>
