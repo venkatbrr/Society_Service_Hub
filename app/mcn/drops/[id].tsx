@@ -411,8 +411,7 @@ export default function PreorderDropDetailScreen() {
             }
           : {
               type: 'success',
-              text1: 'Pre-order placed successfully',
-              text2: 'Your food host will deliver to your flat at the scheduled time.',
+              text1: 'Order placed successfully',
             }
       );
 
@@ -960,7 +959,7 @@ export default function PreorderDropDetailScreen() {
             <Text style={[styles.subLabel, { marginTop: 10 }]}>Delivery Note (Optional)</Text>
             <TextInput
               style={[styles.input, styles.multiline]}
-              placeholder="e.g. Less spicy, call before coming..."
+              placeholder="e.g. Less spicy, extra sauce..."
               placeholderTextColor={colors.textMuted}
               value={buyerNote}
               onChangeText={setBuyerNote}

@@ -1,7 +1,7 @@
 import { Download01 } from '@untitledui/icons/Download01';
 import { XClose } from '@untitledui/icons/XClose';
-import React, { useEffect, useState } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { isRunningAsInstalledPwa } from '../lib/pwaInstall';
@@ -21,6 +21,7 @@ function isDismissCooldownOver(): boolean {
 export function PwaInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [visible, setVisible] = useState(false);
+  const slideAnim = useRef(new Animated.Value(-100)).current;
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
@@ -44,6 +45,24 @@ export function PwaInstallBanner() {
     };
   }, []);
 
+  useEffect(() => {
+    if (visible) {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: -100,
+        duration: 200,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [visible, slideAnim]);
+
   const handleInstall = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
@@ -66,7 +85,7 @@ export function PwaInstallBanner() {
   if (!visible || !deferredPrompt) return null;
 
   return (
-    <View style={styles.bannerContainer}>
+    <Animated.View style={[styles.bannerContainer, { transform: [{ translateY: slideAnim }] }]}>
       <View style={styles.contentRow}>
         <View style={styles.iconWrap}>
           <Download01 size={18} color={Verandah.primaryFg} aria-hidden={true} />
@@ -82,7 +101,7 @@ export function PwaInstallBanner() {
           <XClose size={16} color={Verandah.textMuted} aria-hidden={true} />
         </TouchableOpacity>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
