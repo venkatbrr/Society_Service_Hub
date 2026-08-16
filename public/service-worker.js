@@ -8,7 +8,7 @@
 // page, onto `/network`; explicit id and scope added). manifest.json is in
 // STATIC_ASSETS below, so without this bump an already-installed client would
 // keep the old manifest and keep launching into the landing page.
-const CACHE_NAME = 'wooru-pwa-v7';
+const CACHE_NAME = 'wooru-pwa-v8';
 
 // `/app.html` is the SPA shell every app route rewrites to (see vercel.json).
 // It is the offline fallback for in-app navigation; `/` and `/landing.html`

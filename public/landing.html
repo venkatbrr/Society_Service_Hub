@@ -445,7 +445,17 @@
       html { scroll-behavior: auto; }
       .wn-js [data-reveal] { opacity: 1; transform: none; transition: none; }
       .wn-tile:hover, .wn-card:hover, .wn-btn:hover { transform: none; }
-      #wn-install.wn-pulse { animation: none; }
+      /* Drop the motion, keep the emphasis. Android switches this media query
+         on for Battery Saver and for Accessibility → "Remove animations", so on
+         a phone it is the common case, not the rare one — and `animation: none`
+         alone left the button that had just appeared looking identical to any
+         other ghost button. Holds the pulse's 50% colours, statically. */
+      #wn-install.wn-pulse {
+        animation: none;
+        background: var(--emerald-tint);
+        border-color: var(--emerald);
+        box-shadow: inset 0 0 0 1.5px rgba(15,110,86,.35);
+      }
     }
   </style>
 </head>
