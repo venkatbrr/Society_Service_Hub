@@ -193,11 +193,10 @@ function RootLayoutNav() {
             return;
           }
           redirectTo = takeSavedRoute() || POST_AUTH_LANDING_ROUTE;
-        } else if (!hasResolvedInitialLandingRef.current && pathname !== '/') {
-          // Cold start / page load with a live session, not on home: `/` here is the framework's
-          // initial route, not a screen the user chose, so send them to the MCN hub.
-          // One-shot — tapping Help later still opens `/` normally.
-          // If already on `/`, stay there (hard reload case).
+        } else if (!hasResolvedInitialLandingRef.current && pathname === '/') {
+          // Cold start / page load with a live session: `/` here is the framework's
+          // initial route, not a screen the user chose, so send them to the MCN hub
+          // too. One-shot — tapping Help later still opens `/` normally.
           redirectTo = takeSavedRoute() || POST_AUTH_LANDING_ROUTE;
         }
       }
