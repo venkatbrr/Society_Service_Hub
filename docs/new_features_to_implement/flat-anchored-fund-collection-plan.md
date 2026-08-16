@@ -1,8 +1,9 @@
 # Flat-anchored fund collection — implementation plan
 
 **Status:** not started
-**Written:** 2026-08-15
+**Written:** 2026-08-16
 **Owner:** hand-off doc for an implementing agent
+**Background:** issue diagnosis and the design decisions behind this plan are recorded in [`docs/fixes/done/fund-collection-unregistered-residents.md`](../fixes/done/fund-collection-unregistered-residents.md)
 
 ---
 
@@ -10,7 +11,7 @@
 
 Fund collectors can only record a contribution against a **signed-up resident**. The contributor picker in `app/funds/add-transaction.tsx` is fed by `list_eligible_contributors_for_collector(...)`, which selects from `public.profiles`. Residents who have not created an account do not exist in `profiles`, so the collector cannot find them and cannot record the cash they just handed over.
 
-Production numbers as of 2026-08-15 (community "IRA Aspiration", the only live community):
+Production numbers as of 2026-08-16 (community "IRA Aspiration", the only live community):
 
 | | |
 |---|---|

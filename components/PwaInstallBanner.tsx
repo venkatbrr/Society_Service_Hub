@@ -1,26 +1,25 @@
 import { Download01 } from '@untitledui/icons/Download01';
-import { XClose } from '@untitledui/icons/XClose';
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahRadius, VerandahType } from '../constants/Verandah';
 import { isRunningAsInstalledPwa } from '../lib/pwaInstall';
 
-/** How many days to wait before re-showing the install banner after dismissal */
-const DISMISS_COOLDOWN_DAYS = 3;
-
-/** Check if the cooldown period since last dismissal has elapsed */
-function isDismissCooldownOver(): boolean {
-  if (typeof localStorage === 'undefined') return true;
-  const dismissedAt = localStorage.getItem('pwa_install_dismissed_at');
-  if (!dismissedAt) return true;
-  const elapsed = Date.now() - Number(dismissedAt);
-  return elapsed >= DISMISS_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
-}
-
+/**
+ * The banner has no dismiss control on purpose.
+ *
+ * It only ever renders when the browser has actually offered an install
+ * (`beforeinstallprompt`), and it clears itself as soon as the resident taps
+ * Install — whichever way they answer Chrome's own prompt. That is the single
+ * exit, so the offer cannot be buried and then forgotten.
+ *
+ * The old X wrote a `pwa_install_dismissed_at` key and suppressed the banner
+ * for three days. Both it and the cooldown check are gone; leaving the check
+ * behind would have kept the banner hidden for anyone who had already tapped
+ * the X, which is the opposite of the intent here.
+ */
 export function PwaInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
@@ -31,10 +30,6 @@ export function PwaInstallBanner() {
       // Prevent automatic browser prompt bar
       e.preventDefault();
       setDeferredPrompt(e);
-      // Show banner if cooldown has elapsed since last dismiss
-      if (isDismissCooldownOver()) {
-        setVisible(true);
-      }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -47,23 +42,14 @@ export function PwaInstallBanner() {
   const handleInstall = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
-    const choiceResult = await deferredPrompt.userChoice;
-    if (choiceResult.outcome === 'accepted') {
-      console.log('User accepted the PWA install prompt');
-    }
+    // Resolves for "dismissed" as well as "accepted", and the event is
+    // single-use either way — so the banner goes whatever the resident picks.
+    // Chrome fires a fresh event on a later visit if they declined.
+    await deferredPrompt.userChoice;
     setDeferredPrompt(null);
-    setVisible(false);
   };
 
-  const handleDismiss = () => {
-    if (typeof localStorage !== 'undefined') {
-      // Store the timestamp of dismissal for cooldown-based re-prompting
-      localStorage.setItem('pwa_install_dismissed_at', String(Date.now()));
-    }
-    setVisible(false);
-  };
-
-  if (!visible || !deferredPrompt) return null;
+  if (!deferredPrompt) return null;
 
   return (
     <View style={styles.bannerContainer}>
@@ -77,9 +63,6 @@ export function PwaInstallBanner() {
         </View>
         <TouchableOpacity style={styles.installBtn} onPress={handleInstall}>
           <Text style={styles.installBtnText}>Install</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.closeBtn} onPress={handleDismiss} hitSlop={8}>
-          <XClose size={16} color={Verandah.textMuted} aria-hidden={true} />
         </TouchableOpacity>
       </View>
     </View>
@@ -131,8 +114,5 @@ const styles = StyleSheet.create({
     color: Verandah.primaryFg,
     fontSize: 12,
     fontWeight: '600',
-  },
-  closeBtn: {
-    padding: 4,
   },
 });
