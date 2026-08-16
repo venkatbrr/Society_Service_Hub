@@ -61,6 +61,13 @@ The old strings were written for the period when confirmation was off, where an 
 
 ⚠️ **Before flipping the flag back on**, note that one account —`thewooru@gmail.com`, a platform admin — had an email-only identity at the time of this change. It is protected regardless: `is_platform_admin()` carries a break-glass branch on that exact address, and `handle_new_user()` auto-promotes it, so signing in with Google under the same address still resolves to platform admin.
 
+### 1c. Phone OTP login — UI hidden 2026-08-16
+
+- **Status**: **Hidden in the UI, fully built underneath, unresolved bug.** Unlike §1b, this was never live in production — it was built and hidden in the same session, before ever reaching real users.
+- **Flag**: [`constants/authFlags.ts`](../constants/authFlags.ts) → `PHONE_OTP_LOGIN_ENABLED = false`.
+- **Why hidden**: MSG91's OTP widget throws an unresolved client-side `"Token is missing!"` error before any request reaches MSG91's servers (confirmed via their dashboard's own attempt Logs — zero entries despite repeated tries), even after fixing a real duplicate-widget-init bug in `app/login-phone.tsx`. Root cause not found.
+- Full detail — architecture, every file touched, what to check before re-attempting, re-enable checklist: [`hidden-features/phone-otp-login.md`](hidden-features/phone-otp-login.md).
+
 ### 2. Password strength constraints
 
 - **Status**: Simplified

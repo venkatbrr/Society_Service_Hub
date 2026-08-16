@@ -21,7 +21,7 @@ import {
   View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { EMAIL_AUTH_UI_ENABLED } from '../constants/authFlags';
+import { EMAIL_AUTH_UI_ENABLED, PHONE_OTP_LOGIN_ENABLED } from '../constants/authFlags';
 import { Verandah } from '../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { getAuthErrorMessage, signInWithEmail, signUpWithEmail } from '../lib/auth';
@@ -324,23 +324,30 @@ export default function LoginScreen() {
           </View>
           </>
           )}
+          {PHONE_OTP_LOGIN_ENABLED && (
+            <TouchableOpacity
+              style={styles.phoneButton}
+              onPress={() => router.push('/login-phone')}
+              disabled={loading || googleLoading}
+              activeOpacity={0.88}
+            >
+              <Phone size={20} color={Verandah.teal900} style={{ marginRight: 10 }} />
+              <Text style={styles.phoneButtonText}>Continue with phone</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
-            style={styles.phoneButton}
-            onPress={() => router.push('/login-phone')}
+            style={PHONE_OTP_LOGIN_ENABLED ? styles.googleButton : styles.googleButtonPrimary}
+            onPress={signInWithGoogle}
             disabled={loading || googleLoading}
             activeOpacity={0.88}
           >
-            <Phone size={20} color={Verandah.teal900} style={{ marginRight: 10 }} />
-            <Text style={styles.phoneButtonText}>Continue with phone</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.googleButton} onPress={signInWithGoogle} disabled={loading || googleLoading} activeOpacity={0.88}>
             {googleLoading ? (
-              <ActivityIndicator color={Verandah.cream} />
+              <ActivityIndicator color={PHONE_OTP_LOGIN_ENABLED ? Verandah.cream : Verandah.teal900} />
             ) : (
               <>
                 <Text style={styles.googleG}>G</Text>
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
+                <Text style={PHONE_OTP_LOGIN_ENABLED ? styles.googleButtonText : styles.googleButtonTextPrimary}>Continue with Google</Text>
               </>
             )}
           </TouchableOpacity>
@@ -415,6 +422,11 @@ const styles = StyleSheet.create({
   phoneButtonText: { fontSize: 15, fontWeight: '700', color: Verandah.teal900, fontFamily: VerandahType.sansFamily, letterSpacing: -0.1 },
   googleButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 50, borderRadius: VerandahRadius.button, backgroundColor: 'rgba(255, 255, 255, 0.08)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.16)', marginTop: 10 },
   googleButtonText: { fontSize: 15, fontWeight: '600', color: Verandah.cream, fontFamily: VerandahType.sansFamily, letterSpacing: -0.1 },
+  // Used only while PHONE_OTP_LOGIN_ENABLED is false — Google is then the
+  // sole/primary action and needs the same visual weight it had before phone
+  // login existed, not the secondary/outlined treatment above.
+  googleButtonPrimary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 52, borderRadius: VerandahRadius.button, backgroundColor: Verandah.cream, marginTop: 28, ...Verandah.shadowCard },
+  googleButtonTextPrimary: { fontSize: 15, fontWeight: '700', color: Verandah.teal900, fontFamily: VerandahType.sansFamily, letterSpacing: -0.1 },
   googleG: { fontSize: 17, fontWeight: '700', color: '#EA4335', fontFamily: VerandahType.sansFamily, marginRight: 10 },
   toggleModeContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 14, flexWrap: 'wrap' },
   toggleModeText: { fontSize: 12, color: 'rgba(240, 237, 227, 0.65)', fontFamily: VerandahType.sansFamily },

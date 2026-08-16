@@ -25,8 +25,9 @@ This folder exists so that "we will turn this on later" survives the months in b
 | Schools catalog & compare | `SCHOOLS_CATALOG_ENABLED` | 2026-08-13 | [`mcn-schools-and-borrow.md`](mcn-schools-and-borrow.md) |
 | Borrow & share posts | `BORROW_SHARE_ENABLED` | 2026-08-13 | [`mcn-schools-and-borrow.md`](mcn-schools-and-borrow.md) |
 | "Most ordered" drop sort | `DROP_SORT_MOST_ORDERED_ENABLED` | 2026-08-14 | [`drops-most-ordered-sort.md`](drops-most-ordered-sort.md) |
+| Phone OTP login | `PHONE_OTP_LOGIN_ENABLED` | 2026-08-16 | [`phone-otp-login.md`](phone-otp-login.md) |
 
-All flags live in [`constants/featureFlags.ts`](../../constants/featureFlags.ts).
+Most flags live in [`constants/featureFlags.ts`](../../constants/featureFlags.ts). Auth-specific flags (`PHONE_OTP_LOGIN_ENABLED`, `EMAIL_AUTH_UI_ENABLED`) live in [`constants/authFlags.ts`](../../constants/authFlags.ts) instead.
 
 ---
 

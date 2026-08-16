@@ -11,7 +11,7 @@ Jump straight to what you need; skip the rest.
 
 | Domain | Screens | Section |
 |--------|---------|---------|
-| Auth & onboarding | login, forgot-password, community-select, community-request(+submitted), community-join-block | [§1](#1-authentication--onboarding) |
+| Auth & onboarding | login, forgot-password, community-select, community-request(+submitted), community-join-block (+ hidden: login-phone) | [§1](#1-authentication--onboarding) |
 | Help tab | providers, service visits | [§2](#2-help-tab--providers--visits) |
 | Saved tab | favorites | [§3](#3-saved-tab) |
 | MCN tab | hub, business, drops, carpools, parents, orders (+ hidden: schools, borrow posts) | [§4](#4-mcn--my-community-network) |
@@ -34,21 +34,16 @@ Jump straight to what you need; skip the rest.
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Sign in with Phone OTP (primary), Google (secondary), or optional email/password if enabled |
+| **Purpose** | Sign in with Google (sole visible method), or optional email/password if enabled |
 | **Tables** | `auth.users` via Supabase Auth; trigger `handle_new_user()` auto-creates the `profiles` row |
-| **Rules** | Primary action routes to `/login-phone`. Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection rather than silently reusing the last account. OAuth errors on web display a clear Toast message. Target deep-link routes survive OAuth redirects on the PWA. |
-| **Navigation** | Entry point when unauthenticated. Routes to `/login-phone` (primary) or `/forgot-password`. Post-auth routing belongs to the root layout, which restores any saved deep-link target. |
+| **Rules** | Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection rather than silently reusing the last account. OAuth errors on web display a clear Toast message. Target deep-link routes survive OAuth redirects on the PWA. |
+| **Navigation** | Entry point when unauthenticated. Routes to `/forgot-password`. Post-auth routing belongs to the root layout, which restores any saved deep-link target. |
 | **Integrations** | Supabase Auth, Google Sign-In (needs a dev build — not Expo Go) |
+| **Hidden** | A "Continue with phone" entry point (routes to `/login-phone`) is built and fully wired but hidden behind `constants/authFlags.ts` → `PHONE_OTP_LOGIN_ENABLED = false`. See [`hidden-features/phone-otp-login.md`](hidden-features/phone-otp-login.md). |
 
-### Login Phone — `app/login-phone.tsx`
+### Login Phone — `app/login-phone.tsx` — **hidden, unlinked from the login screen**
 
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Authenticate via 10-digit Indian mobile number OTP via MSG91 widget |
-| **Tables** | `auth.users` via `verify-phone-otp` Edge Function; `profiles` with `phone_number` |
-| **Rules** | Validates 10-digit Indian mobile numbers (`^[6-9]\d{9}$`). Integrates with MSG91 OTP Widget on web and mobile. On OTP verification, passes `access_token` to `verify-phone-otp` Edge Function which verifies server-side with MSG91 using `MSG91_AUTHKEY` secret and establishes the authenticated Supabase session. |
-| **Navigation** | Back to `/login`. Post-auth proceeds through the standard root auth gate (`/community-select` for new users). |
-| **Integrations** | MSG91 OTP Widget API / SDK, Supabase Edge Function `verify-phone-otp` |
+Fully built phone-number OTP sign-in via the MSG91 OTP Widget, with a `verify-phone-otp` Edge Function verifying the widget's access token server-side and establishing the Supabase session. No entry point currently links here — the route stays on disk for direct-URL QA while the underlying MSG91 widget bug is unresolved. Full detail, why it's hidden, and the re-enable checklist: [`hidden-features/phone-otp-login.md`](hidden-features/phone-otp-login.md).
 
 ### Forgot password — `app/forgot-password.tsx`
 

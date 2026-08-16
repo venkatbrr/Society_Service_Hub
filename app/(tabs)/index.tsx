@@ -19,7 +19,6 @@ import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { isFreeNow } from '../../lib/availability';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
 import { SegmentedSlider } from '../../components/SegmentedSlider';
 import { shareOrCopy } from '../../lib/share';
@@ -65,7 +64,6 @@ export default function HomeScreen() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedGroupCategories, setSelectedGroupCategories] = useState<string[] | null>(null);
-  const [availableNowOnly, setAvailableNowOnly] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [providersLoading, setProvidersLoading] = useState(true);
   const [providersLoadError, setProvidersLoadError] = useState<string | null>(null);
@@ -143,11 +141,6 @@ export default function HomeScreen() {
     const full = String(user?.user_metadata?.full_name || '').trim();
     return full ? full.split(/\s+/)[0] : 'there';
   }, [user?.user_metadata?.full_name]);
-
-  const displayedProviders = useMemo(() => {
-    if (!availableNowOnly) return providers;
-    return providers.filter((p) => isFreeNow((p as any).details));
-  }, [providers, availableNowOnly]);
 
   const handleInviteNeighbors = useCallback(async () => {
     if (!communityInvite?.code) {
@@ -517,7 +510,7 @@ export default function HomeScreen() {
 
       {activeSegment === 'providers' ? (
         <FlatList
-          data={displayedProviders}
+          data={providers}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <ProviderCard
@@ -555,15 +548,6 @@ export default function HomeScreen() {
                   onSelectGroupCategories={setSelectedGroupCategories}
                   isLightMode={true}
                 />
-                <TouchableOpacity
-                  style={[styles.availableNowChip, availableNowOnly && styles.availableNowChipActive]}
-                  onPress={() => setAvailableNowOnly((prev) => !prev)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.availableNowChipText, availableNowOnly && styles.availableNowChipTextActive]}>
-                    Available now
-                  </Text>
-                </TouchableOpacity>
               </View>
             </>
           }
@@ -583,7 +567,7 @@ export default function HomeScreen() {
               <EmptyState
                 IconComponent={Users01}
                 title="No Providers Found"
-                message={searchQuery || selectedCategory || availableNowOnly ? "Try adjusting your filters" : "Be the first to add a trusted service provider!"}
+                message={searchQuery || selectedCategory ? "Try adjusting your filters" : "Be the first to add a trusted service provider!"}
                 isLightMode={true}
               />
             )
@@ -881,29 +865,6 @@ const styles = StyleSheet.create({
   filterSection: {
     marginTop: 2,
     marginBottom: 2,
-  },
-  availableNowChip: {
-    alignSelf: 'flex-start',
-    marginTop: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: VerandahRadius.pill,
-    borderWidth: 0.5,
-    borderColor: Verandah.borderHair,
-    backgroundColor: Verandah.card,
-  },
-  availableNowChipActive: {
-    backgroundColor: Verandah.accentSoft,
-    borderColor: Verandah.accent,
-  },
-  availableNowChipText: {
-    fontSize: 12.5,
-    fontWeight: '500',
-    fontFamily: VerandahType.sansFamily,
-    color: Verandah.textPrimary,
-  },
-  availableNowChipTextActive: {
-    color: Verandah.accent,
   },
   listContent: {
     paddingBottom: 100,

@@ -1,8 +1,11 @@
 # Implementation Plan — Phone OTP Login (MSG91), alongside Google
 
-> Status: plan, not yet implemented. No code has been written for this feature — this
-> document only. Corrected against the live code on 2026-08-16 (`app/login.tsx`,
-> `lib/auth.ts`, `app/_layout.tsx` auth gate, `handle_new_user()` trigger).
+> **Status: implemented, then hidden — 2026-08-16, same session.** Phases 1–4 below were all
+> built (Edge Function, client screen, session bridge, optional Google linking), but the
+> MSG91 widget integration has an unresolved client-side bug and the entry point is now
+> gated off. This doc is kept for its architecture reasoning; for current status, what was
+> built, what's broken, and the re-enable checklist, see
+> [`../hidden-features/phone-otp-login.md`](../hidden-features/phone-otp-login.md).
 
 ## Goal
 
