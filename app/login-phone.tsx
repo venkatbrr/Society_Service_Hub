@@ -57,67 +57,96 @@ export default function LoginPhoneScreen() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
-  const [reqId, setReqId] = useState<string | null>(null);
+  const [widgetReady, setWidgetReady] = useState(false);
 
   const otpInputRef = useRef<TextInput>(null);
   const timerRef = useRef<any>(null);
 
-  // Load MSG91 widget script on Web and initialize configuration
+  // Load the MSG91 widget script once on mount and initialize it a single
+  // time. The widget must NOT be re-initialized on every send — doing so
+  // previously raced the mount-time init against a second init on every
+  // "Get OTP" click, which is what caused the intermittent "Token is
+  // missing!" / AuthenticationFailure errors. Sending is done later purely
+  // via the exposed window.sendOtp()/verifyOtp() methods.
   useEffect(() => {
-    if (Platform.OS === 'web' && typeof document !== 'undefined') {
-      const initScript = () => {
-        if (MSG91_TOKEN_AUTH && typeof window.initSendOTP === 'function') {
-          try {
-            window.initSendOTP({
-              widgetId: MSG91_WIDGET_ID,
-              tokenAuth: MSG91_TOKEN_AUTH,
-              token: MSG91_TOKEN_AUTH,
-              authToken: MSG91_TOKEN_AUTH,
-              exposeMethods: true,
-              success: async (data: any) => {
-                console.log('MSG91 widget success callback:', data);
-                const token =
-                  data?.['access-token'] ||
-                  data?.accessToken ||
-                  data?.jwt ||
-                  (typeof data === 'string' ? data : null);
-                if (token) {
-                  await completeSignInWithToken(token);
-                }
-              },
-              failure: (err: any) => {
-                console.warn('MSG91 widget failure callback:', err);
-              },
-            });
-          } catch (e) {
-            console.warn('Error in initSendOTP:', e);
-          }
-        }
-      };
+    if (Platform.OS !== 'web' || typeof document === 'undefined' || typeof window === 'undefined') {
+      return;
+    }
 
-      const existingScript = document.getElementById('msg91-otp-script');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.id = 'msg91-otp-script';
-        script.src = 'https://verify.msg91.com/otp-provider.js';
-        script.async = true;
-        script.onload = () => {
-          console.log('MSG91 OTP script loaded successfully');
-          initScript();
-        };
-        script.onerror = (e) => {
-          console.warn('Failed to load primary MSG91 script from verify.msg91.com, trying fallback...', e);
-          const fallback = document.createElement('script');
-          fallback.id = 'msg91-otp-script-fallback';
-          fallback.src = 'https://control.msg91.com/app/assets/otp-provider/otp-provider.js';
-          fallback.async = true;
-          fallback.onload = () => initScript();
-          document.body.appendChild(fallback);
-        };
-        document.body.appendChild(script);
-      } else {
-        initScript();
+    if (!MSG91_TOKEN_AUTH) {
+      console.error('EXPO_PUBLIC_MSG91_TOKEN_AUTH is empty. Check .env and restart Expo (npx expo start -c --web).');
+      return;
+    }
+
+    // Config shape matches MSG91's own "Client Side Integration" snippet exactly —
+    // no extra alias keys, they are not part of the documented API and only
+    // risk confusing the SDK's own validation before it reaches the network.
+    const configuration = {
+      widgetId: MSG91_WIDGET_ID,
+      tokenAuth: MSG91_TOKEN_AUTH,
+      exposeMethods: true,
+      success: async (data: any) => {
+        const token =
+          data?.['access-token'] ||
+          data?.accessToken ||
+          data?.jwt ||
+          (typeof data === 'string' ? data : null);
+        if (token) {
+          await completeSignInWithToken(token);
+        }
+      },
+      failure: (err: any) => {
+        console.warn('MSG91 widget failure callback:', err);
+        setLoading(false);
+        Toast.show({
+          type: 'error',
+          text1: 'OTP Delivery Failed',
+          text2: err?.message || (typeof err === 'string' ? err : 'MSG91 could not send OTP to this number.'),
+        });
+      },
+    };
+
+    const markReadyWhenExposed = (attempt = 0) => {
+      if (typeof window.sendOtp === 'function' || typeof window.sendOTP === 'function') {
+        setWidgetReady(true);
+        return;
       }
+      if (attempt >= 15) {
+        console.warn('MSG91 widget did not expose sendOtp after init — check widgetId/tokenAuth.');
+        return;
+      }
+      setTimeout(() => markReadyWhenExposed(attempt + 1), 200);
+    };
+
+    const initScript = () => {
+      if (typeof window.initSendOTP !== 'function') return;
+      try {
+        window.initSendOTP(configuration);
+        markReadyWhenExposed();
+      } catch (e) {
+        console.warn('Error in initSendOTP:', e);
+      }
+    };
+
+    const existingScript = document.getElementById('msg91-otp-script');
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.id = 'msg91-otp-script';
+      script.src = 'https://verify.msg91.com/otp-provider.js';
+      script.async = true;
+      script.onload = initScript;
+      script.onerror = (e) => {
+        console.warn('Failed to load primary MSG91 script from verify.msg91.com, trying fallback...', e);
+        const fallback = document.createElement('script');
+        fallback.id = 'msg91-otp-script-fallback';
+        fallback.src = 'https://control.msg91.com/app/assets/otp-provider/otp-provider.js';
+        fallback.async = true;
+        fallback.onload = initScript;
+        document.body.appendChild(fallback);
+      };
+      document.body.appendChild(script);
+    } else {
+      initScript();
     }
   }, []);
 
@@ -151,101 +180,57 @@ export default function LoginPhoneScreen() {
     }
 
     if (!MSG91_TOKEN_AUTH) {
-      console.error('EXPO_PUBLIC_MSG91_TOKEN_AUTH is not loaded. Please ensure it is in .env and restart Expo dev server.');
       Toast.show({
         type: 'error',
-        text1: 'Token is missing',
-        text2: 'EXPO_PUBLIC_MSG91_TOKEN_AUTH is missing or empty. Please restart Expo (npx expo start -c).',
+        text1: 'Token not loaded',
+        text2: 'Expo dev server needs a restart with cache cleared: npx expo start -c --web',
         visibilityTime: 7000,
+      });
+      return;
+    }
+
+    if (Platform.OS === 'web' && !widgetReady) {
+      Toast.show({
+        type: 'error',
+        text1: 'Still loading',
+        text2: 'The OTP service is still initializing — try again in a moment.',
       });
       return;
     }
 
     setLoading(true);
 
-    try {
-      const fullIdentifier = `91${cleanDigits}`;
-      console.log('Initiating OTP send for:', fullIdentifier, 'with Widget ID:', MSG91_WIDGET_ID);
+    const fullIdentifier = `91${cleanDigits}`;
+    const sendFn = Platform.OS === 'web' && typeof window !== 'undefined' ? (window.sendOtp || window.sendOTP) : null;
 
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        const configuration = {
-          widgetId: MSG91_WIDGET_ID,
-          tokenAuth: MSG91_TOKEN_AUTH,
-          token: MSG91_TOKEN_AUTH,
-          authToken: MSG91_TOKEN_AUTH,
-          identifier: fullIdentifier,
-          exposeMethods: true,
-          success: async (data: any) => {
-            console.log('MSG91 success callback:', data);
-            const token =
-              data?.['access-token'] ||
-              data?.accessToken ||
-              data?.jwt ||
-              (typeof data === 'string' ? data : null);
-            if (token) {
-              await completeSignInWithToken(token);
-            }
-          },
-          failure: (err: any) => {
-            console.warn('MSG91 failure callback:', err);
-            setLoading(false);
-            Toast.show({
-              type: 'error',
-              text1: 'OTP Delivery Failed',
-              text2: err?.message || (typeof err === 'string' ? err : 'MSG91 could not send OTP to this number.'),
-            });
-          },
-        };
-
-        if (typeof window.initSendOTP === 'function') {
-          window.initSendOTP(configuration);
-        }
-
-        // Call sendOtp / sendOTP if exposed by the SDK
-        const sendFn = window.sendOtp || window.sendOTP;
-        if (typeof sendFn === 'function') {
-          try {
-            sendFn(
-              fullIdentifier,
-              (res: any) => {
-                console.log('MSG91 sendOtp success response:', res);
-                if (res?.reqId) setReqId(res.reqId);
-              },
-              (err: any) => {
-                console.warn('MSG91 sendOtp error:', err);
-                Toast.show({
-                  type: 'error',
-                  text1: 'Could not send OTP',
-                  text2: err?.message || String(err),
-                });
-              }
-            );
-          } catch (callErr) {
-            console.warn('Direct sendOtp call threw:', callErr);
-          }
-        }
-      }
-
-      // Transition to OTP verification step
-      setStep('otp');
-      startResendTimer();
-      setTimeout(() => otpInputRef.current?.focus(), 300);
-
-      Toast.show({
-        type: 'success',
-        text1: 'OTP Requested',
-        text2: `Verification code sent to +91 ${cleanDigits}`,
-      });
-    } catch (err: any) {
-      console.error('handleSendOtp error:', err);
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to send OTP',
-        text2: getAuthErrorMessage(err),
-      });
-    } finally {
+    if (!sendFn) {
       setLoading(false);
+      Toast.show({ type: 'error', text1: 'OTP service unavailable', text2: 'Please reload the page and try again.' });
+      return;
     }
+
+    sendFn(
+      fullIdentifier,
+      () => {
+        setLoading(false);
+        setStep('otp');
+        startResendTimer();
+        setTimeout(() => otpInputRef.current?.focus(), 300);
+        Toast.show({
+          type: 'success',
+          text1: 'OTP sent',
+          text2: `Verification code sent to +91 ${cleanDigits}`,
+        });
+      },
+      (err: any) => {
+        setLoading(false);
+        Toast.show({
+          type: 'error',
+          text1: 'Could not send OTP',
+          text2: err?.message || (typeof err === 'string' ? err : 'MSG91 could not send OTP to this number.'),
+        });
+      }
+    );
   };
 
   const completeSignInWithToken = async (accessToken: string) => {
