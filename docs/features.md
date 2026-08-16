@@ -34,15 +34,26 @@ Jump straight to what you need; skip the rest.
 
 | Aspect | Details |
 |--------|---------|
-| **Purpose** | Sign in with Google (or optional email/password if enabled) |
-| **Tables** | `auth.users` via Supabase Auth; a trigger auto-creates the `profiles` row |
-| **Rules** | Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection rather than silently reusing the last account. OAuth errors on web display a clear Toast message. Target deep-link routes survive OAuth redirects on the PWA. |
-| **Navigation** | Entry point when unauthenticated. Links to `/forgot-password`. Post-auth routing belongs to the root layout, which restores any saved deep-link target. |
+| **Purpose** | Sign in with Phone OTP (primary), Google (secondary), or optional email/password if enabled |
+| **Tables** | `auth.users` via Supabase Auth; trigger `handle_new_user()` auto-creates the `profiles` row |
+| **Rules** | Primary action routes to `/login-phone`. Google sign-in exchanges the native or web identity token with Supabase and always prompts account selection rather than silently reusing the last account. OAuth errors on web display a clear Toast message. Target deep-link routes survive OAuth redirects on the PWA. |
+| **Navigation** | Entry point when unauthenticated. Routes to `/login-phone` (primary) or `/forgot-password`. Post-auth routing belongs to the root layout, which restores any saved deep-link target. |
 | **Integrations** | Supabase Auth, Google Sign-In (needs a dev build — not Expo Go) |
+
+### Login Phone — `app/login-phone.tsx`
+
+| Aspect | Details |
+|--------|---------|
+| **Purpose** | Authenticate via 10-digit Indian mobile number OTP via MSG91 widget |
+| **Tables** | `auth.users` via `verify-phone-otp` Edge Function; `profiles` with `phone_number` |
+| **Rules** | Validates 10-digit Indian mobile numbers (`^[6-9]\d{9}$`). Integrates with MSG91 OTP Widget on web and mobile. On OTP verification, passes `access_token` to `verify-phone-otp` Edge Function which verifies server-side with MSG91 using `MSG91_AUTHKEY` secret and establishes the authenticated Supabase session. |
+| **Navigation** | Back to `/login`. Post-auth proceeds through the standard root auth gate (`/community-select` for new users). |
+| **Integrations** | MSG91 OTP Widget API / SDK, Supabase Edge Function `verify-phone-otp` |
 
 ### Forgot password — `app/forgot-password.tsx`
 
 Sends a Supabase reset email. Email must contain `@`. Reset URL redirects to `/login` (with `/reset-password` route reserved for future implementation).
+
 
 ### Community select — `app/community-select.tsx`
 

@@ -38,7 +38,7 @@ import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
 type FundContext = Pick<Tables<'events'>, 'id' | 'community_id' | 'title' | 'is_closed'> & {
-  community: Pick<Tables<'communities'>, 'funds_enabled' | 'blocks_enabled'> | null;
+  community: Pick<Tables<'communities'>, 'funds_enabled' | 'blocks_enabled' | 'block_label'> | null;
   fund_roles: Tables<'fund_roles'>[];
   event_transactions: Pick<Tables<'event_transactions'>, 'id' | 'contributor_user_id' | 'contributor_flat_id' | 'contributor_name' | 'type'>[];
 };
@@ -139,7 +139,7 @@ export default function AddTransactionScreen() {
         setIsFetchingContext(true);
         const { data, error } = await supabase
           .from('events')
-          .select('id, community_id, title, is_closed, community:communities!inner(funds_enabled, blocks_enabled)')
+          .select('id, community_id, title, is_closed, community:communities!inner(funds_enabled, blocks_enabled, block_label)')
           .eq('id', event_id as string)
           .single();
 

@@ -19,6 +19,7 @@ import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
 import { VerandahBorder, VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { linkGoogleIdentity } from '../../lib/auth';
 import { replaceTracked } from '../../lib/navigation';
 import { goToLanding } from '../../lib/siteUrl';
 import { supabase } from '../../lib/supabase';
@@ -202,10 +203,14 @@ export default function ProfileScreen() {
         <View style={styles.identityCard}>
           <View style={styles.profileInfo}>
             <Text style={styles.identityName}>
-              {user?.user_metadata?.full_name || 'User'}
+              {user?.user_metadata?.full_name || 'Resident'}
             </Text>
             <Text style={styles.identityEmail}>
-              {user?.email}
+              {user?.email && !user.email.endsWith('@auth.wooru.in')
+                ? user.email
+                : profile?.phone_number
+                  ? `+91 ${profile.phone_number}`
+                  : user?.phone || user?.email}
             </Text>
             {profile?.flat_number ? (
               <Text style={styles.identityFlat}>
@@ -281,6 +286,43 @@ export default function ProfileScreen() {
             </View>
             <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
           </TouchableOpacity>
+
+          {!((user?.app_metadata?.providers || []) as string[]).includes('google') && (
+            <>
+              <View style={styles.menuDivider} />
+              <TouchableOpacity
+                onPress={async () => {
+                  try {
+                    const { error } = await linkGoogleIdentity();
+                    if (error) {
+                      Toast.show({
+                        type: 'error',
+                        text1: 'Google Linking Failed',
+                        text2: error.message || 'Make sure manual linking is enabled in Supabase settings.',
+                      });
+                    }
+                  } catch (err: any) {
+                    Toast.show({
+                      type: 'error',
+                      text1: 'Linking Error',
+                      text2: err?.message || 'Could not link Google account.',
+                    });
+                  }
+                }}
+                style={styles.menuRow}
+                activeOpacity={0.82}
+              >
+                <View style={[styles.adminIconWrap, { backgroundColor: 'rgba(234, 67, 53, 0.12)' }]}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#EA4335' }}>G</Text>
+                </View>
+                <View style={styles.adminContent}>
+                  <Text style={styles.adminTitle}>Link Google account</Text>
+                  <Text style={styles.adminCopy}>Attach Gmail for one-tap sign-in</Text>
+                </View>
+                <ChevronRight size={18} color={Verandah.textMuted} aria-hidden={true} />
+              </TouchableOpacity>
+            </>
+          )}
 
           <View style={styles.menuDivider} />
 

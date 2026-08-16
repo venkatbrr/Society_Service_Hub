@@ -4637,3 +4637,35 @@ export const Constants = {
     },
   },
 } as const
+
+// ---------------------------------------------------------------------------
+// HAND-MAINTAINED — everything above this line is generated, this block is not.
+//
+// `npm run types:preprod` / `types:prod` redirect over the whole file, so a
+// regen silently deletes the three types below and `npx tsc --noEmit` then
+// fails across ~7 unrelated screens. Re-append this block after every regen.
+// See docs/CLAUDE.md §6 step 3.
+// ---------------------------------------------------------------------------
+
+export type ProviderWithInteraction = Tables<'service_providers'> & {
+  is_favorite?: boolean
+  hire_count?: number
+  user_rating?: number | null
+}
+
+export type VisitWithJoinerData = Tables<'service_visits'> & {
+  creator_name?: string | null
+  creator_flat?: string | null
+  creator_avatar_url?: string | null
+  joiner_count?: number
+  has_user_joined?: boolean
+}
+
+export type VisitJoinerWithProfile = Tables<'visit_joiners'> & {
+  user_name?: string | null
+  full_name?: string | null
+  avatar_url?: string | null
+  flat_number?: string | null
+  joined_at?: string
+}
+

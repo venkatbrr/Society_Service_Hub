@@ -3,6 +3,7 @@ import { Eye } from '@untitledui/icons/Eye';
 import { EyeOff } from '@untitledui/icons/EyeOff';
 import { Lock01 } from '@untitledui/icons/Lock01';
 import { Mail01 } from '@untitledui/icons/Mail01';
+import { Phone } from '@untitledui/icons/Phone';
 import { User01 } from '@untitledui/icons/User01';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -323,9 +324,19 @@ export default function LoginScreen() {
           </View>
           </>
           )}
+          <TouchableOpacity
+            style={styles.phoneButton}
+            onPress={() => router.push('/login-phone')}
+            disabled={loading || googleLoading}
+            activeOpacity={0.88}
+          >
+            <Phone size={20} color={Verandah.teal900} style={{ marginRight: 10 }} />
+            <Text style={styles.phoneButtonText}>Continue with phone</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.googleButton} onPress={signInWithGoogle} disabled={loading || googleLoading} activeOpacity={0.88}>
             {googleLoading ? (
-              <ActivityIndicator color="#0F3732" />
+              <ActivityIndicator color={Verandah.cream} />
             ) : (
               <>
                 <Text style={styles.googleG}>G</Text>
@@ -400,8 +411,10 @@ const styles = StyleSheet.create({
   dividerContainer: { alignItems: 'center', justifyContent: 'center', marginVertical: 8 },
   divider: { width: '100%', height: 1, backgroundColor: 'rgba(255, 255, 255, 0.1)' },
   dividerText: { position: 'absolute', paddingHorizontal: 12, fontSize: 11, fontWeight: '500', color: 'rgba(240, 237, 227, 0.5)', backgroundColor: Verandah.teal900 },
-  googleButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 52, borderRadius: VerandahRadius.button, backgroundColor: Verandah.cream, marginTop: 32, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 6, elevation: 3 },
-  googleButtonText: { fontSize: 15, fontWeight: '700', color: Verandah.teal900, fontFamily: VerandahType.sansFamily, letterSpacing: -0.1 },
+  phoneButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 52, borderRadius: VerandahRadius.button, backgroundColor: Verandah.cream, marginTop: EMAIL_AUTH_UI_ENABLED ? 16 : 28, ...Verandah.shadowCard },
+  phoneButtonText: { fontSize: 15, fontWeight: '700', color: Verandah.teal900, fontFamily: VerandahType.sansFamily, letterSpacing: -0.1 },
+  googleButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 50, borderRadius: VerandahRadius.button, backgroundColor: 'rgba(255, 255, 255, 0.08)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.16)', marginTop: 10 },
+  googleButtonText: { fontSize: 15, fontWeight: '600', color: Verandah.cream, fontFamily: VerandahType.sansFamily, letterSpacing: -0.1 },
   googleG: { fontSize: 17, fontWeight: '700', color: '#EA4335', fontFamily: VerandahType.sansFamily, marginRight: 10 },
   toggleModeContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 14, flexWrap: 'wrap' },
   toggleModeText: { fontSize: 12, color: 'rgba(240, 237, 227, 0.65)', fontFamily: VerandahType.sansFamily },

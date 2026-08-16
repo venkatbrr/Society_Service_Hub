@@ -68,10 +68,69 @@ export const resetPassword = async (email: string) => {
 };
 
 /**
+ * Completes phone OTP sign-in by sending the MSG91 access_token to the
+ * verify-phone-otp Edge Function and setting the resulting Supabase session.
+ */
+export const signInWithPhoneAccessToken = async (phone: string, accessToken: string) => {
+  const { data, error } = await supabase.functions.invoke('verify-phone-otp', {
+    body: {
+      phone,
+      access_token: accessToken,
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+
+  if (!data?.session) {
+    throw new Error('No session returned from authentication server.');
+  }
+
+  const { error: sessionError } = await supabase.auth.setSession({
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+  });
+
+  if (sessionError) {
+    throw sessionError;
+  }
+
+  return data;
+};
+
+/**
+ * Links a Google account to the currently authenticated user session.
+ * Requires "Enable manual linking" in Supabase Auth settings.
+ */
+export const linkGoogleIdentity = async () => {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const redirectUrl = origin ? `${origin}/profile` : undefined;
+
+  const { data, error } = await supabase.auth.linkIdentity({
+    provider: 'google',
+    options: {
+      redirectTo: redirectUrl,
+      queryParams: {
+        prompt: 'select_account',
+      },
+    },
+  });
+
+  return { data, error };
+};
+
+/**
  * Helper to get a user-friendly error message from Supabase Auth errors.
  */
-export const getAuthErrorMessage = (error: AuthError) => {
-  switch (error.message) {
+export const getAuthErrorMessage = (error: AuthError | any) => {
+  if (!error) return 'An unexpected error occurred. Please try again.';
+  const msg = error.message || String(error);
+  switch (msg) {
     case 'Invalid login credentials':
       return 'Invalid email or password. Please try again.';
     case 'User already registered':
@@ -81,6 +140,7 @@ export const getAuthErrorMessage = (error: AuthError) => {
     case 'Signup disabled':
       return 'Sign up is currently disabled. Please try again later.';
     default:
-      return error.message || 'An unexpected error occurred. Please try again.';
+      return msg || 'An unexpected error occurred. Please try again.';
   }
 };
+

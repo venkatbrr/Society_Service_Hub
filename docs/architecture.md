@@ -28,7 +28,7 @@ There is **no data-fetching library and no global store**. Every screen owns its
 | `lib/` | Supabase client, auth helpers, generated types, fund logic, phone/Cloudinary/fraud/navigation helpers |
 | `constants/` | Design tokens (`Colors`, `Verandah`) and domain vocabularies (`categories`, `providerDetails`, `schoolReviewAspects`, `sos`, `emojis`) |
 | `supabase/migrations/` | Ordered SQL migrations, applied with `npm run db:push:prod` (or `:preprod`) — there is no unsuffixed variant |
-| `supabase/functions/` | Edge Functions: `check_due_services`, `fraud-check` |
+| `supabase/functions/` | Edge Functions: `check_due_services`, `fraud-check`, `verify-phone-otp` |
 | `admin-dashboard/` | Vanilla-JS platform admin console (separate app) |
 | `data/` | Static seed data — notably `westHyderabadSchools.ts` |
 
@@ -114,9 +114,10 @@ Behaviors worth knowing before you touch this file:
 
 ### Auth helpers (`lib/auth.ts`)
 
-`configureGoogleSignIn()` · `signUpWithEmail(email, password, fullName, flatNumber?)` · `signInWithEmail(email, password)` · `resetPassword(email)` · `getAuthErrorMessage(error)`
+`configureGoogleSignIn()` · `signInWithPhoneAccessToken(phone, accessToken)` · `linkGoogleIdentity()` · `signUpWithEmail(email, password, fullName, flatNumber?)` · `signInWithEmail(email, password)` · `resetPassword(email)` · `getAuthErrorMessage(error)`
 
 Session persistence uses an **AsyncStorage** adapter, not SecureStore (Android caps SecureStore entries at 2 KB, which Supabase JWTs exceed).
+
 
 ---
 

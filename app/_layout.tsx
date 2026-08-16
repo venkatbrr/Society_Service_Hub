@@ -102,7 +102,7 @@ function RootLayoutNav() {
     // A session without a resolved profile is mid-hydration, not "signed in with no community"
     if (session && !profile && !isPlatformAdmin) return;
 
-    const inAuthGroup = segments[0] === 'login' || segments[0] === 'forgot-password';
+    const inAuthGroup = segments[0] === 'login' || segments[0] === 'login-phone' || segments[0] === 'forgot-password';
     const isWebRootPath = Platform.OS === 'web' && pathname === '/';
     const isPublicFoodDropRoute =
       pathname === '/mcn/drops' ||
@@ -123,7 +123,7 @@ function RootLayoutNav() {
     if (!session) {
       // No session → login (except for public / auth routes)
       if (!inAuthGroup && !isPublicLegalRoute && !isPublicFoodDropRoute && !isWebRootPath) {
-        if (pathname && pathname !== '/' && pathname !== '/login') {
+        if (pathname && pathname !== '/' && pathname !== '/login' && pathname !== '/login-phone') {
           savedTargetRouteRef.current = pathname;
           if (Platform.OS === 'web' && typeof window !== 'undefined') {
             try { window.sessionStorage.setItem('wooru.pendingRoute', pathname); } catch {}
