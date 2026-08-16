@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Platform } from 'react-native';
+import { canReloadIntoApp } from '../lib/siteUrl';
 
 // Nested scrollable lists swallow the touch before it ever reaches the
 // document body, so the browser's own native pull-to-refresh never engages on
@@ -8,6 +9,12 @@ import { Platform } from 'react-native';
 // longer, deliberate pull (past HARD_RELOAD_THRESHOLD) does a real
 // `window.location.reload()`, which is what actually picks up a new deployed
 // build — something the in-app data refresh can never do.
+//
+// The hard reload is skipped on routes the server does not serve the app for —
+// in production that is `/`, which is the marketing landing page (see
+// `canReloadIntoApp`). Reloading there ejected the user onto the landing page
+// instead of refreshing the Providers screen, so those pulls fall through to
+// the ordinary data refresh instead.
 export const REFRESH_THRESHOLD = 65;
 export const HARD_RELOAD_THRESHOLD = 115;
 const MAX_PULL_DISTANCE = 140;
@@ -82,10 +89,8 @@ export function useWebPullToRefresh(onRefresh: () => void | Promise<void>, isRef
 
   const handleTouchEnd = async () => {
     if (touchStartRef.current !== null && isPullAllowedRef.current) {
-      if (pullDistance >= HARD_RELOAD_THRESHOLD) {
-        if (typeof window !== 'undefined') {
-          window.location.reload();
-        }
+      if (pullDistance >= HARD_RELOAD_THRESHOLD && canReloadIntoApp()) {
+        window.location.reload();
         return;
       }
 

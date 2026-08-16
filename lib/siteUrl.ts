@@ -50,6 +50,29 @@ export function landingPath(): string {
 }
 
 /**
+ * Whether a full `window.location.reload()` at the current URL would come back
+ * as the app rather than as the marketing page.
+ *
+ * In a deployed build `/` is NOT the app: `build-admin.js` copies
+ * `public/landing.html` over `dist/index.html`, and Vercel resolves the
+ * filesystem before the `/:path*` → `/app.html` rewrite, so an existing
+ * `dist/index.html` always wins at the root. Every other path falls through the
+ * rewrite and is served the SPA shell.
+ *
+ * The Providers screen lives at `/`, reachable only by client-side navigation.
+ * Reloading there therefore fetched the landing page and threw the signed-in
+ * user out of the app — which is what a long pull-to-refresh used to do.
+ *
+ * The Expo dev server has no such swap and serves the SPA at `/`, so this is a
+ * production-only constraint.
+ */
+export function canReloadIntoApp(): boolean {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
+  if (__DEV__) return true;
+  return window.location.pathname !== '/';
+}
+
+/**
  * Full-page navigation to the marketing home page. Web only — native has no
  * landing page, so callers must route to `/login` instead. Returns false when
  * there was nothing to navigate (native, or no `window`).

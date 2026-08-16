@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
+import { canReloadIntoApp } from '../lib/siteUrl';
 import { HARD_RELOAD_THRESHOLD, REFRESH_THRESHOLD } from './useWebPullToRefresh';
 
 interface WebPullIndicatorProps {
@@ -28,7 +29,9 @@ export function WebPullIndicator({
 
   const height = refreshing ? 50 : Math.min(pullDistance, 60);
   const opacity = refreshing ? 1 : Math.min(pullDistance / 30, 1);
-  const isPastHardReload = pullDistance >= hardReloadThreshold;
+  // Matches the hook's own guard, so the label never offers a reload that the
+  // route cannot perform (see `canReloadIntoApp`).
+  const isPastHardReload = pullDistance >= hardReloadThreshold && canReloadIntoApp();
   const isPastThreshold = pullDistance >= threshold;
 
   return (
