@@ -87,17 +87,25 @@ the admin console's `platform_soft_remove_resident()`,
 `platform_remove_resident_from_community()` and `community_lead_remove_resident()`
 do that reversibly.
 
+The blocking-edge list is hand-maintained and drifts as migrations land — the
+same failure mode as the wipe list above. `feedback_reports.user_id` was found
+missing on 2026-08-17; until then, deleting anyone who had filed a bug report
+aborted on a foreign-key violation. To re-derive the list, select from
+`pg_constraint` where `confrelid` is `auth.users` / `public.profiles` and
+`confdeltype in ('a','r')`, and compare against the deletes in the script.
+
 > **Known bug in `platform_delete_user()`** (the admin console's delete path, as
 > of 2026-08-15). It clears `fund_roles`, `notifications`, `ratings` and
 > `favorites` — all of which already cascade from `auth.users`, so those deletes
-> are redundant — while leaving the five relations that actually block the
+> are redundant — while leaving the six relations that actually block the
 > delete with `ON DELETE NO ACTION`: `events.created_by`,
 > `event_transactions.created_by`, `service_providers.created_by`,
-> `community_events.created_by`, `community_event_organizers.granted_by`. It
+> `feedback_reports.user_id`, `community_events.created_by`,
+> `community_event_organizers.granted_by`. It
 > therefore raises a foreign-key violation for any user who created an event,
-> recorded a fund transaction, added a service provider, or granted organizer
-> rights. `delete-resident.sql` handles all five plus the `RESTRICT` edge on
-> `mcn_order_items.product_id`; the RPC still needs fixing.
+> recorded a fund transaction, added a service provider, filed a bug report, or
+> granted organizer rights. `delete-resident.sql` handles all six plus the
+> `RESTRICT` edge on `mcn_order_items.product_id`; the RPC still needs fixing.
 
 ## `reset-cloudinary-uploads.mjs`
 
