@@ -6,7 +6,7 @@ import { UserPlus01 } from '@untitledui/icons/UserPlus01';
 import { Users01 } from '@untitledui/icons/Users01';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, RefreshControl, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { CategoryFilter } from '../../components/CategoryFilter';
@@ -69,40 +69,17 @@ export default function HomeScreen() {
   const [providersLoadError, setProvidersLoadError] = useState<string | null>(null);
   const [visitsLoading, setVisitsLoading] = useState(true);
   const [visitsLoadError, setVisitsLoadError] = useState<string | null>(null);
-  const [activeFund, setActiveFund] = useState<any>(null);
   const [communityInvite, setCommunityInvite] = useState<{ name: string; code: string | null; address: string | null } | null>(null);
   const { user, communityId } = useAuth();
   const router = useRouter();
 
   const { unreadCount } = useNotifications();
 
-  const fetchCommunityStats = useCallback(async () => {
-    if (!communityId) return;
-    try {
-      // Fetch active fund
-      const fundResult = await supabase.from('events')
-        .select('*, event_transactions(amount, type)')
-        .eq('community_id', communityId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const fundData = fundResult.data;
-      if (fundData) {
-        const collected = (fundData.event_transactions ?? [])
-          .filter((t: any) => t.type === 'income')
-          .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
-
-        setActiveFund({
-          id: fundData.id,
-          title: fundData.title,
-          collected: collected,
-        });
-      }
-    } catch (err) {
-      console.error('Error fetching stats:', err);
-    }
-  }, [communityId]);
+  // Hire counts arrive in a second wave (see fetchProviders) and are remembered
+  // here so a refetch redraws the list with the counts it already knows instead
+  // of flashing every provider back to "0 contacts".
+  const hireCountsRef = React.useRef<Record<string, number>>({});
+  const providerFetchSeqRef = React.useRef(0);
 
   useEffect(() => {
     async function fetchCommunityInvite() {
@@ -130,18 +107,6 @@ export default function HomeScreen() {
     fetchCommunityInvite();
   }, [communityId]);
 
-  const greeting = useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  }, []);
-
-  const firstName = useMemo(() => {
-    const full = String(user?.user_metadata?.full_name || '').trim();
-    return full ? full.split(/\s+/)[0] : 'there';
-  }, [user?.user_metadata?.full_name]);
-
   const handleInviteNeighbors = useCallback(async () => {
     if (!communityInvite?.code) {
       Toast.show({ type: 'error', text1: 'Invite code unavailable', text2: 'Community code is not ready yet.' });
@@ -165,6 +130,8 @@ export default function HomeScreen() {
 
   const fetchProviders = useCallback(async () => {
     if (!communityId) return;
+
+    const seq = ++providerFetchSeqRef.current;
 
     setProvidersLoading(true);
     setProvidersLoadError(null);
@@ -193,54 +160,81 @@ export default function HomeScreen() {
         }
       }
 
-      // Fetch providers, favorites, and hire counts in parallel
-      const [providersResult, favoritesResult, hiresResult] = await Promise.all([
+      // Providers and favourites are what the list needs to paint, so they are
+      // the only thing the render waits on.
+      const [providersResult, favoritesResult] = await Promise.all([
         query,
         supabase.from('favorites')
           .select('provider_id')
           .eq('user_id', user?.id as string),
-        supabase.from('provider_hires')
-          .select('provider_id, user_id')
       ]);
 
       if (providersResult.error) throw providersResult.error;
       if (favoritesResult.error) throw favoritesResult.error;
-
-      const userSetPerProvider: Record<string, Set<string>> = {};
-      if (hiresResult.error && !isMissingRelationError(hiresResult.error)) {
-        console.warn('Failed to load hire counts:', hiresResult.error.message);
-      } else if (hiresResult.data) {
-        hiresResult.data.forEach((h: any) => {
-          if (h.provider_id && h.user_id) {
-            if (!userSetPerProvider[h.provider_id]) {
-              userSetPerProvider[h.provider_id] = new Set();
-            }
-            userSetPerProvider[h.provider_id].add(h.user_id);
-          }
-        });
-      }
+      if (seq !== providerFetchSeqRef.current) return;
 
       const favoriteIds = new Set(favoritesResult.data?.map(f => f.provider_id));
 
-      const mergedData = providersResult.data
-        .filter((provider: any) => {
-          // Client-side fraud filter — works before and after migration
-          const status = provider.fraud_status;
-          return !status || status === 'pass' || status === 'queued_low';
-        })
-        .map((provider: any) => ({
+      const visibleProviders = providersResult.data.filter((provider: any) => {
+        // Client-side fraud filter — works before and after migration
+        const status = provider.fraud_status;
+        return !status || status === 'pass' || status === 'queued_low';
+      });
+
+      setProviders(
+        visibleProviders.map((provider: any) => ({
           ...provider,
           is_favorite: favoriteIds.has(provider.id),
-          hire_count: userSetPerProvider[provider.id]?.size || 0
-        }));
+          hire_count: hireCountsRef.current[provider.id] ?? 0,
+        }))
+      );
+      setProvidersLoading(false);
 
-      setProviders(mergedData);
+      // Second wave — hire counts, scoped to the providers actually on screen.
+      // This used to be an unfiltered `select` over the whole provider_hires
+      // table, on every load of the app's landing list: it grew without bound
+      // and blocked the list from painting. Nothing renders behind it now, so
+      // it patches the counts in when it lands.
+      const providerIds = visibleProviders.map((p: any) => p.id);
+      if (providerIds.length === 0) return;
+
+      void supabase
+        .from('provider_hires')
+        .select('provider_id, user_id')
+        .in('provider_id', providerIds)
+        .then(({ data: hires, error: hiresError }) => {
+          if (seq !== providerFetchSeqRef.current) return;
+
+          if (hiresError) {
+            if (!isMissingRelationError(hiresError)) {
+              console.warn('Failed to load hire counts:', hiresError.message);
+            }
+            return;
+          }
+
+          const userSetPerProvider: Record<string, Set<string>> = {};
+          (hires ?? []).forEach((h: any) => {
+            if (!h.provider_id || !h.user_id) return;
+            (userSetPerProvider[h.provider_id] ??= new Set()).add(h.user_id);
+          });
+
+          providerIds.forEach((id: string) => {
+            hireCountsRef.current[id] = userSetPerProvider[id]?.size ?? 0;
+          });
+
+          setProviders(current =>
+            current.map(p => ({ ...p, hire_count: hireCountsRef.current[p.id] ?? p.hire_count }))
+          );
+        });
     } catch (error: any) {
+      if (seq !== providerFetchSeqRef.current) return;
       console.error(error);
       setProvidersLoadError('Failed to load providers');
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load providers' });
     } finally {
-      setProvidersLoading(false);
+      // Only the newest fetch owns the spinner — a superseded one clearing it
+      // would hide the loading state while a newer request is still running.
+      if (seq === providerFetchSeqRef.current) setProvidersLoading(false);
     }
   }, [communityId, selectedCategory, selectedGroupCategories, debouncedSearchQuery, user?.id]);
 
@@ -273,22 +267,25 @@ export default function HomeScreen() {
         return;
       }
 
-      // Batch-fetch creator profiles
+      // Creator profiles and joiner counts are independent of each other — one
+      // await each cost two serial round trips on top of the visits read.
       const creatorIds = [...new Set(visits.map((v: any) => v.created_by))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, flat_number, avatar_url')
-        .in('id', creatorIds);
+      const visitIds = visits.map((v: any) => v.id);
+
+      const [{ data: profiles }, { data: joinerCounts }] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, full_name, flat_number, avatar_url')
+          .in('id', creatorIds),
+        // Count joiners only for the currently fetched visits to avoid scanning the full table
+        supabase
+          .from('visit_joiners')
+          .select('visit_id')
+          .in('visit_id', visitIds),
+      ]);
 
       const profileMap: Record<string, any> = {};
       (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
-
-      // Count joiners only for the currently fetched visits to avoid scanning the full table
-      const visitIds = visits.map((v: any) => v.id);
-      const { data: joinerCounts } = await supabase
-        .from('visit_joiners')
-        .select('visit_id')
-        .in('visit_id', visitIds);
 
       const joinerCountMap: Record<string, number> = {};
       (joinerCounts || []).forEach((j: any) => {
@@ -363,12 +360,9 @@ export default function HomeScreen() {
     } finally {
       setVisitsLoading(false);
     }
-  }, [communityId, user?.id, searchQuery]);
-
-  // Fetch community stats once on mount / communityId change (not on every tab toggle)
-  useEffect(() => {
-    fetchCommunityStats();
-  }, [fetchCommunityStats]);
+    // debouncedSearchQuery, never the raw input — keying this on `searchQuery`
+    // re-ran the whole three-query visits load on every keystroke.
+  }, [communityId, user?.id, debouncedSearchQuery]);
 
   // Debounce free-text search so we don't fire heavy data fetches on every keystroke
   useEffect(() => {
@@ -405,11 +399,7 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    if (activeSegment === 'providers') {
-      await Promise.all([fetchProviders(), fetchCommunityStats()]);
-    } else {
-      await Promise.all([fetchVisits(), fetchCommunityStats()]);
-    }
+    await (activeSegment === 'providers' ? fetchProviders() : fetchVisits());
     setRefreshing(false);
   };
 
@@ -478,11 +468,6 @@ export default function HomeScreen() {
               )}
             </TouchableOpacity>
           </View>
-        </View>
-
-        {/* Greeting */}
-        <View style={styles.greetingBlock}>
-          <Text style={styles.greetingText}>{greeting}, {firstName}</Text>
         </View>
       </View>
 
@@ -719,7 +704,9 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.paper,
     paddingHorizontal: 24,
     paddingTop: VerandahLayout.screenPaddingTop,
-    paddingBottom: 4,
+    // The greeting used to carry this gap; without it the brand row would sit
+    // directly on the segmented control.
+    paddingBottom: 12,
   },
   brandRow: {
     flexDirection: 'row',
@@ -748,17 +735,6 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: '400',
     letterSpacing: -0.3,
-    color: Verandah.textPrimary,
-  },
-  greetingBlock: {
-    marginTop: 10,
-  },
-  greetingText: {
-    fontFamily: VerandahType.serifFamily,
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: '400',
-    letterSpacing: -0.4,
     color: Verandah.textPrimary,
   },
   locationRow: {

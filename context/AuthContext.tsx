@@ -2,6 +2,12 @@ import { isAuthRetryableFetchError, Session, User } from '@supabase/supabase-js'
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
+import {
+  AuthSnapshot,
+  clearAuthSnapshot,
+  readAuthSnapshot,
+  writeAuthSnapshot,
+} from '../lib/authCache';
 import { Enums, Tables } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 
@@ -102,6 +108,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const isClearingRef = React.useRef(false);
 
+  /**
+   * Bumped whenever the local session is torn down. `loadProfile` captures it
+   * on entry and drops its writes if it changed mid-flight, so a slow profile
+   * read cannot repopulate state for a user who has just been signed out.
+   */
+  const authGenerationRef = React.useRef(0);
+
+  /**
+   * In-flight `loadProfile` per user id. `fetchSession()` and the
+   * `INITIAL_SESSION` auth event both want the profile on launch; without this
+   * they each fired their own `profiles` read and raced each other.
+   */
+  const profileLoadRef = React.useRef<{ userId: string; promise: Promise<void> } | null>(null);
+
+  /**
+   * Monotonic per-load id. Only the most recently *started* load may write —
+   * otherwise an in-flight read issued before, say, joining a community could
+   * land after the forced refresh and put the pre-join answer back on screen.
+   */
+  const profileLoadSeqRef = React.useRef(0);
+
+  const applySnapshot = (snapshot: AuthSnapshot) => {
+    setProfile(snapshot.profile);
+    setCommunityId(snapshot.communityId);
+    setMyBlockId(snapshot.myBlockId);
+    setFlatId(snapshot.flatId);
+    setFundsEnabled(snapshot.fundsEnabled);
+    setBlocksEnabled(snapshot.blocksEnabled);
+    setBlockLabel(snapshot.blockLabel);
+    setCommunityHasLead(snapshot.communityHasLead);
+    setIsEventOrganizer(snapshot.isEventOrganizer);
+  };
+
+  // Mirrors whatever the last successful load resolved, so the snapshot written
+  // after the background community queries still carries the profile-phase values.
+  const snapshotRef = React.useRef<Omit<AuthSnapshot, 'version'> | null>(null);
+
+  const persistSnapshot = (patch: Partial<Omit<AuthSnapshot, 'version'>>) => {
+    if (!snapshotRef.current) return;
+    snapshotRef.current = { ...snapshotRef.current, ...patch };
+    writeAuthSnapshot(snapshotRef.current);
+  };
+
   const resetAuthState = () => {
     setSession(null);
     setUser(null);
@@ -121,6 +170,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const clearLocalSession = async () => {
     if (isClearingRef.current) return;
     isClearingRef.current = true;
+    authGenerationRef.current += 1;
+    snapshotRef.current = null;
+    clearAuthSnapshot();
     try {
       await supabase.auth.signOut({ scope: 'local' }).catch(() => { });
     } finally {
@@ -129,7 +181,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const loadProfile = async (userId: string | null | undefined, currentSession?: Session | null) => {
+  /**
+   * `force: true` bypasses the in-flight dedupe — use it after a write that the
+   * profile must reflect (joining a community, picking a flat, editing the
+   * profile). Everything else should share the launch load.
+   */
+  const loadProfile = (
+    userId: string | null | undefined,
+    currentSession?: Session | null,
+    options?: { force?: boolean }
+  ): Promise<void> => {
+    if (!userId) return loadProfileUncached(userId, currentSession);
+
+    const inFlight = profileLoadRef.current;
+    if (!options?.force && inFlight && inFlight.userId === userId) return inFlight.promise;
+
+    const promise = loadProfileUncached(userId, currentSession).finally(() => {
+      if (profileLoadRef.current?.promise === promise) {
+        profileLoadRef.current = null;
+      }
+    });
+    profileLoadRef.current = { userId, promise };
+    return promise;
+  };
+
+  const loadProfileUncached = async (userId: string | null | undefined, currentSession?: Session | null) => {
+    const generation = authGenerationRef.current;
+    const seq = ++profileLoadSeqRef.current;
+    const isStale = () =>
+      authGenerationRef.current !== generation || profileLoadSeqRef.current !== seq;
+
     if (!userId) {
       setProfile(null);
       setCommunityId(null);
@@ -232,12 +313,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         effectiveSession?.user?.app_metadata?.community_id ??
         null;
 
+    if (isStale()) return;
+
     setProfile(profileData ?? null);
     setCommunityId(resolvedCommunityId);
     setMyBlockId(profileData?.block_id ?? null);
     setFlatId((profileData as any)?.flat_id ?? null);
     setActiveCommunityRequest(nextActiveRequest);
     setIsLoading(false);
+
+    // Seed the warm-start snapshot with everything the profile phase resolved.
+    // The second-phase flags below patch onto it as they land — see persistSnapshot.
+    //
+    // Those flags carry over from the previous snapshot for the same user and
+    // community rather than resetting to their defaults: this phase simply does
+    // not know them yet, and writing `fundsEnabled: false` here would mean an
+    // app closed between the two phases persists a snapshot that hides funds on
+    // the next warm start. A community change drops them, since they are
+    // community-scoped and the old answers no longer apply.
+    const previous = snapshotRef.current;
+    const carryOver =
+      previous && previous.userId === userId && previous.communityId === resolvedCommunityId
+        ? previous
+        : null;
+
+    snapshotRef.current = {
+      userId,
+      profile: profileData,
+      communityId: resolvedCommunityId,
+      myBlockId: profileData?.block_id ?? null,
+      flatId: (profileData as any)?.flat_id ?? null,
+      fundsEnabled: carryOver?.fundsEnabled ?? false,
+      blocksEnabled: carryOver?.blocksEnabled ?? false,
+      blockLabel: carryOver?.blockLabel ?? 'Block',
+      communityHasLead: carryOver?.communityHasLead ?? false,
+      isEventOrganizer: carryOver?.isEventOrganizer ?? false,
+    };
+    writeAuthSnapshot(snapshotRef.current);
 
     if (!resolvedCommunityId || profileRole === 'admin') {
       setFundsEnabled(false);
@@ -271,6 +383,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .in('app_role', ['president', 'vice_president'])
         .is('removed_at', null),
     ]).then(([{ data: communityData, error: communityError }, { data: fundsRequestStatus, error: fundsStatusError }, { data: organizerRow, error: organizerError }, { count: leadCount, error: leadError }]) => {
+      if (isStale()) return;
+
       if (communityError) {
         console.error('Error loading community activation status:', communityError);
         setFundsEnabled(false);
@@ -281,6 +395,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setFundsEnabled(enabledFunds);
         setBlocksEnabled(Boolean(communityData?.blocks_enabled));
         setBlockLabel((communityData as any)?.block_label ?? 'Block');
+        persistSnapshot({
+          fundsEnabled: enabledFunds,
+          blocksEnabled: Boolean(communityData?.blocks_enabled),
+          blockLabel: (communityData as any)?.block_label ?? 'Block',
+        });
       }
 
       if (fundsStatusError) {
@@ -305,6 +424,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsEventOrganizer(false);
       } else {
         setIsEventOrganizer(!!organizerRow);
+        persistSnapshot({ isEventOrganizer: !!organizerRow });
       }
 
       if (leadError) {
@@ -314,10 +434,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setCommunityHasLead(true);
       } else {
         setCommunityHasLead((leadCount ?? 0) > 0);
+        persistSnapshot({ communityHasLead: (leadCount ?? 0) > 0 });
       }
     }).catch(err => {
       console.warn('Background community settings load warning:', err);
     });
+  };
+
+  /**
+   * `getSession()` only reads the locally cached JWT — it never contacts the
+   * server — so this confirms the user still exists server-side and signs out
+   * deleted / banned accounts. It runs *alongside* the profile load rather than
+   * in front of it: they are independent round trips, and serialising them put
+   * a whole extra RTT between launch and first paint.
+   */
+  const validateUserServerSide = async () => {
+    const { error: userError } = await supabase.auth.getUser();
+    if (!userError) return;
+
+    if (isAuthRetryableFetchError(userError)) {
+      console.warn('Could not reach auth server; keeping cached session:', userError.message);
+      return;
+    }
+
+    console.warn('User no longer exists on server — signing out:', userError.message);
+    await clearLocalSession();
   };
 
   const fetchSession = async () => {
@@ -331,27 +472,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      // getSession() only reads the locally cached JWT – it never contacts the
-      // server. Validate that the user still exists server-side so that
-      // deleted / banned users are signed out immediately on app launch.
-      if (session?.user?.id) {
-        const { error: userError } = await supabase.auth.getUser();
-        if (userError) {
-          if (isAuthRetryableFetchError(userError)) {
-            console.warn('Could not reach auth server; keeping cached session:', userError.message);
-          } else {
-            console.warn('User no longer exists on server — signing out:', userError.message);
-            await clearLocalSession();
-            return;
-          }
-        }
-        await loadProfile(session.user.id, session);
-      } else {
+      if (!session?.user?.id) {
         resetAuthState();
+        setSession(null);
+        setUser(null);
+        clearAuthSnapshot();
+        return;
       }
 
       setSession(session);
-      setUser(session?.user ?? null);
+      setUser(session.user);
+
+      // Both round trips start before anything is awaited — the profile read and
+      // the server-side session check are independent, and running them in series
+      // put a whole extra RTT between launch and first paint.
+      const profileLoad = loadProfile(session.user.id, session);
+      const validation = validateUserServerSide();
+
+      // Warm start: paint the previous launch's resolved state immediately and
+      // let the load above revalidate behind it, instead of holding the splash
+      // for an answer that almost never changed. See lib/authCache.ts.
+      // Skipped if the real load has already landed (snapshotRef is set on
+      // success) — stale must never overwrite fresh.
+      const snapshot = await readAuthSnapshot();
+      if (!snapshotRef.current && snapshot && snapshot.userId === session.user.id) {
+        snapshotRef.current = snapshot;
+        applySnapshot(snapshot);
+        setIsLoading(false);
+      }
+
+      await Promise.all([profileLoad, validation]);
     } catch (error) {
       console.error('Error fetching session:', error);
       resetAuthState();
@@ -363,10 +513,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     fetchSession();
 
-    // Safety fallback: Ensure isLoading never remains stuck indefinitely on slow/offline starts
-    const safetyTimer = setTimeout(() => {
-      if (!sessionRef.current) setIsLoading(false);
-    }, 8000);
+    // Safety fallback: isLoading must never stick on a slow/offline start.
+    // Unconditional on purpose — the old `if (!sessionRef.current)` guard meant
+    // the one case that actually wedges the splash (a session present but its
+    // profile read hanging) was the one case the timer refused to release.
+    const safetyTimer = setTimeout(() => setIsLoading(false), 6000);
 
     // Re-verify session when mobile app resumes to foreground from background (Native only)
     let appStateSubscription: any = null;
@@ -384,12 +535,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       if (event === 'SIGNED_OUT') {
+        authGenerationRef.current += 1;
+        snapshotRef.current = null;
+        clearAuthSnapshot();
         resetAuthState();
         setIsLoading(false);
         return;
       }
 
       if (!currentSession && event !== 'INITIAL_SESSION') {
+        authGenerationRef.current += 1;
+        snapshotRef.current = null;
+        clearAuthSnapshot();
         resetAuthState();
         setIsLoading(false);
         return;
@@ -398,7 +555,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
+      // A token refresh changes the JWT, nothing about the profile. Re-reading
+      // it here cost a `profiles` round trip roughly every hour and re-ran every
+      // consumer's community query for an identical result.
+      if (event === 'TOKEN_REFRESHED') return;
+
       if (currentSession?.user?.id) {
+        // Deduped against the launch load in fetchSession — INITIAL_SESSION
+        // fires while that one is still in flight and used to double-fetch.
         loadProfile(currentSession.user.id, currentSession).catch((err) => {
           console.warn('Profile hydration warning:', err);
         });
@@ -438,7 +602,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (refreshedSession?.user?.id) {
       setSession(refreshedSession);
       setUser(refreshedSession.user);
-      await loadProfile(refreshedSession.user.id, refreshedSession);
+      await loadProfile(refreshedSession.user.id, refreshedSession, { force: true });
       return;
     }
 
@@ -455,7 +619,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     setSession(currentSession);
     setUser(currentSession?.user ?? null);
-    await loadProfile(currentSession?.user?.id, currentSession);
+    await loadProfile(currentSession?.user?.id, currentSession, { force: true });
   };
 
   const clearPushTokenForCurrentUser = async () => {
@@ -470,6 +634,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     await clearPushTokenForCurrentUser();
+
+    authGenerationRef.current += 1;
+    snapshotRef.current = null;
+    clearAuthSnapshot();
 
     try {
       await supabase.auth.signOut();

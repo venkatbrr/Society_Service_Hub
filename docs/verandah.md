@@ -87,21 +87,54 @@ Font families:
 - UI & body: `Plus Jakarta Sans` (`VerandahType.sansFamily`, 400/500/600/700/800)
 - Loaded via Google Fonts link on web, and via `expo-font` `useFonts()` from bundled `.ttf` files in `assets/fonts/` on native iOS and Android.
 
-From `VerandahType`:
+From `VerandahType`. **Serif (Instrument Serif) — all weight 400, since that is the only cut the family ships:**
 
-- `display`: 26/30, weight 500
-- `title`: 20/26, weight 500
-- `body`: 14/20, weight 400
-- `bodyBold`: 14/20, weight 500
-- `caption`: 12/16, weight 400
-- `captionBold`: 12/16, weight 500
-- `micro`: 11/14, weight 400
-- `sectionLabel`: 12, weight 500, uppercase, letter spacing 0.4
+| Token | Size / line | Letter spacing |
+|---|---|---|
+| `hero` | 46/50 | −0.4 |
+| `screenTitle` | 28/32 | −0.4 |
+| `display` | 28/32 | −0.4 |
+| `cardTitle` | 24/28 | −0.3 |
+| `section` | 22/26 | −0.3 |
 
-Weight policy:
+**Sans (Plus Jakarta Sans):**
 
-- Allowed: `400`, `500`
-- Not allowed: `600+`
+| Token | Size / line | Weight |
+|---|---|---|
+| `title` | 18/24 | 600 |
+| `button` | 16/20 | 700 |
+| `tileTitle` | 15/20 | 700 |
+| `body` | 14/20 | 400 |
+| `bodyBold` | 14/20 | 600 |
+| `caption` | 12/16 | 400 |
+| `captionBold` | 12/16 | 600 |
+| `meta` | 11/14 | 400 |
+| `sectionLabel` | 11, uppercase, ls 0.5 | 600 |
+| `micro` | 10/13 | 500 |
+| `navLabel` | 10/12 | 600 |
+
+Weight policy: `400`–`700`. Nothing above `700` — the family loads up to 800 but no token uses it, and an 800 label beside a 700 one reads as a rendering bug rather than emphasis.
+
+### Serif has a floor: 22px
+
+**Below 22px, use sans.** This is not a taste rule. Instrument Serif is a
+high-contrast *display* face drawn for 40px+ headlines — its hairline strokes
+fall under one device pixel at small sizes and anti-alias to grey, and its small
+x-height makes it read optically shorter than a sans caption several points
+below it. It also ships **weight 400 only**, so there is no heavier cut to
+compensate with; setting `fontWeight: '600'` on it just asks the browser for a
+smeared synthetic bold.
+
+This is the mechanism behind principle 4 above. A title that repeats once per
+card in a scrolling list is never the screen's largest anchor — the stack header
+is — so **feed-tile titles are sans**, via the `tileTitle` token.
+
+`PreorderDropCard` and `EventCard` both used serif at 18/400 until 2026-08-17,
+which left each card's own subject as the faintest text on it, lighter than the
+11.5px host caption above and the 11px meta chips below. `tileTitle` (15/700)
+sits one step above `bodyBold` (14/600), so the title outranks the host name.
+Four modal/section titles remain at 20px serif; they are isolated anchors on
+plain surfaces rather than repeated list items, which is why they hold up.
 
 ## Spacing Scale
 
@@ -181,6 +214,7 @@ The tile is deliberately shorter than the hero: on a tile the photo competes wit
 | `AnimatedTileGlyph` | MCN section-card glyphs; wraps `NetworkTileIcon` in a per-kind idle motion |
 | `useReduceMotion()` | **Required** by any always-on animation — see below |
 | `RatingStars` / `EmojiRating` | Provider star ratings / school aspect emoji scale |
+| `VerandahType.tileTitle` | The title line of any repeated feed tile — sans, never serif (see [Serif has a floor](#serif-has-a-floor-22px)) |
 
 ### Idle motion — MCN section glyphs
 
@@ -267,7 +301,11 @@ Drawn as two nested `View`s rather than imported as an icon — it is a bordered
 | Active highlight | Arch-topped slab behind the active tab: fill `rgba(15,55,50,.07)`, border `rgba(15,55,50,.08)`, radius `18 18 14 14`, inset 6px vertically and 12px within the tab slot |
 | Centre MCN tab | 38×38 teal disc, radius 13, holding `assets/images/adaptive-icon.png` in a 44px box (`resizeMode: contain`) |
 
-Motion uses React Native's built-in `Animated` (**not** Reanimated — it is a dependency but unused, and unconfigured for web). The shared springy curve is `Easing.bezier(0.34, 1.5, 0.5, 1)`: highlight slide 460ms (shared by bottom nav, `SegmentedSlider`, and `ChipRowSlider`), icon scale 400ms, label opacity 300ms. While MCN is active its disc breathes between `translateY` −3 and −6 on a 3s loop; on deactivation it settles to 0. All animations run with `useNativeDriver: false` because the highlight animates layout-adjacent values and the web target cannot use the native driver at all.
+Motion uses React Native's built-in `Animated` (**not** Reanimated — it is a dependency but unused, and unconfigured for web). The shared springy curve is `Easing.bezier(0.34, 1.5, 0.5, 1)`: highlight slide 460ms (shared by bottom nav, `SegmentedSlider`, and `ChipRowSlider`), icon scale 400ms, label opacity 300ms. While MCN is active its disc breathes between `translateY` −3 and −6 on a 3s loop; on deactivation it settles to 0.
+
+**Driver rule (revised 2026-08-17).** The highlight slide stays on the JS driver — it animates layout-adjacent values, and `react-native-web` has no native driver at all, so web is JS-driven throughout. But the per-tab icon scale, label opacity and centre-disc lift animate *only* `transform` and `opacity`, so on native they now run with `useNativeDriver: true` (`USE_NATIVE_DRIVER` in `GlobalBottomNav.tsx`). This matters most for the disc's breathe loop, which **never ends**: on the JS driver it held a 60fps animation frame plus a bridge write alive for as long as MCN was the active tab, i.e. permanently on the app's landing tab. For the same reason the loop is skipped entirely on web (`RUN_IDLE_DISC_FLOAT`), where it cannot be moved off the main thread the rail shares with scrolling; the disc still settles to −3 there. `AnimatedTileGlyph` follows the same rule.
+
+If you add an always-on animation, animate transform/opacity only, drive it natively where a native driver exists, and gate it on `useReduceMotion()`.
 
 The disc's drop shadow is `Verandah.shadowRaised` — see [Elevation](#elevation).
 

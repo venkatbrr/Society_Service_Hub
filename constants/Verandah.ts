@@ -73,6 +73,33 @@ export const VerandahType = {
     lineHeight: 24,
     fontWeight: '600' as const,
   },
+  /**
+   * Title of a **repeated feed tile** — the food drop, event, or listing card
+   * in a scrolling list.
+   *
+   * Deliberately sans, and that is the whole point of the token existing.
+   * These titles were `serifFamily` at 18/400 until 2026-08-17. Instrument
+   * Serif is a high-contrast *display* face drawn for 40px+ headlines: at 18px
+   * its hairline strokes fall under a device pixel and anti-alias to grey, and
+   * its small x-height left the card's own subject ("Batter") reading lighter
+   * than the 11.5px "Home kitchen" caption directly above it. There is also no
+   * heavier cut to reach for — the family ships weight 400 only, so a synthetic
+   * bold is all `fontWeight` can produce on web.
+   *
+   * Verandah's serif rule already covers this: serif is for the single largest
+   * title anchor on a screen, and a title that repeats once per card is not
+   * that anchor. The 22px stack header above the list is.
+   *
+   * 15/700 sits one step above `bodyBold` (14/600), which is what keeps the
+   * title outranking the host name beneath it. Keep serif at >= 22px.
+   */
+  tileTitle: {
+    fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
+    fontSize: 15,
+    lineHeight: 20,
+    letterSpacing: -0.1,
+    fontWeight: '700' as const,
+  },
   body: {
     fontFamily: Platform.select({ ios: 'Plus Jakarta Sans', android: 'Plus Jakarta Sans', web: "'Plus Jakarta Sans', sans-serif", default: 'System' }),
     fontSize: 14,

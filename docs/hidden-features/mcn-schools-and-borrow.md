@@ -65,7 +65,8 @@ Read this before deleting anything that looks orphaned.
 - **`lib/navigation.ts`.** The `/mcn/schools*` parent mappings in `getImmediateParentRoute()` stay, so back navigation still works for anyone who reaches those routes by URL.
 - **`constants/schoolReviewAspects.ts`.** The 8 report-card aspects. Unused while hidden, single source of truth when back.
 - **`components/NetworkTileIcon.tsx` / `.web.tsx`.** The `schools` and `borrow` kinds remain in the union.
-- **`components/SchoolRadarChart.tsx`, `components/SchoolReviewCard.tsx`.** Schools-detail components, untouched.
+- **`components/SchoolRadarChart.tsx`, `components/SchoolReviewCard.tsx`.** Schools-detail components, still live and rendering.
+  - One change on 2026-08-17: **`SchoolRadarChart.web.tsx` no longer uses `framer-motion`**, and the package was removed from `package.json`. Because the whole app ships as one web bundle, that dependency was downloaded by every visitor on every cold load — ~86 KB gzipped, 11% of the bundle — for a chart only reachable inside this hidden feature. The animations (entrance staggers, the rotating dashed ring, the idle breathe, the stroke draw-on) were reimplemented as CSS keyframes with the same timings, plus a `prefers-reduced-motion` block the framer version never had. Visually unchanged; re-verify it when the flag flips. **Do not reintroduce `framer-motion`** — nothing else imports it.
 
 ---
 

@@ -1,8 +1,27 @@
-import { motion } from 'framer-motion';
 import React, { useMemo } from 'react';
 import { Verandah } from '../constants/Colors';
 import { SCHOOL_ASPECTS } from '../constants/schoolReviewAspects';
 import { SchoolAspectIcon } from './SchoolAspectIcon';
+
+/**
+ * The school review radar, animated with plain CSS keyframes.
+ *
+ * This used `framer-motion`, which was the single largest avoidable item in the
+ * web bundle: ~86 KB gzipped (~11% of the whole bundle) downloaded by every
+ * visitor on every cold load, for a chart that only appears inside the schools
+ * catalog — a feature currently hidden behind `SCHOOLS_CATALOG_ENABLED`. The
+ * motion here is entrance staggers, two idle loops and a stroke draw-on, all of
+ * which CSS does natively, so the dependency bought nothing this file needed.
+ *
+ * Each animated element's *base* style is its final state and the keyframes run
+ * with `animation-fill-mode: both`, which is what lets the reduce-motion block
+ * at the end of the sheet simply switch every animation off and land on a
+ * correct static chart.
+ *
+ * Stroke draw-on uses SVG's `pathLength="1"`, which renormalises the path's
+ * length to 1 so `stroke-dasharray`/`stroke-dashoffset` can be expressed in
+ * units of "the whole path" — the CSS equivalent of framer's `pathLength`.
+ */
 
 export interface AspectScores {
   avg_academics: number;
@@ -23,7 +42,71 @@ interface SchoolRadarChartProps {
 type Point = { x: number; y: number; angle: number };
 
 const clampScore = (score: number) => Math.max(1, Math.min(5, score || 0));
-const motionEase = [0.16, 1, 0.3, 1] as const;
+
+// Matches the previous [0.16, 1, 0.3, 1] entrance curve; the two "spring" cases
+// become a mild overshoot rather than a real simulation.
+const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+const SPRING = 'cubic-bezier(0.34, 1.42, 0.5, 1)';
+
+const RADAR_CSS = `
+.wrc-svg { opacity: 1; transform: scale(1); animation: wrc-in 0.28s ${EASE} both; }
+@keyframes wrc-in { from { opacity: 0; transform: scale(0.985); } }
+
+.wrc-ring {
+  opacity: 0.7;
+  animation: wrc-fade-ring 0.28s ${EASE} both, wrc-dash 3.8s linear infinite;
+}
+@keyframes wrc-fade-ring { from { opacity: 0; } to { opacity: 0.7; } }
+@keyframes wrc-dash { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -52; } }
+
+.wrc-grid { opacity: 0.7; animation: wrc-fade-grid 0.24s ${EASE} both; }
+@keyframes wrc-fade-grid { from { opacity: 0; } to { opacity: 0.7; } }
+
+.wrc-axis {
+  opacity: 0.55;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: wrc-draw-axis 0.28s ${EASE} both;
+}
+@keyframes wrc-draw-axis { from { opacity: 0; stroke-dashoffset: 1; } to { opacity: 0.55; stroke-dashoffset: 0; } }
+
+.wrc-pulse { transform-box: view-box; animation: wrc-breathe 2.8s ease-in-out infinite; }
+@keyframes wrc-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.014); } }
+
+.wrc-shape {
+  opacity: 0.97;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: wrc-draw-shape 0.58s ${EASE} 0.12s both;
+}
+@keyframes wrc-draw-shape { from { opacity: 0; stroke-dashoffset: 1; } to { opacity: 0.97; stroke-dashoffset: 0; } }
+
+.wrc-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wrc-core-pulse 2.2s ease-in-out 0.15s infinite;
+}
+@keyframes wrc-core-pulse {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(1.73); }
+}
+
+.wrc-dot {
+  opacity: 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wrc-pop 0.34s ${SPRING} both;
+}
+@keyframes wrc-pop { from { opacity: 0; transform: scale(0); } }
+
+.wrc-label { opacity: 1; transform: translateY(0); animation: wrc-rise 0.38s ${SPRING} both; }
+@keyframes wrc-rise { from { opacity: 0; transform: translateY(6px) scale(0.985); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .wrc-svg, .wrc-ring, .wrc-grid, .wrc-axis, .wrc-pulse,
+  .wrc-shape, .wrc-core, .wrc-dot, .wrc-label { animation: none; }
+}
+`;
 
 export const SchoolRadarChart: React.FC<SchoolRadarChartProps> = ({
   scores,
@@ -92,13 +175,13 @@ export const SchoolRadarChart: React.FC<SchoolRadarChartProps> = ({
         margin: '12px auto',
       }}
     >
-      <motion.svg
+      <style dangerouslySetInnerHTML={{ __html: RADAR_CSS }} />
+
+      <svg
+        className="wrc-svg"
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        initial={{ opacity: 0, scale: 0.985 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.28, ease: motionEase }}
       >
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
@@ -114,103 +197,92 @@ export const SchoolRadarChart: React.FC<SchoolRadarChartProps> = ({
           </filter>
         </defs>
 
-        <motion.circle
+        <circle
+          className="wrc-ring"
           cx={center}
           cy={center}
           r={radius + 7}
           fill="none"
           stroke={Verandah.accent}
-          strokeOpacity={0.18}
           strokeWidth={1.25}
           strokeDasharray="5 8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.7, strokeDashoffset: [0, -52] }}
-          transition={{ opacity: { duration: 0.28, ease: motionEase }, strokeDashoffset: { repeat: Infinity, duration: 3.8, ease: 'linear' } }}
         />
 
         {gridPolygons.map((points, idx) => (
-          <motion.polygon
+          <polygon
             key={`grid-${idx}`}
+            className="wrc-grid"
+            style={{ animationDelay: `${(idx * 0.035).toFixed(3)}s` }}
             points={points}
             fill="none"
             stroke="#E5E7EB"
             strokeWidth={1}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.7 }}
-            transition={{ duration: 0.24, delay: idx * 0.035, ease: motionEase }}
           />
         ))}
 
         {aspectList.map((_, idx) => {
           const outer = getCoordinates(idx, 5);
           return (
-            <motion.line
+            <line
               key={`axis-${idx}`}
+              className="wrc-axis"
+              style={{ animationDelay: `${(idx * 0.022).toFixed(3)}s` }}
+              pathLength={1}
               x1={center}
               y1={center}
               x2={outer.x}
               y2={outer.y}
               stroke="#D1D5DB"
               strokeWidth={1}
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 0.55 }}
-              transition={{ duration: 0.28, delay: idx * 0.022, ease: motionEase }}
             />
           );
         })}
 
-        <motion.g
-          style={{ transformOrigin: `${center}px ${center}px` }}
-          animate={{ scale: [1, 1.014, 1] }}
-          transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
-        >
-          <motion.path
+        <g className="wrc-pulse" style={{ transformOrigin: `${center}px ${center}px` }}>
+          <path
+            className="wrc-shape"
+            pathLength={1}
             d={dataPath}
             fill={`url(#${gradientId})`}
             stroke={Verandah.accent}
             strokeWidth={2.6}
             filter={`url(#${glowId})`}
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 0.97 }}
-            transition={{ duration: 0.58, ease: motionEase, delay: 0.12 }}
           />
-        </motion.g>
+        </g>
 
-        <motion.circle
+        <circle
+          className="wrc-core"
           cx={center}
           cy={center}
           r={3}
           fill={Verandah.accent}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.2, 0.45, 0.2], r: [3, 5.2, 3] }}
-          transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut', delay: 0.15 }}
         />
 
         {aspectList.map((_, idx) => {
           const point = dataPoints[idx];
           return (
-            <motion.circle
+            <circle
               key={`dot-${idx}`}
+              className="wrc-dot"
+              style={{ animationDelay: `${(0.22 + idx * 0.03).toFixed(3)}s` }}
               cx={point.x}
               cy={point.y}
               r={5}
               fill={Verandah.accent}
               stroke="#FFFFFF"
               strokeWidth={2}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 560, damping: 26, delay: 0.22 + idx * 0.03 }}
             />
           );
         })}
-      </motion.svg>
+      </svg>
 
       {aspectList.map((aspect, idx) => {
         const labelPos = getCoordinates(idx, 5.8);
         const scoreVal = scores[aspectKeys[idx]] || 0;
         return (
-          <motion.div
+          <div
             key={`label-${aspect.key}`}
+            className="wrc-label"
             style={{
               position: 'absolute',
               width: 76,
@@ -218,10 +290,8 @@ export const SchoolRadarChart: React.FC<SchoolRadarChartProps> = ({
               top: labelPos.y - 14,
               textAlign: 'center',
               pointerEvents: 'none',
+              animationDelay: `${(0.28 + idx * 0.028).toFixed(3)}s`,
             }}
-            initial={{ opacity: 0, y: 6, scale: 0.985 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 440, damping: 30, delay: 0.28 + idx * 0.028 }}
           >
             <div
               style={{
@@ -248,7 +318,7 @@ export const SchoolRadarChart: React.FC<SchoolRadarChartProps> = ({
             >
               {scoreVal > 0 ? scoreVal.toFixed(1) : '-'}
             </div>
-          </motion.div>
+          </div>
         );
       })}
     </div>

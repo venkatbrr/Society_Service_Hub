@@ -182,6 +182,27 @@ try {
 // in sync with `public/landing.html`, which carries its own copy because it is
 // a static file Expo never touches. `app/+html.tsx` is inert under
 // `output: 'single'` — do not add anything there expecting it to ship.
+//
+// Two things here are load-bearing for startup, not cosmetics:
+//
+//   - The Google Fonts stylesheet is loaded **non-render-blocking** (`media=print`
+//     flipped to `all` on load, with a <noscript> fallback). A plain
+//     `rel="stylesheet"` to a third-party host blocks first paint on that
+//     request even though `display=swap` means the font itself does not.
+//     `lib/webFonts.ts` treats an already-present fonts.googleapis.com link as
+//     satisfied, so it does not add a second one here.
+//   - Supabase gets a `preconnect`. The very first thing the app does after the
+//     bundle evaluates is hit that origin for the session and profile, so
+//     paying DNS + TCP + TLS there in parallel with the bundle download —
+//     rather than serially after it — takes a full handshake off cold start.
+const supabaseOrigin = (() => {
+  try {
+    return new URL(process.env.EXPO_PUBLIC_SUPABASE_URL).origin;
+  } catch {
+    return null;
+  }
+})();
+
 const APP_SHELL_HEAD = `
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0F3732" />
@@ -192,9 +213,17 @@ const APP_SHELL_HEAD = `
     <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+${supabaseOrigin ? `    <link rel="preconnect" href="${supabaseOrigin}" crossorigin />\n` : ''}    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    </noscript>
     <style>
       /* Focus rings on web inputs read as a browser artifact against Verandah's
          soft surfaces; the fields carry their own focus treatment. */

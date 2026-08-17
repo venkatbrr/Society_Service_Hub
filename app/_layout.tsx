@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import { configureGoogleSignIn } from '../lib/auth';
 import { goToLanding } from '../lib/siteUrl';
+import { ensureWebFonts } from '../lib/webFonts';
 
 // Prevent splash screen from auto hiding until fonts are loaded
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -296,18 +297,31 @@ import { PwaInstallBanner } from '../components/PwaInstallBanner';
 import { NotificationPermissionBanner } from '../components/NotificationPermissionBanner';
 import { IosInstallBanner } from '../components/IosInstallBanner';
 
+// Native must load the font assets before any style may name the family —
+// `Platform.select`ing a family that expo-font never loaded falls back to the
+// system font with no error. Web gets the same two families from the Google
+// Fonts stylesheet in the app shell instead (see lib/webFonts.ts), so loading
+// the TTFs there is ~440 KB of duplicate download in front of first paint.
+const NATIVE_FONTS = {
+  'Instrument Serif': require('../assets/fonts/InstrumentSerif-Regular.ttf'),
+  'InstrumentSerif-Regular': require('../assets/fonts/InstrumentSerif-Regular.ttf'),
+  'InstrumentSerif-Italic': require('../assets/fonts/InstrumentSerif-Italic.ttf'),
+  'Plus Jakarta Sans': require('../assets/fonts/PlusJakartaSans-Regular.ttf'),
+  'PlusJakartaSans-Regular': require('../assets/fonts/PlusJakartaSans-Regular.ttf'),
+  'PlusJakartaSans-Medium': require('../assets/fonts/PlusJakartaSans-Medium.ttf'),
+  'PlusJakartaSans-SemiBold': require('../assets/fonts/PlusJakartaSans-SemiBold.ttf'),
+  'PlusJakartaSans-Bold': require('../assets/fonts/PlusJakartaSans-Bold.ttf'),
+  'PlusJakartaSans-ExtraBold': require('../assets/fonts/PlusJakartaSans-ExtraBold.ttf'),
+};
+
+const IS_WEB = Platform.OS === 'web';
+
+if (IS_WEB) {
+  ensureWebFonts();
+}
+
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    'Instrument Serif': require('../assets/fonts/InstrumentSerif-Regular.ttf'),
-    'InstrumentSerif-Regular': require('../assets/fonts/InstrumentSerif-Regular.ttf'),
-    'InstrumentSerif-Italic': require('../assets/fonts/InstrumentSerif-Italic.ttf'),
-    'Plus Jakarta Sans': require('../assets/fonts/PlusJakartaSans-Regular.ttf'),
-    'PlusJakartaSans-Regular': require('../assets/fonts/PlusJakartaSans-Regular.ttf'),
-    'PlusJakartaSans-Medium': require('../assets/fonts/PlusJakartaSans-Medium.ttf'),
-    'PlusJakartaSans-SemiBold': require('../assets/fonts/PlusJakartaSans-SemiBold.ttf'),
-    'PlusJakartaSans-Bold': require('../assets/fonts/PlusJakartaSans-Bold.ttf'),
-    'PlusJakartaSans-ExtraBold': require('../assets/fonts/PlusJakartaSans-ExtraBold.ttf'),
-  });
+  const [fontsLoaded, fontError] = useFonts(IS_WEB ? {} : NATIVE_FONTS);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
@@ -315,7 +329,7 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) {
+  if (!IS_WEB && !fontsLoaded && !fontError) {
     return null;
   }
 

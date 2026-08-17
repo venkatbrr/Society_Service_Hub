@@ -90,9 +90,10 @@ Status screen for an active request. Root routing lands here whenever `activeCom
 
 | Aspect | Details |
 |--------|---------|
-| **Tables** | `service_providers`, `favorites`, `provider_hires`, `service_visits`, `visit_joiners`, `profiles`, `events`, `event_transactions` |
+| **Tables** | `service_providers`, `favorites`, `provider_hires`, `service_visits`, `visit_joiners`, `profiles` |
 | **Components** | `UpcomingServicesCard`, `ProviderCard`, `VisitCard`, `SearchBar`, `CategoryFilter`, `EmptyState` |
-| **Shared rules** | Both segments use 300 ms debounced search. Both refetch on focus so newly created records appear on return. The active segment and visit sub-tab are preserved in route params across drill-in and back. `provider_hires` is scoped to `communityId`; `visit_joiners` is scoped to the current page's visit IDs. Web uses `useWebPullToRefresh` since `RefreshControl` is a native no-op. The header carries an Invite-neighbors share action that sends the community join code. |
+| **Header** | App mark, wordmark, Invite-neighbors share action (sends the community join code), and the notifications bell. **No greeting line** — the "Good morning, <name>" block was removed on 2026-08-17; the MCN hub's "My Community Network" hero is the app's one greeting-shaped anchor. |
+| **Shared rules** | Both segments use 300 ms debounced search, and both fetches key on `debouncedSearchQuery` — never the raw input. Both refetch on focus so newly created records appear on return, and neither clears its list first, so a return to the tab redraws the previous data immediately rather than flashing a spinner. The active segment and visit sub-tab are preserved in route params across drill-in and back. `provider_hires` is scoped to the provider IDs actually on screen (it has no `community_id` column — a `communityId` filter is not available and an unfiltered read is a whole-table scan); `visit_joiners` is scoped to the current page's visit IDs. Web uses `useWebPullToRefresh` since `RefreshControl` is a native no-op. |
 | **Compact density** | The whole screen follows a WhatsApp chat-tile layout: 22 px header title, 36 px circular header buttons, 6 px segment padding, 36 px search bar, 4 px category-chip padding, 56 px FAB. Provider cards are single-row tiles (avatar · name + verified badge · inline meta row of category · ★ rating · hire count · bookmark). Visit cards use 10 px padding and 30 px avatars. New cards on this screen must match. |
 
 ### Providers segment
@@ -101,6 +102,7 @@ Status screen for an active request. Root routing lands here whenever `activeCom
 |--------|---------|
 | **Rules** | Sorted by `avg_rating` descending. Two-level filter: a group row (All Services, Home Support, Repairs & Maintenance, Healthcare & Wellness, Personal Care, Transport & Vehicle Care, Events & Occasions, Education & Coaching, Government & Docs, Other) then a category chip row scoped to the active group. Selecting a group applies `.in('category', groupCategories)`; selecting a category applies `.eq('category', …)`. Groups come from `CATEGORY_GROUPS` in `constants/categories.ts`. Search matches name, category, and phone number (digits-stripped on both sides) using placeholder `"Search by name or phone number..."`. A network or load error surfaces a connection error view with pull-to-refresh retry. An **"Available now"** chip filters the loaded list client-side to Maid/Cook providers currently inside a reported free time band (see Maid/Cook availability below). |
 | **State** | `selectedCategory: string \| null`, `selectedGroupCategories: string[] \| null`, and `availableNowOnly: boolean`, all reset on tab switch/search clear (except `availableNowOnly`, which is a pure client-side filter over the already-fetched list and needs no refetch) |
+| **Load order** | Two waves. The list paints as soon as `service_providers` + `favorites` land; the per-provider contact count (`provider_hires`, scoped to those IDs) arrives second and patches in. Counts already seen are remembered for the session so a refetch does not flash every tile back to "0 contacts". |
 
 ### Maid/Cook availability
 

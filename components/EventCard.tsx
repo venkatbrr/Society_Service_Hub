@@ -329,11 +329,7 @@ const styles = StyleSheet.create({
     color: Verandah.goldInk,
   },
   fullTitle: {
-    fontFamily: VerandahType.serifFamily,
-    fontSize: 18,
-    lineHeight: 22,
-    fontWeight: '400',
-    letterSpacing: -0.3,
+    ...VerandahType.tileTitle,
     color: Verandah.textPrimary,
   },
   fullWhen: {

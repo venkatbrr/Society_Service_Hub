@@ -149,7 +149,8 @@ Full reference: [`verandah.md`](verandah.md).
 - `LinearGradient` on cards, chrome, or button fills
 - Glassmorphism aliases (`colors.glass`, `colors.glassBorder`) — use `colors.card` and `colors.border`
 - `textTransform: 'uppercase'` on body or title text — only `sectionLabel` is uppercase
-- Font weights of 600 or above
+- Font weights above `700` (the shipped scale runs 400–700; `800` loads but no token uses it)
+- **Serif below 22px** — Instrument Serif ships weight 400 only and its hairlines vanish at small sizes. A repeated feed-tile title is sans (`VerandahType.tileTitle`), never serif. See [`verandah.md`](verandah.md) §Serif has a floor.
 - Decorative emojis in navigation or settings chrome
 
 **Reuse instead of re-implementing**: `BaseCard` (card shells) · `DangerZone` (bottom-of-screen delete for a host-owned object — owns its own confirmation, never hand-roll a delete button beside the routine actions) · `Avatar` (people) · `Rupees` (currency) · `EmptyState` (empty lists) · `SearchBar` · `CategoryFilter` · `HeaderBackButton` · `ImageUploader` · `ImageViewer` (full-screen photo viewer — pair it with every cropped cover image) · `SchoolPicker` (searchable catalog picker with an "Other" free-text escape hatch — model any future searchable-catalog field on this, not `FlatPicker`'s inline panel).
@@ -243,6 +244,10 @@ Details and re-enablement notes: [`disabled-features.md`](disabled-features.md).
 | Trap | Reality |
 |------|---------|
 | `app_role === 'community_lead'` | Value no longer exists — removed from the enum on 2026-08-22. Use `isCommunityLead`. |
+| Adding a font to `useFonts()` in `app/_layout.tsx` and expecting it on web | **Web does not call `useFonts` at all** (2026-08-17). It is passed `{}` there and only gets `NATIVE_FONTS` on iOS/Android. Web families come from the Google Fonts stylesheet — in the head via `APP_SHELL_HEAD` for deployed builds, injected at runtime by `ensureWebFonts()` (`lib/webFonts.ts`) for the dev server, which serves Expo's own shell. The old arrangement loaded both, and worse, `RootLayout` returned `null` until ~440 KB of TTFs arrived, so nothing at all rendered until then. A new web family must be added to **both** copies of the Google Fonts URL (`build-admin.js` and `lib/webFonts.ts`), not to `useFonts`. |
+| Assuming a deploy reaches an installed PWA on the very next launch | App-shell navigations are **stale-while-revalidate** since service worker v10 — the cached shell is served immediately and refreshed behind it, so a new build lands on the launch *after* the one that fetched it. This is the deliberate trade for not blocking every cold launch on a network round trip. The long pull (`HARD_RELOAD_THRESHOLD`) still forces the new build immediately. Full rationale and the rest of the 2026-08-17 performance pass: [`fixes/done/app-startup-and-runtime-performance.md`](fixes/done/app-startup-and-runtime-performance.md). |
+| Adding an unfiltered `.select()` "just to build a lookup map" | `app/(tabs)/index.tsx` read the entire `provider_hires` table on every load of the app's landing list, to count contacts for at most 100 providers. It grows without bound and it blocked the list from painting. Scope it (`.in(...)` on the IDs you actually have) and, if it is not needed for first paint, run it as a second wave that patches state when it lands. |
+| Depending on the `user` object from `useAuth()` in a hook's dependency array | Supabase returns a **new object identity** on every auth event, including the hourly `TOKEN_REFRESHED`. `[user]` therefore re-runs the effect on a schedule — it was rebuilding `NotificationContext`'s realtime channel and refetching 50 rows each time. Depend on `user?.id`. |
 | `public.is_admin()` granting platform-admin access in RLS | It is only an alias for `is_community_lead()`. Use `is_platform_admin()` for the platform-admin override. |
 | Assuming `fundsEnabled` is correct on first render | `AuthContext` loads it in a second, non-blocking phase. |
 | `Alert.alert` for a web confirmation | No-op on web. Split on `Platform.OS`. |

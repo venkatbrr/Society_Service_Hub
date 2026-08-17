@@ -1,5 +1,6 @@
-// Wooru — PWA Service Worker (v9)
-// Provides offline caching for static assets and network-first strategy for navigation.
+// Wooru — PWA Service Worker (v10)
+// Provides offline caching for static assets, and serves app-shell navigations
+// from cache while revalidating in the background.
 
 // Bump CACHE_NAME whenever a cached asset changes — the fetch handler is
 // cache-first for images, so installed PWAs keep serving the old icons otherwise.
@@ -12,7 +13,9 @@
 // v9: landing.html gained the iOS "Add to Home Screen" nudge (#wn-ios-install).
 // landing.html is in STATIC_ASSETS below and is precached, so without this
 // bump an already-installed client keeps serving the old page and never sees it.
-const CACHE_NAME = 'wooru-pwa-v9';
+// v10: app-shell navigations moved from network-first to stale-while-revalidate
+// (see the fetch handler) — installed clients must pick up the new strategy.
+const CACHE_NAME = 'wooru-pwa-v10';
 
 // `/app.html` is the SPA shell every app route rewrites to (see vercel.json).
 // It is the offline fallback for in-app navigation; `/` and `/landing.html`
@@ -99,30 +102,54 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first for HTML pages / navigation
+  // Stale-while-revalidate for HTML pages / navigation.
+  //
+  // This was network-first, which meant every single launch of the installed
+  // app — including a cold launch on a slow mobile connection — blocked on a
+  // round trip for the shell before the browser could even discover the script
+  // tag and start fetching the (already cached) bundle. The shell is a tiny,
+  // near-static file; serving the cached copy immediately and refreshing it in
+  // the background makes launch feel instant.
+  //
+  // The trade: a deploy reaches an installed client on its *next* launch rather
+  // than the current one. That is the standard PWA bargain, and the long
+  // pull-to-refresh (HARD_RELOAD_THRESHOLD in components/useWebPullToRefresh.ts)
+  // is still there for a user who wants the new build right now.
   if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+    const isRoot = url.pathname === '/' || url.pathname === '/landing.html';
+    const shellUrl = isRoot ? '/landing.html' : APP_SHELL;
+
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+      caches.open(CACHE_NAME).then((cache) =>
+        cache.match(request).then((cachedResponse) => {
+          const networkFetch = fetch(request)
+            .then((response) => {
+              // put() is fire-and-forget but must not reject unhandled — a
+              // rejected put inside a waitUntil chain fails the whole extend.
+              if (response.ok) cache.put(request, response.clone()).catch(() => { });
+              return response;
+            })
+            .catch(() => null);
+
+          if (cachedResponse) {
+            // Refresh behind the response we are about to hand back.
+            event.waitUntil(networkFetch);
+            return cachedResponse;
           }
-          return response;
+
+          // Nothing cached for this URL yet — wait for the network, and fall
+          // back to the precached shell so expo-router can resolve the route
+          // client-side. Falling back to /landing.html for an app route drops
+          // users onto the marketing page, so only the root does that.
+          return networkFetch.then(
+            (response) =>
+              response ||
+              cache
+                .match(shellUrl)
+                .then((shell) => shell || new Response('Offline', { status: 503 }))
+          );
         })
-        .catch(() => {
-          // Offline. Serve this URL if we have it, else boot the SPA shell and
-          // let expo-router resolve the route client-side. Falling back to
-          // /landing.html here dropped users onto the marketing page when they
-          // pressed back or reloaded offline inside the app.
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) return cachedResponse;
-            const isRoot = url.pathname === '/' || url.pathname === '/landing.html';
-            return caches
-              .match(isRoot ? '/landing.html' : APP_SHELL)
-              .then((shell) => shell || new Response('Offline', { status: 503 }));
-          });
-        })
+      )
     );
     return;
   }

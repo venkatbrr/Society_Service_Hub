@@ -1,7 +1,14 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing, Platform } from 'react-native';
 import { NetworkTileIcon, NetworkTileIconKind } from './NetworkTileIcon';
 import { useReduceMotion } from './useReduceMotion';
+
+// Every kind animates transform only, so on native these never-ending loops can
+// run on the UI thread instead of holding an animation frame + bridge write on
+// the JS thread for as long as the MCN hub is open — three at once, on the
+// screen the app lands on. react-native-web has no native driver, so web keeps
+// the JS driver as documented in docs/verandah.md.
+const USE_NATIVE_DRIVER = Platform.OS !== 'web';
 
 /**
  * The MCN hub's section-card glyph, with a slow idle motion suited to what the
@@ -17,8 +24,9 @@ import { useReduceMotion } from './useReduceMotion';
  * its own delay: with a shared cycle the three cards pulse in unison and the
  * whole screen appears to breathe, which is exactly the effect this avoids.
  *
- * Motion rules per `docs/verandah.md`: built-in `Animated` (not Reanimated),
- * `useNativeDriver: false`, and a static render under reduce-motion.
+ * Motion rules per `docs/verandah.md`: built-in `Animated` (not Reanimated) and
+ * a static render under reduce-motion. Transform-only, so the loops run on the
+ * native driver where one exists — see USE_NATIVE_DRIVER above.
  */
 
 type GlyphMotion = {
@@ -66,13 +74,13 @@ export function AnimatedTileGlyph({ kind, size, color }: AnimatedTileGlyphProps)
           toValue: 1,
           duration: half,
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: false,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
         Animated.timing(drive, {
           toValue: 0,
           duration: half,
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: false,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
       ])
     );

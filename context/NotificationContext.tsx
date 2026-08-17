@@ -43,12 +43,18 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  // Every callback and the subscription effect below key off the id, never the
+  // `user` object: Supabase hands back a fresh object on each auth event
+  // (including the hourly token refresh), and depending on its identity tore
+  // down and rebuilt the realtime channel and refetched the whole notification
+  // list each time.
+  const userId = user?.id;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const registerForPushNotifications = useCallback(async () => {
-    if (!user || Platform.OS === 'web') {
+    if (!userId || Platform.OS === 'web') {
       return;
     }
 
@@ -96,7 +102,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       const { error } = await supabase
         .from('profiles')
         .update({ expo_push_token: token })
-        .eq('id', user.id);
+        .eq('id', userId);
 
       if (error) {
         console.error('Error saving expo push token:', error);
@@ -114,16 +120,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
       console.error('Error registering for push notifications:', error);
     }
-  }, [user]);
+  }, [userId]);
 
   const fetchNotifications = useCallback(async () => {
-    if (!user) return;
-    
+    if (!userId) return;
+
     try {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -136,7 +142,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   const markAsRead = async (id: string) => {
     try {
@@ -157,12 +163,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   };
 
   const markAllAsRead = async () => {
-    if (!user) return;
+    if (!userId) return;
     try {
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('is_read', false);
 
       if (error) throw error;
@@ -175,7 +181,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   };
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setNotifications([]);
       setUnreadCount(0);
       setLoading(false);
@@ -187,14 +193,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     // Subscribe to new notifications
     const channel = supabase
-      .channel(`user_notifications_${user.id}`)
+      .channel(`user_notifications_${userId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
           const newNotification = payload.new as Notification;
@@ -238,7 +244,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       supabase.removeChannel(channel);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchNotifications, registerForPushNotifications, user]);
+  }, [fetchNotifications, registerForPushNotifications, userId]);
 
   return (
     <NotificationContext.Provider 

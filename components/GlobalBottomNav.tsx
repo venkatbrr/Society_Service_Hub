@@ -92,6 +92,19 @@ const INACTIVE_COLOR = Verandah.textDisabled; // #9A988F
 const ACTIVE_STROKE = 2.2;
 const INACTIVE_STROKE = 1.9;
 
+// The per-tab icon scale, label opacity and centre-disc lift animate only
+// `transform` and `opacity`, so on native they can run on the UI thread. That
+// matters most for the disc's breathe loop below, which never ends: on the JS
+// driver it kept a 60fps animation frame + bridge write alive for as long as
+// MCN was the active tab, i.e. permanently on the app's landing screen.
+//
+// react-native-web has no native driver at all, so web stays on the JS driver —
+// and the perpetual loop is skipped there entirely rather than burning the main
+// thread the rail shares with scrolling. The highlight slide keeps the JS
+// driver on both, per docs/verandah.md.
+const USE_NATIVE_DRIVER = Platform.OS !== 'web';
+const RUN_IDLE_DISC_FLOAT = Platform.OS !== 'web';
+
 const discShadow = Platform.select({
   web: { boxShadow: '0 8px 20px rgba(15, 55, 50, 0.30)' } as any,
   default: {
@@ -120,13 +133,13 @@ function NavTab({ tab, isActive, onPress }: NavTabProps) {
       toValue: isActive ? 1.1 : 1,
       duration: 400,
       easing: SPRING,
-      useNativeDriver: false,
+      useNativeDriver: USE_NATIVE_DRIVER,
     }).start();
     Animated.timing(labelOpacity, {
       toValue: isActive ? 1 : 0,
       duration: 300,
       easing: Easing.out(Easing.ease),
-      useNativeDriver: false,
+      useNativeDriver: USE_NATIVE_DRIVER,
     }).start();
   }, [isActive, scale, labelOpacity]);
 
@@ -141,39 +154,41 @@ function NavTab({ tab, isActive, onPress }: NavTabProps) {
         toValue: 0,
         duration: 420,
         easing: Easing.bezier(0.34, 1.4, 0.5, 1),
-        useNativeDriver: false,
+        useNativeDriver: USE_NATIVE_DRIVER,
       }).start();
       return;
     }
 
-    const float = Animated.loop(
-      Animated.sequence([
-        Animated.timing(lift, {
-          toValue: -6,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: false,
-        }),
-        Animated.timing(lift, {
-          toValue: -3,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: false,
-        }),
-      ])
-    );
+    const float = RUN_IDLE_DISC_FLOAT
+      ? Animated.loop(
+        Animated.sequence([
+          Animated.timing(lift, {
+            toValue: -6,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: USE_NATIVE_DRIVER,
+          }),
+          Animated.timing(lift, {
+            toValue: -3,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: USE_NATIVE_DRIVER,
+          }),
+        ])
+      )
+      : null;
 
     Animated.timing(lift, {
       toValue: -3,
       duration: 420,
       easing: Easing.bezier(0.34, 1.4, 0.5, 1),
-      useNativeDriver: false,
+      useNativeDriver: USE_NATIVE_DRIVER,
     }).start(({ finished }) => {
-      if (finished) float.start();
+      if (finished) float?.start();
     });
 
     return () => {
-      float.stop();
+      float?.stop();
       lift.stopAnimation();
     };
   }, [isActive, isCentre, lift]);
