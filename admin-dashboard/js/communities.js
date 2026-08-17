@@ -169,10 +169,11 @@ const CommunitiesPage = {
         dropsRes, hostsRes, bizRes, ownersRes, catsRes,
         eventsRes, organizersRes
       ] = await Promise.all([
-        supabase.from('profiles')
-          .select('id, full_name, email, flat_number, phone_number, app_role, removed_at, created_at, community_id, block_id')
-          .eq('community_id', communityId)
-          .order('created_at', { ascending: false }),
+        // Must go through the RPC, not `from('profiles')`. Residents lost
+        // table-level SELECT in 20260918000000 and `email` is not in the
+        // column grant, so a direct read fails outright with "permission
+        // denied for table profiles" — see the RPC's migration.
+        supabase.rpc('platform_get_community_residents', { p_community_id: communityId }),
         community.blocks_enabled
           ? supabase.rpc('list_community_blocks', { p_community_id: communityId })
           : Promise.resolve({ data: [], error: null }),

@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -4303,6 +4303,21 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      platform_get_community_residents: {
+        Args: { p_community_id: string }
+        Returns: {
+          app_role: Database["public"]["Enums"]["app_role_type"]
+          block_id: string
+          community_id: string
+          created_at: string
+          email: string
+          flat_number: string
+          full_name: string
+          id: string
+          phone_number: string
+          removed_at: string
+        }[]
+      }
       platform_get_event_organizers: {
         Args: { p_community_id?: string }
         Returns: {
@@ -4386,6 +4401,15 @@ export type Database = {
           last_drop_at: string
           orders_total: number
           revenue_total: number
+        }[]
+      }
+      platform_get_profiles_contact: {
+        Args: { p_ids: string[] }
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+          phone_number: string
         }[]
       }
       platform_get_provider_details: {
@@ -4835,6 +4859,7 @@ export const Constants = {
     },
   },
 } as const
+
 
 // ---------------------------------------------------------------------------
 // HAND-MAINTAINED — everything above this line is generated, this block is not.

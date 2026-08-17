@@ -55,10 +55,11 @@ const ApprovalsPage = {
 
       // Fetch profiles
       const requesterIds = [...new Set(requestRows.map(r => r.requested_by))];
+      // Via RPC, not `from('profiles')`: `email` was dropped from the
+      // resident-facing column grant in 20260918000000, and a missing column
+      // grant fails the whole select rather than omitting the column.
       const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone_number, email')
-        .in('id', requesterIds);
+        .rpc('platform_get_profiles_contact', { p_ids: requesterIds });
 
       if (profilesError) throw profilesError;
       

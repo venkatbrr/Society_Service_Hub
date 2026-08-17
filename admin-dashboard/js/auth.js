@@ -86,9 +86,13 @@ const Auth = {
         console.error('is_platform_admin check failed:', rpcError);
       }
 
+      // Columns are named explicitly: 20260918000000 revoked table-level
+      // SELECT on profiles, so `select('*')` now fails with "permission denied
+      // for table profiles". `email` is not readable here — it comes off the
+      // auth session below, which is where the app reads its own address too.
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, avatar_url, app_role, community_id, created_at')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -106,7 +110,7 @@ const Auth = {
       }
 
       this.profile = profile
-        ? { ...profile, app_role: 'admin' }
+        ? { ...profile, email: user.email, app_role: 'admin' }
         : { id: user.id, email: user.email, app_role: 'admin' };
 
       this.currentUser = user;
