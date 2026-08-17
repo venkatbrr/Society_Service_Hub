@@ -30,7 +30,7 @@ VALUES ('64cd9fa6-ad3b-40f0-9f1e-6b9f6a6fce06', '8d4b5be4-b01d-4554-af9a-cca3730
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('64cd9fa6-ad3b-40f0-9f1e-6b9f6a6fce06', '8d4b5be4-b01d-4554-af9a-cca3730cc505', 'Sai Kommerisetti', '+919177391091', 'AC Technician', NULL, 'fraud', 'community')
+VALUES ('64cd9fa6-ad3b-40f0-9f1e-6b9f6a6fce06', '8d4b5be4-b01d-4554-af9a-cca3730cc505', 'Sai Kommerisetti', '+919177391091', 'AC Technician', NULL, 'blocked', 'community')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
@@ -132,7 +132,7 @@ VALUES ('64cd9fa6-ad3b-40f0-9f1e-6b9f6a6fce06', '8d4b5be4-b01d-4554-af9a-cca3730
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.service_providers (community_id, created_by, name, phone, category, description, fraud_status, visibility)
-VALUES ('64cd9fa6-ad3b-40f0-9f1e-6b9f6a6fce06', '8d4b5be4-b01d-4554-af9a-cca3730cc505', 'Wasim Carpenter Ira', '+917523032082', 'Carpenter', NULL, 'fraud', 'community')
+VALUES ('64cd9fa6-ad3b-40f0-9f1e-6b9f6a6fce06', '8d4b5be4-b01d-4554-af9a-cca3730cc505', 'Wasim Carpenter Ira', '+917523032082', 'Carpenter', NULL, 'blocked', 'community')
 ON CONFLICT DO NOTHING;
 
 -- ── Catering (4) ──
