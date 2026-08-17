@@ -253,11 +253,19 @@ export default function CommunityScreen() {
       >
         <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
         <View style={styles.heroBlock}>
-          <Text style={styles.heroEyebrow}>Your community</Text>
-          <Text style={styles.heroTitle}>{communityDetails?.name ?? 'Your community'}</Text>
-          <Text style={styles.heroMeta}>
-            {communityDetails?.address ? `${communityDetails.address} · ` : ''}You are a {appRoleLabel}
-          </Text>
+          <View style={styles.heroTextCol}>
+            <Text style={styles.heroEyebrow}>Your community</Text>
+            <Text style={styles.heroTitle}>{communityDetails?.name ?? 'Your community'}</Text>
+            <Text style={styles.heroMeta}>
+              {communityDetails?.address ? `${communityDetails.address} · ` : ''}You are a {appRoleLabel}
+            </Text>
+          </View>
+          {/* Same action as the invite pill on the community-code panel further
+              down — repeated here because that one sits below the fold. */}
+          <TouchableOpacity onPress={handleInviteNeighbors} style={styles.heroInviteButton} activeOpacity={0.85}>
+            <Share07 size={13} color={Verandah.cream} aria-hidden={true} />
+            <Text style={styles.heroInviteButtonText}>Invite</Text>
+          </TouchableOpacity>
         </View>
 
         {/* A community can be approved and full of residents before anyone is
@@ -603,7 +611,29 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   heroBlock: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
     marginBottom: 2,
+  },
+  heroTextCol: {
+    flex: 1,
+  },
+  heroInviteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: VerandahRadius.pill,
+    backgroundColor: Verandah.teal900,
+    marginTop: 12,
+  },
+  heroInviteButtonText: {
+    fontFamily: VerandahType.sansFamily,
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: Verandah.cream,
   },
   heroEyebrow: {
     fontFamily: VerandahType.sansFamily,
