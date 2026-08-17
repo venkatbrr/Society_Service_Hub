@@ -21,17 +21,23 @@
 --      or the SQL editor `auth.uid()` is NULL and it always throws.
 --   2. It only clears fund_roles / notifications / ratings / favorites —
 --      all four of which already cascade from auth.users anyway. It does
---      NOT clear the five relations that actually block the delete with
+--      NOT clear the six relations that actually block the delete with
 --      ON DELETE NO ACTION:
 --          events.created_by                   → auth.users
 --          event_transactions.created_by       → auth.users
 --          service_providers.created_by        → auth.users
+--          feedback_reports.user_id            → auth.users
 --          community_events.created_by         → profiles
 --          community_event_organizers.granted_by → profiles
 --      So it raises a foreign-key violation for any user who ever created
 --      an event, recorded a fund transaction, added a service provider,
---      or granted organizer rights. This script handles all five, plus
---      the RESTRICT edge on mcn_order_items.product_id.
+--      filed a bug report, or granted organizer rights. This script handles
+--      all six, plus the RESTRICT edge on mcn_order_items.product_id.
+--
+--      That list is hand-maintained and drifts as migrations land. To
+--      re-derive it, select from pg_constraint where confrelid is
+--      auth.users / public.profiles and confdeltype in ('a','r').
+--      Last reconciled: 2026-08-17.
 --
 -- HOW TO RUN
 --   As `postgres` / service role — psql or the Supabase SQL editor.
@@ -96,7 +102,8 @@ declare
     ['parent corner entries',   'select count(*) from public.mcn_parent_corner where user_id = $1'],
     ['schools added',           'select count(*) from public.schools where created_by = $1'],
     ['blood donor record',      'select count(*) from public.blood_donors where user_id = $1'],
-    ['notifications',           'select count(*) from public.notifications where user_id = $1']
+    ['notifications',           'select count(*) from public.notifications where user_id = $1'],
+    ['bug/feedback reports',    'select count(*) from public.feedback_reports where user_id = $1']
   ];
   i integer;
 begin
@@ -213,6 +220,12 @@ begin
   -- service_providers.created_by → auth.users. Children cascade; other
   -- residents' visits keep their rows with provider_id set to NULL.
   delete from public.service_providers where created_by = uid;
+
+  -- feedback_reports.user_id → auth.users. Added 2026-08-17: this edge is
+  -- NO ACTION like the five above and was missing here, so deleting anyone
+  -- who had ever filed a bug report or feedback aborted with a foreign-key
+  -- violation. `user_id` is NOT NULL, so the rows go rather than orphaning.
+  delete from public.feedback_reports where user_id = uid;
 
   ------------------------------------------------------------------
   -- Delete the account. Cascades to profiles and the rest.

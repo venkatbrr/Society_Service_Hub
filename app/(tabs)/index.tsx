@@ -139,7 +139,8 @@ export default function HomeScreen() {
         .select('*')
         .eq('community_id', communityId)
         .order('avg_rating', { ascending: false })
-        .limit(100);
+        .order('name', { ascending: true })
+        .limit(500);
 
       if (selectedCategory && selectedCategory !== 'All') {
         query = query.eq('category', selectedCategory);
@@ -483,48 +484,49 @@ export default function HomeScreen() {
       />
 
       {activeSegment === 'providers' ? (
-        <FlatList
-          data={providers}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <ProviderCard
-              provider={item as ProviderWithInteraction}
-              onPress={() => router.push(`/provider/${item.id}`)}
-              onToggleFavorite={handleToggleFavorite}
+        <View style={styles.providerListContainer}>
+          <View style={styles.fixedFilterSection}>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search by name or phone number..."
               isLightMode={true}
             />
-          )}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={10}
-          windowSize={5}
-          initialNumToRender={8}
-          {...pullToRefresh.pullProps}
-          refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
-          }
-          ListHeaderComponent={
-            <>
-              <WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />
-              <UpcomingServicesCard />
+            <CategoryFilter
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              onSelectGroupCategories={setSelectedGroupCategories}
+              isLightMode={true}
+            />
+          </View>
 
-              <View style={styles.filterSection}>
-                <SearchBar
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  placeholder="Search by name or phone number..."
-                  isLightMode={true}
-                />
-                <CategoryFilter
-                  selectedCategory={selectedCategory}
-                  onSelectCategory={setSelectedCategory}
-                  onSelectGroupCategories={setSelectedGroupCategories}
-                  isLightMode={true}
-                />
-              </View>
-            </>
-          }
+          <FlatList
+            data={providers}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <ProviderCard
+                provider={item as ProviderWithInteraction}
+                onPress={() => router.push(`/provider/${item.id}`)}
+                onToggleFavorite={handleToggleFavorite}
+                isLightMode={true}
+              />
+            )}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            initialNumToRender={8}
+            {...pullToRefresh.pullProps}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />
+            }
+            ListHeaderComponent={
+              <>
+                <WebPullIndicator pullDistance={pullToRefresh.pullDistance} refreshing={refreshing} isPulling={pullToRefresh.isPulling} />
+                <UpcomingServicesCard />
+              </>
+            }
           ListEmptyComponent={
             providersLoading ? (
               <View style={{ padding: 32, alignItems: 'center' }}>
@@ -547,6 +549,7 @@ export default function HomeScreen() {
             )
           }
         />
+        </View>
       ) : (
         <SectionList
           sections={groupVisitsByCategory(visitTab === 'upcoming' ? visits : pastVisits)}
@@ -806,6 +809,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     fontFamily: VerandahType.sansFamily,
+  },
+  providerListContainer: {
+    flex: 1,
+  },
+  fixedFilterSection: {
+    paddingHorizontal: 24,
+    backgroundColor: Verandah.surface,
+    paddingTop: 2,
+    zIndex: 10,
   },
   filterSection: {
     marginTop: 2,

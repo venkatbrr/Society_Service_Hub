@@ -135,13 +135,22 @@ const SERVICE_CATEGORY_EMOJIS: Record<string, string> = {
   'balcony cloth hangers': '👕',
   'internet provider / tech': '🌐',
   'washing machine repair': '🧺',
+  'appliance repair': '🧺',
   'tv repair & install': '📺',
   'swimming / fitness coach': '🏊',
   'doctor / clinic': '🩺',
+  'medical store / pharmacy': '💊',
   'pharmacy delivery': '💊',
+  'diagnostic lab': '🧪',
+  'diagnostic centre': '🧪',
   'diagnostics / lab tests': '🧪',
   'physiotherapy': '🦽',
   'home nurse / nanny': '🧑‍⚕️',
+  'home cleaning': '🧹',
+  'car cleaning': '🚗',
+  'car mechanic': '🚘',
+  'meat / grocery delivery': '🥩',
+  'packers & movers': '📦',
 };
 
 export const getServiceCategoryEmoji = (category?: string | null) => {
