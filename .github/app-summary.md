@@ -34,9 +34,10 @@ The product covers seven resident-facing capabilities:
 | State | React Context | `AuthContext` + `NotificationContext` only — no Redux/Zustand |
 | Session storage | AsyncStorage adapter | Not SecureStore (Android 2 KB per-entry limit) |
 | Auth | Supabase Auth + Google Sign-In | Email/password, password reset, Google token exchange |
-| Notifications | `expo-notifications` | Local alerts on native; Realtime feed on all platforms |
+| Notifications | `expo-notifications` + Web Push | Local alerts on native; Realtime feed + RFC 8291 Web Push via Edge Function on web |
 | Design system | Verandah | Light-mode only, flat, no shadows |
 | Image upload | Cloudinary | Unsigned HTTP upload (listings, products, drops) |
+
 | Admin console | Vanilla HTML/CSS/JS | `admin-dashboard/`, Supabase JS + Chart.js via CDN |
 | Hosting | Vercel | `vercel.json` rewrites; `npm run build` exports web + copies admin console |
 
@@ -303,18 +304,23 @@ Column-level detail lives in [`docs/architecture.md`](../docs/architecture.md) �
 
 **Removed**: `resident_businesses`, `business_offerings`, `business_inquiries` (marketplace, dropped in `20260422010000`).
 
-**Edge Functions**: `check_due_services` (daily reminder sweep, must be scheduled in the Supabase dashboard at `30 3 * * *` = 9 AM IST) and `fraud-check` (provider/review fraud verdicts).
+**Edge Functions**: `check_due_services` (daily reminder sweep), `fraud-check` (provider/review fraud verdicts), and `send-web-push` (VAPID RFC 8291 Web Push dispatcher).
 
 ---
 
 ## 10. Notifications
 
-`NotificationContext` loads the latest 50 rows for the signed-in user, subscribes to Realtime `INSERT` on `notifications`, requests native permission, and fires a local alert on mobile.
+`NotificationContext` loads the latest 50 rows for the signed-in user, subscribes to Realtime `INSERT` on `notifications`, auto-registers web push subscriptions (`lib/webPush.ts`), requests native permission, and fires a local alert on mobile. Web push delivery dispatches automatically via statement trigger `on_notifications_dispatch_push` calling `send-web-push`.
 
-**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `community_lead_removed` · `funds_access_revoked` · `new_community_request` · `provider_reported` · `community_event_posted` · `community_event_cancelled`
+**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `community_lead_removed` · `funds_access_revoked` · `new_community_request` · `provider_reported` · `community_event_posted` · `community_event_cancelled` · `drop_posted` · `preorder_received` · `parent_corner_posted`
 
-> `community_event_posted` / `community_event_cancelled` are emitted by database triggers on `community_events` (`20260908000000`), not by client code, so the fan-out cannot be skipped by a client that writes the row another way. Both carry `data.event_id` and `data.category` and deep-link to `/events/[id]`. Editing an event never re-notifies — `upsert_community_event()` edits with an UPDATE and the post trigger is INSERT-only.
->
+> `community_event_posted` / `community_event_cancelled` are emitted by database triggers on `community_events` (`20260908000000`), not by client code, so the fan-out cannot be skipped by a client that writes the row another way. Both carry `data.event_id` and `data.category` and deep-link to `/events/[id]`.
+> `drop_posted` routes to `/mcn/drops/[drop_id]`.
+> `preorder_received` routes to `/mcn/drops/manage/[drop_id]` for drop creators.
+> `parent_corner_posted` routes to `/mcn/parents`.
+
+Per-channel mutes (`food_drops`, `parent_corner`) are toggled directly via header buttons and stored in `notification_preferences`.
+
 > `community_lead_appointed` / `community_lead_removed` are notification **type strings**, not role values — they survive the `community_lead` role removal untouched.
 >
 > `provider_reported` fans out to the community's leads. Its recipient query targeted the dead `community_lead` role until `20260822000000`, so between the June role migration and 2026-08-22 it **delivered to nobody**. Same class of bug fixed at the same time in `request_community_partnership`.
@@ -324,6 +330,7 @@ Column-level detail lives in [`docs/architecture.md`](../docs/architecture.md) �
 **Legacy, still handled so old rows stay tappable**: `new_community_request` · `new_promotion_request` · `promoted_to_admin` · `promotion_approved` · `promotion_rejected`
 
 Local (non-table) notifications: the 24-hour hire-feedback reminder, deep-linked via `data.kind = 'hire_feedback'`.
+
 
 ---
 

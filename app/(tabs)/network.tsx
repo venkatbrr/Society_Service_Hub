@@ -17,7 +17,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedTileGlyph } from '../../components/AnimatedTileGlyph';
 import { BaseCard } from '../../components/BaseCard';
 import { ComingSoonTile } from '../../components/ComingSoonTile';
+import { NotificationBell } from '../../components/NotificationBell';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
+
 import { WebPullIndicator } from '../../components/WebPullIndicator';
 import { Verandah } from '../../constants/Colors';
 import {
@@ -136,15 +138,22 @@ export default function NetworkScreen() {
     <View style={[styles.container, { backgroundColor: colors.paper }]}>
       {/* Dark teal hero panel */}
       <View style={styles.hero}>
-        <Text
-          style={[styles.heroTitle, { fontSize: heroTitleSize, lineHeight: heroTitleSize + 4 }]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.7}
-        >
-          {HERO_TITLE}
-        </Text>
+        <View style={styles.heroTopRow}>
+          <Text
+            style={[styles.heroTitle, { fontSize: heroTitleSize, lineHeight: heroTitleSize + 4, flex: 1 }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
+            {HERO_TITLE}
+          </Text>
+          <NotificationBell
+            color={Verandah.cream}
+            style={styles.heroBellBtn}
+          />
+        </View>
         <Text style={styles.heroSubtitle}>
+
           {BORROW_SHARE_ENABLED
             ? 'Neighbours, local businesses, school parents & sharing — all in one place.'
             : 'Neighbours, local businesses, carpools & school parents — all in one place.'}
@@ -336,14 +345,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 14,
   },
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 4,
+  },
   heroTitle: {
     fontFamily: VerandahType.serifFamily,
     fontWeight: '400',
     color: Verandah.cream,
     letterSpacing: -0.4,
-    marginBottom: 4,
+  },
+  heroBellBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(240, 237, 227, 0.2)',
   },
   heroSubtitle: {
+
     fontFamily: VerandahType.sansFamily,
     fontSize: 12.5,
     lineHeight: 17,

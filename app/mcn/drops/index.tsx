@@ -24,7 +24,9 @@ import {
 import Toast from 'react-native-toast-message';
 import { AppIcon } from '../../../components/AppIcon';
 import { EmptyState } from '../../../components/EmptyState';
+import { MuteToggleButton } from '../../../components/MuteToggleButton';
 import { PreorderDropCard, PreorderDropItem } from '../../../components/PreorderDropCard';
+
 import { Rupees } from '../../../components/Rupees';
 import { SegmentedSlider } from '../../../components/SegmentedSlider';
 import { ChipRowSlider } from '../../../components/ChipRowSlider';
@@ -565,8 +567,10 @@ export default function FoodDropsCatalogScreen() {
         options={buildMcnHeaderOptions({
           title: 'Pre-order Food',
           onBack: handleBack,
+          headerRight: user?.id ? () => <MuteToggleButton channel="food_drops" /> : undefined,
         })}
       />
+
 
       {/* Top Section Switcher Toggle */}
       <SegmentedSlider<'drops' | 'business'>

@@ -2349,6 +2349,27 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          channel: string
+          muted: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          muted?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          muted?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
@@ -2736,6 +2757,42 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          failure_count: number
+          id: string
+          last_seen_at: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          failure_count?: number
+          id?: string
+          last_seen_at?: string
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          failure_count?: number
+          id?: string
+          last_seen_at?: string
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       ratings: {
         Row: {
@@ -3733,6 +3790,10 @@ export type Database = {
       }
       is_admin: { Args: { p_user_id?: string }; Returns: boolean }
       is_blocks_enabled: { Args: { p_community_id: string }; Returns: boolean }
+      is_channel_muted: {
+        Args: { p_channel: string; p_user_id: string }
+        Returns: boolean
+      }
       is_community_lead: { Args: { p_user_id?: string }; Returns: boolean }
       is_event_organizer: { Args: { p_user_id?: string }; Returns: boolean }
       is_funds_enabled: { Args: { p_community_id: string }; Returns: boolean }

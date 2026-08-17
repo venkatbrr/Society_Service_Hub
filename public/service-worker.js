@@ -15,7 +15,9 @@
 // bump an already-installed client keeps serving the old page and never sees it.
 // v10: app-shell navigations moved from network-first to stale-while-revalidate
 // (see the fetch handler) — installed clients must pick up the new strategy.
-const CACHE_NAME = 'wooru-pwa-v10';
+// v11: added push and notificationclick event listeners for Web Push notifications.
+const CACHE_NAME = 'wooru-pwa-v11';
+
 
 // `/app.html` is the SPA shell every app route rewrites to (see vercel.json).
 // It is the offline fallback for in-app navigation; `/` and `/landing.html`
@@ -170,3 +172,44 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Push: handle incoming web push notifications
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (_) {
+    payload = {};
+  }
+
+  const title = payload.title || 'Wooru';
+  const options = {
+    body: payload.body || '',
+    icon: '/images/icon-192.png',
+    badge: '/images/icon-192.png',
+    tag: payload.tag || undefined,
+    data: { url: payload.url || '/network' },
+  };
+
+  // userVisibleOnly:true means we MUST show something for every push, or
+  // Chrome will eventually revoke the subscription.
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Notification click: deep-link into the app
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || '/network';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
+        if ('focus' in client) {
+          if ('navigate' in client) client.navigate(target).catch(() => {});
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(target);
+    })
+  );
+});
+

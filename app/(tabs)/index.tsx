@@ -1,4 +1,3 @@
-import { Bell01 } from '@untitledui/icons/Bell01';
 import { Calendar } from '@untitledui/icons/Calendar';
 import { Plus } from '@untitledui/icons/Plus';
 import { Tool01 } from '@untitledui/icons/Tool01';
@@ -11,14 +10,15 @@ import { ActivityIndicator, FlatList, Image, RefreshControl, SectionList, StyleS
 import Toast from 'react-native-toast-message';
 import { CategoryFilter } from '../../components/CategoryFilter';
 import { EmptyState } from '../../components/EmptyState';
+import { NotificationBell } from '../../components/NotificationBell';
 import { ProviderCard } from '../../components/ProviderCard';
+
 import { SearchBar } from '../../components/SearchBar';
 import { UpcomingServicesCard } from '../../components/UpcomingServicesCard';
 import { VisitCard } from '../../components/VisitCard';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
-import { useNotifications } from '../../context/NotificationContext';
 import { ProviderWithInteraction, VisitWithJoinerData } from '../../lib/database.types';
 import { SegmentedSlider } from '../../components/SegmentedSlider';
 import { shareOrCopy } from '../../lib/share';
@@ -72,8 +72,6 @@ export default function HomeScreen() {
   const [communityInvite, setCommunityInvite] = useState<{ name: string; code: string | null; address: string | null } | null>(null);
   const { user, communityId } = useAuth();
   const router = useRouter();
-
-  const { unreadCount } = useNotifications();
 
   // Hire counts arrive in a second wave (see fetchProviders) and are remembered
   // here so a refetch redraws the list with the counts it already knows instead
@@ -456,20 +454,11 @@ export default function HomeScreen() {
             >
               <UserPlus01 size={15} color={Verandah.accent} aria-hidden={true} />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={() => router.push('/notifications')}
-            >
-              <Bell01 size={18} color={Verandah.primary} aria-hidden={true} />
-              {unreadCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
+            <NotificationBell style={styles.headerButton} />
           </View>
         </View>
       </View>
+
 
       <SegmentedSlider<'providers' | 'visits'>
         value={activeSegment}
@@ -792,26 +781,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     position: 'relative',
-  },
-  badge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: Verandah.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 3,
-    borderWidth: 2,
-    borderColor: Verandah.paper,
-  },
-  badgeText: {
-    color: Verandah.primaryFg,
-    fontSize: 9,
-    fontWeight: '700',
-    fontFamily: VerandahType.sansFamily,
   },
   segmentedControl: {
     flexDirection: 'row',

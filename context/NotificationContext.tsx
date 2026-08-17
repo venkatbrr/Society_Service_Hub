@@ -1,7 +1,8 @@
 import Constants from 'expo-constants';
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { AppState, Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { ensureWebPushSubscription } from '../lib/webPush';
 import { useAuth } from './AuthContext';
 
 // expo-notifications is native-only (Android/iOS).
@@ -52,11 +53,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const lastForegroundFetchRef = useRef<number>(0);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const registerForPushNotifications = useCallback(async () => {
-    if (!userId || Platform.OS === 'web') {
+    if (!userId) {
       return;
     }
+
+    if (Platform.OS === 'web') {
+      await ensureWebPushSubscription(userId);
+      return;
+    }
+
 
     try {
       if (Platform.OS === 'android') {
@@ -240,15 +249,52 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       )
       .subscribe();
 
+    channelRef.current = channel;
+
     return () => {
+      channelRef.current = null;
       supabase.removeChannel(channel);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchNotifications, registerForPushNotifications, userId]);
 
+  // Foreground resync effect: debounced at most once every 30s
+  useEffect(() => {
+    if (!userId) return;
+
+    const handleForegroundResync = () => {
+      const now = Date.now();
+      if (now - lastForegroundFetchRef.current > 30_000) {
+        lastForegroundFetchRef.current = now;
+        void fetchNotifications();
+      }
+      if (channelRef.current && (channelRef.current.state === 'closed' || channelRef.current.state === 'errored')) {
+        channelRef.current.subscribe();
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const onVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          handleForegroundResync();
+        }
+      };
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    } else {
+      const subscription = AppState.addEventListener('change', (nextState) => {
+        if (nextState === 'active') {
+          handleForegroundResync();
+        }
+      });
+      return () => subscription.remove();
+    }
+  }, [fetchNotifications, userId]);
+
   return (
     <NotificationContext.Provider 
       value={{ 
+
         notifications, 
         unreadCount, 
         loading, 

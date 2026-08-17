@@ -38,6 +38,8 @@ import {
 import Toast from 'react-native-toast-message';
 import { AppIcon } from '../../../components/AppIcon';
 import { BaseCard } from '../../../components/BaseCard';
+import { MuteToggleButton } from '../../../components/MuteToggleButton';
+
 import { ChipRowSlider } from '../../../components/ChipRowSlider';
 import { EmptyState } from '../../../components/EmptyState';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
@@ -466,17 +468,22 @@ export default function ParentCornerScreen() {
         options={buildMcnHeaderOptions({
           title: 'Parent Corner',
           onBack: handleBack,
-          headerRight: () =>
-            !isMissingSchema ? (
-              <TouchableOpacity
-                onPress={() => router.push('/mcn/parents/add' as any)}
-                style={styles.headerAddBtn}
-              >
-                <PlusCircle size={24} color={colors.primary} aria-hidden={true} />
-              </TouchableOpacity>
-            ) : null,
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {user?.id ? <MuteToggleButton channel="parent_corner" /> : null}
+              {!isMissingSchema ? (
+                <TouchableOpacity
+                  onPress={() => router.push('/mcn/parents/add' as any)}
+                  style={styles.headerAddBtn}
+                >
+                  <PlusCircle size={24} color={colors.primary} aria-hidden={true} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ),
         })}
       />
+
 
       {/* Header Subtitle */}
       <View style={styles.headerSubtitleWrap}>

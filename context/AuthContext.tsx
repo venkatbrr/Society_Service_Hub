@@ -10,6 +10,8 @@ import {
 } from '../lib/authCache';
 import { Enums, Tables } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
+import { removeWebPushSubscription } from '../lib/webPush';
+
 
 type ActiveCommunityRequest = Pick<Tables<'community_requests'>, 'id' | 'status' | 'created_at' | 'name'> | null;
 type AppRole = Enums<'app_role_type'>;
@@ -633,9 +635,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await clearPushTokenForCurrentUser();
+    await Promise.all([
+      clearPushTokenForCurrentUser(),
+      removeWebPushSubscription(),
+    ]);
 
     authGenerationRef.current += 1;
+
     snapshotRef.current = null;
     clearAuthSnapshot();
 

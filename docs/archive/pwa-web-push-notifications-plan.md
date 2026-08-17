@@ -1,6 +1,8 @@
 # Implementation Plan: PWA Web Push Notifications
 
-This document outlines the architecture, database schema, code changes, and verification steps required to add Web Push Notifications to the **Society Service Hub** PWA.
+> [!NOTE]
+> **Superseded & Implemented (2026-08-17)**: This document was superseded and implemented by [`docs/new_features_to_implement/notifications-delivery-and-coverage-plan.md`](../new_features_to_implement/notifications-delivery-and-coverage-plan.md).
+
 
 ---
 

@@ -516,6 +516,9 @@ All are `SECURITY DEFINER` and raise unless `is_platform_admin(auth.uid())`. **T
 | `trg_community_event_creator_cap` | `community_events` | BEFORE INSERT | Anti-spam: at most 5 published, future-dated events per creator at a time (same shape as the food-drop concurrent-open cap, `20260821000100`). `SECURITY DEFINER` |
 | `on_community_event_published` | `community_events` | AFTER INSERT | Emits `community_event_posted` to every non-removed profile in the community except the poster. `SECURITY DEFINER` so the fan-out sees all profiles, not just the ones the poster's RLS grants. Fires once per event — `upsert_community_event()` edits with an UPDATE, so editing never re-notifies (`20260908000000`) |
 | `on_community_event_cancelled` | `community_events` | AFTER UPDATE OF `status` | Emits `community_event_cancelled` to the same audience when `status` first becomes `cancelled`, appending `cancellation_note` when set. `SECURITY DEFINER` (`20260908000000`) |
+| `on_drop_published` | `mcn_preorder_drops` | AFTER INSERT | Emits `drop_posted` to non-muted community members except the host. `SECURITY DEFINER` (`20260916000300`) |
+| `on_parent_corner_posted` | `mcn_parent_corner` | AFTER INSERT | Emits `parent_corner_posted` to non-muted community members except the author. `SECURITY DEFINER` (`20260916000300`) |
+| `on_notifications_dispatch_push` | `notifications` | AFTER INSERT (STATEMENT) | Dispatches batch of inserted notification IDs via `pg_net` to `send-web-push` Edge Function. `SECURITY DEFINER` (`20260916000100`) |
 
 
 ---
@@ -533,6 +536,7 @@ RLS is enabled on every active table.
 | `ratings` | Same-community read, owner write |
 | `provider_hires`, `provider_reports` | Community-scoped |
 | `favorites`, `hire_feedback`, `provider_personal_notes`, `provider_public_rating_nudges`, `user_services`, `user_service_history` | **User-owned only** — `auth.uid() = user_id`, no lead or admin override |
+| `push_subscriptions`, `notification_preferences` | **User-owned only** — `auth.uid() = user_id`, own-row select/insert/update/delete |
 | `events`, `event_transactions`, `fund_roles` | Community-scoped read, role-gated write, plus trigger guards |
 | `community_events` | Community-scoped read; insert/update requires `is_event_organizer()` OR `is_community_lead()` (plus `created_by = auth.uid()` on insert, creator-or-lead on update); delete adds `is_platform_admin()` |
 | `community_event_contacts` | Visibility and write both follow the parent event's community/creator-or-lead check — no independent policy of its own |
@@ -551,6 +555,7 @@ RLS is enabled on every active table.
 | `mcn_parent_corner` | Community read; owner or lead writes (scoped to `community_id = get_user_community_id()`) |
 | `mcn_posts` | Community read; owner or lead writes |
 | `schools`, `school_reviews` | Community read; author writes own review. Leads and platform admins may also edit/delete any row (`20260822000000`). |
+
 
 **Uniform MCN owner-or-lead rule** — `mcn_preorder_drops`, `mcn_listings`, `mcn_carpools`, `mcn_parent_corner`, and `mcn_posts` allow the write when
 `owner = auth.uid() OR public.is_community_lead(auth.uid()) OR public.is_platform_admin(auth.uid())`.
@@ -605,9 +610,12 @@ Migration `20260616000001` renamed the roles but left **12 call sites still comp
 
 On arrival: prepend to local state → increment `unreadCount` → schedule a local device notification on iOS/Android.
 
-**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `community_lead_removed` · `funds_access_revoked` · `new_community_request` · `provider_reported` · `community_event_posted` · `community_event_cancelled`
+**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `community_lead_removed` · `funds_access_revoked` · `new_community_request` · `provider_reported` · `community_event_posted` · `community_event_cancelled` · `drop_posted` · `preorder_received` · `parent_corner_posted`
 
 > `community_event_posted` / `community_event_cancelled` carry `data.event_id` and `data.category`, and `app/notifications.tsx` deep-links them to `/events/[id]`.
+> `drop_posted` routes to `/mcn/drops/[drop_id]` for non-muted community members.
+> `preorder_received` routes to host dashboard `/mcn/drops/manage/[drop_id]`.
+> `parent_corner_posted` routes to `/mcn/parents` for non-muted community members.
 
 > `community_lead_appointed` / `community_lead_removed` are notification **type strings**, unrelated to the removed `community_lead` role value.
 >
@@ -619,7 +627,28 @@ On arrival: prepend to local state → increment `unreadCount` → schedule a lo
 
 Hire feedback does **not** use a table row: it is a purely local `expo-notifications` schedule 24 h after a `provider_hires` insert, deep-linked via `data.kind = 'hire_feedback'` and handled in `app/_layout.tsx`.
 
-Web push is not implemented — see [`archive/pwa-web-push-notifications-plan.md`](archive/pwa-web-push-notifications-plan.md) for the unbuilt design.
+### Web push delivery pipeline
+
+Delivers browser push notifications to installed PWAs and desktop browsers:
+
+```
+notification inserted into public.notifications
+  → statement-level trigger on_notifications_dispatch_push
+    → pg_net net.http_post → Edge Function `send-web-push`
+      → queries push_subscriptions for recipient user_ids
+        → signs VAPID + encrypts RFC 8291 payload → browser push service
+          → service worker `push` handler → showNotification()
+            → `notificationclick` → deep-links to relevant route
+```
+
+- **Subscriptions**: Stored in `public.push_subscriptions` keyed uniquely on `endpoint`. Client subscribes via `lib/webPush.ts` (`ensureWebPushSubscription`) on permission grant. Cleaned up on sign-out via `removeWebPushSubscription`.
+- **Per-Channel Mutes**: Stored in `public.notification_preferences` for channels `food_drops` and `parent_corner`. Broadcast fan-outs skip muted users; transactional alerts (e.g. `preorder_received` to host) cannot be muted.
+- **Service Worker**: `public/service-worker.js` (v11) handles `push` and `notificationclick`.
+- **Platform Matrix**:
+  - Android Chrome (installed PWA or in-browser tab): Supported.
+  - Desktop Chrome / Edge / Firefox: Supported.
+  - iOS Safari: Supported on iOS 16.4+ when installed to Home Screen as PWA with user permission gesture.
+
 
 ---
 

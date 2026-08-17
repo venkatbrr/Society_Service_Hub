@@ -9,10 +9,13 @@ import { Car01 } from '@untitledui/icons/Car01';
 import { CheckCircle } from '@untitledui/icons/CheckCircle';
 import { File02 } from '@untitledui/icons/File02';
 import { Flag01 } from '@untitledui/icons/Flag01';
+import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
 import { Tool01 } from '@untitledui/icons/Tool01';
+import { Users01 } from '@untitledui/icons/Users01';
 import { UserX01 } from '@untitledui/icons/UserX01';
 import { Wallet02 } from '@untitledui/icons/Wallet02';
 import { XCircle } from '@untitledui/icons/XCircle';
+
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -78,6 +81,11 @@ export default function NotificationsScreen() {
       case 'drop_hidden_host':
       case 'drop_hidden_buyer':
         return Flag01;
+      case 'drop_posted':
+      case 'preorder_received':
+        return ShoppingBag01;
+      case 'parent_corner_posted':
+        return Users01;
       case 'community_event_posted':
       case 'community_event_cancelled':
         return CalendarDate;
@@ -100,6 +108,21 @@ export default function NotificationsScreen() {
       return;
     }
 
+    if (notification.type === 'drop_posted' && notification.data?.drop_id) {
+      router.push(`/mcn/drops/${notification.data.drop_id}` as any);
+      return;
+    }
+
+    if (notification.type === 'preorder_received' && notification.data?.drop_id) {
+      router.push(`/mcn/drops/manage/${notification.data.drop_id}` as any);
+      return;
+    }
+
+    if (notification.type === 'parent_corner_posted') {
+      router.push('/mcn/parents' as any);
+      return;
+    }
+
     // Moderation notices are the only route back to a hidden object: a hidden
     // drop is filtered out of the public catalog, and a hidden listing is
     // is_active = false. Without these the notification was a dead end.
@@ -113,6 +136,7 @@ export default function NotificationsScreen() {
       router.push(`/mcn/drops/${notification.data.drop_id}` as any);
       return;
     }
+
 
     if (
       (notification.type === 'listing_reported' ||

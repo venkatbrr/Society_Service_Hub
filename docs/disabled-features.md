@@ -148,12 +148,13 @@ The old strings were written for the period when confirmation was off, where an 
 - **Reason**: Phased delivery — the backend shipped first so future UI tasks stay small and safe.
 - **To enable**: follow [`cross-community.md`](cross-community.md) and append an entry to [`cross-community-changelog.md`](cross-community-changelog.md) in the same change set.
 
-### 8. PWA web push notifications
+### 8. PWA web push notifications — ✅ LIVE 2026-08-17
 
-- **Status**: Designed, not built
-- **Details**: Notifications are Supabase Realtime plus local `expo-notifications`. There is no web push subscription table, no push handler in the service worker, and no dispatch Edge Function. `profiles.expo_push_token` is stored but no server-side fan-out consumes it.
-- **iOS specifically**: Safari only grants web push to an **installed** PWA (16.4+) — never to a normal browser tab, where `Notification` is undefined. `NotificationPermissionBanner` already reflects this (it only shows once installed), but the install step itself is the harder gate on iOS, since there is no programmatic install prompt there at all. See [`features.md`](features.md) §12 "PWA install banners" for the instructional Add-to-Home-Screen nudge (`IosInstallBanner` / `#wn-ios-install`) that is the prerequisite path — it does not, by itself, enable any push delivery.
-- **Design doc**: [`archive/pwa-web-push-notifications-plan.md`](archive/pwa-web-push-notifications-plan.md)
+- **Status**: **Enabled & Live.**
+- **Details**: Full web push delivery pipeline is implemented: `public.push_subscriptions` stores endpoints uniquely; statement-level trigger `on_notifications_dispatch_push` dispatches inserted notifications via `pg_net` to `send-web-push` Edge Function; `service-worker.js` (v11) handles `push` and `notificationclick` events. Per-channel mutes (`food_drops`, `parent_corner`) are persisted in `public.notification_preferences`.
+- **iOS specifically**: Safari grants web push to installed PWAs (16.4+) with user permission.
+- **Design & coverage doc**: [`new_features_to_implement/notifications-delivery-and-coverage-plan.md`](new_features_to_implement/notifications-delivery-and-coverage-plan.md)
+
 
 ### 9. Supabase Storage uploads
 

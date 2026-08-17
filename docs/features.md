@@ -478,10 +478,11 @@ Name updates apply directly. Email updates send a verification link to the new a
 
 | Aspect | Details |
 |--------|---------|
-| **Tables** | Reads/writes `notifications` |
-| **Rules** | Users mark individual rows or the whole list as read. Funds-activation types (`funds_access_requested`, `funds_access_approved`, `funds_access_rejected`, `community_lead_appointed`, `funds_access_revoked`) are handled alongside the core flows; legacy promotion and admin-review payloads are still recognized so old rows stay tappable; unknown types fall through safely. |
-| **Routing** | `new_visit` → `/visits/[id]` · `service_reminder` → `/services/[id]` · `community_event_posted` / `community_event_cancelled` → `/events/[id]` · community approval/rejection/removal → `/community-select` · funds-requested and legacy promotion/admin-review → platform approvals · funds approval, rejection, lead appointment, revocation → Community tab |
-| **Real-time** | Supabase Realtime `INSERT` subscription on the signed-in user's rows; updates local state and fires a local native alert on mobile. |
+| **Tables** | Reads/writes `notifications`, `push_subscriptions`, `notification_preferences` |
+| **Rules** | Users mark individual rows or the whole list as read. Mute toggles in Pre-order Food and Parent Corner headers allow users to suppress `food_drops` and `parent_corner` broadcasts without losing transactional pre-order alerts. Funds-activation types (`funds_access_requested`, `funds_access_approved`, `funds_access_rejected`, `community_lead_appointed`, `funds_access_revoked`) are handled alongside the core flows; legacy promotion and admin-review payloads are still recognized so old rows stay tappable; unknown types fall through safely. |
+| **Routing** | `new_visit` → `/visits/[id]` · `service_reminder` → `/services/[id]` · `community_event_posted` / `community_event_cancelled` → `/events/[id]` · `drop_posted` → `/mcn/drops/[drop_id]` · `preorder_received` → host dashboard `/mcn/drops/manage/[drop_id]` · `parent_corner_posted` → `/mcn/parents` · community approval/rejection/removal → `/community-select` · funds-requested and legacy promotion/admin-review → platform approvals · funds approval, rejection, lead appointment, revocation → Community tab |
+| **Real-time & Push** | Supabase Realtime `INSERT` subscription on the signed-in user's rows; updates local state and fires a local native alert on mobile. Statement-level trigger dispatches Web Push notifications to subscribed PWA/browser endpoints via `send-web-push` Edge Function. |
+
 
 ---
 
