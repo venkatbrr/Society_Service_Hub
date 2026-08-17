@@ -24,7 +24,6 @@ type DirectoryResident = {
   full_name: string | null;
   flat_number: string | null;
   phone_number: string | null;
-  email: string | null;
   app_role: 'admin' | 'resident' | 'president' | 'vice_president';
   block_id: string | null;
   block_name: string | null;
@@ -267,7 +266,6 @@ export default function ResidentsScreen() {
                     </View>
                   ) : null}
                 </View>
-                <Text style={[styles.meta, { color: colors.textSecondary }]}>{item.email || 'No email'}</Text>
                 <View style={styles.metaRow}>
                   <Text style={[styles.metaCompact, { color: colors.textSecondary }]}>Flat: {item.flat_number || 'N/A'}</Text>
                   {canViewPhone ? (
@@ -290,9 +288,6 @@ export default function ResidentsScreen() {
           <View style={[styles.modalCard, { backgroundColor: colors.paper }]}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
               {selectedResident?.full_name || 'Resident'}
-            </Text>
-            <Text style={[styles.modalMeta, { color: colors.textSecondary }]}>
-              Email: {selectedResident?.email || 'N/A'}
             </Text>
             <Text style={[styles.modalMeta, { color: colors.textSecondary }]}>
               Flat: {selectedResident?.flat_number || 'N/A'}

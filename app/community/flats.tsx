@@ -46,7 +46,6 @@ type PendingRequest = {
   block_name: string;
   requested_by: string;
   requester_name: string;
-  requester_email: string;
   requester_phone: string;
   flat_number: string;
   created_at: string;
@@ -235,7 +234,7 @@ export default function CommunityFlatsScreen() {
                     {blockLabel} {req.block_name} — Flat {req.flat_number}
                   </Text>
                   <Text style={styles.requestMeta}>
-                    Requested by {req.requester_name || req.requester_email || 'Resident'}
+                    Requested by {req.requester_name || 'Resident'}
                   </Text>
                 </View>
                 <View style={styles.requestActions}>

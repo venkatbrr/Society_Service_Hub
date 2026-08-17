@@ -74,7 +74,7 @@ export const VerandahType = {
     fontWeight: '600' as const,
   },
   /**
-   * Title of a **repeated feed tile** — the food drop, event, or listing card
+   * Title of a **repeated feed tile** — the menu, event, or listing card
    * in a scrolling list.
    *
    * Deliberately sans, and that is the whole point of the token existing.

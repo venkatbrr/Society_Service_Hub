@@ -8,7 +8,7 @@ import {
   readAuthSnapshot,
   writeAuthSnapshot,
 } from '../lib/authCache';
-import { Enums, Tables } from '../lib/database.types';
+import { Enums, ResidentProfile, Tables } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 import { removeWebPushSubscription } from '../lib/webPush';
 
@@ -23,6 +23,21 @@ type FundsAccessStatus = {
 } | null;
 const PLATFORM_ADMIN_EMAIL = 'thewooru@gmail.com';
 
+/**
+ * Every readable column of `profiles`, named explicitly.
+ *
+ * This cannot go back to `select('*')`. `20260918000000` revoked the
+ * table-level SELECT grant and re-granted every column except `email`, so that
+ * no resident can read another resident's address — and Postgres rejects a
+ * bare `*` outright ("permission denied for table profiles") rather than
+ * quietly dropping the column it cannot see.
+ *
+ * A column added to `profiles` must be added here **and** to that migration's
+ * GRANT, or it is invisible to the app even on the owner's own row.
+ */
+const PROFILE_COLUMNS =
+  'id, full_name, avatar_url, community_id, created_at, app_role, flat_number, expo_push_token, phone_number, removed_at, removed_by, block_id, flat_id, last_active_at';
+
 function normalizeAppRole(role: AppRole | null | undefined, isKnownPlatformAdminEmail: boolean): AppRole {
   if (isKnownPlatformAdminEmail) {
     return 'admin';
@@ -34,7 +49,7 @@ function normalizeAppRole(role: AppRole | null | undefined, isKnownPlatformAdmin
 type AuthContextType = {
   session: Session | null;
   user: User | null;
-  profile: Tables<'profiles'> | null;
+  profile: ResidentProfile | null;
   appRole: AppRole;
   communityId: string | null;
   isPlatformAdmin: boolean;
@@ -90,7 +105,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Tables<'profiles'> | null>(null);
+  const [profile, setProfile] = useState<ResidentProfile | null>(null);
   const [communityId, setCommunityId] = useState<string | null>(null);
   const [fundsEnabled, setFundsEnabled] = useState(false);
   const [blocksEnabled, setBlocksEnabled] = useState(false);
@@ -228,7 +243,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select(PROFILE_COLUMNS)
       .eq('id', userId)
       .maybeSingle();
 
@@ -264,7 +279,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             email: email,
             app_role: appRole
           })
-          .select('*')
+          // Writing `email` is still allowed — only reading it back is not.
+          .select(PROFILE_COLUMNS)
           .maybeSingle();
 
         if (insertError) {

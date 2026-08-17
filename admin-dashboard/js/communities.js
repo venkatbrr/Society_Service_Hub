@@ -193,8 +193,8 @@ const CommunitiesPage = {
       this.communityBlocks = unwrap(blocksRes, 'blocks');
       this.communityFlats = unwrap(flatsRes, 'flats');
       this.communityFunds = unwrap(fundsRes, 'funds');
-      this.communityPreorders = unwrap(dropsRes, 'food drops');
-      this.preorderHosts = unwrap(hostsRes, 'food drop hosts');
+      this.communityPreorders = unwrap(dropsRes, 'menus');
+      this.preorderHosts = unwrap(hostsRes, 'menu hosts');
       this.communityBusinesses = unwrap(bizRes, 'businesses');
       this.businessOwners = unwrap(ownersRes, 'business owners');
       this.businessCategories = unwrap(catsRes, 'business categories');
@@ -283,7 +283,7 @@ const CommunitiesPage = {
         <div class="stat-strip">
           <div class="stat"><span class="stat-value">${fmtNumber(this.activeResidents().length)}</span><span class="stat-label">residents</span></div>
           <div class="stat"><span class="stat-value">${fmtNumber(this.activeLeads().length)}</span><span class="stat-label">leads</span></div>
-          <div class="stat"><span class="stat-value">${fmtNumber(this.communityPreorders.length)}</span><span class="stat-label">food drops</span></div>
+          <div class="stat"><span class="stat-value">${fmtNumber(this.communityPreorders.length)}</span><span class="stat-label">menus</span></div>
           <div class="stat"><span class="stat-value">${fmtMoney(food.revenue)}</span><span class="stat-label">food sales</span></div>
           <div class="stat"><span class="stat-value">${fmtNumber(activeBiz)}</span><span class="stat-label">active businesses</span></div>
           <div class="stat"><span class="stat-value">${fmtNumber(this.communityFunds.length)}</span><span class="stat-label">funds</span></div>
@@ -391,7 +391,7 @@ const CommunitiesPage = {
             <div class="mini-metrics">
               ${this.miniMetric('Residents', fmtNumber(this.activeResidents().length), fmtNumber(this.residents.length - this.activeResidents().length) + ' removed')}
               ${this.miniMetric('Community leads', fmtNumber(this.activeLeads().length), this.activeLeads().map(l => esc(l.full_name || 'Resident')).join(', ') || 'None appointed')}
-              ${this.miniMetric('Food drops', fmtNumber(this.communityPreorders.length), fmtNumber(food.open) + ' open · ' + fmtNumber(this.preorderHosts.length) + ' hosts')}
+              ${this.miniMetric('Menus', fmtNumber(this.communityPreorders.length), fmtNumber(food.open) + ' open · ' + fmtNumber(this.preorderHosts.length) + ' hosts')}
               ${this.miniMetric('Food sales', fmtMoney(food.revenue), fmtNumber(food.orders) + ' pre-orders')}
               ${this.miniMetric('Businesses', fmtNumber(this.communityBusinesses.length), fmtNumber(this.businessOwners.length) + ' owners · ' + fmtNumber(this.businessCategories.length) + ' categories')}
               ${this.miniMetric('Funds collected', fmtMoney(collected), fmtMoney(spent) + ' spent')}
@@ -814,7 +814,7 @@ const CommunitiesPage = {
     let body;
     if (view === 'hosts') {
       body = this.preorderHosts.length === 0
-        ? emptyRow(6, 'No food drops created in this community yet.')
+        ? emptyRow(6, 'No menus created in this community yet.')
         : this.preorderHosts.map(h => `
             <tr>
               <td style="font-weight: 500;">
@@ -832,11 +832,11 @@ const CommunitiesPage = {
           `).join('');
     } else {
       body = this.communityPreorders.length === 0
-        ? emptyRow(6, 'No food drops created in this community yet.')
+        ? emptyRow(6, 'No menus created in this community yet.')
         : this.communityPreorders.map(d => `
             <tr>
               <td style="font-weight: 500;">
-                ${esc(d.title || 'Food Drop')}
+                ${esc(d.title || 'Menu')}
                 <br><span class="text-3" style="font-size: 0.8rem; font-weight: normal;">
                   Host: ${esc(d.creator_name || 'Resident')} (${esc(d.creator_flat || 'N/A')})
                 </span>
@@ -851,14 +851,14 @@ const CommunitiesPage = {
     }
 
     const headers = view === 'hosts'
-      ? ['Host', 'Drops', 'Orders', 'Buyers', 'Avg order', 'Revenue']
+      ? ['Host', 'Menus', 'Orders', 'Buyers', 'Avg order', 'Revenue']
       : ['Drop & Host', 'Fulfillment', 'Status', 'Cutoff', 'Orders', 'Revenue'];
 
     return `
       <div class="section-card">
         <div class="row-between" style="margin-bottom: 12px;">
           <div>
-            <h2>🍲 Pre-Order Food Drops</h2>
+            <h2>🍲 Pre-Order Menus</h2>
             <p class="text-3" style="font-size: 0.8rem; margin-top: 2px;">
               ${fmtNumber(this.communityPreorders.length)} drops (${fmtNumber(totals.open)} open) ·
               ${fmtNumber(totals.orders)} pre-orders · ${fmtNumber(this.preorderHosts.length)} ${pluralize(this.preorderHosts.length, 'host')}
@@ -866,7 +866,7 @@ const CommunitiesPage = {
           </div>
           <div class="row-right">
             <div class="segmented">
-              <button class="seg-btn ${view === 'drops' ? 'active' : ''}" data-action="food-view" data-view="drops">By drop</button>
+              <button class="seg-btn ${view === 'drops' ? 'active' : ''}" data-action="food-view" data-view="drops">By menu</button>
               <button class="seg-btn ${view === 'hosts' ? 'active' : ''}" data-action="food-view" data-view="hosts">By host</button>
             </div>
             <span class="badge-pill badge-approved" style="font-size: 0.9rem; padding: 6px 12px; font-weight: 700;">
@@ -1560,7 +1560,7 @@ const CommunitiesPage = {
           <div>
             <h5 class="panel-subhead">Community Activity</h5>
             <div class="mini-metrics compact">
-              ${this.miniMetric('Food drops hosted', fmtNumber(hosted ? hosted.drops_total : 0), hosted ? fmtMoney(hosted.revenue_total) + ' earned' : 'No drops')}
+              ${this.miniMetric('Menus published', fmtNumber(hosted ? hosted.drops_total : 0), hosted ? fmtMoney(hosted.revenue_total) + ' earned' : 'No menus')}
               ${this.miniMetric('Businesses listed', fmtNumber(owned ? owned.listings_total : 0), owned ? fmtNumber(owned.products_total) + ' products' : 'No listings')}
               ${this.miniMetric('Events posted', fmtNumber(eventsPosted), isCoordinator ? 'Holds the grant' : 'No grant')}
               ${this.miniMetric('Visits created', fmtNumber(data.visits_count), 'Service visits')}
@@ -1803,7 +1803,7 @@ const CommunitiesPage = {
           { label: 'Host', key: 'host_name' },
           { label: 'Flat', key: 'host_flat' },
           { label: 'Email', key: 'host_email' },
-          { label: 'Drops', key: 'drops_total' },
+          { label: 'Menus', key: 'drops_total' },
           { label: 'Open drops', key: 'drops_open' },
           { label: 'Orders', key: 'orders_total' },
           { label: 'Distinct buyers', key: 'distinct_buyers' },

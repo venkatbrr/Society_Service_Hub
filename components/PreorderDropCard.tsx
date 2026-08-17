@@ -225,7 +225,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
     }
     if (drop.status === 'cancelled') {
       return {
-        label: 'Drop Cancelled',
+        label: 'Menu Cancelled',
         color: '#DC2626',
         bgColor: '#FEE2E2',
       };
@@ -313,7 +313,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
     const shareUrl = siteUrl(`/api/share-drop?id=${drop.id}`);
 
     const messageLines = [
-      `*Food Drop: ${drop.title}*`,
+      `*Menu: ${drop.title}*`,
       `Hosted by ${hostDisplay}`,
       ``,
       `Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,

@@ -52,7 +52,7 @@ type FundDetail = Tables<'events'> & {
   fund_roles: Tables<'fund_roles'>[];
 };
 
-type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role' | 'email' | 'flat_number'>;
+type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role' | 'flat_number'>;
 
 export default function FundDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -94,7 +94,7 @@ export default function FundDetailScreen() {
       const [transactionsResult, rolesResult, profilesResult, blocksResult, flatsResult] = await Promise.all([
         supabase.from('event_transactions').select('*').eq('event_id', id as string),
         supabase.from('fund_roles').select('*').eq('event_id', id as string),
-        supabase.from('profiles').select('id, full_name, app_role, email, flat_number').eq('community_id', data.community_id).order('full_name', { ascending: true }),
+        supabase.from('profiles').select('id, full_name, app_role, flat_number').eq('community_id', data.community_id).order('full_name', { ascending: true }),
         supabase.rpc('list_community_blocks', { p_community_id: data.community_id }),
         supabase.rpc('list_community_flats', { p_community_id: data.community_id }),
       ]);
@@ -583,7 +583,6 @@ export default function FundDetailScreen() {
                     (member) =>
                       !searchTreasurer.trim() ||
                       (member.full_name || '').toLowerCase().includes(searchTreasurer.toLowerCase()) ||
-                      (member.email || '').toLowerCase().includes(searchTreasurer.toLowerCase()) ||
                       (member.flat_number || '').toLowerCase().includes(searchTreasurer.toLowerCase())
                   )
                   .slice(0, searchTreasurer.trim() ? undefined : 3)
@@ -593,11 +592,8 @@ export default function FundDetailScreen() {
                         <Text style={[styles.roleName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
                         <View style={styles.roleMetaRow}>
                           <Text style={[styles.roleMeta, { color: colors.textMuted }]}>
-                            {member.email || 'No email'}
+                            {member.flat_number ? `Flat: ${member.flat_number}` : 'No flat set'}
                           </Text>
-                          {member.flat_number ? (
-                            <Text style={[styles.roleMeta, { color: colors.textMuted }]}> • Flat: {member.flat_number}</Text>
-                          ) : null}
                         </View>
                       </View>
                       <TouchableOpacity
@@ -669,7 +665,6 @@ export default function FundDetailScreen() {
                     (member) =>
                       !searchCollector.trim() ||
                       (member.full_name || '').toLowerCase().includes(searchCollector.toLowerCase()) ||
-                      (member.email || '').toLowerCase().includes(searchCollector.toLowerCase()) ||
                       (member.flat_number || '').toLowerCase().includes(searchCollector.toLowerCase())
                   )
                   .slice(0, searchCollector.trim() ? undefined : 3)
@@ -679,11 +674,8 @@ export default function FundDetailScreen() {
                         <Text style={[styles.roleName, { color: colors.text }]}>{profileNames.get(member.id) ?? 'Resident'}</Text>
                         <View style={styles.roleMetaRow}>
                           <Text style={[styles.roleMeta, { color: colors.textMuted }]}>
-                            {member.email || 'No email'}
+                            {member.flat_number ? `Flat: ${member.flat_number}` : 'No flat set'}
                           </Text>
-                          {member.flat_number ? (
-                            <Text style={[styles.roleMeta, { color: colors.textMuted }]}> • Flat: {member.flat_number}</Text>
-                          ) : null}
                         </View>
                       </View>
                       <TouchableOpacity

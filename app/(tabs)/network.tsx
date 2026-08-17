@@ -195,7 +195,7 @@ export default function NetworkScreen() {
         }
       >
         <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
-        {/* Merged Food Drops & Community Business Section Card */}
+        {/* Merged Menus & Community Business Section Card */}
         <BaseCard
           padding={14}
           onPress={() => router.push('/mcn/drops' as any)}
@@ -210,7 +210,7 @@ export default function NetworkScreen() {
                 Pre-order Food & Community Business
               </Text>
               <Text style={[styles.badgeText, { color: colors.accent }]}>
-                {preorderCount || 0} open drops · {businessCount || 0} active listings
+                {preorderCount || 0} open menus · {businessCount || 0} active listings
               </Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
@@ -220,32 +220,7 @@ export default function NetworkScreen() {
           </Text>
         </BaseCard>
 
-        {/* 2. Carpooling Section Card */}
-        <BaseCard
-          padding={14}
-          onPress={() => router.push('/mcn/carpools' as any)}
-          style={styles.sectionCard}
-        >
-          <View style={styles.cardHeaderRow}>
-            <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
-              <AnimatedTileGlyph kind="carpool" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-                Community Carpooling
-              </Text>
-              <Text style={[styles.badgeText, { color: '#D97706' }]}>
-                {carpoolCount ?? 0} active rides · City & Outstation
-              </Text>
-            </View>
-            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
-          </View>
-          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Share daily office commutes, weekend intercity travel, outstation trips & school runs with verified society neighbors!
-          </Text>
-        </BaseCard>
-
-        {/* 3. Parent Corner Section Card */}
+        {/* 2. Parent Corner Section Card */}
         <BaseCard
           padding={14}
           onPress={() => router.push('/mcn/parents' as any)}
@@ -267,6 +242,31 @@ export default function NetworkScreen() {
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             Connect with neighborhood parents, share children's school & college details, organize morning carpool & study groups.
+          </Text>
+        </BaseCard>
+
+        {/* 3. Carpooling Section Card */}
+        <BaseCard
+          padding={14}
+          onPress={() => router.push('/mcn/carpools' as any)}
+          style={styles.sectionCard}
+        >
+          <View style={styles.cardHeaderRow}>
+            <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
+              <AnimatedTileGlyph kind="carpool" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                Community Carpooling
+              </Text>
+              <Text style={[styles.badgeText, { color: '#D97706' }]}>
+                {carpoolCount ?? 0} active rides · City & Outstation
+              </Text>
+            </View>
+            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            Share daily office commutes, weekend intercity travel, outstation trips & school runs with verified society neighbors!
           </Text>
         </BaseCard>
 

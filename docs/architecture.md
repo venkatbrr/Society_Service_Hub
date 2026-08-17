@@ -72,6 +72,12 @@ communityId && first resolution && at "/"    → savedTargetRoute ?? POST_AUTH_L
 
 Two guards prevent redirect loops: `lastRedirectRef` blocks repeating the same target, and `alreadyOnTarget` skips navigation when the user is already there. Before bouncing an unauthenticated user to `/login`, the intended pathname is stored in `savedTargetRouteRef` and restored after sign-in — this is what makes deep links survive login.
 
+**Community invite codes are parked, not carried** (`lib/inviteCode.ts`). `usePathname()` drops the query string, so `?code=` on `/community-select` cannot survive the bounce to `/login` on its own. The guard stores it while redirecting a signed-out visit away, then re-appends it to the `/community-select` redirect once the account resolves with no community. Three details are load-bearing:
+
+- **The guard peeks; only `community-select.tsx` clears.** This effect can run more than once before `pathname` catches up, and a consuming read emptied the slot on the first pass — the second pass then redirected to a bare `/community-select`, overwriting the prefilled one. That is what silently broke the prefill for both invite entry points.
+- **Codes are validated as `^[A-Z0-9]{6}$` before being stored.** Supabase's PKCE flow returns the browser to `/login?code=<opaque token>`; a lenient parser would park that token as an invite code. The `inAuthGroup` check is the first line of defence, the format check the second.
+- **On web the guard falls back to `window.location.search`.** `useGlobalSearchParams` can still be empty on the first pass of a cold load, and by the second pass the redirect to `/login` has already happened, so the address bar is the only reliable source at that moment.
+
 **`POST_AUTH_LANDING_ROUTE` (`lib/navigation.ts`) is `/network` — the MCN hub, not the Help tab.** It is the default destination for every "the user is now signed in and settled" transition: after login, after `join_community_by_code()`, and after picking a flat. A saved deep link always wins over it.
 
 The last rule above covers cold start and page load. With a live session the framework's initial route is `/`, which the user did not choose, so the guard sends them to the hub instead. It is one-shot (`hasResolvedInitialLandingRef`, flipped by the first completed auth resolution), so tapping **Help** later opens `/` normally. Because the route literal carries no `(tabs)` group, it compares equal to `usePathname()` — which is why `alreadyOnTarget` needs no group-aware special case.
@@ -280,7 +286,9 @@ Both views are **`WITH (security_invoker = true)`**. A plain Postgres view runs 
 - Max 1 new listing per owner per rolling 24 hours.
 - `mcn_listing_reports` insert trigger auto-sets `is_active = false` and `flagged_for_review_at = now()` once a listing collects 3 pending reports, and notifies leads (`notifications.type = 'listing_auto_hidden'`, or `'listing_reported'` below the threshold). A separate trigger then blocks the *owner* from flipping `is_active` back to true while `flagged_for_review_at` is set — only a lead or platform admin can clear it (by reactivating from the existing Manage listing screen, which nulls the flag).
 
-### 4.6 MCN — pre-order food drops
+### 4.6 MCN — pre-order menus
+
+**Vocabulary: "menu" in the UI, `drop` in the code** (renamed 2026-08-17, migrations `20260917000000` + `20260917000100`). Every string a resident can read now says *menu* — screens, share messages, toasts, `RAISE EXCEPTION` text, and notification titles. Everything a program reads still says *drop*: tables (`mcn_preorder_drops`), columns (`drop_id`), function names, route paths (`/mcn/drops/*`), notification `type` values (`drop_posted`, `drop_reported`, …), and the `food_drops` mute channel key. Renaming those would be a data migration against stored `notification_preferences.channel` values and every existing deep link, for no user-visible gain. When you add copy here, write "menu"; when you touch a query, expect "drop".
 
 | Table | Key columns |
 |-------|-------------|
@@ -400,11 +408,30 @@ Full reference: [`cross-community.md`](cross-community.md).
 | `submit_community_request(...)` | Insert a community-creation request |
 | `platform_approve_community_request(p_request_id)` | Create community + code, assign requester as `resident` |
 | `platform_reject_community_request(p_request_id, p_rejection_reason)` | Reject a pending request |
-| `get_residents_directory(p_include_phone)` | Resident list with block grouping and conditional phone visibility |
+| `get_residents_directory(p_include_phone)` | Resident list with block grouping and conditional phone visibility. **Returns no email column** — see "Resident email is not readable" below |
 | `community_lead_remove_resident(p_target_profile_id)` | Lead removes a non-lead resident |
 | `platform_soft_remove_resident(p_target_profile_id, p_reason)` | Platform-admin soft removal |
 | `set_audit_actor(...)` / `set_audit_context(...)` | Attach audit metadata to profile mutations |
 | `normalize_indian_mobile(p_value)` | Canonicalize flexible phone input to a validated 10-digit mobile |
+
+#### Resident email is not readable (`20260918000000`)
+
+No resident may read another resident's email address — presidents and vice presidents included, since they are neighbours too. Platform admins are unaffected: the console goes through `platform_*` `SECURITY DEFINER` functions, which run as the owner and bypass everything below.
+
+Hiding it in the UI would have been theatre. `profiles` carries a plain `SELECT`-for-my-community policy and RLS is **row**-level only, so any resident could have read every address in their society with `from('profiles').select('email')` against the public API — and `profiles_select_public_hosts` extended that reach to **anonymous** visitors for anyone who has ever hosted a menu, a listing, or a carpool. Postgres has no column-level RLS, so enforcement is column **grants**:
+
+```sql
+REVOKE SELECT ON public.profiles FROM authenticated, anon;   -- table grant first
+GRANT  SELECT (id, full_name, …) ON public.profiles TO authenticated, anon;  -- email absent
+```
+
+Three consequences worth knowing before touching `profiles`:
+
+- **The table-level REVOKE is required.** A column-level `REVOKE SELECT (email)` on its own does nothing while a table-level grant is still held — probed on prod, `SELECT email` still succeeded. Same shape as the `REVOKE … FROM PUBLIC, anon` trap in `CLAUDE.md` §9.
+- **`select('*')` on `profiles` now fails outright** with `permission denied for table profiles` — Postgres rejects the star rather than quietly returning the 14 columns it can see. `context/AuthContext.tsx` names them in `PROFILE_COLUMNS` and uses it for both its read and the self-healing insert's `RETURNING`.
+- **Only reads are restricted.** `INSERT` and `UPDATE` still cover all 15 columns, so signup still records an email for the admin console, and Profile → Edit still changes it (through Supabase Auth, which owns the value).
+
+A column added to `profiles` must be added to that migration's `GRANT` **and** to `PROFILE_COLUMNS`, or it is invisible to the app even on its owner's own row. The client type is `ResidentProfile` (`Omit<Tables<'profiles'>, 'email'>`), so TypeScript refuses code that expects the column. `get_residents_directory` and `list_pending_flat_addition_requests` had their email columns dropped from their signatures for the same reason — the capability is removed, not branched around.
 
 ### Predicates
 

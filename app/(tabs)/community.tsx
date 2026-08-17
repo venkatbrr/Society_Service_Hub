@@ -268,10 +268,10 @@ export default function CommunityScreen() {
           <View style={styles.noLeadCard}>
             <View style={styles.noLeadHeaderRow}>
               <Award01 size={16} color={Verandah.goldInk} aria-hidden={true} />
-              <Text style={styles.noLeadTitle}>No president yet</Text>
+              <Text style={styles.noLeadTitle}>Funds not active yet</Text>
             </View>
             <Text style={styles.noLeadCopy}>
-              Funds and block in-charges aren't active yet. They switch on once a president or vice president is appointed.
+              Funds and block in-charges switch on once a president or vice president is appointed.
             </Text>
             <TouchableOpacity onPress={() => router.push('/residents' as any)} activeOpacity={0.8}>
               <Text style={styles.inlineLink}>See who is in your community</Text>

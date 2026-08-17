@@ -426,7 +426,7 @@ export function getImmediateParentRoute(pathname: string): string {
   if (cleanPath.startsWith('/mcn/schools/')) return '/mcn/schools';
   if (cleanPath === '/mcn/schools') return '/network';
 
-  // 3. Food drops
+  // 3. Menus
   if (cleanPath.startsWith('/mcn/drops/manage/')) {
     const dropId = cleanPath.replace('/mcn/drops/manage/', '');
     return dropId ? `/mcn/drops/${dropId}` : '/mcn/drops';
@@ -455,7 +455,7 @@ export function getImmediateParentRoute(pathname: string): string {
   }
   if (cleanPath.startsWith('/mcn/listing/')) return '/mcn/business';
   if (cleanPath === '/mcn/listing-add') return '/mcn/business';
-  // Business listings and food drops are sibling tabs of one hub card, not
+  // Business listings and menus are sibling tabs of one hub card, not
   // parent and child — both go up to the MCN hub.
   if (cleanPath === '/mcn/business') return '/network';
 

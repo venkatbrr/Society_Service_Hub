@@ -39,7 +39,7 @@ export default function EditProfileScreen() {
   // A saved contact number, nothing more — unverified, and deliberately not
   // wired to phone login in either direction (sign-in resolves the account from
   // the synthetic phone_91…@auth.wooru.in address, never from this column).
-  // Captured the first time a resident types it into a food-drop order, then
+  // Captured the first time a resident types it into a menu order, then
   // reused to prefill every later order. This is the one place it can change.
   const [phoneNumber, setPhoneNumber] = useState(profile?.phone_number || '');
   const [loading, setLoading] = useState(false);
@@ -190,7 +190,7 @@ export default function EditProfileScreen() {
             maxLength={10}
           />
           <Text style={styles.helpText}>
-            Used to prefill your contact number when you order from a food drop.
+            Used to prefill your contact number when you order from a menu.
           </Text>
         </View>
 

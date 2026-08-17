@@ -47,7 +47,7 @@ type SortOption = 'closing' | 'delivery' | 'newest' | 'price' | 'popular';
 const SORT_OPTIONS: { key: SortOption; label: string; hint: string }[] = [
   { key: 'closing', label: 'Closing soon', hint: 'Order before the cut-off passes' },
   { key: 'delivery', label: 'Delivery soonest', hint: 'Food arriving first' },
-  { key: 'newest', label: 'Just added', hint: 'Newest drops from your neighbors' },
+  { key: 'newest', label: 'Just added', hint: 'Newest menus from your neighbours' },
   { key: 'price', label: 'Price: low to high', hint: 'Cheapest item on the menu' },
   // Parked, not removed — the comparator below and get_mcn_drop_order_counts
   // are both live. See DROP_SORT_MOST_ORDERED_ENABLED.
@@ -555,7 +555,7 @@ export default function FoodDropsCatalogScreen() {
     Toast.show({
       type: 'info',
       text1: 'Login required',
-      text2: 'You can browse drops now. Please login to host or manage orders.',
+      text2: 'You can browse menus now. Please login to publish one or manage orders.',
     });
     router.push('/login' as any);
     return false;
@@ -812,7 +812,7 @@ export default function FoodDropsCatalogScreen() {
         </View>
       </Modal>
 
-      {/* My Food Drops Revenue & Earnings Card */}
+      {/* My Menus Revenue & Earnings Card */}
       {activeTab === 'my_drops' && !loading ? (
         <View style={styles.revenueCard}>
           <View style={styles.iconLabelRow}>
@@ -821,7 +821,7 @@ export default function FoodDropsCatalogScreen() {
           </View>
           <View style={styles.revenueRow}>
             <View style={styles.revenueCol}>
-              <Text style={styles.revenueSub}>Drops Hosted</Text>
+              <Text style={styles.revenueSub}>Menus Published</Text>
               <Text style={styles.revenueValText}>{drops.length}</Text>
             </View>
             <View style={styles.revenueDivider} />
@@ -888,7 +888,7 @@ export default function FoodDropsCatalogScreen() {
                       <CheckCircle size={16} color={Verandah.green600} aria-hidden={true} />
                     )}
                     <Text style={isPreparing ? styles.sectionHeaderTextPreparing : styles.sectionHeaderTextCompleted}>
-                      {isPreparing ? 'Kitchen Preparing' : 'Past Completed & Delivered Drops'} ({row.count})
+                      {isPreparing ? 'Kitchen Preparing' : 'Past Completed & Delivered Menus'} ({row.count})
                     </Text>
                   </View>
                   {collapsed ? (
@@ -915,8 +915,8 @@ export default function FoodDropsCatalogScreen() {
             drops.length > 0 && activeFilterCount > 0 ? (
               <EmptyState
                 icon="restaurant-outline"
-                title="No drops match these filters"
-                message={`${drops.length} drop${drops.length === 1 ? '' : 's'} here, but none fit what you picked. Try widening or clearing the filters.`}
+                title="No menus match these filters"
+                message={`${drops.length} menu${drops.length === 1 ? '' : 's'} here, but none fit what you picked. Try widening or clearing the filters.`}
                 actionLabel="Clear filters"
                 onAction={() => {
                   setFilters(DEFAULT_FILTERS);
@@ -928,7 +928,7 @@ export default function FoodDropsCatalogScreen() {
                 icon="restaurant-outline"
                 title={
                   activeTab === 'active'
-                    ? 'No active pre-order drops'
+                    ? 'No active menus'
                     : activeTab === 'my_drops'
                     ? 'You haven’t published any pre-order food'
                     : activeTab === 'review'
@@ -937,10 +937,10 @@ export default function FoodDropsCatalogScreen() {
                 }
                 message={
                   activeTab === 'active'
-                    ? 'No local pre-order food open right now. Check back soon or host your own food pop-up!'
+                    ? 'No local pre-order food open right now. Check back soon or publish your own menu!'
                     : activeTab === 'review'
-                    ? 'Drops you hide, and drops auto-hidden after three resident reports, collect here.'
-                    : 'Publish a pre-order drop to let neighbors order your weekend specials!'
+                    ? 'Menus you hide, and menus auto-hidden after three resident reports, collect here.'
+                    : 'Publish a menu to let neighbours pre-order your weekend specials!'
                 }
               />
             )
@@ -956,7 +956,7 @@ export default function FoodDropsCatalogScreen() {
           activeOpacity={0.85}
         >
           <Plus size={24} color={Verandah.primaryFg} aria-hidden={true} />
-          <Text style={styles.fabText}>Host Food Drop</Text>
+          <Text style={styles.fabText}>Publish Menu</Text>
         </TouchableOpacity>
       ) : null}
     </View>

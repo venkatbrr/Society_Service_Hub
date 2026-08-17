@@ -121,7 +121,7 @@ export default function PreorderDropDetailScreen() {
   const [isModerating, setIsModerating] = useState(false);
 
   const REPORT_REASONS = [
-    { key: 'not_food', label: 'Not a food drop' },
+    { key: 'not_food', label: 'Not a food menu' },
     { key: 'spam', label: 'Spam' },
     { key: 'inappropriate', label: 'Inappropriate' },
     { key: 'unsafe', label: 'Food safety concern' },
@@ -241,7 +241,7 @@ export default function PreorderDropDetailScreen() {
       }
     } catch (err) {
       console.error('Error fetching drop details:', err);
-      Toast.show({ type: 'error', text1: 'Failed to load food drop details' });
+      Toast.show({ type: 'error', text1: 'Failed to load menu details' });
     } finally {
       setLoading(false);
     }
@@ -365,7 +365,7 @@ export default function PreorderDropDetailScreen() {
 
   const handleSubmitOrder = async () => {
     if (!dropId) {
-      Toast.show({ type: 'error', text1: 'Drop is unavailable' });
+      Toast.show({ type: 'error', text1: 'Menu is unavailable' });
       return;
     }
 
@@ -383,7 +383,7 @@ export default function PreorderDropDetailScreen() {
       Toast.show({
         type: 'error',
         text1: 'Hosts cannot place pre-orders',
-        text2: 'You are the host of this food drop.',
+        text2: 'You are the host of this menu.',
       });
       return;
     }
@@ -391,7 +391,7 @@ export default function PreorderDropDetailScreen() {
     if (isCutoffPassed || drop?.status !== 'open') {
       Toast.show({
         type: 'error',
-        text1: 'Pre-orders are closed for this drop',
+        text1: 'Pre-orders are closed for this menu',
         text2: 'The cut-off deadline has passed.',
       });
       return;
@@ -539,7 +539,7 @@ export default function PreorderDropDetailScreen() {
       <View style={[styles.container, { backgroundColor: colors.surface }]}>
         <Stack.Screen
           options={buildMcnHeaderOptions({
-            title: 'Food drop details',
+            title: 'Menu details',
             // A bare Stack.Screen here would fall back to React Navigation's
             // default back button, which calls navigation.goBack() and pops the
             // navigator instead of running goBackSmart() — on a deep-linked or
@@ -560,7 +560,7 @@ export default function PreorderDropDetailScreen() {
       <View style={[styles.container, { backgroundColor: colors.surface }]}>
         <Stack.Screen
           options={buildMcnHeaderOptions({
-            title: 'Food drop details',
+            title: 'Menu details',
             // A bare Stack.Screen here would fall back to React Navigation's
             // default back button, which calls navigation.goBack() and pops the
             // navigator instead of running goBackSmart() — on a deep-linked or
@@ -570,7 +570,7 @@ export default function PreorderDropDetailScreen() {
           })}
         />
         <View style={styles.loaderWrap}>
-          <Text style={{ color: colors.textSecondary }}>Food drop not found.</Text>
+          <Text style={{ color: colors.textSecondary }}>Menu not found.</Text>
         </View>
       </View>
     );
@@ -613,10 +613,10 @@ export default function PreorderDropDetailScreen() {
     try {
       const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
       if (error) throw error;
-      Toast.show({ type: 'success', text1: 'Food drop deleted' });
+      Toast.show({ type: 'success', text1: 'Menu deleted' });
       replaceTracked(router, '/mcn/drops' as any);
     } catch (err: any) {
-      Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
+      Toast.show({ type: 'error', text1: 'Failed to delete menu', text2: err.message });
     }
   };
 
@@ -641,14 +641,14 @@ export default function PreorderDropDetailScreen() {
       if (error) {
         if (error.code === '23505') {
           setHasReported(true);
-          Toast.show({ type: 'info', text1: 'Already reported', text2: 'You have already reported this food drop.' });
+          Toast.show({ type: 'info', text1: 'Already reported', text2: 'You have already reported this menu.' });
           setShowReportModal(false);
         } else {
           throw error;
         }
       } else {
         setHasReported(true);
-        Toast.show({ type: 'success', text1: 'Report submitted', text2: 'Community leads will review this food drop.' });
+        Toast.show({ type: 'success', text1: 'Report submitted', text2: 'Community leads will review this menu.' });
         setShowReportModal(false);
         setSelectedReportReason(null);
         setReportDetails('');
@@ -669,7 +669,7 @@ export default function PreorderDropDetailScreen() {
   const handleHideForReview = () => {
     if (!drop) return;
     confirmAction({
-      title: 'Hide this food drop?',
+      title: 'Hide this menu?',
       message:
         `"${drop.title}" will be removed from the catalogue and stop taking new orders. ` +
         `${hostName} and anyone who already ordered will be notified. You can restore it later.`,
@@ -689,10 +689,10 @@ export default function PreorderDropDetailScreen() {
             })
             .eq('id', drop.id);
           if (error) throw error;
-          Toast.show({ type: 'success', text1: 'Food drop hidden for review' });
+          Toast.show({ type: 'success', text1: 'Menu hidden for review' });
           fetchDropDetails();
         } catch (err: any) {
-          Toast.show({ type: 'error', text1: 'Failed to hide food drop', text2: err.message });
+          Toast.show({ type: 'error', text1: 'Failed to hide menu', text2: err.message });
         } finally {
           setIsModerating(false);
         }
@@ -703,7 +703,7 @@ export default function PreorderDropDetailScreen() {
   const handleRestoreDrop = () => {
     if (!drop) return;
     confirmAction({
-      title: 'Restore this food drop?',
+      title: 'Restore this menu?',
       message: `"${drop.title}" becomes visible again and returns to the state it was in before it was hidden. If its cut-off has since passed it stays closed.`,
       confirmLabel: 'Restore',
       destructive: false,
@@ -724,10 +724,10 @@ export default function PreorderDropDetailScreen() {
             .eq('drop_id', drop.id)
             .eq('status', 'pending');
 
-          Toast.show({ type: 'success', text1: 'Food drop restored' });
+          Toast.show({ type: 'success', text1: 'Menu restored' });
           fetchDropDetails();
         } catch (err: any) {
-          Toast.show({ type: 'error', text1: 'Failed to restore food drop', text2: err.message });
+          Toast.show({ type: 'error', text1: 'Failed to restore menu', text2: err.message });
         } finally {
           setIsModerating(false);
         }
@@ -744,7 +744,7 @@ export default function PreorderDropDetailScreen() {
     const shareUrl = siteUrl(`/api/share-drop?id=${drop.id}`);
 
     const messageLines = [
-      `🍲 *Food Drop: ${drop.title}*`,
+      `🍲 *Menu: ${drop.title}*`,
       `Hosted by ${hostName}${hostFlat ? ` (${hostFlat})` : ''}`,
       ``,
       `📅 Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
@@ -793,16 +793,16 @@ export default function PreorderDropDetailScreen() {
                   ? 'Hidden for review'
                   : canModerateDrop
                   ? 'Hidden for review'
-                  : 'This drop was withdrawn'}
+                  : 'This menu was withdrawn'}
               </Text>
               <Text style={styles.hiddenBannerBody}>
                 {isCreator
-                  ? `This food drop is not visible to neighbours and cannot take new orders${
+                  ? `This menu is not visible to neighbours and cannot take new orders${
                       drop.flagged_reason ? ` — ${drop.flagged_reason.toLowerCase()}` : ''
                     }. A community lead will review it.`
                   : canModerateDrop
                   ? drop.flagged_reason || 'Hidden pending review.'
-                  : 'This food drop has been withdrawn pending review. Please contact the host about your pre-order.'}
+                  : 'This menu has been withdrawn pending review. Please contact the host about your pre-order.'}
               </Text>
             </View>
           </View>
@@ -875,9 +875,9 @@ export default function PreorderDropDetailScreen() {
           <View style={styles.hostNoticeBox}>
             <InfoCircle size={22} color={colors.primary} aria-hidden={true} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.hostNoticeTitle}>You are hosting this food drop</Text>
+              <Text style={styles.hostNoticeTitle}>You are hosting this menu</Text>
               <Text style={styles.hostNoticeSub}>
-                Hosts cannot place pre-orders on their own drop. Use the Manage Dashboard to track resident orders and kitchen prep totals.
+                Hosts cannot place pre-orders on their own menu. Use the Manage Dashboard to track resident orders and kitchen prep totals.
               </Text>
               <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                 <TouchableOpacity
@@ -894,7 +894,7 @@ export default function PreorderDropDetailScreen() {
                     onPress={() => router.push(`/mcn/drops/add?dropId=${drop.id}` as any)}
                     activeOpacity={0.8}
                   >
-                    <Text style={[styles.hostManageBtnText, { color: Verandah.primary }]}>Edit Drop</Text>
+                    <Text style={[styles.hostManageBtnText, { color: Verandah.primary }]}>Edit Menu</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
@@ -905,7 +905,7 @@ export default function PreorderDropDetailScreen() {
         {/* Existing User Orders Status Cards */}
         {userOrders.length > 0 && !isCreator ? (
           <View style={{ marginBottom: 8 }}>
-            <Text style={styles.sectionHeader}>Your Orders for this Drop</Text>
+            <Text style={styles.sectionHeader}>Your Orders for this Menu</Text>
             {userOrders.map((ord: any, index: number) => {
               const isFulfilled = ord.status === 'fulfilled';
               const isCancelled = ord.status === 'cancelled';
@@ -1025,7 +1025,7 @@ export default function PreorderDropDetailScreen() {
         {/* Menu Items Picker Header & Items */}
         <Text style={styles.sectionHeader}>
           {isCreator
-            ? 'Items Offered in Your Drop'
+            ? 'Items Offered in Your Menu'
             : editingOrderId
             ? 'Update Selected Items'
             : userOrders.length > 0
@@ -1241,7 +1241,7 @@ export default function PreorderDropDetailScreen() {
                 { color: hasReported ? colors.textMuted : colors.textTertiary },
               ]}
             >
-              {hasReported ? 'Reported' : 'Report this food drop'}
+              {hasReported ? 'Reported' : 'Report this menu'}
             </Text>
           </TouchableOpacity>
         ) : null}
@@ -1254,8 +1254,8 @@ export default function PreorderDropDetailScreen() {
             </View>
             <Text style={styles.moderationBody}>
               {isHidden
-                ? 'This food drop is hidden from the catalogue and cannot take new orders. Restoring it makes it visible again and dismisses the open reports.'
-                : 'Hiding removes this drop from the catalogue and stops new orders. The host and anyone who already ordered are notified, and you can undo it.'}
+                ? 'This menu is hidden from the catalogue and cannot take new orders. Restoring it makes it visible again and dismisses the open reports.'
+                : 'Hiding removes this menu from the catalogue and stops new orders. The host and anyone who already ordered are notified, and you can undo it.'}
             </Text>
             <TouchableOpacity
               style={[styles.moderationBtn, isHidden && styles.moderationBtnRestore]}
@@ -1267,7 +1267,7 @@ export default function PreorderDropDetailScreen() {
                 <ActivityIndicator color={Verandah.primaryFg} size="small" />
               ) : (
                 <Text style={styles.moderationBtnText}>
-                  {isHidden ? 'Restore food drop' : 'Hide for review'}
+                  {isHidden ? 'Restore menu' : 'Hide for review'}
                 </Text>
               )}
             </TouchableOpacity>
@@ -1276,9 +1276,9 @@ export default function PreorderDropDetailScreen() {
 
         {canDeleteDrop ? (
           <DangerZone
-            title="Delete this food drop"
+            title="Delete this menu"
             consequence={`"${drop.title}" and every pre-order placed on it will be permanently removed. Buyers are not notified, and this cannot be undone.`}
-            actionLabel="Delete food drop"
+            actionLabel="Delete menu"
             onDelete={handleDeleteDrop}
           />
         ) : null}
@@ -1321,7 +1321,7 @@ export default function PreorderDropDetailScreen() {
             style={[styles.reportCard, { backgroundColor: colors.card }]}
             onPress={(e) => e.stopPropagation()}
           >
-            <Text style={styles.reportCardTitle}>Report this food drop</Text>
+            <Text style={styles.reportCardTitle}>Report this menu</Text>
             <View style={styles.reportReasonList}>
               {REPORT_REASONS.map((reason) => {
                 const isSelected = selectedReportReason === reason.key;

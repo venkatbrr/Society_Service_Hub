@@ -12,7 +12,7 @@ import { replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
-type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role' | 'email' | 'flat_number'>;
+type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role' | 'flat_number'>;
 
 export default function AddFundScreen() {
   const { user, communityId, appRole, fundsEnabled } = useAuth();
@@ -50,7 +50,7 @@ export default function AddFundScreen() {
         setIsFetchingMembers(true);
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, app_role, email, flat_number')
+          .select('id, full_name, app_role, flat_number')
           .eq('community_id', communityId)
           .order('full_name', { ascending: true });
 
@@ -88,7 +88,6 @@ export default function AddFundScreen() {
     return members.filter(
       (member) =>
         (member.full_name || '').toLowerCase().includes(term) ||
-        (member.email || '').toLowerCase().includes(term) ||
         (member.flat_number || '').toLowerCase().includes(term)
     );
   }, [members, searchQuery]);
@@ -216,7 +215,7 @@ export default function AddFundScreen() {
               <>
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Search by name, email, or flat..."
+                  placeholder="Search by name or flat..."
                   placeholderTextColor={Verandah.textMuted}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -239,10 +238,9 @@ export default function AddFundScreen() {
                       <View style={styles.memberInfo}>
                         <Text style={styles.memberName}>{memberName}</Text>
                         <View style={styles.memberMetaRow}>
-                          <Text style={styles.memberMeta}>{member.email || 'No email'}</Text>
-                          {member.flat_number ? (
-                            <Text style={styles.memberMeta}> • Flat: {member.flat_number}</Text>
-                          ) : null}
+                          <Text style={styles.memberMeta}>
+                            {member.flat_number ? `Flat: ${member.flat_number}` : 'No flat set'}
+                          </Text>
                         </View>
                       </View>
                       <View style={[styles.selector, isSelected ? styles.selectorSelected : null]} />

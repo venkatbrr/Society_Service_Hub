@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -3750,7 +3750,6 @@ export type Database = {
           app_role: Database["public"]["Enums"]["app_role_type"]
           block_id: string
           block_name: string
-          email: string
           flat_number: string
           full_name: string
           id: string
@@ -3877,7 +3876,6 @@ export type Database = {
           flat_number: string
           id: string
           requested_by: string
-          requester_email: string
           requester_name: string
           requester_phone: string
         }[]
@@ -4842,10 +4840,22 @@ export const Constants = {
 // HAND-MAINTAINED — everything above this line is generated, this block is not.
 //
 // `npm run types:preprod` / `types:prod` redirect over the whole file, so a
-// regen silently deletes the three types below and `npx tsc --noEmit` then
-// fails across ~7 unrelated screens. Re-append this block after every regen.
+// regen silently deletes the four types below and `npx tsc --noEmit` then
+// fails across ~8 unrelated screens. Re-append this block after every regen.
 // See docs/CLAUDE.md §6 step 3.
 // ---------------------------------------------------------------------------
+
+/**
+ * A profile as the **app** can actually read it.
+ *
+ * `Tables<'profiles'>` describes the table, and the table has an `email`
+ * column — but `20260918000000` revoked column read access to it from
+ * `authenticated` and `anon` so that no resident can read another resident's
+ * address. Selecting it fails, so no client type should claim to have it.
+ *
+ * Your own email comes from the auth session (`useAuth().user.email`).
+ */
+export type ResidentProfile = Omit<Tables<'profiles'>, 'email'>
 
 export type ProviderWithInteraction = Tables<'service_providers'> & {
   is_favorite?: boolean
@@ -4868,4 +4878,3 @@ export type VisitJoinerWithProfile = Tables<'visit_joiners'> & {
   flat_number?: string | null
   joined_at?: string
 }
-

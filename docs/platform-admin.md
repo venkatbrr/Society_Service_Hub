@@ -113,13 +113,13 @@ Notes:
 
 **Detail view — hash-driven tabs**
 
-The URL is `#communities?id=<uuid>&tab=<key>`. A persistent header carries the community name, join code, a **Export CSV** button, and an always-visible stat strip (residents · leads · food drops · food sales · active businesses · funds · fund balance · upcoming events).
+The URL is `#communities?id=<uuid>&tab=<key>`. A persistent header carries the community name, join code, a **Export CSV** button, and an always-visible stat strip (residents · leads · menus · food sales · active businesses · funds · fund balance · upcoming events).
 
 | Tab | Panels |
 |-----|--------|
 | **Overview** | Community information; feature status (funds, blocks, flats on record, coordinators) with **Revoke Funds Access**; at-a-glance mini-metrics; **Top Contributors** — the residents actually driving activity, drawn from the host / owner / coordinator rollups |
 | **People & Roles** | Community Leads · **Events Coordinators** · Blocks/Towers · Flats Inventory · Fund Roles · Residents Directory |
-| **Commerce** | Pre-Order Food Drops (**By drop** / **By host**) · Resident Businesses (**By listing** / **By owner** / **By category**) · a link into `#providers` filtered to this community |
+| **Commerce** | Pre-Order Menus (**By menu** / **By host**) · Resident Businesses (**By listing** / **By owner** / **By category**) · a link into `#providers` filtered to this community |
 | **Funds** | Per-fund cards showing **Collected / Spent / Balance** with a spend progress bar; opening one gives the full ledger and collection coverage |
 | **Events** | Community events table (title, category, when, poster + why they could post, contact count, status) and the coordinators panel |
 
@@ -132,7 +132,7 @@ The URL is `#communities?id=<uuid>&tab=<key>`. A persistent header carries the c
 | Blocks / Towers | Enable toggle, Block/Tower label switch, add/archive. **This is the only path** — as of 2026-08-14 (`20260908000200`) the president's in-app screen is read-plus-rename, and `set_community_blocks_enabled` / `add_community_block` / `archive_community_block` are revoked from `authenticated`. See [`features.md`](features.md) §Blocks / towers. |
 | Flats Inventory | Canonical list of units grouped by block, totals, bulk add, individual archival. `platform_add_community_flats` takes **three** arguments — `p_community_id` has no default, and omitting it made PostgREST fail to resolve the function, so adding flats never worked at all until 2026-09-10. |
 | **Fund Roles** | **One card per fund**, each with that fund's Treasurer (Assign/Replace picker) and Block Collectors (**Add** with an optional block scope, and Remove). Grouped per fund because both roles are fund-scoped, not community-scoped. |
-| Pre-Order Food Drops | **By drop**: title, host, fulfillment, status, cutoff, orders, revenue. **By host** (`platform_get_preorder_hosts`): drops, open drops, orders, distinct buyers, average order value, revenue. The two views' totals must agree. |
+| Pre-Order Menus | **By menu**: title, host, fulfillment, status, cutoff, orders, revenue. **By host** (`platform_get_preorder_hosts`): drops, open drops, orders, distinct buyers, average order value, revenue. The two views' totals must agree. |
 | Resident Businesses | **By listing**, **By owner** (`platform_get_business_owners`), **By category** (`platform_get_business_categories`). WhatsApp links go through `buildWhatsAppUrl`, which adds the `91` prefix at link time — stored numbers are 10 digits. |
 | Residents Directory | Searchable; typing re-renders only the `<tbody>`, so the caret stays put. Rows show the events-coordinator grant alongside the app role. Opening a resident gives real per-resident activity (drops hosted and revenue, businesses listed, events posted, visits created). |
 | Fund modal | Collected / Spent / Balance / **Coverage %**, per-block collection coverage bars, treasurer, collectors, and the **full ledger** (`platform_get_fund_ledger`) with a running balance and CSV export. The ledger separates `resident_contribution`, `sponsor_contribution`, `other_income` and `expense` — `platform_get_community_funds`'s `contributions` array lumps sponsor income in with resident contributions and renders it as a nameless "Resident". |

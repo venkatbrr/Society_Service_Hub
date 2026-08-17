@@ -15,7 +15,7 @@ The product covers seven resident-facing capabilities:
 
 1. **Trusted provider discovery** — a community-curated directory of plumbers, electricians, maids, tutors, photographers, and ~40 other service categories, with ratings, private notes, and abuse reporting.
 2. **Shared service visits** — residents schedule a provider visit and neighbors join it, splitting cost and coordination.
-3. **My Community Network (MCN)** — the resident-to-resident economy: home businesses, pre-order food drops, carpooling, and a parent directory. A schools catalog with parent report cards and borrow-and-share posts are also built but **hidden from the UI since 2026-08-13** — see [`docs/hidden-features/`](../docs/hidden-features/README.md).
+3. **My Community Network (MCN)** — the resident-to-resident economy: home businesses, pre-order menus (called "food drops" in the code and schema — see `docs/architecture.md` §4.6), carpooling, and a parent directory. A schools catalog with parent report cards and borrow-and-share posts are also built but **hidden from the UI since 2026-08-13** — see [`docs/hidden-features/`](../docs/hidden-features/README.md).
 4. **Community funds** — transparent, role-scoped ledgers for maintenance and event collections, gated behind platform approval.
 5. **Personal service reminders** — private appliance/service maintenance schedules with due-date notifications.
 6. **SOS** — emergency phone directory plus an opt-in blood donor registry.

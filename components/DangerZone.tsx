@@ -19,11 +19,11 @@ export const SPAM_CAUTION =
   'Posting and deleting repeatedly looks like spam to your neighbours, and your society president can see it.';
 
 interface DangerZoneProps {
-  /** Heading, e.g. "Delete this food drop". */
+  /** Heading, e.g. "Delete this menu". */
   title: string;
   /** What is actually lost. Be specific — name the item and the order count. */
   consequence: string;
-  /** Button and confirm-dialog action label, e.g. "Delete food drop". */
+  /** Button and confirm-dialog action label, e.g. "Delete menu". */
   actionLabel: string;
   onDelete: () => void;
 }

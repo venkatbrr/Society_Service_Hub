@@ -205,8 +205,8 @@ export default function CreateOrEditFoodDropScreen() {
         if (dropData.status === 'completed' || dropData.status === 'closed') {
           Toast.show({
             type: 'error',
-            text1: 'Drop cannot be edited',
-            text2: 'Completed or closed food drops cannot be edited.',
+            text1: 'Menu cannot be edited',
+            text2: 'Completed or closed menus cannot be edited.',
           });
           router.back();
           return;
@@ -280,7 +280,7 @@ export default function CreateOrEditFoodDropScreen() {
       }
     } catch (err) {
       console.error('Error loading drop for editing:', err);
-      Toast.show({ type: 'error', text1: 'Failed to load drop for editing' });
+      Toast.show({ type: 'error', text1: 'Failed to load menu for editing' });
     } finally {
       setLoadingDrop(false);
     }
@@ -371,7 +371,7 @@ export default function CreateOrEditFoodDropScreen() {
     setItemErrors(newItemErrors);
 
     if (errors.title) {
-      Toast.show({ type: 'error', text1: 'Please enter a drop title' });
+      Toast.show({ type: 'error', text1: 'Please enter a menu title' });
       return;
     }
 
@@ -542,7 +542,7 @@ export default function CreateOrEditFoodDropScreen() {
 
         Toast.show({
           type: 'success',
-          text1: 'Food drop updated successfully!',
+          text1: 'Menu updated successfully!',
         });
 
         router.back();
@@ -590,7 +590,7 @@ export default function CreateOrEditFoodDropScreen() {
 
         Toast.show({
           type: 'success',
-          text1: 'Food drop published!',
+          text1: 'Menu published!',
           text2: 'Neighbors can now place pre-orders before the cut-off.',
         });
 
@@ -600,7 +600,7 @@ export default function CreateOrEditFoodDropScreen() {
       console.error(err);
       Toast.show({
         type: 'error',
-        text1: isEditMode ? 'Failed to update food drop' : 'Failed to publish food drop',
+        text1: isEditMode ? 'Failed to update menu' : 'Failed to publish menu',
         text2: err.message,
       });
     } finally {
@@ -635,20 +635,20 @@ export default function CreateOrEditFoodDropScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Cover Photo Uploader */}
         <View style={styles.section}>
-          <Text style={styles.label}>Drop Banner / Cover Photo (Optional)</Text>
+          <Text style={styles.label}>Menu Banner / Cover Photo (Optional)</Text>
           <ImageUploader
             currentImageUrl={imageUrl}
             onImageUploaded={setImageUrl}
             onImageRemoved={() => setImageUrl(null)}
             subfolder="drops"
             aspectRatio={16 / 9}
-            placeholder="Add drop cover photo"
+            placeholder="Add menu cover photo"
           />
         </View>
 
         {/* Drop Basics */}
         <View style={styles.section}>
-          <Text style={styles.label}>Drop Title *</Text>
+          <Text style={styles.label}>Menu Title *</Text>
           <TextInput
             style={[styles.input, fieldErrors.title && styles.inputError]}
             placeholder="e.g. Saturday dinner special, Sunday dum biryani"
@@ -660,14 +660,14 @@ export default function CreateOrEditFoodDropScreen() {
             }}
             maxLength={80}
           />
-          {fieldErrors.title ? <Text style={styles.errorText}>Please enter a drop title</Text> : null}
+          {fieldErrors.title ? <Text style={styles.errorText}>Please enter a menu title</Text> : null}
         </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>Description & Prep Note</Text>
           <TextInput
             style={[styles.input, styles.multiline]}
-            placeholder="Describe the drop, ingredients, special instructions..."
+            placeholder="Describe the menu, ingredients, special instructions..."
             placeholderTextColor={colors.textMuted}
             value={description}
             onChangeText={setDescription}
@@ -970,7 +970,7 @@ export default function CreateOrEditFoodDropScreen() {
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderTitleRow}>
               <ShoppingBag01 size={16} color={Verandah.primary} aria-hidden={true} />
-              <Text style={styles.cardSectionTitle}>Items offered for this drop</Text>
+              <Text style={styles.cardSectionTitle}>Items offered for this menu</Text>
             </View>
             <TouchableOpacity style={styles.addItemBtn} onPress={handleAddItem}>
               <Plus size={15} color={colors.primary} aria-hidden={true} />
@@ -1113,7 +1113,7 @@ export default function CreateOrEditFoodDropScreen() {
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <Text style={styles.submitBtnText}>
-              {isEditMode ? 'Save Food Drop Changes' : 'Publish Food Drop to Community'}
+              {isEditMode ? 'Save Menu Changes' : 'Publish Menu to Community'}
             </Text>
           )}
         </TouchableOpacity>

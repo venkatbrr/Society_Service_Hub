@@ -100,7 +100,7 @@ export default function ManagePreorderDropScreen() {
         Toast.show({
           type: 'info',
           text1: 'Host only',
-          text2: 'Only the host can see the orders for this food drop.',
+          text2: 'Only the host can see the orders for this menu.',
         });
         replaceTracked(router, `/mcn/drops/${dropId}` as any);
         return;
@@ -259,7 +259,7 @@ export default function ManagePreorderDropScreen() {
         fetchDropManagerData();
       } catch (err) {
         console.error(err);
-        Toast.show({ type: 'error', text1: 'Failed to close drop' });
+        Toast.show({ type: 'error', text1: 'Failed to close menu' });
       }
     };
 
@@ -287,25 +287,25 @@ export default function ManagePreorderDropScreen() {
           .update({ status: 'completed', updated_at: new Date().toISOString() })
           .eq('id', dropId);
         if (error) throw error;
-        Toast.show({ type: 'success', text1: 'Food drop marked completed!' });
+        Toast.show({ type: 'success', text1: 'Menu marked completed!' });
         fetchDropManagerData();
       } catch (err) {
         console.error(err);
-        Toast.show({ type: 'error', text1: 'Failed to complete drop' });
+        Toast.show({ type: 'error', text1: 'Failed to complete menu' });
       }
     };
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      if (window.confirm('Complete Drop?\n\nMark this entire food drop as completed and delivered?')) {
+      if (window.confirm('Complete Menu?\n\nMark this entire menu as completed and delivered?')) {
         doComplete();
       }
     } else {
       Alert.alert(
-        'Complete Drop',
-        'Mark this entire food drop as completed and delivered?',
+        'Complete Menu',
+        'Mark this entire menu as completed and delivered?',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Complete Drop', onPress: doComplete },
+          { text: 'Complete Menu', onPress: doComplete },
         ]
       );
     }
@@ -336,7 +336,7 @@ export default function ManagePreorderDropScreen() {
       <View style={[styles.container, { backgroundColor: colors.surface }]}>
         <Stack.Screen
           options={buildMcnHeaderOptions({
-            title: 'Food drop dashboard',
+            title: 'Menu dashboard',
             // See the note in drops/[id].tsx — a bare Stack.Screen restores the
             // default back button and bypasses goBackSmart().
             onBack: () => goBackSmart(router, '/mcn/drops/manage/' + String(dropId || '')),
@@ -354,14 +354,14 @@ export default function ManagePreorderDropScreen() {
       <View style={[styles.container, { backgroundColor: colors.surface }]}>
         <Stack.Screen
           options={buildMcnHeaderOptions({
-            title: 'Food drop dashboard',
+            title: 'Menu dashboard',
             // See the note in drops/[id].tsx — a bare Stack.Screen restores the
             // default back button and bypasses goBackSmart().
             onBack: () => goBackSmart(router, '/mcn/drops/manage/' + String(dropId || '')),
           })}
         />
         <View style={styles.loaderWrap}>
-          <Text style={{ color: colors.textSecondary }}>Drop not found.</Text>
+          <Text style={{ color: colors.textSecondary }}>Menu not found.</Text>
         </View>
       </View>
     );
@@ -383,10 +383,10 @@ export default function ManagePreorderDropScreen() {
     try {
       const { error } = await supabase.from('mcn_preorder_drops').delete().eq('id', drop.id);
       if (error) throw error;
-      Toast.show({ type: 'success', text1: 'Food drop deleted' });
+      Toast.show({ type: 'success', text1: 'Menu deleted' });
       replaceTracked(router, '/mcn/drops' as any);
     } catch (err: any) {
-      Toast.show({ type: 'error', text1: 'Failed to delete food drop', text2: err.message });
+      Toast.show({ type: 'error', text1: 'Failed to delete menu', text2: err.message });
     }
   };
 
@@ -398,7 +398,7 @@ export default function ManagePreorderDropScreen() {
     <View style={[styles.container, { backgroundColor: colors.paper }]}>
       <Stack.Screen
         options={buildMcnHeaderOptions({
-          title: 'Food Drop Dashboard',
+          title: 'Menu Dashboard',
           onBack: handleBack,
         })}
       />
@@ -418,7 +418,7 @@ export default function ManagePreorderDropScreen() {
               onPress={() => router.push(`/mcn/drops/add?dropId=${drop.id}` as any)}
             >
               <Edit01 size={14} color={Verandah.primary} aria-hidden={true} />
-              <Text style={styles.editDropBtnText} numberOfLines={1}>Edit drop</Text>
+              <Text style={styles.editDropBtnText} numberOfLines={1}>Edit menu</Text>
             </TouchableOpacity>
 
             {isOpen ? (
@@ -727,9 +727,9 @@ export default function ManagePreorderDropScreen() {
         ) : null}
 
         <DangerZone
-          title="Delete this food drop"
+          title="Delete this menu"
           consequence={`"${drop.title}" and ${confirmedOrders.length + fulfilledOrders.length === 1 ? '1 pre-order' : `${confirmedOrders.length + fulfilledOrders.length} pre-orders`} will be permanently removed. Buyers are not notified, and this cannot be undone.`}
-          actionLabel="Delete food drop"
+          actionLabel="Delete menu"
           onDelete={handleDeleteDrop}
         />
       </ScrollView>

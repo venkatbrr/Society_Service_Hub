@@ -12,6 +12,7 @@ import { Verandah } from '../constants/Colors';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import { configureGoogleSignIn } from '../lib/auth';
+import { peekInviteCode, readInviteCodeFromUrl, rememberInviteCode } from '../lib/inviteCode';
 import { goToLanding } from '../lib/siteUrl';
 import { ensureWebFonts } from '../lib/webFonts';
 
@@ -41,10 +42,6 @@ function RootLayoutNav() {
   const router = useRouter();
   const lastRedirectRef = useRef<string | null>(null);
   const savedTargetRouteRef = useRef<string | null>(null);
-  // Holds a community invite code seen on a route visited while signed out (e.g.
-  // `/community-select?code=X`), since `pathname` above never carries the query
-  // string. Reapplied once the user has authenticated and needs to join a community.
-  const pendingCommunityCodeRef = useRef<string | null>(null);
   // Flipped by the first completed auth resolution of this launch / page load, so
   // the "land on MCN" rule below fires once and never hijacks a later visit to `/`.
   const hasResolvedInitialLandingRef = useRef(false);
@@ -59,18 +56,6 @@ function RootLayoutNav() {
       try { window.sessionStorage.removeItem('wooru.pendingRoute'); } catch {}
     }
     return target;
-  };
-
-  const takeSavedCommunityCode = () => {
-    let code = pendingCommunityCodeRef.current;
-    if (!code && Platform.OS === 'web' && typeof window !== 'undefined') {
-      try { code = window.sessionStorage.getItem('wooru.pendingCommunityCode'); } catch {}
-    }
-    pendingCommunityCodeRef.current = null;
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      try { window.sessionStorage.removeItem('wooru.pendingCommunityCode'); } catch {}
-    }
-    return code;
   };
 
   // Synchronize browser back button and mobile back button to immediate parent routes
@@ -137,13 +122,11 @@ function RootLayoutNav() {
             try { window.sessionStorage.setItem('wooru.pendingRoute', pathname); } catch {}
           }
         }
-        const inviteCode = typeof globalParams.code === 'string' ? globalParams.code.trim() : '';
-        if (inviteCode) {
-          pendingCommunityCodeRef.current = inviteCode;
-          if (Platform.OS === 'web' && typeof window !== 'undefined') {
-            try { window.sessionStorage.setItem('wooru.pendingCommunityCode', inviteCode); } catch {}
-          }
-        }
+        // `globalParams` can still be empty on the very first pass of a cold web
+        // load, so fall back to the address bar, which is always populated.
+        // Safe inside this branch only: the OAuth return lands on `/login`
+        // (inAuthGroup), whose `?code=` is a PKCE token, not an invite code.
+        rememberInviteCode(globalParams.code ?? readInviteCodeFromUrl());
         redirectTo = '/login';
       } else if (isWebRootPath && typeof window !== 'undefined') {
         if (!consumeHistoryPop()) {
@@ -171,7 +154,11 @@ function RootLayoutNav() {
       } else if (activeCommunityRequest) {
         redirectTo = '/community-request-submitted';
       } else {
-        const pendingCode = takeSavedCommunityCode();
+        // Peek, never consume — this effect can run again before `pathname`
+        // catches up, and a consuming read would send the second pass to a bare
+        // `/community-select`, overwriting the prefilled one. The join screen
+        // clears the code once it has used it.
+        const pendingCode = peekInviteCode();
         redirectTo = pendingCode ? `/community-select?code=${encodeURIComponent(pendingCode)}` : '/community-select';
       }
     } else if (!communityId && activeCommunityRequest && !isOnCommunityRequestSubmitted) {
@@ -179,7 +166,7 @@ function RootLayoutNav() {
       redirectTo = '/community-request-submitted';
     } else if (!communityId && !activeCommunityRequest && !isOnCommunitySelect && !isOnCommunityRequest) {
       // No community, no request → select/request community
-      const pendingCode = takeSavedCommunityCode();
+      const pendingCode = peekInviteCode();
       redirectTo = pendingCode ? `/community-select?code=${encodeURIComponent(pendingCode)}` : '/community-select';
     } else if (communityId) {
       const needsFlatSelection = Boolean(blocksEnabled && !flatId);

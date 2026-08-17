@@ -10,9 +10,18 @@ without touching the schema.
 
 **Deletes** — profiles, `auth.users`, announcements, events, funds, marketplace
 listings/orders/pre-orders, carpools, parent corner, service
-providers/visits/hires/ratings, blood donors, notifications, audit rows — and,
+providers/visits/hires/ratings, blood donors, notifications, notification
+preferences, push subscriptions, feedback reports, audit rows — and,
 unless `wooru.keep_community_shell` is `true`, the communities, blocks, flats
 and emergency contacts as well.
+
+The wipe list is hand-maintained and must name **every** table referencing
+`auth.users`, `profiles` or `communities`; a migration that adds one without
+updating the list makes the run abort on a foreign-key violation. It was last
+reconciled against the live schema on 2026-08-17, when `feedback_reports`,
+`mcn_drop_reports`, `notification_preferences` and `push_subscriptions` were
+found missing. To re-check, list `public` tables whose foreign keys point at
+those three and diff against the `wiped` array.
 
 **`wooru.keep_community_shell`** (CONFIG block) — set `true` to keep
 `communities`, `community_blocks`, `community_flats` and `emergency_contacts`
@@ -30,9 +39,14 @@ their flat, with zero test accounts left. Occupancy is derived from
 - Platform admin accounts — profiles with `app_role = 'admin'` and
   `community_id IS NULL`, which is exactly what `public.is_platform_admin()`
   recognises, plus any emails listed in the CONFIG block. `thewooru@gmail.com`
-  is kept by default because `is_platform_admin()` hardcodes it. Spared profiles
-  get their `community_id` / `block_id` / `flat_id` cleared so they survive the
-  `communities` delete.
+  and `societyservicehub@gmail.com` are kept by default — the former is
+  hardcoded into `is_platform_admin()`, the latter is the other standing
+  platform admin. Spared profiles get their `community_id` / `block_id` /
+  `flat_id` cleared so they survive the `communities` delete.
+- Global emergency contacts — the 14 national helplines are seed rows with
+  `community_id IS NULL`. They survive in shell mode, but a **full** reset
+  (`keep_community_shell` = `false`) drops them along with the community-scoped
+  ones, and nothing re-seeds them.
 
 ### Running it
 

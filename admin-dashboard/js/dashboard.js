@@ -255,7 +255,7 @@ const DashboardPage = {
       { label: 'New members (30d)', key: 'new_members_30d' },
       { label: 'MAU (30d)', key: 'mau_30d' },
       { label: 'Providers', key: 'providers' },
-      { label: 'Food drops', key: 'drops' },
+      { label: 'Menus', key: 'drops' },
       { label: 'Pre-orders', key: 'orders' },
       { label: 'Food revenue', key: 'food_revenue' },
       { label: 'Business listings', key: 'listings' },

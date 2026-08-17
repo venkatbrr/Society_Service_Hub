@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { Tables } from './database.types';
+import { ResidentProfile } from './database.types';
 
 /**
  * Last-known-good snapshot of the resolved auth state, persisted locally.
@@ -20,7 +20,7 @@ import { Tables } from './database.types';
 export type AuthSnapshot = {
   version: number;
   userId: string;
-  profile: Tables<'profiles'>;
+  profile: ResidentProfile;
   communityId: string | null;
   myBlockId: string | null;
   flatId: string | null;

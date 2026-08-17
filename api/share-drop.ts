@@ -3,7 +3,7 @@
 //
 // The Expo web build is a client-rendered SPA: every route resolves to the
 // same static index.html with no per-page meta tags, so link-preview crawlers
-// (WhatsApp, Facebook, Telegram, ...) never see a food drop's title/photo when
+// (WhatsApp, Facebook, Telegram, ...) never see a menu's title/photo when
 // a resident shares it. This endpoint gives crawlers a tiny server-rendered
 // HTML document with real Open Graph tags for the requested drop, then sends
 // everyone else straight into the app.
@@ -52,7 +52,7 @@ module.exports = async function handler(req: any, res: any) {
   }
 
   const html = renderOgPage({
-    title: card.title || 'Food Drop',
+    title: card.title || 'Menu',
     description: card.description?.trim() || 'Pre-order fresh home-cooked food from your neighbors on Wooru.',
     imageUrl: card.image_url ? ogImageUrl(card.image_url) : DEFAULT_OG_IMAGE,
     targetUrl: appUrl,

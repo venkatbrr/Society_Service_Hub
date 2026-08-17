@@ -7,7 +7,13 @@
 --   them: blocks, flats, announcements, events, funds, marketplace
 --   listings/orders/pre-orders, carpools, parent corner, service
 --   providers/visits/hires/ratings, blood donors, emergency contacts,
---   notifications, audit rows, and the matching `auth.users` accounts.
+--   notifications, notification preferences, push subscriptions, feedback
+--   reports, audit rows, and the matching `auth.users` accounts.
+--
+--   The wipe list must cover EVERY table that references `auth.users`,
+--   `public.profiles` or `public.communities`. When a migration adds one,
+--   add it here too — otherwise the run aborts on a foreign-key violation.
+--   Last reconciled against the schema: 2026-08-17.
 --
 -- WHAT THIS KEEPS
 --   * The schema itself — tables, columns, RLS policies, RPCs, triggers,
@@ -63,7 +69,8 @@ select set_config('wooru.keep_platform_admins', 'true', true);
 -- Extra accounts to spare, by email (comma-separated, case-insensitive).
 -- `thewooru@gmail.com` is hardcoded into `is_platform_admin()`, so it is
 -- kept by default — dropping it would orphan that override.
-select set_config('wooru.keep_emails', 'thewooru@gmail.com', true);
+-- `societyservicehub@gmail.com` is the other standing platform admin account.
+select set_config('wooru.keep_emails', 'thewooru@gmail.com,societyservicehub@gmail.com', true);
 
 -- ---------------------------------------------------------------------
 -- Guard
@@ -116,15 +123,18 @@ declare
     'public.community_event_organizers','public.community_events','public.community_flats',
     'public.community_group_members','public.community_groups','public.community_partnerships',
     'public.community_requests','public.emergency_contacts','public.event_transactions',
-    'public.events','public.favorites','public.flat_addition_requests','public.fraud_verdicts',
-    'public.fund_roles','public.funds_access_requests','public.funds_access_revocations',
-    'public.hire_feedback','public.mcn_carpool_requests','public.mcn_carpools',
-    'public.mcn_listing_reports','public.mcn_listings','public.mcn_order_items','public.mcn_orders',
+    'public.events','public.favorites','public.feedback_reports','public.flat_addition_requests',
+    'public.fraud_verdicts','public.fund_roles','public.funds_access_requests',
+    'public.funds_access_revocations','public.hire_feedback','public.mcn_carpool_requests',
+    'public.mcn_carpools','public.mcn_drop_reports','public.mcn_listing_reports',
+    'public.mcn_listings','public.mcn_order_items','public.mcn_orders',
     'public.mcn_parent_corner','public.mcn_posts','public.mcn_preorder_drops',
     'public.mcn_preorder_items','public.mcn_preorder_order_items','public.mcn_preorder_orders',
-    'public.mcn_products','public.notifications','public.profile_audit_log','public.profiles',
+    'public.mcn_products','public.notification_preferences','public.notifications',
+    'public.profile_audit_log','public.profiles',
     'public.provider_hires','public.provider_personal_notes','public.provider_public_rating_nudges',
-    'public.provider_reports','public.provider_shares','public.ratings','public.school_reviews',
+    'public.provider_reports','public.provider_shares','public.push_subscriptions',
+    'public.ratings','public.school_reviews',
     'public.schools','public.service_providers','public.service_visit_communities',
     'public.service_visits','public.user_service_history','public.user_services',
     'public.visit_joiners','auth.users'
@@ -173,6 +183,7 @@ update public.profiles
 delete from public.announcement_audiences;
 delete from public.community_event_contacts;
 delete from public.community_group_members;
+delete from public.mcn_drop_reports;                -- before mcn_preorder_drops
 delete from public.mcn_preorder_order_items;
 delete from public.mcn_order_items;             -- before mcn_products (RESTRICT)
 delete from public.hire_feedback;
@@ -195,6 +206,9 @@ delete from public.ratings;
 delete from public.school_reviews;
 delete from public.blood_donors;
 delete from public.notifications;
+delete from public.notification_preferences;
+delete from public.push_subscriptions;
+delete from public.feedback_reports;            -- before communities + auth.users
 delete from public.fraud_verdicts;
 
 -- Community-scoped content

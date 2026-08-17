@@ -1,5 +1,5 @@
 /**
- * Meal slot for a pre-order food drop (`mcn_preorder_drops.meal_type`).
+ * Meal slot for a pre-order menu (`mcn_preorder_drops.meal_type`).
  *
  * Stored, not derived. An earlier version bucketed it off `fulfillment_time`,
  * which is right most of the time and wrong exactly where it matters — a

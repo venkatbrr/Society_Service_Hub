@@ -211,7 +211,7 @@ export default function MyOrdersScreen() {
   const renderPreorderCard = (order: PreorderOrder) => {
     const drop = order.mcn_preorder_drops;
     const isOutdatedOrMissing = !drop;
-    const dropTitle = drop?.title || 'Food Drop';
+    const dropTitle = drop?.title || 'Menu';
     const hostName = drop?.profiles?.full_name || 'Host';
     const hostFlat = drop?.profiles?.flat_number ? `Flat ${drop.profiles.flat_number}` : '';
     const phone = drop?.profiles?.phone_number;
@@ -249,7 +249,7 @@ export default function MyOrdersScreen() {
               </Text>
             ) : (
               <Text style={[styles.sellerInfo, { color: colors.danger }]}>
-                This food drop is no longer available in your community
+                This menu is no longer available in your community
               </Text>
             )}
           </View>
@@ -346,7 +346,7 @@ export default function MyOrdersScreen() {
               style={[styles.actionBtn, { borderColor: colors.primary, backgroundColor: Verandah.cardMuted }]}
             >
               <Eye size={14} color={colors.primary} aria-hidden={true} />
-              <Text style={[styles.actionBtnText, { color: colors.primary }]}>View Drop</Text>
+              <Text style={[styles.actionBtnText, { color: colors.primary }]}>View Menu</Text>
             </TouchableOpacity>
 
             {phone ? (

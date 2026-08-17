@@ -16,6 +16,7 @@ import { Verandah } from '../constants/Colors';
 import { APP_EMOJIS } from '../constants/emojis';
 import { VerandahBorder, VerandahRadius, VerandahSpace, VerandahType } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
+import { clearInviteCode, normalizeInviteCode, peekInviteCode } from '../lib/inviteCode';
 import { POST_AUTH_LANDING_ROUTE, replaceTracked } from '../lib/navigation';
 import { supabase } from '../lib/supabase';
 
@@ -27,12 +28,24 @@ export default function CommunitySelectScreen() {
 
   const [code, setCode] = useState('');
   const [joining, setJoining] = useState(false);
+  // Whether the code in the box arrived from an invite rather than being typed.
+  // Read once on mount so the "filled from your invite link" banner does not
+  // flicker away when the parked code is cleared below.
+  const [fromInvite, setFromInvite] = useState(
+    () => Boolean(normalizeInviteCode(codeParam) ?? peekInviteCode())
+  );
 
-  // Pre-fill code when arriving via an invite link.
+  // Pre-fill from the invite link. The query param is the normal path; the
+  // parked code (lib/inviteCode.ts) covers the sign-in detour, where the root
+  // layout may have landed us here without the query string surviving.
   useEffect(() => {
-    if (codeParam && typeof codeParam === 'string') {
-      setCode(codeParam.toUpperCase().slice(0, 6));
-    }
+    const invited = normalizeInviteCode(codeParam) ?? peekInviteCode();
+    if (!invited) return;
+
+    setCode(invited);
+    setFromInvite(true);
+    // Consumed — a later visit to this screen should start blank.
+    clearInviteCode();
   }, [codeParam]);
 
   const handleJoinByCode = async () => {
@@ -89,7 +102,7 @@ export default function CommunitySelectScreen() {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Join your community</Text>
         <Text style={styles.subtitle}>
-          {codeParam
+          {fromInvite
             ? `Your neighbour's community code is ready — just tap "Join community" below.`
             : `Enter the 6-character code shared by your community lead, or request a new community.`}
         </Text>
@@ -103,7 +116,7 @@ export default function CommunitySelectScreen() {
             </View>
           </View>
 
-          {codeParam ? (
+          {fromInvite ? (
             <View style={styles.inviteBanner}>
               <Text style={styles.inviteBannerText}>🔗 Code filled from your invite link</Text>
             </View>

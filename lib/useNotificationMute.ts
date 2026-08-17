@@ -62,7 +62,7 @@ export function useNotificationMute(channel: MuteChannel) {
     // Optimistic update
     setMuted(nextMuted);
 
-    const channelLabel = channel === 'food_drops' ? 'Food drop' : 'Parent Corner';
+    const channelLabel = channel === 'food_drops' ? 'Menu' : 'Parent Corner';
 
     try {
       const { error } = await supabase.from('notification_preferences').upsert(
@@ -83,8 +83,8 @@ export function useNotificationMute(channel: MuteChannel) {
         type: 'success',
         text1: nextMuted ? `${channelLabel} notifications muted` : `${channelLabel} notifications on`,
         text2: nextMuted
-          ? `You won't receive community alerts for new ${channel === 'food_drops' ? 'drops' : 'posts'}.`
-          : `You'll receive alerts when new ${channel === 'food_drops' ? 'drops are cooking' : 'posts are added'}.`,
+          ? `You won't receive community alerts for new ${channel === 'food_drops' ? 'menus' : 'posts'}.`
+          : `You'll receive alerts when new ${channel === 'food_drops' ? 'menus are cooking' : 'posts are added'}.`,
       });
     } catch (err: any) {
       console.error('[useNotificationMute] Failed to update preference:', err);

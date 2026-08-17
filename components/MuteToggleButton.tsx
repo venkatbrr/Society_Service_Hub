@@ -28,7 +28,7 @@ export function MuteToggleButton({ channel, style }: MuteToggleButtonProps) {
   // Scoped per channel: a bare "Alerts" beside a switch still leaves the user
   // guessing whether it governs this section or the whole app.
   const label = channel === 'food_drops' ? 'Food alerts' : 'Post alerts';
-  const what = channel === 'food_drops' ? 'new food drop' : 'Parent Corner';
+  const what = channel === 'food_drops' ? 'new menu' : 'Parent Corner';
 
   return (
     <TouchableOpacity

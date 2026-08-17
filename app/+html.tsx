@@ -101,7 +101,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
                 <ShoppingBag01 size={16} color="#DDA94A" aria-hidden="true" />
               </div>
               <div>
-                <div className="feature-item-title">Food Drops</div>
+                <div className="feature-item-title">Menus</div>
                 <div className="feature-item-desc">Pre-order home meals from hosts</div>
               </div>
             </div>
