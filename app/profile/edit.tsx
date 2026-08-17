@@ -18,6 +18,7 @@ import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
+import { isValidIndianMobile, normalizeIndianMobile } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
 
 export default function EditProfileScreen() {
@@ -35,6 +36,12 @@ export default function EditProfileScreen() {
   // on save so it isn't silently wiped.
   const [avatarUrl] = useState<string | null>(profile?.avatar_url || user?.user_metadata?.avatar_url || null);
   const [email, setEmail] = useState(user?.email || '');
+  // A saved contact number, nothing more — unverified, and deliberately not
+  // wired to phone login in either direction (sign-in resolves the account from
+  // the synthetic phone_91…@auth.wooru.in address, never from this column).
+  // Captured the first time a resident types it into a food-drop order, then
+  // reused to prefill every later order. This is the one place it can change.
+  const [phoneNumber, setPhoneNumber] = useState(profile?.phone_number || '');
   const [loading, setLoading] = useState(false);
 
   const colors = Verandah;
@@ -44,6 +51,7 @@ export default function EditProfileScreen() {
   useEffect(() => {
     if (profile) {
       if (profile.full_name) setFullName(profile.full_name);
+      if (profile.phone_number) setPhoneNumber((prev) => prev || profile.phone_number || '');
       if ((profile as any).flat_id) {
         setSelectedFlatId((profile as any).flat_id);
         setIsFlatLocked(true);
@@ -81,6 +89,16 @@ export default function EditProfileScreen() {
       return;
     }
 
+    const trimmedPhone = phoneNumber.trim();
+    if (trimmedPhone && !isValidIndianMobile(trimmedPhone)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid mobile number',
+        text2: 'Enter a valid 10-digit Indian mobile number.',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const metadataUpdates: any = {
@@ -105,6 +123,7 @@ export default function EditProfileScreen() {
         .update({
           full_name: fullName.trim(),
           avatar_url: avatarUrl,
+          phone_number: trimmedPhone ? normalizeIndianMobile(trimmedPhone) : null,
         })
         .eq('id', user?.id as string);
 
@@ -157,6 +176,22 @@ export default function EditProfileScreen() {
             placeholderTextColor={colors.textTertiary}
             autoCapitalize="words"
           />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Mobile Number</Text>
+          <TextInput
+            style={styles.input}
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+            placeholder="10-digit mobile number"
+            placeholderTextColor={colors.textTertiary}
+            keyboardType="phone-pad"
+            maxLength={10}
+          />
+          <Text style={styles.helpText}>
+            Used to prefill your contact number when you order from a food drop.
+          </Text>
         </View>
 
         {communityId && (

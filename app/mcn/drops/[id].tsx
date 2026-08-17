@@ -39,6 +39,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { cloudinaryUrl } from '../../../lib/cloudinary';
 import { confirmAction } from '../../../lib/confirm';
+import { normalizeIndianMobile } from '../../../lib/phone';
 import { shareOrCopy } from '../../../lib/share';
 import { siteUrl } from '../../../lib/siteUrl';
 import { supabase } from '../../../lib/supabase';
@@ -82,7 +83,7 @@ interface DropDetails {
 export default function PreorderDropDetailScreen() {
   const { id: dropId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user, profile, isCommunityLead, isPlatformAdmin } = useAuth();
+  const { user, profile, isCommunityLead, isPlatformAdmin, refreshSession } = useAuth();
   const { height: windowHeight } = useWindowDimensions();
   const heroHeight = getMediaHeroHeight(windowHeight);
   const colors = Verandah;
@@ -275,11 +276,14 @@ export default function PreorderDropDetailScreen() {
     }, [refreshAvailability])
   );
 
-  // Pre-fill resident info from profile
+  // Pre-fill resident info from profile. The phone only backfills an empty box
+  // so it never clobbers a number typed for this order, or the one loaded when
+  // editing an existing order.
   useEffect(() => {
     if (profile) {
       if (profile.full_name) setBuyerName(profile.full_name);
       if (profile.flat_number) setFlatNumber(profile.flat_number);
+      if (profile.phone_number) setBuyerPhone((prev) => prev || profile.phone_number || '');
     }
   }, [profile]);
 
@@ -342,6 +346,7 @@ export default function PreorderDropDetailScreen() {
     if (profile) {
       if (profile.full_name) setBuyerName(profile.full_name);
       if (profile.flat_number) setFlatNumber(profile.flat_number);
+      if (profile.phone_number) setBuyerPhone(profile.phone_number);
     }
     setBuyerNote('');
   };
@@ -435,6 +440,24 @@ export default function PreorderDropDetailScreen() {
       });
 
       if (rpcErr) throw rpcErr;
+
+      // First order doubles as phone capture. Residents who signed in with
+      // Google have no phone on their profile, so keep the one they just typed
+      // and prefill every later order from it. Only fills a blank — an existing
+      // number is changed from Profile → Edit, never silently from here.
+      const capturedPhone = normalizeIndianMobile(buyerPhone);
+      if (capturedPhone && !profile?.phone_number && user.id) {
+        const { error: phoneErr } = await supabase
+          .from('profiles')
+          .update({ phone_number: capturedPhone })
+          .eq('id', user.id);
+        if (phoneErr) {
+          // Non-fatal: the order is already placed, they just retype next time.
+          console.warn('Could not save phone number to profile:', phoneErr.message);
+        } else {
+          await refreshSession();
+        }
+      }
 
       Toast.show(
         editingOrderId
@@ -1132,7 +1155,14 @@ export default function PreorderDropDetailScreen() {
               value={buyerPhone}
               onChangeText={setBuyerPhone}
               keyboardType="phone-pad"
+              maxLength={10}
             />
+            {!profile?.phone_number ? (
+              <Text style={styles.fieldHint}>
+                We&apos;ll save this to your profile so you don&apos;t have to type it again. You can change it
+                anytime from Profile → Edit Profile.
+              </Text>
+            ) : null}
 
             <Text style={[styles.subLabel, { marginTop: 10 }]}>Delivery Note (Optional)</Text>
             <TextInput
@@ -1918,6 +1948,11 @@ const styles = StyleSheet.create({
     color: Verandah.textSecondary,
     marginBottom: 2,
   },
+  fieldHint: {
+    ...VerandahType.caption,
+    color: Verandah.textTertiary,
+    marginTop: 4,
+  },
   input: {
     backgroundColor: Verandah.card,
     borderWidth: 0.5,
@@ -1965,8 +2000,8 @@ const styles = StyleSheet.create({
     borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
     borderRadius: VerandahRadius.lg,
-    padding: 10,
-    gap: 6,
+    padding: 14,
+    gap: 8,
   },
   loginPromptTitle: {
     fontSize: 13,
@@ -1979,17 +2014,24 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   loginPromptBtn: {
-    alignSelf: 'flex-start',
-    marginTop: 2,
+    // Centred and full-size: this is the only route to ordering for a
+    // signed-out visitor arriving on a shared drop link, so it reads as the
+    // screen's primary action rather than a footnote under the copy.
+    alignSelf: 'center',
+    marginTop: 6,
     backgroundColor: Verandah.accent,
     borderRadius: VerandahRadius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 32,
+    paddingVertical: 13,
+    minWidth: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loginPromptBtnText: {
-    color: '#FFFFFF',
-    fontSize: 11,
+    color: Verandah.primaryFg,
+    fontSize: 14.5,
     fontWeight: '600',
+    fontFamily: VerandahType.sansFamily,
   },
   hostNoticeBox: {
     flexDirection: 'row',

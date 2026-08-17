@@ -31,6 +31,27 @@ export function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 /**
+ * `navigator.serviceWorker.ready` never settles when no worker ever takes
+ * control — it does not reject, it just hangs forever, so a bare `await` on it
+ * is an unbounded wait, not a slow one. That is the normal state on the Expo
+ * dev server, which registers no service worker at all (registration ships only
+ * via `build-admin.js`'s app shell and `public/landing.html`; `app/+html.tsx`
+ * never renders — see docs/CLAUDE.md §9), and it happens in production whenever
+ * registration fails, since that call swallows its own error.
+ *
+ * `isWebPushSupported()` does not help: it tests that the *APIs exist*, which
+ * they do in any modern browser, not that a worker is actually controlling the
+ * page. So anything on a user-facing path must put a floor under this. Sign-out
+ * awaited it directly and stopped working entirely.
+ */
+async function swReadyOrNull(timeoutMs = 3000): Promise<ServiceWorkerRegistration | null> {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+  ]);
+}
+
+/**
  * Idempotent. Safe to call on app launch when user is signed in.
  * Re-subscribing is cheap and self-heals endpoints rotated by the browser.
  */
@@ -55,7 +76,11 @@ export async function ensureWebPushSubscription(userId: string): Promise<WebPush
   }
 
   try {
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await swReadyOrNull();
+    if (!reg) {
+      console.warn('[WebPush] No service worker took control; skipping subscribe.');
+      return 'error';
+    }
     let sub = await reg.pushManager.getSubscription();
 
     if (!sub) {
@@ -99,12 +124,17 @@ export async function ensureWebPushSubscription(userId: string): Promise<WebPush
 
 /**
  * Called on sign-out: unsubscribe locally AND delete the DB row.
+ *
+ * Sign-out blocks on this, so it must always settle. Cleaning up the push
+ * subscription is best-effort housekeeping — never a reason to keep someone
+ * signed in.
  */
 export async function removeWebPushSubscription(): Promise<void> {
   if (!isWebPushSupported()) return;
 
   try {
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await swReadyOrNull();
+    if (!reg) return;
     const sub = await reg.pushManager.getSubscription();
     if (sub) {
       const endpoint = sub.endpoint;
