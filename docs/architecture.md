@@ -643,7 +643,7 @@ notification inserted into public.notifications
 
 - **Subscriptions**: Stored in `public.push_subscriptions` keyed uniquely on `endpoint`. Client subscribes via `lib/webPush.ts` (`ensureWebPushSubscription`) on permission grant. Cleaned up on sign-out via `removeWebPushSubscription`.
 - **Per-Channel Mutes**: Stored in `public.notification_preferences` for channels `food_drops` and `parent_corner`. Broadcast fan-outs skip muted users; transactional alerts (e.g. `preorder_received` to host) cannot be muted.
-- **Service Worker**: `public/service-worker.js` (v11) handles `push` and `notificationclick`.
+- **Service Worker**: `public/service-worker.js` (v12) handles `push` and `notificationclick`. The notification's `icon` is `/images/icon-192.png` (expanded art); its `badge` is `/images/notification-badge.png` — a transparent silhouette, because Android alpha-masks the status-bar glyph.
 - **Platform Matrix**:
   - Android Chrome (installed PWA or in-browser tab): Supported.
   - Desktop Chrome / Edge / Firefox: Supported.

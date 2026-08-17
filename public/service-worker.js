@@ -1,4 +1,4 @@
-// Wooru — PWA Service Worker (v10)
+// Wooru — PWA Service Worker (v12)
 // Provides offline caching for static assets, and serves app-shell navigations
 // from cache while revalidating in the background.
 
@@ -16,7 +16,12 @@
 // v10: app-shell navigations moved from network-first to stale-while-revalidate
 // (see the fetch handler) — installed clients must pick up the new strategy.
 // v11: added push and notificationclick event listeners for Web Push notifications.
-const CACHE_NAME = 'wooru-pwa-v11';
+// v12: notification `badge` moved off /images/icon-192.png. Android masks the
+// status-bar badge by its ALPHA channel, and icon-192 is a full-bleed opaque
+// square — so it rendered as a solid white block. /images/notification-badge.png
+// is a transparent arch silhouette. It is precached below, so this bump is what
+// makes installed clients actually fetch it.
+const CACHE_NAME = 'wooru-pwa-v12';
 
 
 // `/app.html` is the SPA shell every app route rewrites to (see vercel.json).
@@ -34,6 +39,7 @@ const STATIC_ASSETS = [
   '/manifest.json',
   '/images/icon.png',
   '/images/icon-192.png',
+  '/images/notification-badge.png',
   '/images/icon-512.png',
   '/images/icon-512-maskable.png',
   '/images/apple-touch-180.png',
@@ -185,8 +191,11 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'Wooru';
   const options = {
     body: payload.body || '',
+    // `icon` is the large art in the expanded notification — the full-colour
+    // app icon is correct there. `badge` is the small status-bar glyph, which
+    // Android masks by alpha, so it MUST be a transparent silhouette.
     icon: '/images/icon-192.png',
-    badge: '/images/icon-192.png',
+    badge: '/images/notification-badge.png',
     tag: payload.tag || undefined,
     data: { url: payload.url || '/network' },
   };
