@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahBorder, VerandahRadius, VerandahType, format12HourTime, getNetworkTileImageHeight } from '../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahType, format12HourTime, getTopCropTileImageStyle } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { cloudinaryUrl } from '../lib/cloudinary';
 import { shareOrCopy } from '../lib/share';
@@ -193,7 +193,12 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
   onPress,
 }) => {
   const { height: windowHeight } = useWindowDimensions();
-  const coverHeight = getNetworkTileImageHeight(windowHeight);
+  // Natural width/height of the cover photo, learnt on load, so the tile can
+  // show the top 40% of *this* picture rather than a fixed slab. Null until
+  // the image reports it (and for the bundled placeholder, which keeps the
+  // fixed height so every photo-less drop matches).
+  const [coverAspect, setCoverAspect] = useState<number | null>(null);
+  const coverSizing = getTopCropTileImageStyle(drop.image_url ? coverAspect : null, windowHeight);
   // Read from context rather than taking an `isCreator` prop: the card is the
   // only thing that needs this, and a prop is one a caller can silently forget
   // to pass. `user` is null for the anonymous browse path, which correctly
@@ -331,7 +336,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
     <View style={styles.card}>
       <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
         {/* Cover photo with overlaid cut-off badge */}
-        <View style={[styles.coverImageWrap, { height: coverHeight }]}>
+        <View style={[styles.coverImageWrap, coverSizing]}>
           {/* A host who uploads nothing gets the bundled thali rather than an
               empty grey box reading "food photo", which looked like an
               unfinished screen. Real photos crop from the top (that is where
@@ -343,6 +348,10 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
             contentFit="cover"
             contentPosition={drop.image_url ? 'top' : 'center'}
             transition={200}
+            onLoad={(e) => {
+              const { width, height } = e.source ?? {};
+              if (width && height) setCoverAspect(width / height);
+            }}
           />
 
           {/* CTA overlays the photo's bottom-right instead of taking a full
@@ -557,8 +566,7 @@ const styles = StyleSheet.create({
     backgroundColor: Verandah.cream,
   },
   coverImage: {
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFillObject,
   },
   title: {
     ...VerandahType.tileTitle,

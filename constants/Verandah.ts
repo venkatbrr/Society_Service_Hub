@@ -266,6 +266,49 @@ export const getMediaHeroHeight = (windowHeight?: number): number =>
   Math.round(Math.min(280, Math.max(150, viewportHeight(windowHeight) * 0.3)));
 
 /**
+ * Fraction of a tile cover photo that stays visible: the tile shows the top 40%
+ * of the picture and crops the rest away.
+ */
+export const TILE_IMAGE_TOP_FRACTION = 0.4;
+
+/**
+ * Sizing style for a **network tile cover that shows the top 40% of its photo**
+ * (pre-order drops, business listings).
+ *
+ * `getNetworkTileImageHeight()` hands every tile the same slab of pixels no
+ * matter what shape the photo is, so a portrait poster — which is what hosts
+ * actually upload — showed only a thin strip of its top. Here the visible
+ * height is derived from the picture instead: at the card's width the photo
+ * would render `width x (1 / aspectRatio)` tall, and the tile keeps 40% of
+ * that, anchored at the top (`contentPosition="top"` on the image does the
+ * anchoring).
+ *
+ * Expressed as `aspectRatio` rather than a pixel height so it never needs the
+ * card's measured width: `width / height = aspectRatio / 0.4`. Yoga still
+ * applies `minHeight` / `maxHeight`, which bound the result — a wide photo
+ * never drops below the old fixed height, and a very tall one never grows past
+ * the detail-screen hero.
+ *
+ * Pass `null` until the image reports its natural size (expo-image's `onLoad`
+ * carries `source.width` / `source.height`); that returns the old fixed height
+ * so the tile is sanely sized on first paint.
+ */
+export const getTopCropTileImageStyle = (
+  naturalAspectRatio: number | null | undefined,
+  windowHeight?: number
+) => {
+  const fallbackHeight = getNetworkTileImageHeight(windowHeight);
+  if (!naturalAspectRatio || !Number.isFinite(naturalAspectRatio) || naturalAspectRatio <= 0) {
+    return { height: fallbackHeight };
+  }
+  return {
+    aspectRatio: naturalAspectRatio / TILE_IMAGE_TOP_FRACTION,
+    minHeight: fallbackHeight,
+    maxHeight: getMediaHeroHeight(windowHeight),
+  };
+};
+
+/**
  * Formats a 24-hour time string (e.g. "13:00", "09:30")
  * into 12-hour AM/PM format (e.g. "01:00 pm", "09:30 am").
  */

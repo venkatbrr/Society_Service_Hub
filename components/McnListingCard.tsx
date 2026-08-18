@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
-import { VerandahBorder, VerandahRadius, VerandahType, getNetworkTileImageHeight } from '../constants/Verandah';
+import { VerandahBorder, VerandahRadius, VerandahType, getTopCropTileImageStyle } from '../constants/Verandah';
 import { cloudinaryUrl } from '../lib/cloudinary';
 import { shareOrCopy } from '../lib/share';
 import { siteUrl } from '../lib/siteUrl';
@@ -46,7 +46,10 @@ export const McnListingCard = React.memo(({
   onPress,
 }: McnListingCardProps) => {
   const { height: windowHeight } = useWindowDimensions();
-  const coverHeight = getNetworkTileImageHeight(windowHeight);
+  // Natural width/height of the cover photo, learnt on load, so the tile can
+  // show the top 40% of *this* picture rather than a fixed slab.
+  const [coverAspect, setCoverAspect] = React.useState<number | null>(null);
+  const coverSizing = getTopCropTileImageStyle(coverAspect, windowHeight);
   const ratings = listing.ratings || [];
   const ratingCount = ratings.length;
   const avgRating = ratingCount > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
@@ -92,10 +95,14 @@ export const McnListingCard = React.memo(({
       {listing.image_url ? (
         <Image
           source={{ uri: cloudinaryUrl(listing.image_url) }}
-          style={[styles.coverImage, { height: coverHeight }]}
+          style={[styles.coverImage, coverSizing]}
           contentFit="cover"
           contentPosition="top"
           transition={200}
+          onLoad={(e) => {
+            const { width, height } = e.source ?? {};
+            if (width && height) setCoverAspect(width / height);
+          }}
         />
       ) : null}
       <View style={listing.image_url ? styles.cardContentWithImage : undefined}>

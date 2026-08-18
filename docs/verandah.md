@@ -177,7 +177,8 @@ From `VerandahLayout` — these differ by platform because web has no status bar
 
 Also exported from `constants/Verandah.ts`:
 
-- `getNetworkTileImageHeight(windowHeight?)` → ~11.5% of viewport (clamp 84–130). Cover height on a **feed tile** (Pre-order Food, Community Business, Community Events). It is a *consequence* of the card body, not a free dial — the tile budget is `(viewport − ~270px chrome) / 3`, so every ~65px added to the photo drops a card off the fold.
+- `getNetworkTileImageHeight(windowHeight?)` → ~11.5% of viewport (clamp 84–130). Cover height on a **feed tile**. Still the token for Community Events, and the floor/fallback for the two tiles that size from the photo. It is a *consequence* of the card body, not a free dial — the tile budget is `(viewport − ~270px chrome) / 3`, so every ~65px added to the photo drops a card off the fold.
+- `getTopCropTileImageStyle(naturalAspectRatio, windowHeight?)` → a style object showing the **top 40% of the photo itself** (`TILE_IMAGE_TOP_FRACTION`). Used by `PreorderDropCard` and `McnListingCard`. Returns `{ aspectRatio: naturalAspectRatio / 0.4, minHeight, maxHeight }`, so it needs no measured card width; pass `null` until expo-image's `onLoad` reports `source.width` / `source.height` and it falls back to `getNetworkTileImageHeight()`.
 - `getMediaHeroHeight(windowHeight?)` → 30% of viewport (clamp 150–280). Cover height on a **detail-screen hero**. See [Component Rules](#component-rules) for why the two differ so much.
 - `format12HourTime(timeStr)` → converts `"13:00"` to `"01:00 pm"`. Use this rather than hand-rolling AM/PM formatting; it passes through strings that already carry am/pm.
 
@@ -203,10 +204,11 @@ Reuse these instead of building local variants:
 
 | Token | Height | Where |
 |---|---|---|
-| `getNetworkTileImageHeight()` | ~11.5% of viewport (clamp 84–130) | Feed tiles — `PreorderDropCard`, `McnListingCard`, `EventCard`. Sized backwards from "three tiles on the fold", not chosen visually — see the source comment before changing it |
+| `getNetworkTileImageHeight()` | ~11.5% of viewport (clamp 84–130) | `EventCard`, and the lower bound / pre-load fallback for the other two tiles. Sized backwards from "three tiles on the fold", not chosen visually — see the source comment before changing it |
+| `getTopCropTileImageStyle()` | top 40% of the photo's own height, bounded by the two tokens above | `PreorderDropCard`, `McnListingCard`. Hosts upload portrait posters, and a fixed slab showed a thin strip of one; deriving the height from the picture keeps a readable share of every cover |
 | `getMediaHeroHeight()` | 30% of viewport (clamp 150–280) | Detail-screen heroes — food drop, business listing, event |
 
-The tile is deliberately shorter than the hero: on a tile the photo competes with the next card and the second card should peek above the fold; on a detail screen the photo is what the resident came to look at. Both use `contentPosition="top"` — `contentFit="cover"` centre-crops, which beheads people and cuts the top off a plated dish.
+The tile is deliberately shorter than the hero: on a tile the photo competes with the next card and the second card should peek above the fold; on a detail screen the photo is what the resident came to look at. All three use `contentPosition="top"` — `contentFit="cover"` centre-crops, which beheads people and cuts the top off a plated dish. Because `getTopCropTileImageStyle()` sizes from the photo, tile heights now vary between cards; `maxHeight` (the hero token) is what stops a very tall poster from owning the whole fold.
 
 `ChipRowSlider` needs a **bounded height slot** — its root is a horizontal `ScrollView` with no intrinsic height, so in a `flex: 1` column it stretches and its centred chips drift out of alignment with the animated pill. Wrap it in a fixed-height `View` or set `maxHeight` on `containerStyle`.
 | `DateField` | Cross-platform date picker (`input[type=date]` on web, `DateTimePicker` modal on native) |
