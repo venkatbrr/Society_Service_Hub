@@ -47,7 +47,7 @@ export const McnListingCard = React.memo(({
 }: McnListingCardProps) => {
   const { height: windowHeight } = useWindowDimensions();
   // Natural width/height of the cover photo, learnt on load, so the tile can
-  // show the top 40% of *this* picture rather than a fixed slab.
+  // show the top 30% of *this* picture rather than a fixed slab.
   const [coverAspect, setCoverAspect] = React.useState<number | null>(null);
   const coverSizing = getTopCropTileImageStyle(coverAspect, windowHeight);
   const ratings = listing.ratings || [];

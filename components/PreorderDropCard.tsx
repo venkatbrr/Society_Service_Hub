@@ -194,7 +194,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
 }) => {
   const { height: windowHeight } = useWindowDimensions();
   // Natural width/height of the cover photo, learnt on load, so the tile can
-  // show the top 40% of *this* picture rather than a fixed slab. Null until
+  // show the top 30% of *this* picture rather than a fixed slab. Null until
   // the image reports it (and for the bundled placeholder, which keeps the
   // fixed height so every photo-less drop matches).
   const [coverAspect, setCoverAspect] = useState<number | null>(null);

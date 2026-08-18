@@ -266,25 +266,30 @@ export const getMediaHeroHeight = (windowHeight?: number): number =>
   Math.round(Math.min(280, Math.max(150, viewportHeight(windowHeight) * 0.3)));
 
 /**
- * Fraction of a tile cover photo that stays visible: the tile shows the top 40%
- * of the picture and crops the rest away.
+ * Fraction of a tile cover photo that stays visible: the tile shows the top 30%
+ * of the picture and crops the rest away. Started at 40%, which read as too much
+ * of the feed spent on one tile.
  */
-export const TILE_IMAGE_TOP_FRACTION = 0.4;
+export const TILE_IMAGE_TOP_FRACTION = 0.3;
 
 /**
- * Sizing style for a **network tile cover that shows the top 40% of its photo**
+ * Sizing style for a **network tile cover that shows the top 30% of its photo**
  * (pre-order drops, business listings).
  *
  * `getNetworkTileImageHeight()` hands every tile the same slab of pixels no
  * matter what shape the photo is, so a portrait poster — which is what hosts
  * actually upload — showed only a thin strip of its top. Here the visible
  * height is derived from the picture instead: at the card's width the photo
- * would render `width x (1 / aspectRatio)` tall, and the tile keeps 40% of
+ * would render `width x (1 / aspectRatio)` tall, and the tile keeps 30% of
  * that, anchored at the top (`contentPosition="top"` on the image does the
  * anchoring).
  *
+ * At this fraction a square cover lands on the `minHeight` floor, so the growth
+ * over the old fixed slab is spent where the problem actually was: portrait
+ * posters, which is what hosts upload.
+ *
  * Expressed as `aspectRatio` rather than a pixel height so it never needs the
- * card's measured width: `width / height = aspectRatio / 0.4`. Yoga still
+ * card's measured width: `width / height = aspectRatio / 0.3`. Yoga still
  * applies `minHeight` / `maxHeight`, which bound the result — a wide photo
  * never drops below the old fixed height, and a very tall one never grows past
  * the detail-screen hero.
