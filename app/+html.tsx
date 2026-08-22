@@ -393,7 +393,19 @@ input:focus, textarea:focus, select:focus {
 
 const serviceWorkerRegistration = `
 if ('serviceWorker' in navigator) {
+  // The worker is deliberately NOT registered against the dev server. Its
+  // static-asset branch is cache-first and nothing evicts an entry until
+  // CACHE_NAME changes, so on localhost it pins Metro's bundle: you edit a
+  // screen, Metro rebuilds, and the browser keeps replaying the cached copy —
+  // a refresh cannot reach the dev server at all. Append ?sw=1 to opt back in
+  // when you actually need to test install or push behaviour locally.
+  const isDevHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  const forceSw = new URLSearchParams(location.search).get('sw') === '1';
   const register = () => {
+    if (isDevHost && !forceSw) {
+      console.info('[PWA] Service Worker not registered on ' + location.hostname + ' (append ?sw=1 to force).');
+      return;
+    }
     navigator.serviceWorker.register('/service-worker.js')
       .then(function(registration) {
         console.log('[PWA] Service Worker registered with scope:', registration.scope);

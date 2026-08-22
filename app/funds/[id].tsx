@@ -54,6 +54,15 @@ type FundDetail = Tables<'events'> & {
 
 type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role' | 'flat_number'>;
 
+/**
+ * Mirrors the ledger's own flat ordering — `length(flat_number), flat_number`
+ * in list_collection_targets_for_collector — so a flat sits in the same place
+ * whether the list came out of Postgres or was grouped here on the client.
+ * Ground-floor numbers (G1) sort ahead of 102 because they are shorter, which
+ * is the order a collection sheet is read in.
+ */
+const compareFlatNumbers = (a: string, b: string) => a.length - b.length || a.localeCompare(b);
+
 export default function FundDetailScreen() {
   const { id } = useLocalSearchParams();
   const [fund, setFund] = useState<FundDetail | null>(null);
@@ -170,6 +179,25 @@ export default function FundDetailScreen() {
     [flats]
   );
 
+  /**
+   * Flat id -> the pieces the contributions list needs to group and sort by.
+   * `list_community_flats` is readable by every approved member of the
+   * community, so a resident gets the same block grouping the treasurer sees.
+   */
+  const flatMeta = useMemo(
+    () =>
+      new Map<string, { blockName: string | null; flatNumber: string }>(
+        flats.map((flat) => [
+          flat.id as string,
+          {
+            blockName: (flat.block_name as string | null) ?? null,
+            flatNumber: ((flat.flat_number as string | null) ?? '').trim(),
+          },
+        ])
+      ),
+    [flats]
+  );
+
   if (loading || !fund) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
@@ -201,6 +229,111 @@ export default function FundDetailScreen() {
   const income = incomeTransactions.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
   const expense = expenseTransactions.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
   const balance = income - expense;
+
+  const flatNumberOf = (transaction: Tables<'event_transactions'>) => {
+    const flatId = (transaction as any).contributor_flat_id as string | null;
+    return (flatId ? flatMeta.get(flatId)?.flatNumber : '') ?? '';
+  };
+  const blockNameOf = (transaction: Tables<'event_transactions'>) => {
+    const flatId = (transaction as any).contributor_flat_id as string | null;
+    return (flatId ? flatMeta.get(flatId)?.blockName : null) ?? null;
+  };
+
+  /**
+   * Contributions read the way the collection sheet does: one section per
+   * block, flats in flat-number order inside it. Rows with no block — outside
+   * sponsors, a member in a community with no flat inventory, or a flat
+   * archived after it paid — fall into a trailing group rather than vanishing.
+   */
+  const contributionGroups = (() => {
+    const byBlock = new Map<string, Tables<'event_transactions'>[]>();
+    const unplaced: Tables<'event_transactions'>[] = [];
+
+    incomeTransactions.forEach((transaction) => {
+      const blockName = blockNameOf(transaction);
+      if (!blockName) {
+        unplaced.push(transaction);
+        return;
+      }
+      const existing = byBlock.get(blockName);
+      if (existing) {
+        existing.push(transaction);
+      } else {
+        byBlock.set(blockName, [transaction]);
+      }
+    });
+
+    const groups = Array.from(byBlock.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([blockName, rows]) => ({
+        key: blockName,
+        title: `Block ${blockName}`,
+        isBlock: true,
+        rows: [...rows].sort((a, b) => compareFlatNumbers(flatNumberOf(a), flatNumberOf(b))),
+      }));
+
+    if (unplaced.length > 0) {
+      // Flat-numbered rows still sort by flat; sponsors have nothing to sort by
+      // and keep newest-first behind them.
+      const withFlat = unplaced.filter((transaction) => flatNumberOf(transaction));
+      const withoutFlat = unplaced.filter((transaction) => !flatNumberOf(transaction));
+
+      groups.push({
+        key: '__unplaced__',
+        title: groups.length > 0 ? 'Other contributions' : 'All contributions',
+        isBlock: false,
+        rows: [
+          ...withFlat.sort((a, b) => compareFlatNumbers(flatNumberOf(a), flatNumberOf(b))),
+          ...withoutFlat.sort((a, b) => getCreatedAtTime(b.created_at) - getCreatedAtTime(a.created_at)),
+        ],
+      });
+    }
+
+    return groups.map((group) => ({
+      ...group,
+      total: group.rows.reduce((sum, row) => sum + Number(row.amount), 0),
+    }));
+  })();
+
+  // Headers only earn their space once at least one block has collected
+  // something — a community with no block inventory gets the plain list back.
+  const showContributionGroupHeaders = contributionGroups.some((group) => group.isBlock);
+
+  /**
+   * Per-block totals, rendered for everyone. The point of the fund screen is
+   * that a resident can check their block's numbers without asking the
+   * treasurer, so this is deliberately outside every permission gate.
+   */
+  const blockSummary = (() => {
+    const rows = new Map<string, { blockName: string; totalFlats: number; paidFlats: number; collected: number }>();
+
+    flats.forEach((flat) => {
+      const blockName = (flat.block_name as string | null) ?? null;
+      if (!blockName) return;
+      const entry = rows.get(blockName) ?? { blockName, totalFlats: 0, paidFlats: 0, collected: 0 };
+      entry.totalFlats += 1;
+      rows.set(blockName, entry);
+    });
+
+    incomeTransactions.forEach((transaction) => {
+      const blockName = blockNameOf(transaction);
+      if (!blockName) return;
+      const entry = rows.get(blockName);
+      if (!entry) return;
+      entry.paidFlats += 1;
+      entry.collected += Number(transaction.amount);
+    });
+
+    return Array.from(rows.values()).sort((a, b) => a.blockName.localeCompare(b.blockName));
+  })();
+
+  const blockSummaryTotals = blockSummary.reduce(
+    (acc, row) => ({ paidFlats: acc.paidFlats + row.paidFlats, totalFlats: acc.totalFlats + row.totalFlats }),
+    { paidFlats: 0, totalFlats: 0 }
+  );
+  const unassignedIncome = incomeTransactions
+    .filter((transaction) => !blockNameOf(transaction))
+    .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
   const treasurers = (fund.fund_roles ?? []).filter((assignment) => assignment.role === 'treasurer');
   const collectors = (fund.fund_roles ?? []).filter((assignment) => assignment.role === 'collector');
   const handleDeleteFund = async () => {
@@ -532,6 +665,38 @@ export default function FundDetailScreen() {
           </View>
         </View>
 
+        {blockSummary.length > 0 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Block-wise Collection</Text>
+              <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>
+                {blockSummaryTotals.paidFlats} of {blockSummaryTotals.totalFlats} flats
+              </Text>
+            </View>
+            <View style={styles.blockSummaryCard}>
+              {blockSummary.map((row, index) => (
+                <View
+                  key={row.blockName}
+                  style={[styles.blockSummaryRow, index > 0 ? styles.blockSummaryDivider : null]}
+                >
+                  <Text style={[styles.blockSummaryName, { color: colors.text }]}>Block {row.blockName}</Text>
+                  <Text style={[styles.blockSummaryMeta, { color: colors.textMuted }]}>
+                    {row.paidFlats}/{row.totalFlats} flats
+                  </Text>
+                  <Rupees amount={row.collected} size="sm" tone={row.collected > 0 ? 'in' : 'neutral'} />
+                </View>
+              ))}
+              {unassignedIncome > 0 ? (
+                <View style={[styles.blockSummaryRow, styles.blockSummaryDivider]}>
+                  <Text style={[styles.blockSummaryName, { color: colors.text }]}>Other</Text>
+                  <Text style={[styles.blockSummaryMeta, { color: colors.textMuted }]}>Sponsors & unlisted flats</Text>
+                  <Rupees amount={unassignedIncome} size="sm" tone="in" />
+                </View>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+
         {permissions.canManageTreasurers ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -716,67 +881,82 @@ export default function FundDetailScreen() {
               {incomeTransactions.length} of {flats.length} flats collected
             </Text>
           </View>
-          {incomeTransactions.map((transaction) => {
-            // A sponsor row has no contributor profile — the payer's name lives
-            // on the row itself, and only a lead may edit it (20260825000000).
-            const sponsorName = ((transaction as any).sponsor_name as string | null) ?? null;
-            const canEditRow = sponsorName ? permissions.canManageTreasurers : permissions.canAddContribution;
-            const RowContent = (
-              <>
-                <View style={[styles.avatar, { backgroundColor: Verandah.accentSoft }]}>
-                  <PlusCircle size={16} color={Verandah.accent} />
-                </View>
-                <View style={styles.transMain}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={[styles.transName, { color: colors.text }]}>
-                      {sponsorName ??
-                        ((transaction as any).contributor_name ??
-                          (transaction.contributor_user_id
-                            ? profileNames.get(transaction.contributor_user_id) ?? 'Resident'
-                            : transaction.title || 'Contribution'))}
+          {contributionGroups.map((group) => (
+            <View key={group.key}>
+              {showContributionGroupHeaders ? (
+                <View style={styles.groupHeader}>
+                  <Text style={[styles.groupTitle, { color: colors.text }]}>{group.title}</Text>
+                  <View style={styles.groupHeaderMeta}>
+                    <Text style={[styles.groupMeta, { color: colors.textMuted }]}>
+                      {group.rows.length} {group.isBlock ? (group.rows.length === 1 ? 'flat' : 'flats') : (group.rows.length === 1 ? 'entry' : 'entries')}
                     </Text>
-                    {canEditRow && (
-                      <Pencil01 size={13} color={colors.textMuted} />
-                    )}
+                    <Rupees amount={group.total} size="sm" tone="in" />
                   </View>
-                  <Text style={[styles.transDate, { color: colors.textMuted }]}>
-                    {(() => {
-                      const dateText = new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
-
-                      if (sponsorName) {
-                        return `Outside sponsor · ${dateText}`;
-                      }
-
-                      const flatLabel = (transaction as any).contributor_flat_id
-                        ? flatLabels.get((transaction as any).contributor_flat_id)
-                        : (transaction.contributor_user_id ? profileFlats.get(transaction.contributor_user_id) : null);
-
-                      return flatLabel ? `Flat ${flatLabel} · ${dateText}` : dateText;
-                    })()}
-                  </Text>
                 </View>
-                <Rupees amount={Number(transaction.amount)} size="sm" tone="in" showSign={true} />
-              </>
-            );
+              ) : null}
+              {group.rows.map((transaction) => {
+                // A sponsor row has no contributor profile — the payer's name lives
+                // on the row itself, and only a lead may edit it (20260825000000).
+                const sponsorName = ((transaction as any).sponsor_name as string | null) ?? null;
+                const canEditRow = sponsorName ? permissions.canManageTreasurers : permissions.canAddContribution;
+                const RowContent = (
+                  <>
+                    <View style={[styles.avatar, { backgroundColor: Verandah.accentSoft }]}>
+                      <PlusCircle size={16} color={Verandah.accent} />
+                    </View>
+                    <View style={styles.transMain}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={[styles.transName, { color: colors.text }]}>
+                          {sponsorName ??
+                            ((transaction as any).contributor_name ??
+                              (transaction.contributor_user_id
+                                ? profileNames.get(transaction.contributor_user_id) ?? 'Resident'
+                                : transaction.title || 'Contribution'))}
+                        </Text>
+                        {canEditRow && (
+                          <Pencil01 size={13} color={colors.textMuted} />
+                        )}
+                      </View>
+                      <Text style={[styles.transDate, { color: colors.textMuted }]}>
+                        {(() => {
+                          const dateText = new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
 
-            if (canEditRow) {
-              return (
-                <TouchableOpacity
-                  key={transaction.id}
-                  style={styles.transactionRow}
-                  onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=income&transaction_id=${transaction.id}`)}
-                >
-                  {RowContent}
-                </TouchableOpacity>
-              );
-            }
+                          if (sponsorName) {
+                            return `Outside sponsor · ${dateText}`;
+                          }
 
-            return (
-              <View key={transaction.id} style={styles.transactionRow}>
-                {RowContent}
-              </View>
-            );
-          })}
+                          const flatLabel = (transaction as any).contributor_flat_id
+                            ? flatLabels.get((transaction as any).contributor_flat_id)
+                            : (transaction.contributor_user_id ? profileFlats.get(transaction.contributor_user_id) : null);
+
+                          return flatLabel ? `Flat ${flatLabel} · ${dateText}` : dateText;
+                        })()}
+                      </Text>
+                    </View>
+                    <Rupees amount={Number(transaction.amount)} size="sm" tone="in" showSign={true} />
+                  </>
+                );
+
+                if (canEditRow) {
+                  return (
+                    <TouchableOpacity
+                      key={transaction.id}
+                      style={styles.transactionRow}
+                      onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=income&transaction_id=${transaction.id}`)}
+                    >
+                      {RowContent}
+                    </TouchableOpacity>
+                  );
+                }
+
+                return (
+                  <View key={transaction.id} style={styles.transactionRow}>
+                    {RowContent}
+                  </View>
+                );
+              })}
+            </View>
+          ))}
           {incomeTransactions.length === 0 ? <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No collections logged yet.</Text> : null}
         </View>
 
@@ -1198,6 +1378,52 @@ const styles = StyleSheet.create({
   emptyNote: {
     fontSize: 13,
     fontStyle: 'italic',
+  },
+  blockSummaryCard: {
+    backgroundColor: Verandah.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Verandah.border,
+    paddingHorizontal: 10,
+  },
+  blockSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+  },
+  blockSummaryDivider: {
+    borderTopWidth: 1,
+    borderTopColor: Verandah.border,
+  },
+  blockSummaryName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  blockSummaryMeta: {
+    fontSize: 11,
+  },
+  groupHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+    marginBottom: 6,
+    paddingHorizontal: 2,
+  },
+  groupHeaderMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  groupTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: -0.2,
+  },
+  groupMeta: {
+    fontSize: 11,
   },
   roleRow: {
     flexDirection: 'row',
