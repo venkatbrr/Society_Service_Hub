@@ -1,4 +1,5 @@
 import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
+import { Download01 } from '@untitledui/icons/Download01';
 import { MinusCircle } from '@untitledui/icons/MinusCircle';
 import { Paperclip } from '@untitledui/icons/Paperclip';
 import { Pencil01 } from '@untitledui/icons/Pencil01';
@@ -42,6 +43,7 @@ import {
     getFundPermissions,
     getRoleAccessSummary,
 } from '../../lib/fundRoles';
+import { downloadCsv, safeFileName, toCsv } from '../../lib/csvExport';
 import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
@@ -63,6 +65,33 @@ type CommunityMember = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'app_role' 
  */
 const compareFlatNumbers = (a: string, b: string) => a.length - b.length || a.localeCompare(b);
 
+/**
+ * NULL is not cash. Rows predating 20260919000000 — and any written by a client
+ * on an older bundle — genuinely have no recorded method, and a treasurer
+ * reconciling the cash box has to be able to see that gap rather than have it
+ * quietly folded into the cash total.
+ */
+const formatPaymentMethod = (value: string | null | undefined) => {
+  if (value === 'cash') return 'Cash';
+  if (value === 'online') return 'Online';
+  return null;
+};
+const paymentMethodOf = (transaction: Tables<'event_transactions'>) =>
+  ((transaction as any).payment_method as string | null) ?? null;
+
+/**
+ * Who handled the money. The sheet's literal 'Self' means the resident paid
+ * directly rather than through a collector, which is worth showing as such —
+ * it is the difference between "nobody collected this" and "we never captured
+ * who did".
+ */
+const collectedByOf = (transaction: Tables<'event_transactions'>) =>
+  ((transaction as any).collected_by_name as string | null)?.trim() || null;
+const formatCollectedBy = (value: string | null) => {
+  if (!value) return null;
+  return value.toLowerCase() === 'self' ? 'paid directly' : `by ${value}`;
+};
+
 export default function FundDetailScreen() {
   const { id } = useLocalSearchParams();
   const [fund, setFund] = useState<FundDetail | null>(null);
@@ -76,6 +105,7 @@ export default function FundDetailScreen() {
   const [searchTreasurer, setSearchTreasurer] = useState('');
   const [searchCollector, setSearchCollector] = useState('');
   const [selectedExpense, setSelectedExpense] = useState<Tables<'event_transactions'> | null>(null);
+  const [exporting, setExporting] = useState(false);
   const { user, appRole } = useAuth();
   const router = useRouter();
   const colors = {
@@ -334,6 +364,121 @@ export default function FundDetailScreen() {
   const unassignedIncome = incomeTransactions
     .filter((transaction) => !blockNameOf(transaction))
     .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+
+  /** What the treasurer needs to reconcile: how much of it should be in hand. */
+  const splitByMethod = (rows: Tables<'event_transactions'>[]) =>
+    rows.reduce(
+      (acc, row) => {
+        const method = paymentMethodOf(row);
+        const bucket = method === 'cash' ? 'cash' : method === 'online' ? 'online' : 'unrecorded';
+        acc[bucket] += Number(row.amount);
+        return acc;
+      },
+      { cash: 0, online: 0, unrecorded: 0 }
+    );
+  const incomeByMethod = splitByMethod(incomeTransactions);
+  const expenseByMethod = splitByMethod(expenseTransactions);
+
+  const contributorLabel = (transaction: Tables<'event_transactions'>) => {
+    const sponsorName = ((transaction as any).sponsor_name as string | null) ?? null;
+    if (sponsorName) return sponsorName;
+    return (
+      ((transaction as any).contributor_name as string | null) ??
+      (transaction.contributor_user_id ? profileNames.get(transaction.contributor_user_id) ?? 'Resident' : 'Resident')
+    );
+  };
+  // Sortable in a spreadsheet, unlike the dd/mm/yyyy the screen shows.
+  const isoDate = (value: string | null) => (value ? new Date(value).toISOString().slice(0, 10) : '');
+
+  /**
+   * The whole ledger as one sheet, in the same order the screen presents it:
+   * totals, then block-wise, then contributions grouped by block, then
+   * expenses. Amounts are bare numbers so Excel can sum the column — no rupee
+   * symbol, no digit grouping.
+   */
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const rows: (string | number | null)[][] = [];
+
+      rows.push(['Fund', fund.title]);
+      rows.push(['Status', fund.is_closed ? 'Closed' : 'Open']);
+      rows.push(['Exported on', new Date().toLocaleString('en-IN')]);
+      rows.push([]);
+      rows.push(['Collected', income]);
+      rows.push(['Spent', expense]);
+      rows.push(['Balance', balance]);
+      rows.push([]);
+      rows.push(['', 'Cash', 'Online', 'Not recorded']);
+      rows.push(['Collected by method', incomeByMethod.cash, incomeByMethod.online, incomeByMethod.unrecorded]);
+      rows.push(['Spent by method', expenseByMethod.cash, expenseByMethod.online, expenseByMethod.unrecorded]);
+
+      if (blockSummary.length > 0) {
+        rows.push([]);
+        rows.push(['Block-wise collection']);
+        rows.push(['Block', 'Flats paid', 'Total flats', 'Collected']);
+        blockSummary.forEach((row) => {
+          rows.push([row.blockName, row.paidFlats, row.totalFlats, row.collected]);
+        });
+        if (unassignedIncome > 0) {
+          rows.push(['Other (sponsors & unlisted flats)', '', '', unassignedIncome]);
+        }
+      }
+
+      rows.push([]);
+      rows.push(['Contributions']);
+      rows.push(['Block', 'Flat', 'Contributor', 'Type', 'Method', 'Collected by', 'Amount', 'Date']);
+      contributionGroups.forEach((group) => {
+        group.rows.forEach((transaction) => {
+          const flatId = (transaction as any).contributor_flat_id as string | null;
+          const meta = flatId ? flatMeta.get(flatId) : undefined;
+          rows.push([
+            meta?.blockName ?? '',
+            meta?.flatNumber ?? '',
+            contributorLabel(transaction),
+            (transaction as any).sponsor_name ? 'Outside sponsor' : 'Resident',
+            formatPaymentMethod(paymentMethodOf(transaction)) ?? 'Not recorded',
+            collectedByOf(transaction) ?? '',
+            Number(transaction.amount),
+            isoDate(transaction.created_at),
+          ]);
+        });
+      });
+      if (incomeTransactions.length === 0) {
+        rows.push(['No collections logged yet.']);
+      }
+
+      rows.push([]);
+      rows.push(['Expenses']);
+      rows.push(['Title', 'Description', 'Method', 'Amount', 'Date']);
+      expenseTransactions.forEach((transaction) => {
+        rows.push([
+          transaction.title || 'Expense',
+          (transaction.description || '').replace(/\[Receipt:\s*https?:\/\/[^\]]+\]/gi, '').trim(),
+          formatPaymentMethod(paymentMethodOf(transaction)) ?? 'Not recorded',
+          Number(transaction.amount),
+          isoDate(transaction.created_at),
+        ]);
+      });
+      if (expenseTransactions.length === 0) {
+        rows.push(['No expenses logged yet.']);
+      }
+
+      const fileName = `${safeFileName(fund.title, 'fund')}-${new Date().toISOString().slice(0, 10)}.csv`;
+      await downloadCsv(fileName, toCsv(rows));
+
+      Toast.show({
+        type: 'success',
+        text1: 'Ledger exported',
+        text2: Platform.OS === 'web' ? fileName : 'Choose where to save or send it.',
+      });
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'Export failed', text2: err?.message ?? 'Could not build the file.' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const treasurers = (fund.fund_roles ?? []).filter((assignment) => assignment.role === 'treasurer');
   const collectors = (fund.fund_roles ?? []).filter((assignment) => assignment.role === 'collector');
   const handleDeleteFund = async () => {
@@ -592,7 +737,25 @@ export default function FundDetailScreen() {
           )}
 
           <View style={styles.roleSummaryCard}>
-            <Text style={styles.roleSummaryTitle}>You are a {formatRoleForFundContext(fundRole, undefined, appRole)}</Text>
+            <View style={styles.roleSummaryHeader}>
+              <Text style={[styles.roleSummaryTitle, { flex: 1 }]}>You are a {formatRoleForFundContext(fundRole, undefined, appRole)}</Text>
+              <TouchableOpacity
+                style={styles.exportButton}
+                onPress={handleExport}
+                disabled={exporting}
+                accessibilityRole="button"
+                accessibilityLabel="Export fund ledger as CSV"
+              >
+                {exporting ? (
+                  <ActivityIndicator size="small" color={Verandah.accent} />
+                ) : (
+                  <>
+                    <Download01 size={14} color={Verandah.accent} aria-hidden={true} />
+                    <Text style={styles.exportButtonText}>Export</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
             <Text style={styles.roleSummaryText}>Treasurers: {roleSummary.treasurers || 'Not assigned yet'}</Text>
             <Text style={styles.roleSummaryText}>Collectors: {roleSummary.collectors || 'None assigned'}</Text>
           </View>
@@ -613,6 +776,21 @@ export default function FundDetailScreen() {
               <Rupees amount={balance} size="sm" tone={balance >= 0 ? 'in' : 'out'} />
             </View>
           </View>
+
+          {/* Decomposes "Collected" into what should physically be in hand. */}
+          {income > 0 ? (
+            <View style={styles.methodSplitRow}>
+              <Text style={styles.methodSplitText}>
+                Collected in cash <Text style={styles.methodSplitValue}>₹{incomeByMethod.cash.toLocaleString('en-IN')}</Text>
+                {'  ·  '}online <Text style={styles.methodSplitValue}>₹{incomeByMethod.online.toLocaleString('en-IN')}</Text>
+                {incomeByMethod.unrecorded > 0 ? (
+                  <>
+                    {'  ·  '}not recorded <Text style={styles.methodSplitValue}>₹{incomeByMethod.unrecorded.toLocaleString('en-IN')}</Text>
+                  </>
+                ) : null}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.accessCard}>
@@ -922,14 +1100,28 @@ export default function FundDetailScreen() {
                           const dateText = new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
 
                           if (sponsorName) {
-                            return `Outside sponsor · ${dateText}`;
+                            return [
+                              'Outside sponsor',
+                              formatPaymentMethod(paymentMethodOf(transaction)),
+                              dateText,
+                              formatCollectedBy(collectedByOf(transaction)),
+                            ]
+                              .filter(Boolean)
+                              .join(' · ');
                           }
 
                           const flatLabel = (transaction as any).contributor_flat_id
                             ? flatLabels.get((transaction as any).contributor_flat_id)
                             : (transaction.contributor_user_id ? profileFlats.get(transaction.contributor_user_id) : null);
 
-                          return flatLabel ? `Flat ${flatLabel} · ${dateText}` : dateText;
+                          return [
+                            flatLabel ? `Flat ${flatLabel}` : null,
+                            formatPaymentMethod(paymentMethodOf(transaction)),
+                            dateText,
+                            formatCollectedBy(collectedByOf(transaction)),
+                          ]
+                            .filter(Boolean)
+                            .join(' · ');
                         })()}
                       </Text>
                     </View>
@@ -990,9 +1182,13 @@ export default function FundDetailScreen() {
                     ) : null}
                   </View>
                   <Text style={[styles.transDate, { color: colors.textMuted }]}>
-                    {cleanDescription
-                      ? `${cleanDescription} • ${new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}`
-                      : new Date(transaction.created_at ?? Date.now()).toLocaleDateString()}
+                    {[
+                      cleanDescription || null,
+                      formatPaymentMethod(paymentMethodOf(transaction)),
+                      new Date(transaction.created_at ?? Date.now()).toLocaleDateString(),
+                    ]
+                      .filter(Boolean)
+                      .join(' • ')}
                   </Text>
                 </View>
                 <Rupees amount={Number(transaction.amount)} size="sm" tone="out" />
@@ -1076,6 +1272,11 @@ export default function FundDetailScreen() {
                     <Text style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Amount Spent</Text>
                     <Rupees amount={Number(selectedExpense.amount)} size="md" tone="out" />
                     
+                    <Text style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 10, marginBottom: 2 }}>Paid by</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text }}>
+                      {formatPaymentMethod(paymentMethodOf(selectedExpense)) ?? 'Not recorded'}
+                    </Text>
+
                     <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 10 }}>
                       Logged on {new Date(selectedExpense.created_at ?? Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </Text>
@@ -1205,9 +1406,31 @@ const styles = StyleSheet.create({
     borderWidth: VerandahBorder.tile,
     borderColor: Verandah.border,
   },
+  roleSummaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   roleSummaryTitle: {
     color: Verandah.textPrimary,
     fontSize: 14,
+    fontWeight: '600',
+  },
+  exportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    minHeight: 30,
+    height: 30,
+    minWidth: 84,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: Verandah.accentSoft,
+  },
+  exportButtonText: {
+    color: Verandah.accent,
+    fontSize: 12,
     fontWeight: '600',
   },
   roleSummaryText: {
@@ -1244,6 +1467,19 @@ const styles = StyleSheet.create({
     width: 1,
     height: '100%',
     backgroundColor: Verandah.border,
+  },
+  methodSplitRow: {
+    marginTop: 6,
+    paddingHorizontal: 2,
+  },
+  methodSplitText: {
+    color: Verandah.textSecondary,
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  methodSplitValue: {
+    color: Verandah.textPrimary,
+    fontWeight: '600',
   },
   accessCard: {
     backgroundColor: Verandah.card,

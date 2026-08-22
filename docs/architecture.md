@@ -264,7 +264,7 @@ Both views are **`WITH (security_invoker = true)`**. A plain Postgres view runs 
 | Table | Key columns |
 |-------|-------------|
 | `events` | A fund. `title`, `description`, `event_date`, `goal_amount`, `is_closed`, `fund_scope`, `group_id`, `partnership_id` |
-| `event_transactions` | `event_id`, `type` (`income`/`expense`), `amount`, `title`, `description`, `category`, `contributor_user_id` (member income only), `contributor_flat_id` (flat money came from), `contributor_name` (payer snapshot name), `sponsor_name` / `sponsor_phone` / `sponsor_note` (outside-sponsor income only), `image_url` |
+| `event_transactions` | `event_id`, `type` (`income`/`expense`), `amount`, `title`, `description`, `category`, `contributor_user_id` (member income only), `contributor_flat_id` (flat money came from), `contributor_name` (payer snapshot name), `sponsor_name` / `sponsor_phone` / `sponsor_note` (outside-sponsor income only), `image_url`, `payment_method` (`cash`/`online`, **nullable** — NULL means not recorded, never assume cash), `collected_by_name` (who physically took the money; the literal `Self` means the resident paid directly, NULL means not captured) |
 | `fund_roles` | `event_id`, `user_id`, `role`, `block_id` (nullable = whole community), `assigned_by` |
 | `funds_access_requests` | `community_id`, `requested_by`, `contact_name`, `contact_phone`, `purpose`, `designated_lead_id`, `status`, `rejection_reason`, `decided_by`, `decided_at` |
 | `funds_access_revocations` | Platform-admin revocation audit trail |

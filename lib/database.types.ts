@@ -784,6 +784,7 @@ export type Database = {
         Row: {
           amount: number
           category: string
+          collected_by_name: string | null
           contributor_flat_id: string | null
           contributor_name: string | null
           contributor_user_id: string | null
@@ -793,6 +794,7 @@ export type Database = {
           event_id: string
           id: string
           image_url: string | null
+          payment_method: string | null
           sponsor_name: string | null
           sponsor_note: string | null
           sponsor_phone: string | null
@@ -802,6 +804,7 @@ export type Database = {
         Insert: {
           amount: number
           category: string
+          collected_by_name?: string | null
           contributor_flat_id?: string | null
           contributor_name?: string | null
           contributor_user_id?: string | null
@@ -811,6 +814,7 @@ export type Database = {
           event_id: string
           id?: string
           image_url?: string | null
+          payment_method?: string | null
           sponsor_name?: string | null
           sponsor_note?: string | null
           sponsor_phone?: string | null
@@ -820,6 +824,7 @@ export type Database = {
         Update: {
           amount?: number
           category?: string
+          collected_by_name?: string | null
           contributor_flat_id?: string | null
           contributor_name?: string | null
           contributor_user_id?: string | null
@@ -829,6 +834,7 @@ export type Database = {
           event_id?: string
           id?: string
           image_url?: string | null
+          payment_method?: string | null
           sponsor_name?: string | null
           sponsor_note?: string | null
           sponsor_phone?: string | null

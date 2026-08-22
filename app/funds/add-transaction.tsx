@@ -94,7 +94,7 @@ export default function AddTransactionScreen() {
   const selfPath = event_id
     ? `/funds/add-transaction?event_id=${event_id}`
     : '/funds/add-transaction';
-  const { user, appRole, myBlockId, refreshSession } = useAuth();
+  const { user, profile, appRole, myBlockId, refreshSession } = useAuth();
   const router = useRouter();
   const colors = {
     background: Verandah.surface,
@@ -129,6 +129,9 @@ export default function AddTransactionScreen() {
   // A contribution names its payer: either a community member or an outside
   // sponsor. Sponsors are the lead's call — see migration 20260825000000.
   const [payerMode, setPayerMode] = useState<'member' | 'sponsor'>('member');
+  // Cash is the default because that is how a collector walking the block is
+  // actually handed money. Applies to expenses too — see 20260919000000.
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'online'>('cash');
   const [sponsorName, setSponsorName] = useState('');
   const [sponsorPhone, setSponsorPhone] = useState('');
   const [sponsorNote, setSponsorNote] = useState('');
@@ -185,6 +188,13 @@ export default function AddTransactionScreen() {
           const { url, cleanNotes } = extractImageUrl((existingTx as any).image_url, existingTx.description);
           setNotes(cleanNotes);
           setImageUrl(url);
+          // Rows written before 20260919000000 have no method. Leave the
+          // toggle on its default rather than asserting the row was cash —
+          // saving the edit is what records the treasurer's actual answer.
+          const existingMethod = ((existingTx as any).payment_method as string | null) ?? null;
+          if (existingMethod === 'cash' || existingMethod === 'online') {
+            setPaymentMethod(existingMethod);
+          }
           if (existingTx.type === 'income') {
             const existingSponsorName = ((existingTx as any).sponsor_name as string | null) ?? null;
             if (existingSponsorName) {
@@ -363,6 +373,7 @@ export default function AddTransactionScreen() {
     setType(nextType);
     setTitle('');
     setNotes('');
+    setPaymentMethod('cash');
     setSelectedTarget(null);
     setContributorName('');
 
@@ -519,6 +530,10 @@ export default function AddTransactionScreen() {
               sponsor_name: isSponsorContribution ? sponsorName.trim() : null,
               sponsor_phone: isSponsorContribution ? sponsorPhone.trim() || null : null,
               sponsor_note: isSponsorContribution ? sponsorNote.trim() || null : null,
+              payment_method: paymentMethod,
+              // Self-recording: whoever is entering the row is who collected
+              // it. Keeps the audit trail complete without another form field.
+              collected_by_name: profile?.full_name?.trim() || null,
             }
           : {
               event_id: event_id as string,
@@ -533,6 +548,7 @@ export default function AddTransactionScreen() {
               sponsor_name: null,
               sponsor_phone: null,
               sponsor_note: null,
+              payment_method: paymentMethod,
             };
 
       if (imageUrl) {
@@ -683,6 +699,32 @@ export default function AddTransactionScreen() {
               onChangeText={setAmount}
               keyboardType="numeric"
             />
+          </View>
+
+          {/* Applies to contributions and expenses alike. */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Payment method</Text>
+            <View style={[styles.tabContainer, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 0 }]}>
+              {(['cash', 'online'] as const).map((method) => {
+                const isActive = paymentMethod === method;
+                return (
+                  <TouchableOpacity
+                    key={method}
+                    style={[
+                      styles.tab,
+                      isActive ? (type === 'income' ? styles.tabActiveIncome : styles.tabActiveExpense) : {},
+                    ]}
+                    onPress={() => setPaymentMethod(method)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isActive }}
+                  >
+                    <Text style={[styles.tabText, { color: isActive ? colors.primary : colors.textMuted }]}>
+                      {method === 'cash' ? 'Cash' : 'Online'}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
           {type === 'income' ? (
