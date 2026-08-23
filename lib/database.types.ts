@@ -3620,6 +3620,27 @@ export type Database = {
           visit_time_slot: string
         }[]
       }
+      get_fund_public_blocks: {
+        Args: { p_event_id: string }
+        Returns: {
+          block_name: string
+          collected: number
+          paid_flats: number
+          total_flats: number
+        }[]
+      }
+      get_fund_public_summary: {
+        Args: { p_event_id: string }
+        Returns: {
+          balance: number
+          collected: number
+          community_name: string
+          contributor_count: number
+          fund_title: string
+          is_closed: boolean
+          spent: number
+        }[]
+      }
       get_fund_role: {
         Args: { p_event_id: string; p_user_id?: string }
         Returns: string
@@ -4865,7 +4886,6 @@ export const Constants = {
     },
   },
 } as const
-
 
 // ---------------------------------------------------------------------------
 // HAND-MAINTAINED — everything above this line is generated, this block is not.

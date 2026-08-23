@@ -1,5 +1,7 @@
 import { ArrowLeft } from '@untitledui/icons/ArrowLeft';
+import { ChevronRight } from '@untitledui/icons/ChevronRight';
 import { Download01 } from '@untitledui/icons/Download01';
+import { Share07 } from '@untitledui/icons/Share07';
 import { MinusCircle } from '@untitledui/icons/MinusCircle';
 import { Paperclip } from '@untitledui/icons/Paperclip';
 import { Pencil01 } from '@untitledui/icons/Pencil01';
@@ -26,6 +28,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BlockPicker } from '../../components/BlockPicker';
+import { FundPublicSummary } from '../../components/FundPublicSummary';
 import { HeaderBackButton } from '../../components/HeaderBackButton';
 import { Rupees } from '../../components/Rupees';
 import { Verandah } from '../../constants/Colors';
@@ -45,6 +48,7 @@ import {
 } from '../../lib/fundRoles';
 import { downloadCsv, safeFileName, toCsv } from '../../lib/csvExport';
 import { goBackSmart, replaceTracked } from '../../lib/navigation';
+import { shareOrCopy } from '../../lib/share';
 import { supabase } from '../../lib/supabase';
 import { getMissingFundSchemaMessage, isMissingFundSchemaError } from '../../lib/supabaseErrors';
 
@@ -79,6 +83,21 @@ const formatPaymentMethod = (value: string | null | undefined) => {
 const paymentMethodOf = (transaction: Tables<'event_transactions'>) =>
   ((transaction as any).payment_method as string | null) ?? null;
 
+/** 'unrecorded' is a first-class bucket, not an absence — see the column comment. */
+export type MethodFilter = 'all' | 'cash' | 'online' | 'unrecorded';
+
+const methodBucketOf = (transaction: Tables<'event_transactions'>) => {
+  const method = paymentMethodOf(transaction);
+  return method === 'cash' ? 'cash' : method === 'online' ? 'online' : 'unrecorded';
+};
+
+const METHOD_FILTERS: { key: MethodFilter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'cash', label: 'Cash' },
+  { key: 'online', label: 'Online' },
+  { key: 'unrecorded', label: 'Not recorded' },
+];
+
 /**
  * Who handled the money. The sheet's literal 'Self' means the resident paid
  * directly rather than through a collector, which is worth showing as such —
@@ -106,7 +125,8 @@ export default function FundDetailScreen() {
   const [searchCollector, setSearchCollector] = useState('');
   const [selectedExpense, setSelectedExpense] = useState<Tables<'event_transactions'> | null>(null);
   const [exporting, setExporting] = useState(false);
-  const { user, appRole } = useAuth();
+  const [methodFilter, setMethodFilter] = useState<MethodFilter>('all');
+  const { user, appRole, session, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const colors = {
     background: Verandah.surface,
@@ -120,6 +140,10 @@ export default function FundDetailScreen() {
   };
 
   const fetchFundDetail = useCallback(async () => {
+    if (!session) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -228,6 +252,13 @@ export default function FundDetailScreen() {
     [flats]
   );
 
+  // A fund link forwarded into a WhatsApp group opens here with no session.
+  // `app/_layout.tsx` lets that through (isPublicFundRoute) instead of bouncing
+  // to /login, and this branch serves the aggregates-only view.
+  if (!authLoading && !session) {
+    return <FundPublicSummary eventId={id as string} />;
+  }
+
   if (loading || !fund) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
@@ -260,6 +291,32 @@ export default function FundDetailScreen() {
   const expense = expenseTransactions.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
   const balance = income - expense;
 
+  /**
+   * The filter narrows the two *lists* only. Collected / Spent / Balance and
+   * the block summary deliberately stay on the full ledger — they are the
+   * fund's headline figures, and a filtered total sitting under the word
+   * "Collected" would read as the fund having collected less than it has.
+   */
+  const matchesMethodFilter = (transaction: Tables<'event_transactions'>) =>
+    methodFilter === 'all' || methodBucketOf(transaction) === methodFilter;
+
+  const visibleIncome = incomeTransactions.filter(matchesMethodFilter);
+  const visibleExpenses = expenseTransactions.filter(matchesMethodFilter);
+  const visibleIncomeTotal = visibleIncome.reduce((sum, t) => sum + Number(t.amount), 0);
+  const visibleExpenseTotal = visibleExpenses.reduce((sum, t) => sum + Number(t.amount), 0);
+  const isFiltered = methodFilter !== 'all';
+  const activeFilterLabel = METHOD_FILTERS.find((f) => f.key === methodFilter)?.label ?? 'All';
+
+  // Counts sit on the chips so an empty bucket is visible before it is tapped.
+  const methodCounts = [...incomeTransactions, ...expenseTransactions].reduce(
+    (acc, transaction) => {
+      acc[methodBucketOf(transaction)] += 1;
+      acc.all += 1;
+      return acc;
+    },
+    { all: 0, cash: 0, online: 0, unrecorded: 0 } as Record<MethodFilter, number>
+  );
+
   const flatNumberOf = (transaction: Tables<'event_transactions'>) => {
     const flatId = (transaction as any).contributor_flat_id as string | null;
     return (flatId ? flatMeta.get(flatId)?.flatNumber : '') ?? '';
@@ -279,7 +336,7 @@ export default function FundDetailScreen() {
     const byBlock = new Map<string, Tables<'event_transactions'>[]>();
     const unplaced: Tables<'event_transactions'>[] = [];
 
-    incomeTransactions.forEach((transaction) => {
+    visibleIncome.forEach((transaction) => {
       const blockName = blockNameOf(transaction);
       if (!blockName) {
         unplaced.push(transaction);
@@ -396,6 +453,38 @@ export default function FundDetailScreen() {
    * expenses. Amounts are bare numbers so Excel can sum the column — no rupee
    * symbol, no digit grouping.
    */
+  const handleShare = async () => {
+    const money = (value: number) => `₹${value.toLocaleString('en-IN')}`;
+    // No window on native, and no reliable public origin to fall back to —
+    // better to share a summary with no link than a link that goes nowhere.
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
+    const lines = [
+      `*${fund.title}*${fund.is_closed ? ' (closed)' : ''}`,
+      '',
+      `Collected ${money(income)}`,
+      `Spent ${money(expense)}`,
+      `Balance ${money(balance)}`,
+    ];
+
+    if (income > 0) {
+      lines.push('', `Cash ${money(incomeByMethod.cash)}  ·  Online ${money(incomeByMethod.online)}`);
+    }
+
+    if (blockSummary.length > 0) {
+      lines.push('');
+      blockSummary.forEach((row) => {
+        lines.push(`Block ${row.blockName}  ${money(row.collected)}  (${row.paidFlats}/${row.totalFlats} flats)`);
+      });
+    }
+
+    if (origin) {
+      lines.push('', `${origin}/funds/${fund.id}`);
+    }
+
+    await shareOrCopy({ title: fund.title, message: lines.join('\n') });
+  };
+
   const handleExport = async () => {
     try {
       setExporting(true);
@@ -404,6 +493,7 @@ export default function FundDetailScreen() {
       rows.push(['Fund', fund.title]);
       rows.push(['Status', fund.is_closed ? 'Closed' : 'Open']);
       rows.push(['Exported on', new Date().toLocaleString('en-IN')]);
+      if (isFiltered) rows.push(['Filtered by payment method', activeFilterLabel]);
       rows.push([]);
       rows.push(['Collected', income]);
       rows.push(['Spent', expense]);
@@ -444,14 +534,14 @@ export default function FundDetailScreen() {
           ]);
         });
       });
-      if (incomeTransactions.length === 0) {
-        rows.push(['No collections logged yet.']);
+      if (visibleIncome.length === 0) {
+        rows.push([isFiltered ? `No ${activeFilterLabel.toLowerCase()} collections.` : 'No collections logged yet.']);
       }
 
       rows.push([]);
       rows.push(['Expenses']);
       rows.push(['Title', 'Description', 'Method', 'Amount', 'Date']);
-      expenseTransactions.forEach((transaction) => {
+      visibleExpenses.forEach((transaction) => {
         rows.push([
           transaction.title || 'Expense',
           (transaction.description || '').replace(/\[Receipt:\s*https?:\/\/[^\]]+\]/gi, '').trim(),
@@ -460,8 +550,8 @@ export default function FundDetailScreen() {
           isoDate(transaction.created_at),
         ]);
       });
-      if (expenseTransactions.length === 0) {
-        rows.push(['No expenses logged yet.']);
+      if (visibleExpenses.length === 0) {
+        rows.push([isFiltered ? `No ${activeFilterLabel.toLowerCase()} expenses.` : 'No expenses logged yet.']);
       }
 
       const fileName = `${safeFileName(fund.title, 'fund')}-${new Date().toISOString().slice(0, 10)}.csv`;
@@ -739,6 +829,15 @@ export default function FundDetailScreen() {
           <View style={styles.roleSummaryCard}>
             <View style={styles.roleSummaryHeader}>
               <Text style={[styles.roleSummaryTitle, { flex: 1 }]}>You are a {formatRoleForFundContext(fundRole, undefined, appRole)}</Text>
+              <TouchableOpacity
+                style={styles.exportButton}
+                onPress={handleShare}
+                accessibilityRole="button"
+                accessibilityLabel="Share fund summary"
+              >
+                <Share07 size={14} color={Verandah.accent} aria-hidden={true} />
+                <Text style={styles.exportButtonText}>Share</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.exportButton}
                 onPress={handleExport}
@@ -1053,149 +1152,41 @@ export default function FundDetailScreen() {
         ) : null}
 
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Contributions</Text>
-            <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>
-              {incomeTransactions.length} of {flats.length} flats collected
-            </Text>
-          </View>
-          {contributionGroups.map((group) => (
-            <View key={group.key}>
-              {showContributionGroupHeaders ? (
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: colors.text }]}>{group.title}</Text>
-                  <View style={styles.groupHeaderMeta}>
-                    <Text style={[styles.groupMeta, { color: colors.textMuted }]}>
-                      {group.rows.length} {group.isBlock ? (group.rows.length === 1 ? 'flat' : 'flats') : (group.rows.length === 1 ? 'entry' : 'entries')}
-                    </Text>
-                    <Rupees amount={group.total} size="sm" tone="in" />
-                  </View>
-                </View>
-              ) : null}
-              {group.rows.map((transaction) => {
-                // A sponsor row has no contributor profile — the payer's name lives
-                // on the row itself, and only a lead may edit it (20260825000000).
-                const sponsorName = ((transaction as any).sponsor_name as string | null) ?? null;
-                const canEditRow = sponsorName ? permissions.canManageTreasurers : permissions.canAddContribution;
-                const RowContent = (
-                  <>
-                    <View style={[styles.avatar, { backgroundColor: Verandah.accentSoft }]}>
-                      <PlusCircle size={16} color={Verandah.accent} />
-                    </View>
-                    <View style={styles.transMain}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={[styles.transName, { color: colors.text }]}>
-                          {sponsorName ??
-                            ((transaction as any).contributor_name ??
-                              (transaction.contributor_user_id
-                                ? profileNames.get(transaction.contributor_user_id) ?? 'Resident'
-                                : transaction.title || 'Contribution'))}
-                        </Text>
-                        {canEditRow && (
-                          <Pencil01 size={13} color={colors.textMuted} />
-                        )}
-                      </View>
-                      <Text style={[styles.transDate, { color: colors.textMuted }]}>
-                        {(() => {
-                          const dateText = new Date(transaction.created_at ?? Date.now()).toLocaleDateString();
-
-                          if (sponsorName) {
-                            return [
-                              'Outside sponsor',
-                              formatPaymentMethod(paymentMethodOf(transaction)),
-                              dateText,
-                              formatCollectedBy(collectedByOf(transaction)),
-                            ]
-                              .filter(Boolean)
-                              .join(' · ');
-                          }
-
-                          const flatLabel = (transaction as any).contributor_flat_id
-                            ? flatLabels.get((transaction as any).contributor_flat_id)
-                            : (transaction.contributor_user_id ? profileFlats.get(transaction.contributor_user_id) : null);
-
-                          return [
-                            flatLabel ? `Flat ${flatLabel}` : null,
-                            formatPaymentMethod(paymentMethodOf(transaction)),
-                            dateText,
-                            formatCollectedBy(collectedByOf(transaction)),
-                          ]
-                            .filter(Boolean)
-                            .join(' · ');
-                        })()}
-                      </Text>
-                    </View>
-                    <Rupees amount={Number(transaction.amount)} size="sm" tone="in" showSign={true} />
-                  </>
-                );
-
-                if (canEditRow) {
-                  return (
-                    <TouchableOpacity
-                      key={transaction.id}
-                      style={styles.transactionRow}
-                      onPress={() => router.push(`/funds/add-transaction?event_id=${fund.id}&type=income&transaction_id=${transaction.id}`)}
-                    >
-                      {RowContent}
-                    </TouchableOpacity>
-                  );
-                }
-
-                return (
-                  <View key={transaction.id} style={styles.transactionRow}>
-                    {RowContent}
-                  </View>
-                );
-              })}
+          <TouchableOpacity
+            style={styles.ledgerLink}
+            onPress={() => router.push(`/funds/contributions?event_id=${fund.id}`)}
+            accessibilityRole="link"
+          >
+            <View style={[styles.avatar, { backgroundColor: Verandah.accentSoft }]}>
+              <PlusCircle size={16} color={Verandah.accent} />
             </View>
-          ))}
-          {incomeTransactions.length === 0 ? <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No collections logged yet.</Text> : null}
-        </View>
+            <View style={styles.transMain}>
+              <Text style={[styles.transName, { color: colors.text }]}>Contributions</Text>
+              <Text style={[styles.transDate, { color: colors.textMuted }]}>
+                {incomeTransactions.length} of {flats.length} flats collected
+              </Text>
+            </View>
+            <Rupees amount={income} size="sm" tone="in" />
+            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
+          </TouchableOpacity>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Expense List</Text>
-            <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>{expenseTransactions.length} entries</Text>
-          </View>
-          {expenseTransactions.map((transaction) => {
-            const receiptUrl = ((transaction as any).image_url || null) || (() => {
-              const match = (transaction.description || '').match(/\[Receipt:\s*(https?:\/\/[^\]]+)\]/i) || (transaction.description || '').match(/(https:\/\/res\.cloudinary\.com\/[^\s]+)/i);
-              return match ? match[1] : null;
-            })();
-            const cleanDescription = (transaction.description || '').replace(/\[Receipt:\s*https?:\/\/[^\]]+\]/gi, '').trim();
-
-            return (
-              <TouchableOpacity
-                key={transaction.id}
-                style={styles.transactionRow}
-                onPress={() => setSelectedExpense(transaction)}
-                activeOpacity={0.75}
-              >
-                <View style={[styles.avatar, { backgroundColor: Verandah.dangerSoft }]}>
-                  <MinusCircle size={16} color={Verandah.danger} />
-                </View>
-                <View style={styles.transMain}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={[styles.transName, { color: colors.text }]}>{transaction.title || 'Expense'}</Text>
-                    {receiptUrl ? (
-                      <Paperclip size={14} color={Verandah.primary} />
-                    ) : null}
-                  </View>
-                  <Text style={[styles.transDate, { color: colors.textMuted }]}>
-                    {[
-                      cleanDescription || null,
-                      formatPaymentMethod(paymentMethodOf(transaction)),
-                      new Date(transaction.created_at ?? Date.now()).toLocaleDateString(),
-                    ]
-                      .filter(Boolean)
-                      .join(' • ')}
-                  </Text>
-                </View>
-                <Rupees amount={Number(transaction.amount)} size="sm" tone="out" />
-              </TouchableOpacity>
-            );
-          })}
-          {expenseTransactions.length === 0 ? <Text style={[styles.emptyNote, { color: colors.textMuted }]}>No expenses logged yet.</Text> : null}
+          <TouchableOpacity
+            style={styles.ledgerLink}
+            onPress={() => router.push(`/funds/expenses?event_id=${fund.id}`)}
+            accessibilityRole="link"
+          >
+            <View style={[styles.avatar, { backgroundColor: Verandah.dangerSoft }]}>
+              <MinusCircle size={16} color={Verandah.danger} />
+            </View>
+            <View style={styles.transMain}>
+              <Text style={[styles.transName, { color: colors.text }]}>Expenses</Text>
+              <Text style={[styles.transDate, { color: colors.textMuted }]}>
+                {expenseTransactions.length} {expenseTransactions.length === 1 ? 'entry' : 'entries'}
+              </Text>
+            </View>
+            <Rupees amount={expense} size="sm" tone="out" />
+            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
+          </TouchableOpacity>
         </View>
 
         <View style={{ height: 100 }} />
@@ -1610,6 +1601,45 @@ const styles = StyleSheet.create({
   transAmount: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  ledgerLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 8,
+    backgroundColor: Verandah.card,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Verandah.border,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: Verandah.border,
+    backgroundColor: Verandah.card,
+  },
+  filterChipActive: {
+    backgroundColor: Verandah.accentSoft,
+    borderColor: Verandah.accent,
+  },
+  filterChipText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: Verandah.textSecondary,
+  },
+  filterChipTextActive: {
+    color: Verandah.accent,
+    fontWeight: '600',
   },
   emptyNote: {
     fontSize: 13,

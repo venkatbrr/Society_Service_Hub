@@ -487,6 +487,13 @@ export function getImmediateParentRoute(pathname: string): string {
     const eventId = params.get('event_id');
     return eventId ? `/funds/${eventId}` : '/funds';
   }
+  // The two ledger screens split out of the fund detail. Both must resolve to
+  // their fund, not to the fund list — the catch-all below would send a
+  // deep-linked visitor a level too far up.
+  if (cleanPath === '/funds/contributions' || cleanPath === '/funds/expenses') {
+    const eventId = params.get('event_id');
+    return eventId ? `/funds/${eventId}` : '/funds';
+  }
   if (cleanPath === '/funds/add') return '/funds';
   if (cleanPath.startsWith('/funds/')) return '/funds';
   if (cleanPath === '/funds') return '/community';

@@ -411,7 +411,17 @@ Title required. **Exactly one treasurer must be selected** (leads and platform a
 | **Collected by** | Contributions carry `collected_by_name` — a snapshot of who physically took the money, shown on the row as `· by Madhava`. The literal value `Self` renders as `· paid directly` and means the resident transferred it themselves rather than handing it to a collector. New contributions entered in the app self-record the name of whoever is logging them, so no extra form field was needed. Included as a **Collected by** column in the CSV export. Expenses do not use it — nobody collects an expense. |
 | **Payment method** | Every contribution and expense records `payment_method` (`cash` / `online`, migration `20260919000000`). It shows on each row's subtitle, in the expense detail modal as "Paid by", as a **Collected in cash / online** split line under the totals grid, and as its own column plus a by-method summary block in the CSV export. The column is **nullable and was not backfilled** — pre-existing rows render "Not recorded" rather than being asserted as cash, and the split line shows a third "not recorded" figure when any exist. |
 | **Role banner** | The "You are a …" line shows the viewer's **actual role** — President, Vice President, Platform admin, Treasurer, Block in-charge, Collector, or Resident. `getEffectiveFundRole()` collapses `admin`/`president`/`vice_president` into one internal `'admin'` fund capacity, so `formatRoleForFundContext()` takes `appRole` as a third argument to name the person correctly rather than showing a generic "Fund admin". What they can *do* is stated separately by the Role Access card underneath (`getRoleAccessSummary`). Same banner on the Add transaction screen. |
-| **Navigation** | → `/funds/add-transaction?event_id=…&type=income\|expense` |
+| **Ledger links** | The two long lists were moved off this screen on 2026-09-21. It now shows a **Contributions** row and an **Expenses** row — each with its count and total — that navigate to `/funds/contributions` and `/funds/expenses`. The screen had grown to a single scroll of ~90 contribution rows; the summary, block-wise table and role management are what a lead actually opens it for. |
+| **Signed-out view** | A fund link forwarded into a WhatsApp group opens for visitors with no session. `app/_layout.tsx` allows `/funds/<uuid>` through the auth guard (`isPublicFundRoute`, matched on a UUID so `/funds/add`, `/funds/contributions` and `/funds/expenses` stay gated), and `components/FundPublicSummary.tsx` renders totals + the block-wise table + a sign-in CTA from two anon-granted RPCs. **Aggregates only** — no contributor names, flat numbers, payment methods, collector names, or expense titles. Verified: anon `select` on `event_transactions`, `events`, `community_flats` and `profiles` all return `[]`. |
+| **Navigation** | → `/funds/add-transaction?event_id=…&type=income\|expense` · `/funds/contributions?event_id=…` · `/funds/expenses?event_id=…` |
+
+### Fund contributions — `app/funds/contributions.tsx`
+
+Every contribution for one fund, grouped by block and ordered by flat number inside each block (`groupContributionsByBlock` in `lib/fundLedger.ts`). A **payment-method filter** — All / Cash / Online / Not recorded, each chip carrying its count — narrows the list; the tally line above it shows both the filtered count and the filtered total. Rows show contributor, flat, method, collected-by and date, and are tappable for anyone who may edit them. Requires sign-in.
+
+### Fund expenses — `app/funds/expenses.tsx`
+
+The same shape for expenses: the method filter, a tally line, and rows opening the expense detail modal with the receipt image. Requires sign-in.
 
 ### Add transaction — `app/funds/add-transaction.tsx`
 

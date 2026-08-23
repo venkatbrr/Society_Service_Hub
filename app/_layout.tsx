@@ -100,6 +100,15 @@ function RootLayoutNav() {
     const isPublicFoodDropRoute =
       pathname === '/mcn/drops' ||
       pathname.startsWith('/mcn/drops/');
+    // A fund detail link gets forwarded into a society WhatsApp group, so a
+    // signed-out tap has to land on something. The screen serves an
+    // aggregates-only public view in that case (get_fund_public_summary /
+    // get_fund_public_blocks) and asks the visitor to sign in for the
+    // contribution and expense lists.
+    //
+    // Matched on a UUID rather than a /funds/ prefix on purpose: /funds/add,
+    // /funds/contributions and /funds/expenses must stay behind the guard.
+    const isPublicFundRoute = /^\/funds\/[0-9a-fA-F-]{36}$/.test(pathname ?? '');
     const isPublicLegalRoute =
       segments[0] === 'legal' ||
       pathname === '/legal' ||
@@ -115,7 +124,7 @@ function RootLayoutNav() {
 
     if (!session) {
       // No session → login (except for public / auth routes)
-      if (!inAuthGroup && !isPublicLegalRoute && !isPublicFoodDropRoute && !isWebRootPath) {
+      if (!inAuthGroup && !isPublicLegalRoute && !isPublicFoodDropRoute && !isPublicFundRoute && !isWebRootPath) {
         if (pathname && pathname !== '/' && pathname !== '/login' && pathname !== '/login-phone') {
           savedTargetRouteRef.current = pathname;
           if (Platform.OS === 'web' && typeof window !== 'undefined') {

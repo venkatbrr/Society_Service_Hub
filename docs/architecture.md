@@ -828,6 +828,8 @@ Strict mode is on; `@/*` maps to the project root.
 
 ## 12. Fund permissions
 
+**Public fund RPCs (2026-09-21).** `get_fund_public_summary(uuid)` and `get_fund_public_blocks(uuid)` are `SECURITY DEFINER`, granted to `anon`, and return **aggregates only** — title, community name, collected/spent/balance, contribution count, and per-block flat counts and sums. They exist so a fund link forwarded into a WhatsApp group opens on something rather than bouncing a signed-out visitor to `/login`. Never add a column naming a person, a flat, or a single transaction: the security property is that a forwarded link cannot reveal who paid what. Base-table RLS is unchanged — anon `select` on `event_transactions`, `events`, `community_flats` and `profiles` all return `[]`.
+
 `lib/fundRoles.ts` is the only place fund permissions are decided.
 
 ```typescript
