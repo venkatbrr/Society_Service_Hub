@@ -195,7 +195,11 @@ export default function NetworkScreen() {
         }
       >
         <WebPullIndicator pullDistance={webPullProps.pullDistance} refreshing={refreshing} isPulling={webPullProps.isPulling} />
-        {/* Merged Menus & Community Business Section Card */}
+        {/* 1. Pre-order Food Section Card.
+            Menus and businesses were one merged card until 2026-08-24, with
+            Community Business reachable only from a segmented switcher inside
+            the drops screen — a whole section buried one level deep, and a
+            merged title that named two things while opening one of them. */}
         <BaseCard
           padding={14}
           onPress={() => router.push('/mcn/drops' as any)}
@@ -207,20 +211,45 @@ export default function NetworkScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-                Pre-order Food & Community Business
+                Pre-order Food
               </Text>
               <Text style={[styles.badgeText, { color: colors.accent }]}>
-                {preorderCount || 0} open menus · {businessCount || 0} active listings
+                {preorderCount || 0} {preorderCount === 1 ? 'open menu' : 'open menus'}
               </Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Pre-order weekend specials, home-baked sweets, pop-up meals & local resident services. Order directly inside your society!
+            Pre-order weekend specials, home-baked sweets & pop-up meals from neighbors who cook. Reserve yours before the cut-off!
           </Text>
         </BaseCard>
 
-        {/* 2. Parent Corner Section Card */}
+        {/* 2. Community Business Section Card */}
+        <BaseCard
+          padding={14}
+          onPress={() => router.push('/mcn/business' as any)}
+          style={styles.sectionCard}
+        >
+          <View style={styles.cardHeaderRow}>
+            <View style={[styles.iconCircle, { backgroundColor: '#E6F1FB' }]}>
+              <AnimatedTileGlyph kind="business" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                Community Business
+              </Text>
+              <Text style={[styles.badgeText, { color: '#185FA5' }]}>
+                {businessCount || 0} {businessCount === 1 ? 'active listing' : 'active listings'}
+              </Text>
+            </View>
+            <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            Home bakers, tuition, tailoring, salon visits, repairs & daily essentials from residents running a business inside your society.
+          </Text>
+        </BaseCard>
+
+        {/* 3. Parent Corner Section Card */}
         <BaseCard
           padding={14}
           onPress={() => router.push('/mcn/parents' as any)}
@@ -245,7 +274,7 @@ export default function NetworkScreen() {
           </Text>
         </BaseCard>
 
-        {/* 3. Carpooling Section Card */}
+        {/* 4. Carpooling Section Card */}
         <BaseCard
           padding={14}
           onPress={() => router.push('/mcn/carpools' as any)}
@@ -270,7 +299,7 @@ export default function NetworkScreen() {
           </Text>
         </BaseCard>
 
-        {/* 4. Schools Catalog Section Card — hidden, see constants/featureFlags.ts */}
+        {/* 5. Schools Catalog Section Card — hidden, see constants/featureFlags.ts */}
         {SCHOOLS_CATALOG_ENABLED && (
           <BaseCard
             padding={14}
@@ -297,7 +326,7 @@ export default function NetworkScreen() {
           </BaseCard>
         )}
 
-        {/* 5. Borrow & Share Section Card — hidden, see constants/featureFlags.ts */}
+        {/* 6. Borrow & Share Section Card — hidden, see constants/featureFlags.ts */}
         {BORROW_SHARE_ENABLED && (
           <BaseCard
             padding={14}

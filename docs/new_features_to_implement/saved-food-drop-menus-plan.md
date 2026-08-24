@@ -1,6 +1,12 @@
 # Saved menus & republish — food drops
 
-**Status:** planned (2026-08-23) · **Owner module:** `app/mcn/drops/*`
+**Status:** superseded (2026-08-24) · **Owner module:** `app/mcn/drops/*`
+
+> **What actually shipped**, and where this plan diverges — read `docs/features.md` §4.3 for the current behaviour, not this file:
+> - **Republish** on the host's own tiles under **Mine** (and on their drop detail), opening a sheet that asks only for the new closing and delivery time. This is the plan's "quick republish" flow, reached from a drop instead of a template.
+> - **No template tables.** Confirmed unnecessary — see the listing-first reasoning below, which is still the right call if named menus are ever wanted.
+> - **No recurring schedule.** Built and removed the same day: it depended on a daily reminder notification, and Wooru ships as a web/PWA where that cannot be relied on to arrive. Table and sweep dropped in `20260924000200`.
+> - **No preset schedule chips.** Built and reverted: deriving the cut-off hid the closing time, which the host needs to see and set outright.
 
 ## The problem
 

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 // Load .env if present and environment variables not already set
 if (fs.existsSync('.env')) {
@@ -230,18 +231,76 @@ ${supabaseOrigin ? `    <link rel="preconnect" href="${supabaseOrigin}" crossori
       input:focus, textarea:focus, select:focus { outline: none; }
     </style>
     <script>
-      if ('serviceWorker' in navigator) {
-        var wooruRegisterSW = function () {
-          navigator.serviceWorker.register('/service-worker.js').catch(function (error) {
+      (function () {
+        if (!('serviceWorker' in navigator)) return;
+        var sw = navigator.serviceWorker;
+        var registration = null;
+        var lastCheck = 0;
+        var updatePending = false;
+        var reloading = false;
+
+        // True when this page was ALREADY controlled at load time. A
+        // controllerchange with no prior controller is just the first-ever
+        // registration taking hold — reloading there bounces every new visitor.
+        var hadController = !!sw.controller;
+
+        function isTyping() {
+          var el = document.activeElement;
+          if (!el) return false;
+          var tag = el.tagName;
+          return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable === true;
+        }
+
+        // A new worker has taken over, which means the shell and bundle on disk
+        // are newer than the ones this tab is running. Reload so the user is on
+        // the deployed build — but never yank the page out from under someone
+        // mid-input; retry when focus leaves the field or the tab comes back.
+        function applyUpdate() {
+          if (!updatePending || reloading || isTyping()) return;
+          reloading = true;
+          window.location.reload();
+        }
+
+        sw.addEventListener('controllerchange', function () {
+          if (!hadController) { hadController = true; return; }
+          updatePending = true;
+          applyUpdate();
+        });
+
+        function checkForUpdate() {
+          if (!registration) return;
+          var now = Date.now();
+          if (now - lastCheck < 60000) return;
+          lastCheck = now;
+          registration.update().catch(function () {});
+        }
+
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState !== 'visible') return;
+          applyUpdate();
+          checkForUpdate();
+        });
+        document.addEventListener('focusout', function () { setTimeout(applyUpdate, 0); });
+
+        // An installed PWA can stay open for days. Browsers only re-fetch the
+        // worker on navigation, so without this a long-lived session never
+        // learns a deploy happened.
+        setInterval(checkForUpdate, 30 * 60 * 1000);
+
+        var register = function () {
+          sw.register('/service-worker.js').then(function (reg) {
+            registration = reg;
+            lastCheck = Date.now();
+          }).catch(function (error) {
             console.warn('[PWA] Service Worker registration failed:', error);
           });
         };
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
-          wooruRegisterSW();
+          register();
         } else {
-          window.addEventListener('load', wooruRegisterSW);
+          window.addEventListener('load', register);
         }
-      }
+      })();
     </script>
 `;
 
@@ -262,5 +321,67 @@ try {
   }
 } catch (err) {
   console.error('Failed to inject head into dist/app.html:', err);
+  process.exit(1);
+}
+
+// Stamp the service worker's cache version from the content of what it caches.
+//
+// `CACHE_NAME` used to be a hand-maintained `wooru-pwa-vN`, and every deploy
+// that forgot to bump it left installed clients on the previous build: the
+// worker only re-runs `install` when its own bytes change, and `activate` only
+// evicts caches whose name differs. So the shell — which carries the <script
+// src> for the content-hashed bundle — was replayed from cache indefinitely,
+// and with it the entire old app. That is the "new features are not loading"
+// class of bug, and it cannot be fixed by discipline: it needs the version to
+// be derived, not remembered.
+//
+// The id hashes `dist/app.html` (which changes whenever the bundle hash
+// changes, i.e. on any app code change), the landing page, the manifest, every
+// precached image, and the worker's own source. A build that changes none of
+// them produces the same id and deliberately keeps the existing cache warm.
+try {
+  const distDir = path.join(__dirname, 'dist');
+  const swPath = path.join(distDir, 'service-worker.js');
+
+  if (!fs.existsSync(swPath)) {
+    console.error('dist/service-worker.js missing — did `expo export --platform web` copy public/?');
+    process.exit(1);
+  }
+
+  const swSource = fs.readFileSync(swPath, 'utf8');
+  const PLACEHOLDER = '__WOORU_BUILD_ID__';
+
+  if (!swSource.includes(PLACEHOLDER)) {
+    console.log('Service worker build id already stamped — skipping');
+  } else {
+    const hash = crypto.createHash('sha256');
+    // The worker's own source first, so a strategy change alone busts the cache.
+    hash.update(swSource);
+
+    const hashFile = (filePath) => {
+      if (fs.existsSync(filePath) && fs.lstatSync(filePath).isFile()) {
+        hash.update(fs.readFileSync(filePath));
+      }
+    };
+
+    hashFile(path.join(distDir, 'app.html'));
+    hashFile(path.join(distDir, 'landing.html'));
+    hashFile(path.join(distDir, 'manifest.json'));
+
+    // Sorted so the id does not depend on directory-read order.
+    const imagesDir = path.join(distDir, 'images');
+    if (fs.existsSync(imagesDir)) {
+      fs.readdirSync(imagesDir).sort().forEach((name) => {
+        hash.update(name);
+        hashFile(path.join(imagesDir, name));
+      });
+    }
+
+    const buildId = hash.digest('hex').slice(0, 12);
+    fs.writeFileSync(swPath, swSource.split(PLACEHOLDER).join(buildId));
+    console.log(`Stamped service worker cache as wooru-pwa-${buildId}`);
+  }
+} catch (err) {
+  console.error('Failed to stamp the service worker build id:', err);
   process.exit(1);
 }

@@ -5,6 +5,8 @@ import { EyeOff } from '@untitledui/icons/EyeOff';
 import { Flag01 } from '@untitledui/icons/Flag01';
 import { InfoCircle } from '@untitledui/icons/InfoCircle';
 import { Lock01 } from '@untitledui/icons/Lock01';
+import { WhatsAppIcon } from '../../../components/WhatsAppIcon';
+import { RepublishDropSheet } from '../../../components/RepublishDropSheet';
 import { Share07 } from '@untitledui/icons/Share07';
 import { Trash01 } from '@untitledui/icons/Trash01';
 import { XCircle } from '@untitledui/icons/XCircle';
@@ -16,6 +18,7 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Modal,
+    Linking,
     Platform,
     Pressable,
     ScrollView,
@@ -39,7 +42,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { cloudinaryUrl } from '../../../lib/cloudinary';
 import { confirmAction } from '../../../lib/confirm';
-import { normalizeIndianMobile } from '../../../lib/phone';
+import { normalizeIndianMobile, whatsAppShareUrl } from '../../../lib/phone';
 import { shareOrCopy } from '../../../lib/share';
 import { siteUrl } from '../../../lib/siteUrl';
 import { supabase } from '../../../lib/supabase';
@@ -64,6 +67,7 @@ interface DropDetails {
   image_url?: string | null;
   fulfillment_date: string;
   fulfillment_time: string;
+  meal_type?: string | null;
   cutoff_at: string;
   max_orders: number | null;
   status: 'open' | 'closed' | 'completed' | 'cancelled';
@@ -83,7 +87,7 @@ interface DropDetails {
 export default function PreorderDropDetailScreen() {
   const { id: dropId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user, profile, isCommunityLead, isPlatformAdmin, refreshSession } = useAuth();
+  const { user, profile, communityId, isCommunityLead, isPlatformAdmin, refreshSession } = useAuth();
   const { height: windowHeight } = useWindowDimensions();
   const heroHeight = getMediaHeroHeight(windowHeight);
   const colors = Verandah;
@@ -104,6 +108,8 @@ export default function PreorderDropDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  // Republish sheet — same component the Mine tab's tile action opens.
+  const [republishOpen, setRepublishOpen] = useState(false);
   // Browser back closes the photo instead of leaving the screen. This modal is
   // hand-rolled rather than <ImageViewer/>, so it must opt in explicitly.
   useWebBackToClose(!!selectedImageUrl, useCallback(() => setSelectedImageUrl(null), []));
@@ -392,7 +398,7 @@ export default function PreorderDropDetailScreen() {
       Toast.show({
         type: 'error',
         text1: 'Pre-orders are closed for this menu',
-        text2: 'The cut-off deadline has passed.',
+        text2: 'Pre-orders for this menu have closed.',
       });
       return;
     }
@@ -704,7 +710,7 @@ export default function PreorderDropDetailScreen() {
     if (!drop) return;
     confirmAction({
       title: 'Restore this menu?',
-      message: `"${drop.title}" becomes visible again and returns to the state it was in before it was hidden. If its cut-off has since passed it stays closed.`,
+      message: `"${drop.title}" becomes visible again and returns to the state it was in before it was hidden. If pre-orders have since closed it stays closed.`,
       confirmLabel: 'Restore',
       destructive: false,
       onConfirm: async () => {
@@ -756,6 +762,31 @@ export default function PreorderDropDetailScreen() {
 
     const message = messageLines.join('\n');
     await shareOrCopy({ title: drop.title, message });
+  };
+
+  /** The same message, straight into WhatsApp's recipient picker. */
+  const handleShareDropWhatsApp = async () => {
+    if (!drop) return;
+    const shareUrl = siteUrl(`/api/share-drop?id=${drop.id}`);
+    const message = [
+      `🍲 *Menu: ${drop.title}*`,
+      `Hosted by ${hostName}${hostFlat ? ` (${hostFlat})` : ''}`,
+      ``,
+      `📅 Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
+      `⏰ Pre-Orders Close: ${cutoffFormatted}`,
+      ``,
+      `🔗 View Menu & Place Pre-Order:`,
+      shareUrl,
+    ].join('\n');
+
+    // `wa.me`, never the `whatsapp://` scheme — that fails on web and in the
+    // PWA (docs/CLAUDE.md §9). `_blank` so the app is not navigated away from.
+    const url = whatsAppShareUrl(message);
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') window.open(url, '_blank');
+      return;
+    }
+    await Linking.openURL(url);
   };
 
   const handleBack = () => {
@@ -847,10 +878,25 @@ export default function PreorderDropDetailScreen() {
               Hosted by {hostName} {hostFlat ? `(${hostFlat})` : ''}
             </Text>
           </View>
-          <TouchableOpacity style={styles.shareBtn} onPress={handleShareDrop} activeOpacity={0.8}>
-            <Share07 size={15} color={Verandah.primaryFg} aria-hidden={true} />
-            <Text style={styles.shareBtnText}>Share</Text>
-          </TouchableOpacity>
+          <View style={styles.shareRow}>
+            {/* Straight to WhatsApp, beside the generic share. Nearly every
+                share of a menu ends up there anyway, and the OS sheet is an
+                extra step — on desktop web there is no sheet at all, so the
+                plain Share button falls back to a clipboard copy. */}
+            <TouchableOpacity
+              style={styles.whatsappBtn}
+              onPress={handleShareDropWhatsApp}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Share this menu on WhatsApp"
+            >
+              <WhatsAppIcon size={17} color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.shareBtn} onPress={handleShareDrop} activeOpacity={0.8}>
+              <Share07 size={15} color={Verandah.primaryFg} aria-hidden={true} />
+              <Text style={styles.shareBtnText}>Share</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Schedule & Cut-off Banner */}
@@ -895,6 +941,23 @@ export default function PreorderDropDetailScreen() {
                     activeOpacity={0.8}
                   >
                     <Text style={[styles.hostManageBtnText, { color: Verandah.primary }]}>Edit Menu</Text>
+                  </TouchableOpacity>
+                ) : null}
+
+                {/* Republish — reruns this menu with a new closing and delivery
+                    time. Same sheet as the Mine tab's tile action, so the word
+                    and the behaviour match wherever the host finds it. Offered
+                    once the drop is no longer open (running the same menu twice
+                    at once is not the case this serves), and never on a drop
+                    hidden for review: that would re-broadcast moderated content
+                    in one tap. */}
+                {!isOpen && !isHidden ? (
+                  <TouchableOpacity
+                    style={[styles.hostManageBtn, { backgroundColor: '#FFFFFF', borderWidth: 0.5, borderColor: Verandah.primary }]}
+                    onPress={() => setRepublishOpen(true)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.hostManageBtnText, { color: Verandah.primary }]}>Republish</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
@@ -1395,6 +1458,28 @@ export default function PreorderDropDetailScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* Republishing lands the host on the brand new drop, which is what they
+          now want to look at and share — not back on the finished one. */}
+      {isCreator && communityId && user?.id && drop ? (
+        <RepublishDropSheet
+          dropId={republishOpen ? drop.id : null}
+          communityId={communityId}
+          userId={user.id}
+          onClose={() => setRepublishOpen(false)}
+          onPublished={(newDropId) => {
+            // Navigate before closing — see the note in app/mcn/drops/index.tsx.
+            replaceTracked(router, `/mcn/drops/${newDropId}` as any);
+            setTimeout(() => setRepublishOpen(false), 0);
+          }}
+          onEditFull={(sourceId) => {
+            // Navigate before closing — see the note on the same handler in
+            // app/mcn/drops/index.tsx.
+            router.push(`/mcn/drops/add?fromDropId=${sourceId}` as any);
+            setTimeout(() => setRepublishOpen(false), 0);
+          }}
+        />
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
@@ -1572,6 +1657,22 @@ const styles = StyleSheet.create({
   hostSub: {
     fontSize: 11,
     color: Verandah.textSecondary,
+  },
+  shareRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  whatsappBtn: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // WhatsApp brand green. Out of register with the Verandah palette on
+    // purpose — a brand affordance is recognised by its colour, and a teal
+    // WhatsApp button reads as "some share thing". Logged in verandah.md.
+    backgroundColor: '#25D366',
+    borderRadius: VerandahRadius.pill,
   },
   shareBtn: {
     flexDirection: 'row',

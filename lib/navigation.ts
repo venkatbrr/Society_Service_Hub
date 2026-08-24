@@ -455,8 +455,9 @@ export function getImmediateParentRoute(pathname: string): string {
   }
   if (cleanPath.startsWith('/mcn/listing/')) return '/mcn/business';
   if (cleanPath === '/mcn/listing-add') return '/mcn/business';
-  // Business listings and menus are sibling tabs of one hub card, not
-  // parent and child — both go up to the MCN hub.
+  // Business listings and menus each own a hub card of their own (2026-08-24;
+  // before that they were sibling tabs behind one merged card). Neither is the
+  // other's parent — both go up to the MCN hub.
   if (cleanPath === '/mcn/business') return '/network';
 
   // 6. General MCN

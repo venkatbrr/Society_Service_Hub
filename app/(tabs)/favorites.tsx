@@ -102,10 +102,9 @@ export default function FavoritesScreen() {
           />
         )}
         contentContainerStyle={styles.listContent}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        initialNumToRender={8}
+        // Same defaults as the Providers list — see the note there. The tuned-down
+        // window stopped this list at roughly one screenful too.
+        initialNumToRender={12}
         {...pullToRefresh.pullProps}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />

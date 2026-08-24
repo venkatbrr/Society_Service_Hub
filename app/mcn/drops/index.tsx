@@ -26,9 +26,9 @@ import { AppIcon } from '../../../components/AppIcon';
 import { EmptyState } from '../../../components/EmptyState';
 import { MuteToggleButton } from '../../../components/MuteToggleButton';
 import { PreorderDropCard, PreorderDropItem } from '../../../components/PreorderDropCard';
+import { RepublishDropSheet } from '../../../components/RepublishDropSheet';
 
 import { Rupees } from '../../../components/Rupees';
-import { SegmentedSlider } from '../../../components/SegmentedSlider';
 import { ChipRowSlider } from '../../../components/ChipRowSlider';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../../components/WebPullIndicator';
@@ -45,7 +45,7 @@ import { supabase } from '../../../lib/supabase';
 type SortOption = 'closing' | 'delivery' | 'newest' | 'price' | 'popular';
 
 const SORT_OPTIONS: { key: SortOption; label: string; hint: string }[] = [
-  { key: 'closing', label: 'Closing soon', hint: 'Order before the cut-off passes' },
+  { key: 'closing', label: 'Closing soon', hint: 'Order before it closes' },
   { key: 'delivery', label: 'Delivery soonest', hint: 'Food arriving first' },
   { key: 'newest', label: 'Just added', hint: 'Newest menus from your neighbours' },
   { key: 'price', label: 'Price: low to high', hint: 'Cheapest item on the menu' },
@@ -180,6 +180,8 @@ export default function FoodDropsCatalogScreen() {
   const [drops, setDrops] = useState<PreorderDropItem[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'closed' | 'my_drops' | 'review'>('active');
   const [preparingCollapsed, setPreparingCollapsed] = useState(false);
+  // Republish sheet target — the host's own past menu being run again.
+  const [republishDropId, setRepublishDropId] = useState<string | null>(null);
   const [completedCollapsed, setCompletedCollapsed] = useState(false);
 
   useEffect(() => {
@@ -572,25 +574,10 @@ export default function FoodDropsCatalogScreen() {
       />
 
 
-      {/* Top Section Switcher Toggle */}
-      <SegmentedSlider<'drops' | 'business'>
-        value="drops"
-        enterFromIndex={1}
-        onChange={(val) => {
-          if (val === 'business') {
-            replaceTracked(router, '/mcn/business' as any);
-          }
-        }}
-        segments={[
-          { key: 'drops', label: 'Pre-order Food' },
-          { key: 'business', label: 'Businesses' },
-        ]}
-        trackStyle={styles.masterToggleRow}
-        segmentStyle={styles.masterToggleBtn}
-        pillStyle={styles.masterToggleBtnActive}
-        activeTextStyle={styles.masterToggleTextActive}
-        inactiveTextStyle={styles.masterToggleText}
-      />
+      {/* The Pre-order Food / Businesses switcher that sat here until
+          2026-08-24 is gone: each section now has its own card on the MCN hub,
+          so the switcher was a second entry point to a sibling screen rather
+          than a control over anything on this one. */}
 
       {/* Tabs, filter and sort share one row — the two controls are the same
           pill as Open/Past/Mine, just icon-width, so five affordances still
@@ -901,10 +888,21 @@ export default function FoodDropsCatalogScreen() {
             }
 
             const item = row.drop;
+            // "Republish" only on the host's own past menus, under Mine. It is
+            // the tab a repeat cook already opens to find last week's menu, so
+            // it is where the one-tap rerun belongs. Never on a drop hidden for
+            // review — republishing would undo the moderation in one tap.
+            const canRepublish =
+              activeTab === 'my_drops' &&
+              item.created_by === user?.id &&
+              !item.flagged_for_review_at &&
+              !(item.status === 'open' && new Date(item.cutoff_at) > new Date());
+
             return (
               <PreorderDropCard
                 drop={item}
                 onPress={() => router.push(`/mcn/drops/${item.id}` as any)}
+                onRepublish={canRepublish ? () => setRepublishDropId(item.id) : undefined}
               />
             );
           }}
@@ -958,6 +956,33 @@ export default function FoodDropsCatalogScreen() {
           <Plus size={24} color={Verandah.primaryFg} aria-hidden={true} />
           <Text style={styles.fabText}>Publish Menu</Text>
         </TouchableOpacity>
+      ) : null}
+
+      {/* Republish: rerun one of the host's own past menus, changing only the
+          closing and delivery time. Publishing lands the host on the new drop,
+          which is the thing they now want to share. */}
+      {communityId && user?.id ? (
+        <RepublishDropSheet
+          dropId={republishDropId}
+          communityId={communityId}
+          userId={user.id}
+          onClose={() => setRepublishDropId(null)}
+          onPublished={(newDropId) => {
+            // Same ordering rule as onEditFull below: navigate, then close.
+            router.push(`/mcn/drops/${newDropId}` as any);
+            setTimeout(() => setRepublishDropId(null), 0);
+          }}
+          onEditFull={(sourceId) => {
+            // Navigate FIRST, then close. The sheet owns a history entry via
+            // useWebBackToClose, and closing it runs `history.back()` unless
+            // that entry has been navigated on top of. Clearing state first let
+            // the pop land on the publish form and bounce the host straight
+            // back to this catalog — the form flashed up, showed its "Menu
+            // copied" toast, and vanished.
+            router.push(`/mcn/drops/add?fromDropId=${sourceId}` as any);
+            setTimeout(() => setRepublishDropId(null), 0);
+          }}
+        />
       ) : null}
     </View>
   );
@@ -1282,36 +1307,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#065F46',
-  },
-  masterToggleRow: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 8,
-    backgroundColor: Verandah.cream,
-    borderRadius: VerandahRadius.segmented,
-    padding: 4,
-    gap: 4,
-  },
-  masterToggleBtn: {
-    flex: 1,
-    paddingVertical: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: VerandahRadius.segmentedInner,
-  },
-  masterToggleBtnActive: {
-    backgroundColor: Verandah.primary,
-  },
-  masterToggleText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Verandah.textSecondary,
-    fontFamily: VerandahType.sansFamily,
-  },
-  masterToggleTextActive: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Verandah.primaryFg,
-    fontFamily: VerandahType.sansFamily,
   },
 });

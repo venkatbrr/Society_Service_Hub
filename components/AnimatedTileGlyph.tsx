@@ -5,7 +5,7 @@ import { useReduceMotion } from './useReduceMotion';
 
 // Every kind animates transform only, so on native these never-ending loops can
 // run on the UI thread instead of holding an animation frame + bridge write on
-// the JS thread for as long as the MCN hub is open — three at once, on the
+// the JS thread for as long as the MCN hub is open — four at once, on the
 // screen the app lands on. react-native-web has no native driver, so web keeps
 // the JS driver as documented in docs/verandah.md.
 const USE_NATIVE_DRIVER = Platform.OS !== 'web';
@@ -21,7 +21,7 @@ const USE_NATIVE_DRIVER = Platform.OS !== 'web';
  * from across the room it is too big.
  *
  * The durations are **mutually prime-ish on purpose** and each glyph starts on
- * its own delay: with a shared cycle the three cards pulse in unison and the
+ * its own delay: with a shared cycle the four cards pulse in unison and the
  * whole screen appears to breathe, which is exactly the effect this avoids.
  *
  * Motion rules per `docs/verandah.md`: built-in `Animated` (not Reanimated) and
@@ -42,6 +42,8 @@ type GlyphMotion = {
 const MOTION_BY_KIND: Record<NetworkTileIconKind, GlyphMotion> = {
   // A shopping bag swinging in the hand.
   food: { duration: 2000, delay: 0, rotate: ['-5deg', '5deg'], translateY: [0, -1] },
+  // A shutter lifting at opening time.
+  business: { duration: 1900, delay: 220, translateY: [0, -1.5] },
   // A car easing forward and back.
   carpool: { duration: 1600, delay: 150, translateX: [-2, 2] },
   // A group drawing together.

@@ -225,6 +225,7 @@ Every glyph in the MCN hub's icon circles carries a slow idle motion matched to 
 | Kind | Motion | Cycle | Delay |
 |---|---|---|---|
 | `food` | Rotate −5° → 5° with a 1px lift — a bag swinging in the hand | 2000ms | 0 |
+| `business` | `translateY` 0 → −1.5 — a shutter lifting at opening time | 1900ms | 220ms |
 | `carpool` | `translateX` −2 → 2 — a car easing forward and back | 1600ms | 150ms |
 | `parents` | Scale 1 → 1.07 — a group drawing together | 1850ms | 300ms |
 | `schools` | `translateY` 1 → −2 — a cap tossed and caught *(hidden today)* | 1750ms | 100ms |
@@ -413,5 +414,12 @@ Current entries:
 - **`components/PreorderDropCard.tsx` → `ReserveButton`**
   - *Deviation*: uses `LinearGradient`, which the general constraints tell you to avoid on card/chrome/button surfaces.
   - *Why*: the gradient is not the button's **surface** — the fill stays a flat `Verandah.primary`. It paints only the travelling highlight (transparent → 42% white → transparent) that drifts continuously across the pill (two bands, half a cycle apart, 2.6s per traversal) to draw the eye to the CTA in a scrolling feed. A hard-edged translucent bar was tried first and reads as a glitch; soft edges are what make it look like light rather than a rectangle.
-  - *Scope*: one 44px-wide `Animated.View` clipped inside the pill's `overflow: 'hidden'`. Gated on `useReduceMotion()` and only rendered while the drop is open, so it is neither always-on nor present on muted/closed states.
-  - *Follow-up*: none required. If a second shimmering CTA appears anywhere, extract `ReserveButton` into a shared component rather than copying the gradient.
+  - *Scope*: one 44px-wide `Animated.View` clipped inside the pill's `overflow: 'hidden'`. Gated on `useReduceMotion()` and only rendered while `active`, so it is neither always-on nor present on muted/closed states.
+  - *Second user (2026-08-24)*: the host's **Republish** action on their own tiles under Mine. It takes `tone="accent"` and a leading `RefreshCw01`, and shimmers like a live CTA — it is the one action a repeat cook opens that tab looking for, and in the muted style it read as disabled. The follow-up below was honoured by **generalising `ReserveButton` in place** (`tone` + `leading` props) rather than copying the gradient into a second button.
+  - *Follow-up*: none required. A third shimmering CTA should still go through `ReserveButton` — add a `tone`, never a second `SheenBand`.
+
+- **`components/WhatsAppIcon.tsx`, plus the `#25D366` buttons in `components/PreorderDropCard.tsx` and `app/mcn/drops/[id].tsx`**
+  - *Deviation*: a raw hex brand colour (WhatsApp green) instead of a `Verandah` token, and a **filled** glyph where the icon set is outline-only.
+  - *Why*: a share-to-WhatsApp button is recognised by its colour and its mark. Painted `Verandah.primary` it reads as "some other share thing", which defeats the point of putting it beside the generic Share button. `@untitledui/icons` carries no brand marks at all — its nearest, `MessageChatCircle`, is a generic bubble. The glyph is a bespoke SVG rather than the 💬-style emoji originally asked for, because the repo bans emoji in UI chrome (`docs/CLAUDE.md` §3) and emoji render differently on every platform, with some shipping no WhatsApp glyph at all.
+  - *Scope*: two 30–32px circular buttons — one on the drop tile's host row, one on the drop detail header row. The colour appears nowhere else.
+  - *Follow-up*: none required. If a WhatsApp affordance is added to a third surface, take the button (not just the icon) into a shared component so the hex stays in one file.

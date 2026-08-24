@@ -159,13 +159,14 @@ Provider-only bookmarks from `favorites`. Unfavoriting removes the row from the 
 
 ### 7.3 MCN tab — My Community Network (`app/(tabs)/network.tsx`)
 
-A **hub of three live section cards**, each with a live count, plus two quick-action buttons (My Orders, My Submissions):
+A **hub of four live section cards**, each with a live count, plus two quick-action buttons (My Orders, My Submissions):
 
 | Card | Route | Live count |
 |------|-------|-----------|
-| Pre-order Food & Community Business | `/mcn/drops` | open drops + active listings |
-| Community Carpooling | `/mcn/carpools` | active rides |
+| Pre-order Food | `/mcn/drops` | open drops |
+| Community Business | `/mcn/business` | active listings |
 | Parent Corner | `/mcn/parents` | children listed |
+| Community Carpooling | `/mcn/carpools` | active rides |
 | *Schools Catalog & Compare* | *`/mcn/schools`* | **hidden 2026-08-13** |
 | *Borrow & Share* | *`/mcn/my-posts?segment=borrow`* | **hidden 2026-08-13** |
 

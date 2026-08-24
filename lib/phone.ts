@@ -27,3 +27,16 @@ export function buildWhatsAppUrl(phone: string | null | undefined, text: string)
   return `https://wa.me/91${last10}?text=${encodeURIComponent(text)}`;
 }
 
+
+/**
+ * A WhatsApp share link with no recipient — opens WhatsApp with the message
+ * ready and lets the sender pick who gets it.
+ *
+ * `buildWhatsAppUrl` above is the other shape: a link to one known number. Use
+ * this one for "share this to WhatsApp" affordances, where the recipient is the
+ * sender's choice. `wa.me` (not the `whatsapp://` scheme) so it also works on
+ * web and in the PWA — see docs/CLAUDE.md §9.
+ */
+export function whatsAppShareUrl(text: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}

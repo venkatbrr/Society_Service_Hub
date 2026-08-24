@@ -258,6 +258,18 @@ export default function CommunityRequestSubmittedScreen() {
           <Text style={[styles.secondaryButtonText, { color: Verandah.textPrimary }]}>Refresh status</Text>
         </TouchableOpacity>
 
+        {/* Escape hatch for the common mis-tap: the requester meant to join an
+            existing community, not start a new one. Without this the pending
+            screen has no exit but signing out, and the root layout routes them
+            straight back here on the next sign-in. */}
+        <TouchableOpacity
+          onPress={() => replaceTracked(router, '/community-select')}
+          style={[styles.secondaryButton, { borderColor: Verandah.border }]}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.secondaryButtonText, { color: Verandah.textPrimary }]}>Join existing community instead</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           onPress={async () => { await signOut(); if (!goToLanding()) replaceTracked(router, '/login'); }}
           style={styles.textButton}

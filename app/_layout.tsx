@@ -170,8 +170,21 @@ function RootLayoutNav() {
         const pendingCode = peekInviteCode();
         redirectTo = pendingCode ? `/community-select?code=${encodeURIComponent(pendingCode)}` : '/community-select';
       }
-    } else if (!communityId && activeCommunityRequest && !isOnCommunityRequestSubmitted) {
-      // Has pending request, show status screen
+    } else if (
+      !communityId &&
+      activeCommunityRequest &&
+      !isOnCommunityRequestSubmitted &&
+      !isOnCommunitySelect &&
+      !isOnCommunityRequest
+    ) {
+      // Has an open request → the status screen is the default landing.
+      //
+      // `community-select` and `community-request` are exempt on purpose: a
+      // requester who picked "new community" by mistake still has to be able to
+      // walk out with a join code, and a rejected one has to be able to try
+      // again. Without the exemption the status screen's own "Join existing
+      // community" / "Request again" buttons navigate and are bounced straight
+      // back here, trapping the account with no way forward.
       redirectTo = '/community-request-submitted';
     } else if (!communityId && !activeCommunityRequest && !isOnCommunitySelect && !isOnCommunityRequest) {
       // No community, no request → select/request community

@@ -1,14 +1,17 @@
+import { RefreshCw01 } from '@untitledui/icons/RefreshCw01';
 import { Share07 } from '@untitledui/icons/Share07';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, Linking, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Verandah } from '../constants/Colors';
 import { VerandahBorder, VerandahRadius, VerandahType, format12HourTime, getTopCropTileImageStyle } from '../constants/Verandah';
 import { useAuth } from '../context/AuthContext';
 import { cloudinaryUrl } from '../lib/cloudinary';
+import { whatsAppShareUrl } from '../lib/phone';
 import { shareOrCopy } from '../lib/share';
 import { siteUrl } from '../lib/siteUrl';
+import { WhatsAppIcon } from './WhatsAppIcon';
 import { Avatar } from './Avatar';
 import { DietDot } from './DietDot';
 import { useReduceMotion } from './useReduceMotion';
@@ -51,15 +54,27 @@ const SHEEN_DURATION = 2600;
  *
  * Closed and completed drops get a muted, static version: there is nothing to
  * reserve, so animating it would be advertising a dead end.
+ *
+ * The host's **Republish** action reuses this in `accent` with a leading icon,
+ * and shimmers like a live CTA. That is deliberate: it is the one action a
+ * repeat cook opens the Mine tab looking for, and in the muted style it read as
+ * disabled. Generalising this button was the follow-up `verandah.md`'s
+ * out-of-register entry already called for — do not copy the gradient into a
+ * third button, add a `tone` here instead.
  */
 function ReserveButton({
   label,
   active,
   onPress,
+  tone = 'primary',
+  leading,
 }: {
   label: string;
   active: boolean;
   onPress: () => void;
+  /** `accent` marks a host action, so it never reads as a buyer's CTA. */
+  tone?: 'primary' | 'accent';
+  leading?: React.ReactNode;
 }) {
   const reduceMotion = useReduceMotion();
   const [width, setWidth] = useState(0);
@@ -91,13 +106,18 @@ function ReserveButton({
 
   return (
     <TouchableOpacity
-      style={[styles.reserveBtn, !active && styles.reserveBtnMuted]}
+      style={[
+        styles.reserveBtn,
+        tone === 'accent' && styles.reserveBtnAccent,
+        !active && styles.reserveBtnMuted,
+      ]}
       onPress={onPress}
       onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
       activeOpacity={0.85}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
+      {leading}
       <Text style={[styles.reserveText, !active && styles.reserveTextMuted]} numberOfLines={1}>
         {label}
       </Text>
@@ -186,11 +206,14 @@ export interface PreorderDropItem {
 interface PreorderDropCardProps {
   drop: PreorderDropItem;
   onPress: () => void;
+  /** Host-only rerun of this menu. Omitted when the action does not apply. */
+  onRepublish?: () => void;
 }
 
 export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
   drop,
   onPress,
+  onRepublish,
 }) => {
   const { height: windowHeight } = useWindowDimensions();
   // Natural width/height of the cover photo, learnt on load, so the tile can
@@ -332,6 +355,30 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
     await shareOrCopy({ title: drop.title, message });
   };
 
+  /** The same message, straight into WhatsApp's recipient picker. */
+  const handleWhatsAppShare = async (e: any) => {
+    e.stopPropagation();
+    const shareUrl = siteUrl(`/api/share-drop?id=${drop.id}`);
+    const message = [
+      `*Menu: ${drop.title}*`,
+      `Hosted by ${hostDisplay}`,
+      ``,
+      `Delivery: ${fulfillFormatted} (${format12HourTime(drop.fulfillment_time)})`,
+      `Pre-Orders Close: ${cutoffFormatted}`,
+      ``,
+      `View Menu & Place Pre-Order:`,
+      shareUrl,
+    ].join('\n');
+
+    // `wa.me`, never `whatsapp://` — that scheme fails on web and in the PWA.
+    const url = whatsAppShareUrl(message);
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') window.open(url, '_blank');
+      return;
+    }
+    await Linking.openURL(url);
+  };
+
   return (
     <View style={styles.card}>
       <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
@@ -362,7 +409,32 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
               shimmering "Reserve now" on your own card invites a tap that goes
               nowhere useful. Hosts manage the drop from inside it, and tapping
               the card still opens it. */}
-          {isHost ? null : (
+          {isHost ? (
+            /* The host's half of that slot. It is empty for them otherwise, so
+               "Republish" costs the tile no height — and tile height is the
+               scarce resource here (see getTopCropTileImageStyle: three tiles
+               must fit the fold). Static, never animated: a Mine list of
+               shimmering pills is noise, and this is a deliberate action the
+               host comes looking for rather than one to advertise. */
+            onRepublish ? (
+              <View style={styles.reserveSlot}>
+                {/* Its own treatment rather than ReserveButton's muted state:
+                    that state means "nothing to do here" (a closed drop), and
+                    painting the host's one useful action in it made Republish
+                    read as disabled. Accent green, not primary, so it stays
+                    distinguishable from a buyer's "Reserve now" at a glance —
+                    and an icon, because the host is scanning their own tiles
+                    for this specific action. */}
+                <ReserveButton
+                  label="Republish"
+                  active
+                  tone="accent"
+                  onPress={onRepublish}
+                  leading={<RefreshCw01 size={14} color={Verandah.primaryFg} aria-hidden={true} />}
+                />
+              </View>
+            ) : null
+          ) : (
             <View style={styles.reserveSlot}>
               <ReserveButton
                 label={isOpen ? 'Reserve now' : 'View menu'}
@@ -386,10 +458,25 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
                 {hostSubtitle}
               </Text>
             </View>
-            <TouchableOpacity style={styles.shareHeaderBtn} onPress={handleShare} hitSlop={8} activeOpacity={0.85}>
-              <Share07 size={14} color={Verandah.primaryFg} aria-hidden={true} />
-              <Text style={styles.shareHeaderText}>Share</Text>
-            </TouchableOpacity>
+            {/* The two share affordances need their own row: `header` has no
+                `gap`, so dropped in as siblings the WhatsApp circle sat flush
+                against the Share pill and read as one two-tone control. */}
+            <View style={styles.shareActions}>
+              <TouchableOpacity
+                style={styles.whatsappHeaderBtn}
+                onPress={handleWhatsAppShare}
+                hitSlop={8}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Share this menu on WhatsApp"
+              >
+                <WhatsAppIcon size={15} color="#FFFFFF" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareHeaderBtn} onPress={handleShare} hitSlop={8} activeOpacity={0.85}>
+                <Share07 size={14} color={Verandah.primaryFg} aria-hidden={true} />
+                <Text style={styles.shareHeaderText}>Share</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Title, preceded by one dot per diet type the menu offers — a
@@ -463,6 +550,21 @@ const styles = StyleSheet.create({
     color: Verandah.textSecondary,
     marginTop: 1,
   },
+  shareActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  whatsappHeaderBtn: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // WhatsApp brand green — deliberately out of the Verandah palette, same
+    // reasoning as the detail screen's button. Logged in verandah.md.
+    backgroundColor: '#25D366',
+    borderRadius: VerandahRadius.pill,
+  },
   shareHeaderBtn: {
     paddingHorizontal: 16,
     paddingVertical: 6,
@@ -498,6 +600,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: VerandahRadius.pill,
@@ -508,6 +611,9 @@ const styles = StyleSheet.create({
   },
   reserveBtnMuted: {
     backgroundColor: Verandah.cardMuted,
+  },
+  reserveBtnAccent: {
+    backgroundColor: Verandah.accent,
   },
   reserveText: {
     fontFamily: VerandahType.sansFamily,

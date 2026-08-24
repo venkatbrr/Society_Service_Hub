@@ -1,41 +1,39 @@
-// Wooru — PWA Service Worker (v12)
-// Provides offline caching for static assets, and serves app-shell navigations
-// from cache while revalidating in the background.
-
-// Bump CACHE_NAME whenever a cached asset changes — the fetch handler is
-// cache-first for images, so installed PWAs keep serving the old icons otherwise.
+// Wooru — PWA Service Worker
 //
-// v7: manifest.json changed (start_url moved off `/`, which is the marketing
-// page, onto `/network`; explicit id and scope added). manifest.json is in
-// STATIC_ASSETS below, so without this bump an already-installed client would
-// keep the old manifest and keep launching into the landing page.
-// v8: landing.html's Install app button gained a reduced-motion fallback.
-// v9: landing.html gained the iOS "Add to Home Screen" nudge (#wn-ios-install).
-// landing.html is in STATIC_ASSETS below and is precached, so without this
-// bump an already-installed client keeps serving the old page and never sees it.
-// v10: app-shell navigations moved from network-first to stale-while-revalidate
-// (see the fetch handler) — installed clients must pick up the new strategy.
-// v11: added push and notificationclick event listeners for Web Push notifications.
-// v12: notification `badge` moved off /images/icon-192.png. Android masks the
-// status-bar badge by its ALPHA channel, and icon-192 is a full-bleed opaque
-// square — so it rendered as a solid white block. /images/notification-badge.png
-// is a transparent arch silhouette. It is precached below, so this bump is what
-// makes installed clients actually fetch it.
-const CACHE_NAME = 'wooru-pwa-v12';
+// Caching contract, one line per resource class:
+//
+//   HTML / navigations   → network-first (4s timeout), cache is offline fallback
+//   /_expo/static/*      → cache-first (content-hashed by Metro, immutable)
+//   other same-origin    → stale-while-revalidate (icons, manifest.json, ...)
+//   /api/*, Supabase,    → never touched, straight to network
+//   every cross-origin
+//
+// The rule behind it: nothing that can change under a stable URL is served from
+// cache without also being revalidated. The shell is the one that matters — it
+// carries the <script src> for the hashed bundle, so a stale shell is a stale
+// *entire app*, which is exactly how new features stop appearing after a deploy.
+//
+// CACHE_NAME is stamped at build time (see build-admin.js). Do NOT hand-bump it
+// and do not hardcode a version here: the build derives it from the content of
+// the shell and every precached asset, so a deploy that changes them
+// invalidates the cache automatically, and one that does not keeps it warm.
+const BUILD_ID = '__WOORU_BUILD_ID__';
+const CACHE_NAME = 'wooru-pwa-' + (/^[0-9a-f]{8,}$/.test(BUILD_ID) ? BUILD_ID : 'dev');
 
+// How long a navigation waits for the network before falling back to the cached
+// shell. Long enough to win on a normal mobile connection, short enough that a
+// dead connection does not feel like a hang.
+const NETWORK_TIMEOUT_MS = 4000;
 
 // `/app.html` is the SPA shell every app route rewrites to (see vercel.json).
-// It is the offline fallback for in-app navigation; `/` and `/landing.html`
-// serve the marketing page and are only correct for the root.
-//
-// v6 moved the shell off `/index.html` — the root is now the static landing
-// page so Google's OAuth brand review can read it without JavaScript. A stale
-// v5 cache would fall back to the marketing page for every app route, so this
-// rename must ship with the CACHE_NAME bump above.
+// `/` and `/landing.html` serve the marketing page and are only correct for the
+// root — falling back to it for an app route ejects users onto marketing.
 const APP_SHELL = '/app.html';
+const LANDING = '/landing.html';
+
 const STATIC_ASSETS = [
   APP_SHELL,
-  '/landing.html',
+  LANDING,
   '/manifest.json',
   '/images/icon.png',
   '/images/icon-192.png',
@@ -48,138 +46,217 @@ const STATIC_ASSETS = [
   '/images/favicon-16.png',
 ];
 
-// Install: pre-cache critical static assets
+const noop = () => { };
+
+// Install: pre-cache critical static assets.
 self.addEventListener('install', (event) => {
   // Deliberately NOT cache.addAll(): that is atomic, so a single 404 rejects the
   // whole install and the service worker never activates — one renamed asset
   // would silently disable offline support entirely. Cache each entry
   // independently and let stragglers fail.
+  //
+  // `cache: 'reload'` bypasses the browser's own HTTP cache so a precache can
+  // never be seeded from a stale copy the HTTP layer happened to be holding.
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
       Promise.all(
         STATIC_ASSETS.map((asset) =>
-          cache.add(asset).catch((err) => {
+          cache.add(new Request(asset, { cache: 'reload' })).catch((err) => {
             console.warn('[PWA] Could not pre-cache', asset, err);
           })
         )
       )
     )
   );
-  // Activate immediately without waiting for existing tabs to close
+  // Activate immediately without waiting for existing tabs to close.
   self.skipWaiting();
 });
 
-// Activate: clean up old caches
+// Activate: drop every cache that is not this build's, and turn on navigation
+// preload so a network-first navigation starts its request in parallel with the
+// worker booting instead of after it.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+    (async () => {
+      const names = await caches.keys();
+      await Promise.all(
+        names.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
       );
-    })
+      if (self.registration.navigationPreload) {
+        await self.registration.navigationPreload.enable().catch(noop);
+      }
+      await self.clients.claim();
+    })()
   );
-  // Take control of all clients immediately
-  self.clients.claim();
 });
 
-// Fetch: network-first for navigation and API calls, cache-first for static assets
+// Lets a page ask a waiting worker to take over immediately. We already
+// skipWaiting() on install, so this is a belt-and-braces path for any browser
+// that still holds the new worker back.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+function withTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('network-timeout')), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (err) => { clearTimeout(timer); reject(err); }
+    );
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Navigations — network-first.
+// ---------------------------------------------------------------------------
+function handleNavigation(event, shellUrl) {
+  // Kicked off synchronously so the `event.waitUntil` below is still inside the
+  // event dispatch — that is what keeps the worker alive long enough to finish
+  // writing the refreshed shell even when we answered from cache.
+  const network = (async () => {
+    const preloaded = await event.preloadResponse;
+    return preloaded || fetch(event.request);
+  })();
+
+  event.waitUntil(
+    network
+      .then((response) => {
+        if (!response || !response.ok) return null;
+        // Clone BEFORE any await. The same Response is handed to respondWith(),
+        // and once the browser starts reading that body clone() throws — so an
+        // `await caches.open()` here would race the refresh away silently.
+        const copy = response.clone();
+        return caches.open(CACHE_NAME).then((cache) => cache.put(shellUrl, copy));
+      })
+      .catch(noop)
+  );
+
+  return (async () => {
+    try {
+      const response = await withTimeout(network, NETWORK_TIMEOUT_MS);
+      if (response) {
+        // respondWith() throws on a response carrying the redirected flag, so a
+        // followed server redirect (e.g. /network/* → /mcn/*, see vercel.json)
+        // has to be handed back to the browser as a real redirect.
+        if (response.redirected) return Response.redirect(response.url, 302);
+        return response;
+      }
+    } catch (_) {
+      // Offline, errored, or slower than NETWORK_TIMEOUT_MS — fall through.
+    }
+
+    const cache = await caches.open(CACHE_NAME);
+    const cached = (await cache.match(shellUrl)) || (await cache.match(event.request));
+    if (cached) return cached;
+
+    // Nothing cached — a first visit, or a client whose cache was just evicted
+    // by a new build. The timeout only exists to stop a slow network holding up
+    // a shell we already have; with no fallback there is nothing to fall back
+    // *to*, so wait the network out rather than showing an offline page to
+    // someone who is merely on a bad connection.
+    try {
+      const response = await network;
+      if (response) {
+        if (response.redirected) return Response.redirect(response.url, 302);
+        return response;
+      }
+    } catch (_) {
+      // Genuinely unreachable.
+    }
+    return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+  })();
+}
+
+// ---------------------------------------------------------------------------
+// Same-origin assets.
+// ---------------------------------------------------------------------------
+
+// Metro fingerprints everything under /_expo/static/ with a content hash, so a
+// changed file always arrives under a new URL. Cache-first is safe there, and
+// nowhere else.
+const isImmutableAsset = (url) => url.pathname.startsWith('/_expo/static/');
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response && response.ok) {
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, response.clone()).catch(noop);
+  }
+  return response;
+}
+
+// Stale-while-revalidate for same-origin assets served from a stable URL —
+// icons, manifest.json, anything under /images. The cached copy answers now and
+// the refreshed copy is in place for the next load, so swapping an icon or
+// editing the manifest no longer requires a cache-version bump.
+function staleWhileRevalidate(event) {
+  const { request } = event;
+  let written = Promise.resolve();
+
+  const network = fetch(request)
+    .then((response) => {
+      if (response && response.ok) {
+        // Clone before awaiting anything — see the note in handleNavigation.
+        const copy = response.clone();
+        written = caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+      }
+      return response;
+    })
+    .catch(() => null);
+
+  // Hold the worker open for the write, not just the fetch — otherwise the
+  // browser is free to kill it the moment we answer from cache and the refresh
+  // never reaches disk, which is the whole point of the strategy.
+  event.waitUntil(network.then(() => written).catch(noop));
+
+  return caches.match(request).then(
+    (cached) =>
+      cached ||
+      network.then(
+        (response) =>
+          response ||
+          new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })
+      )
+  );
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
+  // Only GETs are cacheable at all.
   if (request.method !== 'GET') return;
 
-  // Skip Supabase API calls and auth redirects — always go to network
-  if (
-    url.hostname.includes('supabase') ||
-    url.hostname.includes('googleapis') ||
-    url.hostname.includes('accounts.google')
-  ) {
+  // Anything that is not our own origin goes straight to the network: Supabase,
+  // Google auth and fonts, and every remote image host. Caching a third-party
+  // image under a stable URL is how an updated photo keeps rendering as the old
+  // one.
+  if (url.origin !== self.location.origin) return;
+
+  // Our own serverless endpoints are API calls, not assets — `/api/share-drop`
+  // is a same-origin GET that returns a redirect into the app, and replaying a
+  // cached copy of that is never right.
+  if (url.pathname.startsWith('/api/')) return;
+
+  // The worker must never cache itself: a stale worker cannot be replaced.
+  if (url.pathname === '/service-worker.js') return;
+
+  const isNavigation =
+    request.mode === 'navigate' || (request.headers.get('accept') || '').includes('text/html');
+
+  if (isNavigation) {
+    const isRoot = url.pathname === '/' || url.pathname === LANDING;
+    event.respondWith(handleNavigation(event, isRoot ? LANDING : APP_SHELL));
     return;
   }
 
-  // Never cache our own serverless endpoints. `/api/share-drop` is a same-origin
-  // GET, so the hostname checks above do not catch it — without this it falls
-  // into the cache-first branch below and its response (often a redirect into
-  // the app) is replayed forever, since nothing evicts an entry until
-  // CACHE_NAME changes.
-  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) {
-    return;
-  }
-
-  // Stale-while-revalidate for HTML pages / navigation.
-  //
-  // This was network-first, which meant every single launch of the installed
-  // app — including a cold launch on a slow mobile connection — blocked on a
-  // round trip for the shell before the browser could even discover the script
-  // tag and start fetching the (already cached) bundle. The shell is a tiny,
-  // near-static file; serving the cached copy immediately and refreshing it in
-  // the background makes launch feel instant.
-  //
-  // The trade: a deploy reaches an installed client on its *next* launch rather
-  // than the current one. That is the standard PWA bargain, and the long
-  // pull-to-refresh (HARD_RELOAD_THRESHOLD in components/useWebPullToRefresh.ts)
-  // is still there for a user who wants the new build right now.
-  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
-    const isRoot = url.pathname === '/' || url.pathname === '/landing.html';
-    const shellUrl = isRoot ? '/landing.html' : APP_SHELL;
-
-    event.respondWith(
-      caches.open(CACHE_NAME).then((cache) =>
-        cache.match(request).then((cachedResponse) => {
-          const networkFetch = fetch(request)
-            .then((response) => {
-              // put() is fire-and-forget but must not reject unhandled — a
-              // rejected put inside a waitUntil chain fails the whole extend.
-              if (response.ok) cache.put(request, response.clone()).catch(() => { });
-              return response;
-            })
-            .catch(() => null);
-
-          if (cachedResponse) {
-            // Refresh behind the response we are about to hand back.
-            event.waitUntil(networkFetch);
-            return cachedResponse;
-          }
-
-          // Nothing cached for this URL yet — wait for the network, and fall
-          // back to the precached shell so expo-router can resolve the route
-          // client-side. Falling back to /landing.html for an app route drops
-          // users onto the marketing page, so only the root does that.
-          return networkFetch.then(
-            (response) =>
-              response ||
-              cache
-                .match(shellUrl)
-                .then((shell) => shell || new Response('Offline', { status: 503 }))
-          );
-        })
-      )
-    );
-    return;
-  }
-
-  // Cache-first for static assets (images, js, css, fonts)
-  event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(request).then((response) => {
-        if (response.ok) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
-        }
-        return response;
-      });
-    })
-  );
+  event.respondWith(isImmutableAsset(url) ? cacheFirst(request) : staleWhileRevalidate(event));
 });
 
-// Push: handle incoming web push notifications
+// Push: handle incoming web push notifications.
 self.addEventListener('push', (event) => {
   let payload = {};
   try {
@@ -205,7 +282,7 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Notification click: deep-link into the app
+// Notification click: deep-link into the app.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const target = (event.notification.data && event.notification.data.url) || '/network';
@@ -213,7 +290,7 @@ self.addEventListener('notificationclick', (event) => {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       for (const client of list) {
         if ('focus' in client) {
-          if ('navigate' in client) client.navigate(target).catch(() => {});
+          if ('navigate' in client) client.navigate(target).catch(() => { });
           return client.focus();
         }
       }
@@ -221,4 +298,3 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
-

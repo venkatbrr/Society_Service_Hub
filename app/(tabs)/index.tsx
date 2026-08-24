@@ -513,10 +513,20 @@ export default function HomeScreen() {
             )}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            removeClippedSubviews={true}
-            maxToRenderPerBatch={10}
-            windowSize={5}
-            initialNumToRender={8}
+            // Virtualization is deliberately left near RN's defaults. An earlier
+            // performance pass pinned this list to windowSize={5} /
+            // initialNumToRender={8} / removeClippedSubviews, and that is what
+            // capped it at roughly one screenful: eight rows barely overflow the
+            // viewport, so there is almost nothing left to scroll, and growing the
+            // render window past that first batch then rests entirely on
+            // VirtualizedList's idle-time batcher (Batchinator ->
+            // InteractionManager.runAfterInteractions -> requestIdleCallback),
+            // which the browser starves. windowSize={5} also caps the window at
+            // ~2 viewports, so the remaining ~130 providers were never reachable.
+            // removeClippedSubviews is a no-op on web (VirtualizedList never reads
+            // it) and is a known source of blank cells on Android. Every other list
+            // in the app runs on the defaults and renders fine.
+            initialNumToRender={12}
             {...pullToRefresh.pullProps}
             refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Verandah.accent} />

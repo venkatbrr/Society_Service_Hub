@@ -6,6 +6,8 @@
 
 The report describes two different problems that happened to share a page: **launch** (nothing on screen for seconds) and **navigation** (a screen you have already visited redrawing slowly). They had separate causes and are treated separately below.
 
+> **Partly superseded on 2026-08-24.** The app-shell change below (network-first → stale-while-revalidate, `CACHE_NAME` → `wooru-pwa-v10`) traded deploy freshness for launch speed, and the freshness half of that trade turned out to cost more than it bought: a stale shell points at the old hashed bundle, so installed clients ran an old *entire app* and new features intermittently did not appear. Navigations are network-first again, with `navigationPreload` paying back the latency, and `CACHE_NAME` is now derived from build content instead of hand-bumped (follow-up 1 below, which is no longer "not taken"). The current caching contract lives in [`architecture.md` §15 items 11–12](../../architecture.md). Everything else in this document still stands.
+
 ---
 
 ## Files changed
@@ -202,7 +204,7 @@ Honest limits on the above:
 
 Deliberately left, with reasons:
 
-1. **Precache the hashed JS bundle in the service worker.** `build-admin.js` knows the bundle's hashed filename and could inject it into `dist/service-worker.js`'s `STATIC_ASSETS`, and could derive `CACHE_NAME` from content — which would also permanently fix the "forgot to bump `CACHE_NAME`" trap in `docs/CLAUDE.md`. Skipped as scope: the cache-first branch already caches the bundle on first fetch, so the gain is limited to the very first launch after install, and a wrong cache name breaks offline for everyone.
+1. ~~**Precache the hashed JS bundle in the service worker.**~~ **Taken on 2026-08-24** for the `CACHE_NAME` half: `build-admin.js` now derives the cache name from a SHA-256 over the exported shell, landing page, manifest, images, and the worker source, which permanently retires the "forgot to bump `CACHE_NAME`" trap. Precaching the bundle itself is still not done — the cache-first `/_expo/static/*` branch caches it on first fetch, so the gain is limited to the very first launch after install. *(Original reasoning: skipped as scope, and a wrong cache name breaks offline for everyone.)*
 2. **Code-split the web bundle.** 687 KB gzip is large. Expo/Metro can emit async chunks, but `output: 'single'` currently forbids it and verifying lazy routes is a project of its own.
 3. **Collapse the MCN hub's six count queries into one RPC.** They already run in parallel and the cards render without waiting, so this is bytes rather than latency — but it is a clean win if that screen is touched again.
 4. **`NotificationContext` fetches 50 full rows at startup** to derive a badge count. A `head: true, count: 'exact'` read for the badge plus a lazy list load on the notifications screen would be cheaper.

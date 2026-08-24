@@ -83,7 +83,8 @@ Record ✅ pass or ❌ fail per check with a note on what was observed.
 ### 6. MCN hub
 - [ ] MCN is the 3rd tab with a people icon
 - [ ] Quick actions: My Orders, My Submissions
-- [ ] Four section cards render with live counts: Pre-order Food & Community Business, Community Carpooling, Parent Corner, Schools Catalog & Compare
+- [ ] Four section cards render with live counts, in this order: Pre-order Food (open menus), Community Business (active listings), Parent Corner (children listed), Community Carpooling (active rides)
+- [ ] Pre-order Food opens `/mcn/drops` and Community Business opens `/mcn/business` — neither screen shows the old Pre-order Food / Businesses switcher
 - [ ] Counts refresh on focus and on pull-to-refresh
 - [ ] Each card navigates to the right route
 

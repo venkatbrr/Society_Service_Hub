@@ -20,7 +20,6 @@ import Toast from 'react-native-toast-message';
 import { AppIcon } from '../../components/AppIcon';
 import { EmptyState } from '../../components/EmptyState';
 import { McnListingCard, McnListingItem } from '../../components/McnListingCard';
-import { SegmentedSlider } from '../../components/SegmentedSlider';
 import { ChipRowSlider } from '../../components/ChipRowSlider';
 import { useWebPullToRefresh } from '../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../components/WebPullIndicator';
@@ -28,7 +27,7 @@ import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../lib/mcnHeader';
-import { goBackSmart, replaceTracked } from '../../lib/navigation';
+import { goBackSmart } from '../../lib/navigation';
 import { supabase } from '../../lib/supabase';
 
 type McnCategory = { id: string; name: string; emoji: string; sort_order: number };
@@ -185,25 +184,8 @@ export default function BusinessListingsScreen() {
         })}
       />
 
-      {/* Top Section Switcher Toggle */}
-      <SegmentedSlider<'drops' | 'business'>
-        value="business"
-        enterFromIndex={0}
-        onChange={(val) => {
-          if (val === 'drops') {
-            replaceTracked(router, '/mcn/drops' as any);
-          }
-        }}
-        segments={[
-          { key: 'drops', label: 'Pre-order Food' },
-          { key: 'business', label: 'Businesses' },
-        ]}
-        trackStyle={styles.masterToggleRow}
-        segmentStyle={styles.masterToggleBtn}
-        pillStyle={styles.masterToggleBtnActive}
-        activeTextStyle={styles.masterToggleTextActive}
-        inactiveTextStyle={styles.masterToggleText}
-      />
+      {/* The Pre-order Food / Businesses switcher that sat here until
+          2026-08-24 is gone — see the note in app/mcn/drops/index.tsx. */}
 
       <View style={styles.headerSubtitleWrap}>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -427,22 +409,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
-  masterToggleRow: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 8,
-    backgroundColor: Verandah.cream,
-    borderRadius: VerandahRadius.segmented,
-    padding: 4,
-    gap: 4,
-  },
-  masterToggleBtn: {
-    flex: 1,
-    paddingVertical: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: VerandahRadius.segmentedInner,
-  },
   categorySectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -476,20 +442,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: Verandah.accent,
-  },
-  masterToggleBtnActive: {
-    backgroundColor: Verandah.primary,
-  },
-  masterToggleText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Verandah.textSecondary,
-    fontFamily: VerandahType.sansFamily,
-  },
-  masterToggleTextActive: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Verandah.primaryFg,
-    fontFamily: VerandahType.sansFamily,
   },
 });
