@@ -48,6 +48,52 @@
     (function() {
       if (window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
         window.location.replace('/login' + window.location.search + window.location.hash);
+        return;
+      }
+
+      // Reload-inside-the-app recovery.
+      //
+      // The Providers screen lives at `/` in the SPA, but in a deployed build
+      // `/` is THIS page: build-admin.js copies the marketing page over
+      // dist/index.html and Vercel resolves the filesystem before the
+      // `/:path*` → `/app.html` rewrite, so the root never reaches the shell.
+      // Pressing the browser's reload button on Providers therefore landed
+      // here and threw the resident out of the app. `/providers` does fall
+      // through the rewrite, so forward there and let it hand back to `/`.
+      //
+      // Two conditions, both required:
+      //   1. `wooru.inApp` — sessionStorage, so it is per-tab and survives a
+      //      reload but not a fresh tab. Without it, a resident who typed
+      //      wooru.in deliberately would be yanked into the app instead of
+      //      seeing the site. Written by markAppRunning(), cleared by
+      //      goToLanding() on sign-out (both in lib/siteUrl.ts).
+      //   2. A Supabase token still in localStorage — the flag can outlive a
+      //      sign-out performed in another tab.
+      // Cleared before forwarding so a boot that finds no valid session ends on
+      // /login rather than bouncing back and forth.
+      //
+      // Runs in <head> ahead of any paint, so there is no flash of this page.
+      try {
+        if (sessionStorage.getItem('wooru.inApp') === '1') {
+          // Presence of the token entry is enough — the app is the authority on
+          // whether it is still valid, and it is only ever reached through the
+          // flag above. The `.0`/`.1` suffixes are supabase-js chunking a large
+          // token across keys; the value itself may be a `base64-` envelope, so
+          // do not try to parse it here.
+          var signedIn = false;
+          for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            if (!key || !/^sb-.+-auth-token(\.\d+)?$/.test(key)) continue;
+            if ((localStorage.getItem(key) || '').length > 2) { signedIn = true; break; }
+          }
+          if (signedIn) {
+            sessionStorage.removeItem('wooru.inApp');
+            window.location.replace('/providers');
+            return;
+          }
+        }
+      } catch (e) {
+        // Storage unavailable (private mode, blocked cookies) — just show the page.
       }
       // Marks that JS is available. Scroll-reveal hides content until observed,
       // so it must only ever engage when the script that reveals it can run —

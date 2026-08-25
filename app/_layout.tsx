@@ -13,7 +13,7 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import { configureGoogleSignIn } from '../lib/auth';
 import { peekInviteCode, readInviteCodeFromUrl, rememberInviteCode } from '../lib/inviteCode';
-import { goToLanding } from '../lib/siteUrl';
+import { goToLanding, markAppRunning } from '../lib/siteUrl';
 import { ensureWebFonts } from '../lib/webFonts';
 
 // Prevent splash screen from auto hiding until fonts are loaded
@@ -94,6 +94,12 @@ function RootLayoutNav() {
     if (isLoading) return;
     // A session without a resolved profile is mid-hydration, not "signed in with no community"
     if (session && !profile && !isPlatformAdmin) return;
+
+    // Tell `public/landing.html` this tab is inside the app, so that a browser
+    // reload on a route the deployed site does not serve the shell for — `/`,
+    // where the Providers screen lives — is forwarded back in instead of
+    // ejecting the resident onto the marketing page. Cleared by `goToLanding()`.
+    if (session) markAppRunning();
 
     const inAuthGroup = segments[0] === 'login' || segments[0] === 'login-phone' || segments[0] === 'forgot-password';
     const isWebRootPath = Platform.OS === 'web' && pathname === '/';

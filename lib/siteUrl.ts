@@ -50,6 +50,46 @@ export function landingPath(): string {
 }
 
 /**
+ * Per-tab marker that the app is running here, read by `public/landing.html`.
+ *
+ * The Providers screen lives at `/`, and in a deployed build `/` is the
+ * marketing page (see `canReloadIntoApp()`), so a browser reload there is served
+ * the landing page and ejects the signed-in user out of the app. Pull-to-refresh
+ * could dodge that by declining to reload; the browser's own reload button
+ * cannot be intercepted at all, so the recovery has to live on the landing page:
+ * it forwards back into the app via `/providers`.
+ *
+ * It keys off this flag rather than the session alone so that only a *reload of
+ * a tab that was already in the app* is forwarded. A signed-in resident who
+ * deliberately opens wooru.in in a new tab still gets the marketing page,
+ * because `sessionStorage` is per-tab and starts empty there.
+ *
+ * Keep the literal in sync with the copy in `public/landing.html` — that file is
+ * static HTML Expo never processes, so it cannot import this one.
+ */
+const APP_RUNNING_KEY = 'wooru.inApp';
+
+/** Web only; no-op elsewhere. Called once the app has a live session. */
+export function markAppRunning(): void {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(APP_RUNNING_KEY, '1');
+  } catch {
+    /* private mode / storage disabled — the landing page simply will not forward */
+  }
+}
+
+/** Clears the marker, so the landing page stops forwarding this tab. */
+export function clearAppRunning(): void {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.removeItem(APP_RUNNING_KEY);
+  } catch {
+    /* best effort */
+  }
+}
+
+/**
  * Whether a full `window.location.reload()` at the current URL would come back
  * as the app rather than as the marketing page.
  *
@@ -79,6 +119,9 @@ export function canReloadIntoApp(): boolean {
  */
 export function goToLanding(): boolean {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
+  // Drop the marker first, or the landing page would forward this tab straight
+  // back into the app — an immediate loop on sign-out.
+  clearAppRunning();
   window.location.replace(landingPath());
   return true;
 }

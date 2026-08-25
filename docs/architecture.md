@@ -87,6 +87,8 @@ The last rule above covers cold start and page load. With a live session the fra
 
 `/community-join-block` is **not** in the redirect tree. It is a post-join handoff from `app/community-select.tsx`, entered after `join_community_by_code()` succeeds when the community has `blocks_enabled = true`.
 
+**`/providers` (`app/providers.tsx`) is a bridge, not a screen.** The Providers list lives at `/`, and in a deployed build `/` is the marketing page — `build-admin.js` copies `public/landing.html` over `dist/index.html`, and Vercel resolves the filesystem *before* the `/:path*` → `/app.html` rewrite, so the root never reaches the shell (`canReloadIntoApp()` in `lib/siteUrl.ts`). A browser reload on Providers was therefore served marketing and ejected the resident from the app; pull-to-refresh could decline to reload, the browser's reload button cannot be intercepted. The recovery runs on the landing page: a `<head>` script forwards to `/providers`, which *does* fall through the rewrite, and this route waits for auth to resolve and then `replaceTracked`s to `/`. It waits on purpose — replacing before the first completed auth resolution would land at `/` with `hasResolvedInitialLandingRef` still false and trip the cold-start punt to `/network`. The forward is gated on **both** `sessionStorage['wooru.inApp']` (written by `markAppRunning()`, cleared by `goToLanding()`; per-tab, so it survives a reload but not a freshly opened tab) and a `sb-*-auth-token` entry in `localStorage`. The flag is cleared before forwarding, so a boot that finds no valid session ends on `/login` rather than ping-ponging.
+
 ### AuthContext (`context/AuthContext.tsx`)
 
 ```typescript
