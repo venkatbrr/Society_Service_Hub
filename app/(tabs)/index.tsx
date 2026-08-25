@@ -51,6 +51,26 @@ const parseLocalDateOnly = (dateStr: string) => {
   return new Date(year, month - 1, day);
 };
 
+/**
+ * Providers that carry feedback float to the top of whatever list is on screen —
+ * a rated provider first, then one with a written note from whoever added it,
+ * then bare name-and-number contacts. Most entries in a community directory are
+ * just a phone number, so without this the ones a neighbour actually vouched for
+ * sit scattered through an alphabetical list.
+ *
+ * It runs here rather than in the query because PostgREST can only .order() on
+ * plain columns, and "has a description" is an expression. The sort is stable, so
+ * the avg_rating desc, name asc ordering the DB already applied survives inside
+ * each tier. Safe to do client-side: the fetch pulls the whole community in one
+ * page (limit 500), so this is never ranking a partial set.
+ */
+const feedbackRank = (provider: { avg_rating?: number | null; description?: string | null }) =>
+  (Number(provider.avg_rating) > 0 ? 2 : 0) + (provider.description?.trim() ? 1 : 0);
+
+const rankProvidersByFeedback = <T extends { avg_rating?: number | null; description?: string | null }>(
+  list: T[]
+): T[] => [...list].sort((a, b) => feedbackRank(b) - feedbackRank(a));
+
 const normalizeVisitStatus = (status: unknown) => String(status ?? '').trim().toLowerCase();
 
 export default function HomeScreen() {
@@ -181,7 +201,7 @@ export default function HomeScreen() {
       });
 
       setProviders(
-        visibleProviders.map((provider: any) => ({
+        rankProvidersByFeedback(visibleProviders).map((provider: any) => ({
           ...provider,
           is_favorite: favoriteIds.has(provider.id),
           hire_count: hireCountsRef.current[provider.id] ?? 0,

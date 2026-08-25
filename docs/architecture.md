@@ -218,7 +218,7 @@ Regenerate types after any change: `npx supabase gen types typescript --project-
 | `profiles` | `id` (= `auth.users.id`), `full_name`, `email`, `phone_number`, `flat_id`, `flat_number`, `app_role`, `community_id`, `block_id`, `avatar_url`, `expo_push_token`, `last_active_at`, `removed_at`, `removed_by` | Self / community |
 | `community_requests` | `name`, `city`, `pincode`, `area`, `address`, `community_type`, `approximate_units`, `requester_flat_number`, `proof_photo_url`, `requested_by`, `status`, `rejection_reason`, `reviewed_by`, `reviewed_at`, `resulting_community_id`, `block_label`, `block_details` | Requester / platform |
 | `community_blocks` | `community_id`, `name`, `archived_at` | Community |
-| `community_flats` | `community_id`, `block_id`, `flat_number`, `floor_label`, `occupant_name` (best-known current occupant), `archived_at` | Community |
+| `community_flats` | `community_id`, `block_id`, `flat_number`, `floor_label`, `occupant_name` (best-known current occupant — owned by `event_transaction_occupant_sync`, never rendered into the ledger), `archived_at` | Community |
 | `flat_addition_requests` | `community_id`, `block_id`, `requested_by`, `flat_number`, `status`, `rejection_reason`, `reviewed_by`, `reviewed_at` | Resident / lead / platform |
 | `profile_audit_log` | Audit trail for profile mutations | Platform |
 | `community_events` | ⚠️ Not the funds `events` table (§4.4) — deliberately renamed to avoid the collision. `title`, `category` (cultural/sports/festival/meeting/workshop/other), `description`, `image_url`, `venue`, `event_date` (local `YYYY-MM-DD`), `start_time`, `end_time`, `registration_last_date`, `entry_fee` (display only), `registration_link`, `status` (`published`/`cancelled`), `cancelled_at`, `cancellation_note`, `created_by` | Community |
@@ -531,6 +531,7 @@ All are `SECURITY DEFINER` and raise unless `is_platform_admin(auth.uid())`. **T
 | `user_services_compute_fields_trigger` | `user_services` | BEFORE INS/UPD | Recompute `next_due_on`, clear `notified_at` |
 | `fund_role_guard` | `fund_roles` | INS/UPD/DEL | Funds-enabled gate, treasurer cap (1), collector caps (global + per block) |
 | `event_transaction_guard` | `event_transactions` | INS/UPD | Funds-enabled gate, amount rounding + bounds, payer resolution (member vs sponsor), block-scope check for block in-charges |
+| `event_transaction_occupant_sync` | `event_transactions` | AFTER INS/DEL/UPD OF `contributor_name`, `contributor_flat_id` | Keeps `community_flats.occupant_name` in step with the ledger: stamps the payer's name on the flat a contribution lands on, and clears it from the flat a contribution leaves or is deleted from — but only when that row is what put the name there and no other income row on the old flat still carries it. `SECURITY DEFINER` |
 | `profile_block_guard` | `profiles` | BEFORE INS/UPD | `block_id` must belong to the same community |
 | `fund_role_block_guard` | `fund_roles` | BEFORE INS/UPD | `block_id` must belong to the fund's community |
 | school-review aggregate trigger | `school_reviews` | INS/UPD/DEL | Recompute `schools.avg_*` and `review_count` |

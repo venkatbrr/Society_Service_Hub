@@ -32,6 +32,11 @@ import { supabase } from '../../lib/supabase';
 
 type McnCategory = { id: string; name: string; emoji: string; sort_order: number };
 
+// The catch-all buckets — the "Other" lookup category and the fallback used by
+// listings whose category row is missing — sort after the named categories
+// instead of alphabetically among them.
+const OTHER_CATEGORY_NAMES = new Set(['Other', 'Other Community Businesses']);
+
 export default function BusinessListingsScreen() {
   const router = useRouter();
   const { communityId, user, isCommunityLead } = useAuth();
@@ -158,7 +163,17 @@ export default function BusinessListingsScreen() {
       groupsMap[catName].items.push(item);
     });
 
-    const groupsList = Object.values(groupsMap);
+    // Sections read alphabetically by category name — Beauty & Personal Care
+    // first — rather than in the order the listings happened to come back,
+    // which followed each category's newest listing and so reshuffled itself
+    // every time somebody posted. The two catch-alls sink to the bottom: a
+    // section called "Other" is not something anyone scans the alphabet for.
+    const groupsList = Object.values(groupsMap).sort((a, b) => {
+      const aIsOther = OTHER_CATEGORY_NAMES.has(a.categoryName);
+      const bIsOther = OTHER_CATEGORY_NAMES.has(b.categoryName);
+      if (aIsOther !== bIsOther) return aIsOther ? 1 : -1;
+      return a.categoryName.localeCompare(b.categoryName);
+    });
 
     if (inactiveListings.length > 0) {
       groupsList.push({
