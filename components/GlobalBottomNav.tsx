@@ -162,17 +162,25 @@ function NavTab({ tab, isActive, onPress }: NavTabProps) {
     const float = RUN_IDLE_DISC_FLOAT
       ? Animated.loop(
         Animated.sequence([
+          // `isInteraction: false` because this loop never ends: left at the
+          // default it would pin an `InteractionManager` handle open and starve
+          // `runAfterInteractions`, which is what `VirtualizedList` grows its
+          // render window on. Moot while `RUN_IDLE_DISC_FLOAT` is native-only
+          // (the native driver already defaults it to `false`), but this bar is
+          // mounted on every screen — it must not become the next offender.
           Animated.timing(lift, {
             toValue: -6,
             duration: 1500,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: USE_NATIVE_DRIVER,
+            isInteraction: false,
           }),
           Animated.timing(lift, {
             toValue: -3,
             duration: 1500,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: USE_NATIVE_DRIVER,
+            isInteraction: false,
           }),
         ])
       )

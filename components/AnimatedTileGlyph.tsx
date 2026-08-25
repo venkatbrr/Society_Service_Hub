@@ -10,6 +10,29 @@ import { useReduceMotion } from './useReduceMotion';
 // the JS driver as documented in docs/verandah.md.
 const USE_NATIVE_DRIVER = Platform.OS !== 'web';
 
+// `isInteraction` defaults to `!useNativeDriver`, so on web every step below
+// would default to `true` and hold an `InteractionManager` handle for as long as
+// it runs. In an endless loop the handle is never released, and
+// `InteractionManager.runAfterInteractions` then never drains — which is the
+// queue `VirtualizedList` schedules its render-window growth on (`Batchinator`).
+// Six of these glyphs live on the MCN hub, and once that tab has been visited
+// React Navigation keeps it mounted, so the loops outlive the screen: every
+// FlatList in the app froze at `initialNumToRender` for the rest of the session.
+// These are ambient decoration, never a user interaction — always `false`.
+const IDLE_LOOP = { isInteraction: false } as const;
+
+// `Animated.delay()` is a `timing` with the same defaulting problem and no way to
+// pass `isInteraction` through, so spell it out: at `duration: 0` toward the
+// value the loop already resets to, this is a pure wait.
+const idleDelay = (value: Animated.Value, ms: number) =>
+  Animated.timing(value, {
+    toValue: 0,
+    duration: 0,
+    delay: ms,
+    useNativeDriver: USE_NATIVE_DRIVER,
+    ...IDLE_LOOP,
+  });
+
 /**
  * The MCN hub's section-card glyph, with a slow idle motion suited to what the
  * card is about — the bag sways as if carried, the car drifts forward, the
@@ -71,18 +94,20 @@ export function AnimatedTileGlyph({ kind, size, color }: AnimatedTileGlyphProps)
     const half = motion.duration / 2;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.delay(motion.delay),
+        idleDelay(drive, motion.delay),
         Animated.timing(drive, {
           toValue: 1,
           duration: half,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: USE_NATIVE_DRIVER,
+          ...IDLE_LOOP,
         }),
         Animated.timing(drive, {
           toValue: 0,
           duration: half,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: USE_NATIVE_DRIVER,
+          ...IDLE_LOOP,
         }),
       ])
     );

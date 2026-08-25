@@ -94,6 +94,12 @@ function ReserveButton({
         duration: SHEEN_DURATION,
         easing: Easing.linear,
         useNativeDriver: false,
+        // Ambient sheen, not a user interaction. Left at the default this holds
+        // an `InteractionManager` handle the endless loop never releases, which
+        // starves the queue `VirtualizedList` grows its render window on — and
+        // this card renders once per menu, inside such a list. See the note in
+        // `AnimatedTileGlyph.tsx`.
+        isInteraction: false,
       })
     );
     loop.start();

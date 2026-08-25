@@ -29,6 +29,14 @@ import { useReduceMotion } from './useReduceMotion';
  * `useNativeDriver: false`, since the web target cannot use the native driver.
  */
 
+// Ambient motion, never a user interaction. Without this every step below would
+// default `isInteraction` to `true` (the default is `!useNativeDriver`, and this
+// tile is JS-driven everywhere), holding an `InteractionManager` handle that an
+// endless loop never releases — which starves
+// `InteractionManager.runAfterInteractions`, the queue `VirtualizedList` grows
+// its render window on. See the note in `AnimatedTileGlyph.tsx`.
+const IDLE_LOOP = { isInteraction: false } as const;
+
 const PING_DURATION = 1800;
 const BREATHE_DURATION = 1800;
 const TWINKLE_DURATION = 1250;
@@ -77,14 +85,19 @@ export function ComingSoonTile({
     const ramp = (value: Animated.Value, duration: number, delay = 0) =>
       Animated.loop(
         Animated.sequence([
-          Animated.delay(delay),
+          // Spelled out rather than `Animated.delay()`, which is a `timing` with
+          // the same defaulting problem and no way to pass `isInteraction`
+          // through. At `duration: 0` toward the value the ramp resets to, this
+          // is a pure wait.
+          Animated.timing(value, { toValue: 0, duration: 0, delay, useNativeDriver: false, ...IDLE_LOOP }),
           Animated.timing(value, {
             toValue: 1,
             duration,
             easing: Easing.out(Easing.quad),
             useNativeDriver: false,
+            ...IDLE_LOOP,
           }),
-          Animated.timing(value, { toValue: 0, duration: 0, useNativeDriver: false }),
+          Animated.timing(value, { toValue: 0, duration: 0, useNativeDriver: false, ...IDLE_LOOP }),
         ])
       );
 
@@ -99,12 +112,14 @@ export function ComingSoonTile({
             duration: BREATHE_DURATION / 2,
             easing: Easing.inOut(Easing.sin),
             useNativeDriver: false,
+            ...IDLE_LOOP,
           }),
           Animated.timing(breathe, {
             toValue: 0,
             duration: BREATHE_DURATION / 2,
             easing: Easing.inOut(Easing.sin),
             useNativeDriver: false,
+            ...IDLE_LOOP,
           }),
         ])
       ),
@@ -126,6 +141,7 @@ export function ComingSoonTile({
         duration: COPY_FADE_OUT,
         easing: Easing.in(Easing.quad),
         useNativeDriver: false,
+        ...IDLE_LOOP,
       }).start(({ finished }) => {
         if (!finished) return;
         setLineIndex((i) => (i + 1) % lines.length);
@@ -134,6 +150,7 @@ export function ComingSoonTile({
           duration: COPY_FADE_IN,
           easing: Easing.out(Easing.quad),
           useNativeDriver: false,
+          ...IDLE_LOOP,
         }).start();
       });
     }, COPY_INTERVAL);
