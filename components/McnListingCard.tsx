@@ -19,6 +19,7 @@ export interface McnListingItem {
   is_active: boolean;
   owner_id: string;
   created_at: string;
+  is_community_business?: boolean;
   profiles: { full_name: string; flat_number: string | null } | null;
   category: { name: string; emoji: string } | null;
   mcn_products: Array<{
@@ -50,6 +51,10 @@ export const McnListingCard = React.memo(({
   // show the top 30% of *this* picture rather than a fixed slab.
   const [coverAspect, setCoverAspect] = React.useState<number | null>(null);
   const coverSizing = getTopCropTileImageStyle(coverAspect, windowHeight);
+  // A society-run business (community pharmacy, store) belongs to no flat, so
+  // it is credited to the community rather than to the lead who listed it.
+  const isCommunityRun = listing.is_community_business === true;
+  const ownerLabel = isCommunityRun ? 'Run by the community' : listing.profiles?.full_name || 'Resident';
   const ratings = listing.ratings || [];
   const ratingCount = ratings.length;
   const avgRating = ratingCount > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
@@ -67,7 +72,7 @@ export const McnListingCard = React.memo(({
     const messageLines = [
       `*Community Business: ${listing.name}*`,
       catLabel ? `Category: ${catLabel}` : '',
-      `Owner: ${ownerName} ${flatNo ? `(${flatNo})` : ''}`,
+      isCommunityRun ? 'Run by the community' : `Owner: ${ownerName} ${flatNo ? `(${flatNo})` : ''}`,
     ];
 
     if (listing.description) {
@@ -107,13 +112,13 @@ export const McnListingCard = React.memo(({
       ) : null}
       <View style={listing.image_url ? styles.cardContentWithImage : undefined}>
       <View style={styles.header}>
-        <Avatar name={listing.profiles?.full_name || 'Resident'} size={36} />
+        <Avatar name={isCommunityRun ? listing.name : listing.profiles?.full_name || 'Resident'} size={36} />
         <View style={styles.headerText}>
           <Text style={[styles.name, { color: Verandah.textPrimary }]}>{listing.name}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
             <Text style={[styles.ownerMeta, { color: Verandah.textTertiary }]}>
-              {listing.profiles?.full_name || 'Resident'}
-              {listing.profiles?.flat_number ? ` · ${listing.profiles.flat_number}` : ''}
+              {ownerLabel}
+              {!isCommunityRun && listing.profiles?.flat_number ? ` · ${listing.profiles.flat_number}` : ''}
             </Text>
             {ratingCount > 0 && (
               <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8, gap: 2 }}>

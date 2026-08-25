@@ -40,6 +40,7 @@ interface Listing {
   contact_phone: string | null;
   owner_id: string;
   image_url: string | null;
+  is_community_business: boolean;
   category: { name: string; emoji: string } | null;
   profiles: { full_name: string; flat_number: string | null; phone_number: string | null } | null;
 }
@@ -137,7 +138,7 @@ export default function ListingDetailScreen() {
       const { data: listingData, error: listingError } = await supabase
         .from('mcn_listings')
         .select(`
-          id, name, description, contact_phone, owner_id, image_url,
+          id, name, description, contact_phone, owner_id, image_url, is_community_business,
           category:mcn_business_categories(name, emoji),
           profiles!owner_id(full_name, flat_number, phone_number)
         `)
@@ -247,6 +248,7 @@ export default function ListingDetailScreen() {
   }, [fetchListingData]);
 
   const contactPhone = listing?.contact_phone || listing?.profiles?.phone_number;
+  const isCommunityRun = listing?.is_community_business === true;
 
   const handleCall = () => {
     if (!contactPhone) return;
@@ -255,7 +257,7 @@ export default function ListingDetailScreen() {
 
   const handleWhatsApp = () => {
     if (!contactPhone) return;
-    const text = `Hi ${listing?.profiles?.full_name || 'there'}, I found your business "${listing?.name}" on Wooru and wanted to enquire about your services.`;
+    const text = `Hi ${isCommunityRun ? 'there' : listing?.profiles?.full_name || 'there'}, I found your business "${listing?.name}" on Wooru and wanted to enquire about your services.`;
     const url = buildWhatsAppUrl(contactPhone, text);
     if (url) {
       Linking.openURL(url);
@@ -337,6 +339,9 @@ export default function ListingDetailScreen() {
   const productItems = products.filter((item) => item.item_type !== 'service');
   const serviceItems = products.filter((item) => item.item_type === 'service');
   const isOwner = user?.id === listing.owner_id;
+  // A society-run business (community pharmacy, store) has no flat behind it,
+  // so it is credited to the community rather than to the lead who listed it.
+  const ownerDisplayName = isCommunityRun ? listing.name : listing.profiles?.full_name || 'Resident';
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -387,14 +392,18 @@ export default function ListingDetailScreen() {
           drop detail screen); a listing with no photo keeps all four corners
           rounded so the card does not read as clipped. */}
       <View style={[styles.ownerCard, listing.image_url ? styles.ownerCardMerged : null]}>
-        <Avatar name={listing.profiles?.full_name || 'Resident'} size={48} />
+        <Avatar name={ownerDisplayName} size={48} />
         <View style={styles.ownerInfo}>
           <Text style={[styles.ownerName, { color: colors.textPrimary }]}>
-            {listing.profiles?.full_name || 'Resident'}
+            {ownerDisplayName}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
             <Text style={[styles.ownerFlat, { color: colors.textTertiary, marginRight: 8 }]}>
-              {listing.profiles?.flat_number ? `Flat ${listing.profiles.flat_number}` : 'Resident'}
+              {isCommunityRun
+                ? 'Run by the community'
+                : listing.profiles?.flat_number
+                  ? `Flat ${listing.profiles.flat_number}`
+                  : 'Resident'}
             </Text>
             {ratingCount > 0 && (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -472,7 +481,8 @@ export default function ListingDetailScreen() {
         <>
           {!isOwner ? (
             <Text style={[styles.offeringsNote, { color: colors.textTertiary }]}>
-              Prices are indicative. Call or message {listing.profiles?.full_name || 'the owner'} to place an order.
+              Prices are indicative. Call or message{' '}
+              {isCommunityRun ? 'the business' : listing.profiles?.full_name || 'the owner'} to place an order.
             </Text>
           ) : null}
 

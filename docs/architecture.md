@@ -279,16 +279,22 @@ Both views are **`WITH (security_invoker = true)`**. A plain Postgres view runs 
 | Table | Key columns |
 |-------|-------------|
 | `mcn_business_categories` | `name`, `emoji`, `sort_order` — global lookup |
-| `mcn_listings` | `name`, `description`, `contact_phone`, `image_url` (Cloudinary), `category_id`, `owner_id`, `is_active`, `flagged_for_review_at` (set when auto-hidden by reports) |
+| `mcn_listings` | `name`, `description`, `contact_phone`, `image_url` (Cloudinary), `category_id`, `owner_id`, `is_active`, `is_community_business` (society-run, see below; migration `20260925000000`), `flagged_for_review_at` (set when auto-hidden by reports) |
 | `mcn_products` | `listing_id`, `name`, `description`, `unit`, `price` (**nullable** = "Price on request"), `item_type` (`product`/`service`), `image_url`, `is_available`, `sort_order` |
 | `mcn_orders` | `listing_id`, `buyer_id`, `buyer_phone`, `buyer_note`, `status` (`pending`/`fulfilled`/`cancelled`) — **dormant since 2026-08-09**, no screen writes here |
 | `mcn_order_items` | `order_id`, `product_id`, `quantity`, `unit_price` — dormant, see above |
 | `mcn_listing_reports` | `listing_id`, `reported_by`, `reason`, `details`, `status`, `reviewed_by` — one report per user/listing, mirrors `provider_reports` |
 
-**Anti-spam triggers on `mcn_listings`** (migrations `20260819000000`, `20260821000000`, `20260821000200`), enforced server-side, not just in the UI:
+**Community-run listings** (`is_community_business`, migration `20260925000000`) — a business the society itself runs (community pharmacy, society store) rather than a resident's side business. It belongs to no flat, so the directory credits it to the community instead of showing owner name + flat.
+- Only a community lead or platform admin can set or clear the flag. Enforced twice: `mcn_listings_insert` / `mcn_listings_update` `WITH CHECK`, plus `enforce_community_business_authority()` for a readable error. The same migration added the missing `is_platform_admin` branch to `mcn_listings_update`, matching the DELETE policy.
+- `owner_id` stays the lead who created it, so every existing owner-or-lead manage/update/delete path works unchanged. **Consequence:** `owner_id` is `REFERENCES profiles(id) ON DELETE CASCADE`, so deleting that lead's profile deletes the community's listing — reassign `owner_id` before removing a president who listed one.
+- The three per-resident anti-spam limits below neither apply to it nor count it, since a lead may need to list several community businesses in one sitting.
+
+**Anti-spam triggers on `mcn_listings`** (migrations `20260819000000`, `20260821000000`, `20260821000200`, exemptions `20260925000000`), enforced server-side, not just in the UI:
 - One listing per `(owner_id, category_id)` — blocks both insert and edit.
 - Max 5 listings per owner with `is_active = true` at once.
 - Max 1 new listing per owner per rolling 24 hours.
+- All three skip rows where `is_community_business = true`, on both sides of the check.
 - `mcn_listing_reports` insert trigger auto-sets `is_active = false` and `flagged_for_review_at = now()` once a listing collects 3 pending reports, and notifies leads (`notifications.type = 'listing_auto_hidden'`, or `'listing_reported'` below the threshold). A separate trigger then blocks the *owner* from flipping `is_active` back to true while `flagged_for_review_at` is set — only a lead or platform admin can clear it (by reactivating from the existing Manage listing screen, which nulls the flag).
 
 ### 4.6 MCN — pre-order menus
@@ -581,7 +587,7 @@ RLS is enabled on every active table.
 | `blood_donors` | Community read; residents write only their own row |
 | `emergency_contacts` | Community + global read; writes limited to leads (own community) and platform admins (including global rows) |
 | `mcn_business_categories` | Authenticated read-only lookup |
-| `mcn_listings`, `mcn_products` | Community read; owner writes |
+| `mcn_listings`, `mcn_products` | Community read; owner writes. `mcn_listings.is_community_business` may only be set/cleared by a lead or platform admin (§4.5). |
 | `mcn_orders`, `mcn_order_items` | Buyer or listing owner read; buyer inserts/cancels; owner updates status |
 | `mcn_preorder_drops` + children | **Public read**; creator writes; item and order policies chain through the parent drop |
 | `mcn_carpools` | Community read; creator or lead writes |

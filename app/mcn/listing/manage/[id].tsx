@@ -47,6 +47,7 @@ interface Listing {
   category: { name: string; emoji: string } | null;
   image_url: string | null;
   is_active: boolean;
+  is_community_business: boolean;
   owner_id: string;
   flagged_for_review_at: string | null;
 }
@@ -70,6 +71,9 @@ export default function ManageListingScreen() {
   const [editListingPhone, setEditListingPhone] = useState('');
   const [editListingCategoryId, setEditListingCategoryId] = useState<string | null>(null);
   const [editListingImageUrl, setEditListingImageUrl] = useState<string | null>(null);
+  // Leads only: flips the listing between "a resident's business" and one the
+  // society runs itself (community pharmacy, store), which has no flat behind it.
+  const [editListingIsCommunity, setEditListingIsCommunity] = useState(false);
   const [savingListing, setSavingListing] = useState(false);
   const [editListingErrors, setEditListingErrors] = useState<{ name?: boolean; category?: boolean; phone?: boolean }>({});
 
@@ -128,6 +132,7 @@ export default function ManageListingScreen() {
       setEditListingPhone(listingData.contact_phone || '');
       setEditListingCategoryId(listingData.category_id || null);
       setEditListingImageUrl((listingData as any).image_url || null);
+      setEditListingIsCommunity((listingData as any).is_community_business === true);
 
       // 2. Fetch products
       const { data: productsData, error: productsError } = await supabase
@@ -272,6 +277,7 @@ export default function ManageListingScreen() {
           contact_phone: finalPhone,
           category_id: editListingCategoryId,
           image_url: editListingImageUrl,
+          ...(isCommunityLead ? { is_community_business: editListingIsCommunity } : {}),
         })
         .eq('id', listing.id);
 
@@ -576,6 +582,29 @@ export default function ManageListingScreen() {
               maxLength={15}
             />
           </View>
+
+          {isCommunityLead ? (
+            <View
+              style={[
+                styles.toggleRow,
+                { borderColor: colors.borderHair, backgroundColor: colors.card, marginTop: 4, marginBottom: 4 },
+              ]}
+            >
+              <View style={{ flex: 1, paddingRight: 12 }}>
+                <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Run by the community</Text>
+                <Text style={[styles.toggleDesc, { color: colors.textSecondary }]}>
+                  For a society-run business like the community pharmacy or store. It is listed under the
+                  community instead of an owner's name and flat.
+                </Text>
+              </View>
+              <Switch
+                value={editListingIsCommunity}
+                onValueChange={setEditListingIsCommunity}
+                trackColor={{ false: colors.borderStrong, true: colors.accentSoft }}
+                thumbColor={editListingIsCommunity ? colors.accent : colors.textMuted}
+              />
+            </View>
+          ) : null}
 
           <TouchableOpacity
             style={[styles.saveDetailsBtn, { backgroundColor: colors.primary, marginTop: 6 }]}

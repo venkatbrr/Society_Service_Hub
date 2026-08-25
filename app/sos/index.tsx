@@ -5,7 +5,7 @@ import { MessageCircle01 } from '@untitledui/icons/MessageCircle01';
 import { Phone01 } from '@untitledui/icons/Phone01';
 import { Settings01 } from '@untitledui/icons/Settings01';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -62,8 +62,11 @@ const CONTACT_PAGE_SIZE = 60;
 export default function SosScreen() {
   const router = useRouter();
   const { user, communityId, isCommunityLead, isPlatformAdmin } = useAuth();
-
-  const [activeSegment, setActiveSegment] = useState<Segment>('emergency');
+  // Community shows emergency numbers and blood donors as two separate tiles,
+  // so this screen renders one surface only — the tile that opened it decides
+  // which. There is no in-screen toggle to switch between them.
+  const { segment } = useLocalSearchParams<{ segment?: string }>();
+  const activeSegment: Segment = segment === 'donors' ? 'donors' : 'emergency';
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -195,18 +198,18 @@ export default function SosScreen() {
     }
 
     try {
-      await Promise.all([
-        loadMyDonorRow(),
-        loadDonors(0, true),
-        loadContacts(0, true),
-      ]);
+      await Promise.all(
+        activeSegment === 'donors'
+          ? [loadMyDonorRow(), loadDonors(0, true)]
+          : [loadContacts(0, true)]
+      );
     } catch (error: any) {
       Toast.show({ type: 'error', text1: 'Unable to load SOS data', text2: error.message });
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [communityId, loadContacts, loadDonors, loadMyDonorRow]);
+  }, [activeSegment, communityId, loadContacts, loadDonors, loadMyDonorRow]);
 
   useFocusEffect(
     useCallback(() => {
@@ -217,12 +220,12 @@ export default function SosScreen() {
   const pullToRefresh = useWebPullToRefresh(() => loadAll(true), refreshing);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || activeSegment !== 'donors') return;
 
     loadDonors(0, true).catch((error: any) => {
       Toast.show({ type: 'error', text1: 'Unable to refresh donors', text2: error.message });
     });
-  }, [loading, selectedBloodGroup, showAllDonors, loadDonors]);
+  }, [activeSegment, loading, selectedBloodGroup, showAllDonors, loadDonors]);
 
   const groupedContacts = useMemo(() => {
     const grouped = new Map<EmergencyCategory, EmergencyContactRow[]>();
@@ -377,24 +380,13 @@ export default function SosScreen() {
           <ArrowLeft size={18} color={Verandah.primary} aria-hidden={true} />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
-          <Text style={styles.title}>Emergency & Blood Donors</Text>
-          <Text style={styles.subtitle}>Fast access to urgent numbers and blood donors</Text>
+          <Text style={styles.title}>{activeSegment === 'donors' ? 'Blood donors' : 'Emergency numbers'}</Text>
+          <Text style={styles.subtitle}>
+            {activeSegment === 'donors'
+              ? 'Find a donor nearby, or offer to donate yourself'
+              : 'Fast access to guards, police, hospitals and utilities'}
+          </Text>
         </View>
-      </View>
-
-      <View style={styles.segmentedWrap}>
-        <TouchableOpacity
-          style={[styles.segmentButton, activeSegment === 'emergency' && styles.segmentButtonActive]}
-          onPress={() => setActiveSegment('emergency')}
-        >
-          <Text style={[styles.segmentText, activeSegment === 'emergency' && styles.segmentTextActive]}>Emergency numbers</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.segmentButton, activeSegment === 'donors' && styles.segmentButtonActive]}
-          onPress={() => setActiveSegment('donors')}
-        >
-          <Text style={[styles.segmentText, activeSegment === 'donors' && styles.segmentTextActive]}>Blood donors</Text>
-        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -632,35 +624,6 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: Verandah.textSecondary,
     marginTop: 2,
-  },
-  segmentedWrap: {
-    flexDirection: 'row',
-    borderWidth: 0.5,
-    borderColor: Verandah.borderHair,
-    borderRadius: VerandahRadius.segmented,
-    backgroundColor: Verandah.cardMuted,
-    padding: 3,
-    marginBottom: 12,
-  },
-  segmentButton: {
-    flex: 1,
-    alignItems: 'center',
-    borderRadius: VerandahRadius.segmented,
-    paddingVertical: 7,
-  },
-  segmentButtonActive: {
-    backgroundColor: Verandah.card,
-    ...Verandah.shadowCard,
-  },
-  segmentText: {
-    fontSize: 13,
-    fontWeight: '500',
-    fontFamily: VerandahType.sansFamily,
-    color: Verandah.textMuted,
-  },
-  segmentTextActive: {
-    color: Verandah.primary,
-    fontWeight: '700',
   },
   scrollContent: {
     paddingBottom: 40,

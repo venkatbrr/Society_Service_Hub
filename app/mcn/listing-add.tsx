@@ -4,7 +4,7 @@ import { Trash01 } from '@untitledui/icons/Trash01';
 import { Image } from 'expo-image';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { ImageUploader } from '../../components/ImageUploader';
 import { Rupees } from '../../components/Rupees';
@@ -35,7 +35,7 @@ type DraftItem = {
 
 export default function AddListingScreen() {
   const router = useRouter();
-  const { communityId, user } = useAuth();
+  const { communityId, user, isCommunityLead } = useAuth();
   const colors = Verandah;
 
   const [name, setName] = useState('');
@@ -44,6 +44,10 @@ export default function AddListingScreen() {
   const [categories, setCategories] = useState<McnCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  // Leads only: a business the society itself runs (community pharmacy, society
+  // store). It belongs to no flat, so it is listed under the community rather
+  // than under the lead's own name.
+  const [isCommunityBusiness, setIsCommunityBusiness] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ name?: boolean; category?: boolean; phone?: boolean }>({});
 
@@ -202,6 +206,7 @@ export default function AddListingScreen() {
           category_id: selectedCategoryId,
           image_url: imageUrl,
           is_active: true,
+          is_community_business: isCommunityLead ? isCommunityBusiness : false,
         })
         .select()
         .maybeSingle();
@@ -388,6 +393,26 @@ export default function AddListingScreen() {
           />
           {errors.phone ? <Text style={styles.errorText}>Valid 10-digit phone number is required</Text> : null}
         </View>
+
+        {isCommunityLead ? (
+          <View style={[styles.communityToggleRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <View style={styles.communityToggleText}>
+              <Text style={[styles.label, { color: colors.textPrimary, marginBottom: 2 }]}>
+                Run by the community
+              </Text>
+              <Text style={[styles.communityToggleHint, { color: colors.textTertiary }]}>
+                For a society-run business like the community pharmacy or store. It is listed under the
+                community instead of your name and flat.
+              </Text>
+            </View>
+            <Switch
+              value={isCommunityBusiness}
+              onValueChange={setIsCommunityBusiness}
+              trackColor={{ false: colors.border, true: colors.accentSoft }}
+              thumbColor={isCommunityBusiness ? colors.accent : colors.textMuted}
+            />
+          </View>
+        ) : null}
 
         <View style={styles.field}>
           <View style={styles.sectionHeader}>
@@ -660,6 +685,23 @@ const styles = StyleSheet.create({
   },
   field: {
     marginBottom: 12,
+  },
+  communityToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: VerandahRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  communityToggleText: {
+    flex: 1,
+  },
+  communityToggleHint: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   label: {
     fontSize: 13,

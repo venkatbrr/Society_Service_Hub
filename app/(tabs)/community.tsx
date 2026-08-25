@@ -3,6 +3,7 @@ import { BarChart01 } from '@untitledui/icons/BarChart01';
 import { Building01 } from '@untitledui/icons/Building01';
 import { CalendarDate } from '@untitledui/icons/CalendarDate';
 import { ChevronRight } from '@untitledui/icons/ChevronRight';
+import { Drop } from '@untitledui/icons/Drop';
 import { LayersThree01 } from '@untitledui/icons/LayersThree01';
 import { Phone01 } from '@untitledui/icons/Phone01';
 import { Plus } from '@untitledui/icons/Plus';
@@ -486,26 +487,38 @@ export default function CommunityScreen() {
         <View style={styles.tileGrid}>
           <TouchableOpacity
             style={styles.tile}
+            onPress={() => router.push({ pathname: '/sos', params: { segment: 'emergency' } } as any)}
+            activeOpacity={0.85}
+          >
+            <View style={[styles.tileIconWrap, { backgroundColor: Verandah.sand }]}>
+              <Phone01 size={20} color={Verandah.goldInk} aria-hidden={true} />
+            </View>
+            <Text style={styles.tileTitle}>Emergency{'\n'}numbers</Text>
+            <Text style={styles.tileCopy}>Guards, police, hospitals</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.tile}
+            onPress={() => router.push({ pathname: '/sos', params: { segment: 'donors' } } as any)}
+            activeOpacity={0.85}
+          >
+            <View style={[styles.tileIconWrap, { backgroundColor: Verandah.dangerSoft }]}>
+              <Drop size={20} color={Verandah.danger} aria-hidden={true} />
+            </View>
+            <Text style={styles.tileTitle}>Blood{'\n'}donors</Text>
+            <Text style={styles.tileCopy}>Find or offer to donate</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.tile}
             onPress={() => router.push({ pathname: '/residents', params: { returnTo: 'community' } } as any)}
             activeOpacity={0.85}
           >
             <View style={styles.tileIconWrap}>
               <Users01 size={20} color={Verandah.accent} aria-hidden={true} />
             </View>
-            <Text style={styles.tileTitle}>Residents{'\n'}directory</Text>
+            <Text style={styles.tileTitle}>Residents directory</Text>
             <Text style={styles.tileCopy}>See who lives here</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.tile}
-            onPress={() => router.push('/sos' as any)}
-            activeOpacity={0.85}
-          >
-            <View style={[styles.tileIconWrap, { backgroundColor: Verandah.sand }]}>
-              <Phone01 size={20} color={Verandah.goldInk} aria-hidden={true} />
-            </View>
-            <Text style={styles.tileTitle}>Emergency &{'\n'}donors</Text>
-            <Text style={styles.tileCopy}>Numbers & blood</Text>
           </TouchableOpacity>
         </View>
 
@@ -692,10 +705,12 @@ const styles = StyleSheet.create({
   },
   tileGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
   },
   tile: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '47%',
     borderRadius: VerandahRadius.card,
     borderWidth: VerandahBorder.tile,
     borderColor: Verandah.borderHair,

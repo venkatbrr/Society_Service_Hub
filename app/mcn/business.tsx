@@ -81,7 +81,7 @@ export default function BusinessListingsScreen() {
         let query = supabase
           .from('mcn_listings')
           .select(`
-            id, name, description, contact_phone, image_url, is_active, owner_id, created_at,
+            id, name, description, contact_phone, image_url, is_active, owner_id, created_at, is_community_business,
             category:mcn_business_categories(name, emoji),
             profiles!owner_id(full_name, flat_number),
             mcn_products(id, name, unit, price, is_available, item_type),
