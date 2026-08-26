@@ -35,7 +35,8 @@ import { supabase } from '../../lib/supabase';
 export default function NetworkScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { communityId } = useAuth();
+  const { communityId, user } = useAuth();
+  const userId = user?.id;
   const colors = Verandah;
   const { width: windowWidth } = useWindowDimensions();
 
@@ -56,14 +57,12 @@ export default function NetworkScreen() {
   const [parentCount, setParentCount] = useState<number | null>(null);
   const [schoolCount, setSchoolCount] = useState<number | null>(null);
   const [postCount, setPostCount] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchSectionStats = useCallback(
     async (isRefresh = false) => {
       if (!communityId) return;
       if (isRefresh) setRefreshing(true);
-      else setLoading(true);
 
       try {
         // Hidden sections render no card, so their counts are never read — skip
@@ -95,11 +94,17 @@ export default function NetworkScreen() {
                 .select('id', { count: 'exact', head: true })
                 .eq('community_id', communityId)
             : null,
-          BORROW_SHARE_ENABLED
+          // Counted for the signed-in resident, not the whole community: this
+          // card opens My Submissions, which lists only the user's own posts.
+          // A community-wide number here read as a browse promise the
+          // destination could not keep — "12 active borrow posts" followed by
+          // "You haven't posted any borrow or share requests yet."
+          BORROW_SHARE_ENABLED && userId
             ? supabase
                 .from('mcn_posts')
                 .select('id', { count: 'exact', head: true })
                 .eq('community_id', communityId)
+                .eq('user_id', userId)
                 .eq('kind', 'borrow')
                 .eq('is_available', true)
             : null,
@@ -119,11 +124,13 @@ export default function NetworkScreen() {
       } catch (err) {
         console.error('Error fetching MCN section stats:', err);
       } finally {
-        setLoading(false);
         setRefreshing(false);
       }
     },
-    [communityId]
+    // user?.id, not user: Supabase hands back a new object identity on every
+    // auth event (including the hourly TOKEN_REFRESHED), so [user] would refetch
+    // every count on a timer. docs/CLAUDE.md §9.
+    [communityId, userId]
   );
 
   useFocusEffect(
@@ -342,13 +349,13 @@ export default function NetworkScreen() {
                   Borrow & Share
                 </Text>
                 <Text style={[styles.badgeText, { color: '#7C3AED' }]}>
-                  {postCount ?? 0} {postCount === 1 ? 'active borrow post' : 'active borrow posts'}
+                  {postCount ?? 0} of your {postCount === 1 ? 'post is active' : 'posts are active'}
                 </Text>
               </View>
               <ChevronRight size={18} color={colors.textMuted} aria-hidden={true} />
             </View>
             <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-              Borrow tools, ladders, board games, travel gear & books from neighbors in your society!
+              Offer tools, ladders, board games, travel gear & books to neighbours — and manage the posts you have shared.
             </Text>
           </BaseCard>
         )}

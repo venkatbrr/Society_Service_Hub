@@ -66,6 +66,10 @@ export default function MyPostsScreen() {
         .from('mcn_posts')
         .select('*')
         .eq('user_id', user.id)
+        // `mcn_posts.kind` also allows 'business' — legacy rows from before
+        // community businesses moved to `mcn_listings`. Without this filter they
+        // surface under the tab labelled "Borrow posts".
+        .eq('kind', 'borrow')
         .order('created_at', { ascending: false });
 
       if (error) throw error;

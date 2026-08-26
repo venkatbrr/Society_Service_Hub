@@ -66,7 +66,15 @@ export default function SubmitSchoolReviewScreen() {
 
   useEffect(() => {
     async function loadData() {
-      if (!schoolId || !user?.id) return;
+      // `user` hydrates a tick after mount, so keep spinning until it arrives —
+      // the effect re-runs on user?.id. A missing schoolId, though, is terminal:
+      // returning without clearing `loading` left the screen spinning forever on
+      // a bare /mcn/schools/review URL.
+      if (!schoolId) {
+        setLoading(false);
+        return;
+      }
+      if (!user?.id) return;
       try {
         // Load school name
         if (schoolId.startsWith('wh_school_')) {
@@ -200,6 +208,15 @@ export default function SubmitSchoolReviewScreen() {
     return (
       <View style={styles.loaderWrap}>
         <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (!schoolId) {
+    return (
+      <View style={styles.loaderWrap}>
+        <Stack.Screen options={buildMcnHeaderOptions({ title: 'Parent report card', onBack: handleGoBack })} />
+        <Text style={{ color: colors.textSecondary }}>No school selected to grade.</Text>
       </View>
     );
   }

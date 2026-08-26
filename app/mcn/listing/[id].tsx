@@ -436,7 +436,11 @@ export default function ListingDetailScreen() {
         </View>
       ) : null}
 
-      {contactPhone && !isOwner ? (
+      {/* A community-run business is credited to the community rather than to the
+          lead who listed it, so its shared contact number stays visible to
+          everyone — including that lead. Personal listings keep hiding the
+          buttons from their own owner. */}
+      {contactPhone && (!isOwner || isCommunityRun) ? (
         <View style={styles.contactActions}>
           <TouchableOpacity
             onPress={handleCall}

@@ -436,7 +436,7 @@ export const PreorderDropCard: React.FC<PreorderDropCardProps> = ({
                   active
                   tone="accent"
                   onPress={onRepublish}
-                  leading={<RefreshCw01 size={14} color={Verandah.primaryFg} aria-hidden={true} />}
+                  leading={<RefreshCw01 size={16} color={Verandah.primaryFg} aria-hidden={true} />}
                 />
               </View>
             ) : null
@@ -606,24 +606,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    gap: 7,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
     borderRadius: VerandahRadius.pill,
     backgroundColor: Verandah.primary,
+    // The pill floats on the host's own photo, so it cannot count on contrast
+    // with what is behind it: a dark cover swallows the dark fill outright —
+    // most visibly the accent "Republish", which vanished into a dark green
+    // menu card. A light hairline ring gives it an edge on any photo, and the
+    // muted state swaps in an ink one below for the mirror case.
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.72)',
     // Clips the travelling highlight to the pill.
     overflow: 'hidden',
     ...Verandah.shadowRaised,
   },
   reserveBtnMuted: {
     backgroundColor: Verandah.cardMuted,
+    // Cream fill: a white ring would disappear into it. Ink hairline instead,
+    // which is what separates it from a bright photo.
+    borderColor: Verandah.borderHair,
   },
   reserveBtnAccent: {
     backgroundColor: Verandah.accent,
   },
   reserveText: {
     fontFamily: VerandahType.sansFamily,
-    fontSize: 13,
+    fontSize: 14.5,
     fontWeight: '700',
     color: Verandah.primaryFg,
   },

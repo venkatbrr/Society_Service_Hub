@@ -43,7 +43,7 @@ function getNotificationUrl(type: string, data: any): string {
   if (type === 'preorder_received' && data?.drop_id) {
     return `/mcn/drops/manage/${data.drop_id}`;
   }
-  if (type === 'parent_corner_posted') {
+  if (type === 'parent_corner_posted' || type === 'parent_corner_match') {
     return `/mcn/parents`;
   }
   if (

@@ -11,6 +11,7 @@ import { BaseCard } from './BaseCard';
 import { Verandah } from '../constants/Colors';
 import { VerandahBorder, VerandahRadius, VerandahType } from '../constants/Verandah';
 import { Tables } from '../lib/database.types';
+import { buildWhatsAppUrl } from '../lib/phone';
 
 export type McnPostWithProfile = Tables<'mcn_posts'> & {
   profiles: { full_name: string | null; flat_number: string | null } | null;
@@ -38,19 +39,17 @@ export function McnPostCard({ post, currentUserId, isCommunityLead, onMarkUnavai
       return;
     }
     
-    // Check if it's exactly a 10 digit number after removing non-digits
-    const digitsOnly = post.contact_hint.replace(/\D/g, '');
-    if (digitsOnly.length === 10) {
-      const url = `whatsapp://send?phone=91${digitsOnly}`;
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
-        return;
-      } else {
-        const waWebUrl = `https://wa.me/91${digitsOnly}`;
-        await Linking.openURL(waWebUrl);
-        return;
-      }
+    // wa.me, never the `whatsapp://` scheme — the scheme is native-only and
+    // fails silently in the PWA, which is the shipping target. buildWhatsAppUrl
+    // returns null when the hint is a note rather than a number, which is the
+    // signal to fall through to the clipboard copy below. See docs/CLAUDE.md §9.
+    const waUrl = buildWhatsAppUrl(
+      post.contact_hint,
+      `Hi! I saw your "${post.title}" post on Wooru.`
+    );
+    if (waUrl) {
+      await Linking.openURL(waUrl);
+      return;
     }
 
     // Otherwise just copy to clipboard

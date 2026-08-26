@@ -5,11 +5,12 @@ import { Globe02 } from '@untitledui/icons/Globe02';
 import { MarkerPin01 } from '@untitledui/icons/MarkerPin01';
 import { Phone01 } from '@untitledui/icons/Phone01';
 import { Trash01 } from '@untitledui/icons/Trash01';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { confirmAction } from '../../../lib/confirm';
 import { goBackSmart } from '../../../lib/navigation';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SchoolAspectIcon } from '../../../components/SchoolAspectIcon';
@@ -66,7 +67,12 @@ export default function SchoolDetailScreen() {
   };
 
   const fetchSchoolDetails = useCallback(async () => {
-    if (!schoolId) return;
+    if (!schoolId) {
+      // Without an id there is nothing to fetch — but returning before
+      // setLoading(false) left the screen spinning forever on a malformed URL.
+      setLoading(false);
+      return;
+    }
     try {
       let currentSchool: School | null = null;
 
@@ -139,13 +145,26 @@ export default function SchoolDetailScreen() {
     }
   }, [schoolId]);
 
-  useEffect(() => {
-    fetchSchoolDetails();
-  }, [fetchSchoolDetails]);
+  // useFocusEffect, not useEffect: submitting a report card at
+  // /mcn/schools/review router.back()s to this screen, and a plain useEffect
+  // never re-runs on return — so the parent who just graded the school came back
+  // to "No parent reviews yet" and their own review missing from the list.
+  useFocusEffect(
+    useCallback(() => {
+      fetchSchoolDetails();
+    }, [fetchSchoolDetails])
+  );
 
   const handleCall = () => {
     if (!school?.contact_phone) return;
-    Linking.openURL(`tel:${school.contact_phone}`);
+    // Curated catalog numbers carry spaces and a country code ("+91 83748
+    // 21359"); a raw tel: with spaces is rejected by some dialers and by
+    // Chrome on desktop.
+    const dialable = school.contact_phone.replace(/[^\d+]/g, '');
+    if (!dialable) return;
+    Linking.openURL(`tel:${dialable}`).catch(() => {
+      Toast.show({ type: 'error', text1: 'Could not initiate call' });
+    });
   };
 
   const handleWebsite = () => {

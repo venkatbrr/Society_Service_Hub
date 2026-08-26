@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../../constants/Colors';
+import { FACILITY_OPTIONS } from '../../../constants/schoolCatalog';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
 import { supabase } from '../../../lib/supabase';
@@ -35,18 +36,9 @@ const LEVEL_MAP = {
   all_in_one: 'All-in-one (K-12)',
 };
 
-const COMPARE_FACILITIES = [
-  'Transport / Bus Service',
-  'Playground',
-  'Science Labs',
-  'Smart Classes',
-  'Library',
-  'Computer Lab',
-  'Indoor Sports Arena',
-  'Music & Art Studios',
-  'Swimming Pool',
-  'CCTV Surveillance',
-];
+// Shared with the add-school form so a facility a resident ticks always has a
+// row to show it in. See constants/schoolCatalog.ts.
+const COMPARE_FACILITIES = FACILITY_OPTIONS;
 
 export default function CompareSchoolsScreen() {
   const { ids: idsParam } = useLocalSearchParams<{ ids: string }>();
@@ -57,8 +49,13 @@ export default function CompareSchoolsScreen() {
   const [loading, setLoading] = useState(true);
 
   const fetchSchools = useCallback(async () => {
-    if (!idsParam) return;
-    const ids = idsParam.split(',');
+    if (!idsParam) {
+      // Nothing to compare — but returning before setLoading(false) left a bare
+      // /mcn/schools/compare URL spinning forever instead of saying so.
+      setLoading(false);
+      return;
+    }
+    const ids = idsParam.split(',').map((id) => id.trim()).filter(Boolean);
     try {
       const staticMatches = WEST_HYDERABAD_SCHOOLS.filter((s) => ids.includes(s.id));
       const dbIds = ids.filter((id) => !id.startsWith('wh_school_'));
@@ -70,12 +67,17 @@ export default function CompareSchoolsScreen() {
           .select('*')
           .in('id', dbIds);
 
-        if (!error && data) {
-          dbMatches = data as School[];
-        }
+        if (error) throw error;
+        dbMatches = (data || []) as School[];
       }
 
-      setSchools([...(staticMatches as unknown as School[]), ...dbMatches]);
+      // Order the columns the way the resident ticked them rather than catalog
+      // first, community-added second — otherwise the two schools they were
+      // actually weighing up can end up at opposite ends of the table.
+      const byId = new Map<string, School>();
+      (staticMatches as unknown as School[]).forEach((s) => byId.set(s.id, s));
+      dbMatches.forEach((s) => byId.set(s.id, s));
+      setSchools(ids.map((id) => byId.get(id)).filter((s): s is School => !!s));
     } catch (error) {
       console.error(error);
       Toast.show({ type: 'error', text1: 'Failed to fetch comparison data' });
@@ -99,6 +101,14 @@ export default function CompareSchoolsScreen() {
   if (schools.length === 0) {
     return (
       <View style={styles.loaderWrap}>
+        {/* Header included so a resident who lands here by URL still has a way
+            back to the catalog. */}
+        <Stack.Screen
+          options={buildMcnHeaderOptions({
+            title: 'Compare schools',
+            onBack: () => goBackSmart(router, '/mcn/schools/compare'),
+          })}
+        />
         <Text style={{ color: colors.textSecondary }}>No schools selected for comparison.</Text>
       </View>
     );

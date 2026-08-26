@@ -85,6 +85,7 @@ export default function NotificationsScreen() {
       case 'preorder_received':
         return ShoppingBag01;
       case 'parent_corner_posted':
+      case 'parent_corner_match':
         return Users01;
       case 'community_event_posted':
       case 'community_event_cancelled':
@@ -118,7 +119,7 @@ export default function NotificationsScreen() {
       return;
     }
 
-    if (notification.type === 'parent_corner_posted') {
+    if (notification.type === 'parent_corner_posted' || notification.type === 'parent_corner_match') {
       router.push('/mcn/parents' as any);
       return;
     }

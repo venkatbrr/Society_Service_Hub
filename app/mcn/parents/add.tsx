@@ -21,12 +21,18 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { AppIcon } from '../../../components/AppIcon';
+import { ParentMatchSheet } from '../../../components/ParentMatchSheet';
 import { SchoolPicker } from '../../../components/SchoolPicker';
 import { Verandah } from '../../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { WestHyderabadSchool } from '../../../data/westHyderabadSchools';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
+import {
+    gradeOptionsFor,
+    parseGradeLevel,
+    ParentCornerEntryLike,
+} from '../../../lib/parentCorner';
 import { normalizeIndianMobile, toLast10Digits } from '../../../lib/phone';
 import { supabase } from '../../../lib/supabase';
 
@@ -85,6 +91,11 @@ export default function AddParentCornerScreen() {
   const [useFreeTextSchool, setUseFreeTextSchool] = useState(false);
   const [board, setBoard] = useState('CBSE');
   const [gradeClass, setGradeClass] = useState('');
+  // Numeric rung beside the free-text label, so this child can be matched with
+  // neighbours a year either side. Derived from what the parent types until
+  // they correct it by hand — see `gradeLevelTouched`.
+  const [gradeLevel, setGradeLevel] = useState<number | null>(null);
+  const [gradeLevelTouched, setGradeLevelTouched] = useState(false);
   const [parentName, setParentName] = useState('');
   const [flatNumber, setFlatNumber] = useState('');
   const [contactPhone, setContactPhone] = useState('');
@@ -93,6 +104,9 @@ export default function AddParentCornerScreen() {
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(!!editId);
+  // Set once the entry is saved: holds the row we just wrote, which the match
+  // sheet needs to look for neighbours who asked for the same thing.
+  const [matchEntry, setMatchEntry] = useState<ParentCornerEntryLike | null>(null);
 
   const handleBack = () => {
     goBackSmart(router, '/mcn/parents/add');
@@ -150,6 +164,15 @@ export default function AddParentCornerScreen() {
         setUseFreeTextSchool(!(data as any).school_catalog_id);
         setBoard(data.board);
         setGradeClass(data.grade_class);
+        // Rows written before the picker existed have no stored rung; fall back
+        // to reading their label, the same way the migration backfilled them.
+        {
+          const storedLevel = (data as any).grade_level as number | null | undefined;
+          const resolved =
+            storedLevel ?? parseGradeLevel(data.grade_class, data.institution_type);
+          setGradeLevel(resolved);
+          setGradeLevelTouched(resolved !== null);
+        }
         setParentName(data.parent_name);
         setFlatNumber(data.flat_number);
         setContactPhone(data.contact_phone);
@@ -183,6 +206,10 @@ export default function AddParentCornerScreen() {
     setSchoolCatalogId(null);
     setSchoolName('');
     setUseFreeTextSchool(type === 'college');
+    // Each type has its own ladder — a Class 8 rung is meaningless once this is
+    // a pre-school entry, so drop it and re-read the label under the new type.
+    setGradeLevelTouched(false);
+    setGradeLevel(parseGradeLevel(gradeClass, type));
   };
 
   const handleSelectCatalogSchool = (school: WestHyderabadSchool) => {
@@ -245,6 +272,7 @@ export default function AddParentCornerScreen() {
         school_catalog_id: institutionType === 'college' ? null : schoolCatalogId,
         board: board.trim(),
         grade_class: gradeClass.trim(),
+        grade_level: gradeLevel,
         parent_name: parentName.trim(),
         flat_number: effectiveFlat.toUpperCase(),
         contact_phone: normalizedPhone,
@@ -270,11 +298,26 @@ export default function AddParentCornerScreen() {
         }
         Toast.show({ type: 'success', text1: 'Child details updated' });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('mcn_parent_corner')
-          .insert({ ...fields, community_id: communityId, user_id: user.id });
+          .insert({ ...fields, community_id: communityId, user_id: user.id })
+          .select('id')
+          .maybeSingle();
         if (error) throw error;
         Toast.show({ type: 'success', text1: 'Child details added to Parent Corner' });
+
+        // The parent has just said what they are looking for. Answer it here,
+        // while they are still on the screen, instead of dropping them into a
+        // directory to search it out themselves. Skipped when no intent was
+        // picked — there is nothing to match on.
+        if (data?.id && intents.length > 0) {
+          setMatchEntry({
+            ...fields,
+            id: data.id,
+            user_id: user.id,
+          } as ParentCornerEntryLike);
+          return;
+        }
       }
 
       replaceTracked(router, '/mcn/parents' as any);
@@ -439,9 +482,52 @@ export default function AddParentCornerScreen() {
             placeholder="e.g. Class 8 - B  or  2nd Year B.Tech (CSE)"
             placeholderTextColor={colors.textMuted}
             value={gradeClass}
-            onChangeText={setGradeClass}
+            onChangeText={(text) => {
+              setGradeClass(text);
+              // Read the rung off what they type, until they pick one by hand.
+              if (!gradeLevelTouched) setGradeLevel(parseGradeLevel(text, institutionType));
+            }}
             maxLength={40}
           />
+
+          {/* Year, as a number the app can compare. The free-text line above
+              keeps the section ("8 - B"), which parents want to see; this row
+              is what lets us find neighbours a year either side. */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8, paddingTop: 10 }}
+          >
+            {gradeOptionsFor(institutionType).map((option) => {
+              const isActive = gradeLevel === option.level;
+              return (
+                <TouchableOpacity
+                  key={option.level}
+                  style={[
+                    styles.boardChip,
+                    { borderColor: colors.border, backgroundColor: colors.card },
+                    isActive && { backgroundColor: colors.accentSoft, borderColor: colors.primary },
+                  ]}
+                  onPress={() => {
+                    setGradeLevelTouched(true);
+                    setGradeLevel(isActive ? null : option.level);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.boardChipText,
+                      { color: isActive ? colors.primary : colors.textSecondary },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+          <Text style={[styles.fieldHint, { color: colors.textMuted }]}>
+            Used to suggest neighbours in the same year — study groups, carpools and playdates.
+          </Text>
         </View>
 
         {/* Parent Details Section */}
@@ -564,6 +650,17 @@ export default function AddParentCornerScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Opens straight after a successful save; closing it (either way) is
+          what finally leaves the form. */}
+      <ParentMatchSheet
+        entry={matchEntry}
+        communityId={communityId || ''}
+        onClose={() => {
+          setMatchEntry(null);
+          replaceTracked(router, '/mcn/parents' as any);
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }

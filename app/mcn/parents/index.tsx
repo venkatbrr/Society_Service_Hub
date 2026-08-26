@@ -39,6 +39,7 @@ import Toast from 'react-native-toast-message';
 import { AppIcon } from '../../../components/AppIcon';
 import { BaseCard } from '../../../components/BaseCard';
 import { MuteToggleButton } from '../../../components/MuteToggleButton';
+import { ParentMatchSheet } from '../../../components/ParentMatchSheet';
 
 import { ChipRowSlider } from '../../../components/ChipRowSlider';
 import { EmptyState } from '../../../components/EmptyState';
@@ -48,6 +49,7 @@ import { Verandah } from '../../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
+import { INTENT_LABELS, ParentCornerEntryLike } from '../../../lib/parentCorner';
 import { toLast10Digits } from '../../../lib/phone';
 import { shareOrCopy } from '../../../lib/share';
 import { supabase } from '../../../lib/supabase';
@@ -63,6 +65,9 @@ export interface ParentCornerItem {
   school_name: string;
   board: string;
   grade_class: string;
+  /** Numeric rung behind `grade_class` — see lib/parentCorner.ts. */
+  grade_level: number | null;
+  school_catalog_id: string | null;
   parent_name: string;
   flat_number: string;
   contact_phone: string;
@@ -82,16 +87,6 @@ const INSTITUTION_TYPES = [
 ];
 
 const BOARD_OPTIONS = ['All', 'CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'PU Board', 'University', 'Other', 'NA'];
-
-const INTENT_LABELS: Record<string, string> = {
-  carpool: 'Carpooling',
-  study_group: 'Study Group',
-  homework_help: 'Homework Help',
-  school_info: 'School Info & Updates',
-  activities: 'Sports / Activities Buddy',
-  playdate: 'Playdate / Hangout',
-  other: 'Other',
-};
 
 const renderIntentIcon = (id: string, color: string) => {
   switch (id) {
@@ -127,6 +122,9 @@ export default function ParentCornerScreen() {
   const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
   const [selectedIntent, setSelectedIntent] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('school');
+  // Entry whose matches are being shown. Set from a parent's own card, so
+  // people who listed a child before matching existed can still find theirs.
+  const [matchEntry, setMatchEntry] = useState<ParentCornerEntryLike | null>(null);
 
   const webPullProps = useWebPullToRefresh(() => fetchEntries(true), refreshing);
 
@@ -248,8 +246,22 @@ export default function ParentCornerScreen() {
         if (comp !== 0) return comp;
         return a.grade_class.localeCompare(b.grade_class, undefined, { numeric: true, sensitivity: 'base' });
       } else if (sortBy === 'grade') {
-        const comp = a.grade_class.localeCompare(b.grade_class, undefined, { numeric: true, sensitivity: 'base' });
-        if (comp !== 0) return comp;
+        // Order by the numeric rung where we have it: the label alone puts UKG
+        // next to "2nd Year B.Tech" and sorts pre-school above Class 1. Rows
+        // whose grade could not be parsed keep the old label comparison and
+        // sort last, so they are never silently dropped to the top.
+        const aLevel = a.grade_level ?? null;
+        const bLevel = b.grade_level ?? null;
+        if (aLevel !== null && bLevel !== null) {
+          if (aLevel !== bLevel) return aLevel - bLevel;
+        } else if (aLevel !== null) {
+          return -1;
+        } else if (bLevel !== null) {
+          return 1;
+        } else {
+          const comp = a.grade_class.localeCompare(b.grade_class, undefined, { numeric: true, sensitivity: 'base' });
+          if (comp !== 0) return comp;
+        }
         return a.school_name.localeCompare(b.school_name, undefined, { numeric: true, sensitivity: 'base' });
       } else if (sortBy === 'flat') {
         return a.flat_number.localeCompare(b.flat_number, undefined, { numeric: true, sensitivity: 'base' });
@@ -429,6 +441,22 @@ export default function ParentCornerScreen() {
             <Text style={[styles.notesText, { color: colors.textSecondary }]} numberOfLines={4}>{item.notes}</Text>
           </View>
         ) : null}
+
+        {/* Owner-only: the same match sheet the add form shows on save. An
+            entry listed before matching existed, or one whose neighbours joined
+            later, has no other way to reach it. */}
+        {isOwner && (item.intents || []).length > 0 && (
+          <TouchableOpacity
+            style={[styles.matchBtn, { borderColor: colors.primary }]}
+            onPress={() => setMatchEntry(item as ParentCornerEntryLike)}
+            activeOpacity={0.8}
+          >
+            <Users01 size={15} color={colors.primary} aria-hidden={true} style={{ marginRight: 6 }} />
+            <Text style={[styles.matchBtnText, { color: colors.primary }]}>
+              Find matching parents
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Contact Action Bar: WhatsApp, Call, & Share */}
         <View style={styles.contactBar}>
@@ -696,6 +724,12 @@ export default function ParentCornerScreen() {
           <Plus size={28} color={colors.primaryFg} aria-hidden={true} />
         </TouchableOpacity>
       )}
+
+      <ParentMatchSheet
+        entry={matchEntry}
+        communityId={communityId || ''}
+        onClose={() => setMatchEntry(null)}
+      />
     </View>
   );
 }
@@ -919,6 +953,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginTop: 4,
+  },
+  matchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 38,
+    borderRadius: VerandahRadius.md,
+    borderWidth: 1,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  matchBtnText: {
+    fontSize: 13,
+    fontWeight: '500',
+    fontFamily: VerandahType.sansFamily,
   },
   whatsappBtn: {
     flex: 1,

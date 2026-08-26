@@ -5,6 +5,13 @@ import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Verandah } from '../../../constants/Colors';
+import {
+    ALL_AREAS,
+    FACILITY_OPTIONS,
+    LOCALITY_FILTERS,
+    MAX_SCHOOL_DISTANCE_KM,
+    SYLLABUS_OPTIONS,
+} from '../../../constants/schoolCatalog';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { buildMcnHeaderOptions } from '../../../lib/mcnHeader';
@@ -17,20 +24,11 @@ const LEVELS = [
   { label: 'All-in-one (K-12)', value: 'all_in_one' },
 ] as const;
 
-const SYLLABUSES = ['CBSE', 'ICSE', 'State Board', 'IB (International Baccalaureate)', 'Cambridge / IGCSE', 'Other'] as const;
-
-const FACILITY_OPTIONS = [
-  'Transport / Bus Service',
-  'Playground',
-  'Science Labs',
-  'Smart Classes',
-  'Library',
-  'Computer Lab',
-  'Indoor Sports Arena',
-  'Music & Art Studios',
-  'Swimming Pool',
-  'CCTV Surveillance',
-] as const;
+// Board and facility lists are shared with the catalog's filter chips and the
+// comparison table (constants/schoolCatalog.ts). They used to be separate
+// literals here and drifted: this form offered "Cambridge / IGCSE" while the
+// filter chip read "Cambridge (CAIE)", so a Cambridge school a resident added
+// was invisible under the Cambridge filter.
 
 export default function AddSchoolScreen() {
   const router = useRouter();
@@ -39,7 +37,9 @@ export default function AddSchoolScreen() {
 
   const [name, setName] = useState('');
   const [level, setLevel] = useState<'pre_school' | 'primary' | 'high_school' | 'all_in_one'>('primary');
-  const [syllabus, setSyllabus] = useState('CBSE');
+  const [syllabus, setSyllabus] = useState(SYLLABUS_OPTIONS[0]);
+  const [areaLocality, setAreaLocality] = useState('');
+  const [address, setAddress] = useState('');
   const [distance, setDistance] = useState('');
   const [feeRange, setFeeRange] = useState('');
   const [description, setDescription] = useState('');
@@ -64,6 +64,16 @@ export default function AddSchoolScreen() {
     }
     if (isNaN(distanceNum) || distanceNum < 0) {
       Toast.show({ type: 'error', text1: 'Please enter a valid distance (>= 0)' });
+      return;
+    }
+    // schools.distance is NUMERIC(4,1). Anything larger is a Postgres numeric
+    // field overflow, which used to surface as a bare "Failed to add school
+    // listing" with no hint about which field was wrong.
+    if (distanceNum > MAX_SCHOOL_DISTANCE_KM) {
+      Toast.show({
+        type: 'error',
+        text1: `Distance must be ${MAX_SCHOOL_DISTANCE_KM} km or less`,
+      });
       return;
     }
     if (!feeRange.trim()) {
@@ -93,7 +103,12 @@ export default function AddSchoolScreen() {
           name: trimmedName,
           level,
           syllabus,
-          distance: distanceNum,
+          // Without a locality the school matched no locality chip, so it
+          // vanished the moment anyone touched a filter; without an address
+          // there was no Maps link on its card or detail page.
+          area_locality: areaLocality.trim() || null,
+          address: address.trim() || null,
+          distance: Math.round(distanceNum * 10) / 10,
           fee_range: feeRange.trim(),
           facilities: selectedFacilities,
           description: description.trim() || null,
@@ -172,7 +187,7 @@ export default function AddSchoolScreen() {
         <View style={styles.field}>
           <Text style={[styles.label, { color: colors.textPrimary }]}>Syllabus / Curriculum Board</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.syllabusScroll}>
-            {SYLLABUSES.map((item) => (
+            {SYLLABUS_OPTIONS.map((item) => (
               <TouchableOpacity
                 key={item}
                 style={[
@@ -188,6 +203,52 @@ export default function AddSchoolScreen() {
               </TouchableOpacity>
             ))}
           </ScrollView>
+        </View>
+
+        {/* Area / locality — drives the catalog's locality filter chips */}
+        <View style={styles.field}>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>Area / Locality</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.syllabusScroll}>
+            {LOCALITY_FILTERS.filter((loc) => loc.label !== ALL_AREAS).map((loc) => (
+              <TouchableOpacity
+                key={loc.label}
+                style={[
+                  styles.syllabusChip,
+                  { borderColor: colors.border },
+                  areaLocality === loc.label && { backgroundColor: colors.accent, borderColor: colors.accent }
+                ]}
+                onPress={() => setAreaLocality(areaLocality === loc.label ? '' : loc.label)}
+              >
+                <Text style={[styles.syllabusChipText, { color: areaLocality === loc.label ? colors.surface : colors.textPrimary }]}>
+                  {loc.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <TextInput
+            style={[styles.input, { borderColor: colors.border, color: colors.textPrimary, marginTop: 8 }]}
+            placeholder="Or type another area"
+            placeholderTextColor={colors.textMuted}
+            value={areaLocality}
+            onChangeText={setAreaLocality}
+            maxLength={60}
+          />
+        </View>
+
+        {/* Address — also what produces the Maps link when no map URL is known */}
+        <View style={styles.field}>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>Address (Optional)</Text>
+          <TextInput
+            style={[styles.input, styles.textArea, { borderColor: colors.border, color: colors.textPrimary }]}
+            placeholder="Street, landmark, pin code — used for the Maps link"
+            placeholderTextColor={colors.textMuted}
+            value={address}
+            onChangeText={setAddress}
+            multiline
+            numberOfLines={2}
+            textAlignVertical="top"
+            maxLength={200}
+          />
         </View>
 
         {/* Distance and Fees */}

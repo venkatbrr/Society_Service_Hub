@@ -22,6 +22,14 @@ import { EmptyState } from '../../../components/EmptyState';
 import { useWebPullToRefresh } from '../../../components/useWebPullToRefresh';
 import { WebPullIndicator } from '../../../components/WebPullIndicator';
 import { Verandah } from '../../../constants/Colors';
+import {
+    ALL_AREAS,
+    ALL_BOARDS,
+    BOARD_FILTERS,
+    LOCALITY_FILTERS,
+    findFilter,
+    matchesFilter,
+} from '../../../constants/schoolCatalog';
 import { VerandahLayout, VerandahRadius, VerandahType } from '../../../constants/Verandah';
 import { useAuth } from '../../../context/AuthContext';
 import { WEST_HYDERABAD_SCHOOLS, WestHyderabadSchool } from '../../../data/westHyderabadSchools';
@@ -35,21 +43,6 @@ const LEVEL_MAP = {
   all_in_one: 'K-12 (All-in-one)',
 };
 
-const LOCALITY_OPTIONS = [
-  'All Areas',
-  'Kokapet',
-  'Tellapur',
-  'Nallagandla',
-  'Financial District',
-  'Kollur',
-  'Chandanagar',
-  'Patancheru',
-  'Mokila',
-  'Narsingi',
-];
-
-const BOARD_OPTIONS = ['All Boards', 'CBSE', 'IB', 'Cambridge (CAIE)', 'ICSE', 'Preschool'];
-
 export default function SchoolsCatalogScreen() {
   const router = useRouter();
   const { communityId } = useAuth();
@@ -57,12 +50,18 @@ export default function SchoolsCatalogScreen() {
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedLocality, setSelectedLocality] = useState('All Areas');
-  const [selectedBoard, setSelectedBoard] = useState('All Boards');
+  const [selectedLocality, setSelectedLocality] = useState<string>(ALL_AREAS);
+  const [selectedBoard, setSelectedBoard] = useState<string>(ALL_BOARDS);
   const [selectedSchoolIds, setSelectedSchoolIds] = useState<string[]>([]);
 
   const [customSchools, setCustomSchools] = useState<WestHyderabadSchool[]>([]);
+  // Parent report cards are stored against BOTH curated catalog ids
+  // ("wh_school_12") and `schools` row ids, so the review count on a card cannot
+  // come from `schools.review_count` alone — that column only exists for
+  // community-added rows. Counted here from one lightweight query instead.
+  const [reviewCounts, setReviewCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const handleBack = () => {
@@ -88,32 +87,49 @@ export default function SchoolsCatalogScreen() {
       else setLoading(true);
 
       try {
-        const { data, error } = await supabase
-          .from('schools')
-          .select('*')
-          .eq('community_id', communityId);
+        const [schoolsRes, reviewsRes] = await Promise.all([
+          supabase.from('schools').select('*').eq('community_id', communityId),
+          supabase.from('school_reviews').select('school_id').eq('community_id', communityId),
+        ]);
 
-        if (!error && data) {
-          const normalized = data.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            area_locality: item.area_locality || 'Local Community',
-            syllabus: item.syllabus,
-            level: item.level || 'all_in_one',
-            address: item.address || '',
-            contact_phone: item.contact_phone || '',
-            google_rating: item.google_rating || '',
-            website: item.website || '',
-            google_maps_link: item.google_maps_link || '',
-            fee_range: item.fee_range || 'Contact school for fees',
-            distance: item.distance || 0,
-            facilities: item.facilities || [],
-            description: item.description || '',
-          }));
-          setCustomSchools(normalized);
-        }
+        if (schoolsRes.error) throw schoolsRes.error;
+        if (reviewsRes.error) throw reviewsRes.error;
+
+        const normalized = (schoolsRes.data || []).map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          area_locality: item.area_locality || 'Local Community',
+          syllabus: item.syllabus,
+          level: item.level || 'all_in_one',
+          address: item.address || '',
+          contact_phone: item.contact_phone || '',
+          google_rating: item.google_rating || '',
+          website: item.website || '',
+          google_maps_link: item.google_maps_link || '',
+          fee_range: item.fee_range || 'Contact school for fees',
+          distance: item.distance || 0,
+          facilities: item.facilities || [],
+          description: item.description || '',
+        }));
+        setCustomSchools(normalized);
+
+        const counts: Record<string, number> = {};
+        (reviewsRes.data || []).forEach((row: { school_id: string }) => {
+          counts[row.school_id] = (counts[row.school_id] || 0) + 1;
+        });
+        setReviewCounts(counts);
+        setLoadError(false);
       } catch (err) {
+        // The 81 curated schools still render from app code, so a failure here
+        // is invisible unless we say so — it would otherwise read as "this
+        // community has added no schools" and quietly hide every review count.
         console.error('Error fetching custom schools:', err);
+        setLoadError(true);
+        Toast.show({
+          type: 'error',
+          text1: 'Could not load community schools',
+          text2: 'Showing the curated directory only. Pull to refresh.',
+        });
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -128,13 +144,15 @@ export default function SchoolsCatalogScreen() {
     }, [fetchCustomSchools])
   );
 
-  // Combine Catalog schools + Custom user-added schools
+  // Combine Catalog schools + Custom user-added schools, stamping each with its
+  // parent-review count so the card can show "3 parent reviews" for curated and
+  // community-added schools alike.
   const allSchoolsList = useMemo(() => {
     const map = new Map<string, WestHyderabadSchool>();
     WEST_HYDERABAD_SCHOOLS.forEach((s) => map.set(s.id, s));
     customSchools.forEach((s) => map.set(s.id, s));
-    return Array.from(map.values());
-  }, [customSchools]);
+    return Array.from(map.values()).map((s) => ({ ...s, review_count: reviewCounts[s.id] || 0 }));
+  }, [customSchools, reviewCounts]);
 
   // Filtered schools
   const filteredSchools = useMemo(() => {
@@ -151,12 +169,17 @@ export default function SchoolsCatalogScreen() {
       );
     }
 
-    if (selectedLocality !== 'All Areas') {
-      list = list.filter((s) => s.area_locality.toLowerCase().includes(selectedLocality.toLowerCase()));
+    // Chips match on their own keyword list, not on their label. Matching on the
+    // label is what made "Cambridge (CAIE)" find only half the Cambridge schools
+    // and "Ramachandrapuram" miss every "R C Puram" one.
+    const locality = findFilter(LOCALITY_FILTERS, selectedLocality);
+    if (locality) {
+      list = list.filter((s) => matchesFilter(s.area_locality, locality.keywords));
     }
 
-    if (selectedBoard !== 'All Boards') {
-      list = list.filter((s) => s.syllabus.toLowerCase().includes(selectedBoard.toLowerCase()));
+    const board = findFilter(BOARD_FILTERS, selectedBoard);
+    if (board) {
+      list = list.filter((s) => matchesFilter(s.syllabus, board.keywords));
     }
 
     return list;
@@ -336,7 +359,7 @@ export default function SchoolsCatalogScreen() {
 
       <View style={styles.headerSubtitleWrap}>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Verified directory of 50+ schools in Kokapet, Tellapur, Nallagandla & Patancheru corridor
+          Verified directory of {allSchoolsList.length} schools in Kokapet, Tellapur, Nallagandla & Patancheru corridor
         </Text>
       </View>
 
@@ -359,7 +382,7 @@ export default function SchoolsCatalogScreen() {
       {/* Locality Filter Chips */}
       <View style={styles.filterSection}>
         <ChipRowSlider<string>
-          chips={LOCALITY_OPTIONS.map((loc) => ({ key: loc, label: loc }))}
+          chips={LOCALITY_FILTERS.map((loc) => ({ key: loc.label, label: loc.label }))}
           value={selectedLocality}
           onChange={(loc) => setSelectedLocality(loc)}
           contentContainerStyle={styles.chipsScrollContainer}
@@ -376,7 +399,7 @@ export default function SchoolsCatalogScreen() {
       {/* Board Filter Chips */}
       <View style={styles.filterSection}>
         <ChipRowSlider<string>
-          chips={BOARD_OPTIONS.map((b) => ({ key: b, label: b }))}
+          chips={BOARD_FILTERS.map((b) => ({ key: b.label, label: b.label }))}
           value={selectedBoard}
           onChange={(b) => setSelectedBoard(b)}
           contentContainerStyle={styles.chipsScrollContainer}
@@ -417,11 +440,19 @@ export default function SchoolsCatalogScreen() {
           }
           renderItem={({ item }) => renderSchoolCard(item)}
           ListEmptyComponent={
-            <EmptyState
-              icon="school-outline"
-              title="No schools found"
-              message="No schools match your search or filter criteria. Try resetting filters!"
-            />
+            loadError ? (
+              <EmptyState
+                icon="cloud-offline-outline"
+                title="Could not load schools"
+                message="Something went wrong reaching the directory. Pull down to try again."
+              />
+            ) : (
+              <EmptyState
+                icon="school-outline"
+                title="No schools found"
+                message="No schools match your search or filter criteria. Try resetting filters!"
+              />
+            )
           }
         />
       )}
