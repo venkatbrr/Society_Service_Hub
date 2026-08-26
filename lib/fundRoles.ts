@@ -19,6 +19,10 @@ export const MAX_SPONSOR_NAME_LENGTH = 80;
 export const MAX_SPONSOR_PHONE_LENGTH = 20;
 export const MAX_SPONSOR_NOTE_LENGTH = 280;
 
+/** Free-text bounds on an "other contribution" — mirrored from 20260929000000. */
+export const MAX_PURPOSE_LABEL_LENGTH = 60;
+export const MAX_CONTRIBUTOR_FLAT_LABEL_LENGTH = 20;
+
 type CommunityLike = {
   funds_enabled?: boolean | null;
   blocks_enabled?: boolean | null;

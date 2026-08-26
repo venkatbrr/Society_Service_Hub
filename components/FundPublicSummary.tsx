@@ -136,8 +136,10 @@ export function FundPublicSummary({ eventId }: { eventId: string }) {
           <View style={styles.gateCard}>
             <Text style={styles.gateTitle}>Sign in to see the details</Text>
             <Text style={styles.gateText}>
-              {summary.contributor_count} {summary.contributor_count === 1 ? 'contribution has' : 'contributions have'} been
-              recorded. Residents of {summary.community_name} can sign in to see who has paid, every expense, and the receipts.
+              {/* One per payer, not per entry — a household that also offered
+                  for the food is still one contributor. See 20260928000000. */}
+              {summary.contributor_count} {summary.contributor_count === 1 ? 'contributor has' : 'contributors have'} paid in
+              so far. Residents of {summary.community_name} can sign in to see who has paid, every expense, and the receipts.
             </Text>
             <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/login')} accessibilityRole="button">
               <LogIn01 size={16} color={Verandah.primaryFg} aria-hidden={true} />

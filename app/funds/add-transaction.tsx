@@ -23,8 +23,11 @@ import { Verandah } from '../../constants/Colors';
 import { VerandahLayout, VerandahRadius, VerandahSpace, VerandahType } from '../../constants/Verandah';
 import { useAuth } from '../../context/AuthContext';
 import { Tables } from '../../lib/database.types';
+import { SUGGESTED_PURPOSE_LABELS } from '../../lib/fundLedger';
 import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import {
+    MAX_CONTRIBUTOR_FLAT_LABEL_LENGTH,
+    MAX_PURPOSE_LABEL_LENGTH,
     MAX_SPONSOR_NAME_LENGTH,
     MAX_SPONSOR_NOTE_LENGTH,
     MAX_SPONSOR_PHONE_LENGTH,
@@ -126,9 +129,13 @@ export default function AddTransactionScreen() {
   const [showBlockPrompt, setShowBlockPrompt] = useState(false);
   const [selectedMyBlock, setSelectedMyBlock] = useState<string | null>(myBlockId ?? null);
   const [searchMember, setSearchMember] = useState('');
-  // A contribution names its payer: either a community member or an outside
-  // sponsor. Sponsors are the lead's call — see migration 20260825000000.
-  const [payerMode, setPayerMode] = useState<'member' | 'sponsor'>('member');
+  // Three ways money reaches a fund: a flat's share (picked off the collection
+  // grid), an ad-hoc contribution from someone who names what it was for, and
+  // an outside sponsor — the last still the lead's call (20260825000000).
+  const [payerMode, setPayerMode] = useState<'member' | 'other' | 'sponsor'>('member');
+  const [otherName, setOtherName] = useState('');
+  const [otherFlatLabel, setOtherFlatLabel] = useState('');
+  const [purposeLabel, setPurposeLabel] = useState('');
   // Cash is the default because that is how a collector walking the block is
   // actually handed money. Applies to expenses too — see 20260919000000.
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'online'>('cash');
@@ -197,11 +204,18 @@ export default function AddTransactionScreen() {
           }
           if (existingTx.type === 'income') {
             const existingSponsorName = ((existingTx as any).sponsor_name as string | null) ?? null;
+            const existingPurposeLabel = ((existingTx as any).purpose_label as string | null) ?? null;
             if (existingSponsorName) {
               setPayerMode('sponsor');
               setSponsorName(existingSponsorName);
               setSponsorPhone(((existingTx as any).sponsor_phone as string | null) ?? '');
               setSponsorNote(((existingTx as any).sponsor_note as string | null) ?? '');
+              setSelectedTarget(null);
+            } else if (existingPurposeLabel) {
+              setPayerMode('other');
+              setPurposeLabel(existingPurposeLabel);
+              setOtherName(existingTx.contributor_name || '');
+              setOtherFlatLabel(((existingTx as any).contributor_flat_label as string | null) ?? '');
               setSelectedTarget(null);
             } else {
               setPayerMode('member');
@@ -262,15 +276,37 @@ export default function AddTransactionScreen() {
   // Only the fund-admin capacity (president / vice president / platform admin)
   // may bring in money from outside the community.
   const canRecordSponsor = permissions.canManageTreasurers;
+  // Only the general contribution is one-per-flat. A flat with three offerings
+  // against it has still not paid its share, and must stay selectable.
   const paidFlatIds = useMemo(
     () =>
       new Set(
         (fund?.event_transactions ?? [])
-          .filter((transaction) => transaction.type === 'income' && transaction.contributor_flat_id && transaction.id !== transaction_id)
+          .filter(
+            (transaction) =>
+              transaction.type === 'income' &&
+              transaction.contributor_flat_id &&
+              transaction.id !== transaction_id
+          )
           .map((transaction) => transaction.contributor_flat_id as string)
       ),
     [fund?.event_transactions, transaction_id]
   );
+
+  /**
+   * The payer choices for this caller. Anyone who may record a contribution can
+   * record an "other" one — it is the ordinary case of someone handing over
+   * money at the door for something specific. Sponsors stay the lead's call.
+   */
+  // Short labels so all three fit one segmented row on a phone; the notice card
+  // above and the field label below carry the full meaning.
+  const payerModes: { key: 'member' | 'other' | 'sponsor'; label: string; accessibilityLabel: string }[] = [
+    { key: 'member', label: 'General', accessibilityLabel: 'General contribution' },
+    { key: 'other', label: 'Other', accessibilityLabel: 'Other contribution' },
+    ...(canRecordSponsor
+      ? [{ key: 'sponsor' as const, label: 'Sponsor', accessibilityLabel: 'Outside sponsor' }]
+      : []),
+  ];
 
   const blocks = useMemo(() => {
     const blockMap = new Map<string, string>();
@@ -382,6 +418,9 @@ export default function AddTransactionScreen() {
       setSponsorName('');
       setSponsorPhone('');
       setSponsorNote('');
+      setOtherName('');
+      setOtherFlatLabel('');
+      setPurposeLabel('');
     }
   };
 
@@ -483,6 +522,18 @@ export default function AddTransactionScreen() {
       }
     }
 
+    if (type === 'income' && payerMode === 'other') {
+      if (!otherName.trim()) {
+        Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Contributor name is required.' });
+        return;
+      }
+
+      if (!purposeLabel.trim()) {
+        Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Say what the contribution is for.' });
+        return;
+      }
+    }
+
     if (type === 'income' && payerMode === 'member') {
       if (!selectedTarget) {
         Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Select a flat to mark as paid.' });
@@ -490,7 +541,11 @@ export default function AddTransactionScreen() {
       }
 
       if (paidFlatIds.has(selectedTarget.flat_id)) {
-        Toast.show({ type: 'error', text1: 'Already paid', text2: 'This flat has already contributed.' });
+        Toast.show({
+          type: 'error',
+          text1: 'Already paid',
+          text2: 'This flat has already contributed. Record anything extra under Other contribution.',
+        });
         return;
       }
 
@@ -507,9 +562,13 @@ export default function AddTransactionScreen() {
 
     setIsLoading(true);
     try {
-      const memberName = contributorName.trim();
       const isSponsorContribution = type === 'income' && payerMode === 'sponsor';
-      const payerName = isSponsorContribution ? sponsorName.trim() : memberName;
+      const isOtherContribution = type === 'income' && payerMode === 'other';
+      const payerName = isSponsorContribution
+        ? sponsorName.trim()
+        : isOtherContribution
+          ? otherName.trim()
+          : contributorName.trim();
       let notesText = notes.trim();
       if (type === 'expense' && imageUrl) {
         notesText = notesText ? `${notesText}\n[Receipt: ${imageUrl}]` : `[Receipt: ${imageUrl}]`;
@@ -523,10 +582,18 @@ export default function AddTransactionScreen() {
               type,
               title: payerName,
               description: notes.trim() || null,
-              category: isSponsorContribution ? 'Sponsor contribution' : 'Contribution',
-              contributor_user_id: isSponsorContribution ? null : selectedTarget?.resident_user_id,
-              contributor_flat_id: isSponsorContribution ? null : selectedTarget?.flat_id,
-              contributor_name: isSponsorContribution ? null : contributorName.trim(),
+              category: isSponsorContribution
+                ? 'Sponsor contribution'
+                : isOtherContribution
+                  ? 'Other contribution'
+                  : 'Contribution',
+              // An other contribution marks no flat as paid, so it deliberately
+              // carries no flat key — its flat, if given, is a free-text note.
+              purpose_label: isOtherContribution ? purposeLabel.trim() : null,
+              contributor_flat_label: isOtherContribution ? otherFlatLabel.trim() || null : null,
+              contributor_user_id: isSponsorContribution || isOtherContribution ? null : selectedTarget?.resident_user_id,
+              contributor_flat_id: isSponsorContribution || isOtherContribution ? null : selectedTarget?.flat_id,
+              contributor_name: isSponsorContribution ? null : payerName,
               sponsor_name: isSponsorContribution ? sponsorName.trim() : null,
               sponsor_phone: isSponsorContribution ? sponsorPhone.trim() || null : null,
               sponsor_note: isSponsorContribution ? sponsorNote.trim() || null : null,
@@ -542,6 +609,8 @@ export default function AddTransactionScreen() {
               title: title.trim(),
               description: notesText || null,
               category: 'Expense',
+              purpose_label: null,
+              contributor_flat_label: null,
               contributor_user_id: null,
               contributor_flat_id: null,
               contributor_name: null,
@@ -574,13 +643,19 @@ export default function AddTransactionScreen() {
         text1: transaction_id
           ? type === 'income' ? 'Contribution updated' : 'Expense updated'
           : type === 'income' ? 'Contribution added' : 'Expense added',
-        text2: type === 'income' ? `${payerName} status updated.` : 'The fund ledger was updated successfully.',
+        text2: type === 'income'
+          ? isOtherContribution
+            ? `${payerName} · for ${purposeLabel.trim()}.`
+            : `${payerName} status updated.`
+          : 'The fund ledger was updated successfully.',
       });
       router.back();
     } catch (error: any) {
       let msg = error.message;
       if (error.code === '23505' || (error.message && error.message.includes('unique_income_contribution_per_flat'))) {
-        msg = 'This flat has already contributed to this fund.';
+        // Only a flat's share can collide — other contributions carry no flat
+        // key and sit outside both unique indexes.
+        msg = 'This flat has already contributed. Record anything extra under Other contribution.';
       }
       Toast.show({
         type: 'error',
@@ -680,9 +755,11 @@ export default function AddTransactionScreen() {
                 : type === 'income'
                   ? payerMode === 'sponsor'
                     ? 'Recording money from outside the community. Name the sponsor so the entry stays traceable.'
-                    : permissions.canAddContribution
-                      ? 'Select a resident, add the received amount, and they will appear as paid in the fund.'
-                      : 'Only collectors or treasurers can add contributions.'
+                    : payerMode === 'other'
+                      ? 'Money given for something specific. Name who gave it and what it was for — no flat needs to be picked.'
+                      : permissions.canAddContribution
+                        ? 'Select a resident, add the received amount, and they will appear as paid in the fund.'
+                        : 'Only collectors or treasurers can add contributions.'
                   : permissions.canAddExpense
                     ? 'Add the expense name, amount, and optional note for transparent bookkeeping.'
                     : 'Only treasurers can add expenses.'}
@@ -729,31 +806,97 @@ export default function AddTransactionScreen() {
 
           {type === 'income' ? (
             <View style={styles.inputGroup}>
-              {canRecordSponsor && !transaction_id ? (
-                <View style={[styles.tabContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <TouchableOpacity
-                    style={[styles.tab, payerMode === 'member' ? styles.tabActiveIncome : {}]}
-                    onPress={() => setPayerMode('member')}
-                  >
-                    <Text style={[styles.tabText, { color: payerMode === 'member' ? colors.primary : colors.textMuted }]}>
-                      Community member
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.tab, payerMode === 'sponsor' ? styles.tabActiveIncome : {}]}
-                    onPress={() => setPayerMode('sponsor')}
-                  >
-                    <Text style={[styles.tabText, { color: payerMode === 'sponsor' ? colors.primary : colors.textMuted }]}>
-                      Outside sponsor
-                    </Text>
-                  </TouchableOpacity>
+              {/*
+                A general contribution is the flat's share, picked off the grid
+                and counted in the paid/unpaid roll. An other contribution is
+                someone handing over money for something specific — it just
+                needs a name, what it was for, and the amount.
+              */}
+              {!transaction_id ? (
+                <View style={[styles.tabContainer, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 0 }]}>
+                  {payerModes.map((mode) => {
+                    const isSelected = payerMode === mode.key;
+                    return (
+                      <TouchableOpacity
+                        key={mode.key}
+                        style={[styles.tab, isSelected ? styles.tabActiveIncome : {}]}
+                        onPress={() => setPayerMode(mode.key)}
+                        accessibilityRole="button"
+                        accessibilityLabel={mode.accessibilityLabel}
+                        accessibilityState={{ selected: isSelected }}
+                      >
+                        <Text
+                          style={[styles.tabText, { color: isSelected ? colors.primary : colors.textMuted }]}
+                          numberOfLines={1}
+                        >
+                          {mode.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               ) : null}
 
-              <Text style={[styles.label, { color: colors.text }]}>
-                {payerMode === 'sponsor' ? 'Sponsor name' : 'Select resident flat'}
+              <Text style={[styles.label, { color: colors.text, marginTop: transaction_id ? 0 : 12 }]}>
+                {payerMode === 'sponsor'
+                  ? 'Sponsor name'
+                  : payerMode === 'other'
+                    ? 'Contributor name'
+                    : 'Select resident flat'}
               </Text>
-              {payerMode === 'sponsor' ? (
+
+              {payerMode === 'other' ? (
+                <>
+                  <TextInput
+                    style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                    placeholder="Who gave it, e.g. Ramesh Kumar"
+                    placeholderTextColor={colors.textMuted}
+                    value={otherName}
+                    onChangeText={setOtherName}
+                    maxLength={MAX_SPONSOR_NAME_LENGTH}
+                  />
+
+                  <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>Flat (optional)</Text>
+                  <TextInput
+                    style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                    placeholder="e.g. A-207"
+                    placeholderTextColor={colors.textMuted}
+                    value={otherFlatLabel}
+                    onChangeText={setOtherFlatLabel}
+                    maxLength={MAX_CONTRIBUTOR_FLAT_LABEL_LENGTH}
+                    autoCapitalize="characters"
+                  />
+                  <Text style={[styles.purposeHint, { color: colors.textMuted }]}>
+                    Just a note of where the money came from. It does not mark that flat as having paid its share.
+                  </Text>
+
+                  <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>Contributing for</Text>
+                  <TextInput
+                    style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                    placeholder="e.g. Food, God idol, Prasadam"
+                    placeholderTextColor={colors.textMuted}
+                    value={purposeLabel}
+                    onChangeText={setPurposeLabel}
+                    maxLength={MAX_PURPOSE_LABEL_LENGTH}
+                  />
+                  {/* Typing this at someone's door is the friction that stops
+                      the entry being made at all. */}
+                  <View style={styles.purposeChips}>
+                    {SUGGESTED_PURPOSE_LABELS.map((suggestion) => (
+                      <TouchableOpacity
+                        key={suggestion}
+                        style={[styles.purposeSuggestion, { borderColor: colors.border }]}
+                        onPress={() => setPurposeLabel(suggestion)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Contributing for ${suggestion}`}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[styles.purposeChipText, { color: colors.textMuted }]}>{suggestion}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              ) : payerMode === 'sponsor' ? (
                 <>
                   <TextInput
                     style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
@@ -857,14 +1000,21 @@ export default function AddTransactionScreen() {
 
                   {/* Selected Target Banner */}
                   {selectedTarget && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.primary + '08', borderColor: colors.primary + '40', borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 }}>
-                      <Text style={{ fontSize: 12, color: colors.textMuted }}>Selected Flat:</Text>
-                      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.primary, flex: 1 }}>
-                        {selectedTarget.flat_label}
-                      </Text>
-                      <TouchableOpacity onPress={() => { setSelectedTarget(null); setContributorName(''); }} style={{ paddingHorizontal: 8, paddingVertical: 2 }}>
-                        <Text style={{ fontSize: 12, color: colors.textMuted }}>Clear</Text>
-                      </TouchableOpacity>
+                    <View style={{ backgroundColor: colors.primary + '08', borderColor: colors.primary + '40', borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={{ fontSize: 12, color: colors.textMuted }}>Selected Flat:</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: colors.primary, flex: 1 }}>
+                          {selectedTarget.flat_label}
+                        </Text>
+                        <TouchableOpacity onPress={() => { setSelectedTarget(null); setContributorName(''); }} style={{ paddingHorizontal: 8, paddingVertical: 2 }}>
+                          <Text style={{ fontSize: 12, color: colors.textMuted }}>Clear</Text>
+                        </TouchableOpacity>
+                      </View>
+                      {selectedTarget.has_contributed ? (
+                        <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }}>
+                          Already contributed ₹{Number(selectedTarget.contributed_amount ?? 0).toLocaleString('en-IN')}
+                        </Text>
+                      ) : null}
                     </View>
                   )}
 
@@ -908,7 +1058,11 @@ export default function AddTransactionScreen() {
                                   }}
                                   onPress={() => {
                                     if (isPaid) {
-                                      Toast.show({ type: 'error', text1: 'Already paid', text2: 'This flat has already contributed.' });
+                                      Toast.show({
+                                        type: 'error',
+                                        text1: 'Already paid',
+                                        text2: 'This flat has already contributed. Record anything extra under Other contribution.',
+                                      });
                                       return;
                                     }
                                     setSelectedTarget(target);
@@ -1138,6 +1292,33 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.5,
     marginBottom: 4,
+    marginLeft: 2,
+  },
+  purposeChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingVertical: 2,
+  },
+  purposeChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 9999,
+  },
+  purposeSuggestion: {
+    borderWidth: 1,
+    borderRadius: 9999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  purposeChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  purposeHint: {
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 6,
     marginLeft: 2,
   },
   tabContainer: {

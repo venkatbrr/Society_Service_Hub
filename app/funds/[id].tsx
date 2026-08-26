@@ -37,6 +37,13 @@ import { useAuth } from '../../context/AuthContext';
 import { cloudinaryUrl } from '../../lib/cloudinary';
 import { Tables } from '../../lib/database.types';
 import {
+    GENERAL_PURPOSE_LABEL,
+    contributorFlatLabelOf,
+    isGeneralContribution,
+    purposeLabelOf,
+    summariseByPurpose,
+} from '../../lib/fundLedger';
+import {
     MAX_COLLECTORS,
     MAX_TREASURERS,
     MIN_TREASURERS,
@@ -407,7 +414,12 @@ export default function FundDetailScreen() {
       if (!blockName) return;
       const entry = rows.get(blockName);
       if (!entry) return;
-      entry.paidFlats += 1;
+      // Coverage counts flats that paid their share. Offerings are money, so
+      // they land in `collected`, but a flat that only offered for the food has
+      // not paid — counting them would push blocks past 100%.
+      if (isGeneralContribution(transaction)) {
+        entry.paidFlats += 1;
+      }
       entry.collected += Number(transaction.amount);
     });
 
@@ -435,6 +447,15 @@ export default function FundDetailScreen() {
     );
   const incomeByMethod = splitByMethod(incomeTransactions);
   const expenseByMethod = splitByMethod(expenseTransactions);
+
+  const purposeSummary = summariseByPurpose(incomeTransactions);
+  // "General" is the flat's share only — an other contribution carries a
+  // free-text purpose and marks no flat as paid. See isGeneralContribution in
+  // lib/fundLedger.ts; the coverage counts below depend on that split.
+  const generalContributions = incomeTransactions.filter(isGeneralContribution);
+  const otherContributionTotal = incomeTransactions
+    .filter((transaction) => !isGeneralContribution(transaction))
+    .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
 
   const contributorLabel = (transaction: Tables<'event_transactions'>) => {
     const sponsorName = ((transaction as any).sponsor_name as string | null) ?? null;
@@ -471,6 +492,14 @@ export default function FundDetailScreen() {
       lines.push('', `Cash ${money(incomeByMethod.cash)}  ·  Online ${money(incomeByMethod.online)}`);
     }
 
+    // Only worth a section once the fund collects for more than one thing.
+    if (purposeSummary.length > 1) {
+      lines.push('');
+      purposeSummary.forEach((row) => {
+        lines.push(`${row.label}  ${money(row.total)}`);
+      });
+    }
+
     if (blockSummary.length > 0) {
       lines.push('');
       blockSummary.forEach((row) => {
@@ -503,6 +532,15 @@ export default function FundDetailScreen() {
       rows.push(['Collected by method', incomeByMethod.cash, incomeByMethod.online, incomeByMethod.unrecorded]);
       rows.push(['Spent by method', expenseByMethod.cash, expenseByMethod.online, expenseByMethod.unrecorded]);
 
+      if (purposeSummary.length > 1) {
+        rows.push([]);
+        rows.push(['Collected by purpose']);
+        rows.push(['Purpose', 'Entries', 'Collected']);
+        purposeSummary.forEach((row) => {
+          rows.push([row.label, row.count, row.total]);
+        });
+      }
+
       if (blockSummary.length > 0) {
         rows.push([]);
         rows.push(['Block-wise collection']);
@@ -517,16 +555,21 @@ export default function FundDetailScreen() {
 
       rows.push([]);
       rows.push(['Contributions']);
-      rows.push(['Block', 'Flat', 'Contributor', 'Type', 'Method', 'Collected by', 'Amount', 'Date']);
+      rows.push(['Block', 'Flat', 'Contributor', 'For', 'Type', 'Method', 'Collected by', 'Amount', 'Date']);
       contributionGroups.forEach((group) => {
         group.rows.forEach((transaction) => {
           const flatId = (transaction as any).contributor_flat_id as string | null;
           const meta = flatId ? flatMeta.get(flatId) : undefined;
           rows.push([
             meta?.blockName ?? '',
-            meta?.flatNumber ?? '',
+            meta?.flatNumber ?? contributorFlatLabelOf(transaction) ?? '',
             contributorLabel(transaction),
-            (transaction as any).sponsor_name ? 'Outside sponsor' : 'Resident',
+            purposeLabelOf(transaction) ?? GENERAL_PURPOSE_LABEL,
+            (transaction as any).sponsor_name
+              ? 'Outside sponsor'
+              : isGeneralContribution(transaction)
+                ? 'Resident'
+                : 'Other',
             formatPaymentMethod(paymentMethodOf(transaction)) ?? 'Not recorded',
             collectedByOf(transaction) ?? '',
             Number(transaction.amount),
@@ -942,6 +985,36 @@ export default function FundDetailScreen() {
           </View>
         </View>
 
+        {/*
+          What the money was given for. Ungated for the same reason the
+          block table is: a resident should be able to see that the food
+          collection is covered without asking the treasurer.
+        */}
+        {purposeSummary.length > 1 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Collected for</Text>
+              <Text style={[styles.sectionBadge, { color: colors.textMuted }]}>
+                {purposeSummary.length} {purposeSummary.length === 1 ? 'heading' : 'headings'}
+              </Text>
+            </View>
+            <View style={styles.blockSummaryCard}>
+              {purposeSummary.map((row, index) => (
+                <View
+                  key={row.key}
+                  style={[styles.blockSummaryRow, index > 0 ? styles.blockSummaryDivider : null]}
+                >
+                  <Text style={[styles.blockSummaryName, { color: colors.text }]}>{row.label}</Text>
+                  <Text style={[styles.blockSummaryMeta, { color: colors.textMuted }]}>
+                    {row.count} {row.count === 1 ? 'entry' : 'entries'}
+                  </Text>
+                  <Rupees amount={row.total} size="sm" tone="in" />
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         {blockSummary.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -1151,6 +1224,7 @@ export default function FundDetailScreen() {
           </View>
         ) : null}
 
+
         <View style={styles.section}>
           <TouchableOpacity
             style={styles.ledgerLink}
@@ -1163,7 +1237,10 @@ export default function FundDetailScreen() {
             <View style={styles.transMain}>
               <Text style={[styles.transName, { color: colors.text }]}>Contributions</Text>
               <Text style={[styles.transDate, { color: colors.textMuted }]}>
-                {incomeTransactions.length} of {flats.length} flats collected
+                {generalContributions.length} of {flats.length} flats collected
+                {otherContributionTotal > 0
+                  ? ` · ₹${otherContributionTotal.toLocaleString('en-IN')} in other contributions`
+                  : ''}
               </Text>
             </View>
             <Rupees amount={income} size="sm" tone="in" />

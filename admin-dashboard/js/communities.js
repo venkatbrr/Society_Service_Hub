@@ -1682,6 +1682,7 @@ const CommunitiesPage = {
 
       const kindLabel = {
         resident_contribution: 'Resident',
+        other_contribution: 'Other',
         sponsor_contribution: 'Sponsor',
         other_income: 'Income',
         expense: 'Expense'
@@ -1690,11 +1691,17 @@ const CommunitiesPage = {
       const ledgerHtml = ledger.length === 0
         ? emptyRow(5, 'No transactions recorded yet.')
         : ledger.map(t => {
-            const who = t.entry_kind === 'resident_contribution'
-              ? esc(t.contributor_name || 'Resident') + (t.contributor_flat ? ' (' + esc(t.contributor_flat) + ')' : '')
-              : t.entry_kind === 'sponsor_contribution'
-                ? esc(t.sponsor_name || 'Sponsor')
-                : esc(t.title || t.category || '—');
+            // An other contribution names both the payer and what it was given
+            // for — "Ramesh (A-207) · Prasadam" is the line being audited.
+            const who = t.entry_kind === 'other_contribution'
+              ? esc(t.sponsor_name || t.contributor_name || t.title || 'Resident')
+                + (t.contributor_flat ? ' (' + esc(t.contributor_flat) + ')' : '')
+                + (t.purpose_name ? ' · ' + esc(t.purpose_name) : '')
+              : t.entry_kind === 'resident_contribution'
+                ? esc(t.contributor_name || 'Resident') + (t.contributor_flat ? ' (' + esc(t.contributor_flat) + ')' : '')
+                : t.entry_kind === 'sponsor_contribution'
+                  ? esc(t.sponsor_name || 'Sponsor')
+                  : esc(t.title || t.category || '—');
             return `
               <tr>
                 <td class="text-3" style="font-size: 0.8rem;">${esc(fmtDate(t.created_at))}</td>
@@ -1764,6 +1771,7 @@ const CommunitiesPage = {
             { label: 'Kind', key: 'entry_kind' },
             { label: 'Type', key: 'type' },
             { label: 'Category', key: 'category' },
+            { label: 'Purpose', key: 'purpose_name' },
             { label: 'Title', key: 'title' },
             { label: 'Contributor', key: 'contributor_name' },
             { label: 'Flat', key: 'contributor_flat' },

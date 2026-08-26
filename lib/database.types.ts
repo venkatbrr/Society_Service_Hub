@@ -786,6 +786,7 @@ export type Database = {
           category: string
           collected_by_name: string | null
           contributor_flat_id: string | null
+          contributor_flat_label: string | null
           contributor_name: string | null
           contributor_user_id: string | null
           created_at: string | null
@@ -795,6 +796,7 @@ export type Database = {
           id: string
           image_url: string | null
           payment_method: string | null
+          purpose_label: string | null
           sponsor_name: string | null
           sponsor_note: string | null
           sponsor_phone: string | null
@@ -806,6 +808,7 @@ export type Database = {
           category: string
           collected_by_name?: string | null
           contributor_flat_id?: string | null
+          contributor_flat_label?: string | null
           contributor_name?: string | null
           contributor_user_id?: string | null
           created_at?: string | null
@@ -815,6 +818,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           payment_method?: string | null
+          purpose_label?: string | null
           sponsor_name?: string | null
           sponsor_note?: string | null
           sponsor_phone?: string | null
@@ -826,6 +830,7 @@ export type Database = {
           category?: string
           collected_by_name?: string | null
           contributor_flat_id?: string | null
+          contributor_flat_label?: string | null
           contributor_name?: string | null
           contributor_user_id?: string | null
           created_at?: string | null
@@ -835,6 +840,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           payment_method?: string | null
+          purpose_label?: string | null
           sponsor_name?: string | null
           sponsor_note?: string | null
           sponsor_phone?: string | null
@@ -1892,6 +1898,7 @@ export type Database = {
           created_at: string
           flat_number: string
           grade_class: string
+          grade_level: number | null
           id: string
           institution_type: string
           intents: string[]
@@ -1910,6 +1917,7 @@ export type Database = {
           created_at?: string
           flat_number: string
           grade_class: string
+          grade_level?: number | null
           id?: string
           institution_type?: string
           intents?: string[]
@@ -1928,6 +1936,7 @@ export type Database = {
           created_at?: string
           flat_number?: string
           grade_class?: string
+          grade_level?: number | null
           id?: string
           institution_type?: string
           intents?: string[]
@@ -3981,6 +3990,18 @@ export type Database = {
       }
       normalize_indian_mobile: { Args: { p_value: string }; Returns: string }
       notify_due_services: { Args: never; Returns: number }
+      notify_parent_corner_matches: {
+        Args: { p_entry_id: string; p_target_entry_ids: string[] }
+        Returns: number
+      }
+      parent_corner_intent_label: {
+        Args: { p_intent: string }
+        Returns: string
+      }
+      parse_parent_corner_grade_level: {
+        Args: { p_grade_class: string; p_institution_type: string }
+        Returns: number
+      }
       place_mcn_order: {
         Args: {
           p_buyer_note?: string
@@ -4404,6 +4425,7 @@ export type Database = {
           description: string
           entry_kind: string
           image_url: string
+          purpose_name: string
           recorded_by_name: string
           running_balance: number
           sponsor_name: string

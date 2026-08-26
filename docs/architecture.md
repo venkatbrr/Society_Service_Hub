@@ -191,14 +191,28 @@ Resolution goes through `lib/fundRoles.ts` — see §12. `is_funds_enabled(commu
 
 `list_collection_targets_for_collector(p_event_id)` (defined in migration `20260911000000`) returns all community flats (including resident name, occupant name, and contribution state) — a lead can record a contribution for any flat. A block-scoped collector (`fund_roles.block_id` set) only sees flats in that block; a collector with no block, the treasurer, and leads see the whole community.
 
+### What the money is for — the flat's share vs an "other contribution"
+
+A household pays the flat's share, and the same household may also hand over money for the food, the idol, the prasadam. `event_transactions.purpose_label` (free text, ≤ 60 chars, added by `20260929000000`) is what separates the two:
+
+- **NULL** — the **general contribution**: the flat's share, identified by `contributor_flat_id` (or at least `contributor_user_id`), still exactly one per flat and one per member via `unique_income_contribution_per_flat` / `unique_income_contribution_per_member`. This is what every paid/unpaid roll counts.
+- **Set** — an **other contribution**: an ad-hoc row carrying `contributor_name`, the free-text purpose, an optional free-text `contributor_flat_label`, and **no flat or member key at all**. The trigger forces `contributor_flat_id` and `contributor_user_id` to NULL on this path, which is exactly why the two unique indexes need no purpose predicate — such a row cannot collide with a flat's share in the first place, and cannot mark any flat as paid.
+
+There is deliberately **no purpose catalog**. `20260928000000` shipped one (`fund_contribution_purposes` plus `contribution_purpose_id`) and `20260930000000` dropped it: making a treasurer define "Prasadam" before anyone could give against it, and then walk the block → flat → resident picker, was two setup steps more than the doorstep case can carry. Reporting buckets ad-hoc rows by `lower(purpose_label)` so the same text typed by two collectors lands in one bucket (`purposeBucketKeyOf` in `lib/fundLedger.ts`).
+
+`isGeneralContribution()` in `lib/fundLedger.ts` owns the client-side rule, and **every count meaning "how many flats have paid" must go through it** — an other contribution is real money in the fund's total but is not a flat's share. Server-side the same split is free: coverage RPCs key off `contributor_flat_id` / `contributor_user_id`, which ad-hoc rows never set.
+
+Ad-hoc rows are recordable by anyone who may record a contribution (collector, treasurer, lead) — unlike an outside sponsor, which stays the lead's call. A block-scoped collector is not block-restricted here because there is no flat to scope against; the row adds money under a free-text name and marks nothing as paid.
+
 ### Who paid — member vs outside sponsor
 
-Every income row names its payer, and there are exactly two ways to do that (migration `20260825000000`, enforced by the `event_transactions_payer_shape` check and `event_transaction_guard`):
+Every income row names its payer, and there are exactly three ways to do that (migrations `20260825000000` and `20260930000000`, enforced by the `event_transactions_payer_shape` check and `event_transaction_guard`):
 
-- **Member** — `contributor_user_id` set, sponsor columns null. Recordable by a collector, treasurer, or lead. `unique_income_contribution_per_member` gives each member **exactly one contribution row per fund** — deliberately, so a fund reads as a paid/unpaid roll rather than a running account. Correcting an amount means editing that row.
+- **Member** — `contributor_user_id` set, sponsor columns and `purpose_label` null. Recordable by a collector, treasurer, or lead. `unique_income_contribution_per_member` gives each member **exactly one general contribution row per fund** — deliberately, so a fund reads as a paid/unpaid roll rather than a running account. Correcting an amount means editing that row.
+- **Other contribution** — `purpose_label` and `contributor_name` set, no flat and no member. Any collector, treasurer, or lead may record one; see "What the money is for" above.
 - **Outside sponsor** — `sponsor_name` set (required, ≤ 80 chars), `contributor_user_id` null, with optional `sponsor_phone` and `sponsor_note`. **Only a president / vice president / platform admin** may record one; a treasurer or collector attempting it is rejected by the trigger. Sponsors sit outside the unique index, so the same sponsor may contribute more than once.
 
-There is no third case: an income row with neither payer is rejected, so **money can never be recorded anonymously**.
+There is no fourth case: an income row naming no payer at all is rejected, so **money can never be recorded anonymously**.
 
 `amount` carries a money shape rather than a bare `> 0` check: the trigger rounds to 2 decimal places and rejects anything above **10,00,000 per transaction**, with `event_transactions_amount_bounds` as a direct-SQL backstop. Both constraints are `NOT VALID`, so rows predating the migration are grandfathered rather than rewritten.
 
@@ -269,7 +283,7 @@ Both views are **`WITH (security_invoker = true)`**. A plain Postgres view runs 
 | Table | Key columns |
 |-------|-------------|
 | `events` | A fund. `title`, `description`, `event_date`, `goal_amount`, `is_closed`, `fund_scope`, `group_id`, `partnership_id` |
-| `event_transactions` | `event_id`, `type` (`income`/`expense`), `amount`, `title`, `description`, `category`, `contributor_user_id` (member income only), `contributor_flat_id` (flat money came from), `contributor_name` (payer snapshot name), `sponsor_name` / `sponsor_phone` / `sponsor_note` (outside-sponsor income only), `image_url`, `payment_method` (`cash`/`online`, **nullable** — NULL means not recorded, never assume cash), `collected_by_name` (who physically took the money; the literal `Self` means the resident paid directly, NULL means not captured) |
+| `event_transactions` | `event_id`, `type` (`income`/`expense`), `amount`, `title`, `description`, `category`, `contributor_user_id` (member income only), `contributor_flat_id` (flat money came from), `contributor_name` (payer snapshot name), `sponsor_name` / `sponsor_phone` / `sponsor_note` (outside-sponsor income only), `image_url`, `payment_method` (`cash`/`online`, **nullable** — NULL means not recorded, never assume cash), `collected_by_name` (who physically took the money; the literal `Self` means the resident paid directly, NULL means not captured), `purpose_label` + `contributor_flat_label` (free text, ad-hoc "other contribution" income only — a row with `purpose_label` set is never a flat's share) |
 | `fund_roles` | `event_id`, `user_id`, `role`, `block_id` (nullable = whole community), `assigned_by` |
 | `funds_access_requests` | `community_id`, `requested_by`, `contact_name`, `contact_phone`, `purpose`, `designated_lead_id`, `status`, `rejection_reason`, `decided_by`, `decided_at` |
 | `funds_access_revocations` | Platform-admin revocation audit trail |
@@ -372,7 +386,7 @@ Migration `20260824000000` fixed the app's code path but left the database open:
 
 | Table | Key columns |
 |-------|-------------|
-| `mcn_parent_corner` | `student_name`, `institution_type` (`school`/`college`/`preschool`), `school_name`, `school_catalog_id` (nullable `TEXT`, no FK — set when the parent picked from `data/westHyderabadSchools.ts` via `components/SchoolPicker.tsx` rather than typing free text), `board`, `grade_class`, `parent_name`, `flat_number`, `contact_phone`, `intents` (`TEXT[]`, GIN-indexed — structured tags: `carpool`, `study_group`, `homework_help`, `school_info`, `activities`, `playdate`, `other`), `notes`. Constrained by `mcn_parent_corner_text_lengths` (`student_name` ≤60, `school_name` ≤100, `board` ≤40, `grade_class` ≤40, `parent_name` ≤60, `flat_number` ≤12, `contact_phone` ≤15, `notes` ≤300) and `mcn_parent_corner_intents_valid` (`<= 7` items from the allowed set). |
+| `mcn_parent_corner` | `student_name`, `institution_type` (`school`/`college`/`preschool`), `school_name`, `school_catalog_id` (nullable `TEXT`, no FK — set when the parent picked from `data/westHyderabadSchools.ts` via `components/SchoolPicker.tsx` rather than typing free text), `board`, `grade_class`, `grade_level` (nullable `SMALLINT`, `-3..17` — numeric rung behind the free-text `grade_class` so entries can be banded and compared: `-3` playgroup, `-2` nursery, `-1` LKG, `0` UKG, `1..12` school class, `13..17` college year `+12`. `NULL` when unparseable; display always uses `grade_class`. Indexed with `community_id` as `mcn_parent_corner_match_idx`), `parent_name`, `flat_number`, `contact_phone`, `intents` (`TEXT[]`, GIN-indexed — structured tags: `carpool`, `study_group`, `homework_help`, `school_info`, `activities`, `playdate`, `other`), `notes`. Constrained by `mcn_parent_corner_text_lengths` (`student_name` ≤60, `school_name` ≤100, `board` ≤40, `grade_class` ≤40, `parent_name` ≤60, `flat_number` ≤12, `contact_phone` ≤15, `notes` ≤300) and `mcn_parent_corner_intents_valid` (`<= 7` items from the allowed set). |
 | `schools` | `name`, `level`, `syllabus`, `distance`, `fee_range`, `facilities` (`TEXT[]`), `area_locality`, `address`, `contact_phone`, `website`, `google_maps_link`, `google_rating`, plus trigger-maintained `avg_academics`, `avg_teachers`, `avg_infrastructure`, `avg_sports_activities`, `avg_safety`, `avg_transport`, `avg_value`, `avg_happiness`, `review_count` |
 | `school_reviews` | `school_id` (accepts text IDs for curated schools), `child_grade`, eight `*_score` columns, eight optional `*_comment` columns, `overall_comment` |
 | `mcn_posts` | `kind` (`business`/`borrow`), `title`, `description`, `contact_hint`, `is_available` |
@@ -476,6 +490,10 @@ A column added to `profiles` must be added to that migration's `GRANT` **and** t
 
 `place_mcn_order(p_listing_id, p_items, p_buyer_phone, p_buyer_note, p_order_id)` — **the atomic way to place or edit a business listing order.** Inserts/updates `mcn_orders` and `mcn_order_items` in a single transaction under `enforce_mcn_order_immutable_fields` trigger, ensuring consistency and preventing owner self-orders. ⚠️ **No caller since 2026-08-09** — in-app business ordering was hidden and the function is dormant, not dropped. If ordering returns, route it back through here rather than writing to the tables directly. See [`disabled-features.md`](disabled-features.md) §2b.
 
+`notify_parent_corner_matches(p_entry_id, p_target_entry_ids)` *(added `20260826151058`)* — sends `parent_corner_match` to the owners of the given Parent Corner entries. `SECURITY DEFINER` because `notifications` has no INSERT policy; raises unless `p_entry_id` belongs to `auth.uid()`, caps recipients at 25, and re-checks community, intent overlap and the `parent_corner` mute on the server. **The notification body is composed inside the function from stored rows, never passed in** — a caller-supplied body would let any resident write arbitrary text into a neighbour's feed. Deduped to one nudge per source entry per recipient per 30 days, so the returned count can legitimately be lower than the number requested. `EXECUTE` revoked from `anon` explicitly: `REVOKE ... FROM public` does not undo Supabase's default privileges. Match *finding* is a plain client query under the caller's own RLS (`lib/parentCorner.ts`) — only the notify step needs elevation.
+
+`parse_parent_corner_grade_level(p_grade_class, p_institution_type)` — best-effort read of a free-text class label onto the `grade_level` ladder, used for the one-time backfill. Pre-school keywords are tested before digits so `Nursery 2` lands on nursery rather than Class 2. `lib/parentCorner.ts` mirrors it in TypeScript so the add form preselects the same rung. `parent_corner_intent_label(p_intent)` — intent id → human phrase, used only in the notification copy above.
+
 `get_mcn_carpool_seats(p_carpool_id)` — returns `(total_seats INT, booked_seats INT, remaining_seats INT)` dynamically derived from accepted requests.
 `get_mcn_carpool_passengers(p_carpool_id)` — returns `(passenger_name TEXT, passenger_flat TEXT, seats INT)` for society co-passenger roster visibility (excludes phone numbers).
 
@@ -495,7 +513,7 @@ All are `SECURITY DEFINER` and raise unless `is_platform_admin(auth.uid())`. **T
 
 `platform_get_communities_overview()` *(added `20260910000200`)* — one row per community. Replaces a console-side read of every `profiles` row on the platform that existed only to count members per card.
 
-`platform_get_fund_ledger(p_event_id)` *(added `20260910000200`)* — the full `event_transactions` ledger with a running balance, classifying each row as `resident_contribution` / `sponsor_contribution` / `other_income` / `expense`. `platform_get_community_funds`'s `contributions` array does not make that distinction and renders sponsor income as a nameless "Resident".
+`platform_get_fund_ledger(p_event_id)` *(added `20260910000200`, extended `20260930000000`)* — the full `event_transactions` ledger with a running balance, classifying each row as `resident_contribution` / `other_contribution` / `sponsor_contribution` / `other_income` / `expense`, and carrying `purpose_name` (the free-text `purpose_label`). `contributor_name` and `contributor_flat` fall back to the row's snapshot columns when the profile join finds nothing, so ad-hoc rows and unregistered flat payers are no longer nameless. `platform_get_community_funds`'s `contributions` array does not make that distinction and still renders sponsor income as a nameless "Resident".
 
 `platform_get_community_residents(p_community_id)` *(added `20260918000100`)* / `platform_get_profiles_contact(p_ids)` *(added `20260918000200`)* — the console's resident list and its requester-contact lookup. Both exist for a different reason than the rest of this section: `20260918000000` revoked table-level `SELECT` on `profiles` and granted the columns back individually **without `email`**, and a missing *column* grant fails the entire statement rather than omitting the column. The two direct reads that still named `email` therefore died with `permission denied for table profiles` — `#communities` could not list residents at all, and `#approvals` could not resolve requesters. A platform admin is still entitled to see emails, so the fix routes through `SECURITY DEFINER` rather than widening the grant that keeps residents from reading each other's addresses.
 
@@ -530,11 +548,11 @@ All are `SECURITY DEFINER` and raise unless `is_platform_admin(auth.uid())`. **T
 | `on_service_visit_rescheduled` | `service_visits` | UPDATE of date/slot | Emit `visit_rescheduled` notifications |
 | `user_services_compute_fields_trigger` | `user_services` | BEFORE INS/UPD | Recompute `next_due_on`, clear `notified_at` |
 | `fund_role_guard` | `fund_roles` | INS/UPD/DEL | Funds-enabled gate, treasurer cap (1), collector caps (global + per block) |
-| `event_transaction_guard` | `event_transactions` | INS/UPD | Funds-enabled gate, amount rounding + bounds, payer resolution (member vs sponsor), block-scope check for block in-charges |
+| `event_transaction_guard` | `event_transactions` | INS/UPD | Funds-enabled gate, amount rounding + bounds, payer resolution (member vs other contribution vs sponsor), block-scope check for block in-charges |
 | `event_transaction_occupant_sync` | `event_transactions` | AFTER INS/DEL/UPD OF `contributor_name`, `contributor_flat_id` | Keeps `community_flats.occupant_name` in step with the ledger: stamps the payer's name on the flat a contribution lands on, and clears it from the flat a contribution leaves or is deleted from — but only when that row is what put the name there and no other income row on the old flat still carries it. `SECURITY DEFINER` |
 | `profile_block_guard` | `profiles` | BEFORE INS/UPD | `block_id` must belong to the same community |
 | `fund_role_block_guard` | `fund_roles` | BEFORE INS/UPD | `block_id` must belong to the fund's community |
-| school-review aggregate trigger | `school_reviews` | INS/UPD/DEL | Recompute `schools.avg_*` and `review_count` |
+| `on_school_review_change` | `school_reviews` | INS/UPD/DEL | Recompute `schools.avg_*` and `review_count` via `update_school_aspect_averages()`. Only fires the `UPDATE` when `school_id` parses as a UUID — curated catalog ids (`wh_school_12`) have no `schools` row, and those averages are computed client-side in `app/mcn/schools/[id].tsx` instead. `SECURITY DEFINER`, `search_path` pinned and `EXECUTE` revoked from `anon`/`authenticated` in `20260927000000` |
 | `enforce_mcn_item_max_quantity_trigger` | `mcn_preorder_order_items` | AFTER INS/UPD | Reject orders exceeding `mcn_preorder_items.max_quantity`. `SECURITY DEFINER` |
 | `enforce_mcn_item_max_quantity_order_trigger` | `mcn_preorder_orders` | AFTER UPD OF `status` | Re-check item caps when an order returns to a counted status. `SECURITY DEFINER` |
 | `enforce_mcn_drop_capacity_trigger` | `mcn_preorder_order_items` | AFTER INS/UPD | Reject orders exceeding `mcn_preorder_drops.max_orders`. `SECURITY DEFINER` |
@@ -594,14 +612,18 @@ RLS is enabled on every active table.
 | `mcn_carpools` | Community read; creator or lead writes |
 | `mcn_carpool_requests` | Rider or ride host read; rider inserts; either side updates |
 | `mcn_parent_corner` | Community read; owner or lead writes (scoped to `community_id = get_user_community_id()`) |
-| `mcn_posts` | Community read; owner or lead writes |
-| `schools`, `school_reviews` | Community read; author writes own review. Leads and platform admins may also edit/delete any row (`20260822000000`). |
+| `mcn_posts` | Community read; owner or lead writes (scoped to `community_id = get_user_community_id()`, `20260927000000`) |
+| `schools`, `school_reviews` | Community read; author writes own review. Leads and platform admins may also edit/delete any row (`20260822000000`), scoped to their own community since `20260927000000`. |
 
 
 **Uniform MCN owner-or-lead rule** — `mcn_preorder_drops`, `mcn_listings`, `mcn_carpools`, `mcn_parent_corner`, and `mcn_posts` allow the write when
 `owner = auth.uid() OR public.is_community_lead(auth.uid()) OR public.is_platform_admin(auth.uid())`.
 
-Applies to DELETE (`20260814000000`, corrected to `is_platform_admin` in `20260822000100`) and to UPDATE (`20260822000000`, which also repointed `schools_update`/`schools_delete` and `school_reviews_delete`). The original DELETE rule used `is_admin()`, which is only an alias for `is_community_lead()` and therefore gave the platform admin no override at all. Note: `mcn_parent_corner` UPDATE and DELETE policies (`20260831000000`) additionally pin `community_id = get_user_community_id()` in both `USING` and `WITH CHECK` for owner/lead branches, making `mcn_parent_corner` strictly community-scoped. This community pin has not yet been applied to its four sibling MCN tables.
+Applies to DELETE (`20260814000000`, corrected to `is_platform_admin` in `20260822000100`) and to UPDATE (`20260822000000`, which also repointed `schools_update`/`schools_delete` and `school_reviews_delete`). The original DELETE rule used `is_admin()`, which is only an alias for `is_community_lead()` and therefore gave the platform admin no override at all. Note: `mcn_parent_corner` UPDATE and DELETE policies (`20260831000000`) additionally pin `community_id = get_user_community_id()` in both `USING` and `WITH CHECK` for owner/lead branches, making `mcn_parent_corner` strictly community-scoped. `20260927000000` extended the same pin to `schools`, `school_reviews`, and `mcn_posts`.
+
+**Why the pin matters, and where it is still missing.** `is_community_lead()` answers *"is this user a president or vice-president **anywhere**"*, not *"of this row's community"*. An unpinned owner-or-lead policy therefore lets a president of society A write to society B's rows by id — the SELECT policy hides them, but UPDATE and DELETE do not read through it. Separately, an UPDATE policy with `USING` and **no** `WITH CHECK` never re-checks the post-update row, so a row's owner can rewrite `community_id` or hand the row to another user and still pass. The platform-admin override must sit **outside** the pin: platform admins have `community_id IS NULL`, so `get_user_community_id()` returns `NULL` for them and an inside-the-pin override would silently lock them out.
+
+Still unpinned, and each needs its own change set: `mcn_listings`, `mcn_carpools`, `mcn_preorder_drops`, `mcn_preorder_items`, `mcn_products`, `mcn_carpool_requests`. Of those, `mcn_carpool_requests`, `mcn_preorder_drops`, `mcn_preorder_items`, and `mcn_products` also still lack `WITH CHECK` on UPDATE. They were left alone in `20260927000000` deliberately — they back **live** features, and changing their write rules is a production risk that does not belong in a hidden-feature fix.
 
 Pending or removed users are blocked from community content even when a stale `community_id` remains on the profile.
 
@@ -614,6 +636,7 @@ Migration `20260616000001` renamed the roles but left **12 call sites still comp
 | `20260822000000` | Repointed all 12 dead checks — 7 RLS policies (`schools_update/delete`, `school_reviews_delete`, `mcn_posts_update`, `mcn_carpools_update`, `mcn_parent_corner_update`, `mcn_preorder_drops_update`) and 5 functions (`platform_soft_remove_resident`, `community_lead_remove_resident`, `validate_event_transaction`, `handle_provider_report_notification`, `request_community_partnership`) |
 | `20260822000100` | Replaced the `is_admin()` alias with `is_platform_admin()` on the 5 MCN delete policies, giving the platform admin a real override |
 | `20260822000200` | Dropped `community_lead` / `community_admin` from `app_role_type` via type swap |
+| `20260927000000` | Community-scoped the UPDATE/DELETE policies on `schools`, `school_reviews`, and `mcn_posts` and gave the UPDATE policies the `WITH CHECK` they never had; pinned `update_school_aspect_averages()`'s `search_path` and revoked its `EXECUTE` from `anon`/`authenticated`. Repointing in `20260822000000` fixed *who* could write but left *whose rows* unbounded. |
 
 **Behavior that was broken and is now restored:**
 
@@ -651,12 +674,13 @@ Migration `20260616000001` renamed the roles but left **12 call sites still comp
 
 On arrival: prepend to local state → increment `unreadCount` → schedule a local device notification on iOS/Android.
 
-**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `community_lead_removed` · `funds_access_revoked` · `new_community_request` · `provider_reported` · `community_event_posted` · `community_event_cancelled` · `drop_posted` · `preorder_received` · `parent_corner_posted`
+**Live types**: `new_visit` · `visit_rescheduled` · `community_approved` · `community_rejected` · `removed_from_community` · `service_reminder` · `funds_access_requested` · `funds_access_approved` · `funds_access_rejected` · `community_lead_appointed` · `community_lead_removed` · `funds_access_revoked` · `new_community_request` · `provider_reported` · `community_event_posted` · `community_event_cancelled` · `drop_posted` · `preorder_received` · `parent_corner_posted` · `parent_corner_match`
 
 > `community_event_posted` / `community_event_cancelled` carry `data.event_id` and `data.category`, and `app/notifications.tsx` deep-links them to `/events/[id]`.
 > `drop_posted` routes to `/mcn/drops/[drop_id]` for non-muted community members.
 > `preorder_received` routes to host dashboard `/mcn/drops/manage/[drop_id]`.
 > `parent_corner_posted` routes to `/mcn/parents` for non-muted community members.
+> `parent_corner_match` also routes to `/mcn/parents`, but is **not** a broadcast — it is sent only to the specific parents a neighbour selected in the match sheet, via `notify_parent_corner_matches()`. It respects the same `parent_corner` mute channel.
 
 > `community_lead_appointed` / `community_lead_removed` are notification **type strings**, unrelated to the removed `community_lead` role value.
 >

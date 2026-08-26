@@ -10,16 +10,23 @@ import { Verandah } from '../../constants/Colors';
 import { VerandahLayout } from '../../constants/Verandah';
 import { Tables } from '../../lib/database.types';
 import {
+    GENERAL_PURPOSE_LABEL,
     METHOD_FILTERS,
     MethodFilter,
+    PurposeFilter,
     collectedByOf,
     contributorFlatIdOf,
+    contributorFlatLabelOf,
+    isGeneralContribution,
     countByMethod,
     formatCollectedBy,
     formatPaymentMethod,
     groupContributionsByBlock,
     matchesMethod,
+    matchesPurpose,
     paymentMethodOf,
+    purposeBucketKeyOf,
+    purposeLabelOf,
     sponsorNameOf,
 } from '../../lib/fundLedger';
 import { goBackSmart } from '../../lib/navigation';
@@ -30,8 +37,10 @@ export default function FundContributionsScreen() {
   const router = useRouter();
   const backRoute = `/funds/contributions?event_id=${eventId ?? ''}`;
   const [methodFilter, setMethodFilter] = useState<MethodFilter>('all');
+  const [purposeFilter, setPurposeFilter] = useState<PurposeFilter>('all');
   const {
-    fund, income, flats, flatMeta, flatLabels, profileNames, profileFlats, permissions, loading,
+    fund, income, flats, flatMeta, flatLabels,
+    profileNames, profileFlats, permissions, loading,
   } = useFundLedger(eventId, backRoute);
 
   if (loading || !fund) {
@@ -42,26 +51,63 @@ export default function FundContributionsScreen() {
     );
   }
 
-  const visible = income.filter((t) => matchesMethod(t, methodFilter));
+  const visible = income.filter((t) => matchesMethod(t, methodFilter) && matchesPurpose(t, purposeFilter));
   const groups = groupContributionsByBlock(visible, flatMeta);
   const showGroupHeaders = groups.some((g) => g.isBlock);
   const counts = countByMethod(income);
-  const isFiltered = methodFilter !== 'all';
+  const isFiltered = methodFilter !== 'all' || purposeFilter !== 'all';
   const filterLabel = METHOD_FILTERS.find((f) => f.key === methodFilter)?.label ?? 'All';
   const visibleTotal = visible.reduce((sum, t) => sum + Number(t.amount), 0);
+
+  /**
+   * A chip per bucket the fund actually holds money in: the general
+   * contribution first, then each free-text purpose. Derived from the rows
+   * rather than a catalog, so the chips are exactly what was collected.
+   */
+  const purposeBuckets = income.reduce((acc, t) => {
+    const key = purposeBucketKeyOf(t);
+    const entry = acc.get(key);
+    if (entry) entry.count += 1;
+    else acc.set(key, { label: purposeLabelOf(t) ?? GENERAL_PURPOSE_LABEL, count: 1 });
+    return acc;
+  }, new Map<string, { label: string; count: number }>());
+  const generalBucket = purposeBuckets.get('general');
+  const purposeFilters: { key: PurposeFilter; label: string; count: number }[] = [
+    { key: 'all', label: 'All', count: income.length },
+    ...(generalBucket ? [{ key: 'general' as PurposeFilter, ...generalBucket }] : []),
+    ...Array.from(purposeBuckets.entries())
+      .filter(([key]) => key !== 'general')
+      .sort(([, a], [, b]) => b.count - a.count)
+      .map(([key, bucket]) => ({ key: key as PurposeFilter, label: bucket.label, count: bucket.count })),
+  ];
+  // One bucket is not a choice — the chips only earn their row once the fund
+  // is actually collecting for more than one thing.
+  const showPurposeFilters = purposeFilters.length > 2;
+  const flatsWithGeneral = new Set(
+    income
+      .filter((t) => isGeneralContribution(t) && contributorFlatIdOf(t))
+      .map((t) => contributorFlatIdOf(t) as string)
+  ).size;
 
   const renderRow = (transaction: Tables<'event_transactions'>) => {
     const sponsorName = sponsorNameOf(transaction);
     const canEditRow = sponsorName ? permissions.canManageTreasurers : permissions.canAddContribution;
     const flatId = contributorFlatIdOf(transaction);
+    // An other contribution carries a free-text flat, if the collector noted
+    // one at all — it never resolves against the flat inventory.
     const flatLabel = flatId
       ? flatLabels.get(flatId)
       : transaction.contributor_user_id
         ? profileFlats.get(transaction.contributor_user_id)
-        : null;
+        : contributorFlatLabelOf(transaction);
+
+    const purposeLabel = purposeLabelOf(transaction);
 
     const meta = [
       sponsorName ? 'Outside sponsor' : flatLabel ? `Flat ${flatLabel}` : null,
+      // Only other contributions say what they were for; a flat's share is the
+      // default and naming it on every row would be noise.
+      purposeLabel ? `For ${purposeLabel}` : null,
       formatPaymentMethod(paymentMethodOf(transaction)) ?? 'Not recorded',
       formatCollectedBy(collectedByOf(transaction)),
       new Date(transaction.created_at ?? Date.now()).toLocaleDateString(),
@@ -136,11 +182,32 @@ export default function FundContributionsScreen() {
             })}
           </View>
 
+          {showPurposeFilters ? (
+            <View style={styles.filterRow}>
+              {purposeFilters.map((filter) => {
+                const isActive = purposeFilter === filter.key;
+                return (
+                  <TouchableOpacity
+                    key={String(filter.key)}
+                    style={[styles.filterChip, isActive ? styles.filterChipActive : null]}
+                    onPress={() => setPurposeFilter(filter.key)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isActive }}
+                  >
+                    <Text style={[styles.filterChipText, isActive ? styles.filterChipTextActive : null]}>
+                      {filter.label} {filter.count}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : null}
+
           <View style={styles.tally}>
             <Text style={styles.tallyText}>
               {isFiltered
                 ? `${visible.length} of ${income.length} shown`
-                : `${income.length} of ${flats.length} flats collected`}
+                : `${flatsWithGeneral} of ${flats.length} flats collected`}
             </Text>
             <Rupees amount={visibleTotal} size="sm" tone="in" />
           </View>
@@ -151,11 +218,10 @@ export default function FundContributionsScreen() {
                 <View style={styles.groupHeader}>
                   <Text style={styles.groupTitle}>{group.title}</Text>
                   <View style={styles.groupHeaderMeta}>
+                    {/* Entries, not flats: one flat can now hold its general
+                        contribution plus any number of offerings. */}
                     <Text style={styles.groupMeta}>
-                      {group.rows.length}{' '}
-                      {group.isBlock
-                        ? group.rows.length === 1 ? 'flat' : 'flats'
-                        : group.rows.length === 1 ? 'entry' : 'entries'}
+                      {group.rows.length} {group.rows.length === 1 ? 'entry' : 'entries'}
                     </Text>
                     <Rupees amount={group.total} size="sm" tone="in" />
                   </View>
@@ -167,7 +233,11 @@ export default function FundContributionsScreen() {
 
           {visible.length === 0 ? (
             <Text style={styles.emptyNote}>
-              {isFiltered ? `No ${filterLabel.toLowerCase()} collections.` : 'No collections logged yet.'}
+              {purposeFilter !== 'all'
+                ? 'No collections match these filters.'
+                : isFiltered
+                  ? `No ${filterLabel.toLowerCase()} collections.`
+                  : 'No collections logged yet.'}
             </Text>
           ) : null}
         </View>
