@@ -27,6 +27,7 @@ import { SUGGESTED_PURPOSE_LABELS } from '../../lib/fundLedger';
 import { goBackSmart, replaceTracked } from '../../lib/navigation';
 import {
     MAX_CONTRIBUTOR_FLAT_LABEL_LENGTH,
+    MAX_CONTRIBUTOR_PHONE_LENGTH,
     MAX_PURPOSE_LABEL_LENGTH,
     MAX_SPONSOR_NAME_LENGTH,
     MAX_SPONSOR_NOTE_LENGTH,
@@ -129,12 +130,14 @@ export default function AddTransactionScreen() {
   const [showBlockPrompt, setShowBlockPrompt] = useState(false);
   const [selectedMyBlock, setSelectedMyBlock] = useState<string | null>(myBlockId ?? null);
   const [searchMember, setSearchMember] = useState('');
-  // Three ways money reaches a fund: a flat's share (picked off the collection
-  // grid), an ad-hoc contribution from someone who names what it was for, and
-  // an outside sponsor — the last still the lead's call (20260825000000).
+  // Two ways to record money: a flat's share (picked off the collection grid)
+  // or an ad-hoc contribution from someone who names what it was for. 'sponsor'
+  // is still a reachable mode — rows written before the tabs merged open in it
+  // for editing — but the form no longer offers it for a new entry.
   const [payerMode, setPayerMode] = useState<'member' | 'other' | 'sponsor'>('member');
   const [otherName, setOtherName] = useState('');
   const [otherFlatLabel, setOtherFlatLabel] = useState('');
+  const [otherPhone, setOtherPhone] = useState('');
   const [purposeLabel, setPurposeLabel] = useState('');
   // Cash is the default because that is how a collector walking the block is
   // actually handed money. Applies to expenses too — see 20260919000000.
@@ -216,6 +219,7 @@ export default function AddTransactionScreen() {
               setPurposeLabel(existingPurposeLabel);
               setOtherName(existingTx.contributor_name || '');
               setOtherFlatLabel(((existingTx as any).contributor_flat_label as string | null) ?? '');
+              setOtherPhone(((existingTx as any).contributor_phone as string | null) ?? '');
               setSelectedTarget(null);
             } else {
               setPayerMode('member');
@@ -294,19 +298,38 @@ export default function AddTransactionScreen() {
   );
 
   /**
-   * The payer choices for this caller. Anyone who may record a contribution can
-   * record an "other" one — it is the ordinary case of someone handing over
-   * money at the door for something specific. Sponsors stay the lead's call.
+   * Two ways to record money, and anyone who may add a contribution gets both.
+   *
+   * There is no third "Outside sponsor" tab: once Other contribution existed, a
+   * collector wanting to log "Sharma Electricals — for the lighting" simply
+   * typed it there, so the president-only rule on sponsor rows was guarding a
+   * door with no wall beside it. The sponsor shape stays a legal payer shape —
+   * existing rows still read as "Outside sponsor" and open here for editing —
+   * it is just not something the form offers to create any more.
    */
-  // Short labels so all three fit one segmented row on a phone; the notice card
-  // above and the field label below carry the full meaning.
-  const payerModes: { key: 'member' | 'other' | 'sponsor'; label: string; accessibilityLabel: string }[] = [
-    { key: 'member', label: 'General', accessibilityLabel: 'General contribution' },
-    { key: 'other', label: 'Other', accessibilityLabel: 'Other contribution' },
-    ...(canRecordSponsor
-      ? [{ key: 'sponsor' as const, label: 'Sponsor', accessibilityLabel: 'Outside sponsor' }]
-      : []),
+  const payerModes: { key: 'member' | 'other'; label: string }[] = [
+    { key: 'member', label: 'General contribution' },
+    { key: 'other', label: 'Other contribution' },
   ];
+
+  /** Empty means the form is self-explanatory and the notice card is skipped. */
+  const noticeText = (() => {
+    if (transaction_id) {
+      return 'You are editing this transaction. You can modify the amount, title, and notes.';
+    }
+    if (type === 'expense') {
+      return permissions.canAddExpense
+        ? 'Add the expense name, amount, and optional note for transparent bookkeeping.'
+        : 'Only treasurers can add expenses.';
+    }
+    if (!permissions.canAddContribution) {
+      return 'Only collectors or treasurers can add contributions.';
+    }
+    if (payerMode === 'other') {
+      return 'Money given for something specific — by a resident, or by a shop or business outside the society. Name who gave it and what it was for; no flat needs to be picked.';
+    }
+    return '';
+  })();
 
   const blocks = useMemo(() => {
     const blockMap = new Map<string, string>();
@@ -591,6 +614,7 @@ export default function AddTransactionScreen() {
               // carries no flat key — its flat, if given, is a free-text note.
               purpose_label: isOtherContribution ? purposeLabel.trim() : null,
               contributor_flat_label: isOtherContribution ? otherFlatLabel.trim() || null : null,
+              contributor_phone: isOtherContribution ? otherPhone.trim() || null : null,
               contributor_user_id: isSponsorContribution || isOtherContribution ? null : selectedTarget?.resident_user_id,
               contributor_flat_id: isSponsorContribution || isOtherContribution ? null : selectedTarget?.flat_id,
               contributor_name: isSponsorContribution ? null : payerName,
@@ -611,6 +635,7 @@ export default function AddTransactionScreen() {
               category: 'Expense',
               purpose_label: null,
               contributor_flat_label: null,
+              contributor_phone: null,
               contributor_user_id: null,
               contributor_flat_id: null,
               contributor_name: null,
@@ -747,24 +772,16 @@ export default function AddTransactionScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.notice, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <InfoCircle size={16} color={colors.textMuted} style={{ marginRight: 6 }} />
-            <Text style={[styles.noticeText, { color: colors.textMuted }]}>
-              {transaction_id
-                ? 'You are editing this transaction. You can modify the amount, title, and notes.'
-                : type === 'income'
-                  ? payerMode === 'sponsor'
-                    ? 'Recording money from outside the community. Name the sponsor so the entry stays traceable.'
-                    : payerMode === 'other'
-                      ? 'Money given for something specific. Name who gave it and what it was for — no flat needs to be picked.'
-                      : permissions.canAddContribution
-                        ? 'Select a resident, add the received amount, and they will appear as paid in the fund.'
-                        : 'Only collectors or treasurers can add contributions.'
-                  : permissions.canAddExpense
-                    ? 'Add the expense name, amount, and optional note for transparent bookkeeping.'
-                    : 'Only treasurers can add expenses.'}
-            </Text>
-          </View>
+          {/* Only shown when there is something worth saying. Recording a
+              flat's share needs no explanation — the tab, the grid and the
+              PAID badges already say it — and an empty notice box is worse
+              than no notice box. */}
+          {noticeText ? (
+            <View style={[styles.notice, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <InfoCircle size={16} color={colors.textMuted} style={{ marginRight: 6 }} />
+              <Text style={[styles.noticeText, { color: colors.textMuted }]}>{noticeText}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Amount</Text>
@@ -822,7 +839,6 @@ export default function AddTransactionScreen() {
                         style={[styles.tab, isSelected ? styles.tabActiveIncome : {}]}
                         onPress={() => setPayerMode(mode.key)}
                         accessibilityRole="button"
-                        accessibilityLabel={mode.accessibilityLabel}
                         accessibilityState={{ selected: isSelected }}
                       >
                         <Text
@@ -849,7 +865,7 @@ export default function AddTransactionScreen() {
                 <>
                   <TextInput
                     style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-                    placeholder="Who gave it, e.g. Ramesh Kumar"
+                    placeholder="e.g. Ramesh Kumar, or Sharma Electricals"
                     placeholderTextColor={colors.textMuted}
                     value={otherName}
                     onChangeText={setOtherName}
@@ -869,6 +885,20 @@ export default function AddTransactionScreen() {
                   <Text style={[styles.purposeHint, { color: colors.textMuted }]}>
                     Just a note of where the money came from. It does not mark that flat as having paid its share.
                   </Text>
+
+                  {/* Kept from the old sponsor form: the number you need to
+                      thank the shop that paid for the lighting, or ask them
+                      again next year. Never shown on the contributions list. */}
+                  <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>Phone (optional)</Text>
+                  <TextInput
+                    style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                    placeholder="Contact number"
+                    placeholderTextColor={colors.textMuted}
+                    value={otherPhone}
+                    onChangeText={setOtherPhone}
+                    keyboardType="phone-pad"
+                    maxLength={MAX_CONTRIBUTOR_PHONE_LENGTH}
+                  />
 
                   <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>Contributing for</Text>
                   <TextInput

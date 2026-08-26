@@ -788,6 +788,7 @@ export type Database = {
           contributor_flat_id: string | null
           contributor_flat_label: string | null
           contributor_name: string | null
+          contributor_phone: string | null
           contributor_user_id: string | null
           created_at: string | null
           created_by: string
@@ -810,6 +811,7 @@ export type Database = {
           contributor_flat_id?: string | null
           contributor_flat_label?: string | null
           contributor_name?: string | null
+          contributor_phone?: string | null
           contributor_user_id?: string | null
           created_at?: string | null
           created_by: string
@@ -832,6 +834,7 @@ export type Database = {
           contributor_flat_id?: string | null
           contributor_flat_label?: string | null
           contributor_name?: string | null
+          contributor_phone?: string | null
           contributor_user_id?: string | null
           created_at?: string | null
           created_by?: string
