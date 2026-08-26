@@ -206,7 +206,16 @@ Platform approval of a funds request enables funds **and** promotes the designat
 
 Community info includes a join-code tile with an Invite-neighbors share action.
 
-**Funds domain** (`/funds/*`): funds are `events` rows; ledger lines are `event_transactions` (`type` of income/expense); role grants are `fund_roles`. Exactly one treasurer per fund (enforced by migration `20260813000000`). Collectors and treasurers can edit existing contributions. Community leads can close a fund (`is_closed`), blocking further writes. In block-enabled communities, collector assignment must pick a block, and contributor pickers come from `list_eligible_contributors_for_collector()` so block in-charges only see their own residents.
+**Funds domain** (`/funds/*`): funds are `events` rows; ledger lines are `event_transactions` (`type` of income/expense); role grants are `fund_roles`. Exactly one treasurer per fund (enforced by migration `20260813000000`). Collectors and treasurers can edit existing contributions. Community leads can close a fund (`is_closed`), blocking further writes. In block-enabled communities, collector assignment must pick a block, and the collection grid comes from `list_collection_targets_for_collector()` so block in-charges only see flats in their own block. *(`list_eligible_contributors_for_collector()` is its superseded predecessor — still present in the database, no longer called by any screen.)*
+
+**Income comes in two shapes**, and the difference drives every "how many flats have paid" figure in the app:
+
+- **General contribution** — a flat's share. Picked off the block/floor collection grid, keyed to `contributor_flat_id` (and `contributor_user_id` when the payer is registered), and capped at **one per flat and one per member per fund** by two partial unique indexes. This is the only thing paid/unpaid rolls, block coverage bars, and the public `paid_flats` figure count.
+- **Other contribution** — money handed over for something specific: food, the god idol, prasadam, or a shop paying for the lighting. Carries `contributor_name` plus a free-text `purpose_label`, with optional free-text `contributor_flat_label` and `contributor_phone`, and **no flat or member key at all** (the guard trigger nulls both). It therefore cannot collide with a flat's share and never marks a flat as paid, while still counting in every money total. Any collector, treasurer, or lead can record one; there is no purpose catalog to set up first.
+
+A third shape, **outside sponsor** (`sponsor_name` / `sponsor_phone` / `sponsor_note`, president/VP-only), still exists in the database and still renders and edits, but is no longer offered by the collection form — see [`docs/disabled-features.md`](../docs/disabled-features.md).
+
+The fund detail screen carries the totals, a **Collected for** breakdown by purpose, the block-wise table, and role management; the two long ledgers live on their own screens (`/funds/contributions`, `/funds/expenses`), each with payment-method and purpose filters.
 
 **Blocks / towers** (`/community/blocks`) — optional per-community structure, **decoupled from funds**. `communities.block_label` chooses the noun ("Block" or "Tower") used across all UI. **Block inventory is platform-admin-only as of 2026-08-14** (`20260908000200`): platform admins seed blocks at approval time and maintain them thereafter from the admin console. Community leads get a read-plus-**rename** screen — `set_community_blocks_enabled()`, `add_community_block()` and `archive_community_block()` had `EXECUTE` revoked from `authenticated`, because block rows drive resident flat scoping, fund collection scopes and the per-block collector cap, and disabling them unscoped every resident and in-charge in one tap. Re-adding an archived name restores that block rather than erroring (admin console path).
 
@@ -259,7 +268,9 @@ See [`docs/platform-admin.md`](../docs/platform-admin.md).
 `/provider/add` · `/provider/[id]` · `/visits/add` · `/visits/[id]` · `/hire-feedback/[hireId]`
 
 ### Funds
-`/funds` · `/funds/add` · `/funds/[id]` · `/funds/add-transaction` · `/funds-access/request`
+`/funds` · `/funds/add` · `/funds/[id]` · `/funds/contributions` · `/funds/expenses` · `/funds/add-transaction` · `/funds-access/request`
+
+`/funds/[id]` is the one **publicly reachable** app route — a fund link forwarded into a WhatsApp group opens for a signed-out visitor on an aggregates-only summary (`FundPublicSummary`). The two ledger screens stay behind auth. Both need explicit parent mappings in `getImmediateParentRoute()`; the `/funds/` catch-all would send back-navigation to the fund list instead of the fund.
 
 ### Reminders
 `/services` · `/services/add` · `/services/[id]`

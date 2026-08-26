@@ -137,6 +137,24 @@ The old strings were written for the period when confirmation was off, where an 
 - **Reason**: `pg_cron` is not installed on this project, so automatic sweeps never ran. Visit completion is a manual host action (`Mark as completed` button on visit detail), while display status is derived client-side.
 - **To re-enable**: install `pg_cron` extension, create an authenticated RPC with `SET search_path`, and schedule a cron job.
 
+### 7c. Fund "Outside sponsor" tab — retired from the collection form 2026-08-27
+
+- **Status**: **Removed from the UI. The row shape is fully alive in the database and still renders and edits.**
+- **What went**: the third tab on `/funds/add-transaction` in contribution mode, and with it the only way to *create* a row carrying `sponsor_name` / `sponsor_phone` / `sponsor_note`.
+- **What stayed**: the `sponsor_*` columns, `event_transactions_sponsor_shape`, the payer-shape branch that admits them, and `event_transaction_guard`'s rule that **only a president / vice president / platform admin** may write one. Existing rows still show as "Outside sponsor" on the contributions list, still reopen in sponsor mode with name/phone/note prefilled, and are still editable by leads only — collectors and treasurers see them read-only.
+- **Reason**: the tab's president-only rule stopped restricting anything the moment **Other contribution** shipped in the same week. A collector wanting to log "Sharma Electricals — ₹5,000 for the lighting" could simply type it into the Other tab, which any assigned fund role may use. All the sponsor tab still did was hand collectors and treasurers a database error they had no way to resolve, and force all three tab labels to be clipped to fit a phone. Two tabs let the labels say what they mean.
+- **Replacement**: outside money is an other contribution with the business as the contributor name. `sponsor_phone` was the one field with nothing to fall back on — `contributor_phone` (`20261001000000`) replaces it. It could not ride on `sponsor_phone`, because `event_transactions_sponsor_shape` requires a `sponsor_name` alongside it.
+- **To re-enable**: add `sponsor` back to `payerModes` in `app/funds/add-transaction.tsx` gated on `canRecordSponsor` (`permissions.canManageTreasurers`). The sponsor branch of the form, the save payload, the load-time mode detection and the notice copy were all left in place — nothing but the tab entry was removed. Expect to shorten the labels again.
+
+### 7d. Fund contribution purpose catalog — added and removed 2026-08-26/27
+
+- **Status**: **Removed. Table and column dropped; migration `20260930000000` reverses `20260928000000`.**
+- **What it was**: `fund_contribution_purposes`, a per-fund list of named purposes ("Food", "God idol", "Prasadam") that a treasurer maintained from the fund detail screen, plus `event_transactions.contribution_purpose_id` pointing at it, plus a manage section with add / archive / restore and a 12-purpose cap.
+- **Reason**: it made recording a ₹500 offering a three-step job — define the purpose, then pick a block, a flat and a resident. That is the wrong shape for what actually happens: someone hands over cash at a door and the collector wants to write down a name and move on.
+- **Replacement**: free text on the row (`purpose_label`), with one-tap suggestion chips (`SUGGESTED_PURPOSE_LABELS` in `lib/fundLedger.ts`) instead of a catalog to set up first. Reporting buckets by `lower(purpose_label)` so the same word typed by two collectors lands in one bucket.
+- **Data**: nothing was lost. `20260930000000` copies each purpose's `name` into `purpose_label` on every row that referenced it before dropping the column. No production rows had used it.
+- **Do not re-add** without reading the trap in [`CLAUDE.md`](CLAUDE.md) §9 — this was tried and reverted in under two days.
+
 ---
 
 ## Deferred

@@ -196,7 +196,7 @@ Resolution goes through `lib/fundRoles.ts` — see §12. `is_funds_enabled(commu
 A household pays the flat's share, and the same household may also hand over money for the food, the idol, the prasadam. `event_transactions.purpose_label` (free text, ≤ 60 chars, added by `20260929000000`) is what separates the two:
 
 - **NULL** — the **general contribution**: the flat's share, identified by `contributor_flat_id` (or at least `contributor_user_id`), still exactly one per flat and one per member via `unique_income_contribution_per_flat` / `unique_income_contribution_per_member`. This is what every paid/unpaid roll counts.
-- **Set** — an **other contribution**: an ad-hoc row carrying `contributor_name`, the free-text purpose, an optional free-text `contributor_flat_label`, and **no flat or member key at all**. The trigger forces `contributor_flat_id` and `contributor_user_id` to NULL on this path, which is exactly why the two unique indexes need no purpose predicate — such a row cannot collide with a flat's share in the first place, and cannot mark any flat as paid.
+- **Set** — an **other contribution**: an ad-hoc row carrying `contributor_name`, the free-text purpose, optional free-text `contributor_flat_label` and `contributor_phone`, and **no flat or member key at all**. The trigger forces `contributor_flat_id` and `contributor_user_id` to NULL on this path, which is exactly why the two unique indexes need no purpose predicate — such a row cannot collide with a flat's share in the first place, and cannot mark any flat as paid.
 
 There is deliberately **no purpose catalog**. `20260928000000` shipped one (`fund_contribution_purposes` plus `contribution_purpose_id`) and `20260930000000` dropped it: making a treasurer define "Prasadam" before anyone could give against it, and then walk the block → flat → resident picker, was two setup steps more than the doorstep case can carry. Reporting buckets ad-hoc rows by `lower(purpose_label)` so the same text typed by two collectors lands in one bucket (`purposeBucketKeyOf` in `lib/fundLedger.ts`).
 
@@ -204,7 +204,7 @@ There is deliberately **no purpose catalog**. `20260928000000` shipped one (`fun
 
 Ad-hoc rows are recordable by anyone who may record a contribution (collector, treasurer, lead) — unlike an outside sponsor, which stays the lead's call. A block-scoped collector is not block-restricted here because there is no flat to scope against; the row adds money under a free-text name and marks nothing as paid.
 
-### Who paid — member vs outside sponsor
+### Who paid — the three payer shapes
 
 Every income row names its payer, and there are exactly three ways to do that (migrations `20260825000000` and `20260930000000`, enforced by the `event_transactions_payer_shape` check and `event_transaction_guard`):
 
@@ -472,7 +472,7 @@ A column added to `profiles` must be added to that migration's `GRANT` **and** t
 
 ### Funds and blocks
 
-`get_fund_role(p_event_id, p_user_id)` · `get_my_community_funds_overview()` · `set_fund_closed(p_event_id, p_is_closed)` · `delete_community_fund(...)` · `submit_funds_access_request(...)` · `withdraw_funds_access_request(...)` · `get_funds_access_status(p_community_id)` · `list_collection_targets_for_collector(...)` · `list_community_blocks(...)` · `rename_community_block(...)` · `set_resident_block(...)` · `set_my_block(...)` · `assign_block_in_charge(...)` · `remove_block_in_charge(...)`
+`get_fund_role(p_event_id, p_user_id)` · `get_my_community_funds_overview()` · `set_fund_closed(p_event_id, p_is_closed)` · `delete_community_fund(...)` · `submit_funds_access_request(...)` · `withdraw_funds_access_request(...)` · `get_funds_access_status(p_community_id)` · `list_collection_targets_for_collector(...)` *(supersedes `list_eligible_contributors_for_collector(...)`, which is still in the database but called by nothing — it listed residents where the current one lists flats)* · `list_community_blocks(...)` · `rename_community_block(...)` · `set_resident_block(...)` · `set_my_block(...)` · `assign_block_in_charge(...)` · `remove_block_in_charge(...)`
 
 **Block inventory is platform-admin-only (2026-08-14, `20260908000200`).** `set_community_blocks_enabled(BOOLEAN)`, `add_community_block(TEXT)` and `archive_community_block(UUID)` still exist but `EXECUTE` is revoked from `authenticated`, `anon` and `PUBLIC` — calling them from the app raises a permission error. Blocks define resident flat scoping, fund collection scopes and the per-block collector cap, and turning them off unscopes every resident and in-charge in one tap, so creating/archiving/toggling belongs to the admin console via `platform_add_community_block(...)`, `platform_archive_community_block(...)` and `platform_set_blocks_enabled(...)`. `rename_community_block(...)` is still granted to community leads: it is cosmetic and reversible, and is the one correction a president legitimately needs. `app/community/blocks.tsx` is therefore a read-plus-rename screen.
 
