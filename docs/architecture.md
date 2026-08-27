@@ -723,6 +723,16 @@ notification inserted into public.notifications
 
 Help · Saved · MCN · Community · Profile. The `Tabs` navigator in `(tabs)/_layout.tsx` still owns routing between the five tab screens, but its own bar is hidden (`tabBarStyle: { display: 'none' }`) — expo-router only renders a `Tabs` bar for screens inside that group, so it would disappear on every non-tab route (`/funds`, `/mcn/*`, `/services`, `/sos`, ...). The bar users actually see is `components/GlobalBottomNav.tsx`, rendered once as a flex sibling to the root `<Stack>` in `app/_layout.tsx` so it stays visible on every screen. It derives the active tab from `usePathname()` (e.g. `/funds*`, `/sos`, `/residents` all highlight Community) and pushes to the five tab-root routes on tap. It renders only once `session`, `communityId`, and `!isLoading` are all true — hidden pre-login and pre-community-selection. Height is 52 px on web / `46 + safeAreaBottom` on native (smaller than the old per-tab bar).
 
+### Navigator depth: exactly one nested navigator (`(tabs)`)
+
+The root `<Stack>` in `app/_layout.tsx` (`headerShown: false`, `contentStyle` = `Verandah.surface`, `animation: 'slide_from_right'`) owns every route directly, **except** the five tab screens, which the `Tabs` navigator in `app/(tabs)/_layout.tsx` owns. That is the only nested navigator in the app, and new ones should not be added casually.
+
+`app/mcn/` deliberately has **no `_layout.tsx`** — a folder without one is flattened into its parent navigator, so `/mcn/*` screens are plain root-Stack screens whose route names carry the folder prefix (`mcn/business`, `mcn/drops/add`). They still set their own header through `<Stack.Screen options={buildMcnHeaderOptions(...)} />`; that targets the nearest Stack, which is now the root one.
+
+It used to have a layout, and that layout rendered a `<Stack>` whose `screenOptions` were identical to the root Stack's — no behavioural gain, and it cost two rounds of broken browser-back. expo-router's `useLinking.js` writes a history entry the instant a cross-branch `router.push()` commits, which is *before* a freshly-mounted nested navigator has any state; on browser-back, `resetRoot(record.state)` replays that stateless entry, `StackRouter.getRehydratedState` matches zero routes for the nested stack, and it falls back to `options.initialRouteName ?? routeNames[0]`. Since `app/mcn/` has no `index.tsx` and expo-router sorts siblings by route-name **length**, `routeNames[0]` resolved to `add` — the hidden Borrow & Share composer — producing a correct URL with the wrong screen. Removing the layout removes the nested navigator, and with it the whole failure mode. See [`fixes/done/mcn-nested-navigation-back-fix.md`](fixes/done/mcn-nested-navigation-back-fix.md).
+
+Before adding a `_layout.tsx` to any `app/` sub-folder, confirm it sets options the parent navigator does not already set. If it does not, do not add it.
+
 ### Route-collision rule (read before adding any route)
 
 **No two route files may resolve to the same URL pattern.** React Navigation treats this as a hard error — `getStateFromPath` throws *"Found conflicting screens with the same pattern"* — and expo-router only survives it by deleting that guard. The ambiguity does not fail loudly; it silently corrupts browser history at the boundary between the colliding subtrees.

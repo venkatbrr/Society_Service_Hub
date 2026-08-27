@@ -1,114 +1,105 @@
-# MCN nested-screen back navigation — Android hardware back & web browser back
+# MCN nested-screen back navigation — browser back & Android hardware back
 
-**Date:** 2026-08-16
-**Status:** Fixed and verified (Android: confirmed via matching upstream issue + code fix; Web: confirmed via Playwright repro, fixed, and re-verified against the same repro; iOS: not affected by either bug's mechanism, reasoned from code — not verified on a real device/simulator, see §2 below).
-**Scope:** `lib/navigation.ts` (`useSyncedBackNavigation`, `syncNavigationStack`), affects every `/mcn/*` module reached from a sibling top-level route — food drops, carpooling, parent corner.
-
-**Reported symptom:** From a nested MCN screen (e.g. a food drop's detail or manage screen, a carpool detail, a parent-corner nested screen), pressing the Android hardware back button — or, more importantly since this app is shipping as a web/PWA first, clicking the browser's back button — skipped the immediate previous screen and dropped the user all the way back to `/network` (the MCN hub / post-auth landing route), or to `/login` if signed out.
+**Status:** Fixed 2026-08-27. Root cause found and removed; reproduced, fixed, and re-verified in headless Chrome against the local dev server.
+**Scope:** deleted `app/mcn/_layout.tsx`; simplified `lib/navigation.ts`.
+**History:** an earlier pass on 2026-08-16 misdiagnosed this and shipped a timing-window workaround. That workaround is now removed. §4 keeps the record of why it looked right.
 
 ---
 
-## Two independent bugs, one unaffected platform, same reported symptom
+## 1. The report
 
-Android and web failed for **different, unrelated reasons**; both are now fixed in `lib/navigation.ts`. iOS was never affected by either mechanism (see below).
+Browser-back from `/mcn/listing-add`, `/mcn/parents/add`, `/mcn/drops/add` or `/mcn/carpools/add` landed on the **Borrow & Share composer** — the hidden `/mcn/add` screen — while the address bar correctly read the parent route (`/mcn/business`, etc.). Correct URL, wrong screen.
 
-### 1. Android — hardware back deferred to a buggy internal handler
+It had been reported before, on 2026-08-16, with a *different* visible symptom: back dropped the user on `/network` (or `/login` when signed out). Same bug — see §4.
 
-`useSyncedBackNavigation`'s `hardwareBackPress` listener used to do this when `router.canGoBack()` was true:
+## 2. Root cause
 
-```ts
-setNavIntent('back');
-return false; // defer to React Navigation's own listener
-```
+`app/mcn/_layout.tsx` rendered a `<Stack>` nested inside the root `<Stack>`. Its `screenOptions` were byte-identical to the root Stack's (`headerShown: false`, `contentStyle: { backgroundColor: Verandah.surface }`), so it changed nothing — it existed only because the folder had a layout file. That nested navigator was the whole problem.
 
-Returning `false` is the standard React Native pattern for "not handled here, let the next listener try" — normally React Navigation's own internal `hardwareBackPress` listener (registered by the Stack/Tabs navigators) picks it up and pops correctly.
+The failure chain, in order:
 
-`/mcn` is a Stack navigator nested under the root Stack (a sibling of the `(tabs)` group), and React Navigation has a confirmed, still-open upstream bug with hardware-back deferral in exactly this shape: [expo/expo#33489](https://github.com/expo/expo/issues/33489) ("Android back button is closing the app on a nested stack inside tabs"). Deferring can pop the wrong navigator entirely, landing on the root instead of the previous nested screen.
+1. **A cross-branch push records an incomplete history entry.** Cross into `/mcn/*` from a root-Stack sibling with `router.push()`. `expo-router`'s `useLinking.js` writes the history entry from its `state` listener the moment the push commits — which is *before* the freshly-mounted `mcn` navigator has any state of its own. The recorded entry's path is correct; its state has the `mcn` route with **no child state**.
 
-**Fix:** drive the pop ourselves and swallow the event instead of deferring:
+2. **Browser-back replays that entry verbatim.** `useLinking.js`'s popstate handler does:
+   ```js
+   const record = history.get(index);
+   if (record?.path === path && record?.state) { navigation.resetRoot(record.state); return; }
+   ```
+   The record matches by path, so its stateless snapshot is what gets restored.
 
-```ts
-if (typeof router.canGoBack === 'function' && router.canGoBack()) {
-  backTracked(router);
-  return true;
-}
-```
+3. **The nested stack rehydrates to its fallback initial route.** `StackRouter.getRehydratedState` filters the incoming routes against `routeNames`, finds none for the `mcn` stack, and takes the `routes.length === 0` branch:
+   ```js
+   const initialRouteName = options.initialRouteName !== undefined ? options.initialRouteName : routeNames[0];
+   ```
 
-This is the standard community workaround for the linked upstream issue. It's a small, low-risk change — one hook, mounted once at the root layout, so it covers every `/mcn/*` module automatically.
+4. **`routeNames[0]` was `add`.** `app/mcn/` has no `index.tsx` and the layout set no `initialRouteName`, so the fallback fell to whatever expo-router sorted first. Its tiebreak (`expo-router/build/sortRoutes.js`) is `a.route.length - b.route.length` — **route-name length**. `add` (3 chars) is the shortest name in the folder, so the fallback was the hidden Borrow & Share composer.
 
-### 2. iOS — not affected by either bug, not separately tested
+The root Stack meanwhile kept the correct route and URL, which is why the address bar looked right.
 
-No iOS-specific code change was made, and none was needed for the two bugs above:
-
-- **The Android bug doesn't apply.** iOS has no hardware back button, so it never fires `hardwareBackPress` and never goes through `useSyncedBackNavigation`'s Android-only branch (`if (Platform.OS !== 'android' ...) return;`). Back navigation on iOS is the native edge-swipe gesture and the header back button, both handled entirely inside `react-native-screens`' native stack (`UINavigationController`), outside any JS listener chain this app owns.
-- **The web bug doesn't apply.** It's specific to `expo-router`'s browser `popstate`/DOM-history sync (`useLinking.js`), which only runs on web.
-
-**Caveat — this was reasoned from the code, not verified on a device or simulator.** No iOS hardware/simulator was available in this environment, so there is no equivalent Playwright-style repro for iOS the way there is for Android (matched against a public upstream issue) and web (reproduced directly). `react-native-screens`' native stack implementation is shared across Android and iOS, and the nested-Stack-under-root-Stack shape that triggered the Android bug is identical on iOS, so a *different*, iOS-specific manifestation of a similar nested-stack issue can't be fully ruled out from code reading alone. This was explicitly deprioritized per the product decision to ship web/PWA first and not worry about the native apps for now — flag it for a real device pass before native Android/iOS builds matter again.
-
-### 3. Web — browser back correct for one frame, then silently overridden
-
-This one took real reproduction work to pin down, because the obvious suspect (`lib/navigation.ts`'s tracked-stack bookkeeping) turned out to be innocent. That bookkeeping only feeds `goBackSmart()` (the in-app header back arrow) — it never touches real browser history, and the docs already document (see `docs/CLAUDE.md` §"Never intercept `popstate`") that this codebase was previously burned by code that tried to react to `popstate` and raced expo-router's own handler, corrupting browser history. That prior incident made it important **not** to reach for the same kind of fix again without solid evidence.
-
-**Reproduction (Playwright, headless Chromium against the local dev server):**
-
-1. Cross into `/mcn/*` from a *different* root-Stack sibling via `router.push()` (e.g. `/network` → `/mcn/drops`, mounting the `mcn` Stack navigator fresh for that session).
-2. Push once more inside it (e.g. drop list → drop detail).
-3. Press browser back **once**.
-
-Instrumenting `window.history.pushState`/`replaceState` with `performance.now()` timestamps showed:
+Measured directly (headless Chrome, `navigationRef.getRootState()` snapshots around the back press):
 
 ```
-t=10ms    POPSTATE   /mcn/drops        <- correct, real browser back
-t=186ms   REPLACE    /login            <- wrong, and not caused by us
-t=186ms   REPLACE    /login
-t=187ms   REPLACE    /login
+before back:  [stack {legal/navtest, *mcn}] -> [stack idx=1 {drops/navtest, *drops/add}]
+after  back:  [stack {legal/navtest, *mcn}] -> [stack idx=0 {*add}]        <- fallback initial route
+URL after back: /mcn/drops/navtest                                          <- correct
 ```
 
-`window.location.pathname` genuinely read the correct parent URL for one render immediately after the `popstate` event. Then, ~180ms later, with **no new `popstate` event** and **nothing in this app's code requesting it**, `expo-router`'s web history sync (`node_modules/expo-router/build/fork/useLinking.js`) independently re-resolved the navigation state to the app's default/initial route (`/network`). That transition doesn't originate from our reducer — it reproduces identically with `lib/navigation.ts`'s bookkeeping mentally subtracted from the picture, confirmed by instrumenting `app/_layout.tsx`'s auth guard directly and watching `usePathname()` pass through `/network` as a real, distinct render before our own `!session` guard (correctly, on its own terms) then redirected an anonymous test session onward to `/login` — which is exactly why the anonymous repro shows `/login` while a real signed-in user (who has no reason to be redirected away from `/network`) would just silently land on `/network` instead, matching the original report.
+`usePathname()` also reads `/mcn/drops/navtest` after the back — expo-router's store and the navigator state genuinely disagree, which is why no path-comparison guard inside the app can detect this. It has to be fixed at the navigator.
 
-A cold, direct page-load into `/mcn/drops` (no cross-branch push involved) does **not** exhibit this — the mcn Stack has to be freshly mounted via a client-side push during the session. Swapping `router.push()` for `router.navigate()` on the cross-branch hop does not avoid it either (tested).
+## 3. The fix
 
-This matches community reports of the same class of expo-router/React Navigation web defect with nested Stacks reached via a cross-branch push (see e.g. [expo/expo#35140](https://github.com/expo/expo/issues/35140) and the substack post "Constructing route stack history with Expo Router") — it is an upstream limitation, not a mistake in this codebase.
+**Deleted `app/mcn/_layout.tsx`.** A folder without a layout is flattened into its parent navigator, so `/mcn/*` screens became plain root-Stack screens (route names `mcn/business`, `mcn/drops/add`, …). With no nested navigator, there is nothing to mis-rehydrate: the recorded history state is always complete, because no navigator mounts mid-push.
 
-**Fix — a post-hoc correction, not a `popstate` interception.** `syncNavigationStack()` now arms a one-shot marker whenever it resolves a genuine pop:
+What did **not** change:
+- URLs, `href`s, and `getImmediateParentRoute()` — those key off pathnames, not route names.
+- Headers. MCN screens set their own via `<Stack.Screen options={buildMcnHeaderOptions(...)} />`, which targets the nearest Stack — now the root one. Verified by screenshot: serif title, circled back arrow, correct surface.
+- Screen options. The root Stack already sets both options the deleted layout set.
 
-```ts
-let lastPopLandedRoute: string | null = null;
-let lastPopLandedAt = 0;
-const SPURIOUS_DRIFT_WINDOW_MS = 600; // measured drift is ~180-300ms
+One intentional difference: `/mcn/*` screens now inherit the root Stack's `animation: 'slide_from_right'`, which the mcn Stack did not set. That matches the rest of the app.
+
+Also removed from `lib/navigation.ts`: the 2026-08-16 workaround (`lastPopLandedRoute`, `lastPopLandedAt`, `SPURIOUS_DRIFT_WINDOW_MS`, and the guard block in `syncNavigationStack`, whose `router` parameter is now unnecessary). See §4.
+
+## 4. Why the 2026-08-16 diagnosis looked right — and was wrong
+
+At that time `app/mcn/add.tsx` was a bare `<Redirect href="/(tabs)/network" />` (it had been stubbed out in `ce09600`). So step 4 above rendered a redirect, and the user was thrown to `/network` — then on to `/login` for an anonymous test session. The investigation measured exactly that and concluded expo-router was "independently re-resolving to the default landing route ~180ms after the popstate, with no new popstate and nothing in this app requesting it."
+
+That reading was reproducible but wrong about the cause: the "unexplained" navigation was `mcn/add`'s own `Redirect`, mounted because the stack had fallen back to it. The 600ms window it shipped treated a symptom, and it could hijack a genuine Network-tab tap made within 600ms of a browser-back.
+
+The bug resurfaced as "back shows Borrow & Share" when `a89c42d` (2026-08-27) restored `add.tsx` to a real screen — removing the redirect that had been disguising it.
+
+Confirmed by re-running the repro with the old `<Redirect>` restored: the instrumented log reproduces the original fingerprint exactly.
+
+```
+t=  531  pushState    /mcn/drops/add
+t= 3198  replaceState /login
+t= 3199  replaceState /login
+t= 3199  replaceState /login
+t= 3199  popstate     /login
 ```
 
-If the *very next* pathname change is unexplained — no new `popstate`, no declared `pushTracked`/`replaceTracked`/`backTracked` intent — and it lands specifically on `POST_AUTH_LANDING_ROUTE` (`/network`) within that window, it's recognized as the drift artifact and reversed with a single `replaceTracked()` back to the real destination:
+**If a `/network` drift is ever observed again, it means a different navigator is mis-rehydrating. Fix that navigator; do not re-add a timing window.**
 
-```ts
-if (
-  router && Platform.OS === 'web' && !hadExplicitIntent && intent === 'push' &&
-  lastPopLandedRoute && route === normalizeRoute(POST_AUTH_LANDING_ROUTE) &&
-  route !== lastPopLandedRoute && Date.now() - lastPopLandedAt < SPURIOUS_DRIFT_WINDOW_MS
-) {
-  const correctTo = lastPopLandedRoute;
-  lastPopLandedRoute = null;
-  replaceTracked(router, correctTo as any);
-  return stack;
-}
-```
+## 5. Verification
 
-**Why this doesn't repeat the historical `popstate` mistake:** the earlier corruption came from reacting *mid-flight* — a manual `router.replace()` racing expo-router's own popstate handler while both were mutating navigation state at the same time. This guard does the opposite: it only acts *after* expo-router's own (wrong) resolution has already fully committed, using the same `replaceTracked()` helper every other correction in this app already goes through. It's a narrow, specific fingerprint (unexplained + lands on the one known default route + tight time window), not a general popstate handler.
+Driven over the Chrome DevTools Protocol against the local dev server. The mechanism needs no session, so the harness used two throwaway public routes — one root-Stack sibling under `/legal/*` and one inside `/mcn/drops/*` (both are unauthenticated per the guard in `app/_layout.tsx`) — and asserted the **rendered screen** as well as the URL. The harness routes were deleted afterwards.
 
-**Verified with Playwright:**
-- First back press: lands correctly on the list screen (was landing on `/network`/`/login` before the fix).
-- Second consecutive back press: correctly continues to the screen before that.
-- Forward navigation afterward: unaffected.
-- Confirmed the correction only actually appears in the final URL when there's no competing redirect — an authenticated user (the real-world case) has no such competitor, since `/network` is always a valid destination for them.
+| # | Case | Before | After |
+|---|---|---|---|
+| A | cross-branch entry, 3 pushes, 3 backs | back #2 → Borrow & Share | pass ×4 |
+| B | forward button after backs | pass | pass ×2 |
+| C | cold deep-link into a nested route, push, back | pass | pass ×2 |
+| D | cross-branch entry, one push, one back | **Borrow & Share** | pass |
+| E | push to a sibling list route, back | (unreachable — page was Borrow & Share) | pass ×2 |
 
----
+11/11 after the fix; 2 hard failures plus one aborted case before it, on the same suite. Header back arrow (`goBackSmart`) checked separately: `/mcn/drops/add` → `/mcn/drops`, correct.
 
-## Known trade-off
+`npx tsc --noEmit` clean.
 
-`SPURIOUS_DRIFT_WINDOW_MS = 600` is a timing window, not a structural guarantee. Measured drift lands ~180-300ms after the real `popstate`, so 600ms leaves comfortable headroom for slower devices while staying well under normal human click-reaction time — a user pressing back and then deliberately tapping the Network tab within 600ms is possible but unlikely. If this ever needs revisiting, the fingerprint (unexplained pathname change, no popstate, lands on `POST_AUTH_LANDING_ROUTE`) is the part to keep narrow; widening the time window is the least safe way to make it more aggressive.
+## 6. Not verified
 
-## Where this is also documented
+- **Native Android/iOS.** Web/PWA is the shipping target. The Android `hardwareBackPress` workaround in `useSyncedBackNavigation` is unchanged and still warranted — `(tabs)` remains a navigator under the root Stack — but no device pass was done.
+- **`(tabs)`.** The same expo-router mechanism could in principle affect the one remaining nested navigator. It was not reproduced, and a `Tabs` navigator rehydrates differently (`TabRouter` builds all tab routes rather than falling back to a single one), so the blast radius is smaller. Not investigated further.
 
-`docs/CLAUDE.md` §9 (Known traps) carries both entries with the full evidence trail, so this isn't re-investigated or accidentally reverted later:
-- "Returning `false` from the Android `hardwareBackPress` handler..."
-- "Web: browser-back from a nested `/mcn/*` screen lands on `/network`..."
+## 7. The rule this leaves behind
+
+**Do not give an `app/` sub-folder a `_layout.tsx` unless it sets options the parent navigator does not already set.** A layout file is not free structure — it creates a navigator, and a navigator nested under the root Stack is what broke this twice. Recorded in `docs/CLAUDE.md` §9 and `docs/architecture.md` §9.
