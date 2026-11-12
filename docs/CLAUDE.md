@@ -35,6 +35,16 @@ The `:preprod` scripts contain a literal `PREPROD_REF_TODO` placeholder until th
 
 There is no lint script and no test suite. `npx tsc --noEmit` must pass before you call any change done.
 
+### Docker development
+
+Docker Desktop with Compose Watch (Compose 2.22 or later) can run the Expo dev server against a hosted Supabase project; it does not start Supabase, the standalone admin console, or the Vercel API functions.
+
+1. Copy `.env.example` to `.env` (`Copy-Item .env.example .env` in PowerShell) and fill in at least `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` for a safe hosted test project. The planned preprod project is not configured yet; do not point local development at production unintentionally. Configure the other values in the template for the features you need. `EXPO_PUBLIC_*` values are shipped to clients: never put a service-role key or other secret in them.
+2. Run `docker compose up --build --watch` from the repository root and open `http://localhost:8081`. Keep that terminal open: Compose syncs source changes into the container and rebuilds it when package manifests or the Dockerfile change. In another terminal, run `docker compose exec app npx tsc --noEmit` to type-check.
+3. Press Ctrl+C to stop the server. After changing `.env`, restart with `docker compose up --build --force-recreate --watch` so the container receives the new values.
+
+The host port is published on localhost by default. To opt in to access from a physical device on the local network, add `WOORU_EXPO_BIND_ADDRESS=0.0.0.0` and `REACT_NATIVE_PACKAGER_HOSTNAME=<host LAN IP>` to `.env`, then recreate the container. This exposes the development server to the network; allow port 8081 in the firewall only as needed. Native Google Sign-In requires a development build and its client IDs.
+
 **Data reset (destructive, hand-run only).** [`scripts/db/`](../scripts/db/README.md) holds `reset-community-data.sql` — deletes residents and everything they created, keeping the schema, `mcn_business_categories` and platform admin accounts; its `wooru.keep_community_shell` flag also spares `communities`/`community_blocks`/`community_flats`/`emergency_contacts` so the signup flow still works. `delete-resident.sql` hard-deletes one account (preview by default; refuses platform admins and a society's only lead). Companion `reset-cloudinary-uploads.mjs` clears the orphaned images. Neither is in `package.json` on purpose: a data wipe must not be one `npm run` away. Run the SQL as `postgres`/service role, never through PostgREST — the profile guard triggers only bypass when `auth.uid()` is `NULL`. **Its table list is hand-maintained and drifts:** a migration adding a table that references `auth.users`, `profiles` or `communities` must also add it to the `wiped` array and the delete sequence, or the run aborts on a foreign-key violation. Last reconciled 2026-08-17, when four tables were found missing.
 
 **Uploads go to Cloudinary, not Supabase storage.** `lib/cloudinary.ts` posts to Cloudinary under `wooru/` with an unsigned preset and the DB stores only the `secure_url`. The `community-uploads` bucket exists but is unused and empty — don't write cleanup or migration code against it.
