@@ -1,0 +1,1368 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Wooru + WhatsApp: 10-slide animated feasibility, flow, and cost briefing. Research checked 12 November 2026.">
+  <title>Wooru + WhatsApp | Briefing</title>
+  <style>
+    /* Standalone mapping of the Verandah palette; the phone uses a generic chat look for illustration only. */
+    :root {
+      --paper: #FAF8F4; --card: #FFFFFF; --cream: #F0EDE3;
+      --primary: #0F3732; --accent: #0F6E56; --soft: #E1F5EE;
+      --ink: #1F2A28; --muted: #6B6F6D; --border: rgba(15,55,50,.18);
+      --gold: #854F0B; --gold-soft: #FAEEDA; --danger: #A32D2D; --danger-soft: #FCEBEB;
+      --chat-head: #0B5E54; --chat-bg: #EAE2D6; --chat-out: #D9FDD3; --chat-link: #0A7C66; --tick-read: #34B7F1;
+      --radius: 16px; --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+      --phone-h: clamp(440px, 64vh, 560px);
+    }
+    * { box-sizing: border-box; }
+    html { color-scheme: light; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.55 var(--sans); }
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+    button, select, input { color: var(--primary); background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; max-width: 100%; }
+    button { font-weight: 500; }
+    button:hover { background: var(--soft); }
+    button:disabled { cursor: default; opacity: .5; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    a { color: var(--accent); text-underline-offset: 3px; overflow-wrap: anywhere; }
+    h1, h2, h3, p { margin: 0 0 14px; }
+    h1, h2 { font-weight: 400; letter-spacing: -.035em; line-height: 1.12; color: var(--primary); }
+    h1 { font: 400 clamp(38px, 5.4vw, 72px)/1.06 Georgia, serif; max-width: 1050px; }
+    h2 { font-size: clamp(26px, 2.8vw, 40px); max-width: 1100px; }
+    h3 { font-weight: 500; font-size: 18px; line-height: 1.35; color: var(--primary); margin-bottom: 8px; }
+    strong, b { font-weight: 500; }
+    ul, ol { margin: 0; padding-left: 20px; }
+    li { margin-bottom: 7px; }
+    code { font-size: .88em; overflow-wrap: anywhere; }
+
+    .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 24px; border-bottom: 1px solid var(--border); background: var(--paper); }
+    .brand { color: var(--primary); font-weight: 500; letter-spacing: -.04em; font-size: 22px; margin-right: auto; }
+    .toolbar label { font-size: 13px; }
+    .footer { display: flex; align-items: center; gap: 16px; padding: 10px 24px; border-top: 1px solid var(--border); }
+    #counter { white-space: nowrap; font-size: 14px; font-variant-numeric: tabular-nums; }
+    progress { width: 100%; height: 6px; accent-color: var(--accent); }
+    .hint, .small { font-size: 13px; color: var(--muted); }
+    .eyebrow { color: var(--accent); font-weight: 500; letter-spacing: .05em; font-size: 13px; margin-bottom: 12px; }
+    .lede { max-width: 920px; font-size: clamp(18px, 1.8vw, 23px); color: var(--muted); line-height: 1.5; }
+    .slide { padding: clamp(20px, 3vw, 44px); max-width: 1500px; margin: auto; border-bottom: 1px solid var(--border); }
+    .js:not(.read-all) body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    .js:not(.read-all) main { flex: 1; min-height: 0; overflow-y: auto; }
+    .js:not(.read-all) .slide { display: none; min-height: 100%; border: 0; }
+    .js:not(.read-all) .slide.active { display: flex; flex-direction: column; justify-content: center; }
+    .js:not(.read-all) .slide.active.long { justify-content: flex-start; }
+    .read-all .slide { padding-top: 48px; padding-bottom: 48px; }
+
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 18px 0; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { padding: 18px 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); min-width: 0; }
+    .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+    .tint { background: var(--soft); }
+    .dark { background: var(--primary); color: var(--cream); border-color: var(--primary); }
+    .dark h3, .dark .metric { color: var(--cream); }
+    .warnbox { background: var(--gold-soft); border-color: rgba(133,79,11,.25); }
+    .nobox { background: var(--danger-soft); border-color: rgba(163,45,45,.22); }
+    .nobox h3 { color: var(--danger); }
+    .metric { font-size: clamp(26px, 2.6vw, 40px); line-height: 1.15; color: var(--accent); font-weight: 500; letter-spacing: -.03em; margin-bottom: 8px; }
+    .tag { display: inline-block; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 999px; background: var(--soft); color: var(--accent); margin: 0 4px 6px 0; white-space: nowrap; }
+    .tag.warn, .callout { color: var(--gold); background: var(--gold-soft); }
+    .tag.no { color: var(--danger); background: var(--danger-soft); }
+    .callout { padding: 12px 16px; border-radius: 12px; margin: 14px 0; font-size: 14px; }
+    .sources { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); }
+    .sources a { margin-right: 10px; }
+    .table-wrap { overflow-x: auto; margin: 14px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
+    caption { text-align: left; color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+    th { font-weight: 500; color: var(--primary); background: var(--cream); }
+    th, td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    tr.best td { background: var(--soft); }
+    .jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .jump button { font-size: 13px; }
+
+    /* Scene slides */
+    .scene-slide h2 { font-size: clamp(24px, 2.4vw, 34px); margin-bottom: 10px; }
+    .layout { display: grid; grid-template-columns: minmax(230px, .8fr) minmax(0, 2.5fr); gap: 26px; align-items: start; }
+    .notes { font-size: 15px; }
+    .notes h3 { font-size: 15px; margin-top: 14px; }
+    .notes ul { padding-left: 18px; }
+    .notes .callout { font-size: 13px; }
+    .scene { position: relative; min-width: 0; }
+    .stage { display: grid; grid-template-columns: 282px 104px minmax(0, 1fr); align-items: stretch; }
+    .lane { font-size: 12px; color: var(--muted); margin: 0 0 6px; font-weight: 500; letter-spacing: .03em; min-height: 18px; }
+    .illus { position: absolute; top: -2px; right: 0; font-size: 11px; color: var(--gold); background: var(--gold-soft); padding: 2px 8px; border-radius: 999px; }
+    .scene-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .scene-bar button { font-size: 13px; padding: 5px 12px; }
+    .scene-count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-left: 4px; }
+    .scene-cap { flex-basis: 100%; margin: 4px 0 0; min-height: 46px; padding: 10px 14px; border-radius: 10px; background: var(--cream); color: var(--primary); font-size: 15px; }
+    .tabs { display: flex; gap: 8px; margin: 4px 0 12px; flex-wrap: wrap; }
+    .tabs button[aria-selected="true"] { background: var(--primary); color: var(--cream); border-color: var(--primary); }
+
+    /* Phone */
+    .phone { width: 282px; height: var(--phone-h); background: #15201E; border-radius: 36px; padding: 9px; }
+    .ph-screen { position: relative; height: 100%; background: var(--chat-bg); border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; }
+    .ph-status { display: flex; justify-content: space-between; padding: 6px 18px 2px; background: var(--chat-head); color: #fff; font-size: 11px; }
+    .ph-head { display: flex; align-items: center; gap: 8px; padding: 6px 10px 8px; background: var(--chat-head); color: #fff; }
+    .ph-head .back { font-size: 20px; line-height: 1; opacity: .9; }
+    .av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #E9C46A; color: #3b2f0c; font-weight: 500; font-size: 14px; flex: none; }
+    .ph-who { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+    .ph-who b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ph-who small { font-size: 11px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ph-body { flex: 1; overflow-y: auto; padding: 10px 8px; display: flex; flex-direction: column; gap: 5px; font-size: 13px;
+      background-image: radial-gradient(rgba(0,0,0,.05) 1px, transparent 1px); background-size: 14px 14px; scrollbar-width: none; }
+    .ph-body::-webkit-scrollbar { display: none; }
+    .ph-input { display: flex; gap: 6px; padding: 6px 7px 9px; align-items: center; }
+    .ph-field { flex: 1; background: #fff; border-radius: 18px; padding: 6px 12px; font-size: 13px; min-height: 32px; color: #111; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .ph-field .ph-ph { color: #8a9093; }
+    .ph-field .caret { display: inline-block; width: 1px; height: 14px; background: #111; vertical-align: middle; animation: blink 1s steps(1) infinite; }
+    .ph-send { width: 32px; height: 32px; border-radius: 50%; background: var(--chat-link); color: #fff; display: grid; place-items: center; font-size: 13px; flex: none; }
+    .b { max-width: 84%; padding: 6px 8px 4px; border-radius: 9px; background: #fff; align-self: flex-start; line-height: 1.38; position: relative; color: #111; overflow-wrap: anywhere; animation: pop .32s ease-out both; }
+    .b.out { align-self: flex-end; background: var(--chat-out); }
+    .b .from { display: block; font-size: 11.5px; font-weight: 500; margin-bottom: 1px; }
+    .b .bot { display: block; font-size: 10.5px; font-weight: 500; color: var(--accent); margin-bottom: 2px; }
+    .b .meta { float: right; font-size: 10px; color: #667781; margin: 7px 0 0 10px; white-space: nowrap; }
+    .tk { color: #8696a0; letter-spacing: -3px; margin-left: 3px; }
+    .tk.read { color: var(--tick-read); }
+    .btns { display: flex; flex-direction: column; gap: 3px; align-self: flex-start; width: 84%; animation: pop .32s ease-out both; }
+    .btns button { background: #fff; color: var(--chat-link); border: 0; border-radius: 9px; padding: 7px; font-size: 12.5px; cursor: default; }
+    .btns button:hover { background: #fff; }
+    .chosen, .btns button.chosen { background: #DDF3EC !important; }
+    .typing { display: flex; gap: 3px; padding: 10px 12px; }
+    .typing i { width: 6px; height: 6px; border-radius: 50%; background: #9aa5ab; animation: dot 1s infinite; }
+    .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+    .sys { align-self: center; background: #E1F2FB; color: #3d4b52; font-size: 11px; padding: 3px 10px; border-radius: 8px; animation: pop .32s ease-out both; text-align: center; }
+    .sys.alert { background: #fde8e8; color: var(--danger); }
+    .photo { width: 190px; border-radius: 6px; padding: 12px; background: linear-gradient(135deg, #f6d38b, #e89a4f); color: #3a1f04; margin: 2px 0 4px; }
+    .photo b { display: block; font: 400 19px/1.1 Georgia, serif; margin-bottom: 4px; }
+    .photo span { display: block; font-size: 12px; }
+    .mcard { border-radius: 6px; background: #f6f7f5; padding: 8px 9px; margin: 2px 0 6px; font-size: 12.5px; }
+    .mcard b { display: block; font-size: 13.5px; }
+    .mcard ul { padding-left: 16px; margin: 4px 0; }
+    .mcard li { margin: 0 0 2px; }
+    .mc-tag { display: inline-block; font-size: 10.5px; font-weight: 500; color: var(--gold); background: var(--gold-soft); padding: 1px 6px; border-radius: 6px; margin-bottom: 4px; }
+    .mc-tag.ok { color: var(--accent); background: var(--soft); }
+    .chatlist { background: #fff; align-self: stretch; margin: -10px -8px; }
+    .chatlist div { display: flex; gap: 8px; align-items: center; padding: 9px 10px; border-bottom: 1px solid #eee; }
+    .chatlist small { display: block; color: #667781; font-size: 11.5px; }
+    .ph-overlay { position: absolute; inset: 0; z-index: 5; animation: fade .25s ease-out both; }
+    .scan { position: absolute; inset: 0; background: #0b1412; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 20px; text-align: center; font-size: 13px; }
+    .finder { position: relative; padding: 10px; border: 3px solid #3ddc97; border-radius: 14px; overflow: hidden; }
+    .finder .line { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: #3ddc97; animation: scanl 1.3s linear infinite; }
+    .consent { position: absolute; inset: 0; background: #fff; color: #111; padding: 22px 18px; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+    .consent h4 { margin: 0 0 4px; font-size: 16px; font-weight: 500; }
+    .consent label { display: flex; gap: 8px; align-items: flex-start; }
+    .consent .cb { width: 16px; height: 16px; border-radius: 4px; border: 2px solid var(--chat-link); flex: none; margin-top: 2px; display: grid; place-items: center; font-size: 11px; color: #fff; }
+    .consent .cb.on { background: var(--chat-link); }
+    .consent .cb.off { border-color: #bbb; }
+    .consent .go { margin-top: auto; background: var(--chat-link); color: #fff; border: 0; border-radius: 20px; padding: 10px; cursor: default; }
+    .sheet-wrap { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 6; animation: fade .2s both; }
+    .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 16px 16px 0 0; padding: 12px 12px 16px; animation: up .3s ease-out both; }
+    .sheet h4 { margin: 0 0 8px; font-size: 14px; font-weight: 500; text-align: center; color: #111; }
+    .sheet button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid #eee; border-radius: 0; background: #fff; color: #111; padding: 9px 6px; cursor: default; }
+    .sheet button small { display: block; color: #667781; font-weight: 400; font-size: 12px; }
+    .touch { position: absolute; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%; background: rgba(15,110,86,.35); border: 2px solid #fff; pointer-events: none; z-index: 30; animation: touch .75s ease-out forwards; }
+
+    /* Connector */
+    .conn { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 0 6px; }
+    .conn-label { font-size: 11.5px; text-align: center; color: var(--accent); min-height: 34px; font-weight: 500; display: flex; align-items: flex-end; line-height: 1.25; }
+    .conn-line { position: relative; width: 100%; height: 2px; background: repeating-linear-gradient(90deg, var(--border) 0 6px, transparent 6px 10px); }
+    .conn-dot { position: absolute; top: 50%; left: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--accent); opacity: 0; }
+    .conn-dot.go-r { animation: gor .9s ease-in-out both; }
+    .conn-dot.go-l { animation: gol .9s ease-in-out both; }
+    .conn-arrows { font-size: 11px; color: var(--muted); }
+
+    /* Wooru panel */
+    .wooru { height: var(--phone-h); border: 1px solid var(--border); border-radius: 18px; background: var(--paper); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .w-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 16px; background: var(--card); border-bottom: 1px solid var(--border); }
+    .w-logo { font-weight: 500; color: var(--primary); letter-spacing: -.04em; font-size: 18px; }
+    .w-ctx { font-size: 12.5px; color: var(--muted); text-align: right; }
+    .w-body { padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 14px; flex: 1; }
+    .w-list { display: flex; flex-direction: column; gap: 10px; }
+    .w-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+    .w-card small { color: var(--muted); font-size: 12.5px; }
+    .w-card.muted { background: var(--cream); }
+    .w-card.hl { border-color: var(--accent); }
+    .w-btn { background: var(--primary); color: #fff; border: 0; border-radius: 8px; padding: 7px 12px; font-size: 13px; cursor: default; margin-top: 4px; }
+    .w-btn:hover { background: var(--primary); }
+    .w-btn.ghost { background: var(--card); color: var(--primary); border: 1px solid var(--border); }
+    .w-btn.chosen { background: var(--accent) !important; color: #fff; }
+    .w-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill { display: inline-block; font-size: 11.5px; padding: 2px 9px; border-radius: 999px; background: var(--cream); color: var(--primary); font-weight: 500; }
+    .pill.ok { background: var(--soft); color: var(--accent); }
+    .pill.no { background: var(--danger-soft); color: var(--danger); }
+    .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; margin: 4px 0 0; font-size: 13px; }
+    .kv dt { color: var(--muted); } .kv dd { margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; }
+    .tally { list-style: none; padding: 0; margin: 4px 0 0; font: 400 15px/1.5 "Segoe Print", "Bradley Hand", cursive; color: #1d3d8f; }
+    .tally li { margin: 0; border-bottom: 1px dashed #c9d1e4; animation: fly .45s ease-out both; }
+    .tally li.warn { color: var(--gold); } .tally li.bad { color: var(--danger); text-decoration: line-through; text-decoration-thickness: 1px; }
+    .qr { display: grid; grid-template-columns: repeat(21, 1fr); width: 126px; aspect-ratio: 1; background: #fff; padding: 6px; border-radius: 6px; }
+    .qr.sm { width: 132px; }
+    .qr i { background: #111; } .qr i.o { background: transparent; }
+    .flash { animation: flash 1.3s ease-out; }
+    .fly { animation: fly .55s ease-out both; }
+    .static, .static * { animation: none !important; }
+
+    /* Architecture */
+    .arch { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; margin: 16px 0 6px; align-items: stretch; }
+    .node { position: relative; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); margin: 0 14px; font-size: 13px; }
+    .node b { display: block; color: var(--primary); font-size: 14px; margin-bottom: 4px; }
+    .node.wooru-node { background: var(--soft); border-color: var(--accent); }
+    .node:not(:last-child)::after { content: ""; position: absolute; top: 50%; right: -29px; width: 28px; height: 2px; background: var(--accent); }
+    .node:not(:last-child)::before { content: ""; position: absolute; top: calc(50% - 4px); right: -27px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); z-index: 1; animation: hop 1.8s ease-in-out infinite; }
+    .node:nth-child(2)::before { animation-delay: .3s; } .node:nth-child(3)::before { animation-delay: .6s; } .node:nth-child(4)::before { animation-delay: .9s; } .node:nth-child(5)::before { animation-delay: 1.2s; }
+
+    /* Calculator (reused) */
+    .field-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 14px 0; min-width: 0; }
+    legend { color: var(--primary); font-weight: 500; padding: 0 8px; }
+    .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .field label { font-size: 13px; font-weight: 500; }
+    .field input, .field select { width: 100%; }
+    .field small { font-size: 12px; color: var(--muted); }
+    .field .error { color: var(--danger); font-size: 12px; min-height: 16px; }
+    [aria-invalid="true"] { border-color: var(--danger); background: var(--danger-soft); }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
+    .result-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .result .metric { font-size: 28px; }
+    .breakdown { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; font-size: 13px; margin: 12px 0; }
+    .breakdown dt, .breakdown dd { margin: 0; }
+    .breakdown dd { font-variant-numeric: tabular-nums; text-align: right; }
+    #calc-summary { font-size: 14px; padding: 14px; background: var(--cream); border-radius: 12px; margin-bottom: 14px; }
+    #calc-summary.invalid { color: var(--danger); background: var(--danger-soft); }
+    .cost-bar { height: 7px; background: var(--cream); border-radius: 8px; overflow: hidden; margin: 10px 0; }
+    .cost-bar span { display: block; height: 100%; background: var(--accent); }
+    details { border-bottom: 1px solid var(--border); padding: 12px 0; }
+    summary { cursor: pointer; font-weight: 500; color: var(--primary); }
+    details > div { padding: 12px 0 0; }
+    details.calc-panel { border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; background: var(--card); margin-top: 10px; }
+    .reference-list { columns: 2; column-gap: 28px; font-size: 13px; }
+    .reference-list li { break-inside: avoid; margin-bottom: 8px; }
+    .status { padding: 0 24px; color: var(--danger); font-size: 13px; }
+    .status:empty { display: none; }
+    .print-value { display: none; }
+    .print-note { display: none; }
+    [hidden] { display: none !important; }
+
+    @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes up { from { transform: translateY(100%); } to { transform: none; } }
+    @keyframes dot { 0%, 60%, 100% { transform: none; opacity: .5; } 30% { transform: translateY(-4px); opacity: 1; } }
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes touch { 0% { transform: scale(.4); opacity: 0; } 25% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+    @keyframes scanl { from { top: 0; } to { top: 100%; } }
+    @keyframes gor { 0% { left: 0; opacity: 0; } 10%, 90% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
+    @keyframes gol { 0% { left: 100%; opacity: 0; } 10%, 90% { opacity: 1; } 100% { left: 0; opacity: 0; } }
+    @keyframes flash { 0% { background: #CDEFE2; border-color: var(--accent); } 100% { } }
+    @keyframes fly { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+    @keyframes hop { 0% { right: -27px; opacity: 0; } 15% { opacity: 1; } 70% { right: -7px; opacity: 1; } 100% { right: -7px; opacity: 0; } }
+
+    @media (max-width: 1180px) {
+      .layout { grid-template-columns: 1fr; }
+      .notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; }
+      .notes > h2, .notes > .eyebrow { grid-column: 1 / -1; }
+      .arch { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 14px; }
+      .node:nth-child(3)::after, .node:nth-child(3)::before { display: none; }
+    }
+    @media (max-width: 860px) {
+      .grid.three, .grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hint { display: none; }
+      .illus { position: static; display: inline-block; margin-bottom: 8px; }
+      .scene { display: flex; flex-direction: column; }
+      .scene .illus { order: -2; align-self: flex-start; }
+      .scene-bar { order: -1; margin: 4px 0 12px; }
+      .stage { grid-template-columns: 1fr; justify-items: center; }
+      .stage > div { width: 100%; max-width: 420px; }
+      .phone-wrap { display: flex; flex-direction: column; align-items: center; }
+      .conn { flex-direction: row; padding: 10px 0; }
+      .conn-label { min-height: 0; align-items: center; }
+      .conn-line { flex: 1; }
+      .wooru { height: auto; min-height: 320px; }
+      .reference-list { columns: 1; }
+    }
+    @media (max-width: 560px) {
+      body { font-size: 15px; }
+      .grid, .grid.three, .grid.four, .field-grid, .result-grid, .notes { grid-template-columns: 1fr; }
+      .arch { grid-template-columns: 1fr; }
+      .node::after, .node::before { display: none; }
+      .toolbar .brand { width: 100%; font-size: 19px; }
+      .toolbar select { width: 100%; }
+      .toolbar label { flex: 1; }
+      .toolbar button, .footer button { font-size: 12px; padding: 7px; }
+      .footer { gap: 8px; padding: 10px 14px; }
+      .phone { width: 100%; max-width: 300px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition: none !important; scroll-behavior: auto !important; }
+    }
+    @media print {
+      @page { size: A4 landscape; margin: 10mm; }
+      body { height: auto !important; overflow: visible !important; display: block !important; font-size: 12px; }
+      main { overflow: visible !important; }
+      .toolbar, .footer, .scene-bar button, .tabs, .status, .scene-count { display: none !important; }
+      .slide { display: block !important; break-after: page; min-height: 0 !important; padding: 0 0 2mm; border: 0; }
+      .layout { grid-template-columns: minmax(230px, 1fr) minmax(0, 2fr); gap: 12px; }
+      .notes { display: block; font-size: 12px; }
+      .notes li { margin-bottom: 4px; }
+      .stage { grid-template-columns: minmax(170px, 1fr) 40px minmax(210px, 1.4fr); }
+      .stage > div { width: auto; max-width: none; }
+      .phone, .wooru { width: auto; height: 95mm; min-height: 0; }
+      .conn { flex-direction: column; padding: 0 4px; }
+      .grid, .table-wrap { margin: 8px 0; }
+      .grid { gap: 8px; }
+      .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .card, .node { padding: 8px 10px; }
+      .arch { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .node { margin: 0; font-size: 11px; }
+      .node::after, .node::before { display: none !important; }
+      th, td { padding: 5px 7px; }
+      .scene-bar { margin-top: 5px; }
+      .scene-cap { min-height: 0; padding: 6px 9px; font-size: 12px; }
+      .scene-tab[hidden], details { display: none !important; }
+      .print-note { display: block; font-size: 12px; color: var(--muted); }
+      #allowed > .grid.three, #cost > .provider-matrix, #build > .table-wrap, #build > .grid:not(.four) { display: none !important; }
+      #allowed table, #cost table, #build .grid.four { font-size: 11px; }
+      #allowed th, #allowed td, #cost th, #cost td { padding: 3px 5px; }
+      #allowed .grid.four .card { padding: 7px 8px; }
+      #allowed .grid.four .small { font-size: 11px; }
+      #build .node { padding: 6px 8px; }
+      .ph-overlay, .touch { display: none !important; }
+      .ph-body, .w-body { overflow: visible; }
+      .field input, .field select { display: none; }
+      .print-value { display: block; font-weight: 500; }
+      .jump { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="toolbar" aria-label="Presentation controls">
+    <span class="brand">wooru / whatsapp briefing</span>
+    <label for="slide-select">Go to slide</label>
+    <select id="slide-select" disabled></select>
+    <button id="mode" type="button" disabled aria-pressed="false">Read all</button>
+    <button id="fullscreen" type="button" disabled>Fullscreen</button>
+    <button id="print" type="button" disabled>Print / PDF</button>
+  </header>
+  <p id="status" class="status" role="alert"></p>
+  <main id="deck" tabindex="-1" aria-label="WhatsApp integration presentation">
+
+    <!-- 1 -->
+    <section class="slide" id="title" data-title="Verdict">
+      <p class="eyebrow">01 / Wooru + WhatsApp · decision briefing · researched 12 November 2026</p>
+      <h1>One Wooru number.<br>Local orders, from WhatsApp.</h1>
+      <p class="lede">Start with a Wooru-owned community concierge number for browsing, ordering and updates. Wooru keeps the order; WhatsApp is a familiar channel. Seller-owned Business numbers are a separate optional expansion, not a prerequisite for the pilot.</p>
+      <div class="grid">
+        <div class="card tint"><h3>Pilot: one Wooru-owned number</h3><p>Residents use ordinary WhatsApp to ask across participating food sellers. Sellers manage their menus and orders in Wooru; they do not have to connect a Business number. Later, eligible sellers could optionally connect their own number via Coexistence.</p></div>
+        <div class="card nobox"><h3>No: mirroring existing society groups</h3><p>Group chats are not synced through Coexistence. Meta's Groups API is a separate product: Official Business Accounts only, max 8 participants, and not for Business-app numbers. Unofficial WhatsApp Web bots are not an option.</p></div>
+      </div>
+      <div class="grid four">
+        <div class="card"><p class="metric">6</p><p class="small">animated flows: today vs. the proposed experience</p></div>
+        <div class="card"><p class="metric">1 number</p><p class="small">shared pilot; slide 8 also models an optional, costlier 5-seller-number expansion</p></div>
+        <div class="card"><p class="metric">0</p><p class="small">production messaging accounts connected today; verify owned-number onboarding and provider terms</p></div>
+        <div class="card"><p class="metric">1</p><p class="small">recommended pilot: one food-ordering journey, not a group-sync product</p></div>
+      </div>
+      <p class="small">Use ← → to move between slides. Animations play automatically; use Pause, Step and Replay under each phone. All chats are synthetic examples, not a live integration.</p>
+      <div class="jump" aria-label="Jump to a flow">
+        <button type="button" data-go="problem">See today's problem</button>
+        <button type="button" data-go="connect">Join the concierge</button>
+        <button type="button" data-go="publish">Publish a menu</button>
+        <button type="button" data-go="order">Order in chat</button>
+        <button type="button" data-go="updates">Status &amp; updates</button>
+        <button type="button" data-go="cost">Cost</button>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide scene-slide" id="problem" data-title="Today's problem">
+      <div class="layout">
+        <div class="notes">
+          <p class="eyebrow">02 / How it works today</p>
+          <h2>Orders get lost in the society group.</h2>
+          <ul>
+            <li>Menus are posted as images in a 300+ member group.</li>
+            <li>"1 pls", "same", "still available?" replies get mixed in with notices and greetings.</li>
+            <li>Sellers copy orders into a notebook by hand, so orders get missed or counted twice.</li>
+            <li>Wooru already has proper menus and orders, but residents rarely open another app.</li>
+          </ul>
+          <p class="callout"><b>The goal:</b> bring Wooru's reliable ordering to where residents already chat, without scraping the group.</p>
+        </div>
+        <div class="scene" data-scene="problem"></div>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide long" id="allowed" data-title="What WhatsApp allows">
+      <p class="eyebrow">03 / Platform rules, not opinions</p>
+      <h2>One Wooru number first. Seller numbers only if useful later.</h2>
+      <div class="grid four">
+        <div class="card"><h3>Personal app</h3><p class="small">What residents use. No API to read their chats or groups, and none is needed: they deliberately message Wooru.</p></div>
+        <div class="card"><h3>Business app</h3><p class="small">What our sellers already use. Free and manual. On its own it has no automation API.</p></div>
+        <div class="card tint"><h3>Cloud API · pilot</h3><p class="small">One Wooru-owned number: webhooks, interactive buttons and lists, templates. Outbound fees depend on message category and current rules.</p></div>
+        <div class="card"><h3>Coexistence · later</h3><p class="small">Eligible sellers may connect their own Business app number to the Cloud API for 1:1 chats. This is not needed for a Wooru-number pilot.</p></div>
+      </div>
+      <div class="table-wrap"><table>
+        <caption>What the proposed integration can and cannot do</caption>
+        <thead><tr><th>Capability</th><th>Status</th><th>Condition / reason</th></tr></thead>
+        <tbody>
+          <tr><td>Resident messages Wooru's community number from ordinary WhatsApp</td><td><span class="tag">Pilot route</span></td><td>No Business account needed by residents; link a signed-in Wooru account first.</td></tr>
+          <tr><td>Resident messages a seller's connected Business number</td><td><span class="tag warn">Optional later</span></td><td>Requires eligible seller, official Coexistence and onboarding. Not the pilot.</td></tr>
+          <tr><td>See active menus, place orders, check "my orders" by chat</td><td><span class="tag">Yes, built by Wooru</span></td><td>Needs a one-time identity link and Wooru's existing order rules (<code>place_mcn_preorder</code>).</td></tr>
+          <tr><td>Wooru → WhatsApp updates (confirmed, ready, delivered)</td><td><span class="tag">Yes</span></td><td>Opt-in; free-form replies only within 24 h of the resident's last message, otherwise approved templates.</td></tr>
+          <tr><td>Seller publishes a menu by chatting with Wooru</td><td><span class="tag warn">Optional pilot</span></td><td>Signed-in seller link, structured draft plus explicit <b>Publish</b>; policy review. Private chats are never auto-posted.</td></tr>
+          <tr><td>Service-provider bookings</td><td><span class="tag warn">Later</span></td><td>Wooru only logs hires today; a booking lifecycle must exist first.</td></tr>
+          <tr><td>Read or post into existing society groups</td><td><span class="tag no">No</span></td><td>Coexistence does not sync groups; Groups API = OBA only, max 8 members, excludes Business-app numbers.</td></tr>
+          <tr><td>Read anyone's personal inbox / sync Business-app catalog &amp; orders</td><td><span class="tag no">No</span></td><td>No supported API. Business-app tools are not synced as orders.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="grid three">
+        <div class="card"><h3>Later: seller-number limits</h3><ul class="small"><li>Coexistence eligibility and supported Business-app version must be checked.</li><li>Optional history sync must never create old orders.</li><li>Companion-device and per-number throughput limits need verification before expansion.</li></ul></div>
+        <div class="card"><h3>Policy</h3><ul class="small"><li>Get opt-in and honour opt-outs.</li><li>Never share one customer's chat with another customer.</li><li>Menu promotions are not automatically "utility" messages.</li></ul></div>
+        <div class="card warnbox"><h3>Onboarding gate</h3><ul class="small"><li>Pilot: verify a Wooru-owned number and official messaging access.</li><li>Seller Coexistence later: Tech Provider approval or partner and seller eligibility checks.</li><li>Neither route is live yet.</li></ul></div>
+      </div>
+      <p class="sources">Sources: <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users" target="_blank" rel="noopener noreferrer">Coexistence</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/groups" target="_blank" rel="noopener noreferrer">Groups API</a><a href="https://business.whatsapp.com/policy" target="_blank" rel="noopener noreferrer">Messaging policy</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Pricing</a></p>
+      <p class="print-note">Seller-number eligibility, opt-in and policy gates are described in the interactive HTML; they are not pilot prerequisites for a Wooru-owned number.</p>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide scene-slide" id="connect" data-title="Join the concierge">
+      <div class="layout">
+        <div class="notes">
+          <p class="eyebrow">04 / One-time setup</p>
+          <h2>The seller joins Wooru. Residents link once.</h2>
+          <h3>Seller</h3>
+          <ul><li>Opts in to the concierge inside her signed-in Wooru seller workspace.</li><li>Publishes her menu in Wooru; no Business-app connection or QR scan is required.</li><li>Can still share a Wooru menu link into an existing group herself, not automatically.</li></ul>
+          <h3>Resident</h3>
+          <ul><li>Messages the Wooru-owned number and opens a one-time, expiring account-link request.</li><li>Confirms inside the signed-in Wooru app; if the request is wrong or expired, reject it and request a new one. Unlink or switch accounts from settings.</li></ul>
+          <p class="callout">Pilot gate: official messaging access for Wooru's number, opt-in and identity-link design. Seller-number Coexistence is an optional later evaluation.</p>
+        </div>
+        <div class="scene" data-scene="connect"></div>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide scene-slide" id="publish" data-title="Seller publishes a menu">
+      <div class="layout">
+        <div class="notes">
+          <p class="eyebrow">05 / WhatsApp → Wooru</p>
+          <h2>A menu sent to Wooru becomes a draft, on purpose.</h2>
+          <ul>
+            <li>The linked seller texts <b>Wooru's own assistant number</b> (a Wooru-owned business account).</li>
+            <li>Missing details are asked for, never guessed.</li>
+            <li>Wooru shows a structured draft; nothing goes live until she taps <b>Publish</b>.</li>
+            <li>The menu then follows the same moderation, capacity and cut-off rules as menus created in the app.</li>
+          </ul>
+          <p class="callout">Group posts and private chats are never copied into the feed automatically.</p>
+        </div>
+        <div class="scene" data-scene="publish"></div>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="slide scene-slide" id="order" data-title="Resident orders in chat">
+      <div class="layout">
+        <div class="notes">
+          <p class="eyebrow">06 / WhatsApp → Wooru → WhatsApp</p>
+          <h2>Browse across sellers. Review, then confirm.</h2>
+          <ul>
+            <li>Typing "menu" returns live menus for the resident's own community only.</li>
+            <li>Native WhatsApp list and reply buttons, so there's no typing errors.</li>
+            <li>Show seller, full total, delivery location, payment arrangement and applicable terms. An explicit <b>Place order</b> comes before any write.</li>
+            <li>Wooru's existing <code>place_mcn_preorder</code> rules apply: membership, cut-off, server-side price and capacity.</li>
+            <li>Until the order record exists, show <b>Checking order</b>. On changed terms or sold-out, show no confirmation and ask for a new review. On timeout, check My Orders before retrying.</li>
+            <li>The same record appears in the seller dashboard and in the resident's My Orders.</li>
+          </ul>
+          <p class="callout"><b>WhatsApp is only the chat window.</b> Every reply tagged "Automatic reply from Wooru" comes from Wooru's own number, using its menus, rules and order records.</p>
+        </div>
+        <div class="scene" data-scene="order"></div>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section class="slide scene-slide" id="updates" data-title="Order status and updates">
+      <div class="layout">
+        <div class="notes">
+          <p class="eyebrow">07 / Both directions</p>
+          <h2>Ask Wooru for your orders. Get reliable updates.</h2>
+          <h3>Resident → Wooru</h3>
+          <ul><li>In the Wooru chat, "my orders" returns the linked resident's own orders across participating sellers.</li><li>Cancelling needs a confirmation and a clear outcome. If a seller cancels, show the reason and next action.</li></ul>
+          <h3>Wooru → resident</h3>
+          <ul><li>The seller updates the status in Wooru and the resident gets a WhatsApp message.</li><li>Outside the 24-hour window, Meta-approved utility templates are used.</li></ul>
+          <p class="callout">Blue ticks mean "read", not "delivered to the door". Order status always comes from Wooru.</p>
+        </div>
+        <div>
+          <div class="tabs" role="tablist" aria-label="Choose flow">
+            <button type="button" role="tab" aria-selected="true" data-tab="myorders">A · "my orders"</button>
+            <button type="button" role="tab" aria-selected="false" data-tab="notify">B · Wooru → WhatsApp updates</button>
+          </div>
+          <div class="scene scene-tab" data-scene="myorders"></div>
+          <div class="scene scene-tab" data-scene="notify" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section class="slide long" id="cost" data-title="Providers and cost">
+      <p class="eyebrow">08 / Build-with options and illustrative cost</p>
+      <h2>Cost the Wooru-number pilot separately from seller-number expansion.</h2>
+      <p class="small">The provider comparison covers official Cloud API options. Seller-number Coexistence is a later eligibility question, not a cost or onboarding requirement for the Wooru-owned pilot.</p>
+      <div class="table-wrap provider-matrix"><table>
+        <thead><tr><th>Route</th><th>Seller-number Coexistence later?</th><th>Strength</th><th>Watch out for</th></tr></thead>
+        <tbody>
+          <tr><td><b>Direct Meta</b></td><td>Eligible route, subject to approval</td><td>Full control; no provider subscription</td><td>Wooru must verify the requirements for its own number; seller-number onboarding adds further gates</td></tr>
+          <tr class="best"><td><b>360dialog</b> · recommended to evaluate</td><td>Documented guide</td><td>API-first; published list price; onboarding support</td><td>€49/number/month list price; obtain a written one-number and later multi-seller quote</td></tr>
+          <tr><td><b>Wati</b></td><td>Yes, advertised</td><td>Ready inbox, chatbots, team tools</td><td>Growth plan has no webhooks; Pro has limited webhooks. Per-workspace pricing</td></tr>
+          <tr><td><b>Twilio</b></td><td>Not by standard sign-up</td><td>Mature messaging APIs</td><td>Standard sign-up requires deleting the app account; $0.005 per message in or out</td></tr>
+        </tbody>
+      </table></div>
+      <div class="table-wrap"><table>
+        <caption>Optional later seller-number expansion only: illustrative monthly INR for 5/20/100 separately connected numbers (1,000 inbound / 1,200 outbound each). Includes ₹4,500 operating allowance; excludes ₹25,000 one-time setup assumption and tax. This is NOT the single-number pilot estimate.</caption>
+        <thead><tr><th>Route</th><th class="num">5 numbers</th><th class="num">20 numbers</th><th class="num">100 numbers</th></tr></thead>
+        <tbody id="cost-table">
+          <tr><td>Meta message fees (in every route)</td><td class="num">₹650</td><td class="num">₹7,600</td><td class="num">₹1,17,500</td></tr>
+          <tr><td>Direct Meta</td><td class="num">₹5,150</td><td class="num">₹12,100</td><td class="num">₹1,22,000</td></tr>
+          <tr class="best"><td>360dialog (direct list price)</td><td class="num">₹28,425</td><td class="num">₹1,05,200</td><td class="num">₹5,87,500</td></tr>
+          <tr><td>Wati Pro (1 workspace per seller)</td><td class="num">₹34,145</td><td class="num">₹1,28,080</td><td class="num">₹7,01,900</td></tr>
+          <tr><td>Twilio (handling fees)</td><td class="num">₹9,825</td><td class="num">₹49,500</td><td class="num">₹5,89,500</td></tr>
+        </tbody>
+      </table></div>
+      <p class="callout"><b>Hypothetical rates.</b> These figures assume FX of USD 85 / EUR 95 INR and Meta rates of marketing ₹1, utility/service ₹0.15 per message. They are not live rates or vendor quotes. A single Wooru-owned number is cheaper in per-number subscription arithmetic but still needs actual traffic, policy and provider quotes.</p>
+      <details class="calc-panel" id="calculator"><summary>Open the INR calculator: pilot one-number preset or optional seller-number expansion</summary><div>
+      <div class="actions">
+        <button type="button" data-preset="pilot">Pilot / 1 Wooru number</button>
+        <button type="button" data-preset="small">Small / 5 sellers</button>
+        <button type="button" data-preset="medium">Medium / 20 sellers</button>
+        <button type="button" data-preset="large">Large / 100 sellers</button>
+        <button type="button" id="reset">Reset all assumptions</button>
+      </div>
+      <p id="preset-description" class="small">Pilot: one Wooru-owned number serving a few food sellers. All traffic and fees are assumptions to replace with observed volumes and quotes.</p>
+      <form id="cost-form" novalidate>
+        <fieldset><legend>1. Monthly traffic across modeled API numbers</legend><div class="field-grid">
+          <div class="field"><label for="sellers">Connected API numbers</label><input id="sellers" type="number" min="1" step="1" value="1" data-kind="positive-count"><small>Pilot: one Wooru number, independent of seller count. Later: one number/seller only if choosing Coexistence.</small></div>
+          <div class="field"><label for="inbound">Inbound API messages</label><input id="inbound" type="number" min="0" step="1" value="5000" data-kind="count"><small>Meta: no inbound charge. Twilio handling still applies.</small></div>
+          <div class="field"><label for="outbound">Outbound API messages</label><input id="outbound" type="number" min="0" step="1" value="6000" data-kind="count"><small>Assume delivery for this illustration. Excludes messages sent only in the Business app.</small></div>
+          <div class="field"><label for="marketing">Chargeable marketing messages</label><input id="marketing" type="number" min="0" step="1" value="500" data-kind="count"><small>Delivered, after applicable exemptions.</small></div>
+          <div class="field"><label for="utility">Chargeable utility messages</label><input id="utility" type="number" min="0" step="1" value="1000" data-kind="count"><small>Delivered, after applicable exemptions.</small></div>
+          <div class="field"><label for="authentication">Chargeable authentication messages</label><input id="authentication" type="number" min="0" step="1" value="0" data-kind="count"><small>International authentication / volume-tier effects are not automated.</small></div>
+          <div class="field"><label for="service">Chargeable service messages</label><input id="service" type="number" min="0" step="1" value="3500" data-kind="count"><small>After each number's own free tier and applicable exemptions.</small></div>
+          <div class="field"><label for="exempt">Meta-exempt outbound messages</label><input id="exempt" type="number" min="0" step="1" value="1000" data-kind="count"><small>Pilot assumes 1,000 eligible free service messages for one number; replace with actual rules and traffic.</small></div>
+        </div><p class="small">The four chargeable category counts + exempt messages must equal outbound volume. Edit all relevant counts together. No automatic pooling of free service allowances.</p></fieldset>
+        <fieldset><legend>2. Hypothetical exchange and Meta rates</legend><div class="field-grid">
+          <div class="field"><label for="usd">INR per USD</label><input id="usd" type="number" min="0.000001" step="any" value="85" data-kind="positive"><small>Planning assumption, not a live FX quote.</small></div>
+          <div class="field"><label for="eur">INR per EUR</label><input id="eur" type="number" min="0.000001" step="any" value="95" data-kind="positive"><small>Planning assumption, not a live FX quote.</small></div>
+          <div class="field"><label for="marketing-rate">Marketing / message, INR</label><input id="marketing-rate" type="number" min="0" step="any" value="1" data-kind="amount"><small>Hypothetical. Replace with applicable Meta rate.</small></div>
+          <div class="field"><label for="utility-rate">Utility / message, INR</label><input id="utility-rate" type="number" min="0" step="any" value="0.15" data-kind="amount"><small>Hypothetical blended rate; not a published quote.</small></div>
+          <div class="field"><label for="authentication-rate">Authentication / message, INR</label><input id="authentication-rate" type="number" min="0" step="any" value="0.15" data-kind="amount"><small>Hypothetical; use the actual applicable tier/market rate.</small></div>
+          <div class="field"><label for="service-rate">Service / message, INR</label><input id="service-rate" type="number" min="0" step="any" value="0.15" data-kind="amount"><small>Hypothetical; applies to chargeable service count only.</small></div>
+        </div></fieldset>
+        <fieldset><legend>3. Provider subscriptions and handling</legend><div class="field-grid">
+          <div class="field"><label for="dialog-rate">360dialog / number / month, EUR</label><input id="dialog-rate" type="number" min="0" step="any" value="49" data-kind="amount"><small>Published Regular direct list price [S5]; not partner pricing.</small></div>
+          <div class="field"><label for="dialog-extra">360dialog extra fees / month, INR</label><input id="dialog-extra" type="number" min="0" step="any" value="0" data-kind="amount"><small>Assumed 0 in list-price illustration. Add applicable partner charges; quote remains required.</small></div>
+          <div class="field"><label for="wati-plan">Wati reference plan</label><select id="wati-plan"><option value="5799" selected>Pro / INR 5,799</option><option value="16799">Business / INR 16,799</option><option value="2699">Growth / INR 2,699 (no webhooks)</option></select><small>Published monthly equivalents, billed quarterly [S7]. Selection restores list fee below.</small></div>
+          <div class="field"><label for="wati-rate">Wati / workspace / month, INR</label><input id="wati-rate" type="number" min="0" step="any" value="5799" data-kind="amount"><small>Editable list-fee reference, not a multi-seller quote.</small></div>
+          <div class="field"><label for="workspaces">Wati workspaces</label><input id="workspaces" type="number" min="1" step="1" value="1" data-kind="positive-count"><small>Pilot assumes one workspace. Seller-number scenarios hypothesize one per seller; confirm contracts.</small></div>
+          <div class="field"><label for="wati-extra">Wati extra fees / month, INR</label><input id="wati-extra" type="number" min="0" step="any" value="0" data-kind="amount"><small>Assumed 0. Rate-card markup, numbers, seats, automation/API add-ons require a quote.</small></div>
+          <div class="field"><label for="twilio-rate">Twilio / inbound or outbound, USD</label><input id="twilio-rate" type="number" min="0" step="any" value="0.005" data-kind="amount"><small>Published handling fee [S9]. Does not establish Coexistence support.</small></div>
+          <div class="field"><label for="twilio-extra">Twilio extra fees / month, INR</label><input id="twilio-extra" type="number" min="0" step="any" value="0" data-kind="amount"><small>Assumed 0; excludes failed-message and optional service fees unless entered.</small></div>
+        </div></fieldset>
+        <fieldset><legend>4. Shared planning allowances, not supplier quotes</legend><div class="field-grid">
+          <div class="field"><label for="backend">Backend / month, INR</label><input id="backend" type="number" min="0" step="any" value="1500" data-kind="amount"><small>Illustrative incremental hosting/monitoring allowance.</small></div>
+          <div class="field"><label for="support">Maintenance / support / month, INR</label><input id="support" type="number" min="0" step="any" value="3000" data-kind="amount"><small>Illustrative shared allowance; direct and provider routes may need different budgets.</small></div>
+          <div class="field"><label for="setup">One-time implementation allowance, INR</label><input id="setup" type="number" min="0" step="any" value="25000" data-kind="amount"><small>Hypothetical only, not an engineering estimate or commitment.</small></div>
+          <div class="field"><label for="tax">Illustrative uniform tax, %</label><input id="tax" type="number" min="0" max="100" step="any" value="0" data-kind="tax"><small>Default 0 excludes tax. Actual tax treatment varies; this is not GST advice.</small></div>
+        </div></fieldset>
+      </form>
+      <div id="calc-summary" role="status" aria-live="polite">Enable JavaScript to calculate. No estimate has been generated.</div>
+      <div id="results" class="result-grid" aria-label="Illustrative route cost breakdowns"></div>
+      <details><summary>Formulas, exclusions, and how to interpret the estimate</summary><div>
+        <p>Meta = marketing count x marketing rate + utility count x utility rate + authentication count x authentication rate + service count x service rate. Counts are delivered and already net of exemptions. Each preset assumes uniform service usage and applies a maximum 1,000 service messages/number exemption before deriving its chargeable counts. Edited counts are not automatically allocated across sellers.</p>
+        <p>360dialog = numbers x EUR monthly list fee x EUR/INR + entered extra fees. Wati = workspaces x entered INR fee + entered extra fees. Twilio = (inbound + outbound) x USD handling fee x USD/INR + entered extra fees. Direct provider fee = 0; this is not zero integration cost.</p>
+        <p>Monthly subtotal = Meta + provider + backend + support. Monthly tax = subtotal x tax %. Monthly estimate = subtotal + tax. First-month economic estimate = monthly estimate + setup x (1 + tax %). For Wati, quarterly base subscription cash = workspace fee x workspace count x 3 before taxes; monthly equivalents are not a cash-flow forecast.</p>
+        <p>All routes use the same illustrative Meta pass-through and operating allowance for comparability, not because actual contracts or engineering needs are identical. Pilot: seller count does not multiply the one Wooru-owned number. Later seller-number Coexistence: count eligible connected numbers separately. Wati may use its own message rate card; reflect differences in its extra-fees input. No volume tiers, automatic FEP detection, cross-border/authentication uplifts, ads, AI/OCR, payment processing, phone rental, or unentered vendor charges are included. Partner arrangements and seller eligibility remain unverified.</p>
+        <p>Blank, invalid, or unknown required numeric values stop calculation. Enter a known zero explicitly. Displayed zeros in extra-fee defaults are labeled exclusions, not evidence that no such charges apply. No “cheapest eligible route” is inferred.</p>
+      </div></details>
+      </div></details>
+      <p class="sources">Sources: <a href="https://360dialog.com/pricing" target="_blank" rel="noopener noreferrer">360dialog pricing</a><a href="https://www.wati.io/pricing/" target="_blank" rel="noopener noreferrer">Wati pricing</a><a href="https://www.twilio.com/en-us/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Twilio pricing</a><a href="https://www.twilio.com/docs/whatsapp/self-sign-up" target="_blank" rel="noopener noreferrer">Twilio sign-up</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Meta pricing</a> · list prices checked 12 Nov 2026</p>
+      <p class="print-note">For a one-number pilot scenario, open the interactive HTML calculator. The multi-number table above is an optional expansion, not a pilot quote.</p>
+    </section>
+
+    <!-- 9 -->
+    <section class="slide long" id="build" data-title="How it's built safely">
+      <p class="eyebrow">09 / Concept architecture: no code written yet</p>
+      <h2>A chat adapter in front of Wooru, not a second order system.</h2>
+      <div class="table-wrap"><table>
+        <caption>Who does what</caption>
+        <thead><tr><th>WhatsApp / Meta (the chat window)</th><th>Wooru (the system behind it)</th></tr></thead>
+        <tbody>
+          <tr><td>Carries messages between residents and the Wooru-owned number</td><td>Runs the community concierge. Eligible seller-number Coexistence is a separate, optional expansion.</td></tr>
+          <tr><td>Shows text, buttons, lists and templates</td><td>Writes every automatic reply: who the resident is, their society, live menus, prices, portions left</td></tr>
+          <tr><td>Sends taps and replies to Wooru's server</td><td>Runs the order rules (<code>place_mcn_preorder</code>) and stores the order: one record for the app, the dashboard and the chat</td></tr>
+          <tr><td>Delivers updates; ticks show only that a message was read</td><td>Owns the order status, cancellations, seller dashboard, app notifications and privacy controls</td></tr>
+        </tbody>
+      </table></div>
+      <div class="arch" aria-label="Message flow">
+        <div class="node"><b>Resident / seller</b>Ordinary WhatsApp or Business app</div>
+        <div class="node"><b>Meta Cloud API</b>Wooru number, buttons, templates</div>
+        <div class="node"><b>Provider</b>e.g. 360dialog (or direct Meta)</div>
+        <div class="node wooru-node"><b>Wooru webhook</b>Supabase Edge Function: verify signature, de-duplicate, queue</div>
+        <div class="node wooru-node"><b>Wooru rules</b>Identity link → existing RPCs such as <code>place_mcn_preorder</code></div>
+        <div class="node wooru-node"><b>Notify back</b>Status change → WhatsApp reply / template + app push</div>
+      </div>
+      <div class="grid four">
+        <div class="card"><h3>Identity &amp; tenancy</h3><ul class="small"><li>Link WhatsApp ID ↔ Wooru user via in-app confirmation.</li><li>Support business-scoped IDs when no phone number is shared.</li><li>Community resolved on the server, never from message text.</li><li>Service-role keys never bypass resident rules.</li></ul></div>
+        <div class="card"><h3>Reliability</h3><ul class="small"><li>Webhooks can arrive late, batched or retried for up to 7 days, so make every action idempotent.</li><li>Ignore seller echoes to avoid loops.</li><li>Edited or deleted messages never silently change orders.</li></ul></div>
+        <div class="card"><h3>Privacy &amp; policy</h3><ul class="small"><li>Opt-in, opt-out, retention and deletion.</li><li>No resident chats sent to third-party AI/OCR without a vetted agreement.</li><li>No private chat is ever made public.</li></ul></div>
+        <div class="card"><h3>Operations</h3><ul class="small"><li>Public HTTPS endpoint (not local Docker).</li><li>Resident unlink, opt-out and seller participation controls.</li><li>Monitor one pilot number; human fallback and template management.</li></ul></div>
+      </div>
+      <div class="grid">
+        <div class="card tint"><h3>Ready to reuse in Wooru</h3><p class="small">Transactional food pre-orders (<code>place_mcn_preorder</code>: membership, cut-off, locks, server prices), order statuses, the notification and web-push pipeline, and Edge Functions.</p></div>
+        <div class="card warnbox"><h3>New work needed</h3><p class="small">WhatsApp identity-link and unlink flow, webhook and outbound sender, conversation state, delegated-actor calls into the RPCs, templates, seller opt-in, admin monitoring and explicit pending/failure UX. Seller-number connection is later. Service bookings need a lifecycle first.</p></div>
+      </div>
+      <p class="sources">Sources: <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/create-webhook-endpoint" target="_blank" rel="noopener noreferrer">Webhook security &amp; retries</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview" target="_blank" rel="noopener noreferrer">Webhooks &amp; user IDs</a></p>
+      <p class="print-note">Wooru remains the order source of truth; the HTML briefing includes the full responsibility table and implementation checklist.</p>
+    </section>
+
+    <!-- 10 -->
+    <section class="slide long" id="next" data-title="Recommendation and next steps">
+      <p class="eyebrow">10 / Decision</p>
+      <h2>Prove one Wooru-number food-order journey first.</h2>
+      <div class="grid three">
+        <div class="card dark"><h3>Recommendation</h3><p>Evaluate <b>360dialog</b> or direct Meta for one Wooru-owned API number. Quote the actual pilot separately. Evaluate seller-number Coexistence only after the community-wide flow proves valuable.</p></div>
+        <div class="card"><h3>Pilot scope</h3><ul class="small"><li>2–3 food sellers, one society, one Wooru number.</li><li>Flows: seller opt-in, resident link, menus, review, pending, confirmed/failed orders, my orders, updates.</li><li>Seller menu drafting by chat optional; sharing to existing groups is human-initiated.</li><li>No automatic group sync, bookings or AI parsing in the first pilot.</li></ul></div>
+        <div class="card"><h3>Go / no-go gates</h3><ul class="small"><li>Written one-number quote and official onboarding route.</li><li>Linked-identity, order-failure and opt-out UX verified.</li><li>Food sellers opt in; community content and privacy review.</li><li>Later Coexistence: separate partner/approval and seller-eligibility checks.</li></ul></div>
+      </div>
+      <details><summary>Do residents need anything new?</summary><div><p>They use ordinary WhatsApp but need a Wooru account and a one-time signed-in link to the Wooru number. They can reject an unexpected link or unlink later. Their other chats and groups are never visible to Wooru.</p></div></details>
+      <details><summary>Why not just read the society group?</summary><div><p>Coexistence does not sync groups. The Groups API needs an Official Business Account, caps groups at 8 participants and excludes Business-app numbers. Unofficial WhatsApp Web automation risks bans, session compromise and privacy breaches. Sellers can still share a Wooru menu link in groups manually.</p></div></details>
+      <details><summary>Is it free if the resident messages first?</summary><div><p>Meta doesn't charge for inbound messages. Outbound charges depend on category, market and current free tiers. Providers add per-number or per-message fees. Don't assume everything inside the 24-hour window is free.</p></div></details>
+      <details><summary>Can we use our Supabase service-role key for chat orders?</summary><div><p>Not on its own. The order RPC relies on the signed-in user's identity. A chat integration needs a secure delegated-actor design that keeps membership, pricing, capacity and ownership checks intact.</p></div></details>
+      <details><summary>What happens to old chats and the seller's phone?</summary><div><p>Nothing happens to the seller's Business app in the Wooru-number pilot. If a seller later chooses Coexistence, up to 6 months of history may optionally sync, but old messages must never create orders; onboarding can unlink companion devices, and seller eligibility needs checking.</p></div></details>
+      <details><summary>Sources (checked 12 November 2026)</summary><div><ol class="reference-list">
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users" target="_blank" rel="noopener noreferrer">Meta: Coexistence / onboard Business app users</a></li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/solution-providers/get-started-for-tech-providers" target="_blank" rel="noopener noreferrer">Meta: become a Tech Provider</a></li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Meta: pricing</a></li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/groups" target="_blank" rel="noopener noreferrer">Meta: Groups API</a></li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/create-webhook-endpoint" target="_blank" rel="noopener noreferrer">Meta: webhook endpoint</a></li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview" target="_blank" rel="noopener noreferrer">Meta: webhooks overview</a></li>
+        <li><a href="https://business.whatsapp.com/policy" target="_blank" rel="noopener noreferrer">WhatsApp Business Messaging Policy</a></li>
+        <li><a href="https://docs.360dialog.com/docs/hub/embedded-signup/coexistence-onboarding" target="_blank" rel="noopener noreferrer">360dialog: Coexistence onboarding</a></li>
+        <li><a href="https://360dialog.com/pricing" target="_blank" rel="noopener noreferrer">360dialog: pricing</a></li>
+        <li><a href="https://www.wati.io/coexistence/" target="_blank" rel="noopener noreferrer">Wati: Coexistence</a></li>
+        <li><a href="https://www.wati.io/pricing/" target="_blank" rel="noopener noreferrer">Wati: pricing</a></li>
+        <li><a href="https://www.twilio.com/docs/whatsapp/self-sign-up" target="_blank" rel="noopener noreferrer">Twilio: sender sign-up</a></li>
+        <li><a href="https://www.twilio.com/en-us/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Twilio: pricing</a></li>
+      </ol><p class="small">Wooru code reviewed: <code>lib/phone.ts</code>, <code>app/mcn/drops/[id].tsx</code>, <code>app/provider/[id].tsx</code>, <code>supabase/migrations/20260917000000_rename_food_drop_copy_to_menu.sql</code>, <code>docs/architecture.md</code>. Prices and platform rules change, so recheck before committing.</p></div></details>
+      <p class="print-note">The HTML presentation includes FAQ, source links and the interactive one-number cost calculator; those appendices are omitted from this PDF slide.</p>
+    </section>
+  </main>
+  <footer class="footer">
+    <button id="previous" type="button" disabled>Previous</button>
+    <span id="counter" aria-live="polite">10 slides</span>
+    <progress id="progress" max="10" value="1" aria-label="Presentation progress"></progress>
+    <button id="next" type="button" disabled>Next</button>
+    <span class="hint">← → / Home / End</span>
+  </footer>
+  <script>
+    'use strict';
+    /* ---------- Scene engine ---------- */
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const speed = { v: 1 };
+    const WAIT = { in: 1250, out: 700, typing: 1000, tap: 800, pulse: 1100, wooru: 1100, wset: 1000, wadd: 1000, wtap: 800, wflash: 1000,
+      ticks: 600, screen: 1900, 'screen-off': 500, sheet: 1200, chat: 1300, sys: 1000, cap: 1200 };
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const fmt = s => esc(s).replace(/\*(.+?)\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+    const avColor = { P: '#E9C46A', G: '#A8DADC', W: '#9FD8C4', R: '#F4A6A6', B: '#cfd8dc' };
+    const nameColors = ['#C2185B', '#1565C0', '#6A1B9A', '#2E7D32', '#EF6C00', '#00838F', '#AD1457', '#5D4037'];
+    let clock = 0;
+    function timeLabel(base) { clock += 1; const m = (base + clock) % 60; return '7:' + String(m).padStart(2, '0') + ' pm'; }
+
+    function qrPattern(el, seed) {
+      let x = seed || 7;
+      const rnd = () => { x = (x * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff; };
+      const finder = (r, c) => {
+        for (const [fr, fc] of [[0, 0], [0, 14], [14, 0]]) {
+          if (r >= fr && r < fr + 7 && c >= fc && c < fc + 7) {
+            const rr = r - fr, cc = c - fc;
+            return (rr === 0 || rr === 6 || cc === 0 || cc === 6 || (rr >= 2 && rr <= 4 && cc >= 2 && cc <= 4)) ? 1 : 0;
+          }
+        }
+        return -1;
+      };
+      const cells = [];
+      for (let r = 0; r < 21; r++) for (let c = 0; c < 21; c++) {
+        const f = finder(r, c);
+        const on = f === -1 ? rnd() > .52 : f === 1;
+        cells.push('<i' + (on ? '' : ' class="o"') + '></i>');
+      }
+      el.innerHTML = cells.join('');
+    }
+
+    class Scene {
+      constructor(root, cfg) {
+        this.root = root; this.cfg = cfg; this.steps = cfg.steps; this.timer = null; this.flushers = [];
+        root.innerHTML =
+          '<span class="illus">Illustrative · not a live integration</span>' +
+          '<div class="stage">' +
+            '<div class="phone-wrap"><p class="lane" data-r="lane"></p><div class="phone"><div class="ph-screen">' +
+              '<div class="ph-status"><span>9:41</span><span>●●● 87%</span></div>' +
+              '<div class="ph-head"><span class="back">‹</span><span class="av" data-r="av"></span><span class="ph-who"><b data-r="name"></b><small data-r="sub"></small></span></div>' +
+              '<div class="ph-body" data-r="body" aria-live="off"></div>' +
+              '<div class="ph-input"><span class="ph-field" data-r="field"></span><span class="ph-send" aria-hidden="true">➤</span></div>' +
+              '<div data-r="overlay"></div>' +
+            '</div></div></div>' +
+            '<div class="conn" aria-hidden="true"><span class="conn-label" data-r="clabel"></span><div class="conn-line"><span class="conn-dot" data-r="dot"></span></div><span class="conn-arrows">WhatsApp ⇄ Wooru</span></div>' +
+            '<div class="w-wrap"><p class="lane">In Wooru</p><div class="wooru"><div class="w-top"><span class="w-logo">wooru</span><span class="w-ctx" data-r="wctx"></span></div><div class="w-body" data-r="wbody"></div></div></div>' +
+          '</div>' +
+          '<div class="scene-bar">' +
+            '<button type="button" data-a="play">Pause</button><button type="button" data-a="step">Step ›</button>' +
+            '<button type="button" data-a="replay">↺ Replay</button><button type="button" data-a="speed" aria-label="Playback speed">1×</button>' +
+            '<span class="scene-count" data-r="count"></span>' +
+            '<p class="scene-cap" data-r="cap" aria-live="polite"></p>' +
+          '</div>';
+        this.r = {};
+        root.querySelectorAll('[data-r]').forEach(el => { this.r[el.dataset.r] = el; });
+        root.querySelector('[data-a="play"]').addEventListener('click', () => (this.playing ? this.pause() : this.play()));
+        root.querySelector('[data-a="step"]').addEventListener('click', () => this.step());
+        root.querySelector('[data-a="replay"]').addEventListener('click', () => { this.reset(); this.play(); });
+        root.querySelector('[data-a="speed"]').addEventListener('click', () => {
+          speed.v = speed.v === 1 ? 1.6 : speed.v === 1.6 ? 0.7 : 1;
+          document.querySelectorAll('[data-a="speed"]').forEach(b => { b.textContent = speed.v === 1 ? '1×' : speed.v === 1.6 ? '1.6×' : '0.7×'; });
+        });
+        this.reset();
+      }
+      setChat(c) {
+        this.r.name.textContent = c.name; this.r.sub.textContent = c.sub || '';
+        this.r.av.textContent = c.av || c.name[0]; this.r.av.style.background = avColor[c.av] || '#E9C46A';
+        if (c.lane) this.r.lane.textContent = c.lane;
+      }
+      reset() {
+        clearTimeout(this.timer); this.flush();
+        this.i = 0; this.playing = false; this.started = false; clock = 0; this.colorMap = {};
+        this.r.lane.textContent = this.cfg.lane || '';
+        this.setChat(this.cfg.chat);
+        this.r.body.innerHTML = this.cfg.phoneInit || '';
+        this.r.body.querySelectorAll('.b, .sys').forEach(el => el.classList.add('static'));
+        this.r.field.innerHTML = '<span class="ph-ph">Message</span>';
+        this.r.overlay.innerHTML = '';
+        this.r.wctx.textContent = this.cfg.wTitle;
+        this.r.wbody.innerHTML = this.cfg.wooru;
+        this.hydrate(this.r.wbody);
+        this.r.clabel.textContent = '';
+        this.r.cap.textContent = this.cfg.intro;
+        this.lastOut = null;
+        this.ui();
+      }
+      ui() {
+        const done = this.i >= this.steps.length;
+        this.root.querySelector('[data-a="play"]').textContent = this.playing ? 'Pause' : done ? 'Play again' : (this.i ? 'Resume' : 'Play');
+        this.r.count.textContent = 'Step ' + this.i + ' / ' + this.steps.length;
+      }
+      flush() { const f = this.flushers; this.flushers = []; f.forEach(fn => fn()); }
+      play() {
+        if (this.i >= this.steps.length) this.reset();
+        this.playing = true; this.started = true; this.ui();
+        this.r.cap.setAttribute('aria-live', 'off');
+        clearTimeout(this.timer); this.timer = setTimeout(() => this.advance(), 500 / speed.v);
+      }
+      pause() { this.playing = false; clearTimeout(this.timer); this.r.cap.setAttribute('aria-live', 'polite'); this.ui(); }
+      step() {
+        this.pause(); this.flush(); this.started = true;
+        if (this.i >= this.steps.length) { this.reset(); this.started = true; }
+        this.advance();
+      }
+      finish() {
+        this.pause(); this.flush(); this.started = true;
+        while (this.i < this.steps.length) this.run(this.steps[this.i++], true);
+        this.r.overlay.innerHTML = ''; this.root.querySelectorAll('.touch').forEach(t => t.remove());
+        this.r.body.scrollTop = this.r.body.scrollHeight; this.ui();
+      }
+      advance() {
+        this.flush();
+        if (this.i >= this.steps.length) { this.playing = false; this.ui(); return; }
+        const wait = this.run(this.steps[this.i++], false);
+        this.ui();
+        if (this.playing) {
+          if (this.i >= this.steps.length) { this.playing = false; this.ui(); }
+          else this.timer = setTimeout(() => this.advance(), wait / speed.v);
+        }
+      }
+      add(el, instant) {
+        if (instant) el.classList.add('static');
+        this.r.body.querySelectorAll('.typing').forEach(t => t.remove());
+        this.r.body.append(el);
+        this.r.body.scrollTo({ top: this.r.body.scrollHeight, behavior: instant || reduceMotion ? 'auto' : 'smooth' });
+        return el;
+      }
+      bubble(s, dir, instant) {
+        const b = document.createElement('div');
+        b.className = 'b' + (dir === 'out' ? ' out' : '');
+        let html = '';
+        if (dir === 'in' && !s.from) html += '<span class="bot">⚙ Automatic reply from Wooru</span>';
+        if (s.from) {
+          if (!this.colorMap[s.from]) this.colorMap[s.from] = nameColors[Object.keys(this.colorMap).length % nameColors.length];
+          html += '<span class="from" style="color:' + this.colorMap[s.from] + '">' + esc(s.from) + '</span>';
+        }
+        html += s.html || fmt(s.text);
+        html += '<span class="meta">' + timeLabel(2) + (dir === 'out' ? '<span class="tk">✓</span>' : '') + '</span>';
+        b.innerHTML = html;
+        this.add(b, instant);
+        if (s.buttons) {
+          const wrap = document.createElement('div');
+          wrap.className = 'btns';
+          s.buttons.forEach(label => { const btn = document.createElement('button'); btn.type = 'button'; btn.tabIndex = -1; btn.textContent = label; btn.dataset.tap = label; wrap.append(btn); });
+          this.add(wrap, instant);
+        }
+        if (dir === 'out') {
+          this.lastOut = b;
+          const tk = b.querySelector('.tk');
+          if (instant) tk.textContent = '✓✓';
+          else setTimeout(() => { tk.textContent = '✓✓'; }, 450);
+        }
+        this.hydrate(b);
+        return b;
+      }
+      touch(target) {
+        const rr = this.root.getBoundingClientRect(), tr = target.getBoundingClientRect();
+        const t = document.createElement('span');
+        t.className = 'touch';
+        t.style.left = (tr.left - rr.left + tr.width / 2) + 'px';
+        t.style.top = (tr.top - rr.top + tr.height / 2) + 'px';
+        this.root.append(t);
+        setTimeout(() => t.remove(), 800);
+      }
+      find(label) {
+        const all = Array.from(this.r.overlay.querySelectorAll('[data-tap]')).concat(Array.from(this.r.body.querySelectorAll('[data-tap]')));
+        return all.filter(el => el.dataset.tap === label).pop();
+      }
+      hydrate(scope) { scope.querySelectorAll('[data-qr]').forEach((q, n) => { if (!q.childElementCount) qrPattern(q, 11 + n); }); }
+      sendOut(text, instant) {
+        if (instant || reduceMotion) { this.r.field.innerHTML = '<span class="ph-ph">Message</span>'; this.bubble({ text }, 'out', instant); return 0; }
+        let n = 0;
+        const iv = setInterval(() => {
+          n += 1;
+          this.r.field.innerHTML = esc(text.replace(/\n/g, ' ').slice(0, n)) + '<span class="caret"></span>';
+          if (n >= text.length) done();
+        }, 32);
+        const done = () => {
+          clearInterval(iv);
+          this.flushers = this.flushers.filter(f => f !== done);
+          this.r.field.innerHTML = '<span class="ph-ph">Message</span>';
+          this.bubble({ text }, 'out', false);
+        };
+        this.flushers.push(done);
+        return text.length * 32 + 650;
+      }
+      run(s, instant) {
+        if (s.cap) this.r.cap.textContent = s.cap;
+        const base = s.w || WAIT[s.t] || 900;
+        switch (s.t) {
+          case 'in': this.bubble(s, 'in', instant); break;
+          case 'out': return this.sendOut(s.text, instant) + (s.w || 500);
+          case 'typing': if (!instant) { const t = document.createElement('div'); t.className = 'b typing'; t.innerHTML = '<i></i><i></i><i></i>'; this.add(t, false); } break;
+          case 'sys': { const d = document.createElement('div'); d.className = 'sys' + (s.alert ? ' alert' : ''); d.textContent = s.text; this.add(d, instant); break; }
+          case 'ticks': if (this.lastOut) { const tk = this.lastOut.querySelector('.tk'); tk.textContent = '✓✓'; tk.classList.add('read'); } break;
+          case 'tap': {
+            const el = this.find(s.label);
+            if (el) {
+              el.classList.add('chosen');
+              const inSheet = el.closest('.sheet-wrap');
+              if (!instant) this.touch(el);
+              const after = () => {
+                if (inSheet) this.r.overlay.innerHTML = '';
+                if (s.echo !== false) { const b = this.bubble({ text: s.label }, 'out', instant); b.querySelector('.tk').classList.add('read'); }
+              };
+              if (instant) after();
+              else { const tm = setTimeout(() => { this.flushers = this.flushers.filter(f => f !== fl); after(); }, 380); const fl = () => { clearTimeout(tm); after(); }; this.flushers.push(fl); }
+            }
+            break;
+          }
+          case 'sheet': {
+            if (instant) break;
+            const rows = s.rows.map(r => '<button type="button" tabindex="-1" data-tap="' + esc(r.title) + '">' + esc(r.title) + '<small>' + esc(r.sub) + '</small></button>').join('');
+            this.r.overlay.innerHTML = '<div class="sheet-wrap"><div class="sheet"><h4>' + esc(s.title) + '</h4>' + rows + '</div></div>';
+            break;
+          }
+          case 'screen': if (!instant) { this.r.overlay.innerHTML = '<div class="ph-overlay">' + s.html + '</div>'; this.hydrate(this.r.overlay); } break;
+          case 'screen-off': this.r.overlay.innerHTML = ''; break;
+          case 'chat':
+            this.setChat(s); this.r.body.innerHTML = s.init || ''; this.lastOut = null;
+            if (s.wTitle) this.r.wctx.textContent = s.wTitle;
+            break;
+          case 'wooru':
+            if (s.title) this.r.wctx.textContent = s.title;
+            this.r.wbody.innerHTML = s.html; this.hydrate(this.r.wbody);
+            if (!instant) this.r.wbody.firstElementChild && this.r.wbody.firstElementChild.classList.add('fly');
+            break;
+          case 'wset': {
+            const el = this.r.wbody.querySelector(s.sel);
+            if (el) {
+              el.innerHTML = s.html; if (s.cls !== undefined) el.className = s.cls; this.hydrate(el);
+              if (!instant) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+            }
+            break;
+          }
+          case 'wadd': {
+            const box = this.r.wbody.querySelector(s.into);
+            if (box) {
+              const tmp = document.createElement('div'); tmp.innerHTML = s.html.trim();
+              const el = tmp.firstElementChild;
+              if (instant) el.classList.add('static'); else el.classList.add('fly');
+              if (s.append) box.append(el); else box.prepend(el);
+            }
+            break;
+          }
+          case 'wflash':
+            if (!instant) this.r.wbody.querySelectorAll(s.sel).forEach(el => { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); });
+            break;
+          case 'wtap': {
+            const el = this.r.wbody.querySelector(s.sel);
+            if (el) { el.classList.add('chosen'); if (!instant) this.touch(el); }
+            break;
+          }
+          case 'pulse':
+            this.r.clabel.textContent = (s.dir === 'r' ? s.label + ' →' : '← ' + s.label);
+            if (!instant) { const d = this.r.dot; d.className = 'conn-dot'; void d.offsetWidth; d.classList.add(s.dir === 'r' ? 'go-r' : 'go-l'); }
+            break;
+          default: break;
+        }
+        return base;
+      }
+    }
+
+    /* ---------- Scene scripts (synthetic examples) ---------- */
+    const menuPhoto = '<div class="photo"><b>Sunday Biryani</b><span>Chicken ₹250 · Veg ₹200</span><span>Order by Sat 8 pm · Priya\'s Kitchen</span></div>Comment below to order 🙏';
+    const SCENES = {
+      problem: {
+        lane: 'Any resident\'s phone', chat: { name: 'Green Meadows Residents', sub: '312 members', av: 'G' },
+        wTitle: 'Seller\'s reality today',
+        wooru: '<div class="w-card"><b>Priya\'s notebook</b><small>Copying orders from the group by hand</small><ul class="tally" data-k="tally"></ul></div>' +
+               '<div class="w-card muted" data-k="app"><b>Sunday biryani · menu on Wooru</b><small>Posted · 0 orders through the app</small></div>',
+        intro: 'A typical evening in a society WhatsApp group. Press Play or Step.',
+        steps: [
+          { t: 'in', from: 'Society office', text: 'Water supply off tomorrow 10 am – 2 pm.', w: 1000, cap: 'Notices, greetings and requests all share one busy group.' },
+          { t: 'in', from: 'Priya · B-702', html: menuPhoto, w: 1500, cap: 'A home-chef posts her weekend menu as an image.' },
+          { t: 'in', from: 'Rahul · B-1204', text: '1 veg pls 🙏', w: 800 },
+          { t: 'wadd', into: '[data-k=tally]', html: '<li>Rahul B-1204 – 1 veg</li>', append: true, w: 900, cap: 'Priya copies each reply into her notebook by hand.' },
+          { t: 'in', from: 'Anita · C-301', text: 'Same, 2', w: 800 },
+          { t: 'wadd', into: '[data-k=tally]', html: '<li class="warn">Anita – 2 … chicken? ("same" as?)</li>', append: true, w: 900, cap: '"Same" as what? Ambiguous replies need follow-up.' },
+          { t: 'in', from: 'Security', text: 'Parcel at main gate for A-1101', w: 650 },
+          { t: 'in', from: 'Vikram · A-904', text: 'Is veg still available?', w: 650 },
+          { t: 'in', from: 'Meera · D-12', text: 'Anyone have a good plumber number?', w: 650 },
+          { t: 'in', from: 'Kiran · A-204', text: 'Good morning all 🌼', w: 600 },
+          { t: 'in', from: 'Sunil · C-110', text: '1 veg + 1 chicken for us', w: 600 },
+          { t: 'in', from: 'Neha · B-905', text: 'Plumber: 98xxxxxx21 👍', w: 600 },
+          { t: 'in', from: 'Society office', text: 'Reminder: maintenance due by 10th', w: 600 },
+          { t: 'sys', text: '48 unread messages', alert: true, cap: 'By night the orders are buried under dozens of unrelated messages.' },
+          { t: 'wadd', into: '[data-k=tally]', html: '<li class="warn">Vikram – question unanswered</li>', append: true, w: 900 },
+          { t: 'wadd', into: '[data-k=tally]', html: '<li class="bad">Sunil – missed (scrolled past)</li>', append: true, cap: 'Questions go unanswered; orders are missed or double-counted.' },
+          { t: 'wset', sel: '[data-k=app]', html: '<b>Sunday biryani · menu on Wooru</b><small>Still 0 orders. Residents rarely open another app.</small><span class="pill no">The gap</span>', cap: 'Wooru\'s ordering is reliable, but residents live in WhatsApp. That is the gap to close.' }
+        ]
+      },
+      connect: {
+        lane: 'Seller Priya\'s phone', chat: { name: 'Wooru concierge', sub: 'One community number · concept', av: 'W' },
+        wTitle: 'Priya\'s Wooru seller workspace', intro: 'Priya joins the Wooru concierge pilot. Her existing Business app is not connected.',
+        wooru: '<div class="w-card"><b>Priya\'s Kitchen</b><small>Home chef · Green Meadows</small></div>' +
+               '<div class="w-card" data-k="wa"><b>Concierge participation</b><small>Not enabled · menus stay in Wooru</small><button class="w-btn" data-k="connect" tabindex="-1">Join the Wooru concierge</button></div>',
+        steps: [
+          { t: 'wtap', sel: '[data-k=connect]', cap: 'Priya opts in from her signed-in Wooru seller workspace.' },
+          { t: 'wset', sel: '[data-k=wa]', html: '<b>Participating in Wooru concierge</b><small>Food menus and orders stay in Wooru · no Business-app connection</small><span class="pill ok">Pilot: on</span>', cap: 'Priya keeps her own number untouched. Wooru manages the shared number, not her private chats or groups.' },
+          { t: 'chat', name: 'Wooru concierge', sub: 'One number · your community', av: 'W', lane: 'Resident Rahul\'s phone (ordinary WhatsApp)', cap: 'Rahul messages the Wooru-owned number, not an individual seller.' },
+          { t: 'out', text: 'Hi, what\'s cooking this weekend?' },
+          { t: 'typing' },
+          { t: 'in', text: 'Hi! I\'m Wooru 👋\nTo see menus in your society, link your Wooru account once.', buttons: ['Link my Wooru account'], cap: 'First contact: explicit account link, not an identity guess based on a phone number.' },
+          { t: 'tap', label: 'Link my Wooru account' },
+          { t: 'pulse', dir: 'r', label: 'Link request' },
+          { t: 'wooru', title: 'Rahul · Wooru app (signed in)', html: '<div class="w-card hl"><b>Link this WhatsApp chat to Rahul?</b><small>Short-lived request · check account and community</small><dl class="kv"><dt>Name</dt><dd>Rahul M</dd><dt>Community</dt><dd>Green Meadows · B-1204</dd></dl><div class="w-actions"><button class="w-btn" data-k="confirm" tabindex="-1">Confirm link</button><button class="w-btn ghost" tabindex="-1">Not me · reject</button></div><small>Expired? Request a new link. Unlink later in Wooru settings.</small></div>', w: 1500, cap: 'Rahul checks and confirms inside his signed-in Wooru app. Wrong or expired requests do not link; account settings can unlink.' },
+          { t: 'wtap', sel: '[data-k=confirm]' },
+          { t: 'pulse', dir: 'l', label: 'Linked' },
+          { t: 'in', text: '✅ Linked to *Rahul M · Green Meadows*.\nType *menu* to see all participating food sellers.', cap: 'Future chat actions use Rahul\'s linked community; group chats and other personal conversations are not accessible.' }
+        ]
+      },
+      publish: {
+        lane: 'Seller Priya\'s phone', chat: { name: 'Wooru Assistant', sub: 'Wooru\'s verified business number', av: 'W' },
+        wTitle: 'Green Meadows · Food menus', intro: 'Priya wants to publish a new weekend menu without opening the app.',
+        wooru: '<div class="w-list" data-k="menus"><div class="w-card"><b>Idli &amp; dosa batter</b><small>Anita\'s Kitchen · daily · 6 left</small></div><div class="w-card"><b>Homemade pickles</b><small>Kiran Foods · until Fri</small></div></div>',
+        steps: [
+          { t: 'out', text: 'New menu: Sunday biryani\nChicken ₹250 × 20\nVeg ₹200 × 15\nDelivery Sun 1–2 pm', cap: 'Priya texts her menu to Wooru\'s assistant, just like messaging a friend.' },
+          { t: 'ticks', w: 500 },
+          { t: 'typing' },
+          { t: 'in', text: 'Got it! One question first: when should orders close?', buttons: ['Sat 8 pm', 'Sun 10 am'], cap: 'Missing details are asked for, never guessed.' },
+          { t: 'tap', label: 'Sat 8 pm' },
+          { t: 'typing' },
+          { t: 'in', html: '<div class="mcard"><span class="mc-tag">Draft · not published</span><b>Sunday biryani</b><ul><li>Chicken biryani: ₹250 · 20 portions</li><li>Veg biryani: ₹200 · 15 portions</li></ul>Delivery Sun 1–2 pm · closes Sat 8 pm<br>Community: Green Meadows</div>Publish this menu to Green Meadows?', buttons: ['Publish', 'Edit'], w: 1800, cap: 'Wooru turns it into a structured draft for her to check.' },
+          { t: 'tap', label: 'Publish', cap: 'Nothing goes live until the seller explicitly taps Publish.' },
+          { t: 'pulse', dir: 'r', label: 'Publish menu' },
+          { t: 'wadd', into: '[data-k=menus]', html: '<div class="w-card hl"><span class="pill ok">New</span><b>Sunday biryani</b><small>Priya\'s Kitchen · Chicken ₹250 (20) · Veg ₹200 (15) · closes Sat 8 pm</small></div>', w: 1400, cap: 'The menu appears in Wooru under the same rules as a menu created in the app.' },
+          { t: 'pulse', dir: 'l', label: 'Confirmation' },
+          { t: 'in', text: '✅ Published to *Green Meadows*.\nResidents can order in Wooru or by messaging *Priya\'s Kitchen* on WhatsApp.', cap: 'Residents see it in the app and can order by chat.' }
+        ]
+      },
+      order: {
+        lane: 'Resident Rahul\'s phone', chat: { name: 'Wooru concierge', sub: 'One number · your community', av: 'W' },
+        wTitle: 'Priya\'s Kitchen · seller dashboard', intro: 'Rahul (already linked) wants Sunday\'s biryani.',
+        wooru: '<div class="w-card"><b>Sunday veg biryani</b><small>₹200 · closes Sat 8 pm</small><dl class="kv"><dt>Veg left</dt><dd data-k="veg">9</dd></dl></div>' +
+               '<p class="lane" style="margin:4px 0 -4px">Orders</p><div class="w-list" data-k="orders"><div class="w-card"><b>#WR-1039 · Anita S, C-301</b><small>2 × Chicken · Confirmed</small></div></div>',
+        steps: [
+          { t: 'out', text: 'menu', cap: 'Rahul asks Wooru for open menus across his linked society.' },
+          { t: 'pulse', dir: 'r', label: 'Message' },
+          { t: 'typing', w: 800 },
+          { t: 'in', text: 'Here are participating sellers in *Green Meadows* 🍲', buttons: ['View menus'], cap: 'Wooru replies with live menus across sellers in his community only.' },
+          { t: 'tap', label: 'View menus', echo: false },
+          { t: 'sheet', title: 'Open menus', rows: [{ title: 'Priya · veg biryani', sub: '₹200 · 9 left · Sun 1–2 pm' }, { title: 'Anita · veg thali', sub: '₹220 · 6 left · Sun 1–2 pm' }], cap: 'A native WhatsApp list compares community sellers; tap instead of type.' },
+          { t: 'tap', label: 'Priya · veg biryani' },
+          { t: 'typing', w: 700 },
+          { t: 'in', text: 'How many portions?', buttons: ['1', '2', '3'] },
+          { t: 'tap', label: '2' },
+          { t: 'typing', w: 700 },
+          { t: 'in', html: '<div class="mcard"><span class="mc-tag">Please confirm</span><b>Priya · 2 × veg biryani</b><ul><li>Total ₹400</li><li>Delivery Sun 1–2 pm · B-1204</li><li>Pay Priya at delivery (example)</li><li>Review cancellation terms · closes Sat 8 pm</li></ul></div>', buttons: ['Place order', 'Change order'], w: 1600, cap: 'Seller, full total, delivery location, payment arrangement and terms are visible before commitment.' },
+          { t: 'tap', label: 'Place order' },
+          { t: 'in', text: 'Checking your order… Please do not tap again. If this takes long, check My Orders.', cap: 'Pending is not confirmed. A delayed or failed reply must never look like a successful order.' },
+          { t: 'pulse', dir: 'r', label: 'place_mcn_preorder' },
+          { t: 'wset', sel: '[data-k=veg]', html: '7', cap: 'Wooru rechecks membership, cutoff, price and capacity. If any change, no order is placed and Rahul must review new terms.' },
+          { t: 'wadd', into: '[data-k=orders]', html: '<div class="w-card hl"><span class="pill ok">New · via Wooru number</span><b>#WR-1042 · Rahul M, B-1204</b><small>2 × veg biryani · ₹400 · Confirmed</small></div>', w: 1300, cap: 'The same confirmed record reaches Priya\'s dashboard and Rahul\'s My Orders.' },
+          { t: 'pulse', dir: 'l', label: 'Confirmed' },
+          { t: 'in', text: '✅ Order *#WR-1042* confirmed\n2 × veg biryani · ₹400\nDelivery Sun 1–2 pm · B-1204', cap: 'Only after the actual Wooru order exists does Rahul receive a confirmed reference.' }
+        ]
+      },
+      myorders: {
+        lane: 'Resident Rahul\'s phone', chat: { name: 'Wooru concierge', sub: 'One number · your community', av: 'W' },
+        phoneInit: '<div class="sys">Saturday</div>',
+        wTitle: 'Rahul · My orders', intro: 'Saturday: Rahul wants to check what he ordered.',
+        wooru: '<div class="w-list"><div class="w-card" data-k="o1"><b>#WR-1042 · Veg biryani × 2</b><small>Priya\'s Kitchen · Sun 1–2 pm · ₹400</small><span class="pill">Confirmed</span></div>' +
+               '<div class="w-card" data-k="o2"><b>#WR-0987 · Idli batter × 1</b><small>Anita\'s Kitchen · Thu</small><span class="pill ok">Delivered</span></div></div>',
+        steps: [
+          { t: 'out', text: 'my orders', cap: 'Rahul asks for his orders in plain words.' },
+          { t: 'pulse', dir: 'r', label: 'Lookup · Rahul only' },
+          { t: 'wflash', sel: '[data-k=o1], [data-k=o2]', cap: 'Wooru reads his own orders, never anyone else\'s.' },
+          { t: 'pulse', dir: 'l', label: 'Order status' },
+          { t: 'in', html: '<div class="mcard"><span class="mc-tag ok">Your recent orders · all sellers</span><ul><li><b>#WR-1042</b> Priya · veg biryani × 2: <i>Confirmed</i>, Sun 1–2 pm</li><li><b>#WR-0987</b> Anita · idli batter × 1: <i>Delivered</i> Thu</li></ul></div>', buttons: ['Cancel #WR-1042', 'Open in Wooru'], w: 1700, cap: 'This is Wooru\'s own number, so Rahul can see only his orders across participating sellers; no individual seller receives the cross-seller list.' },
+          { t: 'tap', label: 'Cancel #WR-1042' },
+          { t: 'typing', w: 700 },
+          { t: 'in', text: 'Cancel *2 × veg biryani* (₹400)? Check the applicable cancellation terms first.', buttons: ['Yes, cancel', 'Keep order'], cap: 'Changes need an explicit confirmation and a clear outcome too.' },
+          { t: 'tap', label: 'Keep order' },
+          { t: 'in', text: '👍 Kept. See you Sunday!', cap: 'Nothing changed. Wooru remains the source of truth.' }
+        ]
+      },
+      notify: {
+        lane: 'Resident Rahul\'s phone', chat: { name: 'Wooru concierge', sub: 'One number · your community', av: 'W' },
+        phoneInit: '<div class="b"><span class="bot">⚙ Automatic reply from Wooru</span>✅ Order <b>#WR-1042</b> confirmed<br>2 × veg biryani · ₹400<span class="meta">Fri</span></div><div class="sys">Sunday</div>',
+        wTitle: 'Priya\'s Kitchen · seller dashboard', intro: 'Sunday: Priya updates the order in Wooru. Rahul hasn\'t messaged in over 24 hours.',
+        wooru: '<div class="w-card" data-k="ord"><b>#WR-1042 · Rahul M, B-1204</b><small>2 × veg biryani · ₹400 · Sun 1–2 pm</small><span class="pill" data-k="st">Confirmed</span><div class="w-actions"><button class="w-btn" data-k="ready" tabindex="-1">Mark ready</button><button class="w-btn ghost" data-k="deliv" tabindex="-1">Mark delivered</button></div></div>',
+        steps: [
+          { t: 'wtap', sel: '[data-k=ready]', cap: '12:40: Priya taps Mark ready in Wooru.' },
+          { t: 'wset', sel: '[data-k=st]', html: 'Ready', cls: 'pill ok' },
+          { t: 'pulse', dir: 'l', label: 'Utility template' },
+          { t: 'in', text: '🍲 Your order *#WR-1042* is ready!\nDelivering to B-1204 between 1–2 pm.', cap: 'Rahul is notified instantly, using an approved template because he is outside the 24-hour window.' },
+          { t: 'out', text: 'Great, thanks! 🙏', cap: 'His reply re-opens the 24-hour service window.' },
+          { t: 'ticks' },
+          { t: 'wtap', sel: '[data-k=deliv]', cap: '13:20: delivered. Priya taps Mark delivered.' },
+          { t: 'wset', sel: '[data-k=st]', html: 'Delivered ✓', cls: 'pill ok' },
+          { t: 'pulse', dir: 'l', label: 'Status update' },
+          { t: 'in', text: '✅ Delivered. Enjoy your meal!\nHow was it?', buttons: ['Loved it 😋', 'Report an issue'], cap: '"Delivered" comes from Wooru. Blue ticks only mean a message was read.' },
+          { t: 'tap', label: 'Loved it 😋' },
+          { t: 'pulse', dir: 'r', label: 'Feedback' },
+          { t: 'wadd', into: '[data-k=ord]', html: '<small style="color:var(--accent)">Rahul: "Loved it 😋" (private feedback to seller)</small>', append: true, cap: 'Optional: feedback flows back to the seller inside Wooru.' }
+        ]
+      }
+    };
+
+    const scenes = new Map();
+    document.querySelectorAll('[data-scene]').forEach(el => scenes.set(el, new Scene(el, SCENES[el.dataset.scene])));
+    const visibleScenes = slide => Array.from(slide.querySelectorAll('[data-scene]')).filter(el => !el.hidden).map(el => scenes.get(el));
+
+    /* ---------- Deck navigation ---------- */
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const selector = document.getElementById('slide-select');
+    const main = document.getElementById('deck');
+    const root = document.documentElement;
+    const status = document.getElementById('status');
+    const previous = document.getElementById('previous');
+    const next = document.getElementById('next');
+    const mode = document.getElementById('mode');
+    let active = Math.max(0, slides.findIndex(slide => '#' + slide.id === location.hash));
+    let readAll = false;
+    const sceneVisible = sc => {
+      const bounds = sc.root.getBoundingClientRect();
+      const viewport = main.getBoundingClientRect();
+      return Math.max(0, Math.min(bounds.bottom, viewport.bottom) - Math.max(bounds.top, viewport.top)) >=
+        Math.min(bounds.height, viewport.height) * 0.25;
+    };
+    const sceneObserver = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (readAll || !entry.isIntersecting) continue;
+        const sc = scenes.get(entry.target);
+        if (sc && sc.root.closest('.slide').classList.contains('active') && !sc.started && sceneVisible(sc)) enterScenes(sc.root.closest('.slide'));
+      }
+    }, { root: main, threshold: [0, 0.25] });
+    scenes.forEach(sc => sceneObserver.observe(sc.root));
+    selector.replaceChildren(...slides.map((slide, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = String(index + 1).padStart(2, '0') + ' / ' + slide.dataset.title;
+      return option;
+    }));
+    document.querySelectorAll('.toolbar button, .toolbar select, .footer button').forEach(control => { control.disabled = false; });
+    root.classList.add('js');
+
+    function enterScenes(slide) {
+      visibleScenes(slide).forEach(sc => {
+        if (reduceMotion) { if (!sc.started) sc.finish(); return; }
+        if (!sceneVisible(sc)) return;
+        if (!sc.started || sc.i >= sc.steps.length) { sc.reset(); sc.play(); } else sc.play();
+      });
+    }
+    function showSlide(index, focus = false) {
+      const prev = active;
+      active = Math.max(0, Math.min(slides.length - 1, index));
+      if (!readAll && prev !== active) scenes.forEach(sc => sc.pause());
+      slides.forEach((slide, i) => { slide.classList.toggle('active', i === active); });
+      selector.value = String(active);
+      previous.disabled = active === 0;
+      next.disabled = active === slides.length - 1;
+      document.getElementById('counter').textContent = (active + 1) + ' / ' + slides.length;
+      document.getElementById('progress').value = active + 1;
+      document.title = 'Wooru + WhatsApp | ' + slides[active].dataset.title;
+      history.replaceState(null, '', '#' + slides[active].id);
+      if (readAll) slides[active].scrollIntoView({ block: 'start' });
+      else { main.scrollTop = 0; if (prev !== active || !visibleScenes(slides[active]).some(sc => sc.started)) enterScenes(slides[active]); }
+      if (focus) main.focus({ preventScroll: true });
+    }
+    selector.addEventListener('change', () => showSlide(Number(selector.value), true));
+    previous.addEventListener('click', () => showSlide(active - 1, true));
+    next.addEventListener('click', () => showSlide(active + 1, true));
+    document.querySelectorAll('[data-go]').forEach(btn => btn.addEventListener('click', () => showSlide(slides.findIndex(s => s.id === btn.dataset.go), true)));
+    mode.addEventListener('click', () => {
+      readAll = !readAll;
+      root.classList.toggle('read-all', readAll);
+      mode.textContent = readAll ? 'Slide view' : 'Read all';
+      mode.setAttribute('aria-pressed', String(readAll));
+      if (readAll) scenes.forEach(sc => sc.finish());
+      showSlide(active, true);
+      if (!readAll) { visibleScenes(slides[active]).forEach(sc => sc.reset()); enterScenes(slides[active]); }
+    });
+    document.querySelectorAll('.tabs').forEach(tabs => tabs.addEventListener('click', event => {
+      const btn = event.target.closest('[data-tab]');
+      if (!btn) return;
+      const slide = tabs.closest('.slide');
+      tabs.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b === btn)));
+      slide.querySelectorAll('.scene-tab').forEach(el => {
+        const show = el.dataset.scene === btn.dataset.tab;
+        if (!show) scenes.get(el).pause();
+        el.hidden = !show;
+      });
+      const sc = scenes.get(slide.querySelector('[data-scene="' + btn.dataset.tab + '"]'));
+      if (reduceMotion) sc.finish(); else { sc.reset(); if (sceneVisible(sc)) sc.play(); }
+    }));
+    document.addEventListener('keydown', event => {
+      const target = event.target;
+      if (event.altKey || event.ctrlKey || event.metaKey || readAll ||
+          (target instanceof Element && target.closest('input, select, textarea, summary, a, [contenteditable="true"]'))) return;
+      const keys = { ArrowRight: active + 1, ArrowLeft: active - 1, PageDown: active + 1, PageUp: active - 1, Home: 0, End: slides.length - 1 };
+      if (Object.prototype.hasOwnProperty.call(keys, event.key)) {
+        event.preventDefault();
+        showSlide(keys[event.key], true);
+      }
+    });
+    document.getElementById('fullscreen').addEventListener('click', async () => {
+      status.textContent = '';
+      try {
+        if (document.fullscreenElement) await document.exitFullscreen();
+        else if (root.requestFullscreen) await root.requestFullscreen();
+        else status.textContent = 'Fullscreen is unavailable in this browser. Use browser zoom or full-window mode.';
+      } catch (error) {
+        console.error('Fullscreen request failed:', error);
+        status.textContent = 'Fullscreen could not start: ' + (error instanceof Error ? error.message : String(error));
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      document.getElementById('fullscreen').textContent = document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen';
+    });
+
+    /* ---------- Cost calculator (unchanged logic from the verified 25-slide version) ---------- */
+    const form = document.getElementById('cost-form');
+    const inputs = Array.from(form.querySelectorAll('input'));
+    const results = document.getElementById('results');
+    const calcSummary = document.getElementById('calc-summary');
+    const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+    const number = new Intl.NumberFormat('en-IN');
+    inputs.forEach(input => {
+      const error = document.createElement('span');
+      error.className = 'error';
+      error.id = input.id + '-error';
+      input.after(error);
+      const hint = input.parentElement.querySelector('small');
+      hint.id = input.id + '-hint';
+      input.setAttribute('aria-describedby', hint.id + ' ' + error.id);
+    });
+    function readValues() {
+      const values = {};
+      let valid = true;
+      for (const input of inputs) {
+        const value = Number(input.value);
+        const kind = input.dataset.kind;
+        let error = '';
+        if (input.value.trim() === '' || !Number.isFinite(value)) error = 'Required: enter a finite number; use 0 only if known.';
+        else if (value < 0) error = 'Cannot be negative.';
+        else if ((kind === 'count' || kind === 'positive-count') && !Number.isSafeInteger(value)) error = 'Enter a whole, safely representable count.';
+        else if ((kind === 'positive' || kind === 'positive-count') && value <= 0) error = 'Must be greater than zero.';
+        else if (kind === 'tax' && value > 100) error = 'Use a percentage from 0 to 100.';
+        input.setAttribute('aria-invalid', String(Boolean(error)));
+        document.getElementById(input.id + '-error').textContent = error;
+        if (error) valid = false;
+        values[input.id] = value;
+      }
+      const assigned = values.marketing + values.utility + values.authentication + values.service + values.exempt;
+      if (valid && (!Number.isSafeInteger(assigned) || assigned !== values.outbound)) {
+        const error = 'Chargeable category counts + exempt messages must equal outbound volume (' + number.format(values.outbound) + '). Currently ' + number.format(assigned) + '.';
+        document.getElementById('outbound-error').textContent = error;
+        document.getElementById('outbound').setAttribute('aria-invalid', 'true');
+        valid = false;
+      }
+      return valid ? values : null;
+    }
+    function calculate(v) {
+      const meta = v.marketing * v['marketing-rate'] + v.utility * v['utility-rate'] +
+        v.authentication * v['authentication-rate'] + v.service * v['service-rate'];
+      const operations = v.backend + v.support;
+      const taxFactor = v.tax / 100;
+      const routes = [
+        { name: 'Direct Meta', provider: 0, note: 'Business/API eligibility and custom integration required for the owned number. Tech Provider approval is a separate gate for onboarding other sellers. No BSP subscription; operating costs are still modeled.' },
+        { name: '360dialog list-price illustration', provider: v.sellers * v['dialog-rate'] * v.eur + v['dialog-extra'], note: 'Direct list-price arithmetic only. Independent-seller partner fees, allowances, and eligibility require a written quote.' },
+        { name: 'Wati workspace illustration', provider: v.workspaces * v['wati-rate'] + v['wati-extra'], note: document.getElementById('wati-plan').value === '2699' ? 'Not integration-ready: Growth lists no webhooks. Price does not make this a suitable sync route.' : 'Confirm exact Coexistence/echo webhook coverage, multi-seller rights, and message rate-card differences. Pro lists limited webhooks.' },
+        { name: 'Twilio handling illustration', provider: (v.inbound + v.outbound) * v['twilio-rate'] * v.usd + v['twilio-extra'], note: 'Not shortlisted for retained-app scope: standard signup requires deleting the app account. A separate supported route would need confirmation.' }
+      ];
+      return routes.map(route => {
+        const subtotal = meta + operations + route.provider;
+        const tax = subtotal * taxFactor;
+        const monthly = subtotal + tax;
+        const setupWithTax = v.setup * (1 + taxFactor);
+        return { ...route, meta, operations, subtotal, tax, monthly, setupWithTax, firstMonth: monthly + setupWithTax };
+      });
+    }
+    function updateCosts() {
+      results.replaceChildren();
+      const values = readValues();
+      if (!values) {
+        calcSummary.classList.add('invalid');
+        calcSummary.textContent = 'Incomplete estimate. Correct the highlighted inputs; no cost totals are shown.';
+        return;
+      }
+      const rows = calculate(values);
+      if (rows.some(row => [row.provider, row.meta, row.operations, row.subtotal, row.tax, row.monthly, row.setupWithTax, row.firstMonth].some(value => !Number.isFinite(value) || value > Number.MAX_SAFE_INTEGER))) {
+        calcSummary.classList.add('invalid');
+        calcSummary.textContent = 'Incomplete estimate. These inputs exceed reliable numeric limits; reduce the amounts or volumes.';
+        return;
+      }
+      calcSummary.classList.remove('invalid');
+      calcSummary.textContent = 'Illustrative scenario, not a complete quote: ' + number.format(values.sellers) + ' numbers; ' + number.format(values.inbound) + ' inbound + ' + number.format(values.outbound) +
+        ' outbound messages/month. Modeled Meta fees: ' + inr.format(rows[0].meta) + '. FX: USD ' + values.usd + ', EUR ' + values.eur +
+        ' INR. Uniform tax assumption: ' + values.tax + '%. Unquoted charges remain excluded unless entered.';
+      const max = Math.max(...rows.map(row => row.monthly), 1);
+      rows.forEach((row, index) => {
+        const card = document.createElement('article');
+        card.className = 'card result';
+        card.dataset.route = String(index);
+        const heading = document.createElement('h3');
+        heading.textContent = row.name;
+        const badge = document.createElement('span');
+        badge.className = 'tag warn';
+        badge.textContent = 'Illustrative / quote required';
+        const amount = document.createElement('p');
+        amount.className = 'metric';
+        amount.dataset.monthly = String(row.monthly);
+        amount.textContent = inr.format(row.monthly);
+        const period = document.createElement('p');
+        period.className = 'small';
+        period.textContent = 'Monthly equivalent, including entered tax assumption';
+        const bar = document.createElement('div');
+        bar.className = 'cost-bar';
+        bar.setAttribute('aria-hidden', 'true');
+        const fill = document.createElement('span');
+        fill.style.width = (row.monthly / max * 100) + '%';
+        bar.append(fill);
+        const dl = document.createElement('dl');
+        dl.className = 'breakdown';
+        const breakdown = [
+          ['Meta delivered-message fees', row.meta], ['Provider subscription / handling', row.provider],
+          ['Backend + maintenance allowance', row.operations], ['Subtotal before tax', row.subtotal],
+          ['Modeled monthly tax', row.tax], ['One-time setup incl. modeled tax', row.setupWithTax],
+          ['First-month economic estimate', row.firstMonth]
+        ];
+        breakdown.forEach(([label, value]) => {
+          const term = document.createElement('dt');
+          const detail = document.createElement('dd');
+          term.textContent = label;
+          detail.textContent = inr.format(value);
+          dl.append(term, detail);
+        });
+        const note = document.createElement('p');
+        note.className = 'small';
+        note.textContent = row.note;
+        if (index === 2) note.textContent += ' Quarterly base subscription cash before tax: ' + inr.format(values.workspaces * values['wati-rate'] * 3) + '. Other charges are additional.';
+        card.append(heading, badge, amount, period, bar, dl, note);
+        results.append(card);
+      });
+    }
+    form.addEventListener('submit', event => event.preventDefault());
+    form.addEventListener('input', () => {
+      document.getElementById('preset-description').textContent = 'Custom / edited assumptions. Counts are totals across the modeled API numbers; no free-tier allocation is inferred.';
+      updateCosts();
+    });
+    document.getElementById('wati-plan').addEventListener('change', event => {
+      document.getElementById('wati-rate').value = event.target.value;
+      updateCosts();
+    });
+    const presets = {
+      pilot: { sellers: 1, inbound: 5000, outbound: 6000, marketing: 500, utility: 1000, service: 3500, exempt: 1000 },
+      small: { sellers: 5, inbound: 1000, outbound: 1200, marketing: 100, utility: 200, service: 0, exempt: 900 },
+      medium: { sellers: 20, inbound: 2000, outbound: 2400, marketing: 200, utility: 400, service: 800, exempt: 1000 },
+      large: { sellers: 100, inbound: 5000, outbound: 6000, marketing: 500, utility: 1000, service: 3500, exempt: 1000 }
+    };
+    function applyPreset(name) {
+      const preset = presets[name];
+      document.getElementById('sellers').value = String(preset.sellers);
+      document.getElementById('workspaces').value = String(preset.sellers);
+      for (const key of ['inbound', 'outbound', 'marketing', 'utility', 'service', 'exempt']) {
+        document.getElementById(key).value = String(preset[key] * preset.sellers);
+      }
+      document.getElementById('authentication').value = '0';
+      document.getElementById('preset-description').textContent = name === 'pilot'
+        ? 'Pilot: one Wooru-owned number for a few food sellers; ' + number.format(preset.inbound) + ' inbound and ' +
+          number.format(preset.outbound) + ' outbound messages/month are hypothetical across the whole community. One-number service exemption assumed; quote and actual traffic required.'
+        : name[0].toUpperCase() + name.slice(1) + ': ' + preset.sellers +
+          ' seller numbers, each with ' + number.format(preset.inbound) + ' inbound and ' + number.format(preset.outbound) +
+          ' outbound messages/month. Uniform traffic and per-number service exemptions assumed; rate/budget inputs are unchanged.';
+      updateCosts();
+    }
+    document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => applyPreset(button.dataset.preset)));
+    document.getElementById('reset').addEventListener('click', () => {
+      form.reset();
+      applyPreset('pilot');
+    });
+    let savedDetails = [];
+    function preparePrint() {
+      if (savedDetails.length === 0) savedDetails = Array.from(document.querySelectorAll('details')).map(detail => ({ detail, open: detail.open }));
+      savedDetails.forEach(({ detail }) => { detail.open = true; });
+      form.querySelectorAll('.print-value').forEach(value => value.remove());
+      form.querySelectorAll('input, select').forEach(input => {
+        const value = document.createElement('span');
+        value.className = 'print-value';
+        value.textContent = input instanceof HTMLSelectElement ? input.selectedOptions[0].textContent : (input.value || 'Not entered / incomplete');
+        input.after(value);
+      });
+    }
+    function finishPrint() {
+      savedDetails.forEach(({ detail, open }) => { detail.open = open; });
+      savedDetails = [];
+    }
+    document.getElementById('print').addEventListener('click', () => window.print());
+    window.addEventListener('beforeprint', preparePrint);
+    window.addEventListener('afterprint', finishPrint);
+    window.addEventListener('beforeprint', () => scenes.forEach(sc => sc.finish()));
+    mode.setAttribute('aria-pressed', 'false');
+    showSlide(active);
+    applyPreset('pilot');
+  </script>
+</body>
+</html>

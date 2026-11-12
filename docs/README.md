@@ -58,6 +58,13 @@
 | [`cross-community-changelog.md`](cross-community-changelog.md) | Append-only log; **mandatory** entry for any federation change |
 | [`decisions/0001-additive-rls-for-cross-community.md`](decisions/0001-additive-rls-for-cross-community.md) | ADR: why federation RLS is additive |
 
+### Research presentations
+
+The web build publishes these standalone HTML decks at `/presentations/whatsapp-integration.html` and `/presentations/wooru-community-concierge.html`; they do not require app sign-in.
+
+- [WhatsApp integration presentation](presentations/whatsapp-integration.html) — 10-slide standalone browser briefing for a proposed Wooru-owned number: seller participation, resident linking, menus, food orders, status updates, provider fit and an editable INR calculator with a one-number pilot preset and separately labeled seller-number scenarios. Coexistence is an optional later route; researched 2026-11-12. Not a live integration; open the HTML locally and use Print / PDF to export.
+- [Wooru community concierge strategy](presentations/wooru-community-concierge.html) — separate 10-slide animated stakeholder presentation contrasting Wooru's community commerce record with typical WhatsApp Business tools; explains why existing society groups cannot automatically sync and illustrates seller-approved, human-confirmed food-menu sharing. Shows selectable confirmed and unavailable resident order paths, plus seller, society-lead and platform-admin concept views, trust, rollout and qualitative economics. Proposed strategy, not a live feature; works offline and prints to PDF.
+
 ### Historical — do not treat as current
 
 | Path | What it is |
