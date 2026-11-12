@@ -49,6 +49,7 @@
 | [`hidden-features/`](hidden-features/README.md) | Built features flagged off in the UI, one doc each with a re-enable checklist | Any flag in `constants/featureFlags.ts` added or flipped |
 | [`fixes/`](fixes/) | Audits, implementation briefs, and verified fixes for edge cases | Created per deep-review pass |
 | [`supabase-mcp.md`](supabase-mcp.md) | Supabase MCP server: setup, per-IDE config, tools, security posture | MCP config, access mode, or enabled feature groups change |
+| [`product-analysis.md`](product-analysis.md) | Product-level 360° analysis: workflows, business rules, status, risks, Q&A | Product scope, status, or risk picture changes |
 
 ### Federation — backend live, UI deferred
 
