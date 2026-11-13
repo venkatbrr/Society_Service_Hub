@@ -273,7 +273,7 @@
     .app { border-color: #C8D6D0; background: var(--paper); border-radius: 15px; }
     .app-head { min-height: 38px; padding: 7px 13px; }
     .app-head .brand-lockup { display: flex; align-items: center; gap: 6px; font-size: 15px; }
-    .brand-lockup > span { width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px; color: #fff; background: var(--primary); font: 500 15px/1 Georgia, serif; }
+    .brand-lockup > img { width: 20px; height: 20px; border-radius: 6px; }
     .app-head small { padding: 3px 8px; border-radius: 20px; background: #F1F4F0; font-size: 10px; }
     .app-body .ui-screen { width: 100%; border: 0; }
     .ui-header { padding: 11px 14px 9px; background: #fff; color: var(--primary); border-bottom: 1px solid #E1E9E1; }
@@ -284,13 +284,46 @@
     .ui-banner { padding: 9px 11px; border-radius: 7px; border-left: 3px solid var(--accent); background: #E8F3ED; font-size: 11px; line-height: 1.35; }
     .ui-banner b { margin-bottom: 2px; font-size: 12px; }
     .ui-banner.sand { border-left-color: #B88237; }
-    .app-tile { padding: 9px 11px; border-color: #DEE6DF; border-radius: 8px; font-size: 12px; line-height: 1.3; }
-    .app-tile small { font-size: 10px; margin-top: 3px; }
+    .app-tile { padding: 9px 11px; border-color: #DEE6DF; border-radius: 8px; font-size: 13px; line-height: 1.3; }
+    .app-tile small { font-size: 11px; margin-top: 3px; }
     .app-tile.highlight { background: #E8F3ED; border-color: #A7D1BF; }
-    .ui-label { margin: 2px 0 -2px; color: var(--accent); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+    .ui-label { margin: 2px 0 -2px; color: var(--accent); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
     .ui-tabs { flex: none; padding: 7px 5px; border-top-color: #E0E7DF; font-size: 10px; }
     .ui-tabs b { color: var(--accent); }
-    .ui-action { border-radius: 6px; padding: 7px 10px; }
+    .ui-action { border: 1px solid var(--primary); border-radius: 6px; padding: 7px 10px; background: var(--primary); color: #fff; cursor: pointer; }
+    .ui-action:hover { background: var(--accent); color: #fff; }
+    .chat-actions button { padding: 4px 6px; border: 1px solid #C5D8CD; border-radius: 7px; color: var(--accent); background: #fff; font-size: 10px; }
+    .chat-actions button:hover { background: var(--mint); }
+    .funding-card button { padding: 4px 8px; font-size: 11px; }
+    .share-action { width: 100%; border-color: var(--primary); cursor: pointer; }
+    .share-action:hover { background: var(--accent); color: #fff; }
+    .menu-tile { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 9px; align-items: center; padding: 6px; background: #fff; border: 1px solid #DEE6DF; border-radius: 8px; }
+    .menu-tile img { width: 90px; height: 70px; border-radius: 5px; object-fit: cover; }
+    .menu-tile b, .menu-tile small { display: block; font-size: 11px; }
+    .menu-tile b { margin: 4px 0 2px; color: var(--primary); }
+    .menu-tile small { color: var(--muted); line-height: 1.25; }
+    .menu-tile .dash-badge { font-size: 9px; padding: 2px 5px; }
+    .demo-milestones { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 0; }
+    .demo-milestones button { padding: 4px 8px; font-size: 11px; border-radius: 20px; }
+    .demo-milestones button[aria-current="true"] { border-color: var(--accent); background: var(--mint); }
+    .scene-caption { margin-top: 7px; }
+    .print-story { display: none; }
+    .demo-inline-controls { display: flex; flex-wrap: wrap; gap: 5px; min-height: 31px; align-items: center; margin-top: 6px; font-size: 11px; color: var(--muted); }
+    .demo-inline-controls button { font-size: 11px; padding: 4px 8px; }
+    .demo-inline-controls button[aria-pressed="true"] { background: var(--primary); color: #fff; }
+    .buy-price { display: flex; align-items: baseline; gap: 10px; color: var(--primary); font-size: 12px; }
+    .buy-price strong { font-size: 25px; line-height: 1; }
+    .buy-breakdown { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; padding: 7px 9px; background: #fff; border: 1px solid #DEE6DF; border-radius: 7px; font-size: 11px; }
+    .buy-breakdown b { text-align: right; }
+    .buy-saving { padding: 6px 9px; background: var(--mint); color: var(--primary); border-radius: 6px; font-size: 11px; }
+    .buy-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+    .buy-actions button { padding: 5px 7px; font-size: 11px; }
+    .buy-actions button[aria-pressed="true"] { border-color: var(--accent); background: var(--mint); }
+    .funding-proof { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+    .funding-card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 13px 15px; border: 1px solid var(--line); border-radius: 9px; background: #fff; min-width: 0; }
+    .funding-card b { color: var(--primary); font-size: 16px; }
+    .funding-card small { color: var(--muted); font-size: 12px; }
+    #collective .role-frame .app { height: 360px; }
     .dash-context { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; color: var(--muted); }
     .dash-badge { display: inline-flex; align-items: center; width: fit-content; padding: 4px 8px; border-radius: 20px; color: var(--accent); background: #E8F3ED; font-size: 10px; font-weight: 500; white-space: nowrap; }
     .dash-badge.warning { background: var(--gold-bg); color: var(--gold); }
@@ -321,7 +354,10 @@
     .console-privacy { color: var(--muted); font-size: 9px; }
     .group-member-link { display: flex; flex-direction: column; gap: 5px; }
     @media screen and (max-height: 780px) and (min-width: 901px) {
+      .js:not(.reading):not(.read-all) #group-bridge.slide.active,
+      .js:not(.reading):not(.read-all) #collective.slide.active { padding-top: 20px; padding-bottom: 20px; }
       .js:not(.reading):not(.read-all) #operations .role-frame .app { height: 300px; }
+      .js:not(.reading):not(.read-all) #collective .role-frame .app { height: 320px; }
       .js:not(.reading):not(.read-all) #group-bridge .phone,
       .js:not(.reading):not(.read-all) #group-bridge .app { height: 288px; }
       .js:not(.reading):not(.read-all) #group-bridge .app .ui-content { gap: 5px; padding: 7px 10px; }
@@ -334,6 +370,25 @@
       .console-screen { grid-template-columns: 80px minmax(0, 1fr); }
       .console-heading { align-items: flex-start; }
       .console-heading .dash-badge { white-space: normal; }
+      .funding-proof { grid-template-columns: 1fr; }
+    }
+    @media screen and (max-width: 900px) {
+      .js:not(.reading):not(.read-all) #seller .columns,
+      .js:not(.reading):not(.read-all) #resident .columns { display: flex; flex-direction: column; }
+      .js:not(.reading):not(.read-all) #seller .stage,
+      .js:not(.reading):not(.read-all) #resident .stage,
+      .js:not(.reading):not(.read-all) #group-bridge .stage { order: -1; display: flex; flex-direction: column; width: 100%; }
+      .js:not(.reading):not(.read-all) .stage .stage-label { order: 0; align-self: flex-start; }
+      .js:not(.reading):not(.read-all) .stage .scene-controls { order: 1; margin: 4px 0; }
+      .js:not(.reading):not(.read-all) .stage .demo-milestones { order: 2; margin-bottom: 8px; }
+      .js:not(.reading):not(.read-all) .stage .showcase { order: 3; }
+      .js:not(.reading):not(.read-all) .stage .scene-caption { order: 4; }
+      .js:not(.reading):not(.read-all) #collective .role-frame .app { height: 360px; }
+    }
+    @media print {
+      .demo-milestones, .demo-inline-controls { display: none !important; }
+      .print-story { display: block; margin-top: 8px; padding: 7px; border-left: 2px solid var(--accent); background: var(--mint); font-size: 11px; }
+      .funding-proof { margin: 8px 0; }
     }
   </style>
 </head>
@@ -356,7 +411,7 @@
         <div class="card"><h3>Supplier</h3><p>Quote on combined demand; fulfill confirmed household orders.</p></div>
         <div class="card dark"><h3>Community</h3><p>Approve suppliers, protect trust and fund Wooru through a disclosed agreement.</p></div>
       </div>
-      <p class="small">Buying circles, funding, dashboards, WhatsApp and AI are concepts—not live integrations. Use ← → to navigate and Step to explore the scenes.</p>
+      <p class="small">Buying circles, funding, dashboards, WhatsApp and AI are concepts—not live integrations. Use ← → to navigate; choose a milestone or use the controls inside each demo.</p>
     </section>
 
     <section class="slide" id="problem" data-title="Why this matters now">
@@ -392,38 +447,40 @@
       <p class="small presenter-detail">This compares common inbox/catalog workflows, not every competing product. Wooru membership is currently based on a join code; account linking does not prove real-world identity. Wholesale sourcing, buying circles, resale-product drafting and WhatsApp sharing are proposals, not shipped features.</p>
     </section>
 
+    <section class="slide long" id="seller" data-title="Seller journey">
+      <div class="columns">
+        <div class="notes">
+          <p class="kicker">04 / SELLER JOURNEY · ONE SHARED NUMBER</p>
+          <h2>Publish once. Sell with a real order record.</h2>
+          <ul>
+            <li>Opt in, create a menu in Wooru or review an optional AI-assisted private draft.</li>
+            <li>Priya publishes before Rahul orders; only her Wooru workspace shows her buyers.</li>
+          </ul>
+          <p class="callout">Start with the seller, then follow the same menu and order into the resident and lead views.</p>
+          <p class="small presenter-detail">The app/PWA carries catalog, history, reviews, moderation and society administration. No WhatsApp or AI opt-in is required for core features. A seller-owned Business-number connection is optional and later, and never grants access to existing groups.</p>
+          <p class="print-story">Demo keyframes: private draft → Priya approves publication → 9 portions remain before Rahul orders → 7 remain after his two-portion order.</p>
+        </div>
+        <div class="stage" data-scene="seller"></div>
+      </div>
+      <noscript>A seller suggests a menu, Wooru asks for missing details and drafts it, then the seller reviews and explicitly publishes in Wooru.</noscript>
+    </section>
+
     <section class="slide long" id="resident" data-title="Resident journey">
       <div class="columns">
         <div class="notes">
-          <p class="kicker">04 / RESIDENT JOURNEY · PROPOSED CHAT EXPERIENCE</p>
+          <p class="kicker">05 / RESIDENT JOURNEY · PROPOSED CHAT EXPERIENCE</p>
           <h2>Ask once. Decide with confidence.</h2>
           <ul>
             <li>Link once in the signed-in app, then ask one Wooru number about live menus across local sellers.</li>
             <li>Review, confirm and check My Orders; opt-in status updates refer to that same order.</li>
           </ul>
-          <p class="callout">Try “Show unavailable path” to see what happens when capacity changes. No record means no order.</p>
+          <p class="callout">Try “Unavailable” to see what happens when capacity changes. No record means no order.</p>
           <p class="small presenter-detail">The app switches from community menus to Rahul's My Orders. Linking must be approved in his signed-in app and can be revoked. On a delayed reply, check My Orders before retrying; seller cancellation needs a reason and next action. Updates outside the service window need approved utility templates. Food pilot; figures are illustrative.</p>
+          <p class="print-story">Demo keyframes: 2 × ₹200 = ₹400 reviewed → #WR-1042 confirmed, stock 9 → 7. Alternate: only 1 remains → no order and no stock change.</p>
         </div>
         <div class="stage" data-scene="resident"></div>
       </div>
       <noscript>Animation needs JavaScript. Resident asks Wooru for vegetarian menus, chooses Priya's veg biryani, confirms 2 portions for ₹400, and receives one Wooru order reference.</noscript>
-    </section>
-
-    <section class="slide long" id="seller" data-title="Seller journey">
-      <div class="columns">
-        <div class="notes">
-          <p class="kicker">05 / SELLER JOURNEY · ONE SHARED NUMBER</p>
-          <h2>Publish once. Sell with a real order record.</h2>
-          <ul>
-            <li>Opt in, create a menu in Wooru or review an optional AI-assisted private draft.</li>
-            <li>Priya publishes, manages capacity and sees Rahul’s confirmed order in her workspace.</li>
-          </ul>
-          <p class="callout">No seller-owned Business number is needed for the one-number pilot.</p>
-          <p class="small presenter-detail">The app/PWA carries catalog, history, reviews, moderation and society administration. No WhatsApp or AI opt-in is required for core features. A seller-owned Business-number connection is optional and later, and never grants access to existing groups.</p>
-        </div>
-        <div class="stage" data-scene="seller"></div>
-      </div>
-      <noscript>A seller suggests a menu, Wooru asks for missing details and drafts it, then the seller reviews and explicitly publishes in Wooru.</noscript>
     </section>
 
     <section class="slide long" id="group-bridge" data-title="Existing group bridge">
@@ -450,33 +507,14 @@
         <div class="role-frame">
           <h3>Resident · optional monthly essentials circle</h3>
           <p class="small">Interest is not an order. Confirm only after the supplier's final price is shown.</p>
-          <div class="app" aria-label="Illustrative resident buying circle screen">
-            <div class="ui-screen">
-              <div class="ui-header"><span class="ui-overline">Community / buying circle</span><b>Monthly essentials</b><small>Green Meadows · proposed</small></div>
-              <div class="ui-content">
-                <div class="ui-banner"><b>Rice · interest gathering</b>Society combines quantities; no payment or order yet.</div>
-                <div class="app-tile"><b>Compare the final offer</b><small>Same grade and quantity · supplier price + packing + transport.</small></div>
-                <div class="app-tile highlight"><b>Choose fulfillment, then confirm</b><small>Society pickup, or a separately quoted doorstep option.</small></div>
-              </div>
-              <div class="ui-tabs"><span>Help</span><span>Saved</span><b>MCN</b><span>Community</span><span>Profile</span></div>
-            </div>
-          </div>
+          <div class="app" id="buying-resident" aria-live="polite" aria-label="Illustrative resident buying circle screen"></div>
+          <div class="demo-inline-controls" id="buying-controls"></div>
         </div>
         <div class="role-frame">
           <h3>Society lead and approved supplier</h3>
           <p class="small">A wholesaler or farmer group confirms its quote; sponsorship never selects the winner.</p>
-          <div class="app" aria-label="Illustrative supplier selection and quote screen">
-            <div class="ui-screen">
-              <div class="ui-header"><span class="ui-overline">Community / sourcing</span><b>Separate sourcing views</b><small>Green Meadows · proposed</small></div>
-              <div class="ui-content">
-                <span class="ui-label">Society lead workspace</span>
-                <div class="app-tile"><b>Compare and select an offer</b><small>Request quotes for grade, quantity, packing and delivery; record why.</small></div>
-                <span class="ui-label">Supplier workspace · own quote only</span>
-                <div class="app-tile highlight"><b>Confirm capacity and terms</b><small>Wholesaler or farmer approves the quote, even if entered with assistance.</small></div>
-              </div>
-              <div class="ui-tabs"><b>Quotes</b><span>Offers</span><span>Fulfillment</span></div>
-            </div>
-          </div>
+          <div class="app" id="buying-sourcing" aria-label="Illustrative lead or supplier sourcing view"></div>
+          <div class="demo-inline-controls" id="buying-roles"><button type="button" data-buy-role="lead" aria-pressed="true">Society lead</button><button type="button" data-buy-role="supplier" aria-pressed="false">Approved supplier</button></div>
         </div>
       </div>
       <p class="small presenter-detail">Illustrative workflow only. The society may request two or more comparable quotes and disclose selection conflicts; residents indicate interest before a fixed offer, then explicitly confirm or decline. If minimum demand is not met or the price changes, no silent order is placed. A supplier must agree to household-level billing and fulfillment at the quoted aggregate price; Wooru holds no stock or resident funds. Packing, transport, optional last-mile delivery, cancellations, quality complaints and replacement terms affect net savings. A low farm-gate price is not the final price. Delivery API integration requires validated multi-stop economics and a provider quote; it is not shown as shipped.</p>
@@ -536,7 +574,11 @@
         <div><b>Association</b>Retains its agreed share; separately contracts for Wooru's platform and support.</div><span aria-hidden="true">→</span>
         <div><b>Wooru</b>Invoices the association for a disclosed service fee, not a grocery markup.</div>
       </div>
-      <div class="grid three">
+      <div class="funding-proof" aria-label="Illustrative sponsor placement and association contract">
+        <div class="funding-card" id="sponsor-example" aria-live="polite"></div>
+        <div class="funding-card"><span class="ui-overline">Association finance · concept</span><b>Two separate agreements</b><small>Sponsor pays the association for the placement. Association approves and pays a disclosed Wooru service invoice. No item markup or buyer-data sale.</small></div>
+      </div>
+      <div class="grid three presenter-detail">
         <div class="card green"><h3>Primary · society contract</h3><p>Sign only when sponsor funding and the society's approval can cover the fee.</p></div>
         <div class="card"><h3>Later · enterprise contract</h3><p>A property operator may pay for proven multi-community tools. No buyer or price is validated.</p></div>
         <div class="card"><h3>Later · managed support</h3><p>Separately scope human procurement or campaign assistance; price its staffing cost.</p></div>
@@ -665,13 +707,16 @@
   </footer>
   <script>
     'use strict';
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const tile = (title, detail, highlight = false) =>
       `<div class="app-tile${highlight ? ' highlight' : ''}"><b>${title}</b><small>${detail}</small></div>`;
+    const menuTile = () =>
+      `<div class="menu-tile"><img src="./media/food-menu-placeholder.jpg" alt="Illustrated food placeholder, not a photo of the dish">` +
+      `<div><span class="dash-badge">Open · veg</span><b>Priya’s Kitchen · Veg biryani</b>` +
+      `<small>₹200 / portion · 9 of 15 left<br>Closes Sat 8 pm · Sun 1–2 pm</small></div></div>`;
     const appScreen = (title, subtitle, content, activeTab) =>
       `<div class="ui-screen"><div class="ui-header"><span class="ui-overline">${activeTab} / Wooru</span><b>${title}</b><small>${subtitle}</small></div>` +
       `<div class="ui-content">${content}</div><div class="ui-tabs">` +
-      ['Help', 'Saved', 'MCN', 'Community', 'Profile'].map(tab =>
+      (activeTab === 'Quotes' ? ['Quotes', 'Orders', 'Delivery'] : ['Help', 'Saved', 'MCN', 'Community', 'Profile']).map(tab =>
         tab === activeTab ? `<b>${tab}</b>` : `<span>${tab}</span>`).join('') + `</div></div>`;
     const residentScreen = state => appScreen(
       state === 'confirmed' || state === 'delivered' ? 'My orders' : 'Pre-order food', 'Green Meadows · Rahul M',
@@ -687,6 +732,11 @@
           tile('#WR-1042 · Priya’s Kitchen', '2 × veg biryani · ₹400 · Sun 1–2 pm · Confirmed', true) +
           `<span class="ui-label">Explore more in your community</span>` +
           tile('Anita’s Kitchen', 'Veg thali · ₹220 · 6 left')
+        : state === 'review'
+          ? `<div class="ui-banner sand"><b>Review before confirming</b>No order is placed until Rahul explicitly confirms.</div>` +
+            tile('Priya’s Kitchen · 2 × veg biryani', '₹200 each · ₹400 total · Sun 1–2 pm', true) +
+            tile('Delivery and payment', 'Flat B-1204 · use verified phone · pay Priya on delivery') +
+            `<button type="button" class="ui-action" data-demo-action="place-order">Place order · ₹400</button>`
         : state === 'unavailable'
           ? `<div class="ui-banner sand"><b>No order placed</b>Only 1 portion remains; the 2-portion quote is no longer valid.</div>` +
             tile('Review revised cart', '1 × veg biryani · ₹200 · confirm again to place', true) +
@@ -697,7 +747,7 @@
             tile('My orders', 'Check the latest status if the reply is delayed')
           : `<div class="ui-banner"><b>Food in your community</b>Browse every participating seller in one place.</div>` +
           `<span class="ui-label">Open for Sunday delivery</span>` +
-          tile('Priya’s Kitchen · Veg biryani', '₹200 · 9 left · closes Sat 8 pm') +
+          menuTile() +
           tile('Anita’s Kitchen · Veg thali', '₹220 · 6 left · closes Sat 6 pm') +
           `<span class="ui-label">My orders</span>` +
           tile('Recent orders', 'Your own order history is here, not in someone else’s chat.'),
@@ -708,13 +758,15 @@
       (state === 'empty'
         ? tile('No Sunday menu yet', 'Create in Wooru or review an assistant draft')
         : state === 'draft'
-          ? tile('Draft · veg biryani', '₹200 · 15 portions · Sat 8 pm cutoff · Review and publish', true)
+          ? tile('Draft · veg biryani', '₹200 · 15 portions · Sat 8 pm cutoff', true) +
+            `<button type="button" class="ui-action" data-demo-action="publish">Review and publish</button>`
           : tile('Published · veg biryani', `₹200 · ${state === 'ordered' ? '7' : '9'} left · Sat 8 pm cutoff`, true)) +
       `<span class="ui-label">Your orders</span>` +
       (state === 'ordered'
-        ? tile('New · #WR-1042 · Rahul M', '2 × veg biryani · ₹400 · Confirmed · Sun 1–2 pm', true)
+        ? tile('New · #WR-1042 · Rahul M', '2 × veg biryani · ₹400 · Confirmed · Sun 1–2 pm', true) +
+          tile('Prep and delivery', '2 portions for Rahul · 7 available after this order')
         : tile('Sunday pre-orders', state === 'published' ? 'Existing reservations · 9 portions left' : 'No Sunday orders yet')) +
-      `<span class="ui-action">Manage menu and capacity</span>`,
+      (state === 'ordered' ? `<button type="button" class="ui-action" data-demo-action="manage">View own delivery roster</button>` : ''),
       'MCN');
     const leadScreen = (ordered, flag = false) => appScreen(
       'Community pulse', 'Green Meadows · president / vice president',
@@ -736,7 +788,7 @@
       `<div><span>Green Meadows</span><span>${ordered ? 8 : 7}</span></div>` +
       `<div><span>Other communities</span><span>107</span></div></div>` +
       `<div class="console-alert${alert ? ' warning' : ''}"><b>${alert ? 'Template delivery failed' : 'Delivery healthy'}</b>` +
-      `<span>${alert ? 'Green Meadows · inspect provider status' : 'No open alerts · provider status available'}</span></div>` +
+      `<span>${alert ? 'Green Meadows · provider retry pending' : 'No open alerts · provider status available'}</span></div>` +
       `<span class="console-privacy">Operational signals only · no buyer details or transcripts</span>` +
       `</div></div>`;
     const groupScreen = state => appScreen(
@@ -747,21 +799,21 @@
         : state === 'draft'
           ? `<div class="ui-banner sand"><b>Private draft · not published</b>Optional AI suggests details; Priya must claim and review.</div>` +
             tile('Sunday veg biryani · ₹200', 'Priya reviews price, 15 portions, Sat 8 pm cutoff and duplicate menus', true) +
-            `<span class="ui-label">Seller action required</span><span class="ui-action">Review and publish</span>`
+            `<span class="ui-label">Seller action required</span><button type="button" class="ui-action" data-demo-action="group-publish">Review and publish</button>`
           : `<div class="ui-banner"><b>Published by Priya</b>Seller-approved menu · live details in Wooru.</div>` +
             tile('Sunday veg biryani · ₹200', 'Priya’s Kitchen · 9 left · Sat 8 pm cutoff', true) +
             `<div class="group-member-link"><span class="ui-label">Member link</span>` +
             tile('Open current menu', 'Unlinked residents sign in before ordering; old previews may be stale') + `</div>` +
-            `<span class="ui-action">Share via WhatsApp</span>`,
+            `<button type="button" class="ui-action" data-demo-action="group-share">Share via WhatsApp</button>`,
       'MCN');
     const groupPhone = state => state === 'chooser'
-      ? `<div class="share-screen"><b>Choose a chat or group</b><div class="share-row">Recent chats</div>` +
-        `<div class="share-row selected">Green Meadows Residents<small>Selected by Priya · 312 members</small></div>` +
-        `<div class="share-action waiting">Continue to preview · not sent</div></div>`
+      ? `<div class="share-screen"><b>Simulated share chooser</b><div class="share-row">Priya selects a chat</div>` +
+        `<div class="share-row selected">Green Meadows Residents<small>Chosen by Priya · Wooru cannot read the group</small></div>` +
+        `<button type="button" class="share-action" data-demo-action="group-preview">Preview link · not sent</button></div>`
       : state === 'preview'
         ? `<div class="share-screen"><b>Green Meadows Residents · preview</b>` +
           `<div class="share-preview"><b>Priya’s Kitchen · Sunday veg biryani</b><small>₹200 · opens current Wooru menu; sign-in required to order</small></div>` +
-          `<small>Preview is illustrative and may go stale. You can cancel.</small><div class="share-action">Send · requires Priya’s tap</div></div>`
+          `<small>Preview is illustrative and may go stale. You can cancel.</small><button type="button" class="share-action" data-demo-action="group-send">Send as Priya</button></div>`
         : `<div class="bubble${state === 'sent' ? ' out' : ''}"><span class="by">${state === 'sent' ? 'Priya · shared Wooru link' : 'Priya · original group post'}</span>` +
           (state === 'sent'
             ? `Sunday veg biryani · ₹200<br>Open Priya’s current Wooru menu (illustrative link)`
@@ -779,9 +831,9 @@
           { who: 'panel', html: residentScreen('browse'), caption: 'Linked to Green Meadows. Rahul can unlink later; Wooru now knows which menus he may see.' },
           { who: 'resident', text: 'What vegetarian food is open Sunday under ₹250?', caption: 'One message to Wooru—not two chats with two different sellers.' },
           { who: 'link', direction: 'forward', text: 'Community + live menus', caption: 'Wooru resolves Rahul’s linked society, then queries its current menus.' },
-          { who: 'wooru', text: 'In Green Meadows, two Sunday options match:\nPriya: veg biryani · ₹200 · 9 left\nAnita: veg thali · ₹220 · 6 left', actions: 'Priya’s biryani | Anita’s thali | Open Wooru', caption: 'AI can phrase the answer; Wooru supplies the exact menu facts.' },
+          { who: 'wooru', text: 'In Green Meadows, two Sunday options match:\nPriya: veg biryani · ₹200 · 9 left\nAnita: veg thali · ₹220 · 6 left', actions: 'Priya’s biryani', caption: 'AI can phrase the answer; Wooru supplies the exact menu facts.' },
           { who: 'resident', text: 'Priya’s biryani, two portions', caption: 'Natural language helps choose, but it does not place the order.' },
-          { who: 'wooru', text: 'Review your order:\n2 × veg biryani · ₹400 total\nPriya’s Kitchen · Sun 1–2 pm · B-1204\nPay Priya at delivery (example)\nCheck cancellation terms · closes Sat 8 pm', actions: 'Place order | Change order', caption: 'Seller, quantity, full total, delivery location, payment arrangement and terms are visible before the write.' },
+          { who: 'wooru', text: 'Review your order:\n2 × veg biryani · ₹400 total\nPriya’s Kitchen · Sun 1–2 pm · B-1204\nPay Priya at delivery (example)\nCheck cancellation terms · closes Sat 8 pm', actions: 'Place order | Change order', panel: residentScreen('review'), caption: 'Seller, quantity, full total, delivery location, payment arrangement and terms are visible before the write.' },
           { who: 'resident', text: 'Place order', caption: 'Rahul explicitly confirms.' },
           { who: 'panel', html: residentScreen('checking'),
             caption: 'Checking order: do not claim success or invite a second tap before a Wooru order exists. A delayed reply points to My Orders.' },
@@ -827,7 +879,7 @@
         steps: [
           { who: 'seller', text: 'Sunday: veg biryani ₹200, 15 portions, delivery 1–2 pm', caption: 'Priya describes a menu in plain language to the Wooru assistant.' },
           { who: 'link', direction: 'forward', text: 'Draft details', caption: 'AI extracts a draft; Wooru does not publish it.' },
-          { who: 'wooru', text: 'Draft: veg biryani · ₹200 · 15 portions · Sun 1–2 pm.\nWhen should orders close?', actions: 'Sat 8 pm | Edit draft', caption: 'Missing details are asked for rather than guessed.' },
+          { who: 'wooru', text: 'Draft: veg biryani · ₹200 · 15 portions · Sun 1–2 pm.\nWhen should orders close?', caption: 'Missing details are asked for rather than guessed.' },
           { who: 'seller', text: 'Sat 8 pm', caption: 'Priya supplies the missing cutoff.' },
           { who: 'wooru', text: 'Ready to review in Wooru:\nVeg biryani · ₹200 · 15 portions\nDelivery Sun 1–2 pm · cutoff Sat 8 pm', actions: 'Review and publish in Wooru', caption: 'Draft first; the seller approves the final listing in Wooru.' },
           { who: 'panel', html: sellerScreen('draft'),
@@ -882,7 +934,7 @@
       panel: residentScreen('browse'),
       steps: [
         { who: 'resident', text: 'Priya’s biryani, two portions', caption: 'Rahul asks for the same two portions shown in the successful path.' },
-        { who: 'wooru', text: 'Review your order:\n2 × veg biryani · ₹400 total\nPriya’s Kitchen · Sun 1–2 pm · B-1204\nPay Priya at delivery (example)\nCheck cancellation terms · closes Sat 8 pm',
+        { who: 'wooru', text: 'Review your order:\n2 × veg biryani · ₹400 total\nPriya’s Kitchen · Sun 1–2 pm · B-1204\nPay Priya at delivery (example)\nCheck cancellation terms · closes Sat 8 pm', panel: residentScreen('review'),
           actions: 'Place order | Change order', caption: 'The quote is a review, not a reservation. Availability can change before confirmation.' },
         { who: 'resident', text: 'Place order', caption: 'Rahul confirms the reviewed terms.' },
         { who: 'panel', html: residentScreen('checking'), caption: 'Wooru checks the server result before replying; it must not claim success yet.' },
@@ -891,14 +943,19 @@
         { who: 'panel', html: residentScreen('unavailable'),
           caption: 'My Orders has no new order. Rahul can review one portion at ₹200, choose another seller, or leave.' },
         { who: 'wooru', text: 'Sorry—only 1 portion is left. No order was placed.\nReview 1 portion for ₹200, or choose another menu. If a reply is delayed, check My Orders before retrying.',
-          actions: 'Review 1 portion | See other menus | My Orders',
           caption: 'A new quantity or price requires a fresh review and another explicit confirmation. No silent substitution.' }
       ]
+    };
+    const milestones = {
+      seller: [['Private draft', 6], ['Published', 8], ['Order received', 10]],
+      resident: [['Find a menu', 7], ['Review ₹400', 9], ['Confirmed', 15], ['Delivered', 17]],
+      group: [['Private draft', 3], ['Published', 4], ['Choose group', 6], ['Preview', 7], ['Sent by Priya', 8]]
     };
 
     class Scene {
       constructor(element, data) {
         this.element = element;
+        this.kind = element.dataset.scene;
         this.primary = data;
         this.data = data;
         this.timer = null;
@@ -910,26 +967,53 @@
               <div class="messages" data-part="messages"></div><div class="phone-compose"><span class="compose-add" aria-hidden="true"></span><span class="compose-field" data-part="compose">${data.phoneCompose || (data.phoneTitle ? 'Activity feed · read-only' : 'Message Wooru…')}</span><span class="compose-send" aria-hidden="true"></span></div>
             </div></div>
             <div class="bridge"><span data-part="direction">Wooru ↔ chat</span><div class="bridge-line" data-part="bridge"></div></div>
-            <div class="app"><div class="app-head"><b class="brand-lockup"><span aria-hidden="true">w</span>wooru</b><small data-part="context"></small></div><div class="app-body" data-part="panel"></div></div>
+            <div class="app"><div class="app-head"><b class="brand-lockup"><img src="./media/wooru-mark.png" alt="">wooru</b><small data-part="context"></small></div><div class="app-body" data-part="panel"></div></div>
           </div>
           <div class="scene-controls">
-            <button type="button" data-action="play">Play</button>
-            <button type="button" data-action="step">Step</button>
-            <button type="button" data-action="replay">Replay</button>
+            <button type="button" data-action="play">Play demo</button>
+            <button type="button" data-action="step">Next step</button>
+            <button type="button" data-action="replay">Reset</button>
             ${data.alternate ? '<button type="button" data-action="variant"></button>' : ''}
             <button type="button" data-action="speed">1×</button>
             <output data-part="count"></output>
-            <p class="scene-caption" data-part="caption" aria-live="polite"></p>
-          </div>`;
+          </div>
+          <div class="demo-milestones" aria-label="Jump to demo milestone">${milestones[this.kind].map(([label, index]) =>
+            `<button type="button" data-milestone="${index}">${label}</button>`).join('')}</div>
+          <p class="scene-caption" data-part="caption" aria-live="polite"></p>`;
         this.parts = {};
         element.querySelectorAll('[data-part]').forEach(node => { this.parts[node.dataset.part] = node; });
         element.querySelector('[data-action="play"]').addEventListener('click', () => this.playing ? this.pause() : this.play());
         element.querySelector('[data-action="step"]').addEventListener('click', () => this.step());
-        element.querySelector('[data-action="replay"]').addEventListener('click', () => { this.reset(); this.play(); });
+        element.querySelector('[data-action="replay"]').addEventListener('click', () => { this.reset(); this.updateUrl(); });
         if (data.alternate) element.querySelector('[data-action="variant"]').addEventListener('click', () => {
           this.data = this.data === this.primary ? this.primary.alternate : this.primary;
           this.reset();
-          this.play();
+          this.updateUrl();
+        });
+        element.querySelector('.demo-milestones').addEventListener('click', event => {
+          const button = event.target.closest('[data-milestone]');
+          if (button && !button.disabled) this.jumpTo(Number(button.dataset.milestone));
+        });
+        element.addEventListener('click', event => {
+          const button = event.target.closest('[data-demo-action]');
+          if (!button || !element.contains(button)) return;
+          switch (button.dataset.demoAction) {
+            case 'place-order': this.jumpTo(this.data === this.primary ? 15 : 7); break;
+            case 'choose-priya': this.jumpTo(9); break;
+            case 'change-order': this.jumpTo(this.data === this.primary ? 7 : 1); break;
+            case 'review-draft': this.jumpTo(6); break;
+            case 'publish': this.jumpTo(8); break;
+            case 'manage':
+              this.parts.panel.innerHTML = appScreen('Delivery roster', 'Priya’s Kitchen · only her own orders',
+                tile('Prep summary', '2 veg biryani for Rahul · 7 of 15 portions remain', true) +
+                tile('#WR-1042 · Rahul M', 'Confirmed · ₹400 · Sun 1–2 pm · mark delivered after fulfillment'), 'MCN');
+              this.parts.caption.textContent = 'Priya sees her own prep totals and delivery roster, never another seller’s orders.';
+              break;
+            case 'group-publish': this.jumpTo(4); break;
+            case 'group-share': this.jumpTo(6); break;
+            case 'group-preview': this.jumpTo(7); break;
+            case 'group-send': this.jumpTo(8); break;
+          }
         });
         element.querySelector('[data-action="speed"]').addEventListener('click', event => {
           this.speed = this.speed === 1 ? 1.5 : 1;
@@ -959,9 +1043,21 @@
       updateControls() {
         this.parts.count.textContent = `Step ${this.index} / ${this.data.steps.length}`;
         this.element.querySelector('[data-action="play"]').textContent =
-          this.playing ? 'Pause' : this.index === this.data.steps.length ? 'Play again' : this.index ? 'Resume' : 'Play';
+          this.playing ? 'Pause' : this.index === this.data.steps.length ? 'Play again' : this.index ? 'Resume' : 'Play demo';
         const variant = this.element.querySelector('[data-action="variant"]');
-        if (variant) variant.textContent = this.data === this.primary ? 'Show unavailable path' : 'Show successful order';
+        if (variant) variant.textContent = this.data === this.primary ? 'Unavailable' : 'Successful order';
+        const list = this.element.querySelector('.demo-milestones');
+        const alternate = this.data !== this.primary;
+        if (list.dataset.alternate !== String(alternate)) {
+          const choices = alternate
+            ? [['Review ₹400', 2], ['Capacity changed', 5], ['No order', 7]]
+            : milestones[this.kind];
+          list.innerHTML = choices.map(([label, index]) =>
+            `<button type="button" data-milestone="${index}">${label}</button>`).join('');
+          list.dataset.alternate = String(alternate);
+        }
+        list.querySelectorAll('[data-milestone]').forEach(button =>
+          button.setAttribute('aria-current', String(Number(button.dataset.milestone) === this.index)));
       }
       pause() {
         this.playing = false;
@@ -994,13 +1090,20 @@
         this.parts.caption.setAttribute('aria-live', 'polite');
         this.advance(false);
       }
-      finish() {
+      jumpTo(target, updateUrl = true) {
         this.pause();
         this.reset();
         this.started = true;
-        while (this.index < this.data.steps.length) this.advance(true);
+        while (this.index < Math.min(target, this.data.steps.length)) this.advance(true, false);
+        if (updateUrl) this.updateUrl();
       }
-      advance(instant) {
+      updateUrl() {
+        const slide = this.element.closest('.slide');
+        if (!slide.classList.contains('active') || document.documentElement.classList.contains('reading')) return;
+        history.replaceState(null, '', '#' + slide.id +
+          (this.index || this.data !== this.primary ? '@' + (this.data === this.primary ? '' : 'u') + this.index : ''));
+      }
+      advance(instant, updateUrl = true) {
         const step = this.data.steps[this.index];
         if (!step) return;
         this.index++;
@@ -1011,6 +1114,7 @@
         } else if (step.who === 'phone') {
           this.parts.messages.innerHTML = step.html;
           this.parts.messages.classList.toggle('instant', instant);
+          this.parts.messages.scrollTop = this.parts.messages.scrollHeight;
           if (step.title) this.parts.phoneTitle.textContent = step.title;
           if (step.subtitle) this.parts.phoneSubtitle.textContent = step.subtitle;
           if (step.compose) this.parts.compose.textContent = step.compose;
@@ -1041,7 +1145,11 @@
             const actions = document.createElement('div');
             actions.className = 'chat-actions';
             step.actions.split(' | ').forEach(label => {
-              const chip = document.createElement('span');
+              const action = { 'Place order': 'place-order', 'Priya’s biryani': 'choose-priya',
+                'Change order': 'change-order', 'Review and publish in Wooru': 'review-draft' }[label];
+              const chip = document.createElement('button');
+              chip.type = 'button';
+              chip.dataset.demoAction = action;
               chip.textContent = label;
               actions.append(chip);
             });
@@ -1054,37 +1162,106 @@
           this.parts.messages.append(bubble);
           this.parts.messages.scrollTop = this.parts.messages.scrollHeight;
         }
+        if (step.panel) this.parts.panel.innerHTML = step.panel;
+        const appAction = this.parts.panel.querySelector('[data-demo-action]');
+        if (appAction) {
+          const overflow = appAction.getBoundingClientRect().bottom - this.parts.panel.getBoundingClientRect().bottom;
+          if (overflow > 0) this.parts.panel.scrollTop += overflow + 8;
+        }
         this.parts.caption.textContent = step.caption;
         this.updateControls();
+        if (updateUrl) this.updateUrl();
       }
     }
 
     document.getElementById('lead-preview').innerHTML = leadScreen(true, true);
     document.getElementById('platform-preview').innerHTML = platformScreen(true, true);
+    let buyingState = 'interest';
+    let buyingFulfillment = 'pickup';
+    let buyingRole = 'lead';
+    const buyingResident = document.getElementById('buying-resident');
+    const buyingSourcing = document.getElementById('buying-sourcing');
+    function renderBuying() {
+      const offered = buyingState !== 'interest';
+      const selected = buyingState === 'pickup' || buyingState === 'delivery';
+      const concluded = buyingState === 'confirmed' || buyingState === 'declined';
+      const delivery = buyingFulfillment === 'delivery';
+      buyingResident.innerHTML = appScreen('Monthly essentials', 'Green Meadows · illustrative quote',
+        offered
+          ? `<span class="dash-badge${concluded && buyingState === 'declined' ? ' warning' : ''}">${buyingState === 'confirmed' ? 'Confirmed · example only' : buyingState === 'declined' ? 'No order placed' : 'Final offer · example only'}</span>` +
+            `<div class="buy-price"><strong>₹${delivery ? 575 : 550}</strong><span>10 kg rice ${delivery ? 'with optional doorstep delivery' : 'at society pickup'}</span></div>` +
+            `<div class="buy-breakdown"><span>Supplier · 10 kg × ₹52</span><b>₹520</b><span>Shared transport · ₹1,200 ÷ 40</span><b>₹30</b>${delivery ? '<span>Optional doorstep</span><b>₹25</b>' : ''}<span>Comparable local price</span><b>₹650</b></div>` +
+            `<div class="buy-saving">${buyingState === 'declined' ? 'Potential saving, not realised' : 'Illustrative saving'} · ₹${delivery ? 75 : 100} per household</div>` +
+            (concluded ? `<button type="button" class="ui-action" data-buy-state="interest">Start another example</button>`
+              : `<div class="buy-actions">${selected ? `<button type="button" class="ui-action" data-buy-state="confirmed">Confirm ₹${delivery ? 575 : 550}</button>` : ''}` +
+                `<button type="button" data-buy-state="pickup" aria-pressed="${buyingState === 'pickup'}">Pickup · ₹550</button>` +
+                `<button type="button" data-buy-state="delivery" aria-pressed="${delivery}">Doorstep · ₹575</button>` +
+                `<button type="button" data-buy-state="declined">Decline</button></div>`)
+          : `<div class="ui-banner sand"><b>Rice · interest gathering</b>40 households × 10 kg = 400 kg. No price accepted, payment or order yet.</div>` +
+            tile('Same grade, same quantity', 'Lead requests comparable supplier quotes; a supplier confirms capacity.') +
+            `<button type="button" class="ui-action" data-buy-state="offer">See final offer</button>`,
+        'MCN');
+      buyingSourcing.innerHTML = buyingRole === 'lead'
+        ? appScreen('Compare rice offers', 'Society lead · proposed sourcing',
+          `<div class="ui-banner"><b>400 kg · 40 households</b>Same rice grade, 10 kg packs. Record the selection reason.</div>` +
+          tile('Offer A · ₹55/kg landed', '₹52/kg supplier + ₹1,200 shared transport · society pickup', true) +
+          tile('Offer B · ₹58/kg landed', 'Comparable grade, packing and pickup included') +
+          `<div class="buy-saving">Lead selects Offer A on price and capacity; sponsor has no ranking role.</div>`,
+          'Community')
+        : appScreen('My rice quote', 'Approved supplier · own offer only',
+          `<div class="ui-banner"><b>Capacity confirmation · example</b>400 kg in forty 10 kg packs, same grade.</div>` +
+          tile('Supplier price · ₹52/kg', '₹20,800 goods · household-level billing · no Wooru stock or funds', true) +
+          tile('Fulfillment terms', '₹1,200 shared transport · pickup window and quality terms confirmed') +
+          `<div class="buy-saving">Only this supplier’s own quote is visible here.</div>`,
+          'Quotes');
+      document.querySelectorAll('[data-buy-role]').forEach(button =>
+        button.setAttribute('aria-pressed', String(button.dataset.buyRole === buyingRole)));
+      document.getElementById('buying-controls').textContent =
+        buyingState === 'interest' ? 'Tap See final offer to begin · simulated data' :
+        buyingState === 'confirmed' ? 'Example order recorded; no real charge or order.' :
+        buyingState === 'declined' ? 'Example closed with no order.' : 'Choose fulfillment, then explicitly confirm or decline.';
+    }
+    buyingResident.addEventListener('click', event => {
+      const button = event.target.closest('[data-buy-state]');
+      if (!button || !buyingResident.contains(button)) return;
+      buyingState = button.dataset.buyState;
+      if (buyingState === 'pickup' || buyingState === 'delivery') buyingFulfillment = buyingState;
+      if (buyingState === 'interest') buyingFulfillment = 'pickup';
+      renderBuying();
+    });
+    document.getElementById('buying-roles').addEventListener('click', event => {
+      const button = event.target.closest('[data-buy-role]');
+      if (!button) return;
+      buyingRole = button.dataset.buyRole;
+      renderBuying();
+    });
+    renderBuying();
+    const sponsorExample = document.getElementById('sponsor-example');
+    let sponsorDismissed = false;
+    function renderSponsor() {
+      sponsorExample.innerHTML = sponsorDismissed
+        ? `<span class="ui-overline">Resident community feed · concept</span><b>Placement hidden</b><small>This resident dismissed the illustrative sponsor card.</small><button type="button" data-sponsor-toggle>Show example</button>`
+        : `<span class="ui-overline">Resident community feed · concept</span><span class="dash-badge warning">Sponsored · association approved</span><b>Neighbourhood grocery partner</b><small>A labelled local placement, separate from food and supplier rankings.</small><button type="button" data-sponsor-toggle>Dismiss example</button>`;
+    }
+    sponsorExample.addEventListener('click', event => {
+      if (!event.target.closest('[data-sponsor-toggle]')) return;
+      sponsorDismissed = !sponsorDismissed;
+      renderSponsor();
+    });
+    renderSponsor();
     const slides = [...document.querySelectorAll('.slide')];
     const select = document.getElementById('jump');
     const deck = document.getElementById('deck');
     const readButton = document.getElementById('read-all');
     const scenes = new Map([...document.querySelectorAll('[data-scene]')].map(element =>
       [element.closest('.slide').id, new Scene(element, scripts[element.dataset.scene])]));
-    const sceneVisible = scene => {
-      const bounds = scene.element.getBoundingClientRect();
-      const viewport = deck.getBoundingClientRect();
-      return Math.max(0, Math.min(bounds.bottom, viewport.bottom) - Math.max(bounds.top, viewport.top)) >=
-        Math.min(bounds.height, viewport.height) * 0.25;
+    const readLocation = () => {
+      const [id, state] = location.hash.slice(1).split('@');
+      const match = state?.match(/^(u?)(\d+)$/);
+      return { id, state: match ? { unavailable: Boolean(match[1]), step: Number(match[2]) } : null };
     };
-    const sceneObserver = new IntersectionObserver(entries => {
-      for (const entry of entries) {
-        const scene = scenes.get(entry.target.closest('.slide').id);
-        if (!reading && scene && scene.element.closest('.slide').classList.contains('active') &&
-            !scene.started && sceneVisible(scene)) {
-          if (reduced) scene.finish();
-          else scene.play();
-        }
-      }
-    }, { root: deck, threshold: [0, 0.25] });
-    scenes.forEach(scene => sceneObserver.observe(scene.element));
-    let active = Math.max(0, slides.findIndex(slide => '#' + slide.id === location.hash));
+    const initialLocation = readLocation();
+    let active = Math.max(0, slides.findIndex(slide => slide.id === initialLocation.id));
     let reading = false;
     select.replaceChildren(...slides.map((slide, i) => {
       const option = document.createElement('option');
@@ -1094,7 +1271,7 @@
     }));
     document.documentElement.classList.add('js');
     document.querySelectorAll('.top button, .top select, .bottom button').forEach(control => { control.disabled = false; });
-    function show(index, focus = false) {
+    function show(index, focus = false, restore = null) {
       const previous = active;
       active = Math.max(0, Math.min(slides.length - 1, index));
       if (previous !== active) scenes.forEach(scene => scene.pause());
@@ -1110,10 +1287,13 @@
       else {
         deck.scrollTop = 0;
         const scene = scenes.get(slides[active].id);
-        if (scene && previous !== active) scene.reset();
-        if (scene && !scene.started && sceneVisible(scene)) {
-          if (reduced) scene.finish();
-          else scene.play();
+        if (scene && previous !== active) {
+          scene.data = scene.primary;
+          scene.reset();
+        }
+        if (scene && restore) {
+          scene.data = restore.unavailable && scene.primary.alternate ? scene.primary.alternate : scene.primary;
+          scene.jumpTo(restore.step);
         }
       }
       if (focus) deck.focus({ preventScroll: true });
@@ -1126,7 +1306,7 @@
       document.documentElement.classList.toggle('reading', reading);
       readButton.textContent = reading ? 'Slide view' : 'Read all';
       readButton.setAttribute('aria-pressed', String(reading));
-      if (reading) scenes.forEach(scene => scene.finish());
+      if (reading) scenes.forEach(scene => scene.jumpTo(scene.data.steps.length, false));
       else {
         const scene = scenes.get(slides[active].id);
         if (scene) scene.reset();
@@ -1141,15 +1321,50 @@
       if (target !== undefined) { event.preventDefault(); show(target, true); }
     });
     document.getElementById('print').addEventListener('click', () => window.print());
-    window.addEventListener('beforeprint', () => scenes.forEach(scene => {
-      scene.data = scene.primary;
-      scene.finish();
-    }));
-    window.addEventListener('hashchange', () => {
-      const index = slides.findIndex(slide => '#' + slide.id === location.hash);
-      if (index >= 0 && index !== active) show(index);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) scenes.forEach(scene => scene.pause());
     });
-    show(active);
+    const printState = new Map();
+    let printBuying;
+    let printSponsorDismissed;
+    window.addEventListener('beforeprint', () => {
+      printSponsorDismissed = sponsorDismissed;
+      sponsorDismissed = false;
+      renderSponsor();
+      printBuying = { state: buyingState, fulfillment: buyingFulfillment, role: buyingRole };
+      buyingState = 'pickup';
+      buyingFulfillment = 'pickup';
+      buyingRole = 'lead';
+      renderBuying();
+      scenes.forEach((scene, id) => {
+        printState.set(id, { data: scene.data, index: scene.index, started: scene.started });
+        scene.data = scene.primary;
+        scene.jumpTo(id === 'resident' ? 15 : scene.primary.steps.length, false);
+      });
+    });
+    window.addEventListener('afterprint', () => {
+      sponsorDismissed = printSponsorDismissed;
+      renderSponsor();
+      if (printBuying) {
+        buyingState = printBuying.state;
+        buyingFulfillment = printBuying.fulfillment;
+        buyingRole = printBuying.role;
+        renderBuying();
+      }
+      scenes.forEach((scene, id) => {
+        const state = printState.get(id);
+        if (!state) return;
+        scene.data = state.data;
+        if (state.started) scene.jumpTo(state.index, false);
+        else scene.reset();
+      });
+    });
+    window.addEventListener('hashchange', () => {
+      const next = readLocation();
+      const index = slides.findIndex(slide => slide.id === next.id);
+      if (index >= 0) show(index, false, next.state);
+    });
+    show(active, false, initialLocation.state);
   </script>
   <script src="./cost-calculator.js"></script>
 </body>
