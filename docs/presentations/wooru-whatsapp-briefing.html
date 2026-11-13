@@ -355,6 +355,10 @@
     .wish-hero svg { grid-row: span 2; box-sizing: content-box; width: 20px; height: 20px; padding: 8px; border-radius: 50%; background: #fff; color: #B88237; }
     .wish-hero b { font-size: 14px; font-weight: 500; line-height: 1.25; }
     .wish-hero small { color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .buy-scene .showcase > [hidden] { display: none !important; }
+    .wish-link { display: flex; flex-direction: column; gap: 2px; margin: 5px 0 2px; }
+    .wish-link b { color: #111B21; font-size: 12px; font-weight: 500; }
+    .wish-link small { color: #54656F; font-size: 11px; }
     .wish-field { padding: 9px 11px; border: 1px solid #CFDCD5; border-radius: 8px; background: #fff; color: var(--primary); font-size: 13px; }
     .wish-chips { display: flex; gap: 6px; }
     .wish-chips > * { flex: 1; padding: 7px 0; border: 1px solid #CFDCD5; border-radius: 18px; background: #fff; color: var(--muted); font-size: 12px; font-weight: 400; text-align: center; }
@@ -813,12 +817,13 @@
           <p class="kicker">07 / MAKE A WISH · PROPOSED CONCEPT</p>
           <h2>One wish. One demand pool. A price residents choose.</h2>
           <ul>
-            <li>A resident wishes for groceries, food or a service; neighbours tap “Me too.”</li>
+            <li>A resident wishes for groceries, food or a service and shares it to the WhatsApp group.</li>
+            <li>Neighbours tap “Me too” from the chat and join in Wooru.</li>
             <li>At minimum demand the lead compares approved supplier quotes.</li>
             <li>Each household confirms only the final landed price.</li>
           </ul>
           <p class="callout">Interest is not an order. Sponsors never pick the winning supplier.</p>
-          <p class="print-story">Fictional demo, not pilot data: wish for 10 kg rice → 40 households · 400 kg → Offer A ₹55/kg landed → ₹550 at pickup vs ₹650 local.</p>
+          <p class="print-story">Fictional demo, not pilot data: wish for 10 kg rice → shared to the society WhatsApp group → 40 households · 400 kg → Offer A ₹55/kg landed → ₹550 at pickup vs ₹650 local.</p>
         </div>
         <div class="stage buy-scene" id="buying-scene">
           <span class="stage-label">Fictional demo · Make a wish is a concept, not shipped</span>
@@ -830,7 +835,14 @@
               <span class="home-bar" aria-hidden="true"></span>
             </div></div>
             <div class="bridge"><span id="buying-bridge">Wish → pool</span><div class="bridge-line"></div></div>
-            <div class="app"><div class="app-screen">
+            <div class="phone" id="buying-wa" hidden><div class="phone-inner">
+              <div class="chat-statusbar" aria-hidden="true"><span>7:07</span><span class="island"></span><span class="chat-signal"></span></div>
+              <div class="phone-head"><span class="chat-back" aria-hidden="true"></span><span class="avatar">G</span><span class="chat-contact"><b>Green Meadows Residents</b><small>Anita’s WhatsApp · illustrative</small></span><span class="chat-tools" aria-hidden="true"></span></div>
+              <div class="messages" id="buying-wa-messages" aria-label="Illustrative WhatsApp group with Rahul’s shared wish"></div>
+              <div class="phone-compose"><span class="compose-pill"><span class="compose-field">Message</span></span><span class="compose-mic" aria-hidden="true"></span></div>
+              <span class="home-bar" aria-hidden="true"></span>
+            </div></div>
+            <div class="app" id="buying-sourcing-app"><div class="app-screen">
               <div class="chat-statusbar app-status" aria-hidden="true"><span>7:07</span><span class="island"></span><span class="chat-signal"></span></div>
               <div class="app-head"><b class="brand-lockup"><img src="./media/wooru-mark.png" alt="">wooru</b><small id="buying-role-label">Society lead</small></div>
               <div class="app-body" id="buying-sourcing" aria-label="Illustrative lead or supplier sourcing screen"></div>
@@ -1562,8 +1574,21 @@
 
     document.getElementById('lead-preview').innerHTML = leadScreen(true, true);
     document.getElementById('platform-preview').innerHTML = platformScreen(true, true);
-    const buyMilestones = ['Make a wish', 'Neighbours join', 'Minimum reached', 'Compare quotes', 'Final offer', 'Household decides'];
-    const buyBridge = ['Wish', 'Me too × 4', '400 kg pool', 'Quotes', 'Final offer', 'Decision'];
+    const buyMilestones = ['Make a wish', 'Shared on WhatsApp', 'Minimum reached', 'Compare quotes', 'Final offer', 'Household decides'];
+    const buyBridge = ['Wish', 'Shared to group', '400 kg pool', 'Quotes', 'Final offer', 'Decision'];
+    const buyingWa = document.getElementById('buying-wa');
+    const buyingSourcingApp = document.getElementById('buying-sourcing-app');
+    buyingWa.querySelector('.chat-tools').innerHTML = icon('call') + icon('more');
+    buyingWa.querySelector('.compose-pill').insertAdjacentHTML('afterbegin', icon('smile'));
+    buyingWa.querySelector('.compose-mic').innerHTML = icon('mic');
+    document.getElementById('buying-wa-messages').innerHTML =
+      `<div class="bubble"><span class="by">Rahul · B-1204</span>Wished on Wooru, who’s in?` +
+      `<div class="share-preview wish-link"><b>Wooru · Rahul’s wish</b><small>Sona masoori rice · 10 kg every month · Green Meadows only</small></div>` +
+      `<span class="stamp">7:02 pm · shared by Rahul</span>` +
+      `<span class="chat-actions"><button type="button" data-buy-go="2">Me too on Wooru</button></span></div>` +
+      `<div class="bubble out">Me too, joined in Wooru<span class="stamp">7:04 pm</span></div>` +
+      `<div class="bubble"><span class="by">Suresh · C-302</span>Joined. Same grade please<span class="stamp">7:05 pm</span></div>` +
+      `<div class="bubble"><span class="by">Kiran · A-708</span>Me too<span class="stamp">7:06 pm</span></div>`;
     let buyStep = 0;
     let buyingFulfillment = 'pickup';
     let buyingDecision = 'confirmed';
@@ -1592,10 +1617,10 @@
         `<span class="ui-label">Wish type</span><div class="wish-chips"><b>Groceries</b><span>Food</span><span>Services</span></div>` +
         `<span class="ui-label">I wish for</span><div class="wish-field">Sona masoori rice · same grade</div>` +
         `<span class="ui-label">How much, every month</span><div class="wish-chips"><span>5 kg</span><b>10 kg</b><span>25 kg</span></div>` +
-        `<button type="button" class="ui-action" data-buy-go="1">${icon('wish')}Post wish</button>`, 'MCN');
+        `<button type="button" class="ui-action" data-buy-go="1">${icon('wish')}Post & share on WhatsApp</button>`, 'MCN');
       if (buyStep === 1) return appScreen('Wishes', 'Green Meadows · your wish is live',
         wishCard(4, false) +
-        tile('Visible to Green Meadows only', 'No price, payment or order yet. You can withdraw any time.') +
+        tile('Shared to Green Meadows Residents', 'You picked the WhatsApp group and pressed Send. No order yet.') +
         `<button type="button" class="ui-action" data-buy-go="2">See who joined</button>`, 'MCN');
       if (buyStep === 2) return appScreen('Wishes', 'Green Meadows · demand pooled',
         `<div class="ui-banner"><b>Minimum reached</b>Your society lead can now ask approved suppliers for same-grade quotes.</div>` + wishCard(40, true), 'MCN');
@@ -1670,6 +1695,8 @@
       buyingSourcing.innerHTML = buyingRole === 'lead' ? leadBuyScreen() : supplierBuyScreen();
       revealAction(buyingResident);
       revealAction(buyingSourcing);
+      buyingWa.hidden = buyStep !== 1;
+      buyingSourcingApp.hidden = buyStep === 1;
       document.getElementById('buying-role-label').textContent = buyingRole === 'lead' ? 'Society lead' : 'Approved supplier';
       document.getElementById('buying-bridge').textContent = buyBridge[buyStep];
       document.getElementById('buying-count').textContent = `Step ${buyStep + 1} / ${buyMilestones.length}`;
@@ -1683,7 +1710,7 @@
       const declined = buyingDecision === 'declined';
       document.getElementById('buying-caption').textContent = [
         'Rahul taps Make a wish: 10 kg sona masoori rice every month. A wish is interest, not an order.',
-        'The wish is visible to Green Meadows only. Early “Me too” taps start the pool; the lead sees the total.',
+        'Rahul shares the wish to the society WhatsApp group himself: he picks the group and presses Send; Wooru never posts on its own. Neighbours tap the link and join in Wooru.',
         '40 households join · 400 kg. Minimum demand is met, so the society lead can request quotes.',
         buyingRole === 'lead' ? 'The lead compares same-grade offers on landed price and capacity, and records why Offer A wins.'
           : 'The approved supplier sees only its own request and quote, and confirms 400 kg capacity.',
