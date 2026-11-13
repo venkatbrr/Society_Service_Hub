@@ -234,6 +234,108 @@
     }
   </style>
   <link rel="stylesheet" href="./presentation.css">
+  <style>
+    /* Concept screens in this deck; the shared slide stylesheet also serves the archives. */
+    .phone { padding: 6px; background: #19332E; border: 1px solid #19332E; border-radius: 27px; }
+    .phone-inner { border-radius: 21px; background: #EEEAE2; }
+    .chat-statusbar { height: 19px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; background: var(--primary); color: #fff; font-size: 9px; font-weight: 500; }
+    .chat-signal { display: flex; align-items: center; gap: 3px; }
+    .chat-signal::before { content: ""; width: 14px; height: 8px; background: linear-gradient(90deg, #fff 2px, transparent 2px 4px, #fff 4px 7px, transparent 7px 9px, #fff 9px); clip-path: polygon(0 70%, 100% 0, 100% 100%, 0 100%); }
+    .chat-signal::after { content: ""; width: 13px; height: 7px; border: 1px solid #fff; border-radius: 2px; background: linear-gradient(90deg, #fff 72%, transparent 72%); }
+    .phone-head { min-height: 53px; flex: none; padding: 7px 9px; gap: 8px; background: #fff; color: var(--primary); border-bottom: 1px solid #D9E1DB; }
+    .phone-head .avatar { width: 32px; height: 32px; background: var(--primary); color: #fff; font-size: 14px; }
+    .chat-back { width: 10px; height: 10px; border-left: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(45deg); margin-left: 3px; flex: none; }
+    .chat-contact { min-width: 0; flex: 1; }
+    .phone-head b { font-size: 12px; line-height: 1.15; }
+    .phone-head small { font-size: 9px; line-height: 1.2; margin-top: 2px; color: var(--muted); }
+    .chat-more { width: 3px; height: 3px; border-radius: 50%; background: var(--accent); box-shadow: 0 -5px var(--accent), 0 5px var(--accent); margin: 0 5px; flex: none; }
+    .messages { padding: 9px 8px; gap: 6px; background: radial-gradient(circle at 2px 2px, #DCD6CA 1px, transparent 1px) 0 0 / 19px 19px, #EEEAE2; }
+    .messages::before { content: "TODAY"; align-self: center; padding: 2px 8px; margin-bottom: 2px; border-radius: 20px; color: var(--muted); background: #F7F5F0; font-size: 8px; font-weight: 500; letter-spacing: .08em; }
+    .bubble { max-width: 93%; padding: 7px 9px 5px; border: 1px solid #E5E6DF; border-radius: 11px 11px 11px 3px; background: #fff; font-size: 11px; line-height: 1.38; }
+    .bubble.out { border-color: #CCE7D3; border-radius: 11px 11px 3px 11px; background: #DCF4E3; }
+    .bubble.preview { border: 1px dashed var(--accent); background: #EFF8F1; }
+    .bubble .by { margin-bottom: 3px; font-size: 9px; }
+    .bubble .stamp { margin-top: 3px; font-size: 9px; }
+    .chat-actions { gap: 4px; }
+    .chat-actions span { font-size: 10px; padding: 4px 6px; border-color: #C5D8CD; }
+    .phone-compose { margin: 0; padding: 7px 8px; display: flex; gap: 6px; align-items: center; flex: none; border-top: 1px solid #D9E1DB; border-radius: 0; background: #F7F5F0; }
+    .compose-add, .compose-send { display: grid; place-items: center; flex: none; border-radius: 50%; }
+    .compose-add { position: relative; width: 18px; height: 18px; border: 1.5px solid var(--accent); }
+    .compose-add::before, .compose-add::after { content: ""; position: absolute; background: var(--accent); border-radius: 2px; }
+    .compose-add::before { width: 8px; height: 1.5px; }
+    .compose-add::after { width: 1.5px; height: 8px; }
+    .compose-field { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 7px 9px; background: #fff; border: 1px solid #E0E6DF; border-radius: 20px; font-size: 10px; }
+    .compose-send { width: 24px; height: 24px; background: var(--accent); }
+    .compose-send::after { content: ""; width: 7px; height: 7px; border-top: 2px solid #fff; border-right: 2px solid #fff; transform: rotate(45deg); margin-right: 3px; }
+    .share-screen { gap: 8px; padding: 10px; background: #F7F5F0; font-size: 11px; }
+    .share-row, .share-preview { padding: 8px 9px; border-radius: 8px; }
+    .share-action { border-radius: 7px; font-size: 11px; }
+    .app { border-color: #C8D6D0; background: var(--paper); border-radius: 15px; }
+    .app-head { min-height: 38px; padding: 7px 13px; }
+    .app-head .brand-lockup { display: flex; align-items: center; gap: 6px; font-size: 15px; }
+    .brand-lockup > span { width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px; color: #fff; background: var(--primary); font: 500 15px/1 Georgia, serif; }
+    .app-head small { padding: 3px 8px; border-radius: 20px; background: #F1F4F0; font-size: 10px; }
+    .app-body .ui-screen { width: 100%; border: 0; }
+    .ui-header { padding: 11px 14px 9px; background: #fff; color: var(--primary); border-bottom: 1px solid #E1E9E1; }
+    .ui-overline { display: block; margin-bottom: 3px; font-size: 9px; font-weight: 500; letter-spacing: .09em; text-transform: uppercase; color: var(--accent); }
+    .ui-header b { font-size: 17px; line-height: 1.15; }
+    .ui-header small { margin-top: 3px; color: var(--muted); opacity: 1; }
+    .ui-content { padding: 10px 12px; gap: 8px; }
+    .ui-banner { padding: 9px 11px; border-radius: 7px; border-left: 3px solid var(--accent); background: #E8F3ED; font-size: 11px; line-height: 1.35; }
+    .ui-banner b { margin-bottom: 2px; font-size: 12px; }
+    .ui-banner.sand { border-left-color: #B88237; }
+    .app-tile { padding: 9px 11px; border-color: #DEE6DF; border-radius: 8px; font-size: 12px; line-height: 1.3; }
+    .app-tile small { font-size: 10px; margin-top: 3px; }
+    .app-tile.highlight { background: #E8F3ED; border-color: #A7D1BF; }
+    .ui-label { margin: 2px 0 -2px; color: var(--accent); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+    .ui-tabs { flex: none; padding: 7px 5px; border-top-color: #E0E7DF; font-size: 10px; }
+    .ui-tabs b { color: var(--accent); }
+    .ui-action { border-radius: 6px; padding: 7px 10px; }
+    .dash-context { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; color: var(--muted); }
+    .dash-badge { display: inline-flex; align-items: center; width: fit-content; padding: 4px 8px; border-radius: 20px; color: var(--accent); background: #E8F3ED; font-size: 10px; font-weight: 500; white-space: nowrap; }
+    .dash-badge.warning { background: var(--gold-bg); color: var(--gold); }
+    .dash-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .dash-stats > div, .console-stats > div { min-width: 0; padding: 9px 10px; border: 1px solid #DEE6DF; border-radius: 8px; background: #fff; }
+    .dash-stats > div.changed, .console-stats > div.changed { border-color: #A7D1BF; background: #E8F3ED; animation: appear .5s both; }
+    .dash-stats b, .console-stats b { display: block; color: var(--primary); font-size: 24px; line-height: 1; font-variant-numeric: tabular-nums; }
+    .dash-stats span, .console-stats span { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; }
+    .dash-task { display: flex; flex-direction: column; gap: 3px; padding: 9px 10px; border: 1px solid #DEE6DF; border-left: 3px solid var(--accent); border-radius: 8px; background: #fff; }
+    .dash-task.needs-review { border-left-color: #B88237; background: #FEFAF2; }
+    .dash-task b { color: var(--primary); font-size: 12px; }
+    .dash-task small { color: var(--muted); font-size: 10px; }
+    .console-screen { grid-template-columns: 90px minmax(0, 1fr); }
+    .console-side { padding: 12px 8px; background: var(--primary); font-size: 10px; }
+    .console-side b { padding: 3px 5px 16px; font-size: 15px; letter-spacing: -.03em; }
+    .console-side b small { display: block; margin-top: 1px; color: #B9D2C8; font-size: 7px; letter-spacing: .12em; }
+    .console-side span { padding: 7px 5px; }
+    .console-side .selected { border-radius: 5px; background: #DDF1E8; }
+    .console-main { padding: 11px 12px; gap: 7px; background: #FAF8F4; }
+    .console-heading { display: flex; justify-content: space-between; align-items: center; gap: 7px; }
+    .console-heading h3 { font-size: 15px; font-weight: 500; line-height: 1.15; }
+    .console-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .console-table { border-color: #DEE6DF; background: #fff; border-radius: 7px; font-size: 10px; }
+    .console-table div { padding: 5px 8px; border-color: #E9EDE7; }
+    .console-table div:first-child { background: #F1F4F0; }
+    .console-alert { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; padding: 7px 8px; border-left: 3px solid var(--accent); background: #E8F3ED; color: var(--primary); border-radius: 5px; font-size: 10px; }
+    .console-alert.warning { border-left-color: #B88237; background: #FEF5E7; }
+    .console-privacy { color: var(--muted); font-size: 9px; }
+    .group-member-link { display: flex; flex-direction: column; gap: 5px; }
+    @media screen and (max-height: 780px) and (min-width: 901px) {
+      .js:not(.reading):not(.read-all) #operations .role-frame .app { height: 300px; }
+      .js:not(.reading):not(.read-all) #group-bridge .phone,
+      .js:not(.reading):not(.read-all) #group-bridge .app { height: 288px; }
+      .js:not(.reading):not(.read-all) #group-bridge .app .ui-content { gap: 5px; padding: 7px 10px; }
+      #group-bridge .app-head { min-height: 32px; padding: 5px 9px; }
+      #group-bridge .ui-header { padding: 7px 10px; }
+      #group-bridge .ui-tabs { padding: 5px; }
+      #group-bridge .group-member-link { display: none; }
+    }
+    @media (max-width: 560px) {
+      .console-screen { grid-template-columns: 80px minmax(0, 1fr); }
+      .console-heading { align-items: flex-start; }
+      .console-heading .dash-badge { white-space: normal; }
+    }
+  </style>
 </head>
 <body>
   <header class="top">
@@ -350,7 +452,7 @@
           <p class="small">Interest is not an order. Confirm only after the supplier's final price is shown.</p>
           <div class="app" aria-label="Illustrative resident buying circle screen">
             <div class="ui-screen">
-              <div class="ui-header"><b>Monthly essentials</b><small>Green Meadows · proposed</small></div>
+              <div class="ui-header"><span class="ui-overline">Community / buying circle</span><b>Monthly essentials</b><small>Green Meadows · proposed</small></div>
               <div class="ui-content">
                 <div class="ui-banner"><b>Rice · interest gathering</b>Society combines quantities; no payment or order yet.</div>
                 <div class="app-tile"><b>Compare the final offer</b><small>Same grade and quantity · supplier price + packing + transport.</small></div>
@@ -365,7 +467,7 @@
           <p class="small">A wholesaler or farmer group confirms its quote; sponsorship never selects the winner.</p>
           <div class="app" aria-label="Illustrative supplier selection and quote screen">
             <div class="ui-screen">
-              <div class="ui-header"><b>Separate sourcing views</b><small>Green Meadows · proposed</small></div>
+              <div class="ui-header"><span class="ui-overline">Community / sourcing</span><b>Separate sourcing views</b><small>Green Meadows · proposed</small></div>
               <div class="ui-content">
                 <span class="ui-label">Society lead workspace</span>
                 <div class="app-tile"><b>Compare and select an offer</b><small>Request quotes for grade, quantity, packing and delivery; record why.</small></div>
@@ -567,7 +669,7 @@
     const tile = (title, detail, highlight = false) =>
       `<div class="app-tile${highlight ? ' highlight' : ''}"><b>${title}</b><small>${detail}</small></div>`;
     const appScreen = (title, subtitle, content, activeTab) =>
-      `<div class="ui-screen"><div class="ui-header"><b>${title}</b><small>${subtitle}</small></div>` +
+      `<div class="ui-screen"><div class="ui-header"><span class="ui-overline">${activeTab} / Wooru</span><b>${title}</b><small>${subtitle}</small></div>` +
       `<div class="ui-content">${content}</div><div class="ui-tabs">` +
       ['Help', 'Saved', 'MCN', 'Community', 'Profile'].map(tab =>
         tab === activeTab ? `<b>${tab}</b>` : `<span>${tab}</span>`).join('') + `</div></div>`;
@@ -601,8 +703,7 @@
           tile('Recent orders', 'Your own order history is here, not in someone else’s chat.'),
       'MCN');
     const sellerScreen = state => appScreen(
-      'Priya’s Kitchen', 'Green Meadows · seller workspace',
-      `<div class="ui-banner"><b>Your menu and orders</b>Only you see your buyers and order details.</div>` +
+      'Priya’s Kitchen', 'Green Meadows · private seller workspace',
       `<span class="ui-label">Sunday menu</span>` +
       (state === 'empty'
         ? tile('No Sunday menu yet', 'Create in Wooru or review an assistant draft')
@@ -613,35 +714,30 @@
       (state === 'ordered'
         ? tile('New · #WR-1042 · Rahul M', '2 × veg biryani · ₹400 · Confirmed · Sun 1–2 pm', true)
         : tile('Sunday pre-orders', state === 'published' ? 'Existing reservations · 9 portions left' : 'No Sunday orders yet')) +
-      `<span class="ui-label">Manage</span><span class="ui-action">Open seller dashboard</span>`,
+      `<span class="ui-action">Manage menu and capacity</span>`,
       'MCN');
     const leadScreen = (ordered, flag = false) => appScreen(
-      'Community overview', 'Green Meadows · president / vice president',
-      `<div class="ui-banner"><b>Community food activity</b>Aggregate insight only · no private chats or buyer details</div>` +
-      `<div class="ui-metrics"><div class="ui-metric${ordered ? ' changed' : ''}"><b>${ordered ? 8 : 7}</b>Food orders today</div>` +
-      `<div class="ui-metric"><b>2</b>Open menus</div><div class="ui-metric"><b>2</b>Participating sellers</div>` +
-      `<div class="ui-metric${flag ? ' changed' : ''}"><b>${flag ? 1 : 0}</b>New moderation flags</div></div>` +
-      `<span class="ui-label">Moderation</span>` +
-      (flag
-        ? tile('Reported menu · incorrect cutoff', 'Public menu details only · review or request correction', true) +
-          `<span class="ui-action">Review report</span>`
-        : tile('Listings and menu reports', 'No open flags · resolved actions remain in audit history')),
+      'Community pulse', 'Green Meadows · president / vice president',
+      `<div class="dash-context"><span class="dash-badge">Today · Green Meadows</span><span>Aggregate only</span></div>` +
+      `<div class="dash-stats"><div class="${ordered ? 'changed' : ''}"><b>${ordered ? 8 : 7}</b><span>Food orders</span></div>` +
+      `<div><b>2</b><span>Open menus</span></div><div><b>2</b><span>Local sellers</span></div></div>` +
+      `<div class="dash-task${flag ? ' needs-review' : ''}"><span class="ui-label">Public listing review</span>` +
+      `<b>${flag ? '1 report needs review' : 'No open reports'}</b>` +
+      `<small>${flag ? 'Menu cutoff reported · inspect the public listing' : 'Resolved actions stay in the audit history'}</small></div>`,
       'Community');
     const platformScreen = (ordered, alert = false) =>
-      `<div class="console-screen"><aside class="console-side"><b>wooru</b><span class="selected">Overview</span>` +
-      `<span>Communities</span><span>Commerce</span><span>Health</span></aside>` +
-      `<div class="console-main"><h3>Concierge overview</h3><span class="small">All communities · synthetic pilot metrics</span>` +
-      `<div class="ui-metrics"><div class="ui-metric${ordered ? ' changed' : ''}"><b>${ordered ? 115 : 114}</b>Food orders today · all</div>` +
-      `<div class="ui-metric${ordered ? ' changed' : ''}"><b>${ordered ? 8 : 7}</b>Green Meadows today</div>` +
-      `<div class="ui-metric"><b>1</b>Pilot community</div><div class="ui-metric${alert ? ' changed' : ''}"><b>${alert ? 1 : 0}</b>Delivery alerts</div></div>` +
-      `<span class="ui-label">Operations · no buyer or chat data</span>` +
+      `<div class="console-screen"><aside class="console-side"><b>wooru<small>OPERATIONS</small></b><span class="selected">Overview</span>` +
+      `<span>Communities</span><span>Commerce</span><span>Channel health</span></aside>` +
+      `<div class="console-main"><div class="console-heading"><div><span class="ui-overline">Platform / all communities</span>` +
+      `<h3>Commerce health</h3></div><span class="dash-badge${alert ? ' warning' : ''}">${alert ? '1 delivery alert' : 'Channel healthy'}</span></div>` +
+      `<div class="console-stats"><div class="${ordered ? 'changed' : ''}"><b>${ordered ? 115 : 114}</b><span>Food orders today</span></div>` +
+      `<div class="${ordered ? 'changed' : ''}"><b>${ordered ? 8 : 7}</b><span>Green Meadows</span></div></div>` +
       `<div class="console-table"><div><span>Community</span><span>Orders today</span></div>` +
       `<div><span>Green Meadows</span><span>${ordered ? 8 : 7}</span></div>` +
       `<div><span>Other communities</span><span>107</span></div></div>` +
-      (alert
-        ? tile('Template delivery failed · Green Meadows', 'Inspect provider status · no buyer or transcript shown', true) +
-          `<span class="ui-action">Inspect delivery status</span>`
-        : tile('Channel health & onboarding', 'Delivery healthy · 0 alerts · review provider setup')) +
+      `<div class="console-alert${alert ? ' warning' : ''}"><b>${alert ? 'Template delivery failed' : 'Delivery healthy'}</b>` +
+      `<span>${alert ? 'Green Meadows · inspect provider status' : 'No open alerts · provider status available'}</span></div>` +
+      `<span class="console-privacy">Operational signals only · no buyer details or transcripts</span>` +
       `</div></div>`;
     const groupScreen = state => appScreen(
       'Food in your community', 'Green Meadows · future sharing concept',
@@ -654,8 +750,8 @@
             `<span class="ui-label">Seller action required</span><span class="ui-action">Review and publish</span>`
           : `<div class="ui-banner"><b>Published by Priya</b>Seller-approved menu · live details in Wooru.</div>` +
             tile('Sunday veg biryani · ₹200', 'Priya’s Kitchen · 9 left · Sat 8 pm cutoff', true) +
-            `<span class="ui-label">Member link</span>` +
-            tile('Open current menu', 'Unlinked residents sign in before ordering; old previews may be stale') +
+            `<div class="group-member-link"><span class="ui-label">Member link</span>` +
+            tile('Open current menu', 'Unlinked residents sign in before ordering; old previews may be stale') + `</div>` +
             `<span class="ui-action">Share via WhatsApp</span>`,
       'MCN');
     const groupPhone = state => state === 'chooser'
@@ -809,11 +905,12 @@
         element.innerHTML = `<span class="stage-label">Illustrative · proposed, not a live integration</span>
           <div class="showcase">
             <div class="phone"><div class="phone-inner">
-              <div class="phone-head"><span class="avatar" data-part="avatar">${data.phoneAvatar || 'W'}</span><span><b data-part="phoneTitle">${data.phoneTitle || 'Wooru concierge'}</b><small data-part="phoneSubtitle">${data.phoneSubtitle || 'One number · your community'}</small></span></div>
-              <div class="messages" data-part="messages"></div><div class="phone-compose" data-part="compose">${data.phoneCompose || (data.phoneTitle ? 'Activity feed · read-only' : 'Message Wooru…')}</div>
+              <div class="chat-statusbar" aria-hidden="true"><span>7:07</span><span class="chat-signal"></span></div>
+              <div class="phone-head"><span class="chat-back" aria-hidden="true"></span><span class="avatar" data-part="avatar">${data.phoneAvatar || 'W'}</span><span class="chat-contact"><b data-part="phoneTitle">${data.phoneTitle || 'Wooru concierge'}</b><small data-part="phoneSubtitle">${data.phoneSubtitle || 'One number · your community'}</small></span><span class="chat-more" aria-hidden="true"></span></div>
+              <div class="messages" data-part="messages"></div><div class="phone-compose"><span class="compose-add" aria-hidden="true"></span><span class="compose-field" data-part="compose">${data.phoneCompose || (data.phoneTitle ? 'Activity feed · read-only' : 'Message Wooru…')}</span><span class="compose-send" aria-hidden="true"></span></div>
             </div></div>
             <div class="bridge"><span data-part="direction">Wooru ↔ chat</span><div class="bridge-line" data-part="bridge"></div></div>
-            <div class="app"><div class="app-head"><b>wooru</b><small data-part="context"></small></div><div class="app-body" data-part="panel"></div></div>
+            <div class="app"><div class="app-head"><b class="brand-lockup"><span aria-hidden="true">w</span>wooru</b><small data-part="context"></small></div><div class="app-body" data-part="panel"></div></div>
           </div>
           <div class="scene-controls">
             <button type="button" data-action="play">Play</button>
