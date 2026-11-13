@@ -161,44 +161,46 @@
     @keyframes backward { 0% { left: calc(100% - 12px); opacity: 0; } 20%, 80% { opacity: 1; } 100% { left: 0; opacity: 0; } }
     .instant, .instant * { animation: none !important; }
     [hidden] { display: none !important; }
-    @media (max-width: 1110px) {
-      .columns { grid-template-columns: 1fr; }
-      .notes { max-width: 800px; }
-      .notes ul { columns: 2; column-gap: 35px; }
+    @media screen and (max-width: 1110px) {
+      .reading .columns { grid-template-columns: 1fr; }
+      .reading .notes { max-width: 800px; }
+      .reading .notes ul { columns: 2; column-gap: 35px; }
     }
-    @media (max-width: 760px) {
-      .grid.three, .grid.four, .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .stage { display: flex; flex-direction: column; }
-      .stage-label { order: -2; align-self: flex-start; }
-      .scene-controls { order: -1; margin: 4px 0 12px; }
-      .showcase { grid-template-columns: minmax(0, 1fr); justify-items: center; }
-      .phone, .app { width: min(100%, 370px); height: 420px; min-height: 0; }
-      .bridge { width: min(100%, 370px); flex-direction: row; padding: 14px 0; }
-      .bridge-line { flex: 1; }
-      .notes ul { columns: 1; }
-      .console-screen { grid-template-columns: 80px minmax(0, 1fr); }
-      .console-side { padding: 10px 5px; }
-      #group-bridge .columns { display: flex; flex-direction: column; }
-      #group-bridge .stage { order: -1; width: 100%; display: flex; flex-direction: column; }
+    @media screen and (max-width: 760px) {
+      .reading .grid.three, .reading .grid.four, .reading .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .reading .stage { display: flex; flex-direction: column; }
+      .reading .stage-label { order: -2; align-self: flex-start; }
+      .reading .scene-controls { order: -1; margin: 4px 0 12px; }
+      .reading .showcase { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+      .reading .phone, .reading .app { width: min(100%, 370px); height: 420px; min-height: 0; }
+      .reading .bridge { width: min(100%, 370px); flex-direction: row; padding: 14px 0; }
+      .reading .bridge-line { flex: 1; }
+      .reading .notes ul { columns: 1; }
+      .reading .console-screen { grid-template-columns: 80px minmax(0, 1fr); }
+      .reading .console-side { padding: 10px 5px; }
+      .reading #group-bridge .columns { display: flex; flex-direction: column; }
+      .reading #group-bridge .stage { order: -1; width: 100%; display: flex; flex-direction: column; }
     }
-    @media (max-width: 560px) {
-      .grid, .grid.three, .grid.four, .steps { grid-template-columns: 1fr; }
+    @media screen and (max-width: 560px) {
+      .reading .grid, .reading .grid.three, .reading .grid.four, .reading .steps { grid-template-columns: 1fr; }
       .top, .bottom { padding: 10px 14px; gap: 8px; flex-wrap: wrap; }
       .brand { width: 100%; }
       .top label { flex: 1; }
       .top select { width: 100%; }
       .bottom button { padding: 6px; font-size: 12px; }
-      .flow { flex-direction: column; }
-      .flow > span { transform: rotate(90deg); }
+      .reading .flow { flex-direction: column; }
+      .reading .flow > span { transform: rotate(90deg); }
     }
-    @media screen and (max-height: 780px) and (min-width: 901px) {
-      #income h2 { font-size: 30px; margin-bottom: 8px; }
-      #income .lede { font-size: 16px; margin-bottom: 8px; }
-      #income .flow, #income .grid { margin: 8px 0; }
-      #income .card { padding: 10px 12px; }
-      #income .callout { margin: 6px 0; padding: 8px 11px; }
-      #collective .ui-tabs { display: none; }
-      #group-bridge .phone, #group-bridge .app { height: 272px; }
+    @media screen {
+      .js:not(.reading):not(.read-all) #income h2 { font-size: 30px; margin-bottom: 8px; }
+      .js:not(.reading):not(.read-all) #income .lede { font-size: 16px; margin-bottom: 8px; }
+      .js:not(.reading):not(.read-all) #income .flow,
+      .js:not(.reading):not(.read-all) #income .grid { margin: 8px 0; }
+      .js:not(.reading):not(.read-all) #income .card { padding: 10px 12px; }
+      .js:not(.reading):not(.read-all) #income .callout { margin: 6px 0; padding: 8px 11px; }
+      .js:not(.reading):not(.read-all) #collective .ui-tabs { display: none; }
+      .js:not(.reading):not(.read-all) #group-bridge .phone,
+      .js:not(.reading):not(.read-all) #group-bridge .app { height: 272px; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
@@ -362,44 +364,34 @@
     .console-alert.warning { border-left-color: #B88237; background: #FEF5E7; }
     .console-privacy { color: var(--muted); font-size: 9px; }
     .group-member-link { display: flex; flex-direction: column; gap: 5px; }
-    @media screen and (max-height: 780px) and (min-width: 901px) {
+    @media screen {
       .js:not(.reading):not(.read-all) #group-bridge.slide.active,
       .js:not(.reading):not(.read-all) #collective.slide.active { padding-top: 20px; padding-bottom: 20px; }
-      #vision .grid { margin: 7px 0; }
-      #vision .card { padding: 10px 12px; }
-      #vision .proof-strip, #income .proof-bar, #collective .proof-bar, #operations .exec-evidence { margin: 4px 0; }
-      #income .funding-proof { gap: 8px; margin: 4px 0; }
-      #income .funding-card { gap: 3px; padding: 7px 10px; }
-      #income .flow > div { padding: 9px 10px; }
+      .js:not(.reading):not(.read-all) #vision .grid { margin: 7px 0; }
+      .js:not(.reading):not(.read-all) #vision .card { padding: 10px 12px; }
+      .js:not(.reading):not(.read-all) #vision .proof-strip,
+      .js:not(.reading):not(.read-all) #income .proof-bar,
+      .js:not(.reading):not(.read-all) #collective .proof-bar,
+      .js:not(.reading):not(.read-all) #operations .exec-evidence { margin: 4px 0; }
+      .js:not(.reading):not(.read-all) #income .funding-proof { gap: 8px; margin: 4px 0; }
+      .js:not(.reading):not(.read-all) #income .funding-card { gap: 3px; padding: 7px 10px; }
+      .js:not(.reading):not(.read-all) #income .flow > div { padding: 9px 10px; }
       .js:not(.reading):not(.read-all) #operations .role-frame .app { height: 260px; }
       .js:not(.reading):not(.read-all) #collective .role-frame .app { height: 290px; }
       .js:not(.reading):not(.read-all) #group-bridge .phone,
       .js:not(.reading):not(.read-all) #group-bridge .app { height: 288px; }
       .js:not(.reading):not(.read-all) #group-bridge .app .ui-content { gap: 5px; padding: 7px 10px; }
-      #group-bridge .app-head { min-height: 32px; padding: 5px 9px; }
-      #group-bridge .ui-header { padding: 7px 10px; }
-      #group-bridge .ui-tabs { padding: 5px; }
-      #group-bridge .group-member-link { display: none; }
+      .js:not(.reading):not(.read-all) #group-bridge .app-head { min-height: 32px; padding: 5px 9px; }
+      .js:not(.reading):not(.read-all) #group-bridge .ui-header { padding: 7px 10px; }
+      .js:not(.reading):not(.read-all) #group-bridge .ui-tabs { padding: 5px; }
+      .js:not(.reading):not(.read-all) #group-bridge .group-member-link { display: none; }
     }
-    @media (max-width: 560px) {
-      .exec-evidence { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .console-screen { grid-template-columns: 80px minmax(0, 1fr); }
-      .console-heading { align-items: flex-start; }
-      .console-heading .dash-badge { white-space: normal; }
-      .funding-proof { grid-template-columns: 1fr; }
-    }
-    @media screen and (max-width: 900px) {
-      .js:not(.reading):not(.read-all) #seller .columns,
-      .js:not(.reading):not(.read-all) #resident .columns { display: flex; flex-direction: column; }
-      .js:not(.reading):not(.read-all) #seller .stage,
-      .js:not(.reading):not(.read-all) #resident .stage,
-      .js:not(.reading):not(.read-all) #group-bridge .stage { order: -1; display: flex; flex-direction: column; width: 100%; }
-      .js:not(.reading):not(.read-all) .stage .stage-label { order: 0; align-self: flex-start; }
-      .js:not(.reading):not(.read-all) .stage .scene-controls { order: 1; margin: 4px 0; }
-      .js:not(.reading):not(.read-all) .stage .demo-milestones { order: 2; margin-bottom: 8px; }
-      .js:not(.reading):not(.read-all) .stage .showcase { order: 3; }
-      .js:not(.reading):not(.read-all) .stage .scene-caption { order: 4; }
-      .js:not(.reading):not(.read-all) #collective .role-frame .app { height: 360px; }
+    @media screen and (max-width: 560px) {
+      .reading .exec-evidence { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .reading .console-screen { grid-template-columns: 80px minmax(0, 1fr); }
+      .reading .console-heading { align-items: flex-start; }
+      .reading .console-heading .dash-badge { white-space: normal; }
+      .reading .funding-proof { grid-template-columns: 1fr; }
     }
     @media print {
       .demo-milestones, .demo-inline-controls { display: none !important; }
@@ -410,6 +402,62 @@
       .funding-proof { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 8px 0; }
       .proof-strip, .proof-bar, .exec-evidence { margin: 6px 0; }
     }
+    @media screen {
+      .js:not(.reading):not(.read-all) main {
+        display: flex; align-items: center; justify-content: center;
+        padding: 16px; overflow: hidden;
+      }
+      .js:not(.reading):not(.read-all) #slide-frame {
+        position: relative; flex: none;
+        width: calc(1280px * var(--slide-scale, 1));
+        height: calc(720px * var(--slide-scale, 1));
+      }
+      .js:not(.reading):not(.read-all) #slide-frame .slide.active {
+        position: absolute; inset: 0; margin: 0;
+        width: 1280px; max-width: none; height: 720px; min-height: 0;
+        aspect-ratio: auto; padding: 40px; overflow: auto;
+        transform: scale(var(--slide-scale, 1)); transform-origin: top left;
+      }
+      .js:not(.reading):not(.read-all) .slide h1 { font-size: 64px; }
+      .js:not(.reading):not(.read-all) .slide h2 { font-size: 38px; }
+      .js:not(.reading):not(.read-all) #vision h1 { font-size: 46px; }
+      .js:not(.reading):not(.read-all) #income h2 { font-size: 30px; }
+      .js:not(.reading):not(.read-all) .slide .columns,
+      .js:not(.reading):not(.read-all) .slide .layout {
+        display: grid; grid-template-columns: minmax(245px, .7fr) minmax(0, 1.55fr); gap: 29px;
+      }
+      .js:not(.reading):not(.read-all) .slide .stage { display: block; }
+      .js:not(.reading):not(.read-all) .slide .showcase,
+      .js:not(.reading):not(.read-all) .slide .scene .stage {
+        display: grid; grid-template-columns: 220px 46px minmax(0, 1fr); justify-items: stretch;
+      }
+      .js:not(.reading):not(.read-all) .slide .phone,
+      .js:not(.reading):not(.read-all) .slide .app,
+      .js:not(.reading):not(.read-all) .slide .wooru {
+        width: 100%; height: 290px; min-height: 0; max-width: none;
+      }
+      .js:not(.reading):not(.read-all) .slide .bridge,
+      .js:not(.reading):not(.read-all) .slide .conn {
+        width: auto; flex-direction: column; padding: 0 8px;
+      }
+      .js:not(.reading):not(.read-all) .slide .bridge-line,
+      .js:not(.reading):not(.read-all) .slide .conn-line { width: 100%; }
+      .js:not(.reading):not(.read-all) .slide .role-boards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .grid.four,
+      .js:not(.reading):not(.read-all) .slide .exec-evidence { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .field-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .funding-proof { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .flow { flex-direction: row; }
+      .js:not(.reading):not(.read-all) .slide .flow > span { transform: none; }
+      .js:not(.reading):not(.read-all) .slide .console-screen { grid-template-columns: 90px minmax(0, 1fr); }
+      .js:not(.reading):not(.read-all) .slide .console-heading { align-items: center; }
+      .js:not(.reading):not(.read-all) .slide .console-heading .dash-badge { white-space: nowrap; }
+    }
+    .reading #slide-frame { display: contents; }
+    @media print { #slide-frame { display: contents !important; } }
   </style>
 </head>
 <body>
@@ -422,6 +470,7 @@
   </header>
   <p id="error" class="error" role="alert"></p>
   <main id="deck" tabindex="-1" aria-label="Wooru and WhatsApp community commerce presentation">
+    <div id="slide-frame">
     <section class="slide" id="vision" data-title="The solution">
       <p class="kicker">01 / THE SOLUTION · LEADERSHIP DISCUSSION</p>
       <h1>One community.<br>One order record.<br>A buying idea to test.</h1>
@@ -739,6 +788,7 @@
       </table></div>
       <p class="source presenter-detail">Product grounding: <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/features.md">Wooru feature reference</a> and <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/architecture.md">architecture reference</a>. WhatsApp feasibility and editable cost assumptions are on slides 9 and 11. No buying-circle, supplier, sponsor, delivery API, WhatsApp or AI integration is live.</p>
     </section>
+    </div>
   </main>
   <footer class="bottom">
     <button id="prev" type="button" disabled>Previous</button>
@@ -1294,6 +1344,7 @@
     const slides = [...document.querySelectorAll('.slide')];
     const select = document.getElementById('jump');
     const deck = document.getElementById('deck');
+    const slideFrame = document.getElementById('slide-frame');
     const readButton = document.getElementById('read-all');
     const scenes = new Map([...document.querySelectorAll('[data-scene]')].map(element =>
       [element.closest('.slide').id, new Scene(element, scripts[element.dataset.scene])]));
@@ -1313,6 +1364,12 @@
     }));
     document.documentElement.classList.add('js');
     document.querySelectorAll('.top button, .top select, .bottom button').forEach(control => { control.disabled = false; });
+    const fitSlide = () => {
+      const scale = Math.min(1, (deck.clientWidth - 32) / 1280, (deck.clientHeight - 32) / 720);
+      slideFrame.style.setProperty('--slide-scale', String(Math.max(0, scale)));
+    };
+    new ResizeObserver(fitSlide).observe(deck);
+    fitSlide();
     function show(index, focus = false, restore = null) {
       const previous = active;
       active = Math.max(0, Math.min(slides.length - 1, index));
