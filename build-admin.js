@@ -42,8 +42,10 @@ try {
   console.log('Successfully copied admin-dashboard to dist/admin');
   copyFolderSync('admin-dashboard', 'public/admin');
   console.log('Successfully copied admin-dashboard to public/admin');
+  copyFolderSync('docs/presentations', 'dist/presentations');
+  console.log('Successfully copied research presentations to dist/presentations');
 } catch (err) {
-  console.error('Failed to copy admin-dashboard:', err);
+  console.error('Failed to copy static site assets:', err);
   process.exit(1);
 }
 

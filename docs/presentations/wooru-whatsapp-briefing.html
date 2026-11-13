@@ -1,0 +1,1987 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A twelve-slide Wooru concept briefing on community commerce, collective buying, sponsor-funded income, optional WhatsApp, and pilot economics.">
+  <title>Wooru | Community commerce and income model</title>
+  <style>
+    :root {
+      --paper: #FAF8F4; --card: #fff; --cream: #F0EDE3; --ink: #1F2A28;
+      --primary: #0F3732; --accent: #0F6E56; --mint: #E1F5EE;
+      --muted: #596964; --line: #C8D6D0; --gold: #854F0B; --gold-bg: #FAEEDA;
+      --red: #A32D2D; --red-bg: #FCEBEB; --chat: #EAE2D6; --out: #D9FDD3;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 400 16px/1.48 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    button, select { font: inherit; color: var(--primary); background: var(--card); border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px; cursor: pointer; }
+    button:hover { background: var(--mint); }
+    button:disabled { opacity: .5; cursor: default; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    a { color: var(--accent); text-underline-offset: 3px; overflow-wrap: anywhere; }
+    h1, h2, h3, p { margin: 0 0 14px; }
+    h1, h2, h3 { color: var(--primary); font-weight: 400; line-height: 1.13; letter-spacing: -.025em; }
+    h1 { font: 400 clamp(38px, 5.2vw, 72px)/1.07 Georgia, serif; max-width: 930px; }
+    h2 { font-size: clamp(29px, 3.1vw, 43px); max-width: 1100px; }
+    h3 { font-size: 19px; font-weight: 500; }
+    strong, b { font-weight: 500; }
+    ul, ol { margin: 0; padding-left: 20px; }
+    li { margin-bottom: 8px; }
+    .small { font-size: 13px; color: var(--muted); }
+    .kicker { font-size: 13px; color: var(--accent); letter-spacing: .06em; font-weight: 500; margin-bottom: 12px; }
+    .lede { max-width: 950px; font-size: clamp(19px, 2vw, 25px); color: var(--muted); }
+    .top, .bottom { display: flex; align-items: center; gap: 12px; padding: 10px 24px; background: var(--paper); }
+    .top { border-bottom: 1px solid var(--line); }
+    .bottom { border-top: 1px solid var(--line); }
+    .brand { margin-right: auto; font-size: 20px; letter-spacing: -.04em; font-weight: 500; color: var(--primary); }
+    .top label, .counter { font-size: 13px; white-space: nowrap; }
+    .bottom progress { flex: 1; height: 6px; accent-color: var(--accent); }
+    .error { margin: 0 24px; color: var(--red); }
+    .error:empty { display: none; }
+    .slide { max-width: 1480px; margin: auto; padding: clamp(24px, 3.5vw, 48px); border-bottom: 1px solid var(--line); }
+    .js:not(.reading) body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    .js:not(.reading) main { min-height: 0; flex: 1; overflow-y: auto; }
+    .js:not(.reading) .slide { display: none; border: 0; min-height: 100%; }
+    .js:not(.reading) .slide.active { display: flex; flex-direction: column; justify-content: center; }
+    .js:not(.reading) .slide.active.long { justify-content: flex-start; }
+    .reading .slide { padding-top: 48px; padding-bottom: 48px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 18px 0; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 19px 21px; }
+    .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+    .green { background: var(--mint); }
+    .dark { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .dark h3, .dark .metric { color: #fff; }
+    .sand { background: var(--gold-bg); border-color: #DFC7A0; }
+    .metric { color: var(--accent); font-size: clamp(27px, 3vw, 40px); font-weight: 500; line-height: 1.1; }
+    .tag { display: inline-block; padding: 4px 9px; border-radius: 100px; background: var(--mint); color: var(--accent); font-size: 12px; font-weight: 500; }
+    .tag.later { background: var(--gold-bg); color: var(--gold); }
+    .tag.no { background: var(--red-bg); color: var(--red); }
+    .callout { padding: 13px 17px; background: var(--gold-bg); color: var(--gold); border-radius: 11px; margin: 12px 0; font-size: 14px; }
+    .pillrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+    .pillrow span { border: 1px solid var(--line); border-radius: 99px; padding: 4px 11px; background: var(--card); font-size: 13px; }
+    .columns { display: grid; grid-template-columns: minmax(200px, .75fr) minmax(0, 2fr); gap: 24px; align-items: start; }
+    .notes { font-size: 15px; }
+    .notes h2 { font-size: clamp(27px, 2.7vw, 37px); }
+    .notes ul { padding-left: 19px; }
+    .stage { min-width: 0; }
+    .stage-label { color: var(--gold); background: var(--gold-bg); padding: 3px 9px; border-radius: 99px; font-size: 11px; display: inline-block; margin-bottom: 8px; }
+    .showcase { display: grid; grid-template-columns: minmax(230px, 285px) 90px minmax(240px, 1fr); align-items: stretch; gap: 0; }
+    .phone { background: #192A26; padding: 8px; height: min(57vh, 500px); min-height: 390px; border-radius: 32px; }
+    .phone-inner { display: flex; flex-direction: column; height: 100%; background: var(--chat); border-radius: 25px; overflow: hidden; }
+    .phone-head { background: #0B5E54; color: #fff; padding: 10px 13px; display: flex; gap: 10px; align-items: center; }
+    .avatar { border-radius: 50%; width: 35px; height: 35px; display: grid; place-items: center; background: #E1F5EE; color: #0B5E54; font-weight: 500; flex: none; }
+    .phone-head b { display: block; font-size: 14px; }
+    .phone-head small { display: block; font-size: 11px; }
+    .messages { padding: 10px 8px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 7px; background-image: radial-gradient(#C9C4B9 0.6px, transparent 0.6px); background-size: 14px 14px; }
+    .bubble { align-self: flex-start; max-width: 91%; background: var(--card); color: #15241F; border-radius: 9px; padding: 8px 10px; font-size: 13px; line-height: 1.4; animation: appear .32s ease-out both; overflow-wrap: anywhere; }
+    .bubble.out { align-self: flex-end; background: var(--out); }
+    .bubble.preview { border: 2px dashed var(--accent); background: var(--mint); }
+    .share-screen { display: flex; flex-direction: column; gap: 12px; min-height: 100%; padding: 14px; background: var(--paper); color: var(--ink); font-size: 13px; }
+    .share-screen b { color: var(--primary); }
+    .share-row, .share-preview { padding: 10px 12px; border: 1px solid var(--line); background: var(--card); border-radius: 10px; }
+    .share-row small, .share-preview small { display: block; color: var(--muted); margin-top: 4px; }
+    .share-row.selected { border-color: var(--accent); background: var(--mint); }
+    .share-action { margin-top: auto; padding: 9px 12px; background: var(--primary); color: #fff; border-radius: 8px; text-align: center; font-weight: 500; }
+    .share-action.waiting { background: var(--cream); color: var(--muted); }
+    .bubble .by { display: block; color: var(--accent); font-size: 10px; font-weight: 500; margin-bottom: 4px; }
+    .bubble .stamp { color: var(--muted); display: block; text-align: right; font-size: 10px; margin-top: 4px; }
+    .chat-actions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+    .chat-actions span { color: var(--accent); border: 1px solid var(--line); border-radius: 7px; background: #fff; padding: 4px 7px; font-weight: 500; font-size: 11px; }
+    .phone-compose { margin: 7px; padding: 8px 12px; background: #fff; border-radius: 20px; color: var(--muted); font-size: 12px; }
+    .bridge { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; padding: 0 8px; color: var(--accent); font-size: 11px; text-align: center; font-weight: 500; }
+    .bridge-line { height: 2px; width: 100%; background: repeating-linear-gradient(to right, var(--line) 0 6px, transparent 6px 11px); position: relative; }
+    .bridge-line::after { content: ""; display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); position: absolute; top: -5px; opacity: 0; }
+    .bridge-line.forward::after { animation: forward .8s ease-in-out; }
+    .bridge-line.backward::after { animation: backward .8s ease-in-out; }
+    .app { border: 1px solid var(--line); border-radius: 17px; height: min(57vh, 500px); min-height: 390px; overflow: hidden; background: var(--paper); display: flex; flex-direction: column; }
+    .app-head { background: #fff; border-bottom: 1px solid var(--line); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .app-head b { color: var(--primary); font-size: 18px; letter-spacing: -.04em; }
+    .app-head small { color: var(--muted); font-size: 11px; text-align: right; }
+    .app-body { overflow-y: auto; padding: 13px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+    .app-tile { padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: 11px; font-size: 13px; }
+    .app-tile b, .app-tile small { display: block; }
+    .app-tile small { color: var(--muted); margin-top: 4px; }
+    .app-tile.highlight { border-color: var(--accent); background: var(--mint); }
+    .app-tile.just-added { animation: appear .45s ease-out both; }
+    .app-body:has(.ui-screen) { padding: 0; }
+    .ui-screen { width: min(100%, 410px); min-height: 100%; margin: auto; display: flex; flex-direction: column; background: var(--paper); border-inline: 1px solid var(--line); }
+    .ui-header { background: var(--primary); color: var(--cream); padding: 12px 14px; }
+    .ui-header b { display: block; font-size: 15px; }
+    .ui-header small { display: block; font-size: 11px; opacity: .85; }
+    .ui-content { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 9px; }
+    .ui-label { color: var(--muted); font-size: 11px; font-weight: 500; margin: 3px 0 -3px; }
+    .ui-banner { padding: 10px 12px; background: var(--mint); border-radius: 11px; color: var(--primary); font-size: 12px; }
+    .ui-banner b { display: block; font-size: 14px; }
+    .ui-banner.sand { background: var(--gold-bg); }
+    .ui-tabs { display: flex; justify-content: space-around; gap: 2px; padding: 9px 5px; background: #fff; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+    .ui-tabs b { color: var(--accent); }
+    .ui-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    .ui-metric { padding: 9px 10px; background: #fff; border: 1px solid var(--line); border-radius: 9px; font-size: 11px; color: var(--muted); }
+    .ui-metric b { display: block; font-size: 21px; line-height: 1.15; color: var(--primary); }
+    .ui-metric.changed { background: var(--mint); border-color: var(--accent); animation: appear .5s both; }
+    .ui-action { display: inline-block; padding: 5px 10px; border-radius: 7px; background: var(--primary); color: #fff; font-size: 11px; font-weight: 500; }
+    .console-screen { display: grid; grid-template-columns: 102px minmax(0, 1fr); min-height: 100%; width: 100%; background: #fff; }
+    .console-side { background: var(--primary); color: var(--cream); padding: 15px 9px; font-size: 11px; }
+    .console-side b, .console-side span { display: block; padding: 7px 5px; }
+    .console-side b { font-size: 16px; }
+    .console-side .selected { color: var(--primary); background: var(--mint); border-radius: 7px; }
+    .console-main { min-width: 0; padding: 13px; display: flex; flex-direction: column; gap: 9px; }
+    .console-main h3 { font-size: 17px; margin: 0; }
+    .console-main .ui-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .console-table { border: 1px solid var(--line); border-radius: 9px; font-size: 11px; overflow: hidden; }
+    .console-table div { display: flex; justify-content: space-between; gap: 6px; padding: 7px 9px; border-bottom: 1px solid var(--line); }
+    .console-table div:last-child { border: 0; }
+    .console-table div:first-child { background: var(--cream); font-weight: 500; }
+    .scene-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .scene-controls button { padding: 5px 10px; font-size: 13px; }
+    .scene-controls output { font-size: 12px; color: var(--muted); }
+    .scene-caption { flex-basis: 100%; min-height: 54px; border-radius: 10px; padding: 9px 13px; background: var(--cream); color: var(--primary); font-size: 14px; margin: 0; }
+    .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; margin: 18px 0; }
+    .flow > div { background: #fff; padding: 13px 14px; border: 1px solid var(--line); border-radius: 10px; flex: 1; min-width: 130px; font-size: 13px; }
+    .flow b { display: block; color: var(--primary); font-size: 14px; }
+    .flow > span { align-self: center; color: var(--accent); font-weight: 500; }
+    .steps { counter-reset: phase; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin: 18px 0; }
+    .steps > div { padding: 15px; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+    .steps > div::before { counter-increment: phase; content: "0" counter(phase); color: var(--accent); font-size: 25px; display: block; margin-bottom: 10px; }
+    .steps h3 { font-size: 17px; }
+    .steps p { font-size: 13px; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; }
+    th, td { padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--primary); font-weight: 500; background: var(--cream); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; margin: 18px 0; }
+    .source { color: var(--muted); font-size: 13px; margin-top: 16px; }
+    .source a { margin-right: 14px; }
+    .plain { font-size: 14px; }
+    noscript { display: block; padding: 12px; background: var(--gold-bg); border-radius: 9px; }
+    .quiet { color: var(--muted); }
+    @keyframes appear { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+    @keyframes forward { 0% { left: 0; opacity: 0; } 20%, 80% { opacity: 1; } 100% { left: calc(100% - 12px); opacity: 0; } }
+    @keyframes backward { 0% { left: calc(100% - 12px); opacity: 0; } 20%, 80% { opacity: 1; } 100% { left: 0; opacity: 0; } }
+    .instant, .instant * { animation: none !important; }
+    [hidden] { display: none !important; }
+    @media screen and (max-width: 1110px) {
+      .reading .columns { grid-template-columns: 1fr; }
+      .reading .notes { max-width: 800px; }
+      .reading .notes ul { columns: 2; column-gap: 35px; }
+    }
+    @media screen and (max-width: 760px) {
+      .reading .grid.three, .reading .grid.four, .reading .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .reading .stage { display: flex; flex-direction: column; }
+      .reading .stage-label { order: -2; align-self: flex-start; }
+      .reading .scene-controls { order: -1; margin: 4px 0 12px; }
+      .reading .showcase { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+      .reading .phone, .reading .app { width: min(100%, 370px); height: 420px; min-height: 0; }
+      .reading .bridge { width: min(100%, 370px); flex-direction: row; padding: 14px 0; }
+      .reading .bridge-line { flex: 1; }
+      .reading .notes ul { columns: 1; }
+      .reading .console-screen { grid-template-columns: 80px minmax(0, 1fr); }
+      .reading .console-side { padding: 10px 5px; }
+      .reading #group-bridge .columns { display: flex; flex-direction: column; }
+      .reading #group-bridge .stage { order: -1; width: 100%; display: flex; flex-direction: column; }
+    }
+    @media screen and (max-width: 560px) {
+      .reading .grid, .reading .grid.three, .reading .grid.four, .reading .steps { grid-template-columns: 1fr; }
+      .top, .bottom { padding: 10px 14px; gap: 8px; flex-wrap: wrap; }
+      .brand { width: 100%; }
+      .top label { flex: 1; }
+      .top select { width: 100%; }
+      .bottom button { padding: 6px; font-size: 12px; }
+      .reading .flow { flex-direction: column; }
+      .reading .flow > span { transform: rotate(90deg); }
+    }
+    @media screen {
+      .js:not(.reading):not(.read-all) #income h2 { font-size: 30px; margin-bottom: 8px; }
+      .js:not(.reading):not(.read-all) #income .lede { font-size: 16px; margin-bottom: 8px; }
+      .js:not(.reading):not(.read-all) #income .flow,
+      .js:not(.reading):not(.read-all) #income .grid { margin: 8px 0; }
+      .js:not(.reading):not(.read-all) #income .card { padding: 10px 12px; }
+      .js:not(.reading):not(.read-all) #income .callout { margin: 6px 0; padding: 8px 11px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+    }
+    @media print {
+      @page { size: A4 landscape; margin: 12mm; }
+      body { height: auto !important; display: block !important; overflow: visible !important; font-size: 12px; }
+      main { overflow: visible !important; }
+      .top, .bottom, .scene-controls button, .error { display: none !important; }
+      .slide { display: block !important; min-height: 0 !important; border: 0; padding: 2mm 0; break-after: page; }
+      .columns { grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr); gap: 12px; }
+      .notes ul { columns: 1; }
+      .showcase { grid-template-columns: minmax(155px, .7fr) 40px minmax(210px, 1fr); }
+      .phone, .app { width: auto; height: 95mm; min-height: 0; }
+      .bridge { width: auto; flex-direction: column; padding: 0 4px; }
+      .bridge-line { width: 100%; }
+      .grid, .steps { gap: 8px; margin: 9px 0; }
+      .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .card, .steps > div { padding: 10px 12px; }
+      .table-wrap { margin: 8px 0; }
+      th, td { padding: 6px 8px; }
+      .scene-controls { margin-top: 5px; }
+      .scene-caption { min-height: 0; padding: 6px 9px; font-size: 12px; }
+      #group-bridge h2 { font-size: 25px; margin-bottom: 8px; }
+      #group-bridge .notes { font-size: 12px; }
+      #group-bridge .notes li { margin-bottom: 4px; }
+      #group-bridge .callout { font-size: 11px; padding: 7px 9px; margin: 6px 0; }
+      #group-bridge .phone, #group-bridge .app { height: 80mm; }
+      .messages { overflow-y: auto; }
+      .app-body { overflow: visible; }
+      a::after { content: " (" attr(href) ")"; font-size: 10px; }
+    }
+  </style>
+  <link rel="stylesheet" href="./presentation.css">
+  <style>
+    /* Concept screens in this deck; the shared slide stylesheet also serves the archives. */
+    .phone { padding: 9px; background: #121614; border: 1px solid #2B302E; border-radius: 38px; }
+    .phone-inner { border-radius: 30px; background: #EFEAE2; }
+    .chat-statusbar { position: relative; height: 26px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: #008069; color: #fff; font-size: 11px; font-weight: 500; }
+    .island { position: absolute; top: 6px; left: 50%; width: 64px; height: 16px; margin-left: -32px; border-radius: 10px; background: #121614; }
+    .chat-signal { display: flex; align-items: center; gap: 3px; }
+    .chat-signal::before { content: ""; width: 14px; height: 8px; background: linear-gradient(90deg, currentColor 2px, transparent 2px 4px, currentColor 4px 7px, transparent 7px 9px, currentColor 9px); clip-path: polygon(0 70%, 100% 0, 100% 100%, 0 100%); }
+    .chat-signal::after { content: ""; width: 15px; height: 7px; border: 1px solid currentColor; border-radius: 2px; background: linear-gradient(90deg, currentColor 72%, transparent 72%); }
+    .phone-head { min-height: 52px; flex: none; padding: 4px 10px 8px 8px; gap: 7px; background: #008069; color: #fff; border-bottom: 0; }
+    .phone-head .avatar { width: 32px; height: 32px; background: #fff; color: var(--primary); font-size: 15px; }
+    .chat-back { width: 9px; height: 9px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(45deg); margin-left: 4px; flex: none; }
+    .chat-contact { min-width: 0; flex: 1; }
+    .phone-head b { font-size: 14px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .phone-head small { font-size: 10px; line-height: 1.2; margin-top: 1px; color: rgba(255, 255, 255, .82); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-tools { display: flex; gap: 11px; flex: none; }
+    .chat-tools svg { width: 17px; height: 17px; }
+    .messages { padding: 8px 9px 6px 14px; gap: 5px; background:
+      radial-gradient(circle at 8px 8px, rgba(150, 140, 120, .16) 2px, transparent 2.5px) 0 0 / 34px 34px,
+      radial-gradient(circle at 25px 22px, rgba(150, 140, 120, .12) 3px, transparent 3.5px) 0 0 / 34px 34px, #EFEAE2; }
+    .messages::before { content: "Today"; align-self: center; padding: 3px 10px; margin-bottom: 3px; border-radius: 7px; color: #54656F; background: #fff; box-shadow: 0 1px .5px rgba(11, 20, 26, .13); font-size: 10px; font-weight: 500; }
+    .bubble { position: relative; max-width: 88%; padding: 6px 8px 4px; border: 0; border-radius: 0 8px 8px 8px; background: #fff; color: #111B21; box-shadow: 0 1px .5px rgba(11, 20, 26, .13); font-size: 12px; line-height: 1.38; }
+    .bubble::before { content: ""; position: absolute; top: 0; left: -7px; width: 8px; height: 12px; background: inherit; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+    .bubble.out { margin-right: 6px; border-radius: 8px 0 8px 8px; background: #D9FDD3; }
+    .bubble.out::before { left: auto; right: -7px; clip-path: polygon(0 0, 100% 0, 0 100%); }
+    .bubble.preview { border: 1px dashed var(--accent); background: #EFF8F1; }
+    .bubble.preview::before { display: none; }
+    .bubble .by { margin-bottom: 2px; color: #008069; font-size: 10px; }
+    .bubble .stamp { margin-top: 2px; color: #667781; font-size: 10px; }
+    .bubble.out .stamp::after { content: "✓✓"; content: "✓✓" / ""; margin-left: 4px; color: #53BDEB; letter-spacing: -.35em; }
+    .bubble:has(.chat-actions) { display: flex; flex-direction: column; }
+    .chat-actions { order: 2; display: flex; flex-direction: column; gap: 0; margin: 6px -8px -4px; border-top: 1px solid #E9EDEF; }
+    .chat-actions span { font-size: 10px; padding: 4px 6px; border-color: #C5D8CD; }
+    .phone-compose { margin: 0; padding: 5px 6px 4px; display: flex; gap: 5px; align-items: center; flex: none; border-top: 0; border-radius: 0; background: transparent; }
+    .compose-pill { flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px; padding: 8px 10px; border-radius: 22px; background: #fff; color: #54656F; box-shadow: 0 1px .5px rgba(11, 20, 26, .1); }
+    .compose-pill svg { width: 17px; height: 17px; flex: none; }
+    .compose-field { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0; background: none; border: 0; color: #667781; font-size: 12px; }
+    .compose-mic { width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 50%; background: #00A884; color: #fff; }
+    .compose-mic svg { width: 18px; height: 18px; }
+    .home-bar { flex: none; height: 15px; display: grid; place-items: center; }
+    .home-bar::after { content: ""; width: 92px; height: 4px; border-radius: 3px; background: #1B1F1D; }
+    .share-screen { gap: 8px; padding: 10px; background: #F7F5F0; font-size: 11px; }
+    .share-row, .share-preview { padding: 8px 9px; border-radius: 8px; }
+    .share-action { border-radius: 7px; font-size: 11px; }
+    .app { border-color: #C8D6D0; background: var(--paper); border-radius: 15px; }
+    .showcase .app { padding: 9px; background: #121614; border: 1px solid #2B302E; border-radius: 38px; }
+    .app-screen { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; border-radius: 30px; background: var(--paper); }
+    .app-status { background: #fff; color: #111B21; }
+    .app-screen .home-bar { background: #fff; }
+    .showcase .app-head { flex: none; min-height: 0; padding: 4px 14px 9px; }
+    .showcase .app-head small { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .phone .messages:has(.share-screen) { padding: 0; }
+    .phone .messages:has(.share-screen)::before { display: none; }
+    .phone .share-screen { background: #fff; color: #111B21; }
+    .phone .share-screen > b { color: #008069; font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+    .phone .share-row { position: relative; min-height: 46px; padding: 6px 6px 6px 50px; display: flex; flex-direction: column; justify-content: center; border: 0; border-bottom: 1px solid #E9EDEF; border-radius: 0; background: transparent; }
+    .phone .share-row::before { content: ""; position: absolute; left: 4px; top: 50%; width: 36px; height: 36px; margin-top: -18px; border-radius: 50%; background: #DFE5E7; }
+    .phone .share-row.selected { background: #F0F2F5; border-color: #E9EDEF; border-radius: 8px; }
+    .phone .share-row.selected::before { content: "✓"; content: "✓" / ""; display: grid; place-items: center; background: #00A884; color: #fff; font-size: 16px; }
+    .phone .share-preview { border: 0; border-left: 4px solid #00A884; border-radius: 6px; background: #F0F2F5; }
+    .phone .share-action { border: 0; border-radius: 22px; background: #00A884; color: #fff; }
+    .phone .share-action:hover { background: #008069; }
+    .phone [data-demo-action="group-cancel"] { border: 0; background: transparent; color: #008069; font-weight: 500; cursor: pointer; }
+    .app-head { min-height: 38px; padding: 7px 13px; }
+    .app-head .brand-lockup { display: flex; align-items: center; gap: 6px; font-size: 15px; }
+    .brand-lockup > img { width: 20px; height: 20px; border-radius: 6px; }
+    .app-head small { padding: 3px 8px; border-radius: 20px; background: #F1F4F0; font-size: 10px; }
+    .app-body .ui-screen { width: 100%; border: 0; }
+    .ui-header { padding: 11px 14px 9px; background: #fff; color: var(--primary); border-bottom: 1px solid #E1E9E1; }
+    .ui-overline { display: block; margin-bottom: 3px; font-size: 9px; font-weight: 500; letter-spacing: .09em; text-transform: uppercase; color: var(--accent); }
+    .ui-header b { font-size: 17px; line-height: 1.15; }
+    .ui-header small { margin-top: 3px; color: var(--muted); opacity: 1; }
+    .ui-content { padding: 10px 12px; gap: 8px; }
+    .ui-banner { padding: 9px 11px; border-radius: 7px; border-left: 3px solid var(--accent); background: #E8F3ED; font-size: 11px; line-height: 1.35; }
+    .ui-banner b { margin-bottom: 2px; font-size: 12px; }
+    .ui-banner.sand { border-left-color: #B88237; }
+    .app-tile { padding: 9px 11px; border-color: #DEE6DF; border-radius: 8px; font-size: 13px; line-height: 1.3; }
+    .app-tile small { font-size: 11px; margin-top: 3px; }
+    .app-tile.highlight { background: #E8F3ED; border-color: #A7D1BF; }
+    .ui-label { margin: 2px 0 -2px; color: var(--accent); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+    .ui-tabs { flex: none; padding: 6px 4px 5px; border-top-color: #E0E7DF; font-size: 10px; }
+    .ui-tabs > * { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 400; }
+    .ui-tabs svg { width: 18px; height: 18px; padding: 2px 10px; border-radius: 12px; box-sizing: content-box; }
+    .ui-tabs b { color: var(--primary); font-weight: 500; }
+    .ui-tabs b svg { background: #DDEFE6; }
+    .ui-action { border: 1px solid var(--primary); border-radius: 6px; padding: 7px 10px; background: var(--primary); color: #fff; cursor: pointer; }
+    .ui-action:hover { background: var(--accent); color: #fff; }
+    .chat-actions button { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 6px; border: 0; border-radius: 0; color: #027EB5; background: transparent; font-size: 12px; font-weight: 500; cursor: pointer; }
+    .chat-actions button + button { border-top: 1px solid #E9EDEF; }
+    .chat-actions button::before { content: "↩"; content: "↩" / ""; font-size: 12px; }
+    .chat-actions button:hover:not(:disabled) { background: #F5F6F6; }
+    .chat-actions button:disabled { color: #8696A0; cursor: default; }
+    .funding-card button { padding: 4px 8px; font-size: 11px; }
+    .share-action { width: 100%; border-color: var(--primary); cursor: pointer; }
+    .share-action:hover { background: var(--accent); color: #fff; }
+    .menu-tile { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 9px; align-items: center; padding: 6px; background: #fff; border: 1px solid #DEE6DF; border-radius: 8px; }
+    .menu-tile img { width: 90px; height: 70px; border-radius: 5px; object-fit: cover; }
+    .menu-tile b, .menu-tile small { display: block; font-size: 11px; }
+    .menu-tile b { margin: 4px 0 2px; color: var(--primary); }
+    .menu-tile small { color: var(--muted); line-height: 1.25; }
+    .menu-tile .dash-badge { font-size: 9px; padding: 2px 5px; }
+    .demo-milestones { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 0; }
+    .demo-milestones button { padding: 4px 8px; font-size: 11px; border-radius: 20px; }
+    .demo-milestones button[aria-current="true"] { border-color: var(--accent); background: var(--mint); }
+    .scene-caption { margin-top: 7px; }
+    .print-story { display: none; }
+    .demo-inline-controls { display: flex; flex-wrap: wrap; gap: 5px; min-height: 31px; align-items: center; margin-top: 6px; font-size: 11px; color: var(--muted); }
+    .demo-inline-controls button { font-size: 11px; padding: 4px 8px; }
+    .demo-inline-controls button[aria-pressed="true"] { background: var(--primary); color: #fff; }
+    .buy-price { display: flex; align-items: baseline; gap: 10px; color: var(--primary); font-size: 12px; }
+    .buy-price strong { font-size: 25px; line-height: 1; }
+    .buy-breakdown { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; padding: 7px 9px; background: #fff; border: 1px solid #DEE6DF; border-radius: 7px; font-size: 11px; }
+    .buy-breakdown b { text-align: right; }
+    .buy-saving { padding: 6px 9px; background: var(--mint); color: var(--primary); border-radius: 6px; font-size: 11px; }
+    .buy-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+    .buy-actions button { padding: 5px 7px; font-size: 11px; }
+    .buy-actions button[aria-pressed="true"] { border-color: var(--accent); background: var(--mint); }
+    .ui-action svg { width: 16px; height: 16px; margin-right: 6px; vertical-align: -3px; }
+    .wish-hero { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 3px 10px; align-items: start; padding: 12px; border-radius: 10px; background: #FBF3E4; color: var(--primary); }
+    .wish-hero svg { grid-row: span 2; box-sizing: content-box; width: 20px; height: 20px; padding: 8px; border-radius: 50%; background: #fff; color: #B88237; }
+    .wish-hero b { font-size: 14px; font-weight: 500; line-height: 1.25; }
+    .wish-hero small { color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .buy-scene .showcase > [hidden] { display: none !important; }
+    .wish-link { display: flex; flex-direction: column; gap: 2px; margin: 5px 0 2px; }
+    .wish-link b { color: #111B21; font-size: 12px; font-weight: 500; }
+    .wish-link small { color: #54656F; font-size: 11px; }
+    .wish-field { padding: 9px 11px; border: 1px solid #CFDCD5; border-radius: 8px; background: #fff; color: var(--primary); font-size: 13px; }
+    .wish-chips { display: flex; gap: 6px; }
+    .wish-chips > * { flex: 1; padding: 7px 0; border: 1px solid #CFDCD5; border-radius: 18px; background: #fff; color: var(--muted); font-size: 12px; font-weight: 400; text-align: center; }
+    .wish-chips b { border-color: var(--accent); background: #E8F3ED; color: var(--primary); font-weight: 500; }
+    .wish-card { display: flex; flex-direction: column; gap: 6px; padding: 12px; border: 1px solid #DEE6DF; border-radius: 10px; background: #fff; }
+    .wish-card .ui-overline { margin: 0; }
+    .wish-card b { color: var(--primary); font-size: 15px; font-weight: 500; }
+    .wish-card small { color: var(--muted); font-size: 12px; }
+    .wish-meter { height: 6px; overflow: hidden; border-radius: 3px; background: #E3ECE7; }
+    .wish-meter span { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+    .wish-joiners { display: flex; align-items: center; gap: 8px; color: var(--primary); font-size: 12px; }
+    .wish-faces { display: flex; padding-left: 6px; }
+    .wish-faces i { width: 22px; height: 22px; display: grid; place-items: center; margin-left: -6px; border: 2px solid #fff; border-radius: 50%; background: #DDEFE6; color: var(--primary); font-size: 10px; font-style: normal; }
+    .buy-decline { padding: 6px; border: 0; background: transparent; color: var(--muted); font-size: 13px; text-decoration: underline; cursor: pointer; }
+    .funding-proof { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+    .funding-card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 13px 15px; border: 1px solid var(--line); border-radius: 9px; background: #fff; min-width: 0; }
+    .funding-card b { color: var(--primary); font-size: 16px; }
+    .funding-card small { color: var(--muted); font-size: 12px; }
+    .proof-strip { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0; font-size: 12px; }
+    .proof-strip span { padding: 6px 9px; border-left: 3px solid var(--accent); background: var(--mint); border-radius: 4px; }
+    .proof-strip .pending { border-left-color: #B88237; background: var(--gold-bg); }
+    .proof-bar { padding: 8px 11px; border-left: 3px solid #B88237; background: var(--gold-bg); border-radius: 5px; font-size: 12px; margin: 9px 0; }
+    .exec-evidence { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; margin: 10px 0; }
+    .exec-evidence > div { min-width: 0; padding: 8px 9px; border: 1px solid var(--line); border-radius: 7px; background: #fff; font-size: 11px; line-height: 1.3; }
+    .exec-evidence b { display: block; color: var(--primary); font-size: 12px; margin-bottom: 3px; }
+    .exec-ledger { margin: 10px 0; }
+    .exec-ledger th, .exec-ledger td { padding: 7px 10px; font-size: 12px; }
+    #collective .role-frame .app { height: 360px; }
+    .dash-context { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; color: var(--muted); }
+    .dash-badge { display: inline-flex; align-items: center; width: fit-content; padding: 4px 8px; border-radius: 20px; color: var(--accent); background: #E8F3ED; font-size: 10px; font-weight: 500; white-space: nowrap; }
+    .dash-badge.warning { background: var(--gold-bg); color: var(--gold); }
+    .dash-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .dash-stats > div, .console-stats > div { min-width: 0; padding: 9px 10px; border: 1px solid #DEE6DF; border-radius: 8px; background: #fff; }
+    .dash-stats > div.changed, .console-stats > div.changed { border-color: #A7D1BF; background: #E8F3ED; animation: appear .5s both; }
+    .dash-stats b, .console-stats b { display: block; color: var(--primary); font-size: 24px; line-height: 1; font-variant-numeric: tabular-nums; }
+    .dash-stats span, .console-stats span { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; }
+    .dash-task { display: flex; flex-direction: column; gap: 3px; padding: 9px 10px; border: 1px solid #DEE6DF; border-left: 3px solid var(--accent); border-radius: 8px; background: #fff; }
+    .dash-task.needs-review { border-left-color: #B88237; background: #FEFAF2; }
+    .dash-task b { color: var(--primary); font-size: 12px; }
+    .dash-task small { color: var(--muted); font-size: 10px; }
+    .console-screen { grid-template-columns: 90px minmax(0, 1fr); }
+    .console-side { padding: 12px 8px; background: var(--primary); font-size: 10px; }
+    .console-side b { padding: 3px 5px 16px; font-size: 15px; letter-spacing: -.03em; }
+    .console-side b small { display: block; margin-top: 1px; color: #B9D2C8; font-size: 7px; letter-spacing: .12em; }
+    .console-side span { padding: 7px 5px; }
+    .console-side .selected { border-radius: 5px; background: #DDF1E8; }
+    .console-main { padding: 11px 12px; gap: 7px; background: #FAF8F4; }
+    .console-heading { display: flex; justify-content: space-between; align-items: center; gap: 7px; }
+    .console-heading h3 { font-size: 15px; font-weight: 500; line-height: 1.15; }
+    .console-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .console-table { border-color: #DEE6DF; background: #fff; border-radius: 7px; font-size: 10px; }
+    .console-table div { padding: 5px 8px; border-color: #E9EDE7; }
+    .console-table div:first-child { background: #F1F4F0; }
+    .console-alert { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; padding: 7px 8px; border-left: 3px solid var(--accent); background: #E8F3ED; color: var(--primary); border-radius: 5px; font-size: 10px; }
+    .console-alert.warning { border-left-color: #B88237; background: #FEF5E7; }
+    .console-privacy { color: var(--muted); font-size: 9px; }
+    .group-member-link { display: flex; flex-direction: column; gap: 5px; }
+    #operations .exec-evidence {
+      grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+      border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+      padding: 7px 0; margin: 8px 0 12px;
+    }
+    #operations .exec-evidence > div {
+      padding: 3px 12px; border: 0; border-left: 2px solid #DDEFE6;
+      border-radius: 0; background: transparent; font-size: 12px;
+    }
+    #operations .exec-evidence b {
+      margin-bottom: 2px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+    }
+    #operations .role-boards { gap: 14px; }
+    #operations .role-frame h3 { margin-bottom: 2px; font-size: 16px; }
+    #operations .role-frame > .small { min-height: 0; margin-bottom: 7px; font-size: 12px; }
+    #operations .operations-boundary {
+      display: flex; align-items: baseline; gap: 10px; margin-top: 9px;
+      padding: 8px 11px; border-left: 3px solid var(--accent);
+      border-radius: 4px; background: var(--mint); font-size: 12px;
+    }
+    #operations .operations-boundary b { flex: none; color: var(--primary); font-weight: 500; }
+    @media screen {
+      .js:not(.reading):not(.read-all) #group-bridge.slide.active,
+      .js:not(.reading):not(.read-all) #collective.slide.active { padding-top: 20px; padding-bottom: 20px; }
+      .js:not(.reading):not(.read-all) #vision .grid { margin: 7px 0; }
+      .js:not(.reading):not(.read-all) #vision .card { padding: 10px 12px; }
+      .js:not(.reading):not(.read-all) #vision .proof-strip,
+      .js:not(.reading):not(.read-all) #income .proof-bar,
+      .js:not(.reading):not(.read-all) #collective .proof-bar,
+      .js:not(.reading):not(.read-all) #operations .exec-evidence { margin: 4px 0; }
+      .js:not(.reading):not(.read-all) #income .funding-proof { gap: 8px; margin: 4px 0; }
+      .js:not(.reading):not(.read-all) #income .funding-card { gap: 3px; padding: 7px 10px; }
+      .js:not(.reading):not(.read-all) #income .flow > div { padding: 9px 10px; }
+    }
+    @media screen and (max-width: 560px) {
+      .reading .exec-evidence { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .reading .console-screen { grid-template-columns: 80px minmax(0, 1fr); }
+      .reading .console-heading { align-items: flex-start; }
+      .reading .console-heading .dash-badge { white-space: normal; }
+      .reading .funding-proof { grid-template-columns: 1fr; }
+    }
+    @media print {
+      .demo-milestones, .demo-inline-controls { display: none !important; }
+      .print-story { display: block; margin-top: 8px; padding: 7px; border-left: 2px solid var(--accent); background: var(--mint); font-size: 11px; }
+      .grid.four, .exec-evidence { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .flow { flex-direction: row; }
+      .flow > span { transform: none; }
+      .funding-proof { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 8px 0; }
+      .proof-strip, .proof-bar, .exec-evidence { margin: 6px 0; }
+    }
+    @media screen {
+      .js:not(.reading):not(.read-all) main {
+        display: flex; align-items: center; justify-content: center;
+        padding: 16px; overflow: hidden;
+      }
+      .js:not(.reading):not(.read-all) #slide-frame {
+        position: relative; flex: none;
+        width: calc(1280px * var(--slide-scale, 1));
+        height: calc(720px * var(--slide-scale, 1));
+      }
+      .js:not(.reading):not(.read-all) #slide-frame .slide.active {
+        position: absolute; inset: 0; margin: 0;
+        width: 1280px; max-width: none; height: 720px; min-height: 0;
+        aspect-ratio: auto; padding: 40px; overflow: auto;
+        justify-content: safe center;
+        transform: scale(var(--slide-scale, 1)); transform-origin: top left;
+      }
+      .js:not(.reading):not(.read-all) .slide h1 { font-size: 64px; }
+      .js:not(.reading):not(.read-all) .slide h2 { font-size: 38px; }
+      .js:not(.reading):not(.read-all) .slide .metric { font-size: 40px; }
+      .js:not(.reading):not(.read-all) #vision h1 { font-size: 46px; }
+      .js:not(.reading):not(.read-all) #income h2 { font-size: 30px; }
+      .js:not(.reading):not(.read-all) .slide .columns,
+      .js:not(.reading):not(.read-all) .slide .layout {
+        display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 28px;
+      }
+      .js:not(.reading):not(.read-all) .slide .notes { font-size: 16px; }
+      .js:not(.reading):not(.read-all) .slide .notes h2 { font-size: 32px; }
+      .js:not(.reading):not(.read-all) .slide .stage { display: block; }
+      .js:not(.reading):not(.read-all) .slide .showcase,
+      .js:not(.reading):not(.read-all) .slide .scene .stage {
+        display: grid; grid-template-columns: 280px 72px minmax(0, 1fr); justify-items: stretch;
+      }
+      .js:not(.reading):not(.read-all) .slide .phone,
+      .js:not(.reading):not(.read-all) .slide .app,
+      .js:not(.reading):not(.read-all) .slide .wooru {
+        width: 100%; height: 430px; min-height: 0; max-width: none;
+      }
+      .js:not(.reading):not(.read-all) .slide .stage-label { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .phone-head b { font-size: 15px; }
+      .js:not(.reading):not(.read-all) .slide .phone-head small { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .bubble { flex: none; font-size: 13px; padding: 6px 8px 4px; }
+      .js:not(.reading):not(.read-all) .slide .bubble .by,
+      .js:not(.reading):not(.read-all) .slide .bubble .stamp { font-size: 10px; }
+      .js:not(.reading):not(.read-all) .slide .compose-field { font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide .app-head { flex: none; min-height: 42px; }
+      .js:not(.reading):not(.read-all) .slide .app-head small { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .app-body { min-height: 0; }
+      .js:not(.reading):not(.read-all) .slide .ui-screen { flex: none; margin: 0; }
+      .js:not(.reading):not(.read-all) .slide .ui-header,
+      .js:not(.reading):not(.read-all) .slide .ui-tabs { flex: none; }
+      .js:not(.reading):not(.read-all) .slide .ui-header { padding: 14px 16px; }
+      .js:not(.reading):not(.read-all) .slide .ui-header b { font-size: 20px; }
+      .js:not(.reading):not(.read-all) .slide .ui-header small { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .ui-content { flex: 1 0 auto; padding: 14px; gap: 10px; }
+      .js:not(.reading):not(.read-all) .slide .ui-banner { font-size: 13px; padding: 11px 13px; }
+      .js:not(.reading):not(.read-all) .slide .ui-banner b { font-size: 14px; }
+      .js:not(.reading):not(.read-all) .slide .ui-label { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .app-tile { font-size: 14px; padding: 11px 13px; }
+      .js:not(.reading):not(.read-all) .slide .app-tile small { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .ui-tabs { font-size: 11px; padding: 10px 6px; }
+      .js:not(.reading):not(.read-all) .slide .ui-action,
+      .js:not(.reading):not(.read-all) .slide .chat-actions button,
+      .js:not(.reading):not(.read-all) .slide .buy-actions button { min-height: 36px; font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls { gap: 7px; margin-top: 10px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button,
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button,
+      .js:not(.reading):not(.read-all) .slide .demo-inline-controls button { min-height: 32px; font-size: 12px; padding: 5px 9px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button[data-action="play"] { background: var(--primary); color: #fff; }
+      .js:not(.reading):not(.read-all) .slide .scene-caption { min-height: 58px; font-size: 14px; }
+      .js:not(.reading):not(.read-all) .slide .share-screen { font-size: 13px; padding: 12px; gap: 12px; }
+      .js:not(.reading):not(.read-all) .slide .share-action { min-height: 38px; font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide .menu-tile { grid-template-columns: 100px minmax(0, 1fr); }
+      .js:not(.reading):not(.read-all) .slide .menu-tile img { width: 100px; height: 86px; }
+      .js:not(.reading):not(.read-all) .slide .menu-tile b,
+      .js:not(.reading):not(.read-all) .slide .menu-tile small { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .bridge,
+      .js:not(.reading):not(.read-all) .slide .conn {
+        width: auto; flex-direction: column; padding: 0 4px;
+        font-size: 11px; line-height: 1.3; overflow-wrap: normal;
+      }
+      .js:not(.reading):not(.read-all) .slide .messages,
+      .js:not(.reading):not(.read-all) .slide .app-body,
+      .js:not(.reading):not(.read-all) .slide .role-frame .app { scrollbar-width: none; }
+      .js:not(.reading):not(.read-all) .slide .messages::-webkit-scrollbar,
+      .js:not(.reading):not(.read-all) .slide .app-body::-webkit-scrollbar,
+      .js:not(.reading):not(.read-all) .slide .role-frame .app::-webkit-scrollbar { display: none; }
+      .js:not(.reading):not(.read-all) .slide .bridge-line,
+      .js:not(.reading):not(.read-all) .slide .conn-line { width: 100%; }
+      .js:not(.reading):not(.read-all) .slide .role-boards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .role-frame > .small { min-height: 0; margin-bottom: 8px; }
+      .js:not(.reading):not(.read-all) .slide .role-frame .app { height: 360px; overflow-y: auto; }
+      .js:not(.reading):not(.read-all) #operations .role-frame .app { height: 360px; }
+      .js:not(.reading):not(.read-all) #collective .role-frame .app { height: 396px; }
+      .js:not(.reading):not(.read-all) #collective .ui-content { gap: 7px; padding: 10px 12px; }
+      .js:not(.reading):not(.read-all) .slide .buy-price,
+      .js:not(.reading):not(.read-all) .slide .buy-breakdown,
+      .js:not(.reading):not(.read-all) .slide .buy-saving { font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide .dash-stats span,
+      .js:not(.reading):not(.read-all) .slide .console-stats span,
+      .js:not(.reading):not(.read-all) .slide .dash-task small { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .dash-task b { font-size: 14px; }
+      .js:not(.reading):not(.read-all) .slide .console-main { gap: 10px; padding: 14px; }
+      .js:not(.reading):not(.read-all) .slide .console-side { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .console-table { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .console-table div { padding: 8px; }
+      .js:not(.reading):not(.read-all) .slide .console-alert { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .console-privacy { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .grid.four,
+      .js:not(.reading):not(.read-all) .slide .exec-evidence { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .field-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .funding-proof { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .flow { flex-direction: row; }
+      .js:not(.reading):not(.read-all) .slide .flow > span { transform: none; }
+      .js:not(.reading):not(.read-all) .slide .console-screen { grid-template-columns: 90px minmax(0, 1fr); }
+      .js:not(.reading):not(.read-all) .slide .console-heading { align-items: center; }
+      .js:not(.reading):not(.read-all) .slide .console-heading .dash-badge { white-space: nowrap; }
+    }
+    .slide-master { display: none; }
+    @media screen {
+      .js:not(.reading):not(.read-all) body { background: #0D1917; }
+      .js:not(.reading):not(.read-all) main { padding: 12px; }
+      .js:not(.reading):not(.read-all) .top,
+      .js:not(.reading):not(.read-all) .bottom {
+        position: fixed; left: 0; right: 0; z-index: 20; padding: 10px 24px;
+        background: rgba(8, 18, 16, .92); border: 0; color: #DCE7E2;
+        opacity: 0; pointer-events: none; transition: opacity .25s ease;
+      }
+      .js:not(.reading):not(.read-all) .top { top: 0; }
+      .js:not(.reading):not(.read-all) .bottom { bottom: 0; }
+      .js.chrome-on:not(.reading):not(.read-all) .top,
+      .js.chrome-on:not(.reading):not(.read-all) .bottom,
+      .js:not(.reading):not(.read-all) .top:hover,
+      .js:not(.reading):not(.read-all) .bottom:hover,
+      .js:not(.reading):not(.read-all) .top:focus-within,
+      .js:not(.reading):not(.read-all) .bottom:focus-within { opacity: 1; pointer-events: auto; }
+      .js:not(.reading):not(.read-all) .brand { color: #F4F1EA; }
+      .js:not(.reading):not(.read-all) .top label,
+      .js:not(.reading):not(.read-all) .counter,
+      .js:not(.reading):not(.read-all) .bottom .small { color: #A9BDB6; }
+      .js:not(.reading):not(.read-all) .top button,
+      .js:not(.reading):not(.read-all) .top select,
+      .js:not(.reading):not(.read-all) .bottom button {
+        background: #13241F; color: #F4F1EA; border-color: rgba(255, 255, 255, .22);
+      }
+      .js:not(.reading):not(.read-all) .top button:hover,
+      .js:not(.reading):not(.read-all) .bottom button:hover { background: #1E3630; }
+      .js:not(.reading):not(.read-all) .bottom progress { accent-color: #5DCAA5; }
+      .js:not(.reading):not(.read-all) #slide-frame .slide.active {
+        background: #fff; border: 0; border-radius: 4px; padding: 40px 48px 64px;
+      }
+      .js:not(.reading):not(.read-all) #slide-frame .slide.active::before {
+        content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px; background: var(--primary);
+      }
+      .js:not(.reading):not(.read-all) #slide-frame .slide.active::after {
+        content: ""; position: absolute; top: 0; left: 0; width: 160px; height: 6px; background: #5DCAA5;
+      }
+      .js:not(.reading):not(.read-all) .slide-master {
+        position: absolute; left: 48px; right: 48px; bottom: 18px;
+        display: flex; align-items: center; gap: 16px; padding-top: 10px;
+        border-top: 1px solid #E3E9E5; color: var(--muted); font-size: 12px;
+      }
+      .slide-master .master-brand { display: flex; align-items: center; gap: 7px; color: var(--primary); font-size: 15px; font-weight: 500; letter-spacing: -.03em; }
+      .slide-master .master-brand img { width: 18px; height: 18px; border-radius: 5px; }
+      .slide-master .master-number { margin-left: auto; color: var(--primary); font-variant-numeric: tabular-nums; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) {
+        display: grid; grid-template-columns: 596px minmax(0, 1fr); grid-template-rows: auto auto auto 1fr;
+        column-gap: 22px; align-items: start;
+      }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) > .stage-label { grid-column: 1; grid-row: 1; justify-self: center; margin-bottom: 8px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) > .showcase {
+        grid-column: 1; grid-row: 2 / span 3; grid-template-columns: 266px 64px 266px;
+      }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .phone,
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .app { height: 566px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .app-body:has(.ui-screen) { overflow: hidden; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-screen { height: 100%; min-height: 0; border: 0; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-header { padding: 10px 14px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-header b { font-size: 18px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-content {
+        flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 12px; gap: 9px;
+      }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-content::-webkit-scrollbar { display: none; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-banner { font-size: 12px; padding: 9px 11px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-banner b { font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .app-tile { font-size: 13px; padding: 10px 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-tabs { font-size: 10px; padding: 6px 2px 4px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-action { width: 100%; min-height: 40px; border-radius: 10px; font-size: 14px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .chat-actions button { min-height: 34px; font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .app-head { min-height: 0; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .app-head small { font-size: 10px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls {
+        grid-column: 2; grid-row: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px; margin: 0; padding: 12px; border-radius: 12px; background: #F2F6F4;
+      }
+      .js:not(.reading):not(.read-all) .slide .scene-controls output {
+        order: -2; grid-column: 1 / -1; padding: 0 2px 2px; color: var(--muted); font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
+      }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button {
+        min-height: 34px; padding: 4px 8px; border: 1px solid #D5E1DB; border-radius: 8px; background: #fff; font-size: 13px; white-space: nowrap;
+      }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button:hover:not(:disabled) { background: #E4EEE9; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button[data-action="play"] {
+        order: -1; grid-column: 1 / -1; min-height: 40px; border-color: var(--primary); background: var(--primary); color: #fff; font-size: 14px;
+      }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button[data-action="variant"] { order: 1; grid-column: 1 / -1; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls .buy-primary {
+        order: -1; grid-column: 1 / -1; min-height: 40px; border-color: var(--primary); background: var(--primary); color: #fff; font-size: 14px;
+      }
+      .js:not(.reading):not(.read-all) .slide .scene-controls .buy-primary:hover:not(:disabled) { background: var(--accent); }
+      .js:not(.reading):not(.read-all) .slide .buy-scene .buy-actions button { flex: 1; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button[data-action="variant"][aria-pressed="true"] { border-color: #B88237; background: var(--gold-bg); color: var(--gold); }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones {
+        grid-column: 2; grid-row: 3; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 4px; margin: 12px 0 0;
+      }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones::before {
+        content: "Jump to"; padding: 0 2px 2px; color: var(--muted); font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
+      }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button {
+        display: flex; align-items: center; gap: 9px; min-height: 30px; padding: 4px 10px; border: 1px solid transparent; border-radius: 8px;
+        background: transparent; font-size: 13px; text-align: left; white-space: nowrap;
+      }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button::before {
+        content: ""; width: 8px; height: 8px; flex: none; border: 2px solid #A7C4B8; border-radius: 50%;
+      }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button:hover { background: #F2F6F4; }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button[aria-current="true"] { border-color: #A7D1BF; background: #E8F3ED; color: var(--primary); }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button[aria-current="true"]::before { border-color: var(--accent); background: var(--accent); }
+      .js:not(.reading):not(.read-all) .slide .scene-caption {
+        grid-column: 2; grid-row: 4; min-height: 0; margin: 12px 0 0; padding: 10px 12px; border-radius: 0 8px 8px 0;
+        border-left: 3px solid var(--accent); background: #F4F7F5; font-size: 14px; line-height: 1.45;
+      }
+      /* Minimal demo layout: smaller phones, light presenter rail. */
+      .js:not(.reading):not(.read-all) .slide .columns:has(> :is([data-scene], .buy-scene)) { grid-template-columns: 250px minmax(0, 1fr); gap: 36px; align-items: center; }
+      .js:not(.reading):not(.read-all) .slide .columns:has(> :is([data-scene], .buy-scene)) .notes { font-size: 14px; line-height: 1.5; }
+      .js:not(.reading):not(.read-all) .slide .columns:has(> :is([data-scene], .buy-scene)) .notes h2 { font-size: 27px; line-height: 1.18; margin-bottom: 16px; }
+      .js:not(.reading):not(.read-all) .slide .columns:has(> :is([data-scene], .buy-scene)) .notes li { margin-bottom: 6px; }
+      .js:not(.reading):not(.read-all) .slide .columns:has(> :is([data-scene], .buy-scene)) .callout { font-size: 13px; padding: 9px 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) { grid-template-columns: 540px minmax(0, 1fr); column-gap: 32px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) > .stage-label { font-size: 11px; padding: 3px 10px; margin-bottom: 10px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) > .showcase { grid-template-columns: 240px 60px 240px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .phone,
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .app { height: 530px; padding: 7px; border-radius: 34px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) :is(.phone-inner, .app-screen) { border-radius: 28px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .bridge span { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .phone-head b { font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .phone-head small { font-size: 10px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .bubble { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .compose-field { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .app-head .brand-lockup { font-size: 14px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-header { padding: 8px 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-header b { font-size: 16px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-header small { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-content { padding: 10px; gap: 7px; font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-banner { font-size: 11px; padding: 7px 9px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-banner b { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .app-tile { font-size: 12px; padding: 8px 10px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-action { min-height: 34px; border-radius: 9px; font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .chat-actions button { min-height: 30px; font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-tabs { font-size: 9px; padding: 5px 2px 3px; }
+      .js:not(.reading):not(.read-all) .slide .buy-scene .wish-field { font-size: 12px; padding: 7px 9px; }
+      .js:not(.reading):not(.read-all) .slide .buy-scene .wish-chips > * { font-size: 11px; padding: 5px 0; }
+      .js:not(.reading):not(.read-all) .slide .buy-scene .buy-breakdown,
+      .js:not(.reading):not(.read-all) .slide .buy-scene .buy-saving { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .buy-scene .buy-actions button { min-height: 30px; font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .buy-scene .buy-decline { padding: 2px; font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls { padding: 0; gap: 6px; background: transparent; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls output { font-size: 11px; padding: 0 0 2px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button { min-height: 30px; font-size: 12px; border-radius: 7px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls :is(button[data-action="play"], .buy-primary) { min-height: 36px; font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones { gap: 0; margin-top: 14px; padding-left: 4px; border-left: 2px solid #E3E9E5; }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones::before { display: none; }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button { min-height: 26px; padding: 2px 8px; gap: 8px; border: 0; font-size: 12px; color: var(--muted); }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button::before { width: 6px; height: 6px; }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button[aria-current="true"] { background: transparent; color: var(--primary); font-weight: 500; }
+      .js:not(.reading):not(.read-all) .slide .scene-caption { margin-top: 14px; padding: 2px 0 2px 10px; background: transparent; font-size: 13px; line-height: 1.5; color: var(--ink, #2B3A35); }
+    }
+    .reading #slide-frame { display: contents; }
+    @media print {
+      #slide-frame { display: contents !important; }
+      #slide-frame .slide {
+        display: flex !important; flex-direction: column; justify-content: safe center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <span class="brand">wooru / community commerce</span>
+    <label for="jump">Slide</label>
+    <select id="jump" disabled></select>
+    <button id="read-all" type="button" disabled aria-pressed="false">Read all</button>
+    <button id="present" type="button" disabled hidden>Full screen</button>
+    <button id="print" type="button" disabled>Print / PDF</button>
+  </header>
+  <p id="error" class="error" role="alert"></p>
+  <main id="deck" tabindex="-1" aria-label="Wooru and WhatsApp community commerce presentation">
+    <div id="slide-frame">
+    <section class="slide" id="vision" data-title="The solution">
+      <p class="kicker">01 / THE SOLUTION · LEADERSHIP DISCUSSION</p>
+      <h1>One community.<br>One order record.<br>A buying idea to test.</h1>
+      <p class="lede">Wooru already supports community food menus and pre-orders. Test whether society-led essentials buying can lower the final household price, and whether an association would pay Wooru under a separate, funded service contract.</p>
+      <div class="grid three">
+        <div class="card green"><h3>Works today · food</h3><p>Members browse menus, place server-checked pre-orders and see their own order status.</p></div>
+        <div class="card"><h3>Test next · essentials</h3><p>Compare supplier offers for pooled demand; residents accept only a final landed price.</p></div>
+        <div class="card dark"><h3>Prove the payer</h3><p>A sponsor could pay the association; Wooru would earn only under a separate agreement.</p></div>
+      </div>
+      <div class="proof-strip"><span>Product basis: <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/features.md">documented food-order workflow</a></span><span class="pending">Pilot demand, savings and payer: not validated</span></div>
+      <p class="small">Decision requested: authorize discovery and quotes, not a feature rollout. Buying circles, funding, dashboards, WhatsApp and AI are concepts; interactive examples are fictional.</p>
+      <p class="small presenter-detail">Product basis: <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/features.md">pre-order menu contract</a> and <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/architecture.md">atomic order and capacity rules</a>. No actual orders, supplier quotes or sponsor commitments are represented by this presentation.</p>
+    </section>
+
+    <section class="slide" id="problem" data-title="Why this matters now">
+      <p class="kicker">02 / FOUR PROBLEMS TO TEST, NOT MARKET-SIZE CLAIMS</p>
+      <h2>Discussion alone does not establish an order or a saving.</h2>
+      <p class="lede">For a society buying pilot, these are the operational gaps to check with members, suppliers and association leads.</p>
+      <div class="grid four">
+        <div class="card"><p class="metric">01</p><h3>Availability</h3><p>Can a resident see a current offer instead of relying on an old group post?</p></div>
+        <div class="card sand"><p class="metric">02</p><h3>Order proof</h3><p>Does explicit confirmation create one record with quantity, price and status?</p></div>
+        <div class="card"><p class="metric">03</p><h3>Landed price</h3><p>Is the same-grade basket still cheaper after packing and transport?</p></div>
+        <div class="card green"><p class="metric">04</p><h3>Funding proof</h3><p>Will a sponsor fund the association, and will it separately contract Wooru?</p></div>
+      </div>
+      <p class="proof-bar">Evidence gap: no observed demand baseline, comparable supplier/local quotes or sponsor/association commitment is included here.</p>
+      <p class="small presenter-detail">These are pilot questions, not measured prevalence. Wooru's existing food menus address availability and order records in-app; pooled purchasing and sponsorship are unbuilt proposals.</p>
+    </section>
+
+    <section class="slide" id="gap" data-title="What makes Wooru different">
+      <p class="kicker">03 / ONE SOURCE OF TRUTH · LIVE PRODUCT VERSUS PROPOSAL</p>
+      <h2>The order lives in Wooru, not in a chat reply.</h2>
+      <div class="flow" aria-label="Existing food pre-order workflow">
+        <div><b>Community</b>Resident belongs to a society</div><span aria-hidden="true">→</span>
+        <div><b>Seller listing</b>Host publishes a menu</div><span aria-hidden="true">→</span>
+        <div><b>Explicit order</b>Resident reviews and confirms</div><span aria-hidden="true">→</span>
+        <div><b>Record and status</b>Server checks price, cutoff and capacity</div>
+      </div>
+      <div class="proof-strip"><span>Documented today: food menu and signed-in pre-order</span><span class="pending">Proposed: supplier quotes → final household offer → fulfillment</span></div>
+      <p class="small">A seller-specific chat may help discovery, but it does not replace Wooru's order record. Existing-group sharing is human-initiated; no group sync is claimed. <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/architecture.md">Food-order technical reference</a>.</p>
+      <div class="table-wrap presenter-detail"><table>
+        <thead><tr><th>Typical seller-specific inbox or catalog</th><th>Proposed Wooru community layer</th></tr></thead>
+        <tbody>
+          <tr><td>Helps a business manage its own chats, catalog and responses.</td><td>Residents find participating sellers and structured offerings <b>within their own society</b>; sellers own their listings.</td></tr>
+          <tr><td>Can answer questions or share a product link; the conversation remains the main surface.</td><td>A linked Wooru account and live records ground cross-seller food discovery, with <b>the app and chat referring to the same order</b>.</td></tr>
+          <tr><td>A message such as “two please” still needs order handling.</td><td>For food, Wooru's server-checked pre-order tracks <b>item, price, cutoff and capacity</b> after explicit confirmation.</td></tr>
+          <tr><td>Separate sellers cannot easily combine a society's recurring demand.</td><td>A proposed buying circle lets society leads compare supplier quotes and residents confirm a <b>final landed price</b>. No automatic existing-group sync.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="grid three presenter-detail">
+        <div class="card"><h3>For residents</h3><p>Find community offerings in one place; food orders have a durable Wooru history instead of only a chat thread.</p></div>
+        <div class="card"><h3>For sellers</h3><p>Publish once in Wooru; choose when to share a listing into an existing group. No group listener or bulk auto-posting.</p></div>
+        <div class="card"><h3>For leads</h3><p>Moderate community listings with authorized tools and see aggregate activity, not private group or buyer conversations.</p></div>
+      </div>
+      <p class="small presenter-detail">Product basis: <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/features.md">food menu and My Orders behavior</a>; <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/architecture.md">atomic pre-order RPC</a>. The inbox comparison is a workflow contrast, not a surveyed competitor claim. Joining by code does not prove real-world identity; chat linking, buying circles and WhatsApp automation are proposals.</p>
+    </section>
+
+    <section class="slide long" id="seller" data-title="Seller journey">
+      <div class="columns">
+        <div class="notes">
+          <p class="kicker">04 / SELLER JOURNEY · ONE SHARED NUMBER</p>
+          <h2>Seller approval precedes every shared menu.</h2>
+          <ul>
+            <li>Live basis: a host publishes a food menu and manages only their orders in Wooru.</li>
+            <li>Proposed: an opt-in assistant prepares a private draft; the seller approves it.</li>
+          </ul>
+          <p class="callout">Proof checkpoint: publication is the seller's action, not an AI or group action.</p>
+          <p class="small presenter-detail">The app/PWA carries catalog, history, reviews, moderation and society administration. No WhatsApp or AI opt-in is required for core features. A seller-owned Business-number connection is optional and later, and never grants access to existing groups.</p>
+          <p class="print-story">Fictional demo, not pilot data: private draft → Priya approves publication → 9 portions remain → 7 after a two-portion order.</p>
+        </div>
+        <div class="stage" data-scene="seller"></div>
+      </div>
+      <noscript>A seller suggests a menu, Wooru asks for missing details and drafts it, then the seller reviews and explicitly publishes in Wooru.</noscript>
+    </section>
+
+    <section class="slide long" id="resident" data-title="Resident journey">
+      <div class="columns">
+        <div class="notes">
+          <p class="kicker">05 / RESIDENT JOURNEY · PROPOSED CHAT EXPERIENCE</p>
+          <h2>Review first. Confirm against live stock.</h2>
+          <ul>
+            <li>Live basis: signed-in residents confirm food pre-orders and check their own order history.</li>
+            <li>Proposed: one linked chat can guide discovery without inventing an order.</li>
+          </ul>
+          <p class="callout">Proof checkpoint: try “Unavailable.” Changed capacity means no two-portion order.</p>
+          <p class="small presenter-detail">The app switches from community menus to Rahul's My Orders. Linking must be approved in his signed-in app and can be revoked. On a delayed reply, check My Orders before retrying; seller cancellation needs a reason and next action. Updates outside the service window need approved utility templates. Food pilot; figures are illustrative.</p>
+          <p class="print-story">Fictional demo, not pilot data: ₹400 reviewed → #WR-1042 confirmed, stock 9 → 7. Alternate: capacity changed → no order.</p>
+        </div>
+        <div class="stage" data-scene="resident"></div>
+      </div>
+      <noscript>Animation needs JavaScript. Resident asks Wooru for vegetarian menus, chooses Priya's veg biryani, confirms 2 portions for ₹400, and receives one Wooru order reference.</noscript>
+    </section>
+
+    <section class="slide long" id="group-bridge" data-title="Existing group bridge">
+      <div class="columns">
+        <div class="notes">
+          <p class="kicker">06 / OPTIONAL ADOPTION BRIDGE</p>
+          <h2>Share a listing manually; never sync a group.</h2>
+          <ul>
+            <li>Seller publishes in Wooru before any share.</li>
+            <li>A person chooses the group, previews the link and presses Send.</li>
+          </ul>
+          <p class="callout">Feasibility gate: <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/groups">Meta's Groups API</a> creates small invite-only groups; it cannot connect to an existing society group.</p>
+          <p class="small presenter-detail">An authorized moderator can submit with seller permission; rejected or unclaimed drafts stay private. Unlinked visitors sign in before ordering. This sharing workflow is proposed, not shipped. The pilot remains food pre-orders; resale products come later.</p>
+        </div>
+        <div class="stage" data-scene="group"></div>
+      </div>
+      <noscript>Existing society groups cannot sync automatically. A seller or authorized moderator submits menu details with permission; the seller approves the Wooru draft. To share back, a person chooses the WhatsApp group and presses Send.</noscript>
+    </section>
+
+    <section class="slide long" id="collective" data-title="Make a wish · buy together">
+      <div class="columns">
+        <div class="notes">
+          <p class="kicker">07 / MAKE A WISH · PROPOSED CONCEPT</p>
+          <h2>One wish. Neighbours join. Everyone saves.</h2>
+          <ul>
+            <li>Wish for groceries, food or a service.</li>
+            <li>Share to WhatsApp; neighbours tap “Me too”.</li>
+            <li>Lead compares quotes; each home confirms.</li>
+          </ul>
+          <p class="callout">Interest is not an order.</p>
+          <p class="print-story">Fictional demo, not pilot data: wish for 10 kg rice → shared to the society WhatsApp group → 40 households · 400 kg → Offer A ₹55/kg landed → ₹550 at pickup vs ₹650 local.</p>
+        </div>
+        <div class="stage buy-scene" id="buying-scene">
+          <span class="stage-label">Fictional demo · Make a wish is a concept, not shipped</span>
+          <div class="showcase">
+            <div class="app"><div class="app-screen">
+              <div class="chat-statusbar app-status" aria-hidden="true"><span>7:07</span><span class="island"></span><span class="chat-signal"></span></div>
+              <div class="app-head"><b class="brand-lockup"><img src="./media/wooru-mark.png" alt="">wooru</b><small>Rahul · resident</small></div>
+              <div class="app-body" id="buying-resident" aria-live="polite" aria-label="Illustrative resident Make a wish screen"></div>
+              <span class="home-bar" aria-hidden="true"></span>
+            </div></div>
+            <div class="bridge"><span id="buying-bridge">Wish → pool</span><div class="bridge-line"></div></div>
+            <div class="phone" id="buying-wa" hidden><div class="phone-inner">
+              <div class="chat-statusbar" aria-hidden="true"><span>7:07</span><span class="island"></span><span class="chat-signal"></span></div>
+              <div class="phone-head"><span class="chat-back" aria-hidden="true"></span><span class="avatar">G</span><span class="chat-contact"><b>Green Meadows Residents</b><small>Anita’s WhatsApp · illustrative</small></span><span class="chat-tools" aria-hidden="true"></span></div>
+              <div class="messages" id="buying-wa-messages" aria-label="Illustrative WhatsApp group with Rahul’s shared wish"></div>
+              <div class="phone-compose"><span class="compose-pill"><span class="compose-field">Message</span></span><span class="compose-mic" aria-hidden="true"></span></div>
+              <span class="home-bar" aria-hidden="true"></span>
+            </div></div>
+            <div class="app" id="buying-sourcing-app"><div class="app-screen">
+              <div class="chat-statusbar app-status" aria-hidden="true"><span>7:07</span><span class="island"></span><span class="chat-signal"></span></div>
+              <div class="app-head"><b class="brand-lockup"><img src="./media/wooru-mark.png" alt="">wooru</b><small id="buying-role-label">Society lead</small></div>
+              <div class="app-body" id="buying-sourcing" aria-label="Illustrative lead or supplier sourcing screen"></div>
+              <span class="home-bar" aria-hidden="true"></span>
+            </div></div>
+          </div>
+          <div class="scene-controls" id="buying-controls">
+            <button type="button" data-buy-nav="next" class="buy-primary">Next step</button>
+            <button type="button" data-buy-nav="back">Back step</button>
+            <button type="button" data-buy-nav="reset">Reset</button>
+            <button type="button" data-buy-nav="role" data-action="variant" aria-pressed="false">Supplier view</button>
+            <output id="buying-count"></output>
+          </div>
+          <div class="demo-milestones" id="buying-milestones" aria-label="Jump to demo milestone"></div>
+          <p class="scene-caption" id="buying-caption" aria-live="polite"></p>
+        </div>
+      </div>
+      <p class="small presenter-detail">Validation missing: same-grade supplier and local-market quotes · packing and shared transport · optional doorstep quote · minimum demand · quality/returns terms. Make a wish is a proposed concept; the app does not ship it today. Illustrative workflow only. The society may request two or more comparable quotes and disclose selection conflicts; residents indicate interest before a fixed offer, then explicitly confirm or decline. If minimum demand is not met or the price changes, no silent order is placed. A supplier must agree to household-level billing and fulfillment at the quoted aggregate price; Wooru holds no stock or resident funds. Packing, transport, optional last-mile delivery, cancellations, quality complaints and replacement terms affect net savings. A low farm-gate price is not the final price. Delivery API integration requires validated multi-stop economics and a provider quote; it is not shown as shipped.</p>
+      <noscript>Proposed Make a wish: a resident posts a wish and neighbours tap Me too, pooling non-binding interest; at minimum demand a society lead compares approved wholesale or farmer quotes; the supplier confirms capacity; residents review the final landed price and select pickup or separately priced optional delivery before confirming.</noscript>
+    </section>
+
+    <section class="slide long" id="operations" data-title="Community and platform views">
+      <p class="kicker">08 / ROLE-BASED VISIBILITY · FICTIONAL DASHBOARD COUNTERS</p>
+      <h2>Four roles. Two dashboards. No private chats.</h2>
+      <div class="exec-evidence" aria-label="Proposed data scope for each role">
+        <div><b>Resident</b>Own price + order</div>
+        <div><b>Society lead</b>Society totals + public listings</div>
+        <div><b>Supplier</b>Approved quotes + own orders</div>
+        <div><b>Platform ops</b>Cross-community totals + delivery health</div>
+      </div>
+      <div class="role-boards">
+        <div class="role-frame">
+          <h3>Society lead · Wooru app</h3>
+          <p class="small">President / vice president · Green Meadows scope</p>
+          <div class="app" id="lead-preview" aria-label="Illustrative society lead app screen"></div>
+        </div>
+        <div class="role-frame">
+          <h3>Platform admin · Wooru web console</h3>
+          <p class="small">All communities · aggregate counts and delivery health</p>
+          <div class="app" id="platform-preview" aria-label="Illustrative platform admin console"></div>
+        </div>
+      </div>
+      <p class="operations-boundary"><b>ONE ORDER · TWO AGGREGATES</b><span>Green Meadows 7 → 8 · Platform 114 → 115 · Buyer identity and chat content stay private.</span></p>
+      <p class="small presenter-detail">The same synthetic order changes Green Meadows 7 → 8 and the platform total 114 → 115. Proposed buying circles would add approved suppliers, comparable quotes and aggregate participation to the society lead's view, not buyer conversations. Platform operations sees cross-community aggregate and delivery-health signals. Neither proposed panel grants access to private chats or unrelated buyer orders. The existing app and admin console do not ship these exact panels.</p>
+      <noscript>Illustrative future views: community leads see their society's aggregate orders and public menu reports; platform admins see cross-community totals and delivery health.</noscript>
+    </section>
+
+    <section class="slide long" id="trust" data-title="Feasibility and trust">
+      <p class="kicker">09 / PILOT GATES · NO WHATSAPP DEPENDENCY</p>
+      <h2>Four checks before buying-circle implementation.</h2>
+      <div class="grid four">
+        <div class="card green"><h3>Identity and consent</h3><p>Membership, seller approval and resident opt-in are explicit.</p></div>
+        <div class="card"><h3>Comparable supply</h3><p>Same grade, pack size, availability and final landed price are quoted.</p></div>
+        <div class="card sand"><h3>Fulfillment</h3><p>Billing, delivery, quality complaints and refunds have accountable owners.</p></div>
+        <div class="card"><h3>Channel cost</h3><p>Start app-first; add paid chat only if eligibility and unit cost justify it.</p></div>
+      </div>
+      <p class="proof-bar">Unverified: supplier capacity, household billing, delivery economics, sponsor interest and the association agreement. No group listener or automated posting.</p>
+      <div class="flow presenter-detail" aria-label="Proposed one-to-one message flow">
+        <div><b>Resident</b>Messages Wooru's number</div><span aria-hidden="true">→</span>
+        <div><b>Official Cloud API</b>Delivers a 1:1 message</div><span aria-hidden="true">→</span>
+        <div><b>Wooru gateway</b>Links identity, verifies webhook</div><span aria-hidden="true">→</span>
+        <div><b>Wooru order</b>Checks price, cutoff, capacity</div><span aria-hidden="true">→</span>
+        <div><b>Reply and status</b>Same record in app and chat</div>
+      </div>
+      <div class="table-wrap presenter-detail"><table>
+        <thead><tr><th>Official route</th><th>What it supports</th><th>What it does not support</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users">Business-app Coexistence</a></td><td>Eligible seller's one-to-one app/API chat sync, subject to onboarding.</td><td>Group chats are explicitly <b>not synchronized</b>.</td></tr>
+          <tr><td><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/groups">Groups API</a></td><td>API-created, invite-only groups for Official Business Accounts, up to eight participants.</td><td>No connector to an existing large society group; unavailable to Business-app phone numbers.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="grid three presenter-detail">
+        <div class="card green"><h3>Can pilot</h3><p>Opt-in Wooru-owned number, linked resident, live menus, explicit food order and updates with a human fallback.</p></div>
+        <div class="card sand"><h3>Cannot sync groups</h3><p>Coexistence is eligible 1:1 chat only. The Groups API does not connect to existing large society groups. A person chooses and sends each share.</p></div>
+        <div class="card"><h3>Keep trust</h3><p>Seller approval, scoped identity, webhook retries, opt-outs and server-side order checks. AI never invents an order.</p></div>
+      </div>
+      <p class="small presenter-detail">Buying circles can be app-first; paid WhatsApp automation is optional. Food orders need linked identity, server-side price/cutoff/capacity checks and explicit buyer confirmation. Existing <code>place_mcn_preorder</code> relies on the signed-in user; a service-role key alone cannot impersonate the resident. Verify provider onboarding, template policy, retries and data-processing terms before implementation. Other business listings are contact-only today. Society-selected suppliers and sponsors require separate approvals and a disclosed conflict policy.</p>
+    </section>
+
+    <section class="slide" id="income" data-title="Where Wooru earns">
+      <p class="kicker">10 / BUSINESS MODEL · NO CONTRACT EVIDENCED HERE</p>
+      <h2>Residents and suppliers pay no Wooru fee.</h2>
+      <p class="lede">A sponsorship belongs to the association, not Wooru. Wooru earns only when the association signs and pays a separate service agreement.</p>
+      <div class="flow" aria-label="Proposed sponsor to association to Wooru funding flow">
+        <div><b>Sponsor</b>Would pay the association directly for a labelled, approved placement.</div><span aria-hidden="true">→</span>
+        <div><b>Association</b>Would retain its agreed share and separately contract for Wooru's service.</div><span aria-hidden="true">→</span>
+        <div><b>Wooru</b>Would invoice the association for a disclosed service fee, not a grocery markup.</div>
+      </div>
+      <div class="funding-proof" aria-label="Illustrative sponsor placement and association contract">
+        <div class="funding-card" id="sponsor-example" aria-live="polite"></div>
+        <div class="funding-card"><span class="ui-overline">Association finance · proposed, uncontracted</span><b>Two separate agreements</b><small>A sponsor would pay the association for a placement; the association would separately approve Wooru's service scope and invoice. Neither agreement is evidenced here.</small></div>
+      </div>
+      <p class="proof-bar">Before revenue can be claimed: sponsor interest and terms · association approval · signed Wooru service scope and fee · actual operating cost.</p>
+      <div class="grid three presenter-detail">
+        <div class="card green"><h3>Primary · society contract</h3><p>Sign only when sponsor funding and the society's approval can cover the fee.</p></div>
+        <div class="card"><h3>Later · enterprise contract</h3><p>A property operator may pay for proven multi-community tools. No buyer or price is validated.</p></div>
+        <div class="card"><h3>Later · managed support</h3><p>Separately scope human procurement or campaign assistance; price its staffing cost.</p></div>
+      </div>
+      <p class="callout">Under this proposal, residents would pay the supplier for goods and any chosen delivery. No hidden item margin, personal-data sale or sponsor-controlled supplier ranking.</p>
+      <p class="small presenter-detail">These are income hypotheses, not current contracts or forecasts. Sponsored placements and procurement decisions need separate approvals, comparable landed-price quotes and disclosed conflicts. A single society may not support meaningful ad spend; a multi-society program is a later opportunity, not assumed revenue. Funding gate: a contracted association fee must exceed actual platform, supplier support, communications, sales and operating costs with a sustainable margin. Consumer gate: a comparable final price including packing, transport and optional delivery must show a real benefit without an undisclosed subsidy. A delivery charge is fulfillment cost, not assumed Wooru income. The fictional rice arithmetic belongs to the interactive demo on slide 7, not this revenue case.</p>
+    </section>
+
+    <section class="slide long" id="economics" data-title="Pilot economics">
+      <p class="eyebrow">11 / UNIT ECONOMICS · EVIDENCE LEDGER</p>
+      <h2>No defensible margin until quotes and a contract exist.</h2>
+      <p class="lede">Do not turn a fictional rice quote or chat-cost estimate into a business forecast. Collect comparable prices and separate the household saving from Wooru's contracted income.</p>
+      <div class="table-wrap exec-ledger"><table aria-label="Pilot economics validation ledger">
+        <thead><tr><th>Decision input</th><th>Evidence required</th><th>Status in this briefing</th></tr></thead>
+        <tbody>
+          <tr><td>Household basket</td><td>Same-grade supplier and local-market quotes</td><td>Quotes required</td></tr>
+          <tr><td>Shared fulfillment</td><td>Packing, transport, quality and returns terms</td><td>Quotes and terms required</td></tr>
+          <tr><td>Optional doorstep</td><td>Multi-stop delivery quote and responsible party</td><td>Quote required</td></tr>
+          <tr><td>Wooru operating cost</td><td>Platform, support, staffing and optional chat</td><td>Actual cost required</td></tr>
+          <tr><td>Wooru income</td><td>Association-approved service scope and signed fee</td><td>Contract not evidenced</td></tr>
+        </tbody>
+      </table></div>
+      <p class="proof-bar">Gate: prove a cheaper comparable household basket after fulfillment, and a separately signed association fee that covers Wooru's actual costs. Targets remain to be agreed.</p>
+      <p class="small presenter-detail">The provider comparison covers official Cloud API options. Seller-number Coexistence is a later eligibility question, not a cost or onboarding requirement for the Wooru-owned pilot.</p>
+      <div class="table-wrap provider-matrix presenter-detail"><table>
+        <thead><tr><th>Route</th><th>Seller-number Coexistence later?</th><th>Strength</th><th>Watch out for</th></tr></thead>
+        <tbody>
+          <tr><td><b>Direct Meta</b></td><td>Eligible route, subject to approval</td><td>Full control; no provider subscription</td><td>Wooru must verify the requirements for its own number; seller-number onboarding adds further gates</td></tr>
+          <tr class="best"><td><b>360dialog</b> · recommended to evaluate</td><td>Documented guide</td><td>API-first; published list price; onboarding support</td><td>€49/number/month list price; obtain a written one-number and later multi-seller quote</td></tr>
+          <tr><td><b>Wati</b></td><td>Yes, advertised</td><td>Ready inbox, chatbots, team tools</td><td>Growth plan has no webhooks; Pro has limited webhooks. Per-workspace pricing</td></tr>
+          <tr><td><b>Twilio</b></td><td>Not by standard sign-up</td><td>Mature messaging APIs</td><td>Standard sign-up requires deleting the app account; $0.005 per message in or out</td></tr>
+        </tbody>
+      </table></div>
+      <p class="callout presenter-detail"><b>Optional research model, not pilot economics.</b> The editable calculator below contains fictional traffic, exchange rates and operating allowances. Replace them with measured volumes and written provider quotes before comparing routes; none of its outputs establishes Wooru's income or margin.</p>
+      <details class="calc-panel presenter-detail" id="calculator"><summary>Open the INR calculator: pilot one-number preset or optional seller-number expansion</summary><div>
+      <div class="actions">
+        <button type="button" data-preset="pilot">Pilot / 1 Wooru number</button>
+        <button type="button" data-preset="small">Small / 5 sellers</button>
+        <button type="button" data-preset="medium">Medium / 20 sellers</button>
+        <button type="button" data-preset="large">Large / 100 sellers</button>
+        <button type="button" id="reset">Reset all assumptions</button>
+      </div>
+      <p id="preset-description" class="small">Pilot: one Wooru-owned number serving a few food sellers. All traffic and fees are assumptions to replace with observed volumes and quotes.</p>
+      <form id="cost-form" novalidate>
+        <fieldset><legend>1. Monthly traffic across modeled API numbers</legend><div class="field-grid">
+          <div class="field"><label for="sellers">Connected API numbers</label><input id="sellers" type="number" min="1" step="1" value="1" data-kind="positive-count"><small>Pilot: one Wooru number, independent of seller count. Later: one number/seller only if choosing Coexistence.</small></div>
+          <div class="field"><label for="inbound">Inbound API messages</label><input id="inbound" type="number" min="0" step="1" value="5000" data-kind="count"><small>Meta: no inbound charge. Twilio handling still applies.</small></div>
+          <div class="field"><label for="outbound">Outbound API messages</label><input id="outbound" type="number" min="0" step="1" value="6000" data-kind="count"><small>Assume delivery for this illustration. Excludes messages sent only in the Business app.</small></div>
+          <div class="field"><label for="marketing">Chargeable marketing messages</label><input id="marketing" type="number" min="0" step="1" value="500" data-kind="count"><small>Delivered, after applicable exemptions.</small></div>
+          <div class="field"><label for="utility">Chargeable utility messages</label><input id="utility" type="number" min="0" step="1" value="1000" data-kind="count"><small>Delivered, after applicable exemptions.</small></div>
+          <div class="field"><label for="authentication">Chargeable authentication messages</label><input id="authentication" type="number" min="0" step="1" value="0" data-kind="count"><small>International authentication / volume-tier effects are not automated.</small></div>
+          <div class="field"><label for="service">Chargeable service messages</label><input id="service" type="number" min="0" step="1" value="3500" data-kind="count"><small>After each number's own free tier and applicable exemptions.</small></div>
+          <div class="field"><label for="exempt">Meta-exempt outbound messages</label><input id="exempt" type="number" min="0" step="1" value="1000" data-kind="count"><small>Pilot assumes 1,000 eligible free service messages for one number; replace with actual rules and traffic.</small></div>
+        </div><p class="small">The four chargeable category counts + exempt messages must equal outbound volume. Edit all relevant counts together. No automatic pooling of free service allowances.</p></fieldset>
+        <fieldset><legend>2. Hypothetical exchange and Meta rates</legend><div class="field-grid">
+          <div class="field"><label for="usd">INR per USD</label><input id="usd" type="number" min="0.000001" step="any" value="85" data-kind="positive"><small>Planning assumption, not a live FX quote.</small></div>
+          <div class="field"><label for="eur">INR per EUR</label><input id="eur" type="number" min="0.000001" step="any" value="95" data-kind="positive"><small>Planning assumption, not a live FX quote.</small></div>
+          <div class="field"><label for="marketing-rate">Marketing / message, INR</label><input id="marketing-rate" type="number" min="0" step="any" value="1" data-kind="amount"><small>Hypothetical. Replace with applicable Meta rate.</small></div>
+          <div class="field"><label for="utility-rate">Utility / message, INR</label><input id="utility-rate" type="number" min="0" step="any" value="0.15" data-kind="amount"><small>Hypothetical blended rate; not a published quote.</small></div>
+          <div class="field"><label for="authentication-rate">Authentication / message, INR</label><input id="authentication-rate" type="number" min="0" step="any" value="0.15" data-kind="amount"><small>Hypothetical; use the actual applicable tier/market rate.</small></div>
+          <div class="field"><label for="service-rate">Service / message, INR</label><input id="service-rate" type="number" min="0" step="any" value="0.15" data-kind="amount"><small>Hypothetical; applies to chargeable service count only.</small></div>
+        </div></fieldset>
+        <fieldset><legend>3. Provider subscriptions and handling</legend><div class="field-grid">
+          <div class="field"><label for="dialog-rate">360dialog / number / month, EUR</label><input id="dialog-rate" type="number" min="0" step="any" value="49" data-kind="amount"><small>Published Regular direct list price [S5]; not partner pricing.</small></div>
+          <div class="field"><label for="dialog-extra">360dialog extra fees / month, INR</label><input id="dialog-extra" type="number" min="0" step="any" value="0" data-kind="amount"><small>Assumed 0 in list-price illustration. Add applicable partner charges; quote remains required.</small></div>
+          <div class="field"><label for="wati-plan">Wati reference plan</label><select id="wati-plan"><option value="5799" selected>Pro / INR 5,799</option><option value="16799">Business / INR 16,799</option><option value="2699">Growth / INR 2,699 (no webhooks)</option></select><small>Published monthly equivalents, billed quarterly [S7]. Selection restores list fee below.</small></div>
+          <div class="field"><label for="wati-rate">Wati / workspace / month, INR</label><input id="wati-rate" type="number" min="0" step="any" value="5799" data-kind="amount"><small>Editable list-fee reference, not a multi-seller quote.</small></div>
+          <div class="field"><label for="workspaces">Wati workspaces</label><input id="workspaces" type="number" min="1" step="1" value="1" data-kind="positive-count"><small>Pilot assumes one workspace. Seller-number scenarios hypothesize one per seller; confirm contracts.</small></div>
+          <div class="field"><label for="wati-extra">Wati extra fees / month, INR</label><input id="wati-extra" type="number" min="0" step="any" value="0" data-kind="amount"><small>Assumed 0. Rate-card markup, numbers, seats, automation/API add-ons require a quote.</small></div>
+          <div class="field"><label for="twilio-rate">Twilio / inbound or outbound, USD</label><input id="twilio-rate" type="number" min="0" step="any" value="0.005" data-kind="amount"><small>Published handling fee [S9]. Does not establish Coexistence support.</small></div>
+          <div class="field"><label for="twilio-extra">Twilio extra fees / month, INR</label><input id="twilio-extra" type="number" min="0" step="any" value="0" data-kind="amount"><small>Assumed 0; excludes failed-message and optional service fees unless entered.</small></div>
+        </div></fieldset>
+        <fieldset><legend>4. Shared planning allowances, not supplier quotes</legend><div class="field-grid">
+          <div class="field"><label for="backend">Backend / month, INR</label><input id="backend" type="number" min="0" step="any" value="1500" data-kind="amount"><small>Illustrative incremental hosting/monitoring allowance.</small></div>
+          <div class="field"><label for="support">Maintenance / support / month, INR</label><input id="support" type="number" min="0" step="any" value="3000" data-kind="amount"><small>Illustrative shared allowance; direct and provider routes may need different budgets.</small></div>
+          <div class="field"><label for="setup">One-time implementation allowance, INR</label><input id="setup" type="number" min="0" step="any" value="25000" data-kind="amount"><small>Hypothetical only, not an engineering estimate or commitment.</small></div>
+          <div class="field"><label for="tax">Illustrative uniform tax, %</label><input id="tax" type="number" min="0" max="100" step="any" value="0" data-kind="tax"><small>Default 0 excludes tax. Actual tax treatment varies; this is not GST advice.</small></div>
+        </div></fieldset>
+      </form>
+      <div id="calc-summary" role="status" aria-live="polite">Enable JavaScript to calculate. No estimate has been generated.</div>
+      <div id="results" class="result-grid" aria-label="Illustrative route cost breakdowns"></div>
+      <details><summary>Formulas, exclusions, and how to interpret the estimate</summary><div>
+        <p>Meta = marketing count x marketing rate + utility count x utility rate + authentication count x authentication rate + service count x service rate. Counts are delivered and already net of exemptions. Each preset assumes uniform service usage and applies a maximum 1,000 service messages/number exemption before deriving its chargeable counts. Edited counts are not automatically allocated across sellers.</p>
+        <p>360dialog = numbers x EUR monthly list fee x EUR/INR + entered extra fees. Wati = workspaces x entered INR fee + entered extra fees. Twilio = (inbound + outbound) x USD handling fee x USD/INR + entered extra fees. Direct provider fee = 0; this is not zero integration cost.</p>
+        <p>Monthly subtotal = Meta + provider + backend + support. Monthly tax = subtotal x tax %. Monthly estimate = subtotal + tax. First-month economic estimate = monthly estimate + setup x (1 + tax %). For Wati, quarterly base subscription cash = workspace fee x workspace count x 3 before taxes; monthly equivalents are not a cash-flow forecast.</p>
+        <p>All routes use the same illustrative Meta pass-through and operating allowance for comparability, not because actual contracts or engineering needs are identical. Pilot: seller count does not multiply the one Wooru-owned number. Later seller-number Coexistence: count eligible connected numbers separately. Wati may use its own message rate card; reflect differences in its extra-fees input. No volume tiers, automatic FEP detection, cross-border/authentication uplifts, ads, AI/OCR, payment processing, phone rental, or unentered vendor charges are included. Partner arrangements and seller eligibility remain unverified.</p>
+        <p>Blank, invalid, or unknown required numeric values stop calculation. Enter a known zero explicitly. Displayed zeros in extra-fee defaults are labeled exclusions, not evidence that no such charges apply. No “cheapest eligible route” is inferred.</p>
+      </div></details>
+      </div></details>
+      <p class="sources presenter-detail">Sources: <a href="https://360dialog.com/pricing" target="_blank" rel="noopener noreferrer">360dialog pricing</a><a href="https://www.wati.io/pricing/" target="_blank" rel="noopener noreferrer">Wati pricing</a><a href="https://www.twilio.com/en-us/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Twilio pricing</a><a href="https://www.twilio.com/docs/whatsapp/self-sign-up" target="_blank" rel="noopener noreferrer">Twilio sign-up</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Meta pricing</a> · list prices checked 12 Nov 2026</p>
+      <p class="print-note">Optional WhatsApp pricing research belongs in Read all. Its editable assumptions are fictional and are not the pilot budget or a vendor quote.</p>
+    </section>
+
+    <section class="slide long" id="decision" data-title="Pilot decision">
+      <p class="kicker">12 / LEADERSHIP DECISION · DISCOVERY BEFORE BUILD</p>
+      <h2>Authorize proof, not a network rollout.</h2>
+      <div class="grid three">
+        <div class="card dark"><h3>First · manual proof</h3><p>One willing society and essentials basket. Collect comparable quotes, household interest and supplier terms without building a network.</p></div>
+        <div class="card"><h3>Next · community pilot</h3><p>Proceed only after a final-price test, fulfillment plan and association service agreement pass pre-agreed gates.</p></div>
+        <div class="card sand"><h3>Later · expand</h3><p>Repeat only if observed savings, fulfillment, opt-in and Wooru's covered operating cost hold across pilots.</p></div>
+      </div>
+      <p class="proof-bar">Leadership ask: approve discovery and supplier/sponsor/association conversations. Set numeric gates after baselines and quotes; approve implementation separately.</p>
+      <p class="small">Track comparable landed-price saving, resident opt-in, fulfilled orders, complaints and actual cost per society. No target, supplier quote or contracted income is asserted here.</p>
+      <div class="table-wrap presenter-detail"><table>
+        <thead><tr><th>Decision area</th><th>Question to answer before implementation</th></tr></thead>
+        <tbody>
+          <tr><td>Buying circle</td><td>Comparable basket saving: supplier/local quotes and receipts. Supplier capacity and household billing: written terms. Numeric gate: leadership to set after baseline.</td></tr>
+          <tr><td>Income</td><td>Sponsor willingness: written interest or agreement. Association fee: approved scope and signed contract. Cost coverage: Wooru's observed platform/support/operations cost.</td></tr>
+          <tr><td>Optional delivery</td><td>Multi-stop cost and failure/returns owner: delivery quote and service terms. Gate: preserve observed net saving after any doorstep charge.</td></tr>
+          <tr><td>Optional chat and AI</td><td>Only after app-first value: provider eligibility, opt-in and actual cost per completed order versus simpler in-app discovery.</td></tr>
+        </tbody>
+      </table></div>
+      <p class="source presenter-detail">Product grounding: <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/features.md">Wooru feature reference</a> and <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/architecture.md">architecture reference</a>. WhatsApp feasibility and editable cost assumptions are on slides 9 and 11. No buying-circle, supplier, sponsor, delivery API, WhatsApp or AI integration is live.</p>
+    </section>
+    </div>
+  </main>
+  <footer class="bottom">
+    <button id="prev" type="button" disabled>Previous</button>
+    <span id="counter" class="counter" aria-live="polite">1 / 12</span>
+    <progress id="progress" value="1" max="12" aria-label="Presentation progress"></progress>
+    <button id="next" type="button" disabled>Next</button>
+    <span class="small">← → · swipe · F full screen</span>
+  </footer>
+  <script>
+    'use strict';
+    const tile = (title, detail, highlight = false) =>
+      `<div class="app-tile${highlight ? ' highlight' : ''}"><b>${title}</b><small>${detail}</small></div>`;
+    const menuTile = () =>
+      `<div class="menu-tile"><img src="./media/food-menu-placeholder.jpg" alt="Illustrated food placeholder, not a photo of the dish">` +
+      `<div><span class="dash-badge">Open · veg</span><b>Priya’s Kitchen · Veg biryani</b>` +
+      `<small>₹200 / portion · 9 of 15 left<br>Closes Sat 8 pm · Sun 1–2 pm</small></div></div>`;
+    const iconPaths = {
+      call: '<path d="M5 3.5h3.5l1.7 4.3-2.2 1.4a11 11 0 0 0 6.8 6.8l1.4-2.2 4.3 1.7V19a1.8 1.8 0 0 1-1.9 1.8A16.5 16.5 0 0 1 3.2 5.4 1.8 1.8 0 0 1 5 3.5z"/>',
+      more: '<circle cx="12" cy="5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="19" r="1.3" fill="currentColor"/>',
+      smile: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><circle cx="9" cy="10" r=".9" fill="currentColor"/><circle cx="15" cy="10" r=".9" fill="currentColor"/>',
+      clip: '<path d="m20 11.5-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/>',
+      camera: '<path d="M4 7.5h3.2L9 5h6l1.8 2.5H20a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8.5a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
+      mic: '<rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+      Help: '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4z"/>',
+      Saved: '<path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/>',
+      MCN: '<path d="M4 9.5 5.5 4h13L20 9.5M4 9.5h16M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0M5.5 12.5V20h13v-7.5M10 20v-4.5h4V20"/>',
+      Community: '<circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5a6 6 0 0 1 12 0"/><circle cx="17" cy="9.5" r="2.4"/><path d="M16 14.2a5 5 0 0 1 5 5"/>',
+      Profile: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>',
+      Quotes: '<path d="M6 3h9l4 4v14H6z"/><path d="M14.5 3v4.5H19M9 12.5h7M9 16.5h7"/>',
+      Orders: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+      Delivery: '<path d="M3 6.5h11v10H3zM14 10h4l3 3.5v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/>',
+      wish: '<path d="M11 3.5l1.9 5 5 1.9-5 1.9-1.9 5-1.9-5-5-1.9 5-1.9z"/><path d="M18.5 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>'
+    };
+    const icon = name =>
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[name]}</svg>`;
+    const appScreen = (title, subtitle, content, activeTab) =>
+      `<div class="ui-screen"><div class="ui-header"><span class="ui-overline">${activeTab} / Wooru</span><b>${title}</b><small>${subtitle}</small></div>` +
+      `<div class="ui-content">${content}</div><div class="ui-tabs">` +
+      (activeTab === 'Quotes' ? ['Quotes', 'Orders', 'Delivery'] : ['Help', 'Saved', 'MCN', 'Community', 'Profile']).map(tab =>
+        tab === activeTab ? `<b>${icon(tab)}${tab}</b>` : `<span>${icon(tab)}${tab}</span>`).join('') + `</div></div>`;
+    const residentScreen = state => appScreen(
+      state === 'confirmed' || state === 'delivered' ? 'My orders' : 'Pre-order food', 'Green Meadows · Rahul M',
+      state === 'link'
+        ? `<div class="ui-banner sand"><b>Link request from Wooru concierge</b>Approve this one-time request in your signed-in account. Reject an unexpected request.</div>` +
+          tile('Connect this chat', 'Green Meadows · approve or reject in Wooru', true)
+        : state === 'delivered'
+          ? `<div class="ui-banner"><b>Order delivered</b>The latest status is in Wooru, even if a chat update is delayed.</div>` +
+            tile('#WR-1042 · Priya’s Kitchen', '2 × veg biryani · ₹400 · Delivered', true)
+        : state === 'confirmed'
+        ? `<div class="ui-banner"><b>Order confirmed</b>Saved in Wooru, whichever channel you use.</div>` +
+          `<span class="ui-label">Your upcoming orders</span>` +
+          tile('#WR-1042 · Priya’s Kitchen', '2 × veg biryani · ₹400 · Sun 1–2 pm · Confirmed', true) +
+          `<span class="ui-label">Explore more in your community</span>` +
+          tile('Anita’s Kitchen', 'Veg thali · ₹220 · 6 left')
+        : state === 'review'
+          ? `<div class="ui-banner sand"><b>Review before confirming</b>No order is placed until Rahul explicitly confirms.</div>` +
+            tile('Priya’s Kitchen · 2 × veg biryani', '₹200 each · ₹400 total · Sun 1–2 pm', true) +
+            tile('Delivery and payment', 'Flat B-1204 · use verified phone · pay Priya on delivery') +
+            `<button type="button" class="ui-action" data-demo-action="place-order">Place order · ₹400</button>`
+        : state === 'unavailable'
+          ? `<div class="ui-banner sand"><b>No order placed</b>Only 1 portion remains; the 2-portion quote is no longer valid.</div>` +
+            tile('Review revised cart', '1 × veg biryani · ₹200 · confirm again to place', true) +
+            tile('My orders', 'No new order · check here first if a request is still pending')
+        : state === 'checking'
+          ? `<div class="ui-banner sand"><b>Checking your order</b>Do not submit again yet. Confirmed only when a Wooru order appears.</div>` +
+            tile('Priya’s Kitchen · 2 × veg biryani', '₹400 · Sun 1–2 pm · B-1204 · Checking', true) +
+            tile('My orders', 'Check the latest status if the reply is delayed')
+          : `<div class="ui-banner"><b>Food in your community</b>Browse every participating seller in one place.</div>` +
+          `<span class="ui-label">Open for Sunday delivery</span>` +
+          menuTile() +
+          tile('Anita’s Kitchen · Veg thali', '₹220 · 6 left · closes Sat 6 pm') +
+          `<span class="ui-label">My orders</span>` +
+          tile('Recent orders', 'Your own order history is here, not in someone else’s chat.'),
+      'MCN');
+    const sellerScreen = state => appScreen(
+      'Priya’s Kitchen', 'Green Meadows · private seller workspace',
+      `<span class="ui-label">Sunday menu</span>` +
+      (state === 'empty'
+        ? tile('No Sunday menu yet', 'Create in Wooru or review an assistant draft')
+        : state === 'draft'
+          ? tile('Draft · veg biryani', '₹200 · 15 portions · Sat 8 pm cutoff', true) +
+            `<button type="button" class="ui-action" data-demo-action="publish">Review and publish</button>`
+          : tile('Published · veg biryani', `₹200 · ${state === 'ordered' ? '7' : '9'} left · Sat 8 pm cutoff`, true)) +
+      `<span class="ui-label">Your orders</span>` +
+      (state === 'ordered'
+        ? tile('New · #WR-1042 · Rahul M', '2 × veg biryani · ₹400 · Confirmed · Sun 1–2 pm', true) +
+          tile('Prep and delivery', '2 portions for Rahul · 7 available after this order')
+        : tile('Sunday pre-orders', state === 'published' ? 'Existing reservations · 9 portions left' : 'No Sunday orders yet')) +
+      (state === 'ordered' ? `<button type="button" class="ui-action" data-demo-action="manage">View own delivery roster</button>` : ''),
+      'MCN');
+    const leadScreen = (ordered, flag = false) => appScreen(
+      'Community pulse', 'Green Meadows · president / vice president',
+      `<div class="dash-context"><span class="dash-badge">Today · Green Meadows</span><span>Aggregate only</span></div>` +
+      `<div class="dash-stats"><div class="${ordered ? 'changed' : ''}"><b>${ordered ? 8 : 7}</b><span>Food orders</span></div>` +
+      `<div><b>2</b><span>Open menus</span></div><div><b>2</b><span>Local sellers</span></div></div>` +
+      `<div class="dash-task${flag ? ' needs-review' : ''}"><span class="ui-label">Public listing review</span>` +
+      `<b>${flag ? '1 report needs review' : 'No open reports'}</b>` +
+      `<small>${flag ? 'Menu cutoff reported · inspect the public listing' : 'Resolved actions stay in the audit history'}</small></div>`,
+      'Community');
+    const platformScreen = (ordered, alert = false) =>
+      `<div class="console-screen"><aside class="console-side"><b>wooru<small>OPERATIONS</small></b><span class="selected">Overview</span>` +
+      `<span>Communities</span><span>Commerce</span><span>Channel health</span></aside>` +
+      `<div class="console-main"><div class="console-heading"><div><span class="ui-overline">Platform / all communities</span>` +
+      `<h3>Commerce health</h3></div><span class="dash-badge${alert ? ' warning' : ''}">${alert ? '1 delivery alert' : 'Channel healthy'}</span></div>` +
+      `<div class="console-stats"><div class="${ordered ? 'changed' : ''}"><b>${ordered ? 115 : 114}</b><span>Food orders today</span></div>` +
+      `<div class="${ordered ? 'changed' : ''}"><b>${ordered ? 8 : 7}</b><span>Green Meadows</span></div></div>` +
+      `<div class="console-table"><div><span>Community</span><span>Orders today</span></div>` +
+      `<div><span>Green Meadows</span><span>${ordered ? 8 : 7}</span></div>` +
+      `<div><span>Other communities</span><span>107</span></div></div>` +
+      `<div class="console-alert${alert ? ' warning' : ''}"><b>${alert ? 'Template delivery failed' : 'Delivery healthy'}</b>` +
+      `<span>${alert ? 'Green Meadows · provider retry pending' : 'No open alerts · provider status available'}</span></div>` +
+      `<span class="console-privacy">Operational signals only · no buyer details or transcripts</span>` +
+      `</div></div>`;
+    const groupScreen = state => appScreen(
+      'Food in your community', 'Green Meadows · future sharing concept',
+      state === 'empty'
+        ? `<div class="ui-banner sand"><b>No menu submitted yet</b>Wooru cannot read the existing group.</div>` +
+          tile('Submit food-menu details', 'Seller or authorized moderator · with seller permission')
+        : state === 'draft'
+          ? `<div class="ui-banner sand"><b>Private draft · not published</b>Optional AI suggests details; Priya must claim and review.</div>` +
+            tile('Sunday veg biryani · ₹200', 'Priya reviews price, 15 portions, Sat 8 pm cutoff and duplicate menus', true) +
+            `<span class="ui-label">Seller action required</span><button type="button" class="ui-action" data-demo-action="group-publish">Review and publish</button>`
+          : `<div class="ui-banner"><b>Published by Priya</b>Seller-approved menu · live details in Wooru.</div>` +
+            tile('Sunday veg biryani · ₹200', 'Priya’s Kitchen · 9 left · Sat 8 pm cutoff', true) +
+            `<div class="group-member-link"><span class="ui-label">Member link</span>` +
+            tile('Open current menu', 'Unlinked residents sign in before ordering; old previews may be stale') + `</div>` +
+            `<button type="button" class="ui-action" data-demo-action="group-share">Share via WhatsApp</button>`,
+      'MCN');
+    const groupPhone = state => state === 'chooser'
+      ? `<div class="share-screen"><b>Simulated share chooser</b><div class="share-row">Priya selects a chat</div>` +
+        `<div class="share-row selected">Green Meadows Residents<small>Chosen by Priya · Wooru cannot read the group</small></div>` +
+        `<button type="button" class="share-action" data-demo-action="group-preview">Preview link · not sent</button></div>`
+      : state === 'preview'
+        ? `<div class="share-screen"><b>Green Meadows Residents · preview</b>` +
+          `<div class="share-preview"><b>Priya’s Kitchen · Sunday veg biryani</b><small>₹200 · opens current Wooru menu; sign-in required to order</small></div>` +
+          `<small>Preview is illustrative and may go stale. You can cancel.</small><button type="button" data-demo-action="group-cancel">Cancel sharing</button><button type="button" class="share-action" data-demo-action="group-send">Send as Priya</button></div>`
+        : `<div class="bubble${state === 'sent' ? ' out' : ''}"><span class="by">${state === 'sent' ? 'Priya · shared Wooru link' : 'Priya · original group post'}</span>` +
+          (state === 'sent'
+            ? `Sunday veg biryani · ₹200<br>Open Priya’s current Wooru menu (illustrative link)`
+            : `Sunday veg biryani · ₹200. 15 portions, closes Sat 8 pm. Message me to order.`) +
+          `<span class="stamp">${state === 'sent' ? 'Sent by Priya' : 'Visible in group only'}</span></div>`;
+    const scripts = {
+      resident: {
+        start: 'Rahul initiates a chat with Wooru; linking and food ordering here are proposed experiences.',
+        context: 'Resident app · concept',
+        panel: residentScreen('browse'),
+        steps: [
+          { who: 'resident', text: 'Hi Wooru', caption: 'Rahul initiates the conversation with one Wooru-owned number.' },
+          { who: 'wooru', text: 'To see menus in your society, approve a one-time link in your signed-in Wooru app.', caption: 'The chat cannot infer Rahul’s community from a phone number or group membership.' },
+          { who: 'panel', html: residentScreen('link'), caption: 'Rahul reviews and approves the link in Wooru; an unexpected request can be rejected.' },
+          { who: 'panel', html: residentScreen('browse'), caption: 'Linked to Green Meadows. Rahul can unlink later; Wooru now knows which menus he may see.' },
+          { who: 'resident', text: 'What vegetarian food is open Sunday under ₹250?', caption: 'One message to Wooru—not two chats with two different sellers.' },
+          { who: 'link', direction: 'forward', text: 'Community + live menus', caption: 'Wooru resolves Rahul’s linked society, then queries its current menus.' },
+          { who: 'wooru', text: 'In Green Meadows, two Sunday options match:\nPriya: veg biryani · ₹200 · 9 left\nAnita: veg thali · ₹220 · 6 left', actions: 'Priya’s biryani', caption: 'AI can phrase the answer; Wooru supplies the exact menu facts.' },
+          { who: 'resident', text: 'Priya’s biryani, two portions', caption: 'Natural language helps choose, but it does not place the order.' },
+          { who: 'wooru', text: 'Review your order:\n2 × veg biryani · ₹400 total\nPriya’s Kitchen · Sun 1–2 pm · B-1204\nPay Priya at delivery (example)\nCheck cancellation terms · closes Sat 8 pm', actions: 'Place order | Change order', panel: residentScreen('review'), caption: 'Seller, quantity, full total, delivery location, payment arrangement and terms are visible before the write.' },
+          { who: 'resident', text: 'Place order', caption: 'Rahul explicitly confirms.' },
+          { who: 'panel', html: residentScreen('checking'),
+            caption: 'Checking order: do not claim success or invite a second tap before a Wooru order exists. A delayed reply points to My Orders.' },
+          { who: 'link', direction: 'forward', text: 'Authorised order request', caption: 'Wooru checks linked user, community, price, cutoff and capacity again on the server. Changed terms or sold-out means no order and a fresh review.' },
+          { who: 'panel', html: residentScreen('confirmed'),
+            caption: 'The resident app shows Rahul’s own #WR-1042 in My Orders. Priya’s remaining capacity drops 9 → 7.' },
+          { who: 'link', direction: 'backward', text: 'Confirmed order', caption: 'The confirmation comes from the actual Wooru order record, not from an AI guess.' },
+          { who: 'wooru', text: 'Order #WR-1042 confirmed.\n2 × veg biryani · ₹400\nSun 1–2 pm. Ask “my orders” anytime.', caption: 'WhatsApp delivers the answer; Wooru owns the order and future status.' },
+          { who: 'panel', html: residentScreen('delivered'), caption: 'Later, Priya marks the order delivered in Wooru. The app reflects the same record.' },
+          { who: 'wooru', text: 'Update for #WR-1042: delivered. See My Orders for the current status.', caption: 'A proposed opt-in chat update mirrors Wooru status; outside the service window it needs an approved template.' }
+        ]
+      },
+      group: {
+        start: 'Existing WhatsApp group: Wooru cannot see it. Priya chooses to submit her own food-menu post.',
+        context: 'Listings · concept',
+        phoneTitle: 'Green Meadows Residents',
+        phoneSubtitle: 'Existing WhatsApp group · illustrative',
+        phoneAvatar: 'G',
+        phoneCompose: 'Existing group · person shares manually',
+        panel: groupScreen('empty'),
+        steps: [
+          { who: 'phone', html: groupPhone('original'), caption: 'Priya posts in the existing group. Wooru receives nothing from that group.' },
+          { who: 'link', direction: 'forward', text: 'Priya taps Share / pastes details',
+            caption: 'Priya deliberately submits her own menu details in Wooru. A moderator could submit with permission, but only Priya can approve publication.' },
+          { who: 'panel', html: groupScreen('draft'),
+            caption: 'Optional AI extracts a private food-menu draft. Priya signs in, claims it and checks price, cutoff and duplicates. If rejected or unclaimed, it stays private.' },
+          { who: 'panel', html: groupScreen('published'),
+            caption: 'Priya checks her menu, then taps Publish in Wooru. No one automatically posts to the group.' },
+          { who: 'link', direction: 'backward', text: 'Priya taps Share via WhatsApp',
+            caption: 'A person initiates sharing from the published Wooru listing; Wooru cannot pick a group or send in the background.' },
+          { who: 'phone', html: groupPhone('chooser'), title: 'Send to…', subtitle: 'WhatsApp share sheet · illustrative', compose: 'No message sent',
+            caption: 'WhatsApp opens its share chooser, separate from the group chat. Priya selects Green Meadows Residents; nothing is sent.' },
+          { who: 'phone', html: groupPhone('preview'), title: 'Green Meadows Residents', subtitle: 'Link preview · not sent yet', compose: 'Cancel or press Send',
+            caption: 'Priya previews the link and may cancel. A preview is not a live availability guarantee; the Wooru menu is authoritative.' },
+          { who: 'phone', html: groupPhone('sent'), title: 'Green Meadows Residents', subtitle: 'Existing WhatsApp group · illustrative', compose: 'Existing group · person shares manually',
+            caption: 'Priya presses Send. The group receives a link to the current Wooru menu; unlinked residents sign in before ordering. No automatic group sync.' }
+        ]
+      },
+      seller: {
+        start: 'The seller can draft faster, while Wooru stays the publishing authority.',
+        context: 'Seller app · concept',
+        panel: sellerScreen('empty'),
+        steps: [
+          { who: 'seller', text: 'Sunday: veg biryani ₹200, 15 portions, delivery 1–2 pm', caption: 'Priya describes a menu in plain language to the Wooru assistant.' },
+          { who: 'link', direction: 'forward', text: 'Draft details', caption: 'AI extracts a draft; Wooru does not publish it.' },
+          { who: 'wooru', text: 'Draft: veg biryani · ₹200 · 15 portions · Sun 1–2 pm.\nWhen should orders close?', caption: 'Missing details are asked for rather than guessed.' },
+          { who: 'seller', text: 'Sat 8 pm', caption: 'Priya supplies the missing cutoff.' },
+          { who: 'wooru', text: 'Ready to review in Wooru:\nVeg biryani · ₹200 · 15 portions\nDelivery Sun 1–2 pm · cutoff Sat 8 pm', actions: 'Review and publish in Wooru', caption: 'Draft first; the seller approves the final listing in Wooru.' },
+          { who: 'panel', html: sellerScreen('draft'),
+            caption: 'The draft is private until Priya reviews and explicitly publishes it in Wooru.' },
+          { who: 'seller', text: 'I reviewed and published it in Wooru', caption: 'Publication is a separate, seller-confirmed Wooru action—not an AI action.' },
+          { who: 'panel', html: sellerScreen('published'),
+            caption: 'The published menu began with 15 portions. Other reservations have left 9 available before Rahul orders.' },
+          { who: 'link', direction: 'forward', text: 'Rahul confirms #WR-1042',
+            caption: 'The same confirmed order from the resident scene reaches Priya’s Wooru dashboard.' },
+          { who: 'panel', html: sellerScreen('ordered'),
+            caption: 'Priya sees her own buyer and order #WR-1042. Two portions reduce availability from 9 to 7.' }
+        ]
+      },
+      lead: {
+        start: 'A new, aggregate-only community view for a president or vice president.',
+        context: 'Society lead · Wooru app concept',
+        phoneTitle: 'Community activity',
+        phoneSubtitle: 'Green Meadows · aggregate signal',
+        panel: leadScreen(false),
+        steps: [
+          { who: 'system', text: 'Green Meadows · 7 food orders today', caption: 'The lead sees an aggregate count, not the resident’s messages.' },
+          { who: 'system', text: 'A food pre-order was confirmed', caption: 'The order event is counted without disclosing who placed it.' },
+          { who: 'link', direction: 'forward', text: 'Aggregate +1', caption: 'Only the community-level food order count changes.' },
+          { who: 'panel', html: leadScreen(true), caption: 'Today: 8 orders across Green Meadows. No buyer card or private chat is visible.' },
+          { who: 'system', text: 'Public menu reported: wrong cutoff', caption: 'A community member reports a public menu detail, not a buyer chat.' },
+          { who: 'panel', html: leadScreen(true, true), caption: 'One public listing report appears. The lead can inspect the listing and request a correction or moderate it.' },
+          { who: 'system', text: 'Lead reviews the menu and requests a correction', caption: 'The reported menu is handled under existing permissions; the seller is informed, with an auditable outcome.' },
+          { who: 'panel', html: leadScreen(true), caption: 'The queue returns to zero after resolution. The aggregate order count stays at 8.' }
+        ]
+      },
+      platform: {
+        start: 'The proposed concierge insight panel is in Wooru’s separate web-only admin console.',
+        context: 'Platform admin · web console concept',
+        phoneTitle: 'Channel events',
+        phoneSubtitle: 'Wooru operations · aggregate signal',
+        panel: platformScreen(false),
+        steps: [
+          { who: 'system', text: 'Platform total · 114 food orders today', caption: 'Operations starts with aggregate data across communities.' },
+          { who: 'system', text: 'A confirmed food order was recorded in Green Meadows', caption: 'The order is counted without exposing its reference, buyer identity or chat content here.' },
+          { who: 'link', direction: 'forward', text: 'Aggregate counters', caption: 'Authorized aggregation updates the platform and community totals.' },
+          { who: 'panel', html: platformScreen(true), caption: 'All communities: 114 → 115; Green Meadows: 7 → 8. Other communities stay at 107.' },
+          { who: 'system', text: 'Utility-template delivery failed · Green Meadows', caption: 'A channel alert appears without exposing a buyer or chat transcript.' },
+          { who: 'panel', html: platformScreen(true, true), caption: 'Operations inspects the delivery status and provider health, not the resident’s messages.' },
+          { who: 'system', text: 'Operator verifies recovery and safe retry', caption: 'If needed, retry idempotently; keep Wooru’s order state correct even while WhatsApp delivery fails.' },
+          { who: 'panel', html: platformScreen(true), caption: 'Delivery health is restored. The admin view still contains aggregate or operational signals only.' }
+        ]
+      }
+    };
+    scripts.resident.alternate = {
+      start: 'Alternate outcome: another order leaves only one portion before Rahul confirms.',
+      context: 'Resident app · capacity changed',
+      panel: residentScreen('browse'),
+      steps: [
+        { who: 'resident', text: 'Priya’s biryani, two portions', caption: 'Rahul asks for the same two portions shown in the successful path.' },
+        { who: 'wooru', text: 'Review your order:\n2 × veg biryani · ₹400 total\nPriya’s Kitchen · Sun 1–2 pm · B-1204\nPay Priya at delivery (example)\nCheck cancellation terms · closes Sat 8 pm', panel: residentScreen('review'),
+          actions: 'Place order | Change order', caption: 'The quote is a review, not a reservation. Availability can change before confirmation.' },
+        { who: 'resident', text: 'Place order', caption: 'Rahul confirms the reviewed terms.' },
+        { who: 'panel', html: residentScreen('checking'), caption: 'Wooru checks the server result before replying; it must not claim success yet.' },
+        { who: 'link', direction: 'forward', text: 'Capacity changed · no order',
+          caption: 'The server now has only one portion. It rejects the two-portion request without creating an order.' },
+        { who: 'panel', html: residentScreen('unavailable'),
+          caption: 'My Orders has no new order. Rahul can review one portion at ₹200, choose another seller, or leave.' },
+        { who: 'wooru', text: 'Sorry—only 1 portion is left. No order was placed.\nReview 1 portion for ₹200, or choose another menu. If a reply is delayed, check My Orders before retrying.',
+          caption: 'A new quantity or price requires a fresh review and another explicit confirmation. No silent substitution.' }
+      ]
+    };
+    const milestones = {
+      seller: [['Private draft', 6], ['Published', 8], ['Order received', 10]],
+      resident: [['Find a menu', 7], ['Review ₹400', 9], ['Confirmed', 15], ['Delivered', 17]],
+      group: [['Private draft', 3], ['Published', 4], ['Choose group', 6], ['Preview', 7], ['Sent by Priya', 8]]
+    };
+
+    class Scene {
+      constructor(element, data) {
+        this.element = element;
+        this.kind = element.dataset.scene;
+        this.primary = data;
+        this.data = data;
+        this.timer = null;
+        element.innerHTML = `<span class="stage-label">Fictional demo · not pilot data or a live integration</span>
+          <div class="showcase">
+            <div class="phone"><div class="phone-inner">
+              <div class="chat-statusbar" aria-hidden="true"><span>7:07</span><span class="island"></span><span class="chat-signal"></span></div>
+              <div class="phone-head"><span class="chat-back" aria-hidden="true"></span><span class="avatar" data-part="avatar">${data.phoneAvatar || 'W'}</span><span class="chat-contact"><b data-part="phoneTitle">${data.phoneTitle || 'Wooru concierge'}</b><small data-part="phoneSubtitle">${data.phoneSubtitle || 'One number · your community'}</small></span><span class="chat-tools" aria-hidden="true">${icon('call')}${icon('more')}</span></div>
+              <div class="messages" data-part="messages"></div>
+              <div class="phone-compose"><span class="compose-pill">${icon('smile')}<span class="compose-field" data-part="compose">${data.phoneCompose || (data.phoneTitle ? 'Activity feed · read-only' : 'Message Wooru…')}</span>${icon('clip')}${icon('camera')}</span><span class="compose-mic" aria-hidden="true">${icon('mic')}</span></div>
+              <span class="home-bar" aria-hidden="true"></span>
+            </div></div>
+            <div class="bridge"><span data-part="direction">Wooru ↔ chat</span><div class="bridge-line" data-part="bridge"></div></div>
+            <div class="app"><div class="app-screen">
+              <div class="chat-statusbar app-status" aria-hidden="true"><span>7:07</span><span class="island"></span><span class="chat-signal"></span></div>
+              <div class="app-head"><b class="brand-lockup"><img src="./media/wooru-mark.png" alt="">wooru</b><small data-part="context"></small></div>
+              <div class="app-body" data-part="panel"></div>
+              <span class="home-bar" aria-hidden="true"></span>
+            </div></div>
+          </div>
+          <div class="scene-controls">
+            <button type="button" data-action="play">Play demo</button>
+            <button type="button" data-action="back">Back step</button>
+            <button type="button" data-action="step">Next step</button>
+            <button type="button" data-action="replay">Reset</button>
+            ${data.alternate ? '<button type="button" data-action="variant"></button>' : ''}
+            <button type="button" data-action="speed" aria-label="Playback speed: 1×">1×</button>
+            <output data-part="count"></output>
+          </div>
+          <div class="demo-milestones" aria-label="Jump to demo milestone">${milestones[this.kind].map(([label, index]) =>
+            `<button type="button" data-milestone="${index}">${label}</button>`).join('')}</div>
+          <p class="scene-caption" data-part="caption" aria-live="polite"></p>`;
+        this.parts = {};
+        element.querySelectorAll('[data-part]').forEach(node => { this.parts[node.dataset.part] = node; });
+        element.querySelector('[data-action="play"]').addEventListener('click', () => this.playing ? this.pause() : this.play());
+        element.querySelector('[data-action="back"]').addEventListener('click', () => this.jumpTo(Math.max(0, this.index - 1)));
+        element.querySelector('[data-action="step"]').addEventListener('click', () => this.step());
+        element.querySelector('[data-action="replay"]').addEventListener('click', () => { this.reset(); this.updateUrl(); });
+        if (data.alternate) element.querySelector('[data-action="variant"]').addEventListener('click', () => {
+          this.data = this.data === this.primary ? this.primary.alternate : this.primary;
+          this.reset();
+          this.updateUrl();
+        });
+        element.querySelector('.demo-milestones').addEventListener('click', event => {
+          const button = event.target.closest('[data-milestone]');
+          if (button && !button.disabled) this.jumpTo(Number(button.dataset.milestone));
+        });
+        element.addEventListener('click', event => {
+          const button = event.target.closest('[data-demo-action]');
+          if (!button || !element.contains(button)) return;
+          switch (button.dataset.demoAction) {
+            case 'place-order': this.jumpTo(this.data === this.primary ? 15 : 7); break;
+            case 'choose-priya': this.jumpTo(9); break;
+            case 'change-order': this.jumpTo(this.data === this.primary ? 7 : 1); break;
+            case 'review-draft': this.jumpTo(6); break;
+            case 'publish': this.jumpTo(8); break;
+            case 'manage':
+              this.pause();
+              this.parts.panel.innerHTML = appScreen('Delivery roster', 'Priya’s Kitchen · only her own orders',
+                tile('Prep summary', '2 veg biryani for Rahul · 7 of 15 portions remain', true) +
+                tile('#WR-1042 · Rahul M', 'Confirmed · ₹400 · Sun 1–2 pm · mark delivered after fulfillment') +
+                `<button type="button" class="ui-action" data-demo-action="back-to-seller">Back to seller overview</button>`, 'MCN');
+              this.parts.caption.textContent = 'Priya sees her own prep totals and delivery roster, never another seller’s orders.';
+              break;
+            case 'back-to-seller': this.jumpTo(10); break;
+            case 'group-publish': this.jumpTo(4); break;
+            case 'group-share': this.jumpTo(6); break;
+            case 'group-preview': this.jumpTo(7); break;
+            case 'group-send': this.jumpTo(8); break;
+            case 'group-cancel': this.jumpTo(4); break;
+          }
+        });
+        element.querySelector('[data-action="speed"]').addEventListener('click', event => {
+          this.speed = this.speed === 1 ? 1.5 : 1;
+          event.currentTarget.textContent = this.speed + '×';
+          event.currentTarget.setAttribute('aria-label', 'Playback speed: ' + this.speed + '×');
+          if (this.playing) this.schedule();
+        });
+        this.speed = 1;
+        this.reset();
+      }
+      reset() {
+        this.pause();
+        this.index = 0;
+        this.started = false;
+        this.parts.messages.replaceChildren();
+        this.parts.panel.scrollTop = 0;
+        this.parts.panel.innerHTML = this.data.panel;
+        this.parts.context.textContent = this.data.context;
+        this.parts.caption.textContent = this.data.start;
+        this.parts.caption.setAttribute('aria-live', 'polite');
+        this.parts.direction.textContent = 'Wooru ↔ chat';
+        this.parts.bridge.className = 'bridge-line';
+        this.parts.avatar.textContent = this.data.phoneAvatar || 'W';
+        this.parts.phoneTitle.textContent = this.data.phoneTitle || 'Wooru concierge';
+        this.parts.phoneSubtitle.textContent = this.data.phoneSubtitle || 'One number · your community';
+        this.parts.compose.textContent = this.data.phoneCompose || (this.data.phoneTitle ? 'Activity feed · read-only' : 'Message Wooru…');
+        this.updateControls();
+      }
+      updateControls() {
+        this.parts.count.textContent = `Step ${this.index} / ${this.data.steps.length}`;
+        this.element.querySelector('[data-action="back"]').disabled = this.index === 0;
+        this.element.querySelector('[data-action="step"]').disabled = this.index === this.data.steps.length;
+        this.element.querySelector('[data-action="play"]').textContent =
+          this.playing ? 'Pause' : this.index === this.data.steps.length ? 'Play again' : this.index ? 'Resume' : 'Play demo';
+        const variant = this.element.querySelector('[data-action="variant"]');
+        if (variant) {
+          variant.textContent = this.data === this.primary ? 'Unavailable' : 'Successful order';
+          variant.setAttribute('aria-pressed', String(this.data !== this.primary));
+        }
+        const list = this.element.querySelector('.demo-milestones');
+        const alternate = this.data !== this.primary;
+        if (list.dataset.alternate !== String(alternate)) {
+          const choices = alternate
+            ? [['Review ₹400', 2], ['Capacity changed', 5], ['No order', 7]]
+            : milestones[this.kind];
+          list.innerHTML = choices.map(([label, index]) =>
+            `<button type="button" data-milestone="${index}">${label}</button>`).join('');
+          list.dataset.alternate = String(alternate);
+        }
+        list.querySelectorAll('[data-milestone]').forEach(button =>
+          button.setAttribute('aria-current', String(Number(button.dataset.milestone) === this.index)));
+      }
+      pause() {
+        this.playing = false;
+        clearTimeout(this.timer);
+        if (this.parts) {
+          this.parts.caption.setAttribute('aria-live', 'polite');
+          this.updateControls();
+        }
+      }
+      schedule() {
+        clearTimeout(this.timer);
+        const words = this.parts.caption.textContent.trim().split(/\s+/).length;
+        const duration = Math.max(3000, Math.min(7000, words * 220));
+        if (this.playing) this.timer = setTimeout(() => {
+          this.advance(false);
+          if (this.index < this.data.steps.length) this.schedule();
+          else this.pause();
+        }, duration / this.speed);
+      }
+      play() {
+        if (this.index === this.data.steps.length) this.reset();
+        this.started = true;
+        this.playing = true;
+        this.parts.caption.setAttribute('aria-live', 'off');
+        this.updateControls();
+        this.schedule();
+      }
+      step() {
+        this.pause();
+        if (this.index === this.data.steps.length) this.reset();
+        this.started = true;
+        this.parts.caption.setAttribute('aria-live', 'polite');
+        this.advance(false);
+      }
+      jumpTo(target, updateUrl = true) {
+        this.pause();
+        this.reset();
+        this.started = true;
+        while (this.index < Math.min(target, this.data.steps.length)) this.advance(true, false);
+        if (updateUrl) this.updateUrl();
+      }
+      updateUrl() {
+        const slide = this.element.closest('.slide');
+        if (!slide.classList.contains('active') || document.documentElement.classList.contains('reading')) return;
+        history.replaceState(null, '', '#' + slide.id +
+          (this.index || this.data !== this.primary ? '@' + (this.data === this.primary ? '' : 'u') + this.index : ''));
+      }
+      advance(instant, updateUrl = true) {
+        const step = this.data.steps[this.index];
+        if (!step) return;
+        this.parts.messages.querySelectorAll('button').forEach(button => { button.disabled = true; });
+        this.index++;
+        if (step.who === 'panel') {
+          this.parts.panel.innerHTML = step.html;
+          if (instant) this.parts.panel.classList.add('instant');
+          else this.parts.panel.classList.remove('instant');
+        } else if (step.who === 'phone') {
+          this.parts.messages.innerHTML = step.html;
+          this.parts.messages.classList.toggle('instant', instant);
+          this.parts.messages.scrollTop = this.parts.messages.scrollHeight;
+          if (step.title) this.parts.phoneTitle.textContent = step.title;
+          if (step.subtitle) this.parts.phoneSubtitle.textContent = step.subtitle;
+          if (step.compose) this.parts.compose.textContent = step.compose;
+        } else if (step.who === 'link') {
+          this.parts.direction.textContent = step.text;
+          this.parts.bridge.className = 'bridge-line';
+          if (!instant) {
+            void this.parts.bridge.offsetWidth;
+            this.parts.bridge.classList.add(step.direction);
+          }
+        } else {
+          const bubble = document.createElement('div');
+          bubble.className = 'bubble' + (step.who === 'resident' || step.who === 'seller' ? ' out' : '');
+          if (instant) bubble.classList.add('instant');
+          if (step.who === 'wooru') {
+            const by = document.createElement('span');
+            by.className = 'by';
+            by.textContent = this.data.context.includes('Seller app')
+              ? 'Wooru assistant · draft for review'
+              : 'Wooru reply · based on Wooru data';
+            bubble.append(by);
+          }
+          const content = document.createElement('span');
+          content.style.whiteSpace = 'pre-line';
+          content.textContent = step.text;
+          bubble.append(content);
+          if (step.actions) {
+            const actions = document.createElement('div');
+            actions.className = 'chat-actions';
+            step.actions.split(' | ').forEach(label => {
+              const action = { 'Place order': 'place-order', 'Priya’s biryani': 'choose-priya',
+                'Change order': 'change-order', 'Review and publish in Wooru': 'review-draft' }[label];
+              const chip = document.createElement('button');
+              chip.type = 'button';
+              chip.dataset.demoAction = action;
+              chip.textContent = label;
+              actions.append(chip);
+            });
+            bubble.append(actions);
+          }
+          const stamp = document.createElement('span');
+          stamp.className = 'stamp';
+          stamp.textContent = '7:' + String(this.index + 2).padStart(2, '0') + ' pm';
+          bubble.append(stamp);
+          this.parts.messages.append(bubble);
+          this.parts.messages.scrollTop = this.parts.messages.scrollHeight;
+        }
+        if (step.panel) this.parts.panel.innerHTML = step.panel;
+        const appAction = this.parts.panel.querySelector('[data-demo-action]');
+        if (appAction) {
+          const scroller = [this.parts.panel.querySelector('.ui-content'), this.parts.panel]
+            .find(node => node && node.scrollHeight > node.clientHeight + 1) || this.parts.panel;
+          const overflow = appAction.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom;
+          if (overflow > 0) scroller.scrollTop += overflow + 8;
+        }
+        this.parts.caption.textContent = step.caption;
+        this.updateControls();
+        if (updateUrl) this.updateUrl();
+      }
+    }
+
+    document.getElementById('lead-preview').innerHTML = leadScreen(true, true);
+    document.getElementById('platform-preview').innerHTML = platformScreen(true, true);
+    const buyMilestones = ['Make a wish', 'Shared on WhatsApp', 'Minimum reached', 'Compare quotes', 'Final offer', 'Household decides'];
+    const buyBridge = ['Wish', 'Shared to group', '400 kg pool', 'Quotes', 'Final offer', 'Decision'];
+    const buyingWa = document.getElementById('buying-wa');
+    const buyingSourcingApp = document.getElementById('buying-sourcing-app');
+    buyingWa.querySelector('.chat-tools').innerHTML = icon('call') + icon('more');
+    buyingWa.querySelector('.compose-pill').insertAdjacentHTML('afterbegin', icon('smile'));
+    buyingWa.querySelector('.compose-mic').innerHTML = icon('mic');
+    document.getElementById('buying-wa-messages').innerHTML =
+      `<div class="bubble"><span class="by">Rahul · B-1204</span>Wished on Wooru, who’s in?` +
+      `<div class="share-preview wish-link"><b>Wooru · Rahul’s wish</b><small>Sona masoori rice · 10 kg every month · Green Meadows only</small></div>` +
+      `<span class="stamp">7:02 pm · shared by Rahul</span>` +
+      `<span class="chat-actions"><button type="button" data-buy-go="2">Me too on Wooru</button></span></div>` +
+      `<div class="bubble out">Me too, joined in Wooru<span class="stamp">7:04 pm</span></div>` +
+      `<div class="bubble"><span class="by">Suresh · C-302</span>Joined. Same grade please<span class="stamp">7:05 pm</span></div>` +
+      `<div class="bubble"><span class="by">Kiran · A-708</span>Me too<span class="stamp">7:06 pm</span></div>`;
+    let buyStep = 0;
+    let buyingFulfillment = 'pickup';
+    let buyingDecision = 'confirmed';
+    let buyingRole = 'lead';
+    const buyingScene = document.getElementById('buying-scene');
+    const buyingResident = document.getElementById('buying-resident');
+    const buyingSourcing = document.getElementById('buying-sourcing');
+    const buyingMilestones = document.getElementById('buying-milestones');
+    buyingMilestones.innerHTML = buyMilestones.map((label, index) =>
+      `<button type="button" data-buy-go="${index}">${label}</button>`).join('');
+    const wishCard = (households, joined) =>
+      `<div class="wish-card"><span class="ui-overline">Rahul’s wish · every month</span><b>Sona masoori rice · 10 kg</b>` +
+      `<div class="wish-meter" aria-hidden="true"><span style="width:${Math.min(100, Math.round(households / 30 * 100))}%"></span></div>` +
+      `<small>${households} households · ${households * 10} kg · min 30</small>` +
+      `<div class="wish-joiners"><span class="wish-faces" aria-hidden="true"><i>A</i><i>S</i><i>K</i></span>` +
+      `<span>${joined ? `You and ${households - 1} neighbours` : 'Neighbours tap “Me too” to join'}</span></div></div>`;
+    const offerBody = () => {
+      const delivery = buyingFulfillment === 'delivery';
+      return `<div class="buy-price"><strong>₹${delivery ? 575 : 550}</strong><span>10 kg rice ${delivery ? 'with doorstep delivery' : 'at society pickup'}</span></div>` +
+        `<div class="buy-breakdown">        <span>Supplier · 10 kg × ₹52</span><b>₹520</b><span>Transport · ₹1,200 ÷ 40</span><b>₹30</b>${delivery ? '<span>Optional doorstep</span><b>₹25</b>' : ''}<span>Comparable local price</span><b>₹650</b></div>`;
+    };
+    function residentBuyScreen() {
+      const delivery = buyingFulfillment === 'delivery';
+      if (buyStep === 0) return appScreen('Make a wish', 'Green Meadows · ask once, buy together',
+        `<span class="ui-label">Wish type</span><div class="wish-chips"><b>Groceries</b><span>Food</span><span>Services</span></div>` +
+        `<span class="ui-label">I wish for</span><div class="wish-field">Sona masoori rice · same grade</div>` +
+        `<span class="ui-label">How much, every month</span><div class="wish-chips"><span>5 kg</span><b>10 kg</b><span>25 kg</span></div>` +
+        `<button type="button" class="ui-action" data-buy-go="1">${icon('wish')}Share on WhatsApp</button>`, 'MCN');
+      if (buyStep === 1) return appScreen('Wishes', 'Green Meadows · your wish is live',
+        wishCard(4, false) +
+        tile('Shared to Green Meadows Residents', 'Sent by you · no order yet') +
+        `<button type="button" class="ui-action" data-buy-go="2">See who joined</button>`, 'MCN');
+      if (buyStep === 2) return appScreen('Wishes', 'Green Meadows · demand pooled',
+        `<div class="ui-banner"><b>Minimum reached</b>Your society lead can now ask approved suppliers for same-grade quotes.</div>` + wishCard(40, true), 'MCN');
+      if (buyStep === 3) return appScreen('Wishes', 'Green Meadows · quotes requested',
+        `<div class="ui-banner sand"><b>Quotes being compared</b>You have committed nothing. You will see one final price.</div>` + wishCard(40, true), 'MCN');
+      if (buyStep === 4) return appScreen('Your rice offer', 'Final offer · example only',
+        offerBody() +
+        `<div class="buy-actions"><button type="button" data-buy-fulfil="pickup" aria-pressed="${!delivery}">Pickup · ₹550</button>` +
+        `<button type="button" data-buy-fulfil="delivery" aria-pressed="${delivery}">Doorstep · ₹575</button></div>` +
+        `<button type="button" class="ui-action" data-buy-decide="confirmed">Confirm ₹${delivery ? 575 : 550}</button>` +
+        `<button type="button" class="buy-decline" data-buy-decide="declined">Decline · no order</button>`, 'MCN');
+      const declined = buyingDecision === 'declined';
+      return appScreen(declined ? 'No order placed' : 'My orders', 'From your wish · example only',
+        `<span class="dash-badge${declined ? ' warning' : ''}">${declined ? 'Declined · nothing charged' : 'Confirmed · example only'}</span>` + offerBody() +
+        `<div class="buy-saving">${declined ? 'Potential saving, not realised' : 'Illustrative saving'} · ₹${delivery ? 75 : 100} per household</div>` +
+        `<button type="button" class="ui-action" data-buy-go="0">Make another wish</button>`, 'MCN');
+    }
+    function leadBuyScreen() {
+      if (buyStep <= 1) return appScreen('Community wishes', 'Green Meadows · society lead',
+        (buyStep === 1 ? tile('New · Sona masoori rice · 10 kg', '4 households · 40 kg · minimum 30', true) : '') +
+        tile('Food · home-chef biryani', '26 households · below minimum') +
+        tile('Food · Diwali sweets box', '18 households · below minimum') +
+        tile('Groceries · veg box', '21 households · below minimum') +
+        `<div class="buy-saving">Leads see wish totals, never private chats.</div>`, 'Community');
+      if (buyStep === 2) return appScreen('Community wishes', 'Green Meadows · society lead',
+        `<div class="ui-banner"><b>Minimum reached · 40 households</b>400 kg rice, same grade, forty 10 kg packs.</div>` +
+        tile('Next: request two or more quotes', 'Approved suppliers only; record any conflicts.') +
+        `<button type="button" class="ui-action" data-buy-go="3">Request quotes</button>`, 'Community');
+      if (buyStep === 3) return appScreen('Compare rice offers', 'Society lead · proposed sourcing',
+        tile('Offer A · ₹55/kg landed', '₹52/kg supplier + ₹1,200 shared transport · pickup', true) +
+        tile('Offer B · ₹58/kg landed', 'Comparable grade, packing and pickup included') +
+        `<div class="buy-saving">Selected on price and capacity; sponsors have no ranking role.</div>` +
+        `<button type="button" class="ui-action" data-buy-go="4">Send Offer A to residents</button>`, 'Community');
+      if (buyStep === 4) return appScreen('Rice · Offer A', 'Society lead · awaiting households',
+        `<div class="ui-banner"><b>Offer sent · 40 households</b>Each household confirms or declines. No silent orders.</div>` +
+        tile('Offer A · ₹55/kg landed', 'Pickup Sun 10–12 · optional doorstep ₹25', true) +
+        tile('Confirmations', 'Shown as totals only; closes Fri 8 pm'), 'Community');
+      return appScreen('Rice · Offer A', 'Society lead · example totals',
+        `<div class="ui-banner"><b>Confirmations closed</b>Example: 32 confirmed · 8 declined.</div>` +
+        tile('Supplier order · 320 kg', 'Household-level billing · Wooru holds no stock or funds', true) +
+        tile('Pickup · Sun 10–12', 'Clubhouse · quality and returns terms agreed'), 'Community');
+    }
+    function supplierBuyScreen() {
+      if (buyStep <= 1) return appScreen('Quote requests', 'Approved supplier · own quotes only',
+        tile('No open request', 'Requests arrive only after a society reaches minimum demand.'), 'Quotes');
+      if (buyStep === 2) return appScreen('Quote requests', 'Approved supplier · own quotes only',
+        tile('New · Green Meadows', '400 kg sona masoori · forty 10 kg packs', true) +
+        `<button type="button" class="ui-action" data-buy-go="3">Submit quote</button>`, 'Quotes');
+      if (buyStep === 3) return appScreen('My rice quote', 'Approved supplier · own quote only',
+        `<div class="ui-banner"><b>Capacity confirmed · example</b>400 kg in forty 10 kg packs, same grade.</div>` +
+        tile('Supplier price · ₹52/kg', '₹20,800 goods · household-level billing', true) +
+        tile('Fulfillment terms', '₹1,200 shared transport · pickup and quality terms'), 'Quotes');
+      if (buyStep === 4) return appScreen('My rice quote', 'Approved supplier · selected',
+        `<div class="ui-banner"><b>Quote selected</b>Residents are confirming. Volume is not final yet.</div>` +
+        tile('Supplier price · ₹52/kg', 'Up to 400 kg · pickup Sun 10–12', true), 'Orders');
+      return appScreen('Orders', 'Approved supplier · example',
+        `<div class="ui-banner"><b>Order confirmed · 320 kg</b>32 households · billed individually.</div>` +
+        tile('Pickup · Sun 10–12', 'Green Meadows clubhouse', true), 'Orders');
+    }
+    function revealAction(root) {
+      const content = root.querySelector('.ui-content');
+      if (!content) return;
+      content.scrollTop = 0;
+      const action = root.querySelector('.ui-action');
+      if (!action) return;
+      const overflow = action.getBoundingClientRect().bottom - content.getBoundingClientRect().bottom;
+      if (overflow > 0) content.scrollTop = overflow + 8;
+    }
+    function renderBuying(updateUrl = true) {
+      buyingResident.innerHTML = residentBuyScreen();
+      buyingSourcing.innerHTML = buyingRole === 'lead' ? leadBuyScreen() : supplierBuyScreen();
+      revealAction(buyingResident);
+      revealAction(buyingSourcing);
+      buyingWa.hidden = buyStep !== 1;
+      buyingSourcingApp.hidden = buyStep === 1;
+      document.getElementById('buying-role-label').textContent = buyingRole === 'lead' ? 'Society lead' : 'Approved supplier';
+      document.getElementById('buying-bridge').textContent = buyBridge[buyStep];
+      document.getElementById('buying-count').textContent = `Step ${buyStep + 1} / ${buyMilestones.length}`;
+      const roleButton = buyingScene.querySelector('[data-buy-nav="role"]');
+      roleButton.setAttribute('aria-pressed', String(buyingRole === 'supplier'));
+      roleButton.textContent = buyingRole === 'lead' ? 'Supplier view' : 'Society lead view';
+      buyingScene.querySelector('[data-buy-nav="back"]').disabled = buyStep === 0;
+      buyingScene.querySelector('[data-buy-nav="next"]').disabled = buyStep === buyMilestones.length - 1;
+      buyingMilestones.querySelectorAll('button').forEach((button, index) =>
+        button.setAttribute('aria-current', String(index === buyStep)));
+      const declined = buyingDecision === 'declined';
+      document.getElementById('buying-caption').textContent = [
+        'Rahul taps Make a wish: 10 kg sona masoori rice every month. A wish is interest, not an order.',
+        'Rahul shares the wish to the society WhatsApp group himself: he picks the group and presses Send; Wooru never posts on its own. Neighbours tap the link and join in Wooru.',
+        '40 households join · 400 kg. Minimum demand is met, so the society lead can request quotes.',
+        buyingRole === 'lead' ? 'The lead compares same-grade offers on landed price and capacity, and records why Offer A wins.'
+          : 'The approved supplier sees only its own request and quote, and confirms 400 kg capacity.',
+        'Rahul sees one final landed price, chooses pickup or doorstep, then confirms or declines.',
+        declined ? 'Rahul declines: no order and no charge. The pool continues without him.'
+          : 'Rahul confirms. In this example 32 households confirm, so the supplier fulfils 320 kg.'][buyStep];
+      if (updateUrl && location.hash.startsWith('#collective'))
+        history.replaceState(null, '', `#collective@${buyStep}`);
+    }
+    function setBuyStep(step, updateUrl = true) {
+      buyStep = Math.max(0, Math.min(buyMilestones.length - 1, step));
+      if (buyStep < 4) { buyingFulfillment = 'pickup'; buyingDecision = 'confirmed'; }
+      renderBuying(updateUrl);
+    }
+    buyingScene.addEventListener('click', event => {
+      const target = event.target.closest('button');
+      if (!target || !buyingScene.contains(target)) return;
+      if (target.dataset.buyGo) setBuyStep(Number(target.dataset.buyGo));
+      else if (target.dataset.buyFulfil) { buyingFulfillment = target.dataset.buyFulfil; renderBuying(); }
+      else if (target.dataset.buyDecide) { buyingDecision = target.dataset.buyDecide; buyStep = 5; renderBuying(); }
+      else if (target.dataset.buyNav === 'next') setBuyStep(buyStep + 1);
+      else if (target.dataset.buyNav === 'back') setBuyStep(buyStep - 1);
+      else if (target.dataset.buyNav === 'reset') setBuyStep(0);
+      else if (target.dataset.buyNav === 'role') { buyingRole = buyingRole === 'lead' ? 'supplier' : 'lead'; renderBuying(); }
+    });
+    setBuyStep(0, false);
+    const sponsorExample = document.getElementById('sponsor-example');
+    let sponsorDismissed = false;
+    function renderSponsor() {
+      sponsorExample.innerHTML = sponsorDismissed
+        ? `<span class="ui-overline">Resident feed · fictional placement</span><b>Placement hidden</b><small>This resident dismissed the fictional sponsor card.</small><button type="button" data-sponsor-toggle>Show example</button>`
+        : `<span class="ui-overline">Resident feed · fictional placement</span><span class="dash-badge warning">Sponsored · approval required</span><b>Neighbourhood grocery partner</b><small>A labelled example, separate from food and supplier rankings. No sponsor is contracted.</small><button type="button" data-sponsor-toggle>Dismiss example</button>`;
+    }
+    sponsorExample.addEventListener('click', event => {
+      if (!event.target.closest('[data-sponsor-toggle]')) return;
+      sponsorDismissed = !sponsorDismissed;
+      renderSponsor();
+    });
+    renderSponsor();
+    const slides = [...document.querySelectorAll('.slide')];
+    const select = document.getElementById('jump');
+    const deck = document.getElementById('deck');
+    const slideFrame = document.getElementById('slide-frame');
+    const readButton = document.getElementById('read-all');
+    const scenes = new Map([...document.querySelectorAll('[data-scene]')].map(element =>
+      [element.closest('.slide').id, new Scene(element, scripts[element.dataset.scene])]));
+    const readLocation = () => {
+      const [id, state] = location.hash.slice(1).split('@');
+      const match = state?.match(/^(u?)(\d+)$/);
+      return { id, state: match ? { unavailable: Boolean(match[1]), step: Number(match[2]) } : null };
+    };
+    const initialLocation = readLocation();
+    let active = Math.max(0, slides.findIndex(slide => slide.id === initialLocation.id));
+    let reading = false;
+    select.replaceChildren(...slides.map((slide, i) => {
+      const option = document.createElement('option');
+      option.value = String(i);
+      option.textContent = `${String(i + 1).padStart(2, '0')} / ${slide.dataset.title}`;
+      return option;
+    }));
+    document.documentElement.classList.add('js');
+    document.querySelectorAll('.top button, .top select, .bottom button').forEach(control => { control.disabled = false; });
+    slides.forEach((slide, i) => {
+      const master = document.createElement('div');
+      master.className = 'slide-master';
+      master.setAttribute('aria-hidden', 'true');
+      master.innerHTML = `<span class="master-brand"><img src="./media/wooru-mark.png" alt="">wooru</span>` +
+        `<span>Community commerce · leadership discussion</span>` +
+        `<span class="master-number">${String(i + 1).padStart(2, '0')} / ${slides.length}</span>`;
+      slide.append(master);
+    });
+    let chromeTimer;
+    const revealChrome = () => {
+      document.documentElement.classList.add('chrome-on');
+      clearTimeout(chromeTimer);
+      chromeTimer = setTimeout(() => document.documentElement.classList.remove('chrome-on'), 2500);
+    };
+    document.addEventListener('mousemove', revealChrome);
+    document.addEventListener('touchstart', revealChrome, { passive: true });
+    revealChrome();
+    const presentButton = document.getElementById('present');
+    const toggleFullscreen = () => {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen().catch(() => {});
+    };
+    presentButton.hidden = !document.fullscreenEnabled;
+    presentButton.addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', () => {
+      presentButton.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+    });
+    const fitSlide = () => {
+      const scale = Math.min((deck.clientWidth - 24) / 1280, (deck.clientHeight - 24) / 720);
+      slideFrame.style.setProperty('--slide-scale', String(Math.max(0, scale)));
+    };
+    new ResizeObserver(fitSlide).observe(deck);
+    fitSlide();
+    function show(index, focus = false, restore = null) {
+      const previous = active;
+      active = Math.max(0, Math.min(slides.length - 1, index));
+      if (previous !== active) scenes.forEach(scene => scene.pause());
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === active));
+      select.value = String(active);
+      document.getElementById('counter').textContent = `${active + 1} / ${slides.length}`;
+      document.getElementById('progress').value = active + 1;
+      document.getElementById('prev').disabled = active === 0;
+      document.getElementById('next').disabled = active === slides.length - 1;
+      document.title = `Wooru | ${slides[active].dataset.title}`;
+      history.replaceState(null, '', '#' + slides[active].id);
+      if (reading) slides[active].scrollIntoView({ block: 'start' });
+      else {
+        deck.scrollTop = 0;
+        const scene = scenes.get(slides[active].id);
+        if (scene && previous !== active) {
+          scene.data = scene.primary;
+          scene.reset();
+        }
+        if (scene && restore) {
+          scene.data = restore.unavailable && scene.primary.alternate ? scene.primary.alternate : scene.primary;
+          scene.jumpTo(restore.step);
+        }
+        if (slides[active].id === 'collective' && (previous !== active || restore))
+          setBuyStep(restore ? restore.step : 0, Boolean(restore));
+      }
+      if (focus) deck.focus({ preventScroll: true });
+    }
+    select.addEventListener('change', () => show(Number(select.value), true));
+    document.getElementById('prev').addEventListener('click', () => show(active - 1, true));
+    document.getElementById('next').addEventListener('click', () => show(active + 1, true));
+    readButton.addEventListener('click', () => {
+      reading = !reading;
+      document.documentElement.classList.toggle('reading', reading);
+      readButton.textContent = reading ? 'Slide view' : 'Read all';
+      readButton.setAttribute('aria-pressed', String(reading));
+      if (reading) {
+        scenes.forEach(scene => scene.jumpTo(scene.data.steps.length, false));
+        setBuyStep(4, false);
+      }
+      else {
+        const scene = scenes.get(slides[active].id);
+        if (scene) scene.reset();
+      }
+      show(active);
+    });
+    document.addEventListener('keydown', event => {
+      if (event.altKey || event.ctrlKey || event.metaKey || reading ||
+          (event.target instanceof Element && event.target.closest('input, select, textarea, a, summary, [contenteditable="true"]'))) return;
+      const target = { ArrowRight: active + 1, ArrowLeft: active - 1, PageDown: active + 1,
+        PageUp: active - 1, Home: 0, End: slides.length - 1 }[event.key];
+      if (target !== undefined) { event.preventDefault(); show(target, true); }
+      else if ((event.key === 'f' || event.key === 'F') && document.fullscreenEnabled) toggleFullscreen();
+    });
+    let swipeStart = null;
+    deck.addEventListener('touchstart', event => {
+      swipeStart = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null;
+    }, { passive: true });
+    deck.addEventListener('touchend', event => {
+      if (!swipeStart || reading) return;
+      const dx = event.changedTouches[0].clientX - swipeStart.x;
+      const dy = event.changedTouches[0].clientY - swipeStart.y;
+      swipeStart = null;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) show(active + (dx < 0 ? 1 : -1), true);
+    }, { passive: true });
+    document.getElementById('print').addEventListener('click', () => window.print());
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) scenes.forEach(scene => scene.pause());
+    });
+    const printState = new Map();
+    let printBuying;
+    let printSponsorDismissed;
+    window.addEventListener('beforeprint', () => {
+      printSponsorDismissed = sponsorDismissed;
+      sponsorDismissed = false;
+      renderSponsor();
+      printBuying = { state: buyingState, fulfillment: buyingFulfillment, role: buyingRole };
+      buyingState = 'pickup';
+      buyingFulfillment = 'pickup';
+      buyingRole = 'lead';
+      renderBuying();
+      scenes.forEach((scene, id) => {
+        printState.set(id, { data: scene.data, index: scene.index, started: scene.started });
+        scene.data = scene.primary;
+        scene.jumpTo(id === 'resident' ? 15 : scene.primary.steps.length, false);
+      });
+    });
+    window.addEventListener('afterprint', () => {
+      sponsorDismissed = printSponsorDismissed;
+      renderSponsor();
+      if (printBuying) {
+        buyingState = printBuying.state;
+        buyingFulfillment = printBuying.fulfillment;
+        buyingRole = printBuying.role;
+        renderBuying();
+      }
+      scenes.forEach((scene, id) => {
+        const state = printState.get(id);
+        if (!state) return;
+        scene.data = state.data;
+        if (state.started) scene.jumpTo(state.index, false);
+        else scene.reset();
+      });
+    });
+    window.addEventListener('hashchange', () => {
+      const next = readLocation();
+      const index = slides.findIndex(slide => slide.id === next.id);
+      if (index >= 0) show(index, false, next.state);
+    });
+    show(active, false, initialLocation.state);
+  </script>
+  <script src="./cost-calculator.js"></script>
+</body>
+</html>
