@@ -198,9 +198,6 @@
       .js:not(.reading):not(.read-all) #income .grid { margin: 8px 0; }
       .js:not(.reading):not(.read-all) #income .card { padding: 10px 12px; }
       .js:not(.reading):not(.read-all) #income .callout { margin: 6px 0; padding: 8px 11px; }
-      .js:not(.reading):not(.read-all) #collective .ui-tabs { display: none; }
-      .js:not(.reading):not(.read-all) #group-bridge .phone,
-      .js:not(.reading):not(.read-all) #group-bridge .app { height: 272px; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
@@ -376,15 +373,6 @@
       .js:not(.reading):not(.read-all) #income .funding-proof { gap: 8px; margin: 4px 0; }
       .js:not(.reading):not(.read-all) #income .funding-card { gap: 3px; padding: 7px 10px; }
       .js:not(.reading):not(.read-all) #income .flow > div { padding: 9px 10px; }
-      .js:not(.reading):not(.read-all) #operations .role-frame .app { height: 260px; }
-      .js:not(.reading):not(.read-all) #collective .role-frame .app { height: 290px; }
-      .js:not(.reading):not(.read-all) #group-bridge .phone,
-      .js:not(.reading):not(.read-all) #group-bridge .app { height: 288px; }
-      .js:not(.reading):not(.read-all) #group-bridge .app .ui-content { gap: 5px; padding: 7px 10px; }
-      .js:not(.reading):not(.read-all) #group-bridge .app-head { min-height: 32px; padding: 5px 9px; }
-      .js:not(.reading):not(.read-all) #group-bridge .ui-header { padding: 7px 10px; }
-      .js:not(.reading):not(.read-all) #group-bridge .ui-tabs { padding: 5px; }
-      .js:not(.reading):not(.read-all) #group-bridge .group-member-link { display: none; }
     }
     @media screen and (max-width: 560px) {
       .reading .exec-evidence { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -426,25 +414,85 @@
       .js:not(.reading):not(.read-all) #income h2 { font-size: 30px; }
       .js:not(.reading):not(.read-all) .slide .columns,
       .js:not(.reading):not(.read-all) .slide .layout {
-        display: grid; grid-template-columns: minmax(245px, .7fr) minmax(0, 1.55fr); gap: 29px;
+        display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 28px;
       }
+      .js:not(.reading):not(.read-all) .slide .notes { font-size: 16px; }
+      .js:not(.reading):not(.read-all) .slide .notes h2 { font-size: 32px; }
       .js:not(.reading):not(.read-all) .slide .stage { display: block; }
       .js:not(.reading):not(.read-all) .slide .showcase,
       .js:not(.reading):not(.read-all) .slide .scene .stage {
-        display: grid; grid-template-columns: 220px 46px minmax(0, 1fr); justify-items: stretch;
+        display: grid; grid-template-columns: 280px 48px minmax(0, 1fr); justify-items: stretch;
       }
       .js:not(.reading):not(.read-all) .slide .phone,
       .js:not(.reading):not(.read-all) .slide .app,
       .js:not(.reading):not(.read-all) .slide .wooru {
-        width: 100%; height: 290px; min-height: 0; max-width: none;
+        width: 100%; height: 430px; min-height: 0; max-width: none;
       }
+      .js:not(.reading):not(.read-all) .slide .stage-label { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .phone-head { min-height: 62px; }
+      .js:not(.reading):not(.read-all) .slide .phone-head b { font-size: 14px; }
+      .js:not(.reading):not(.read-all) .slide .phone-head small { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .bubble { flex: none; font-size: 14px; padding: 10px 11px 7px; }
+      .js:not(.reading):not(.read-all) .slide .bubble .by,
+      .js:not(.reading):not(.read-all) .slide .bubble .stamp { font-size: 10px; }
+      .js:not(.reading):not(.read-all) .slide .compose-field { font-size: 12px; padding: 9px; }
+      .js:not(.reading):not(.read-all) .slide .app-head { flex: none; min-height: 42px; }
+      .js:not(.reading):not(.read-all) .slide .app-head small { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .app-body { min-height: 0; }
+      .js:not(.reading):not(.read-all) .slide .ui-screen { flex: none; margin: 0; }
+      .js:not(.reading):not(.read-all) .slide .ui-header,
+      .js:not(.reading):not(.read-all) .slide .ui-tabs { flex: none; }
+      .js:not(.reading):not(.read-all) .slide .ui-header { padding: 14px 16px; }
+      .js:not(.reading):not(.read-all) .slide .ui-header b { font-size: 20px; }
+      .js:not(.reading):not(.read-all) .slide .ui-header small { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .ui-content { flex: 1 0 auto; padding: 14px; gap: 10px; }
+      .js:not(.reading):not(.read-all) .slide .ui-banner { font-size: 13px; padding: 11px 13px; }
+      .js:not(.reading):not(.read-all) .slide .ui-banner b { font-size: 14px; }
+      .js:not(.reading):not(.read-all) .slide .ui-label { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .app-tile { font-size: 14px; padding: 11px 13px; }
+      .js:not(.reading):not(.read-all) .slide .app-tile small { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .ui-tabs { font-size: 11px; padding: 10px 6px; }
+      .js:not(.reading):not(.read-all) .slide .ui-action,
+      .js:not(.reading):not(.read-all) .slide .chat-actions button,
+      .js:not(.reading):not(.read-all) .slide .buy-actions button { min-height: 36px; font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls { gap: 7px; margin-top: 10px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button,
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button,
+      .js:not(.reading):not(.read-all) .slide .demo-inline-controls button { min-height: 32px; font-size: 12px; padding: 5px 9px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button[data-action="play"] { background: var(--primary); color: #fff; }
+      .js:not(.reading):not(.read-all) .slide .scene-caption { min-height: 58px; font-size: 14px; }
+      .js:not(.reading):not(.read-all) .slide .share-screen { font-size: 13px; padding: 12px; gap: 12px; }
+      .js:not(.reading):not(.read-all) .slide .share-action { min-height: 38px; font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide .menu-tile { grid-template-columns: 100px minmax(0, 1fr); }
+      .js:not(.reading):not(.read-all) .slide .menu-tile img { width: 100px; height: 86px; }
+      .js:not(.reading):not(.read-all) .slide .menu-tile b,
+      .js:not(.reading):not(.read-all) .slide .menu-tile small { font-size: 12px; }
       .js:not(.reading):not(.read-all) .slide .bridge,
       .js:not(.reading):not(.read-all) .slide .conn {
-        width: auto; flex-direction: column; padding: 0 8px;
+        width: auto; flex-direction: column; padding: 0 4px;
+        font-size: 10px; overflow-wrap: anywhere;
       }
       .js:not(.reading):not(.read-all) .slide .bridge-line,
       .js:not(.reading):not(.read-all) .slide .conn-line { width: 100%; }
       .js:not(.reading):not(.read-all) .slide .role-boards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .js:not(.reading):not(.read-all) .slide .role-frame > .small { min-height: 0; margin-bottom: 8px; }
+      .js:not(.reading):not(.read-all) .slide .role-frame .app { height: 360px; overflow-y: auto; }
+      .js:not(.reading):not(.read-all) #operations .role-frame .app { height: 360px; }
+      .js:not(.reading):not(.read-all) #collective .role-frame .app { height: 410px; }
+      .js:not(.reading):not(.read-all) #collective .ui-content { gap: 7px; padding: 10px 12px; }
+      .js:not(.reading):not(.read-all) .slide .buy-price,
+      .js:not(.reading):not(.read-all) .slide .buy-breakdown,
+      .js:not(.reading):not(.read-all) .slide .buy-saving { font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide .dash-stats span,
+      .js:not(.reading):not(.read-all) .slide .console-stats span,
+      .js:not(.reading):not(.read-all) .slide .dash-task small { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .dash-task b { font-size: 14px; }
+      .js:not(.reading):not(.read-all) .slide .console-main { gap: 10px; padding: 14px; }
+      .js:not(.reading):not(.read-all) .slide .console-side { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .console-table { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .console-table div { padding: 8px; }
+      .js:not(.reading):not(.read-all) .slide .console-alert { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide .console-privacy { font-size: 11px; }
       .js:not(.reading):not(.read-all) .slide .grid.four,
       .js:not(.reading):not(.read-all) .slide .exec-evidence { grid-template-columns: repeat(4, minmax(0, 1fr)); }
       .js:not(.reading):not(.read-all) .slide .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -571,10 +619,10 @@
     </section>
 
     <section class="slide long" id="group-bridge" data-title="Existing group bridge">
-      <p class="kicker">06 / OPTIONAL ADOPTION BRIDGE · NOT REQUIRED FOR THE PILOT</p>
-      <h2>Share a listing manually; never sync a group.</h2>
       <div class="columns">
         <div class="notes">
+          <p class="kicker">06 / OPTIONAL ADOPTION BRIDGE</p>
+          <h2>Share a listing manually; never sync a group.</h2>
           <ul>
             <li>Seller publishes in Wooru before any share.</li>
             <li>A person chooses the group, previews the link and presses Send.</li>
@@ -912,7 +960,7 @@
       : state === 'preview'
         ? `<div class="share-screen"><b>Green Meadows Residents · preview</b>` +
           `<div class="share-preview"><b>Priya’s Kitchen · Sunday veg biryani</b><small>₹200 · opens current Wooru menu; sign-in required to order</small></div>` +
-          `<small>Preview is illustrative and may go stale. You can cancel.</small><button type="button" class="share-action" data-demo-action="group-send">Send as Priya</button></div>`
+          `<small>Preview is illustrative and may go stale. You can cancel.</small><button type="button" data-demo-action="group-cancel">Cancel sharing</button><button type="button" class="share-action" data-demo-action="group-send">Send as Priya</button></div>`
         : `<div class="bubble${state === 'sent' ? ' out' : ''}"><span class="by">${state === 'sent' ? 'Priya · shared Wooru link' : 'Priya · original group post'}</span>` +
           (state === 'sent'
             ? `Sunday veg biryani · ₹200<br>Open Priya’s current Wooru menu (illustrative link)`
@@ -1070,10 +1118,11 @@
           </div>
           <div class="scene-controls">
             <button type="button" data-action="play">Play demo</button>
+            <button type="button" data-action="back">Back step</button>
             <button type="button" data-action="step">Next step</button>
             <button type="button" data-action="replay">Reset</button>
             ${data.alternate ? '<button type="button" data-action="variant"></button>' : ''}
-            <button type="button" data-action="speed">1×</button>
+            <button type="button" data-action="speed" aria-label="Playback speed: 1×">1×</button>
             <output data-part="count"></output>
           </div>
           <div class="demo-milestones" aria-label="Jump to demo milestone">${milestones[this.kind].map(([label, index]) =>
@@ -1082,6 +1131,7 @@
         this.parts = {};
         element.querySelectorAll('[data-part]').forEach(node => { this.parts[node.dataset.part] = node; });
         element.querySelector('[data-action="play"]').addEventListener('click', () => this.playing ? this.pause() : this.play());
+        element.querySelector('[data-action="back"]').addEventListener('click', () => this.jumpTo(Math.max(0, this.index - 1)));
         element.querySelector('[data-action="step"]').addEventListener('click', () => this.step());
         element.querySelector('[data-action="replay"]').addEventListener('click', () => { this.reset(); this.updateUrl(); });
         if (data.alternate) element.querySelector('[data-action="variant"]').addEventListener('click', () => {
@@ -1103,20 +1153,25 @@
             case 'review-draft': this.jumpTo(6); break;
             case 'publish': this.jumpTo(8); break;
             case 'manage':
+              this.pause();
               this.parts.panel.innerHTML = appScreen('Delivery roster', 'Priya’s Kitchen · only her own orders',
                 tile('Prep summary', '2 veg biryani for Rahul · 7 of 15 portions remain', true) +
-                tile('#WR-1042 · Rahul M', 'Confirmed · ₹400 · Sun 1–2 pm · mark delivered after fulfillment'), 'MCN');
+                tile('#WR-1042 · Rahul M', 'Confirmed · ₹400 · Sun 1–2 pm · mark delivered after fulfillment') +
+                `<button type="button" class="ui-action" data-demo-action="back-to-seller">Back to seller overview</button>`, 'MCN');
               this.parts.caption.textContent = 'Priya sees her own prep totals and delivery roster, never another seller’s orders.';
               break;
+            case 'back-to-seller': this.jumpTo(10); break;
             case 'group-publish': this.jumpTo(4); break;
             case 'group-share': this.jumpTo(6); break;
             case 'group-preview': this.jumpTo(7); break;
             case 'group-send': this.jumpTo(8); break;
+            case 'group-cancel': this.jumpTo(4); break;
           }
         });
         element.querySelector('[data-action="speed"]').addEventListener('click', event => {
           this.speed = this.speed === 1 ? 1.5 : 1;
           event.currentTarget.textContent = this.speed + '×';
+          event.currentTarget.setAttribute('aria-label', 'Playback speed: ' + this.speed + '×');
           if (this.playing) this.schedule();
         });
         this.speed = 1;
@@ -1127,6 +1182,7 @@
         this.index = 0;
         this.started = false;
         this.parts.messages.replaceChildren();
+        this.parts.panel.scrollTop = 0;
         this.parts.panel.innerHTML = this.data.panel;
         this.parts.context.textContent = this.data.context;
         this.parts.caption.textContent = this.data.start;
@@ -1141,10 +1197,15 @@
       }
       updateControls() {
         this.parts.count.textContent = `Step ${this.index} / ${this.data.steps.length}`;
+        this.element.querySelector('[data-action="back"]').disabled = this.index === 0;
+        this.element.querySelector('[data-action="step"]').disabled = this.index === this.data.steps.length;
         this.element.querySelector('[data-action="play"]').textContent =
           this.playing ? 'Pause' : this.index === this.data.steps.length ? 'Play again' : this.index ? 'Resume' : 'Play demo';
         const variant = this.element.querySelector('[data-action="variant"]');
-        if (variant) variant.textContent = this.data === this.primary ? 'Unavailable' : 'Successful order';
+        if (variant) {
+          variant.textContent = this.data === this.primary ? 'Unavailable' : 'Successful order';
+          variant.setAttribute('aria-pressed', String(this.data !== this.primary));
+        }
         const list = this.element.querySelector('.demo-milestones');
         const alternate = this.data !== this.primary;
         if (list.dataset.alternate !== String(alternate)) {
@@ -1168,11 +1229,13 @@
       }
       schedule() {
         clearTimeout(this.timer);
+        const words = this.parts.caption.textContent.trim().split(/\s+/).length;
+        const duration = Math.max(3000, Math.min(7000, words * 220));
         if (this.playing) this.timer = setTimeout(() => {
           this.advance(false);
           if (this.index < this.data.steps.length) this.schedule();
           else this.pause();
-        }, 1550 / this.speed);
+        }, duration / this.speed);
       }
       play() {
         if (this.index === this.data.steps.length) this.reset();
@@ -1205,6 +1268,7 @@
       advance(instant, updateUrl = true) {
         const step = this.data.steps[this.index];
         if (!step) return;
+        this.parts.messages.querySelectorAll('button').forEach(button => { button.disabled = true; });
         this.index++;
         if (step.who === 'panel') {
           this.parts.panel.innerHTML = step.html;
