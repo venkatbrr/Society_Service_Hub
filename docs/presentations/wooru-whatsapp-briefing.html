@@ -416,10 +416,12 @@
         position: absolute; inset: 0; margin: 0;
         width: 1280px; max-width: none; height: 720px; min-height: 0;
         aspect-ratio: auto; padding: 40px; overflow: auto;
+        justify-content: safe center;
         transform: scale(var(--slide-scale, 1)); transform-origin: top left;
       }
       .js:not(.reading):not(.read-all) .slide h1 { font-size: 64px; }
       .js:not(.reading):not(.read-all) .slide h2 { font-size: 38px; }
+      .js:not(.reading):not(.read-all) .slide .metric { font-size: 40px; }
       .js:not(.reading):not(.read-all) #vision h1 { font-size: 46px; }
       .js:not(.reading):not(.read-all) #income h2 { font-size: 30px; }
       .js:not(.reading):not(.read-all) .slide .columns,
@@ -457,7 +459,12 @@
       .js:not(.reading):not(.read-all) .slide .console-heading .dash-badge { white-space: nowrap; }
     }
     .reading #slide-frame { display: contents; }
-    @media print { #slide-frame { display: contents !important; } }
+    @media print {
+      #slide-frame { display: contents !important; }
+      #slide-frame .slide {
+        display: flex !important; flex-direction: column; justify-content: safe center;
+      }
+    }
   </style>
 </head>
 <body>
