@@ -416,6 +416,27 @@
     .console-alert.warning { border-left-color: #B88237; background: #FEF5E7; }
     .console-privacy { color: var(--muted); font-size: 9px; }
     .group-member-link { display: flex; flex-direction: column; gap: 5px; }
+    #operations .exec-evidence {
+      grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+      border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+      padding: 7px 0; margin: 8px 0 12px;
+    }
+    #operations .exec-evidence > div {
+      padding: 3px 12px; border: 0; border-left: 2px solid #DDEFE6;
+      border-radius: 0; background: transparent; font-size: 12px;
+    }
+    #operations .exec-evidence b {
+      margin-bottom: 2px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+    }
+    #operations .role-boards { gap: 14px; }
+    #operations .role-frame h3 { margin-bottom: 2px; font-size: 16px; }
+    #operations .role-frame > .small { min-height: 0; margin-bottom: 7px; font-size: 12px; }
+    #operations .operations-boundary {
+      display: flex; align-items: baseline; gap: 10px; margin-top: 9px;
+      padding: 8px 11px; border-left: 3px solid var(--accent);
+      border-radius: 4px; background: var(--mint); font-size: 12px;
+    }
+    #operations .operations-boundary b { flex: none; color: var(--primary); font-weight: 500; }
     @media screen {
       .js:not(.reading):not(.read-all) #group-bridge.slide.active,
       .js:not(.reading):not(.read-all) #collective.slide.active { padding-top: 20px; padding-bottom: 20px; }
@@ -908,26 +929,27 @@
     </section>
 
     <section class="slide long" id="operations" data-title="Community and platform views">
-      <p class="kicker">08 / DECISION RIGHTS · FICTIONAL DASHBOARD COUNTERS</p>
-      <h2>Each role sees only what it needs to decide.</h2>
-      <div class="exec-evidence" aria-label="Proposed role decision rights">
-        <div><b>Resident</b>Reviews own final price and order.</div>
-        <div><b>Society lead</b>Approves suppliers; sees aggregate demand.</div>
-        <div><b>Supplier</b>Quotes and fulfills own orders only.</div>
-        <div><b>Wooru</b>Operates channel health, not buyer chats.</div>
+      <p class="kicker">08 / ROLE-BASED VISIBILITY · FICTIONAL DASHBOARD COUNTERS</p>
+      <h2>Four roles. Two dashboards. No private chats.</h2>
+      <div class="exec-evidence" aria-label="Proposed data scope for each role">
+        <div><b>Resident</b>Own price + order</div>
+        <div><b>Society lead</b>Society totals + public listings</div>
+        <div><b>Supplier</b>Approved quotes + own orders</div>
+        <div><b>Platform ops</b>Cross-community totals + delivery health</div>
       </div>
       <div class="role-boards">
         <div class="role-frame">
-          <h3>Society president / vice president</h3>
-          <p class="small">Fictional activity count; proposed sourcing and public-listing oversight.</p>
+          <h3>Society lead · Wooru app</h3>
+          <p class="small">President / vice president · Green Meadows scope</p>
           <div class="app" id="lead-preview" aria-label="Illustrative society lead app screen"></div>
         </div>
         <div class="role-frame">
-          <h3>Wooru platform admin · separate web console</h3>
-          <p class="small">Fictional activity count; channel health without private transcripts.</p>
+          <h3>Platform admin · Wooru web console</h3>
+          <p class="small">All communities · aggregate counts and delivery health</p>
           <div class="app" id="platform-preview" aria-label="Illustrative platform admin console"></div>
         </div>
       </div>
+      <p class="operations-boundary"><b>ONE ORDER · TWO AGGREGATES</b><span>Green Meadows 7 → 8 · Platform 114 → 115 · Buyer identity and chat content stay private.</span></p>
       <p class="small presenter-detail">The same synthetic order changes Green Meadows 7 → 8 and the platform total 114 → 115. Proposed buying circles would add approved suppliers, comparable quotes and aggregate participation to the society lead's view, not buyer conversations. Platform operations sees cross-community aggregate and delivery-health signals. Neither proposed panel grants access to private chats or unrelated buyer orders. The existing app and admin console do not ship these exact panels.</p>
       <noscript>Illustrative future views: community leads see their society's aggregate orders and public menu reports; platform admins see cross-community totals and delivery health.</noscript>
     </section>
