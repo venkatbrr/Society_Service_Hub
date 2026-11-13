@@ -323,7 +323,7 @@
       .scene-cap { min-height: 0; padding: 6px 9px; font-size: 12px; }
       .scene-tab[hidden], details { display: none !important; }
       .print-note { display: block; font-size: 12px; color: var(--muted); }
-      #allowed > .grid.three, #cost > .provider-matrix, #build > .table-wrap, #build > .grid:not(.four) { display: none !important; }
+      #allowed > .grid.three { display: none !important; }
       #allowed table, #cost table, #build .grid.four { font-size: 11px; }
       #allowed th, #allowed td, #cost th, #cost td { padding: 3px 5px; }
       #allowed .grid.four .card { padding: 7px 8px; }
@@ -336,6 +336,7 @@
       .jump { display: none; }
     }
   </style>
+  <link rel="stylesheet" href="./presentation.css">
 </head>
 <body>
   <header class="toolbar" aria-label="Presentation controls">
@@ -358,14 +359,14 @@
         <div class="card tint"><h3>Pilot: one Wooru-owned number</h3><p>Residents use ordinary WhatsApp to ask across participating food sellers. Sellers manage their menus and orders in Wooru; they do not have to connect a Business number. Later, eligible sellers could optionally connect their own number via Coexistence.</p></div>
         <div class="card nobox"><h3>No: mirroring existing society groups</h3><p>Group chats are not synced through Coexistence. Meta's Groups API is a separate product: Official Business Accounts only, max 8 participants, and not for Business-app numbers. Unofficial WhatsApp Web bots are not an option.</p></div>
       </div>
-      <div class="grid four">
+      <div class="grid four presenter-detail">
         <div class="card"><p class="metric">6</p><p class="small">animated flows: today vs. the proposed experience</p></div>
         <div class="card"><p class="metric">1 number</p><p class="small">shared pilot; slide 8 also models an optional, costlier 5-seller-number expansion</p></div>
         <div class="card"><p class="metric">0</p><p class="small">production messaging accounts connected today; verify owned-number onboarding and provider terms</p></div>
         <div class="card"><p class="metric">1</p><p class="small">recommended pilot: one food-ordering journey, not a group-sync product</p></div>
       </div>
-      <p class="small">Use ← → to move between slides. Animations play automatically; use Pause, Step and Replay under each phone. All chats are synthetic examples, not a live integration.</p>
-      <div class="jump" aria-label="Jump to a flow">
+      <p class="small">Proposal, not a live integration · Synthetic chat scenes · Use ← → to navigate.</p>
+      <div class="jump presenter-detail" aria-label="Jump to a flow">
         <button type="button" data-go="problem">See today's problem</button>
         <button type="button" data-go="connect">Join the concierge</button>
         <button type="button" data-go="publish">Publish a menu</button>
@@ -382,12 +383,11 @@
           <p class="eyebrow">02 / How it works today</p>
           <h2>Orders get lost in the society group.</h2>
           <ul>
-            <li>Menus are posted as images in a 300+ member group.</li>
-            <li>"1 pls", "same", "still available?" replies get mixed in with notices and greetings.</li>
-            <li>Sellers copy orders into a notebook by hand, so orders get missed or counted twice.</li>
-            <li>Wooru already has proper menus and orders, but residents rarely open another app.</li>
+            <li>Menus disappear in a busy group; “two please” is not a recorded order.</li>
+            <li>Sellers reconcile chats by hand while Wooru’s structured menus go unseen.</li>
           </ul>
-          <p class="callout"><b>The goal:</b> bring Wooru's reliable ordering to where residents already chat, without scraping the group.</p>
+          <p class="callout"><b>The opportunity:</b> bring the Wooru order record to a familiar chat, without scraping groups.</p>
+          <p class="small presenter-detail">Large groups mix orders with notices and greetings; manual notebook tallying can miss or duplicate orders. Wooru already has proper menus and orders, but residents do not always open another app.</p>
         </div>
         <div class="scene" data-scene="problem"></div>
       </div>
@@ -403,7 +403,7 @@
         <div class="card tint"><h3>Cloud API · pilot</h3><p class="small">One Wooru-owned number: webhooks, interactive buttons and lists, templates. Outbound fees depend on message category and current rules.</p></div>
         <div class="card"><h3>Coexistence · later</h3><p class="small">Eligible sellers may connect their own Business app number to the Cloud API for 1:1 chats. This is not needed for a Wooru-number pilot.</p></div>
       </div>
-      <div class="table-wrap"><table>
+      <div class="table-wrap presenter-detail"><table>
         <caption>What the proposed integration can and cannot do</caption>
         <thead><tr><th>Capability</th><th>Status</th><th>Condition / reason</th></tr></thead>
         <tbody>
@@ -417,12 +417,16 @@
           <tr><td>Read anyone's personal inbox / sync Business-app catalog &amp; orders</td><td><span class="tag no">No</span></td><td>No supported API. Business-app tools are not synced as orders.</td></tr>
         </tbody>
       </table></div>
-      <div class="grid three">
+      <div class="grid three presenter-detail">
         <div class="card"><h3>Later: seller-number limits</h3><ul class="small"><li>Coexistence eligibility and supported Business-app version must be checked.</li><li>Optional history sync must never create old orders.</li><li>Companion-device and per-number throughput limits need verification before expansion.</li></ul></div>
         <div class="card"><h3>Policy</h3><ul class="small"><li>Get opt-in and honour opt-outs.</li><li>Never share one customer's chat with another customer.</li><li>Menu promotions are not automatically "utility" messages.</li></ul></div>
         <div class="card warnbox"><h3>Onboarding gate</h3><ul class="small"><li>Pilot: verify a Wooru-owned number and official messaging access.</li><li>Seller Coexistence later: Tech Provider approval or partner and seller eligibility checks.</li><li>Neither route is live yet.</li></ul></div>
       </div>
-      <p class="sources">Sources: <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users" target="_blank" rel="noopener noreferrer">Coexistence</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/groups" target="_blank" rel="noopener noreferrer">Groups API</a><a href="https://business.whatsapp.com/policy" target="_blank" rel="noopener noreferrer">Messaging policy</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Pricing</a></p>
+      <div class="grid">
+        <div class="card tint"><h3>What the pilot can do</h3><p>Linked residents ask for live menus, explicitly place a food order, check their own status and receive opt-in updates.</p></div>
+        <div class="card nobox"><h3>What it cannot do</h3><p>No reading or posting into existing groups, personal inbox access or silent conversion of private messages into listings.</p></div>
+      </div>
+      <p class="sources presenter-detail">Sources: <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users" target="_blank" rel="noopener noreferrer">Coexistence</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/groups" target="_blank" rel="noopener noreferrer">Groups API</a><a href="https://business.whatsapp.com/policy" target="_blank" rel="noopener noreferrer">Messaging policy</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Pricing</a></p>
       <p class="print-note">Seller-number eligibility, opt-in and policy gates are described in the interactive HTML; they are not pilot prerequisites for a Wooru-owned number.</p>
     </section>
 
@@ -432,11 +436,12 @@
         <div class="notes">
           <p class="eyebrow">04 / One-time setup</p>
           <h2>The seller joins Wooru. Residents link once.</h2>
-          <h3>Seller</h3>
-          <ul><li>Opts in to the concierge inside her signed-in Wooru seller workspace.</li><li>Publishes her menu in Wooru; no Business-app connection or QR scan is required.</li><li>Can still share a Wooru menu link into an existing group herself, not automatically.</li></ul>
-          <h3>Resident</h3>
-          <ul><li>Messages the Wooru-owned number and opens a one-time, expiring account-link request.</li><li>Confirms inside the signed-in Wooru app; if the request is wrong or expired, reject it and request a new one. Unlink or switch accounts from settings.</li></ul>
-          <p class="callout">Pilot gate: official messaging access for Wooru's number, opt-in and identity-link design. Seller-number Coexistence is an optional later evaluation.</p>
+          <ul>
+            <li>Priya opts in and publishes her menu in Wooru. No Business number connection needed.</li>
+            <li>Rahul links once by approving an expiring request in his signed-in app.</li>
+          </ul>
+          <p class="callout">One Wooru-owned number for the pilot; seller-number Coexistence is later.</p>
+          <p class="small presenter-detail">Priya may share a menu link into a group herself, never automatically. Rahul can reject an unexpected or expired link, request a new one, unlink or switch accounts. Official messaging access, opt-in and identity-link design remain pilot gates.</p>
         </div>
         <div class="scene" data-scene="connect"></div>
       </div>
@@ -449,12 +454,11 @@
           <p class="eyebrow">05 / WhatsApp → Wooru</p>
           <h2>A menu sent to Wooru becomes a draft, on purpose.</h2>
           <ul>
-            <li>The linked seller texts <b>Wooru's own assistant number</b> (a Wooru-owned business account).</li>
-            <li>Missing details are asked for, never guessed.</li>
-            <li>Wooru shows a structured draft; nothing goes live until she taps <b>Publish</b>.</li>
-            <li>The menu then follows the same moderation, capacity and cut-off rules as menus created in the app.</li>
+            <li>Priya texts the Wooru-owned number; missing details are asked for, not guessed.</li>
+            <li>She reviews a private draft and taps Publish in Wooru.</li>
           </ul>
-          <p class="callout">Group posts and private chats are never copied into the feed automatically.</p>
+          <p class="callout">No private chat or group post becomes a public menu automatically.</p>
+          <p class="small presenter-detail">Published menus follow the app’s existing moderation, capacity and cutoff rules. Chat-based seller drafting is optional in the pilot, not a prerequisite.</p>
         </div>
         <div class="scene" data-scene="publish"></div>
       </div>
@@ -467,14 +471,12 @@
           <p class="eyebrow">06 / WhatsApp → Wooru → WhatsApp</p>
           <h2>Browse across sellers. Review, then confirm.</h2>
           <ul>
-            <li>Typing "menu" returns live menus for the resident's own community only.</li>
-            <li>Native WhatsApp list and reply buttons, so there's no typing errors.</li>
-            <li>Show seller, full total, delivery location, payment arrangement and applicable terms. An explicit <b>Place order</b> comes before any write.</li>
-            <li>Wooru's existing <code>place_mcn_preorder</code> rules apply: membership, cut-off, server-side price and capacity.</li>
-            <li>Until the order record exists, show <b>Checking order</b>. On changed terms or sold-out, show no confirmation and ask for a new review. On timeout, check My Orders before retrying.</li>
-            <li>The same record appears in the seller dashboard and in the resident's My Orders.</li>
+            <li>Choose a live menu from your own society with a list, not guesswork.</li>
+            <li>Review seller, total, delivery and payment; tap Place order explicitly.</li>
+            <li>Wooru checks capacity and confirms only after an order record exists.</li>
           </ul>
-          <p class="callout"><b>WhatsApp is only the chat window.</b> Every reply tagged "Automatic reply from Wooru" comes from Wooru's own number, using its menus, rules and order records.</p>
+          <p class="callout">WhatsApp is the window. Wooru is the order system.</p>
+          <p class="small presenter-detail">The existing <code>place_mcn_preorder</code> rules enforce membership, cutoff, price and capacity. Show Checking order until the write succeeds. Changed terms or sold-out require a new review. On timeout, check My Orders before retrying. The same record appears in the seller dashboard and the resident’s My Orders.</p>
         </div>
         <div class="scene" data-scene="order"></div>
       </div>
@@ -486,11 +488,12 @@
         <div class="notes">
           <p class="eyebrow">07 / Both directions</p>
           <h2>Ask Wooru for your orders. Get reliable updates.</h2>
-          <h3>Resident → Wooru</h3>
-          <ul><li>In the Wooru chat, "my orders" returns the linked resident's own orders across participating sellers.</li><li>Cancelling needs a confirmation and a clear outcome. If a seller cancels, show the reason and next action.</li></ul>
-          <h3>Wooru → resident</h3>
-          <ul><li>The seller updates the status in Wooru and the resident gets a WhatsApp message.</li><li>Outside the 24-hour window, Meta-approved utility templates are used.</li></ul>
-          <p class="callout">Blue ticks mean "read", not "delivered to the door". Order status always comes from Wooru.</p>
+          <ul>
+            <li>“My orders” returns only Rahul’s own records across participating sellers.</li>
+            <li>Priya updates an order in Wooru; Rahul receives its latest status in chat.</li>
+          </ul>
+          <p class="callout">Blue ticks show a message was read—not that the food was delivered.</p>
+          <p class="small presenter-detail">Cancellation needs confirmation and a clear outcome; seller cancellation needs a reason and next action. Outside the 24-hour window, updates need approved utility templates. Wooru remains the source of truth.</p>
         </div>
         <div>
           <div class="tabs" role="tablist" aria-label="Choose flow">
@@ -507,8 +510,14 @@
     <section class="slide long" id="cost" data-title="Providers and cost">
       <p class="eyebrow">08 / Build-with options and illustrative cost</p>
       <h2>Cost the Wooru-number pilot separately from seller-number expansion.</h2>
-      <p class="small">The provider comparison covers official Cloud API options. Seller-number Coexistence is a later eligibility question, not a cost or onboarding requirement for the Wooru-owned pilot.</p>
-      <div class="table-wrap provider-matrix"><table>
+      <p class="lede">One community number, not one subscription per seller. Get a written quote before choosing a provider.</p>
+      <div class="grid three">
+        <div class="card tint"><p class="metric">₹10,330</p><h3>Illustrative monthly pilot</h3><p class="small">One Wooru number via 360dialog at direct list price, modeled traffic and ₹4,500 operating allowance.</p></div>
+        <div class="card"><p class="metric">1 number</p><h3>For the first society</h3><p class="small">A few food sellers can participate without connecting their own Business numbers.</p></div>
+        <div class="card warnbox"><h3>Not a vendor quote</h3><p class="small">Meta categories, volumes, FX, taxes and actual provider charges must be validated. Seller-number expansion is later.</p></div>
+      </div>
+      <p class="small presenter-detail">The provider comparison covers official Cloud API options. Seller-number Coexistence is a later eligibility question, not a cost or onboarding requirement for the Wooru-owned pilot.</p>
+      <div class="table-wrap provider-matrix presenter-detail"><table>
         <thead><tr><th>Route</th><th>Seller-number Coexistence later?</th><th>Strength</th><th>Watch out for</th></tr></thead>
         <tbody>
           <tr><td><b>Direct Meta</b></td><td>Eligible route, subject to approval</td><td>Full control; no provider subscription</td><td>Wooru must verify the requirements for its own number; seller-number onboarding adds further gates</td></tr>
@@ -517,7 +526,7 @@
           <tr><td><b>Twilio</b></td><td>Not by standard sign-up</td><td>Mature messaging APIs</td><td>Standard sign-up requires deleting the app account; $0.005 per message in or out</td></tr>
         </tbody>
       </table></div>
-      <div class="table-wrap"><table>
+      <div class="table-wrap presenter-detail"><table>
         <caption>Optional later seller-number expansion only: illustrative monthly INR for 5/20/100 separately connected numbers (1,000 inbound / 1,200 outbound each). Includes ₹4,500 operating allowance; excludes ₹25,000 one-time setup assumption and tax. This is NOT the single-number pilot estimate.</caption>
         <thead><tr><th>Route</th><th class="num">5 numbers</th><th class="num">20 numbers</th><th class="num">100 numbers</th></tr></thead>
         <tbody id="cost-table">
@@ -528,7 +537,7 @@
           <tr><td>Twilio (handling fees)</td><td class="num">₹9,825</td><td class="num">₹49,500</td><td class="num">₹5,89,500</td></tr>
         </tbody>
       </table></div>
-      <p class="callout"><b>Hypothetical rates.</b> These figures assume FX of USD 85 / EUR 95 INR and Meta rates of marketing ₹1, utility/service ₹0.15 per message. They are not live rates or vendor quotes. A single Wooru-owned number is cheaper in per-number subscription arithmetic but still needs actual traffic, policy and provider quotes.</p>
+      <p class="callout presenter-detail"><b>Hypothetical rates.</b> These figures assume FX of USD 85 / EUR 95 INR and Meta rates of marketing ₹1, utility/service ₹0.15 per message. They are not live rates or vendor quotes. A single Wooru-owned number is cheaper in per-number subscription arithmetic but still needs actual traffic, policy and provider quotes.</p>
       <details class="calc-panel" id="calculator"><summary>Open the INR calculator: pilot one-number preset or optional seller-number expansion</summary><div>
       <div class="actions">
         <button type="button" data-preset="pilot">Pilot / 1 Wooru number</button>
@@ -584,15 +593,15 @@
         <p>Blank, invalid, or unknown required numeric values stop calculation. Enter a known zero explicitly. Displayed zeros in extra-fee defaults are labeled exclusions, not evidence that no such charges apply. No “cheapest eligible route” is inferred.</p>
       </div></details>
       </div></details>
-      <p class="sources">Sources: <a href="https://360dialog.com/pricing" target="_blank" rel="noopener noreferrer">360dialog pricing</a><a href="https://www.wati.io/pricing/" target="_blank" rel="noopener noreferrer">Wati pricing</a><a href="https://www.twilio.com/en-us/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Twilio pricing</a><a href="https://www.twilio.com/docs/whatsapp/self-sign-up" target="_blank" rel="noopener noreferrer">Twilio sign-up</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Meta pricing</a> · list prices checked 12 Nov 2026</p>
-      <p class="print-note">For a one-number pilot scenario, open the interactive HTML calculator. The multi-number table above is an optional expansion, not a pilot quote.</p>
+      <p class="sources presenter-detail">Sources: <a href="https://360dialog.com/pricing" target="_blank" rel="noopener noreferrer">360dialog pricing</a><a href="https://www.wati.io/pricing/" target="_blank" rel="noopener noreferrer">Wati pricing</a><a href="https://www.twilio.com/en-us/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Twilio pricing</a><a href="https://www.twilio.com/docs/whatsapp/self-sign-up" target="_blank" rel="noopener noreferrer">Twilio sign-up</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Meta pricing</a> · list prices checked 12 Nov 2026</p>
+      <p class="print-note">Illustrative one-number scenario, not a vendor quote. The HTML has editable assumptions and a separate optional seller-number expansion model.</p>
     </section>
 
     <!-- 9 -->
     <section class="slide long" id="build" data-title="How it's built safely">
       <p class="eyebrow">09 / Concept architecture: no code written yet</p>
       <h2>A chat adapter in front of Wooru, not a second order system.</h2>
-      <div class="table-wrap"><table>
+      <div class="table-wrap presenter-detail"><table>
         <caption>Who does what</caption>
         <thead><tr><th>WhatsApp / Meta (the chat window)</th><th>Wooru (the system behind it)</th></tr></thead>
         <tbody>
@@ -603,24 +612,28 @@
         </tbody>
       </table></div>
       <div class="arch" aria-label="Message flow">
-        <div class="node"><b>Resident / seller</b>Ordinary WhatsApp or Business app</div>
-        <div class="node"><b>Meta Cloud API</b>Wooru number, buttons, templates</div>
-        <div class="node"><b>Provider</b>e.g. 360dialog (or direct Meta)</div>
-        <div class="node wooru-node"><b>Wooru webhook</b>Supabase Edge Function: verify signature, de-duplicate, queue</div>
-        <div class="node wooru-node"><b>Wooru rules</b>Identity link → existing RPCs such as <code>place_mcn_preorder</code></div>
-        <div class="node wooru-node"><b>Notify back</b>Status change → WhatsApp reply / template + app push</div>
+        <div class="node"><b>Resident</b>Messages the Wooru number</div>
+        <div class="node"><b>Official Cloud API</b>Meta and chosen provider</div>
+        <div class="node wooru-node"><b>Wooru gateway</b>Verify, link identity and de-duplicate</div>
+        <div class="node wooru-node"><b>Wooru orders</b>Check price and capacity; write once</div>
+        <div class="node wooru-node"><b>Reply &amp; status</b>Same record in app and chat</div>
       </div>
-      <div class="grid four">
+      <div class="grid three">
+        <div class="card"><h3>Identity first</h3><p class="small">A signed-in Wooru member links the chat; the server scopes every request to their society.</p></div>
+        <div class="card tint"><h3>One source of truth</h3><p class="small">An order is confirmed only when Wooru’s transaction succeeds, never on an AI guess.</p></div>
+        <div class="card"><h3>Safe delivery</h3><p class="small">Verify webhooks, handle retries idempotently and respect messaging opt-outs.</p></div>
+      </div>
+      <div class="grid four presenter-detail">
         <div class="card"><h3>Identity &amp; tenancy</h3><ul class="small"><li>Link WhatsApp ID ↔ Wooru user via in-app confirmation.</li><li>Support business-scoped IDs when no phone number is shared.</li><li>Community resolved on the server, never from message text.</li><li>Service-role keys never bypass resident rules.</li></ul></div>
         <div class="card"><h3>Reliability</h3><ul class="small"><li>Webhooks can arrive late, batched or retried for up to 7 days, so make every action idempotent.</li><li>Ignore seller echoes to avoid loops.</li><li>Edited or deleted messages never silently change orders.</li></ul></div>
         <div class="card"><h3>Privacy &amp; policy</h3><ul class="small"><li>Opt-in, opt-out, retention and deletion.</li><li>No resident chats sent to third-party AI/OCR without a vetted agreement.</li><li>No private chat is ever made public.</li></ul></div>
         <div class="card"><h3>Operations</h3><ul class="small"><li>Public HTTPS endpoint (not local Docker).</li><li>Resident unlink, opt-out and seller participation controls.</li><li>Monitor one pilot number; human fallback and template management.</li></ul></div>
       </div>
-      <div class="grid">
+      <div class="grid presenter-detail">
         <div class="card tint"><h3>Ready to reuse in Wooru</h3><p class="small">Transactional food pre-orders (<code>place_mcn_preorder</code>: membership, cut-off, locks, server prices), order statuses, the notification and web-push pipeline, and Edge Functions.</p></div>
         <div class="card warnbox"><h3>New work needed</h3><p class="small">WhatsApp identity-link and unlink flow, webhook and outbound sender, conversation state, delegated-actor calls into the RPCs, templates, seller opt-in, admin monitoring and explicit pending/failure UX. Seller-number connection is later. Service bookings need a lifecycle first.</p></div>
       </div>
-      <p class="sources">Sources: <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/create-webhook-endpoint" target="_blank" rel="noopener noreferrer">Webhook security &amp; retries</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview" target="_blank" rel="noopener noreferrer">Webhooks &amp; user IDs</a></p>
+      <p class="sources presenter-detail">Sources: <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/create-webhook-endpoint" target="_blank" rel="noopener noreferrer">Webhook security &amp; retries</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview" target="_blank" rel="noopener noreferrer">Webhooks &amp; user IDs</a></p>
       <p class="print-note">Wooru remains the order source of truth; the HTML briefing includes the full responsibility table and implementation checklist.</p>
     </section>
 
@@ -630,15 +643,16 @@
       <h2>Prove one Wooru-number food-order journey first.</h2>
       <div class="grid three">
         <div class="card dark"><h3>Recommendation</h3><p>Evaluate <b>360dialog</b> or direct Meta for one Wooru-owned API number. Quote the actual pilot separately. Evaluate seller-number Coexistence only after the community-wide flow proves valuable.</p></div>
-        <div class="card"><h3>Pilot scope</h3><ul class="small"><li>2–3 food sellers, one society, one Wooru number.</li><li>Flows: seller opt-in, resident link, menus, review, pending, confirmed/failed orders, my orders, updates.</li><li>Seller menu drafting by chat optional; sharing to existing groups is human-initiated.</li><li>No automatic group sync, bookings or AI parsing in the first pilot.</li></ul></div>
-        <div class="card"><h3>Go / no-go gates</h3><ul class="small"><li>Written one-number quote and official onboarding route.</li><li>Linked-identity, order-failure and opt-out UX verified.</li><li>Food sellers opt in; community content and privacy review.</li><li>Later Coexistence: separate partner/approval and seller-eligibility checks.</li></ul></div>
+        <div class="card"><h3>Pilot scope</h3><p>One society, 2–3 food sellers, one Wooru number. Link residents, browse menus, review orders and track status.</p></div>
+        <div class="card"><h3>Go / no-go gates</h3><p>Official onboarding and a written quote; linked identity, opt-out and failed-order UX; seller consent and privacy review.</p></div>
       </div>
-      <details><summary>Do residents need anything new?</summary><div><p>They use ordinary WhatsApp but need a Wooru account and a one-time signed-in link to the Wooru number. They can reject an unexpected link or unlink later. Their other chats and groups are never visible to Wooru.</p></div></details>
-      <details><summary>Why not just read the society group?</summary><div><p>Coexistence does not sync groups. The Groups API needs an Official Business Account, caps groups at 8 participants and excludes Business-app numbers. Unofficial WhatsApp Web automation risks bans, session compromise and privacy breaches. Sellers can still share a Wooru menu link in groups manually.</p></div></details>
-      <details><summary>Is it free if the resident messages first?</summary><div><p>Meta doesn't charge for inbound messages. Outbound charges depend on category, market and current free tiers. Providers add per-number or per-message fees. Don't assume everything inside the 24-hour window is free.</p></div></details>
-      <details><summary>Can we use our Supabase service-role key for chat orders?</summary><div><p>Not on its own. The order RPC relies on the signed-in user's identity. A chat integration needs a secure delegated-actor design that keeps membership, pricing, capacity and ownership checks intact.</p></div></details>
-      <details><summary>What happens to old chats and the seller's phone?</summary><div><p>Nothing happens to the seller's Business app in the Wooru-number pilot. If a seller later chooses Coexistence, up to 6 months of history may optionally sync, but old messages must never create orders; onboarding can unlink companion devices, and seller eligibility needs checking.</p></div></details>
-      <details><summary>Sources (checked 12 November 2026)</summary><div><ol class="reference-list">
+      <p class="small presenter-detail">Seller menu drafting by chat and human-initiated sharing to existing groups are optional. No group sync, bookings or AI parsing in the first pilot. Seller-number Coexistence needs separate approval and eligibility checks later.</p>
+      <details class="presenter-detail"><summary>Do residents need anything new?</summary><div><p>They use ordinary WhatsApp but need a Wooru account and a one-time signed-in link to the Wooru number. They can reject an unexpected link or unlink later. Their other chats and groups are never visible to Wooru.</p></div></details>
+      <details class="presenter-detail"><summary>Why not just read the society group?</summary><div><p>Coexistence does not sync groups. The Groups API needs an Official Business Account, caps groups at 8 participants and excludes Business-app numbers. Unofficial WhatsApp Web automation risks bans, session compromise and privacy breaches. Sellers can still share a Wooru menu link in groups manually.</p></div></details>
+      <details class="presenter-detail"><summary>Is it free if the resident messages first?</summary><div><p>Meta doesn't charge for inbound messages. Outbound charges depend on category, market and current free tiers. Providers add per-number or per-message fees. Don't assume everything inside the 24-hour window is free.</p></div></details>
+      <details class="presenter-detail"><summary>Can we use our Supabase service-role key for chat orders?</summary><div><p>Not on its own. The order RPC relies on the signed-in user's identity. A chat integration needs a secure delegated-actor design that keeps membership, pricing, capacity and ownership checks intact.</p></div></details>
+      <details class="presenter-detail"><summary>What happens to old chats and the seller's phone?</summary><div><p>Nothing happens to the seller's Business app in the Wooru-number pilot. If a seller later chooses Coexistence, up to 6 months of history may optionally sync, but old messages must never create orders; onboarding can unlink companion devices, and seller eligibility needs checking.</p></div></details>
+      <details class="presenter-detail"><summary>Sources (checked 12 November 2026)</summary><div><ol class="reference-list">
         <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users" target="_blank" rel="noopener noreferrer">Meta: Coexistence / onboard Business app users</a></li>
         <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/solution-providers/get-started-for-tech-providers" target="_blank" rel="noopener noreferrer">Meta: become a Tech Provider</a></li>
         <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Meta: pricing</a></li>

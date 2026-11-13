@@ -223,6 +223,7 @@
       a::after { content: " (" attr(href) ")"; font-size: 10px; }
     }
   </style>
+  <link rel="stylesheet" href="./presentation.css">
 </head>
 <body>
   <header class="top">
@@ -237,13 +238,13 @@
     <section class="slide" id="vision" data-title="The thesis">
       <p class="kicker">01 / PRODUCT STRATEGY · PROPOSAL, NOT A LIVE FEATURE</p>
       <h1>One community.<br>One concierge.<br>All its local sellers.</h1>
-      <p class="lede">Wooru is not another WhatsApp Business inbox. It is the community-specific discovery and order record that residents could reach through one opt-in conversation—or through the Wooru app. Existing society groups remain human-operated sharing channels.</p>
+      <p class="lede">Not another WhatsApp Business inbox. Wooru is the community's discovery and order record—reachable by app or one opt-in chat. Existing groups remain human sharing channels.</p>
       <div class="grid three">
         <div class="card green"><h3>One place to ask</h3><p>“What vegetarian food is open on Sunday?”—across participating sellers in <em>my</em> society.</p></div>
         <div class="card"><h3>One trustworthy record</h3><p>Menus, prices, capacity, order history and status live in Wooru, not in a thread or an AI model.</p></div>
         <div class="card dark"><h3>AI with a job</h3><p>Help residents find things and help sellers draft them; never invent prices or take irreversible action without confirmation.</p></div>
       </div>
-      <p class="small">The animated chats and screens are synthetic future concepts. Neither the WhatsApp integration, AI concierge nor group-sharing workflow is live. Use ← → to navigate; each animation has Pause, Step and Replay.</p>
+      <p class="small">Concept only · Synthetic screens · No live WhatsApp or AI integration. Use ← → to navigate; Pause, Step and Replay control the scenes.</p>
     </section>
 
     <section class="slide" id="gap" data-title="Why Wooru is different">
@@ -258,12 +259,12 @@
           <tr><td>Community WhatsApp groups spread posts, but older offers get buried.</td><td>Human-shared posts can become <b>seller-approved, searchable Wooru listings</b>; Wooru listings can be shared back as links, never silently synced.</td></tr>
         </tbody>
       </table></div>
-      <div class="grid three">
+      <div class="grid three presenter-detail">
         <div class="card"><h3>For residents</h3><p>Find community offerings in one place; food orders have a durable Wooru history instead of only a chat thread.</p></div>
         <div class="card"><h3>For sellers</h3><p>Publish once in Wooru; choose when to share a listing into an existing group. No group listener or bulk auto-posting.</p></div>
         <div class="card"><h3>For leads</h3><p>Moderate community listings with authorized tools and see aggregate activity, not private group or buyer conversations.</p></div>
       </div>
-      <p class="small">This compares common inbox/catalog workflows, not every competing product. Wooru membership is currently based on a join code; account linking does not prove real-world identity. Resale-product drafting and WhatsApp sharing here are proposals, not shipped features.</p>
+      <p class="small presenter-detail">This compares common inbox/catalog workflows, not every competing product. Wooru membership is currently based on a join code; account linking does not prove real-world identity. Resale-product drafting and WhatsApp sharing here are proposals, not shipped features.</p>
     </section>
 
     <section class="slide long" id="resident" data-title="Resident journey">
@@ -272,12 +273,11 @@
           <p class="kicker">03 / ANIMATED RESIDENT JOURNEY</p>
           <h2>Find it. Compare it. Confirm it.</h2>
           <ul>
-            <li>One Wooru number, not a separate chat for every seller.</li>
-            <li>Natural language helps discover; Wooru's live menu records answer.</li>
-            <li>Review the total, delivery location and payment arrangement before confirming. Show “Checking order” until Wooru confirms it.</li>
-            <li>Watch the Wooru app switch from community menus to Rahul's My Orders after confirmation.</li>
+            <li>Ask one Wooru number across participating sellers; live records ground the answer.</li>
+            <li>Review the full order, confirm explicitly, then wait for a real Wooru order record.</li>
           </ul>
-            <p class="callout">Use “Show unavailable path” below to see a failed capacity check. If confirmation is delayed, check My Orders before retrying. Seller cancellation needs a reason and next action. Food pilot; figures are illustrative.</p>
+          <p class="callout">Try “Show unavailable path” to see what happens when capacity changes. No record means no order.</p>
+          <p class="small presenter-detail">The app switches from community menus to Rahul's My Orders. On a delayed reply, check My Orders before retrying; seller cancellation needs a reason and next action. Food pilot; figures are illustrative.</p>
         </div>
         <div class="stage" data-scene="resident"></div>
       </div>
@@ -286,16 +286,15 @@
 
     <section class="slide long" id="group-bridge" data-title="Existing group bridge">
       <p class="kicker">04 / EXISTING GROUPS · PROPOSED HUMAN SHARING</p>
-      <h2>From the group, with permission. Back to the group, by choice.</h2>
+      <h2>From group post to Wooru listing—by choice.</h2>
       <div class="columns">
         <div class="notes">
           <ul>
-            <li>A seller shares or pastes their own post; an authorized moderator can submit with permission for the seller to claim.</li>
-            <li>AI may extract a <b>private food-menu draft</b>. The signed-in seller checks details, then explicitly publishes; rejected or unclaimed drafts stay private.</li>
-            <li>The seller or lead taps Share, chooses the existing WhatsApp group and presses Send; Wooru cannot send on their behalf.</li>
-            <li>The link opens the current Wooru menu; an unlinked visitor is asked to sign in before ordering. Group previews may become stale.</li>
+            <li>Priya submits her post. AI can draft, but only she can publish.</li>
+            <li>Priya chooses the group, previews the link and presses Send herself.</li>
           </ul>
-          <p class="callout">The human sharing and AI draft steps are proposed, not shipped. The pilot remains food pre-orders; resale products come later.</p>
+          <p class="callout">No existing-group sync. The live Wooru menu, not a stale preview, decides availability.</p>
+          <p class="small presenter-detail">An authorized moderator can submit with seller permission; rejected or unclaimed drafts stay private. Unlinked visitors sign in before ordering. This sharing workflow is proposed, not shipped. The pilot remains food pre-orders; resale products come later.</p>
         </div>
         <div class="stage" data-scene="group"></div>
       </div>
@@ -308,12 +307,11 @@
           <p class="kicker">05 / SELLER EXPERIENCE</p>
           <h2>The app remains the workshop. Chat is a shortcut.</h2>
           <ul>
-            <li>The seller owns menu details and can approve an AI-assisted draft.</li>
-            <li>Watch the same private food-menu draft become a published menu, then Rahul's confirmed order in Priya's workspace.</li>
-            <li>The app/PWA carries richer catalog, history, reviews, moderation and society administration.</li>
-            <li>No WhatsApp account or AI opt-in is required for core Wooru features.</li>
+            <li>AI helps draft. Priya reviews and publishes the menu in Wooru.</li>
+            <li>The same workspace receives Rahul’s confirmed order and manages capacity.</li>
           </ul>
-          <p class="callout">A seller's own Business-number connection is optional and later; it neither grants Wooru access to existing groups nor is required for the concierge pilot.</p>
+          <p class="callout">The app is the workshop; chat is an optional shortcut.</p>
+          <p class="small presenter-detail">The app/PWA carries catalog, history, reviews, moderation and society administration. No WhatsApp or AI opt-in is required for core features. A seller-owned Business-number connection is optional and later, and never grants access to existing groups.</p>
         </div>
         <div class="stage" data-scene="seller"></div>
       </div>
@@ -326,12 +324,11 @@
           <p class="kicker">06 / PRESIDENT OR VICE PRESIDENT · FUTURE CONCEPT</p>
           <h2>See how the community is doing, without reading its chats.</h2>
           <ul>
-            <li>Green Meadows-level menus, sellers and aggregate food-order activity.</li>
-            <li>The same confirmed order changes today's count from 7 to 8.</li>
-            <li>See a reported menu, inspect its public details, and resolve it using authorized moderation actions.</li>
-            <li>No buyer identity, private messages or individual order details here.</li>
+            <li>Community-level food activity rises from 7 to 8 orders.</li>
+            <li>Review and resolve reported public menus—not private conversations.</li>
           </ul>
-          <p class="callout">This proposed insight panel is not shipped. Moderation shows only reported public content and status, never buyer orders or private chats.</p>
+          <p class="callout">Aggregate insight. No buyer card, order detail or chat transcript.</p>
+          <p class="small presenter-detail">This proposed panel is not shipped. The president or vice president sees Green Meadows-level menus, sellers and aggregate orders. Moderation shows reported public content and an auditable outcome only.</p>
         </div>
         <div class="stage" data-scene="lead"></div>
       </div>
@@ -344,12 +341,11 @@
           <p class="kicker">07 / WOORU PLATFORM ADMIN · WEB-ONLY FUTURE CONCEPT</p>
           <h2>Operate the channel across societies, not their conversations.</h2>
           <ul>
-            <li>A separate web console, not an admin screen in the resident app.</li>
-            <li>See aggregate adoption, delivery health, onboarding and moderation; investigate a failed message without opening a buyer chat.</li>
-            <li>The same order changes Green Meadows 7 → 8 and all communities 114 → 115.</li>
-            <li>No transcripts or buyer-level order cards in this proposed insights view.</li>
+            <li>Track channel health and aggregate orders across societies.</li>
+            <li>Investigate delivery failures without opening resident chats.</li>
           </ul>
-          <p class="callout">The existing platform console has other authorized commerce reports. This proposed concierge panel is intentionally aggregate-only; it does not change current admin privileges.</p>
+          <p class="callout">A separate web console—not a resident-app admin screen.</p>
+          <p class="small presenter-detail">The same order changes Green Meadows 7 → 8 and all communities 114 → 115. The existing console has other authorized commerce reports. This proposed insights panel is aggregate-only and does not change current privileges.</p>
         </div>
         <div class="stage" data-scene="platform"></div>
       </div>
@@ -394,7 +390,7 @@
         <div class="card"><h3>What to buy or verify</h3><p>Wooru-owned business number and official messaging access, qualified data processor for optional AI, consent/legal review, and a real written provider quote.</p></div>
         <div class="card sand"><h3>What not to promise</h3><p>Automatic reading <em>or posting</em> in existing society groups, universal product checkout, AI-generated confirmations without a transaction, or seller Coexistence before eligibility is checked.</p></div>
       </div>
-      <div class="table-wrap"><table>
+      <div class="table-wrap presenter-detail"><table>
         <thead><tr><th>Cost driver</th><th>Question to answer in the pilot</th></tr></thead>
         <tbody>
           <tr><td>Official one-to-one messaging</td><td>Meta message categories, templates, number/provider charges and changing free tiers; what is the cost per completed order? A person sharing a link to a group is not an API-initiated group message.</td></tr>
@@ -402,7 +398,8 @@
           <tr><td>Engineering and trust</td><td>Identity, retries, seller approval, duplicate drafts, moderation, data processing, support and recovery; which expenses recur as sellers grow?</td></tr>
         </tbody>
       </table></div>
-      <p class="source">Detailed provider fit and editable illustrative INR calculator: <a href="./whatsapp-integration.html#cost">WhatsApp feasibility deck · slide 8</a>. Those assumptions are not live vendor quotes. Product grounding: <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/features.md">Wooru feature reference</a> and <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/architecture.md">architecture reference</a>. Proposed journey and boundaries: <a href="./whatsapp-integration.html#allowed">WhatsApp feasibility deck · slide 3</a>.</p>
+      <p class="callout">Illustrative pilot: ₹10,330/month for one Wooru number under modeled assumptions—not a quote. <a href="./whatsapp-integration.html#cost">See the editable cost model.</a></p>
+      <p class="source presenter-detail">Product grounding: <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/features.md">Wooru feature reference</a> and <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/architecture.md">architecture reference</a>. Proposed journey and boundaries: <a href="./whatsapp-integration.html#allowed">WhatsApp feasibility deck · slide 3</a>.</p>
     </section>
   </main>
   <footer class="bottom">

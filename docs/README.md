@@ -60,7 +60,7 @@
 
 ### Research presentations
 
-The web build publishes these standalone HTML decks at `/presentations/whatsapp-integration.html` and `/presentations/wooru-community-concierge.html`; they do not require app sign-in.
+The web build publishes these ten-slide, 16:9 decks at `/presentations/whatsapp-integration.html` and `/presentations/wooru-community-concierge.html`. Both use [`presentations/presentation.css`](presentations/presentation.css), work locally when opened from this folder, provide a Read all mode for detailed research, and export in widescreen PDF format without app sign-in.
 
 - [WhatsApp integration presentation](presentations/whatsapp-integration.html) — 10-slide standalone browser briefing for a proposed Wooru-owned number: seller participation, resident linking, menus, food orders, status updates, provider fit and an editable INR calculator with a one-number pilot preset and separately labeled seller-number scenarios. Coexistence is an optional later route; researched 2026-11-12. Not a live integration; open the HTML locally and use Print / PDF to export.
 - [Wooru community concierge strategy](presentations/wooru-community-concierge.html) — separate 10-slide animated stakeholder presentation contrasting Wooru's community commerce record with typical WhatsApp Business tools; explains why existing society groups cannot automatically sync and illustrates seller-approved, human-confirmed food-menu sharing. Shows selectable confirmed and unavailable resident order paths, plus seller, society-lead and platform-admin concept views, trust, rollout and qualitative economics. Proposed strategy, not a live feature; works offline and prints to PDF.
