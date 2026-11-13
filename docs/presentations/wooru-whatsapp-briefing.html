@@ -472,15 +472,19 @@
         width: auto; flex-direction: column; padding: 0 4px;
         font-size: 11px; line-height: 1.3; overflow-wrap: normal;
       }
-      .js:not(.reading):not(.read-all) .slide .messages { scrollbar-width: none; }
-      .js:not(.reading):not(.read-all) .slide .messages::-webkit-scrollbar { display: none; }
+      .js:not(.reading):not(.read-all) .slide .messages,
+      .js:not(.reading):not(.read-all) .slide .app-body,
+      .js:not(.reading):not(.read-all) .slide .role-frame .app { scrollbar-width: none; }
+      .js:not(.reading):not(.read-all) .slide .messages::-webkit-scrollbar,
+      .js:not(.reading):not(.read-all) .slide .app-body::-webkit-scrollbar,
+      .js:not(.reading):not(.read-all) .slide .role-frame .app::-webkit-scrollbar { display: none; }
       .js:not(.reading):not(.read-all) .slide .bridge-line,
       .js:not(.reading):not(.read-all) .slide .conn-line { width: 100%; }
       .js:not(.reading):not(.read-all) .slide .role-boards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .js:not(.reading):not(.read-all) .slide .role-frame > .small { min-height: 0; margin-bottom: 8px; }
       .js:not(.reading):not(.read-all) .slide .role-frame .app { height: 360px; overflow-y: auto; }
       .js:not(.reading):not(.read-all) #operations .role-frame .app { height: 360px; }
-      .js:not(.reading):not(.read-all) #collective .role-frame .app { height: 410px; }
+      .js:not(.reading):not(.read-all) #collective .role-frame .app { height: 396px; }
       .js:not(.reading):not(.read-all) #collective .ui-content { gap: 7px; padding: 10px 12px; }
       .js:not(.reading):not(.read-all) .slide .buy-price,
       .js:not(.reading):not(.read-all) .slide .buy-breakdown,
@@ -508,6 +512,77 @@
       .js:not(.reading):not(.read-all) .slide .console-heading { align-items: center; }
       .js:not(.reading):not(.read-all) .slide .console-heading .dash-badge { white-space: nowrap; }
     }
+    .slide-master { display: none; }
+    @media screen {
+      .js:not(.reading):not(.read-all) body { background: #0D1917; }
+      .js:not(.reading):not(.read-all) main { padding: 12px; }
+      .js:not(.reading):not(.read-all) .top,
+      .js:not(.reading):not(.read-all) .bottom {
+        position: fixed; left: 0; right: 0; z-index: 20; padding: 10px 24px;
+        background: rgba(8, 18, 16, .92); border: 0; color: #DCE7E2;
+        opacity: 0; pointer-events: none; transition: opacity .25s ease;
+      }
+      .js:not(.reading):not(.read-all) .top { top: 0; }
+      .js:not(.reading):not(.read-all) .bottom { bottom: 0; }
+      .js.chrome-on:not(.reading):not(.read-all) .top,
+      .js.chrome-on:not(.reading):not(.read-all) .bottom,
+      .js:not(.reading):not(.read-all) .top:hover,
+      .js:not(.reading):not(.read-all) .bottom:hover,
+      .js:not(.reading):not(.read-all) .top:focus-within,
+      .js:not(.reading):not(.read-all) .bottom:focus-within { opacity: 1; pointer-events: auto; }
+      .js:not(.reading):not(.read-all) .brand { color: #F4F1EA; }
+      .js:not(.reading):not(.read-all) .top label,
+      .js:not(.reading):not(.read-all) .counter,
+      .js:not(.reading):not(.read-all) .bottom .small { color: #A9BDB6; }
+      .js:not(.reading):not(.read-all) .top button,
+      .js:not(.reading):not(.read-all) .top select,
+      .js:not(.reading):not(.read-all) .bottom button {
+        background: #13241F; color: #F4F1EA; border-color: rgba(255, 255, 255, .22);
+      }
+      .js:not(.reading):not(.read-all) .top button:hover,
+      .js:not(.reading):not(.read-all) .bottom button:hover { background: #1E3630; }
+      .js:not(.reading):not(.read-all) .bottom progress { accent-color: #5DCAA5; }
+      .js:not(.reading):not(.read-all) #slide-frame .slide.active {
+        background: #fff; border: 0; border-radius: 4px; padding: 40px 48px 64px;
+      }
+      .js:not(.reading):not(.read-all) #slide-frame .slide.active::before {
+        content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px; background: var(--primary);
+      }
+      .js:not(.reading):not(.read-all) #slide-frame .slide.active::after {
+        content: ""; position: absolute; top: 0; left: 0; width: 160px; height: 6px; background: #5DCAA5;
+      }
+      .js:not(.reading):not(.read-all) .slide-master {
+        position: absolute; left: 48px; right: 48px; bottom: 18px;
+        display: flex; align-items: center; gap: 16px; padding-top: 10px;
+        border-top: 1px solid #E3E9E5; color: var(--muted); font-size: 12px;
+      }
+      .slide-master .master-brand { display: flex; align-items: center; gap: 7px; color: var(--primary); font-size: 15px; font-weight: 500; letter-spacing: -.03em; }
+      .slide-master .master-brand img { width: 18px; height: 18px; border-radius: 5px; }
+      .slide-master .master-number { margin-left: auto; color: var(--primary); font-variant-numeric: tabular-nums; }
+      .js:not(.reading):not(.read-all) .slide [data-scene] {
+        display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center;
+      }
+      .js:not(.reading):not(.read-all) .slide [data-scene] > .stage-label { grid-column: 1 / -1; justify-self: start; }
+      .js:not(.reading):not(.read-all) .slide [data-scene] > .showcase,
+      .js:not(.reading):not(.read-all) .slide [data-scene] > .scene-caption { grid-column: 1 / -1; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls {
+        flex-wrap: nowrap; gap: 2px; margin-top: 10px; padding: 3px; border-radius: 999px; background: #EEF2EF;
+      }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button {
+        min-height: 30px; padding: 4px 11px; border: 0; border-radius: 999px; background: transparent; white-space: nowrap;
+      }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button:hover:not(:disabled) { background: #DCE8E2; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button[data-action="play"] { background: var(--primary); color: #fff; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls output { padding: 0 9px; white-space: nowrap; }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones {
+        justify-content: flex-end; gap: 4px; margin-top: 10px;
+      }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button { min-height: 28px; padding: 3px 10px; font-size: 11px; white-space: nowrap; }
+      .js:not(.reading):not(.read-all) .slide .scene-caption {
+        min-height: 46px; margin-top: 10px; padding: 9px 14px; border-radius: 0 8px 8px 0;
+        border-left: 3px solid var(--accent); background: #F4F7F5; font-size: 15px;
+      }
+    }
     .reading #slide-frame { display: contents; }
     @media print {
       #slide-frame { display: contents !important; }
@@ -523,6 +598,7 @@
     <label for="jump">Slide</label>
     <select id="jump" disabled></select>
     <button id="read-all" type="button" disabled aria-pressed="false">Read all</button>
+    <button id="present" type="button" disabled hidden>Full screen</button>
     <button id="print" type="button" disabled>Print / PDF</button>
   </header>
   <p id="error" class="error" role="alert"></p>
@@ -852,7 +928,7 @@
     <span id="counter" class="counter" aria-live="polite">1 / 12</span>
     <progress id="progress" value="1" max="12" aria-label="Presentation progress"></progress>
     <button id="next" type="button" disabled>Next</button>
-    <span class="small">← → / Home / End</span>
+    <span class="small">← → · swipe · F full screen</span>
   </footer>
   <script>
     'use strict';
@@ -1437,8 +1513,36 @@
     }));
     document.documentElement.classList.add('js');
     document.querySelectorAll('.top button, .top select, .bottom button').forEach(control => { control.disabled = false; });
+    slides.forEach((slide, i) => {
+      const master = document.createElement('div');
+      master.className = 'slide-master';
+      master.setAttribute('aria-hidden', 'true');
+      master.innerHTML = `<span class="master-brand"><img src="./media/wooru-mark.png" alt="">wooru</span>` +
+        `<span>Community commerce · leadership discussion</span>` +
+        `<span class="master-number">${String(i + 1).padStart(2, '0')} / ${slides.length}</span>`;
+      slide.append(master);
+    });
+    let chromeTimer;
+    const revealChrome = () => {
+      document.documentElement.classList.add('chrome-on');
+      clearTimeout(chromeTimer);
+      chromeTimer = setTimeout(() => document.documentElement.classList.remove('chrome-on'), 2500);
+    };
+    document.addEventListener('mousemove', revealChrome);
+    document.addEventListener('touchstart', revealChrome, { passive: true });
+    revealChrome();
+    const presentButton = document.getElementById('present');
+    const toggleFullscreen = () => {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen().catch(() => {});
+    };
+    presentButton.hidden = !document.fullscreenEnabled;
+    presentButton.addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', () => {
+      presentButton.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+    });
     const fitSlide = () => {
-      const scale = Math.min((deck.clientWidth - 32) / 1280, (deck.clientHeight - 32) / 720);
+      const scale = Math.min((deck.clientWidth - 24) / 1280, (deck.clientHeight - 24) / 720);
       slideFrame.style.setProperty('--slide-scale', String(Math.max(0, scale)));
     };
     new ResizeObserver(fitSlide).observe(deck);
@@ -1491,7 +1595,19 @@
       const target = { ArrowRight: active + 1, ArrowLeft: active - 1, PageDown: active + 1,
         PageUp: active - 1, Home: 0, End: slides.length - 1 }[event.key];
       if (target !== undefined) { event.preventDefault(); show(target, true); }
+      else if ((event.key === 'f' || event.key === 'F') && document.fullscreenEnabled) toggleFullscreen();
     });
+    let swipeStart = null;
+    deck.addEventListener('touchstart', event => {
+      swipeStart = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null;
+    }, { passive: true });
+    deck.addEventListener('touchend', event => {
+      if (!swipeStart || reading) return;
+      const dx = event.changedTouches[0].clientX - swipeStart.x;
+      const dy = event.changedTouches[0].clientY - swipeStart.y;
+      swipeStart = null;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) show(active + (dx < 0 ? 1 : -1), true);
+    }, { passive: true });
     document.getElementById('print').addEventListener('click', () => window.print());
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) scenes.forEach(scene => scene.pause());
