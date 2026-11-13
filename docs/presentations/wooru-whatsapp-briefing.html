@@ -680,6 +680,50 @@
         grid-column: 2; grid-row: 4; min-height: 0; margin: 12px 0 0; padding: 10px 12px; border-radius: 0 8px 8px 0;
         border-left: 3px solid var(--accent); background: #F4F7F5; font-size: 14px; line-height: 1.45;
       }
+      /* Minimal demo layout: smaller phones, light presenter rail. */
+      .js:not(.reading):not(.read-all) .slide .columns:has(> :is([data-scene], .buy-scene)) { grid-template-columns: 250px minmax(0, 1fr); gap: 36px; align-items: center; }
+      .js:not(.reading):not(.read-all) .slide .columns:has(> :is([data-scene], .buy-scene)) .notes { font-size: 14px; line-height: 1.5; }
+      .js:not(.reading):not(.read-all) .slide .columns:has(> :is([data-scene], .buy-scene)) .notes h2 { font-size: 27px; line-height: 1.18; margin-bottom: 16px; }
+      .js:not(.reading):not(.read-all) .slide .columns:has(> :is([data-scene], .buy-scene)) .notes li { margin-bottom: 6px; }
+      .js:not(.reading):not(.read-all) .slide .columns:has(> :is([data-scene], .buy-scene)) .callout { font-size: 13px; padding: 9px 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) { grid-template-columns: 540px minmax(0, 1fr); column-gap: 32px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) > .stage-label { font-size: 11px; padding: 3px 10px; margin-bottom: 10px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) > .showcase { grid-template-columns: 240px 60px 240px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .phone,
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .app { height: 530px; padding: 7px; border-radius: 34px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) :is(.phone-inner, .app-screen) { border-radius: 28px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .bridge span { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .phone-head b { font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .phone-head small { font-size: 10px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .bubble { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .compose-field { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .app-head .brand-lockup { font-size: 14px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-header { padding: 8px 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-header b { font-size: 16px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-header small { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-content { padding: 10px; gap: 7px; font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-banner { font-size: 11px; padding: 7px 9px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-banner b { font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .app-tile { font-size: 12px; padding: 8px 10px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-action { min-height: 34px; border-radius: 9px; font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .chat-actions button { min-height: 30px; font-size: 12px; }
+      .js:not(.reading):not(.read-all) .slide :is([data-scene], .buy-scene) .ui-tabs { font-size: 9px; padding: 5px 2px 3px; }
+      .js:not(.reading):not(.read-all) .slide .buy-scene .wish-field { font-size: 12px; padding: 7px 9px; }
+      .js:not(.reading):not(.read-all) .slide .buy-scene .wish-chips > * { font-size: 11px; padding: 5px 0; }
+      .js:not(.reading):not(.read-all) .slide .buy-scene .buy-breakdown,
+      .js:not(.reading):not(.read-all) .slide .buy-scene .buy-saving { font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .buy-scene .buy-actions button { min-height: 30px; font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .buy-scene .buy-decline { padding: 2px; font-size: 11px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls { padding: 0; gap: 6px; background: transparent; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls output { font-size: 11px; padding: 0 0 2px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls button { min-height: 30px; font-size: 12px; border-radius: 7px; }
+      .js:not(.reading):not(.read-all) .slide .scene-controls :is(button[data-action="play"], .buy-primary) { min-height: 36px; font-size: 13px; }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones { gap: 0; margin-top: 14px; padding-left: 4px; border-left: 2px solid #E3E9E5; }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones::before { display: none; }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button { min-height: 26px; padding: 2px 8px; gap: 8px; border: 0; font-size: 12px; color: var(--muted); }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button::before { width: 6px; height: 6px; }
+      .js:not(.reading):not(.read-all) .slide .demo-milestones button[aria-current="true"] { background: transparent; color: var(--primary); font-weight: 500; }
+      .js:not(.reading):not(.read-all) .slide .scene-caption { margin-top: 14px; padding: 2px 0 2px 10px; background: transparent; font-size: 13px; line-height: 1.5; color: var(--ink, #2B3A35); }
     }
     .reading #slide-frame { display: contents; }
     @media print {
@@ -815,14 +859,13 @@
       <div class="columns">
         <div class="notes">
           <p class="kicker">07 / MAKE A WISH · PROPOSED CONCEPT</p>
-          <h2>One wish. One demand pool. A price residents choose.</h2>
+          <h2>One wish. Neighbours join. Everyone saves.</h2>
           <ul>
-            <li>A resident wishes for groceries, food or a service and shares it to the WhatsApp group.</li>
-            <li>Neighbours tap “Me too” from the chat and join in Wooru.</li>
-            <li>At minimum demand the lead compares approved supplier quotes.</li>
-            <li>Each household confirms only the final landed price.</li>
+            <li>Wish for groceries, food or a service.</li>
+            <li>Share to WhatsApp; neighbours tap “Me too”.</li>
+            <li>Lead compares quotes; each home confirms.</li>
           </ul>
-          <p class="callout">Interest is not an order. Sponsors never pick the winning supplier.</p>
+          <p class="callout">Interest is not an order.</p>
           <p class="print-story">Fictional demo, not pilot data: wish for 10 kg rice → shared to the society WhatsApp group → 40 households · 400 kg → Offer A ₹55/kg landed → ₹550 at pickup vs ₹650 local.</p>
         </div>
         <div class="stage buy-scene" id="buying-scene">
@@ -1613,14 +1656,13 @@
     function residentBuyScreen() {
       const delivery = buyingFulfillment === 'delivery';
       if (buyStep === 0) return appScreen('Make a wish', 'Green Meadows · ask once, buy together',
-        `<div class="wish-hero">${icon('wish')}<b>Wish for groceries, food or a service</b></div>` +
         `<span class="ui-label">Wish type</span><div class="wish-chips"><b>Groceries</b><span>Food</span><span>Services</span></div>` +
         `<span class="ui-label">I wish for</span><div class="wish-field">Sona masoori rice · same grade</div>` +
         `<span class="ui-label">How much, every month</span><div class="wish-chips"><span>5 kg</span><b>10 kg</b><span>25 kg</span></div>` +
-        `<button type="button" class="ui-action" data-buy-go="1">${icon('wish')}Post & share on WhatsApp</button>`, 'MCN');
+        `<button type="button" class="ui-action" data-buy-go="1">${icon('wish')}Share on WhatsApp</button>`, 'MCN');
       if (buyStep === 1) return appScreen('Wishes', 'Green Meadows · your wish is live',
         wishCard(4, false) +
-        tile('Shared to Green Meadows Residents', 'You picked the WhatsApp group and pressed Send. No order yet.') +
+        tile('Shared to Green Meadows Residents', 'Sent by you · no order yet') +
         `<button type="button" class="ui-action" data-buy-go="2">See who joined</button>`, 'MCN');
       if (buyStep === 2) return appScreen('Wishes', 'Green Meadows · demand pooled',
         `<div class="ui-banner"><b>Minimum reached</b>Your society lead can now ask approved suppliers for same-grade quotes.</div>` + wishCard(40, true), 'MCN');
@@ -1628,7 +1670,6 @@
         `<div class="ui-banner sand"><b>Quotes being compared</b>You have committed nothing. You will see one final price.</div>` + wishCard(40, true), 'MCN');
       if (buyStep === 4) return appScreen('Your rice offer', 'Final offer · example only',
         offerBody() +
-        `<div class="buy-saving">Illustrative saving · ₹${delivery ? 75 : 100} per household</div>` +
         `<div class="buy-actions"><button type="button" data-buy-fulfil="pickup" aria-pressed="${!delivery}">Pickup · ₹550</button>` +
         `<button type="button" data-buy-fulfil="delivery" aria-pressed="${delivery}">Doorstep · ₹575</button></div>` +
         `<button type="button" class="ui-action" data-buy-decide="confirmed">Confirm ₹${delivery ? 575 : 550}</button>` +
@@ -1644,7 +1685,7 @@
         (buyStep === 1 ? tile('New · Sona masoori rice · 10 kg', '4 households · 40 kg · minimum 30', true) : '') +
         tile('Food · home-chef biryani', '26 households · below minimum') +
         tile('Food · Diwali sweets box', '18 households · below minimum') +
-        tile('Groceries · organic vegetable box', '21 households · below minimum') +
+        tile('Groceries · veg box', '21 households · below minimum') +
         `<div class="buy-saving">Leads see wish totals, never private chats.</div>`, 'Community');
       if (buyStep === 2) return appScreen('Community wishes', 'Green Meadows · society lead',
         `<div class="ui-banner"><b>Minimum reached · 40 households</b>400 kg rice, same grade, forty 10 kg packs.</div>` +
