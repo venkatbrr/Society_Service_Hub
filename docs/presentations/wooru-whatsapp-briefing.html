@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Wooru and WhatsApp: one ten-slide concept briefing on community commerce, resident and seller journeys, group-sharing limits, trust, and pilot economics.">
-  <title>Wooru + WhatsApp | Community commerce briefing</title>
+  <meta name="description" content="A twelve-slide Wooru concept briefing on community commerce, collective buying, sponsor-funded income, optional WhatsApp, and pilot economics.">
+  <title>Wooru | Community commerce and income model</title>
   <style>
     :root {
       --paper: #FAF8F4; --card: #fff; --cream: #F0EDE3; --ink: #1F2A28;
@@ -191,6 +191,15 @@
       .flow { flex-direction: column; }
       .flow > span { transform: rotate(90deg); }
     }
+    @media screen and (max-height: 780px) and (min-width: 901px) {
+      #income h2 { font-size: 30px; margin-bottom: 8px; }
+      #income .lede { font-size: 16px; margin-bottom: 8px; }
+      #income .flow, #income .grid { margin: 8px 0; }
+      #income .card { padding: 10px 12px; }
+      #income .callout { margin: 6px 0; padding: 8px 11px; }
+      #collective .ui-tabs { display: none; }
+      #group-bridge .phone, #group-bridge .app { height: 272px; }
+    }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
     }
@@ -238,24 +247,24 @@
   <main id="deck" tabindex="-1" aria-label="Wooru and WhatsApp community commerce presentation">
     <section class="slide" id="vision" data-title="The solution">
       <p class="kicker">01 / THE SOLUTION · PROPOSAL, NOT A LIVE INTEGRATION</p>
-      <h1>One community.<br>One concierge.<br>All its local sellers.</h1>
-      <p class="lede">One Wooru-owned number lets linked residents find local food, place a real pre-order and get updates in a familiar chat. Wooru remains the community's catalog and order record; the app works without WhatsApp.</p>
+      <h1>One community.<br>Shared demand.<br>Better local choices.</h1>
+      <p class="lede">Wooru already records local food pre-orders. The next idea: society-approved buying circles for essentials, with optional chat and delivery. Sponsors could fund the association, which contracts Wooru.</p>
       <div class="grid three">
-        <div class="card green"><h3>Resident</h3><p>Ask once across participating food sellers in <em>my</em> society. Review and confirm before ordering.</p></div>
-        <div class="card"><h3>Seller</h3><p>Keep one Wooru menu, real availability and order history; choose when to share a link.</p></div>
-        <div class="card dark"><h3>Community</h3><p>Understand aggregate activity without exposing private conversations or inventing a group listener.</p></div>
+        <div class="card green"><h3>Resident</h3><p>Find local food or join an optional bulk offer with a clear final price.</p></div>
+        <div class="card"><h3>Supplier</h3><p>Quote on combined demand; fulfill confirmed household orders.</p></div>
+        <div class="card dark"><h3>Community</h3><p>Approve suppliers, protect trust and fund Wooru through a disclosed agreement.</p></div>
       </div>
-      <p class="small">Concept only · Synthetic screens · No live WhatsApp or AI integration. Use ← → to navigate and Step to explore the scenes.</p>
+      <p class="small">Buying circles, funding, dashboards, WhatsApp and AI are concepts—not live integrations. Use ← → to navigate and Step to explore the scenes.</p>
     </section>
 
     <section class="slide" id="problem" data-title="Why this matters now">
       <p class="kicker">02 / THE EVERYDAY FRICTION</p>
       <h2>People already talk locally. The order is what gets lost.</h2>
-      <p class="lede">A busy society group is good at spreading a post, not at keeping a current menu, stock, buyer confirmation and status in one place.</p>
+      <p class="lede">A busy society group spreads a post, but cannot combine monthly demand, compare landed supplier prices, or keep each order and delivery status current.</p>
       <div class="grid three">
         <div class="card"><p class="metric">01</p><h3>Resident</h3><p>“Is this still available?” A buried post or old preview cannot answer reliably; checking another app for every update adds friction.</p></div>
         <div class="card sand"><p class="metric">02</p><h3>Seller</h3><p>“Two please” in a chat is not a recorded order. Capacity, cutoff and delivery details need manual reconciliation.</p></div>
-        <div class="card green"><p class="metric">03</p><h3>Wooru's opportunity</h3><p>Let chat help residents reach live Wooru records; keep ordering, history and status in Wooru.</p></div>
+        <div class="card green"><p class="metric">03</p><h3>Wooru's opportunity</h3><p>Keep food orders in Wooru today; explore society buying circles with explicit prices and opt-in tomorrow.</p></div>
       </div>
       <p class="callout">Modern convenience should not mean an AI guess or a silent group scrape. Choice, current data and a clear confirmation matter more.</p>
       <p class="small presenter-detail">This is a qualitative problem framing, not a measured market-size claim. Wooru already has food menus, server-checked pre-orders and My Orders in the app; the chat doorway is proposed.</p>
@@ -270,7 +279,7 @@
           <tr><td>Helps a business manage its own chats, catalog and responses.</td><td>Residents find participating sellers and structured offerings <b>within their own society</b>; sellers own their listings.</td></tr>
           <tr><td>Can answer questions or share a product link; the conversation remains the main surface.</td><td>A linked Wooru account and live records ground cross-seller food discovery, with <b>the app and chat referring to the same order</b>.</td></tr>
           <tr><td>A message such as “two please” still needs order handling.</td><td>For food, Wooru's server-checked pre-order tracks <b>item, price, cutoff and capacity</b> after explicit confirmation.</td></tr>
-          <tr><td>Community groups spread posts, but old offers get buried.</td><td>A seller can approve a Wooru menu and a person can share its link back. <b>No automatic existing-group sync.</b></td></tr>
+          <tr><td>Separate sellers cannot easily combine a society's recurring demand.</td><td>A proposed buying circle lets society leads compare supplier quotes and residents confirm a <b>final landed price</b>. No automatic existing-group sync.</td></tr>
         </tbody>
       </table></div>
       <div class="grid three presenter-detail">
@@ -278,7 +287,7 @@
         <div class="card"><h3>For sellers</h3><p>Publish once in Wooru; choose when to share a listing into an existing group. No group listener or bulk auto-posting.</p></div>
         <div class="card"><h3>For leads</h3><p>Moderate community listings with authorized tools and see aggregate activity, not private group or buyer conversations.</p></div>
       </div>
-      <p class="small presenter-detail">This compares common inbox/catalog workflows, not every competing product. Wooru membership is currently based on a join code; account linking does not prove real-world identity. Resale-product drafting and WhatsApp sharing here are proposals, not shipped features.</p>
+      <p class="small presenter-detail">This compares common inbox/catalog workflows, not every competing product. Wooru membership is currently based on a join code; account linking does not prove real-world identity. Wholesale sourcing, buying circles, resale-product drafting and WhatsApp sharing are proposals, not shipped features.</p>
     </section>
 
     <section class="slide long" id="resident" data-title="Resident journey">
@@ -332,13 +341,53 @@
       <noscript>Existing society groups cannot sync automatically. A seller or authorized moderator submits menu details with permission; the seller approves the Wooru draft. To share back, a person chooses the WhatsApp group and presses Send.</noscript>
     </section>
 
+    <section class="slide long" id="collective" data-title="Community buying concept">
+      <p class="kicker">07 / BUY TOGETHER · FUTURE CONCEPT</p>
+      <h2>One demand pool. A price residents can choose.</h2>
+      <div class="role-boards">
+        <div class="role-frame">
+          <h3>Resident · optional monthly essentials circle</h3>
+          <p class="small">Interest is not an order. Confirm only after the supplier's final price is shown.</p>
+          <div class="app" aria-label="Illustrative resident buying circle screen">
+            <div class="ui-screen">
+              <div class="ui-header"><b>Monthly essentials</b><small>Green Meadows · proposed</small></div>
+              <div class="ui-content">
+                <div class="ui-banner"><b>Rice · interest gathering</b>Society combines quantities; no payment or order yet.</div>
+                <div class="app-tile"><b>Compare the final offer</b><small>Same grade and quantity · supplier price + packing + transport.</small></div>
+                <div class="app-tile highlight"><b>Choose fulfillment, then confirm</b><small>Society pickup, or a separately quoted doorstep option.</small></div>
+              </div>
+              <div class="ui-tabs"><span>Help</span><span>Saved</span><b>MCN</b><span>Community</span><span>Profile</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="role-frame">
+          <h3>Society lead and approved supplier</h3>
+          <p class="small">A wholesaler or farmer group confirms its quote; sponsorship never selects the winner.</p>
+          <div class="app" aria-label="Illustrative supplier selection and quote screen">
+            <div class="ui-screen">
+              <div class="ui-header"><b>Separate sourcing views</b><small>Green Meadows · proposed</small></div>
+              <div class="ui-content">
+                <span class="ui-label">Society lead workspace</span>
+                <div class="app-tile"><b>Compare and select an offer</b><small>Request quotes for grade, quantity, packing and delivery; record why.</small></div>
+                <span class="ui-label">Supplier workspace · own quote only</span>
+                <div class="app-tile highlight"><b>Confirm capacity and terms</b><small>Wholesaler or farmer approves the quote, even if entered with assistance.</small></div>
+              </div>
+              <div class="ui-tabs"><b>Quotes</b><span>Offers</span><span>Fulfillment</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="small presenter-detail">Illustrative workflow only. The society may request two or more comparable quotes and disclose selection conflicts; residents indicate interest before a fixed offer, then explicitly confirm or decline. If minimum demand is not met or the price changes, no silent order is placed. A supplier must agree to household-level billing and fulfillment at the quoted aggregate price; Wooru holds no stock or resident funds. Packing, transport, optional last-mile delivery, cancellations, quality complaints and replacement terms affect net savings. A low farm-gate price is not the final price. Delivery API integration requires validated multi-stop economics and a provider quote; it is not shown as shipped.</p>
+      <noscript>Proposed buying circle: residents express non-binding interest; a society lead compares approved wholesale or farmer quotes; the supplier confirms capacity; residents review the final landed price and select pickup or separately priced optional delivery before confirming.</noscript>
+    </section>
+
     <section class="slide long" id="operations" data-title="Community and platform views">
-      <p class="kicker">07 / TWO DASHBOARDS · FUTURE CONCEPTS</p>
+      <p class="kicker">08 / TWO DASHBOARDS · FUTURE CONCEPTS</p>
       <h2>Community visibility, without private conversations.</h2>
       <div class="role-boards">
         <div class="role-frame">
           <h3>Society president / vice president</h3>
-          <p class="small">Green Meadows: 7 → 8 food orders; review reported public menus, not buyer chats.</p>
+          <p class="small">7 → 8 food orders; proposed sourcing and public-listing oversight, not buyer chats.</p>
           <div class="app" id="lead-preview" aria-label="Illustrative society lead app screen"></div>
         </div>
         <div class="role-frame">
@@ -347,12 +396,12 @@
           <div class="app" id="platform-preview" aria-label="Illustrative platform admin console"></div>
         </div>
       </div>
-      <p class="small presenter-detail">The same synthetic order changes Green Meadows 7 → 8 and the platform total 114 → 115. A society lead sees aggregate community activity and authorized public-listing moderation; platform operations sees cross-community aggregate and delivery-health signals. Neither proposed panel grants access to private chats or buyer orders. The existing app and admin console do not ship these exact panels.</p>
+      <p class="small presenter-detail">The same synthetic order changes Green Meadows 7 → 8 and the platform total 114 → 115. Proposed buying circles would add approved suppliers, comparable quotes and aggregate participation to the society lead's view, not buyer conversations. Platform operations sees cross-community aggregate and delivery-health signals. Neither proposed panel grants access to private chats or unrelated buyer orders. The existing app and admin console do not ship these exact panels.</p>
       <noscript>Illustrative future views: community leads see their society's aggregate orders and public menu reports; platform admins see cross-community totals and delivery health.</noscript>
     </section>
 
     <section class="slide long" id="trust" data-title="Feasibility and trust">
-      <p class="kicker">08 / OFFICIAL ROUTE AND TRUST</p>
+      <p class="kicker">09 / OPTIONAL CHAT AND TRUST</p>
       <h2>One-to-one API. Human group sharing. Wooru order rules.</h2>
       <div class="flow" aria-label="Proposed one-to-one message flow">
         <div><b>Resident</b>Messages Wooru's number</div><span aria-hidden="true">→</span>
@@ -373,17 +422,35 @@
         <div class="card sand"><h3>Cannot sync groups</h3><p>Coexistence is eligible 1:1 chat only. The Groups API does not connect to existing large society groups. A person chooses and sends each share.</p></div>
         <div class="card"><h3>Keep trust</h3><p>Seller approval, scoped identity, webhook retries, opt-outs and server-side order checks. AI never invents an order.</p></div>
       </div>
-      <p class="small presenter-detail">Food orders need linked identity, server-side price/cutoff/capacity checks and explicit buyer confirmation. Existing <code>place_mcn_preorder</code> relies on the signed-in user; a service-role key alone cannot impersonate the resident. Verify provider onboarding, template policy, retries and data-processing terms before implementation. Other business listings are contact-only today.</p>
+      <p class="small presenter-detail">Buying circles can be app-first; paid WhatsApp automation is optional. Food orders need linked identity, server-side price/cutoff/capacity checks and explicit buyer confirmation. Existing <code>place_mcn_preorder</code> relies on the signed-in user; a service-role key alone cannot impersonate the resident. Verify provider onboarding, template policy, retries and data-processing terms before implementation. Other business listings are contact-only today. Society-selected suppliers and sponsors require separate approvals and a disclosed conflict policy.</p>
+    </section>
+
+    <section class="slide" id="income" data-title="Where Wooru earns">
+      <p class="kicker">10 / BUSINESS MODEL · PROPOSED, NOT CONTRACTED</p>
+      <h2>Residents and suppliers pay no Wooru fee.</h2>
+      <p class="lede">A sponsorship belongs to the association, not Wooru. Wooru earns only when the association signs and pays a separate service agreement.</p>
+      <div class="flow" aria-label="Proposed sponsor to association to Wooru funding flow">
+        <div><b>Sponsor</b>Pays the association directly for a labelled, approved placement.</div><span aria-hidden="true">→</span>
+        <div><b>Association</b>Retains its agreed share; separately contracts for Wooru's platform and support.</div><span aria-hidden="true">→</span>
+        <div><b>Wooru</b>Invoices the association for a disclosed service fee, not a grocery markup.</div>
+      </div>
+      <div class="grid three">
+        <div class="card green"><h3>Primary · society contract</h3><p>Sign only when sponsor funding and the society's approval can cover the fee.</p></div>
+        <div class="card"><h3>Later · enterprise contract</h3><p>A property operator may pay for proven multi-community tools. No buyer or price is validated.</p></div>
+        <div class="card"><h3>Later · managed support</h3><p>Separately scope human procurement or campaign assistance; price its staffing cost.</p></div>
+      </div>
+      <p class="callout">Residents pay the supplier for goods and any chosen delivery. No hidden item margin, personal-data sale or sponsor-controlled supplier ranking.</p>
+      <p class="small presenter-detail">These are income hypotheses, not current contracts or forecasts. Sponsored placements and procurement decisions need separate approvals, comparable landed-price quotes and disclosed conflicts. A single society may not support meaningful ad spend; a multi-society program is a later opportunity, not assumed revenue. Funding gate: contracted association fee must exceed actual platform, supplier support, communications, sales and operating costs with a sustainable margin. Consumer gate: the final price including packing, transport and any doorstep option must beat a comparable local offer without relying on an undisclosed subsidy. A delivery fee is a separately disclosed fulfillment cost, not Wooru income; if residents must pay no delivery surcharge, the supplier, sponsor or association funds it explicitly. Illustrative arithmetic only: 40 households × 10 kg of rice at ₹52/kg plus ₹1,200 shared transport is ₹55/kg at pickup; against a comparable hypothetical ₹65/kg, each household saves ₹100 before any doorstep delivery charge. No real supplier quote or sponsor commitment is implied.</p>
     </section>
 
     <section class="slide long" id="economics" data-title="Pilot economics">
-      <p class="eyebrow">09 / PILOT ECONOMICS · ILLUSTRATIVE</p>
-      <h2>Start with one number. Measure cost per completed order.</h2>
-      <p class="lede">One community number, not one subscription per seller. Get a written quote before choosing a provider.</p>
+      <p class="eyebrow">11 / OPTIONAL CHAT COST · ILLUSTRATIVE</p>
+      <h2>Optional chat has costs. Income needs a contract.</h2>
+      <p class="lede">This one-number scenario is neither a quote nor the full cost of Wooru or a community buying circle.</p>
       <div class="grid three">
         <div class="card tint"><p class="metric">₹10,330</p><h3>Illustrative monthly pilot</h3><p class="small">One Wooru number via 360dialog at direct list price, modeled traffic and ₹4,500 operating allowance.</p></div>
-        <div class="card"><p class="metric">1 number</p><h3>For the first society</h3><p class="small">A few food sellers can participate without connecting their own Business numbers.</p></div>
-        <div class="card warnbox"><h3>Not a vendor quote</h3><p class="small">Meta categories, volumes, FX, taxes and actual provider charges must be validated. Seller-number expansion is later.</p></div>
+        <div class="card"><p class="metric">App first</p><h3>For buying circles</h3><p class="small">Prove resident savings and supplier fulfillment without assuming a paid chat channel.</p></div>
+        <div class="card warnbox"><h3>Funding gate</h3><p class="small">A signed association fee must cover actual Wooru costs and margin. Supplier, delivery and sponsor quotes remain unverified.</p></div>
       </div>
       <p class="small presenter-detail">The provider comparison covers official Cloud API options. Seller-number Coexistence is a later eligibility question, not a cost or onboarding requirement for the Wooru-owned pilot.</p>
       <div class="table-wrap provider-matrix presenter-detail"><table>
@@ -463,33 +530,34 @@
       </div></details>
       </div></details>
       <p class="sources presenter-detail">Sources: <a href="https://360dialog.com/pricing" target="_blank" rel="noopener noreferrer">360dialog pricing</a><a href="https://www.wati.io/pricing/" target="_blank" rel="noopener noreferrer">Wati pricing</a><a href="https://www.twilio.com/en-us/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Twilio pricing</a><a href="https://www.twilio.com/docs/whatsapp/self-sign-up" target="_blank" rel="noopener noreferrer">Twilio sign-up</a><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Meta pricing</a> · list prices checked 12 Nov 2026</p>
-      <p class="print-note">Illustrative one-number scenario, not a vendor quote. The HTML has editable assumptions and a separate optional seller-number expansion model.</p>
+      <p class="print-note">Optional WhatsApp cost only, not a total business budget or vendor quote. The HTML has editable assumptions and a separate optional seller-number expansion model.</p>
     </section>
 
     <section class="slide long" id="decision" data-title="Pilot decision">
-      <p class="kicker">10 / DECISION AND PROOF</p>
-      <h2>Prove one community food journey before widening the channel.</h2>
+      <p class="kicker">12 / TEAM DECISION AND PROOF</p>
+      <h2>Prove the savings and the payer before building the network.</h2>
       <div class="grid three">
-        <div class="card dark"><h3>One narrow pilot</h3><p>One society, 2–3 food sellers, one Wooru-owned number. Link residents, browse live menus, confirm a pre-order and check its status.</p></div>
-        <div class="card"><h3>Go / no-go gates</h3><p>Verify official number onboarding and written costs; identity and opt-in; seller consent; failed-order UX and privacy review.</p></div>
-        <div class="card sand"><h3>Measure real value</h3><p>Completed and repeat orders, discovery across sellers, seller time saved, opt-outs, failed replies and cost per completed order.</p></div>
+        <div class="card dark"><h3>One manual buying-circle test</h3><p>One society, one essentials basket, two comparable supplier quotes and pickup first. Supplier invoices each household.</p></div>
+        <div class="card"><h3>Go / no-go gates</h3><p>Real net savings, reliable fulfillment, resident opt-in and a sponsor-funded association contract that covers Wooru's costs.</p></div>
+        <div class="card sand"><h3>Measure real value</h3><p>Repeat participation, fulfilled orders, complaints, supplier performance, sponsor renewal and actual cost per community.</p></div>
       </div>
-      <p class="callout">Next: validate with residents, sellers and leads. Add human group-sharing experiments, seller-number Coexistence or other commerce only after this journey works.</p>
+      <p class="callout">Next: validate the idea, not build it. Add produce, delivery APIs, AI or paid WhatsApp only when savings, operations and funding are proven.</p>
       <div class="table-wrap presenter-detail"><table>
-        <thead><tr><th>Cost driver</th><th>Question to answer in the pilot</th></tr></thead>
+        <thead><tr><th>Decision area</th><th>Question to answer before implementation</th></tr></thead>
         <tbody>
-          <tr><td>Official one-to-one messaging</td><td>Meta message categories, templates, number/provider charges and changing free tiers; what is the cost per completed order? A person sharing a link to a group is not an API-initiated group message.</td></tr>
-          <tr><td>AI assistance</td><td>How often does it actually improve discovery or save seller time versus buttons and search? What does each assisted conversation cost?</td></tr>
-          <tr><td>Engineering and trust</td><td>Identity, retries, seller approval, duplicate drafts, moderation, data processing, support and recovery; which expenses recur as sellers grow?</td></tr>
+          <tr><td>Buying circle</td><td>Does a comparable essentials basket cost less after packing, transport and quality issues? Can a supplier invoice and fulfill household orders at the aggregate price?</td></tr>
+          <tr><td>Income</td><td>Will a sponsor fund the association, and will the association sign a separate Wooru contract? Does the fee cover the full operating cost rather than just the illustrative chat model?</td></tr>
+          <tr><td>Optional delivery</td><td>Does one multi-stop route preserve net savings? Who contracts the courier, funds doorstep service, owns failed delivery and resolves refunds?</td></tr>
+          <tr><td>Optional chat and AI</td><td>Only after app-first value is proven: verify official messaging eligibility, opt-in, privacy, costs per completed order, and whether grounded assistance beats simple search or buttons.</td></tr>
         </tbody>
       </table></div>
-      <p class="source presenter-detail">Product grounding: <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/features.md">Wooru feature reference</a> and <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/architecture.md">architecture reference</a>. Official feasibility, sources and editable cost assumptions are on slides 8 and 9 of this deck. No WhatsApp or AI integration is live.</p>
+      <p class="source presenter-detail">Product grounding: <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/features.md">Wooru feature reference</a> and <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/architecture.md">architecture reference</a>. WhatsApp feasibility and editable cost assumptions are on slides 9 and 11. No buying-circle, supplier, sponsor, delivery API, WhatsApp or AI integration is live.</p>
     </section>
   </main>
   <footer class="bottom">
     <button id="prev" type="button" disabled>Previous</button>
-    <span id="counter" class="counter" aria-live="polite">1 / 10</span>
-    <progress id="progress" value="1" max="10" aria-label="Presentation progress"></progress>
+    <span id="counter" class="counter" aria-live="polite">1 / 12</span>
+    <progress id="progress" value="1" max="12" aria-label="Presentation progress"></progress>
     <button id="next" type="button" disabled>Next</button>
     <span class="small">← → / Home / End</span>
   </footer>
@@ -939,7 +1007,7 @@
       document.getElementById('progress').value = active + 1;
       document.getElementById('prev').disabled = active === 0;
       document.getElementById('next').disabled = active === slides.length - 1;
-      document.title = `Wooru + WhatsApp | ${slides[active].dataset.title}`;
+      document.title = `Wooru | ${slides[active].dataset.title}`;
       history.replaceState(null, '', '#' + slides[active].id);
       if (reading) slides[active].scrollIntoView({ block: 'start' });
       else {
