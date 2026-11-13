@@ -11,6 +11,7 @@ body { background: #EDEDE8; color: var(--deck-ink); }
 .top, .toolbar { padding: 9px max(24px, calc((100vw - 1280px) / 2)); }
 .bottom, .footer { padding: 8px max(24px, calc((100vw - 1280px) / 2)); }
 .brand { letter-spacing: -.055em; }
+.archive-link { font-size: 13px; white-space: nowrap; color: var(--deck-accent); }
 .top button, .toolbar button, .bottom button, .footer button,
 .top select, .toolbar select { border-color: var(--deck-line); border-radius: 7px; }
 .bottom progress, .footer progress { height: 3px; }
@@ -41,6 +42,41 @@ body { background: #EDEDE8; color: var(--deck-ink); }
   border-radius: 6px; font-size: 12px; padding: 5px 9px;
 }
 .slide .tabs button[aria-selected="true"] { background: var(--deck-green); }
+.slide .card.tint { background: #E1F5EE; }
+.slide .card.warnbox { background: #FAEEDA; }
+.slide .role-boards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.slide .role-frame { min-width: 0; }
+.slide .role-frame h3 { margin-bottom: 4px; }
+.slide .role-frame > .small { min-height: 42px; }
+.slide .role-frame .app { width: 100%; height: 330px; min-height: 0; }
+.slide .role-frame .ui-screen { width: 100%; }
+.slide .field-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.slide fieldset { border: 1px solid var(--deck-line); border-radius: 9px; padding: 16px; margin: 14px 0; min-width: 0; }
+.slide legend { color: var(--deck-green); font-weight: 500; padding: 0 8px; }
+.slide .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.slide .field label { font-size: 13px; font-weight: 500; }
+.slide .field input, .slide .field select {
+  width: 100%; padding: 7px 12px; border: 1px solid var(--deck-line);
+  border-radius: 7px; color: var(--deck-green); font: inherit; background: #fff;
+}
+.slide .field small { font-size: 12px; color: #596964; }
+.slide .field .error { color: #A32D2D; font-size: 12px; min-height: 16px; }
+.slide [aria-invalid="true"] { border-color: #A32D2D; background: #FCEBEB; }
+.slide .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
+.slide .result-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.slide .result .metric { font-size: 28px; }
+.slide .breakdown { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; font-size: 13px; margin: 12px 0; }
+.slide .breakdown dt, .slide .breakdown dd { margin: 0; }
+.slide .breakdown dd { font-variant-numeric: tabular-nums; text-align: right; }
+.slide #calc-summary { font-size: 14px; padding: 14px; background: #F0EDE3; border-radius: 9px; margin-bottom: 14px; }
+.slide #calc-summary.invalid { color: #A32D2D; background: #FCEBEB; }
+.slide .cost-bar { height: 7px; background: #F0EDE3; border-radius: 8px; overflow: hidden; margin: 10px 0; }
+.slide .cost-bar span { display: block; height: 100%; background: var(--deck-accent); }
+.slide details { border-bottom: 1px solid var(--deck-line); padding: 12px 0; }
+.slide summary { cursor: pointer; font-weight: 500; color: var(--deck-green); }
+.slide details > div { padding: 12px 0 0; }
+.slide details.calc-panel { border: 1px solid var(--deck-line); border-radius: 9px; padding: 12px 16px; background: #fff; margin-top: 10px; }
+.slide .print-value, .slide .print-note { display: none; }
 .presenter-detail { display: none; }
 .js:not(.reading):not(.read-all) main {
   display: flex; align-items: center; justify-content: center;
@@ -92,10 +128,14 @@ body { background: #EDEDE8; color: var(--deck-ink); }
   grid-template-columns: minmax(230px, .75fr) minmax(0, 2fr);
 }
 @media screen and (max-height: 780px) and (min-width: 901px) {
+  .js:not(.reading):not(.read-all) #vision h1 { font-size: 46px; }
+  .js:not(.reading):not(.read-all) #vision .lede { font-size: 17px; }
+  .js:not(.reading):not(.read-all) #vision .grid { margin: 8px 0; }
   .js:not(.reading):not(.read-all) .slide .phone,
   .js:not(.reading):not(.read-all) .slide .app,
   .js:not(.reading):not(.read-all) .slide .wooru { height: 290px; }
   .js:not(.reading):not(.read-all) .slide .steps { margin: 14px 0; }
+  .js:not(.reading):not(.read-all) #operations .role-frame .app { height: 240px; }
 }
 @media (max-width: 900px) {
   .js:not(.reading):not(.read-all) main { display: block; padding: 0; }
@@ -121,17 +161,20 @@ body { background: #EDEDE8; color: var(--deck-ink); }
   .js:not(.reading):not(.read-all) .slide .bridge-line,
   .js:not(.reading):not(.read-all) .slide .conn-line { flex: 1; }
   .reading .slide, .read-all .slide { padding: 28px; }
+  .slide .role-boards { grid-template-columns: 1fr; }
+  .slide .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
   .top, .toolbar, .bottom, .footer { padding: 9px 14px; }
   .slide h1 { font-size: 42px; }
   .slide h2 { font-size: 30px; }
   .reading .slide, .read-all .slide { width: 100%; margin: 0; border: 0; padding: 26px 20px; }
+  .slide .field-grid, .slide .result-grid { grid-template-columns: 1fr; }
 }
 @media print {
   @page { size: 320mm 180mm; margin: 0; }
   html, body { width: 320mm; margin: 0; background: #fff !important; }
-  .top, .toolbar, .bottom, .footer, .status, .error { display: none !important; }
+  .top, .toolbar, .bottom, .footer, .status, .error, .archive-link { display: none !important; }
   main { display: block !important; overflow: visible !important; padding: 0 !important; }
   .slide, .js:not(.reading):not(.read-all) .slide, .reading .slide, .read-all .slide {
     display: block !important; box-sizing: border-box;
@@ -164,5 +207,10 @@ body { background: #EDEDE8; color: var(--deck-ink); }
   .slide .arch { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; }
   .slide .scene-caption, .slide .scene-cap { font-size: 12px; }
   .slide .phone, .slide .app, .slide .wooru, .slide .card { break-inside: avoid; }
+  .slide .role-boards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .slide .role-frame .app { height: 88mm !important; }
+  .slide .role-frame > .small { min-height: 0; }
+  .slide details.calc-panel { display: none !important; }
+  .slide .print-note { display: block; }
   a::after { display: none; }
 }
