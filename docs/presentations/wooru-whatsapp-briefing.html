@@ -813,7 +813,7 @@
           <p class="kicker">07 / MAKE A WISH · PROPOSED CONCEPT</p>
           <h2>One wish. One demand pool. A price residents choose.</h2>
           <ul>
-            <li>A resident makes a wish; neighbours tap “Me too.”</li>
+            <li>A resident wishes for groceries, food or a service; neighbours tap “Me too.”</li>
             <li>At minimum demand the lead compares approved supplier quotes.</li>
             <li>Each household confirms only the final landed price.</li>
           </ul>
@@ -1588,7 +1588,8 @@
     function residentBuyScreen() {
       const delivery = buyingFulfillment === 'delivery';
       if (buyStep === 0) return appScreen('Make a wish', 'Green Meadows · ask once, buy together',
-        `<div class="wish-hero">${icon('wish')}<b>What should the community buy together?</b><small>Neighbours can join your wish. Nothing is ordered until you confirm a final price.</small></div>` +
+        `<div class="wish-hero">${icon('wish')}<b>Wish for groceries, food or a service</b></div>` +
+        `<span class="ui-label">Wish type</span><div class="wish-chips"><b>Groceries</b><span>Food</span><span>Services</span></div>` +
         `<span class="ui-label">I wish for</span><div class="wish-field">Sona masoori rice · same grade</div>` +
         `<span class="ui-label">How much, every month</span><div class="wish-chips"><span>5 kg</span><b>10 kg</b><span>25 kg</span></div>` +
         `<button type="button" class="ui-action" data-buy-go="1">${icon('wish')}Post wish</button>`, 'MCN');
@@ -1616,8 +1617,9 @@
     function leadBuyScreen() {
       if (buyStep <= 1) return appScreen('Community wishes', 'Green Meadows · society lead',
         (buyStep === 1 ? tile('New · Sona masoori rice · 10 kg', '4 households · 40 kg · minimum 30', true) : '') +
-        tile('Organic vegetable box', '21 households · below minimum') +
-        tile('Weekend car wash', '12 households · below minimum') +
+        tile('Food · home-chef biryani', '26 households · below minimum') +
+        tile('Food · Diwali sweets box', '18 households · below minimum') +
+        tile('Groceries · organic vegetable box', '21 households · below minimum') +
         `<div class="buy-saving">Leads see wish totals, never private chats.</div>`, 'Community');
       if (buyStep === 2) return appScreen('Community wishes', 'Green Meadows · society lead',
         `<div class="ui-banner"><b>Minimum reached · 40 households</b>400 kg rice, same grade, forty 10 kg packs.</div>` +
