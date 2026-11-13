@@ -1365,7 +1365,7 @@
     document.documentElement.classList.add('js');
     document.querySelectorAll('.top button, .top select, .bottom button').forEach(control => { control.disabled = false; });
     const fitSlide = () => {
-      const scale = Math.min(1, (deck.clientWidth - 32) / 1280, (deck.clientHeight - 32) / 720);
+      const scale = Math.min((deck.clientWidth - 32) / 1280, (deck.clientHeight - 32) / 720);
       slideFrame.style.setProperty('--slide-scale', String(Math.max(0, scale)));
     };
     new ResizeObserver(fitSlide).observe(deck);
