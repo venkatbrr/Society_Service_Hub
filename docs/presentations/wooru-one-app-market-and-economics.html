@@ -171,20 +171,28 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .econ table{margin-top:18px}.econ td,.econ tbody th{font-variant-numeric:tabular-nums;font-size:14px}
 .econ td.neg{color:var(--warn)}.econ td.pos{color:var(--ok)}.econ tr.even th,.econ tr.even td{font-weight:650}
 
-/* 10 Decision */
-.decide{display:grid;grid-template-columns:400px 1fr;gap:48px}
-.ask{border-top:1px solid var(--ink)}
-.ask li{display:grid;grid-template-columns:24px 1fr;padding:16px 0;border-bottom:1px solid var(--line);font-size:15px}
-.ask ul{margin:0;padding:0;list-style:none}.ask li:before{content:"";width:12px;height:12px;margin-top:4px;border:1.5px solid var(--ink);border-radius:2px}
-.ask li small{display:block;color:var(--ink3);font-size:12.5px}
-.gantt{border-top:1px solid var(--ink);padding-top:12px}
-.g-scale{display:grid;grid-template-columns:110px repeat(3,1fr);font-size:11.5px;color:var(--ink3);margin-bottom:6px}
-.g-row{display:grid;grid-template-columns:110px 1fr;align-items:center;padding:8px 0}
-.g-row b{font-size:14px;font-weight:600}
-.g-track{position:relative;height:34px;background:var(--tint);border-radius:4px}
-.g-bar{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--blue);font-size:13px;color:#fff;padding:8px 10px;white-space:nowrap;overflow:hidden}
-.measures{margin-top:30px}.measures td,.measures tbody th{padding-top:13px;padding-bottom:13px}
-.measures th:first-child{width:46%}.measures td,.measures tbody th{font-size:14px}
+/* 10 Team plan */
+.sec-h{font-size:11.5px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.plan{display:grid;grid-template-columns:1fr 340px;gap:40px}
+.gantt{border-top:1px solid var(--ink);padding-top:8px}
+.g-scale{display:grid;grid-template-columns:150px repeat(3,1fr);font-size:11.5px;color:var(--ink3);margin-bottom:2px}
+.g-row{display:grid;grid-template-columns:150px 1fr;align-items:center;padding:4px 0}
+.g-row b{display:block;font-size:14px;font-weight:600;line-height:1.2}.g-row small{display:block;font-size:11.5px;color:var(--ink3)}
+.g-track{position:relative;height:32px;border-radius:4px;background:linear-gradient(90deg,transparent calc(33.333% - 1px),#fff calc(33.333% - 1px) 33.333%,transparent 33.333% calc(66.666% - 1px),#fff calc(66.666% - 1px) 66.666%,transparent 66.666%),var(--tint)}
+.g-bar{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--blue);font-size:12.5px;color:#fff;padding:7px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-bar.prep{background:var(--blue-tint);color:var(--blue)}.g-bar.wa{background:var(--ok)}.g-bar.wa.prep{background:var(--ok-tint);color:var(--ok)}
+.g-track.gates{background:none;border-top:1px dashed var(--line2);border-radius:0;height:30px}
+.gate{position:absolute;top:0;transform:translateX(-100%);padding:4px 12px 0 0;font-size:11.5px;font-weight:600;color:var(--ink);white-space:nowrap;text-align:right;line-height:1.2}
+.gate:after{content:"";position:absolute;right:-5px;top:-5px;width:9px;height:9px;background:var(--ink);transform:rotate(45deg)}
+.gate small{display:block;font-weight:400;color:var(--ink3)}
+.ship{border-top:1px solid var(--ink)}.ship ul{margin:0;padding:0;list-style:none}
+.ship li{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.3}
+.ship .later{margin-top:8px;font-size:12.5px;color:var(--ink3)}.ship .later b{color:var(--ink2);font-weight:600}
+.wins{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink)}
+.wins>div{padding:10px 18px 0 0}.wins>div+div{padding-left:18px;border-left:1px solid var(--line)}
+.wins strong{display:block;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--blue);line-height:1.1}
+.wins p{font-size:13.5px;margin-top:3px;line-height:1.3}.wins small{display:block;font-size:11.5px;color:var(--ink3);margin-top:3px}
+.wins-wrap{margin-top:22px}
 
 /* Read mode, no-JS and print */
 .read-mode main{display:block;overflow:visible}.js body.read-mode{height:auto;min-height:100dvh;overflow:auto}
@@ -239,7 +247,7 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
   <div class="contents">
     <div><span>02–04</span>Market: resident complaints, Indian competitors, examples abroad</div>
     <div><span>05–07</span>Product: what exists, what we propose, in what order</div>
-    <div><span>08–10</span>Business: who pays, break-even, the 90-day pilot we are asking for</div>
+    <div><span>08–10</span>Business: who pays, break-even, and our team’s 90-day plan</div>
   </div>
   <div class="folio"><span>Wooru</span><span>01 / 10</span></div>
 </div>
@@ -505,35 +513,48 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
 
 <!-- 10 -->
 <section class="slide" id="slide-10" aria-labelledby="t10">
-<div class="label"><b>10</b>Decision</div>
-<h2 id="t10">We are asking for approval to run a 90-day pilot in 3–5 societies</h2>
-<p class="dek">A learning plan, not a delivery commitment. Expansion is decided on day 90 from the measures below.</p>
-<div class="body decide">
-<div class="ask">
-  <ul>
-    <li><div>Approve discovery and pilot scoping<small>Engineering estimate to follow in week 2</small></div></li>
-    <li><div>Name 3–5 pilot societies<small>Mix of sizes; at least one with paid staff</small></div></li>
-    <li><div>Agree an office-side owner in each society<small>The person who closes issues</small></div></li>
-    <li><div>Set the pilot budget<small>Still to be agreed</small></div></li>
-  </ul>
-</div>
+<div class="label"><b>10</b>Team plan · next 90 days</div>
+<h2 id="t10">How we build it, what we ship, and how we know it worked</h2>
+<div class="body">
+<div class="plan">
 <div>
+  <p class="sec-h">How we deliver · four workstreams, 3–5 pilot societies</p>
   <div class="gantt">
     <div class="g-scale"><span></span><span>Days 1–30</span><span>31–60</span><span>61–90</span></div>
-    <div class="g-row"><b>Understand</b><div class="g-track"><div class="g-bar" style="left:0;width:33.333%">Interviews, baseline follow-ups</div></div></div>
-    <div class="g-row"><b>Pilot</b><div class="g-track"><div class="g-bar" style="left:33.333%;width:33.333%">Notices + issue tracking, staffed</div></div></div>
-    <div class="g-row"><b>Decide</b><div class="g-track"><div class="g-bar" style="left:66.666%;width:33.334%">Usage, cost, willingness to pay</div></div></div>
+    <div class="g-row"><div><b>Product &amp; research</b><small>interviews, measures</small></div><div class="g-track"><div class="g-bar prep" style="left:0;width:33.333%">Interviews · baseline follow-ups</div><div class="g-bar prep" style="left:66.666%;width:33.334%">Measure · scale-or-stop review</div></div></div>
+    <div class="g-row"><div><b>App engineering</b><small>Wooru app + backend</small></div><div class="g-track"><div class="g-bar prep" style="left:0;width:33.333%">Harden sign-in, alerts, funds</div><div class="g-bar" style="left:33.333%;width:50%">Ship notices + issue tracking</div></div></div>
+    <div class="g-row"><div><b>WhatsApp</b><small>one Wooru number</small></div><div class="g-track"><div class="g-bar wa prep" style="left:0;width:33.333%">Number, templates, opt-in</div><div class="g-bar wa" style="left:33.333%;width:66.667%">Two-way: report, ask, get status updates</div></div></div>
+    <div class="g-row"><div><b>Society onboarding</b><small>office owner per society</small></div><div class="g-track"><div class="g-bar prep" style="left:20%;width:30%">Onboard · train owners</div><div class="g-bar" style="left:50%;width:50%">Weekly check-ins · support log</div></div></div>
+    <div class="g-row"><div><b>Team gates</b><small>go / no-go</small></div><div class="g-track gates"><span class="gate" style="left:33.333%">Day 30<small>pilot ready</small></span><span class="gate" style="left:66.666%">Day 60<small>in daily use</small></span><span class="gate" style="left:100%">Day 90<small>scale or stop</small></span></div></div>
   </div>
-  <table class="measures">
-  <thead><tr><th scope="col">Measure</th><th scope="col">Working target, not a result</th></tr></thead>
-  <tbody>
-  <tr><th scope="row">Repeat follow-ups on similar issues</th><td>25% fewer than pre-pilot baseline</td></tr>
-  <tr><th scope="row">Support effort per society</th><td>Recorded weekly; sets the variable cost</td></tr>
-  <tr><th scope="row">Willingness to pay</th><td>Associations say yes at an agreed price</td></tr>
-  </tbody></table>
+</div>
+<div>
+  <p class="sec-h">What we ship in the pilot</p>
+  <div class="ship">
+  <ul>
+    <li>Reliable sign-in and alerts<span class="status s-have">Have · harden</span></li>
+    <li>Official notices with read counts<span class="status s-prop">New</span></li>
+    <li>Issues with a named owner and status<span class="status s-prop">New</span></li>
+    <li>Two-way WhatsApp on one Wooru number<span class="status s-prop">New</span></li>
+    <li>Privacy and contact choices<span class="status s-prop">New</span></li>
+    <li>Services, menus, events, funds ledger<span class="status s-have">Have</span></li>
+  </ul>
+  <p class="later"><b>Not in this pilot:</b> facility booking, polls, billing, visitor access. They come later, after the pilot proves demand.</p>
+</div>
+</div>
+</div>
+<div class="wins-wrap">
+  <p class="sec-h">How we will know it worked · working targets, not results</p>
+  <div class="wins">
+    <div><strong>25% fewer</strong><p>repeat follow-ups on similar issues</p><small>vs. the days 1–30 baseline</small></div>
+    <div><strong>1 working day</strong><p>to name an owner on every reported issue</p><small>from report to assigned</small></div>
+    <div><strong>Hours / society</strong><p>support effort, logged weekly</p><small>tests the ₹1,000 variable cost (slide 9)</small></div>
+    <div><strong>Yes to pay</strong><p>associations agree to ₹2,500 a month</p><small>tests the price behind break-even at 40</small></div>
+  </div>
 </div>
 </div>
 <div class="foot">
+<p class="so"><span>Day 90</span>All four met: expand toward 40 paying societies. Some met: fix and re-run. None: stop and rethink.</p>
 <div class="folio"><span>Wooru · leadership brief</span><span>10 / 10</span></div>
 </div>
 </section>
