@@ -80,6 +80,14 @@
     .read-mode main { display:block; overflow:visible; }
     .js body.read-mode { height:auto; overflow:auto; }
     .read-mode .slide { display:block; width:min(100% - 32px,1100px); height:auto; aspect-ratio:auto; margin:20px auto; border:1px solid var(--line); }
+    /* Presenting works without the Fullscreen API (iPhone Safari has none for pages) */
+    .present-controls { display:none; }
+    .presenting .top,.presenting .bottom,.presenting #status { display:none; }
+    .js body.presenting { height:100dvh; overflow:hidden; background:#fff; }
+    .js body.presenting main { overflow-y:auto; padding-bottom:56px; }
+    .presenting .present-controls { display:flex; gap:6px; align-items:center; position:fixed; z-index:20; right:max(10px,env(safe-area-inset-right)); bottom:max(10px,env(safe-area-inset-bottom)); padding:5px; border:1px solid var(--line); border-radius:9px; background:rgba(255,255,255,.94); }
+    .present-controls button { padding:5px 10px; font-size:13px; }
+    .present-controls span { min-width:52px; text-align:center; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
     @media(max-width:900px) {
       .js body { height:auto; min-height:100dvh; overflow:auto; }
       .js main { overflow:visible; }
@@ -413,6 +421,12 @@
     <span id="counter" class="counter" aria-live="polite">01 / 25</span>
     <button id="last" type="button">Last</button>
   </footer>
+  <div class="present-controls" aria-label="Full-screen controls">
+    <button id="present-previous" type="button" aria-label="Previous slide">‹</button>
+    <span id="present-counter"></span>
+    <button id="present-next" type="button" aria-label="Next slide">›</button>
+    <button id="present-exit" type="button" aria-label="Exit full screen">Exit</button>
+  </div>
   <script>
     (() => {
       document.documentElement.classList.add('js');
@@ -433,6 +447,7 @@
         });
         const label = `${String(index + 1).padStart(2, '0')} / ${slides.length}`;
         counter.textContent = label;
+        document.querySelector('#present-counter').textContent = label;
         progress.value = index + 1;
         previous.disabled = index === 0;
         next.disabled = index === slides.length - 1;
@@ -448,12 +463,42 @@
         if (document.body.classList.contains('read-mode')) slides[index].scrollIntoView();
       });
       document.querySelector('#print').addEventListener('click', () => window.print());
-      document.querySelector('#fullscreen').addEventListener('click', async () => {
-        try {
-          if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
-          else await document.exitFullscreen();
-        } catch { status.textContent = 'Full screen is unavailable in this browser.'; }
-      });
+      const root = document.documentElement;
+      const fullscreen = document.querySelector('#fullscreen');
+      const nativeFullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+      const isPresenting = () => document.body.classList.contains('presenting');
+      function setPresenting(on) {
+        document.body.classList.toggle('presenting', on);
+        fullscreen.textContent = on ? 'Exit full screen' : 'Full screen';
+      }
+      async function enterPresenting() {
+        if (document.body.classList.contains('read-mode')) document.querySelector('#read-toggle').click();
+        setPresenting(true);
+        const request = root.requestFullscreen || root.webkitRequestFullscreen;
+        if (request) {
+          try {
+            await request.call(root, {navigationUI: 'hide'});
+            if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape').catch(() => {});
+          } catch { /* Native full screen refused; the in-page mode still applies. */ }
+        }
+        document.querySelector('#present-exit').focus({preventScroll:true});
+      }
+      async function exitPresenting() {
+        setPresenting(false);
+        if (screen.orientation && screen.orientation.unlock) { try { screen.orientation.unlock(); } catch {} }
+        if (nativeFullscreenElement()) {
+          const exit = document.exitFullscreen || document.webkitExitFullscreen;
+          try { await exit.call(document); } catch {}
+        }
+        fullscreen.focus({preventScroll:true});
+      }
+      fullscreen.addEventListener('click', () => isPresenting() ? exitPresenting() : enterPresenting());
+      document.querySelector('#present-exit').addEventListener('click', exitPresenting);
+      document.querySelector('#present-previous').addEventListener('click', () => { show(index - 1); main.scrollTop = 0; });
+      document.querySelector('#present-next').addEventListener('click', () => { show(index + 1); main.scrollTop = 0; });
+      const onNativeChange = () => { if (!nativeFullscreenElement() && isPresenting()) exitPresenting(); };
+      document.addEventListener('fullscreenchange', onNativeChange);
+      document.addEventListener('webkitfullscreenchange', onNativeChange);
       document.querySelector('#read-toggle').addEventListener('click', event => {
         const enabled = document.body.classList.toggle('read-mode');
         event.currentTarget.setAttribute('aria-pressed', String(enabled));
@@ -462,6 +507,7 @@
         if (enabled) window.scrollTo(0, 0);
       });
       document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && isPresenting() && !nativeFullscreenElement()) { exitPresenting(); return; }
         if (document.body.classList.contains('read-mode') || event.altKey || event.ctrlKey || event.metaKey) return;
         if (['ArrowRight', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); show(index + 1); }
         if (['ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); show(index - 1); }

@@ -190,6 +190,15 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .read-mode main{display:block;overflow:visible}.js body.read-mode{height:auto;min-height:100dvh;overflow:auto}
 .read-mode .stage-wrap{height:var(--read-height);margin:20px auto;overflow:clip}.read-mode .stage{height:auto}
 .js body.read-mode .slide{display:flex}.js body.read-mode .slide:not(:last-child){margin-bottom:20px}.read-mode .navigation{display:none}
+/* Presenting: works without the Fullscreen API (iPhone Safari has none for pages) */
+.present-exit,.present-hint{display:none}
+.js body.presenting{background:#000;height:100dvh;height:100svh;overscroll-behavior:none;touch-action:pan-x pan-y}
+.presenting .toolbar,.presenting .navigation{display:none}
+.presenting main{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.presenting .present-exit{display:block;position:fixed;z-index:20;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));width:36px;height:36px;padding:0;border:0;border-radius:50%;background:rgba(20,24,31,.55);color:#fff;font-size:20px;line-height:36px;text-align:center}
+.presenting .present-counter{display:block;position:fixed;z-index:20;bottom:max(8px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);padding:3px 10px;border-radius:12px;background:rgba(20,24,31,.55);color:#fff;font-size:12px;font-variant-numeric:tabular-nums}
+.present-counter{display:none}
+@media(orientation:portrait){.presenting .present-hint{display:block;position:fixed;z-index:20;top:max(14px,env(safe-area-inset-top));left:14px;right:60px;color:#cfd4dc;font-size:13px;text-align:center}}
 html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:not(.js) .stage{width:1280px;height:auto;transform:none;margin:0 auto}html:not(.js) .slide{width:1280px;height:720px;margin:20px 0}
 @media(max-width:900px){
  .toolbar,.navigation{padding:8px 14px}.help-text{display:none}
@@ -216,6 +225,9 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
 <noscript><p style="padding:14px;background:#fff4ec">JavaScript is off. All ten slides are shown as one document.</p></noscript>
 <p id="status" class="sr-only" role="status" aria-live="polite"></p>
 <p id="feedback" class="feedback" role="status" hidden></p>
+<button type="button" class="present-exit" id="present-exit" aria-label="Exit full screen">×</button>
+<p class="present-hint" aria-hidden="true">Rotate your phone for a larger slide</p>
+<p class="present-counter" id="present-counter" aria-hidden="true"></p>
 <main><div class="stage-wrap"><div class="stage" id="deck">
 
 <!-- 1 -->
@@ -549,8 +561,9 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
   let touchStart = null;
   function resize() {
     const reading = document.body.classList.contains('read-mode');
-    const width = Math.max(1, (reading ? document.documentElement.clientWidth : main.clientWidth) - 32);
-    const height = Math.max(1, main.clientHeight - 32);
+    const gutter = document.body.classList.contains('presenting') ? 0 : 32;
+    const width = Math.max(1, (reading ? document.documentElement.clientWidth : main.clientWidth) - gutter);
+    const height = Math.max(1, main.clientHeight - gutter);
     const scale = reading ? Math.min(1, width / 1280) : Math.min(width / 1280, height / 720);
     document.documentElement.style.setProperty('--scale', String(scale));
     document.documentElement.style.setProperty('--read-height', `${(slides.length * 720 + (slides.length - 1) * 20) * scale}px`);
@@ -570,6 +583,7 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
     previous.disabled = active === 0;
     next.disabled = active === slides.length - 1;
     counter.textContent = String(active + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    presentCounter.textContent = counter.textContent;
     progress.value = active + 1;
     status.textContent = 'Slide ' + (active + 1) + ' of ' + slides.length + ': ' + slides[active].querySelector('h1,h2').textContent.trim();
     if (writeHash) history.replaceState(null, '', '#slide-' + (active + 1));
@@ -589,22 +603,52 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
     else window.scrollTo(0, 0);
   });
   document.querySelector('#print').addEventListener('click', () => window.print());
-  fullscreen.addEventListener('click', async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await document.documentElement.requestFullscreen();
-      feedback.hidden = true;
-    } catch (error) {
-      feedback.textContent = 'Full screen is unavailable: ' + error.message;
-      feedback.hidden = false;
-      status.textContent = feedback.textContent;
-    }
-  });
-  document.addEventListener('fullscreenchange', () => {
-    fullscreen.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+  const root = document.documentElement;
+  const presentExit = document.querySelector('#present-exit');
+  const presentCounter = document.querySelector('#present-counter');
+  const nativeFullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+  function setPresenting(on) {
+    document.body.classList.toggle('presenting', on);
+    fullscreen.textContent = on ? 'Exit full screen' : 'Full screen';
     resize();
+  }
+  async function enterPresenting() {
+    if (document.body.classList.contains('read-mode')) read.click();
+    feedback.hidden = true;
+    setPresenting(true);
+    const request = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (request) {
+      try {
+        await request.call(root, {navigationUI: 'hide'});
+        if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape').catch(() => {});
+      } catch (error) { /* Browser refused native full screen; the in-page mode still applies. */ }
+    }
+    presentExit.focus({preventScroll: true});
+  }
+  async function exitPresenting() {
+    setPresenting(false);
+    if (screen.orientation && screen.orientation.unlock) { try { screen.orientation.unlock(); } catch (error) {} }
+    if (nativeFullscreenElement()) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      try { await exit.call(document); } catch (error) {}
+    }
+    fullscreen.focus({preventScroll: true});
+  }
+  fullscreen.addEventListener('click', () => document.body.classList.contains('presenting') ? exitPresenting() : enterPresenting());
+  presentExit.addEventListener('click', exitPresenting);
+  const onNativeChange = () => {
+    // User left native full screen (Esc / Android back): leave the in-page mode too.
+    if (!nativeFullscreenElement() && document.body.classList.contains('presenting')) exitPresenting();
+    else resize();
+  };
+  document.addEventListener('fullscreenchange', onNativeChange);
+  document.addEventListener('webkitfullscreenchange', onNativeChange);
+  main.addEventListener('click', event => {
+    if (!document.body.classList.contains('presenting') || (event.target instanceof Element && event.target.closest('a,button'))) return;
+    show(active + (event.clientX < window.innerWidth / 3 ? -1 : 1));
   });
   document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.body.classList.contains('presenting') && !nativeFullscreenElement()) { exitPresenting(); return; }
     if (document.body.classList.contains('read-mode') || event.altKey || event.ctrlKey || event.metaKey || event.target.closest('input,select,textarea,[contenteditable="true"]')) return;
     if (event.key === 'ArrowRight' || event.key === 'PageDown') { event.preventDefault(); show(active + 1); }
     if (event.key === 'ArrowLeft' || event.key === 'PageUp') { event.preventDefault(); show(active - 1); }
