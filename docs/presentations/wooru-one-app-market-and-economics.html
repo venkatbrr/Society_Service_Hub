@@ -65,7 +65,7 @@ tbody tr:last-child>*{border-bottom:1px solid var(--line2)}
 .contents{margin-top:34px;border-top:1px solid var(--ink);max-width:600px}
 .contents div{display:grid;grid-template-columns:70px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}.contents span{color:var(--ink3);font-variant-numeric:tabular-nums}
 .cover-copy .folio{margin-top:28px}
-.cover-visual{background:#eef1f6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border-left:1px solid var(--line)}
+.cover-visual{background:#eef1f6;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding-top:26px;border-left:1px solid var(--line)}
 .caption{font-size:11.5px;color:var(--ink2);text-align:center;max-width:300px;line-height:1.4}
 
 /* Phone */
@@ -155,29 +155,23 @@ mark.hl{background:transparent;color:inherit;padding:0;font-weight:600}
 
 /* 7 Document assistant */
 .split{padding:0}
-.split-grid{height:100%;display:grid;grid-template-columns:1fr 360px}
-.split-copy{padding:38px 38px 18px 64px;display:flex;flex-direction:column;min-width:0}
-.split-copy .label{margin-bottom:8px;color:var(--ink2)}
-.split-copy .dek{margin-top:8px}
-.split-copy .body{margin-top:12px}
-.content-heading{display:flex;align-items:center;gap:10px;color:var(--ink2);font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;line-height:1.2}
-.content-heading:after{content:"";height:1px;flex:1;background:var(--line2)}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);margin-top:7px;border-top:1px solid var(--line)}
-.steps div{padding:8px 12px 0 0;font-size:13px;color:var(--ink2);line-height:1.34}.steps div+div{padding-left:12px;border-left:1px solid var(--line)}
-.steps b{display:block;color:var(--ink);font-size:15px;font-weight:600;margin-bottom:4px}.steps b i{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--blue-tint);font-style:normal;color:var(--blue);margin-right:6px}
-.content-heading.market-heading{margin-top:12px}
-.rivals{margin-top:8px}.rivals th:nth-child(1){width:21%}.rivals th:nth-child(2){width:48%}.rivals th:nth-child(3){width:31%}
-.rivals td,.rivals tbody th{font-size:13px;line-height:1.3;padding:5px 9px 5px 0}.rivals thead th{font-size:11.5px;line-height:1.3;padding:0 8px 5px 0}
-.rivals tr.us th,.rivals tr.us td{background:var(--blue-tint)}.rivals tr.us th{padding-left:8px;border-left:2px solid var(--blue)}
-.content-heading.guard-heading{margin-top:10px}
-.guard{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:7px}
-.guard div{border:1px solid var(--line);border-left:2px solid var(--blue);border-radius:4px;background:var(--tint);padding:7px 9px;font-size:12.5px;color:var(--ink2);line-height:1.3}.guard b{display:block;color:var(--ink);font-weight:600;margin-bottom:2px}
+.split-grid{height:100%;display:grid;grid-template-columns:1fr 470px}
+.split-copy{padding:44px 46px 22px 64px;display:flex;flex-direction:column;min-width:0}
+.split-copy .label{margin-bottom:12px}
+.split-copy .dek{max-width:680px}
+.split-copy .body{margin-top:25px}
+.steps{border-top:1px solid var(--line2)}
+.steps div{display:grid;grid-template-columns:120px 1fr;gap:18px;padding:12px 0;border-bottom:1px solid var(--line);font-size:16px;line-height:1.35;color:var(--ink2)}
+.steps b{color:var(--ink);font-weight:600}.steps b i{font-style:normal;color:var(--blue);margin-right:10px}
+.assistant-guard{margin-top:19px;font-size:15px;line-height:1.45;color:var(--ink2)}
+.assistant-guard b{color:var(--ink)}
+.assistant-market{margin-top:22px;font-size:14px;line-height:1.45;color:var(--ink2)}
+.assistant-market b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
 .split-copy .foot{padding-top:8px}
-.split-copy .foot .folio{margin-top:8px;padding-top:7px}
-.split-visual{background:#eef1f6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-left:1px solid var(--line)}
+.split-visual{background:#eef1f6;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding-top:26px;border-left:1px solid var(--line)}
 .chat{display:flex;flex-direction:column;gap:6px}
-.q{align-self:flex-end;max-width:82%;background:var(--blue);color:#fff;border-radius:12px 12px 3px 12px;padding:6px 9px;font-size:9.5px;line-height:1.35}
-.a{align-self:flex-start;max-width:92%;background:#fff;border:1px solid var(--line);border-radius:12px 12px 12px 3px;padding:7px 9px;font-size:9.5px;line-height:1.4}
+.q{align-self:flex-end;max-width:82%;background:var(--blue);color:#fff;border-radius:12px 12px 3px 12px;padding:6px 9px;font-size:10.5px;line-height:1.35}
+.a{align-self:flex-start;max-width:92%;background:#fff;border:1px solid var(--line);border-radius:12px 12px 12px 3px;padding:7px 9px;font-size:10.5px;line-height:1.4}
 .a.miss{background:var(--tint);border-color:var(--line)}
 .cite{display:inline-block;margin:4px 3px 0 0;padding:1px 6px;border-radius:99px;background:var(--blue-tint);color:var(--blue);font-size:7.5px;font-weight:600}
 .a small{display:block;margin-top:3px;font-size:7.5px;color:var(--ink3)}
@@ -481,31 +475,15 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
 <div class="split-copy">
 <div class="label"><b>07</b>Product · proposed AI</div>
 <h2 id="t7">Answers from the society’s own documents</h2>
-<p class="dek">The committee uploads bye-laws, AGM minutes and circulars once. Residents ask in their own words. Every answer shows where it came from. Proposed, not built.</p>
+<p class="dek">A proposed assistant for bye-laws, AGM minutes and circulars. Residents ask a question and see the source of the answer.</p>
 <div class="body">
-<div class="content-heading">How it works</div>
 <div class="steps">
-  <div><b><i>1</i>Upload</b>A lead adds a PDF and marks it public or committee-only.</div>
-  <div><b><i>2</i>Read</b>Wooru indexes passages and keeps each page reference.</div>
-  <div><b><i>3</i>Ask</b>Residents ask in plain language; only allowed files are searched.</div>
-  <div><b><i>4</i>Answer</b>Replies cite pages. If nothing fits, Wooru says so.</div>
+  <div><b><i>01</i>Upload</b><span>A lead adds documents and chooses who can see them.</span></div>
+  <div><b><i>02</i>Ask</b><span>A resident asks a question in their own words.</span></div>
+  <div><b><i>03</i>Check</b><span>Wooru cites the page, or says it cannot find an answer.</span></div>
 </div>
-<div class="content-heading market-heading">Competitor snapshot</div>
-<table class="rivals">
-<thead><tr><th scope="col">Who</th><th scope="col">Closest thing on offer</th><th scope="col">Resident self-serve?</th></tr></thead>
-<tbody>
-<tr><th scope="row">TownSq <small style="font-weight:400;color:var(--ink3)">US</small></th><td>AI drafts manager replies from community documents</td><td>Manager-side</td></tr>
-<tr><th scope="row">ADDA</th><td>Resident chatbot for everyday questions</td><td>Not shown</td></tr>
-<tr><th scope="row">Vantaca <small style="font-weight:400;color:var(--ink3)">US</small></th><td>Staff AI for board packs and month-end books</td><td>Staff-side</td></tr>
-<tr><th scope="row">Indian society apps</th><td>MyGate, NoBrokerHood, ApnaComplex: no public AI features found</td><td>None found</td></tr>
-<tr class="us"><th scope="row">Wooru</th><td><mark class="hl">Residents ask, get cited answers; committee files stay private</mark></td><td><span class="status s-prop">Proposed</span></td></tr>
-</tbody></table>
-<div class="content-heading guard-heading">Safeguards</div>
-<div class="guard">
-  <div><b>No source, no answer</b>An answer without a page reference isn’t shown.</div>
-  <div><b>Private stays private</b>Committee-only files are blocked in the database, not just hidden by the AI.</div>
-  <div><b>Not legal advice</b>Each reply says so. A daily question limit keeps costs down.</div>
-</div>
+<p class="assistant-guard"><b>Designed for privacy.</b> Only permitted files are searched; committee-only files are protected in the database. Answers aren’t legal advice.</p>
+<p class="assistant-market"><b>What we found elsewhere</b>TownSq helps managers draft replies; ADDA has a general chatbot; Vantaca serves staff. Public pages did not establish the same resident document Q&amp;A. See slide 3 for the Indian comparison.</p>
 </div>
 <div class="foot">
 <p class="note">Public-page check · 16 Nov 2026. Some vendor pages blocked access; this is a likely gap, not proof. Rough, unvalidated cost: &lt;₹10 per society to index; ₹0.10–₹1 per question.</p>
