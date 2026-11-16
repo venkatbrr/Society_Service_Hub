@@ -52,6 +52,12 @@ These documents are the maintained references for the live product and its engin
 | [`cross-community-changelog.md`](cross-community-changelog.md) | Append-only log; **mandatory** entry for any federation change |
 | [`decisions/0001-additive-rls-for-cross-community.md`](decisions/0001-additive-rls-for-cross-community.md) | ADR: why federation RLS is additive |
 
+### Proposals: designed, not built
+
+| File | Scope |
+|------|-------|
+| [`new_features_to_implement/owner-tenant-visibility-proposal.md`](new_features_to_implement/owner-tenant-visibility-proposal.md) | Owner versus tenant types, flat membership, lead approval, visibility rules, and a competitor evidence check. The proposal is not implemented. |
+
 ## Product research and leadership presentations
 
 Research and concept reviews are useful for comparison and ideation. They do **not** establish that a feature is live in Wooru or validated with residents.
@@ -68,7 +74,7 @@ Research and concept reviews are useful for comparison and ideation. They do **n
 
 | Presentation | Format and purpose |
 |---|---|
-| [One app, market and economics](presentations/wooru-one-app-market-and-economics.html) | Redesigned 10-slide leadership deck covering competitors, Wooru's current versus proposed features, two-way WhatsApp, phased delivery and illustrative economics. The web build publishes it at `/presentations/wooru-one-app-market-and-economics.html`. |
+| [One app, market and economics](presentations/wooru-one-app-market-and-economics.html) | Redesigned 10-slide leadership deck covering competitors (including owner/tenant evidence and the limits of public permission data), Wooru's current versus proposed features, two-way WhatsApp, phased delivery and illustrative economics. The web build publishes it at `/presentations/wooru-one-app-market-and-economics.html`. |
 | [One app, market and economics — editable deck](presentations/wooru-one-app-market-and-economics.pptx) | Earlier PowerPoint version with sources and notes. Its layout has not been updated to match the redesigned HTML deck. |
 | [Feature and income strategy](presentations/wooru-feature-and-income-strategy.html) | 25-slide CEO briefing on current features, priorities, competitors, proposed revenue and community pain-point research. Slides 20–25 contain the issue-research section. |
 | [Feature and income strategy — editable deck](presentations/wooru-feature-and-income-strategy.pptx) | Matching PowerPoint version of the 25-slide strategy deck. |
