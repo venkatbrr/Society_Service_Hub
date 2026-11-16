@@ -54,4 +54,4 @@ These are interaction principles to test, not a recommendation to copy Courali's
 
 - [Courali — Gated Community App | UI/UX Case Study](https://www.behance.net/gallery/257082685/Courali-Gated-Community-App-UIUX-Case-Study) — independent design portfolio by Hameed Hassan Ali; viewed 15 November 2026.
 - The case-study description identifies Courali as a concept prototype and says its research/personas are synthesized. Screens and feature descriptions are design artifacts, not proof of a functioning product.
-- [Wooru feature contracts](features.md) and [Verandah design guidance](verandah.md) — references for Wooru's documented current behavior and design constraints.
+- [Wooru feature contracts](../../features.md) and [Verandah design guidance](../../verandah.md) — references for Wooru's documented current behavior and design constraints.

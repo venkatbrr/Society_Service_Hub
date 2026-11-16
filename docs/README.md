@@ -52,30 +52,30 @@ These documents are the maintained references for the live product and its engin
 | [`cross-community-changelog.md`](cross-community-changelog.md) | Append-only log; **mandatory** entry for any federation change |
 | [`decisions/0001-additive-rls-for-cross-community.md`](decisions/0001-additive-rls-for-cross-community.md) | ADR: why federation RLS is additive |
 
-### Proposals: designed, not built
+### New feature ideas: proposals and competitor research
+
+Everything from the product discussions lives in one folder, [`new-feature-ideas/`](new-feature-ideas/README.md). Nothing in it is built.
 
 | File | Scope |
 |------|-------|
-| [`new_features_to_implement/owner-tenant-visibility-proposal.md`](new_features_to_implement/owner-tenant-visibility-proposal.md) | Owner versus tenant types, flat membership, lead approval, visibility rules, and a competitor evidence check. The proposal is not implemented. |
+| [`proposals/owner-tenant-visibility-proposal.md`](new-feature-ideas/proposals/owner-tenant-visibility-proposal.md) | Owner versus tenant types, flat membership, lead approval, visibility rules, and a competitor evidence check. |
+| [`proposals/society-document-assistant-proposal.md`](new-feature-ideas/proposals/society-document-assistant-proposal.md) | Residents ask questions about uploaded society documents (bye-laws, minutes, circulars) and get answers with citations. Includes a competitor check, visibility rules, risks and phases. |
+| [`competitor-research/apartmant.md`](new-feature-ideas/competitor-research/apartmant.md) | Apartmant Resident App: advertised resident, management, guard and parking features; UX observations; gaps and adopt/pilot/defer recommendations. |
+| [`competitor-research/emaar-one.md`](new-feature-ideas/competitor-research/emaar-one.md) | Emaar One: Google Play feature and screenshot review, UX patterns Wooru could adapt, and reported usability issues. |
+| [`competitor-research/courali-ux-reference.md`](new-feature-ideas/competitor-research/courali-ux-reference.md) | Courali: an independent design concept covering request ownership, visible status milestones and recovery patterns. Not validated product evidence. |
 
-## Product research and leadership presentations
+Engineering plans written before these discussions (cross-community pre-orders, two-environment setup, and the completed plans under `done/`) stay in [`new_features_to_implement/`](new_features_to_implement/).
 
-Research and concept reviews are useful for comparison and ideation. They do **not** establish that a feature is live in Wooru or validated with residents.
+## Leadership presentations
 
-### External product and UX references
-
-| Document | What it covers |
-|---|---|
-| [Apartmant Resident App](competitor-analysis-apartmant.md) | Advertised resident, management, guard and parking features; UX observations; gaps and adopt/pilot/defer recommendations. |
-| [Emaar One](competitor-analysis-emaar-one.md) | Google Play feature and screenshot review, UX patterns Wooru could adapt, and reported usability issues. |
-| [Courali](ux-reference-courali.md) | Independent gated-community design concept; end-to-end request ownership, visible status milestones and recovery patterns. Its research and screens are not validated product evidence. |
+Research and concept reviews are useful for comparison and ideation. They do **not** establish that a feature is live in Wooru or validated with residents. Presentations stay in `presentations/` because the web build publishes that folder.
 
 ### Wooru presentations
 
 | Presentation | Format and purpose |
 |---|---|
-| [One app, market and economics](presentations/wooru-one-app-market-and-economics.html) | Redesigned 10-slide leadership deck covering competitors (including owner/tenant evidence and the limits of public permission data), Wooru's current versus proposed features, two-way WhatsApp, phased delivery and illustrative economics. The web build publishes it at `/presentations/wooru-one-app-market-and-economics.html`. |
-| [One app, market and economics — editable deck](presentations/wooru-one-app-market-and-economics.pptx) | Earlier PowerPoint version with sources and notes. Its layout has not been updated to match the redesigned HTML deck. |
+| [One app, market and economics](presentations/wooru-one-app-market-and-economics.html) | Redesigned 11-slide leadership deck covering competitors (including owner/tenant evidence, an AI-on-documents column and the limits of public permission data), Wooru's current versus proposed features, two-way WhatsApp, the proposed society document assistant with a worked example, phased delivery and illustrative economics. The web build publishes it at `/presentations/wooru-one-app-market-and-economics.html`. |
+| [One app, market and economics — editable deck](presentations/wooru-one-app-market-and-economics.pptx) | Earlier PowerPoint version with sources and notes. Its content and layout differ from the current HTML deck. |
 | [Feature and income strategy](presentations/wooru-feature-and-income-strategy.html) | 25-slide CEO briefing on current features, priorities, competitors, proposed revenue and community pain-point research. Slides 20–25 contain the issue-research section. |
 | [Feature and income strategy — editable deck](presentations/wooru-feature-and-income-strategy.pptx) | Matching PowerPoint version of the 25-slide strategy deck. |
 | [Community commerce and income briefing](presentations/wooru-whatsapp-briefing.html) | 12-slide discussion of food orders, community commerce, WhatsApp journeys, sponsorship hypotheses, feasibility gates and leadership decisions. Includes interactive demos and an editable cost model. |

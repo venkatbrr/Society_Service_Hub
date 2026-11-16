@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="A ten-slide Wooru leadership brief covering resident problems, competitors, product direction and illustrative economics.">
+<meta name="description" content="An eleven-slide Wooru leadership brief covering resident problems, competitors, product direction and illustrative economics.">
 <title>Wooru | One app, market and economics</title>
 <script>document.documentElement.classList.add('js');</script>
 <style>
@@ -108,6 +108,12 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .compete td{font-size:13.5px}.compete thead th.gap{color:var(--warn)}.compete thead th.have{color:var(--ok)}.compete thead th.prop{color:var(--blue)}
 .compete ul{margin:0;padding:0;list-style:none}.compete li{margin:0 0 3px;padding-left:12px;position:relative}.compete li:before{content:"–";position:absolute;left:0;color:var(--ink3)}
 .compete tbody th small{display:block;font-weight:400;color:var(--ink3);font-size:11.5px;margin-top:2px}
+.compete.wide th:nth-child(1){width:12%}.compete.wide th:nth-child(2){width:17%}.compete.wide th:nth-child(3){width:22%}.compete.wide th:nth-child(4){width:15%}.compete.wide th:nth-child(5){width:16%}.compete.wide th:nth-child(6){width:18%}
+.compete.wide td{font-size:13px;padding:8px 9px;line-height:1.32}.compete.wide tbody th{padding:8px 9px;font-size:14px}.compete.wide li{margin-bottom:1px}
+.so.tight{margin-top:14px;font-size:15px;line-height:1.35}
+.compete thead th.ai{color:#7a4a00;background:#fff6dc;padding-left:10px}.compete td.ai{background:#fffaeb;color:var(--ink2)}.compete td.ai b{display:block;color:var(--ink);font-weight:600;font-size:12px;margin-bottom:1px}
+mark.hl{background:#fff1b8;color:inherit;padding:0 3px;border-radius:2px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.so.ai-gap span{color:#a15c00}
 
 /* 4 International */
 .world th:nth-child(1){width:10%}.world th:nth-child(2){width:15%}.world th:nth-child(3){width:30%}.world th:nth-child(4){width:33%}.world th:nth-child(5){width:12%}
@@ -144,7 +150,31 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .views h3{font-size:14px;margin-bottom:6px}.views p{font-size:14px;color:var(--ink2)}
 .views .today h3{color:var(--warn)}
 
-/* 7 Phases */
+/* 7 Document assistant */
+.split{padding:0}
+.split-grid{height:100%;display:grid;grid-template-columns:1fr 400px}
+.split-copy{padding:44px 44px 22px 64px;display:flex;flex-direction:column;min-width:0}
+.split-copy .body{margin-top:18px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink)}
+.steps div{padding:10px 12px 0 0;font-size:13px;color:var(--ink2);line-height:1.35}.steps div+div{padding-left:12px;border-left:1px solid var(--line)}
+.steps b{display:block;color:var(--ink);font-size:14px;font-weight:600;margin-bottom:3px}.steps b i{font-style:normal;color:var(--blue);margin-right:5px}
+.rivals{margin-top:20px}.rivals th:nth-child(1){width:24%}.rivals th:nth-child(2){width:54%}.rivals th:nth-child(3){width:22%}
+.rivals td,.rivals tbody th{font-size:13px;padding:7px 10px 7px 0}.rivals thead th{padding-left:0}
+.rivals tr.us th,.rivals tr.us td{background:#fffaeb}.rivals tr.us th{padding-left:8px}
+.guard{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.guard div{border-left:2px solid var(--blue);padding-left:10px;font-size:13px;color:var(--ink2);line-height:1.35}.guard b{display:block;color:var(--ink);font-weight:600}
+.split-visual{background:#eef1f6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-left:1px solid var(--line)}
+.chat{display:flex;flex-direction:column;gap:6px}
+.q{align-self:flex-end;max-width:82%;background:var(--blue);color:#fff;border-radius:12px 12px 3px 12px;padding:6px 9px;font-size:9.5px;line-height:1.35}
+.a{align-self:flex-start;max-width:92%;background:#fff;border:1px solid var(--line);border-radius:12px 12px 12px 3px;padding:7px 9px;font-size:9.5px;line-height:1.4}
+.a.miss{background:#fffaeb;border-color:#f3dfa6}
+.cite{display:inline-block;margin:4px 3px 0 0;padding:1px 6px;border-radius:99px;background:var(--blue-tint);color:var(--blue);font-size:7.5px;font-weight:600}
+.a small{display:block;margin-top:3px;font-size:7.5px;color:var(--ink3)}
+.p-ask{flex:none;display:flex;align-items:center;gap:6px;margin:0 10px 6px;padding:7px 10px;border:1px solid var(--line2);border-radius:99px;background:#fff;font-size:9px;color:var(--ink3)}
+.p-ask span{flex:1}.p-ask i{width:20px;height:20px;border-radius:50%;background:var(--blue);display:grid;place-items:center;color:#fff;font-style:normal;font-size:10px}
+.p-legal{flex:none;text-align:center;font-size:7px;color:var(--ink3);padding:0 10px 18px}
+
+/* 8 Phases */
 .phases{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink)}
 .ph{padding:16px 26px 0 0}.ph+.ph{padding-left:26px;border-left:1px solid var(--line)}
 .ph-top{display:flex;justify-content:space-between;align-items:baseline}.ph-top span{font-size:12px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.06em}.ph-top em{font-style:normal;font-size:12px;color:var(--ink3)}
@@ -193,7 +223,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .wins strong{display:block;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--blue);line-height:1.1}
 .wins p{font-size:13.5px;margin-top:3px;line-height:1.3}.wins small{display:block;font-size:11.5px;color:var(--ink3);margin-top:3px}
 .wins-wrap{margin-top:14px}
-#slide-10 .body{margin-top:18px}
+#slide-11 .body{margin-top:18px}
 
 /* Read mode, no-JS and print */
 .read-mode main{display:block;overflow:visible}.js body.read-mode{height:auto;min-height:100dvh;overflow:auto}
@@ -231,7 +261,7 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
   <button type="button" id="print">Print / PDF</button>
   <button type="button" id="fullscreen">Full screen</button>
 </header>
-<noscript><p style="padding:14px;background:#fff4ec">JavaScript is off. All ten slides are shown as one document.</p></noscript>
+<noscript><p style="padding:14px;background:#fff4ec">JavaScript is off. All eleven slides are shown as one document.</p></noscript>
 <p id="status" class="sr-only" role="status" aria-live="polite"></p>
 <p id="feedback" class="feedback" role="status" hidden></p>
 <button type="button" class="present-exit" id="present-exit" aria-label="Exit full screen">×</button>
@@ -243,14 +273,14 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
 <section class="slide cover" id="slide-1" aria-labelledby="t1"><div class="cover-grid">
 <div class="cover-copy">
   <div class="label">Leadership brief · 15 Nov 2026</div>
-  <h1 id="t1">One app for the whole gated society</h1>
-  <p class="dek">Today a resident uses one app for the gate, another for maintenance dues, and WhatsApp for everything else. This brief sets out what residents complain about, what competitors still miss, what Wooru already has, and what closing the gap would cost.</p>
+  <h1 id="t1">One app for life in your society</h1>
+  <p class="dek">Many residents use a society app for the gate and dues, and WhatsApp for everyday questions. This brief looks at what frustrates them, where Wooru can help, and what it could cost.</p>
   <div class="contents">
-    <div><span>02–04</span>Market: resident complaints, Indian competitors, examples abroad</div>
-    <div><span>05–07</span>Product: what exists, what we propose, in what order</div>
-    <div><span>08–10</span>Business: who pays, break-even, and our team’s 90-day plan</div>
+    <div><span>02–04</span>Market: resident feedback, competitors and ideas from abroad</div>
+    <div><span>05–08</span>Product: what exists, what we’d build next, and an AI idea we didn’t find elsewhere</div>
+    <div><span>09–11</span>Business: who might pay, break-even and the team’s 90-day plan</div>
   </div>
-  <div class="folio"><span>Wooru</span><span>01 / 10</span></div>
+  <div class="folio"><span>Wooru</span><span>01 / 11</span></div>
 </div>
 <div class="cover-visual">
   <div class="phone" role="img" aria-label="Concept resident home screen: proposed notices, quick actions and two-way WhatsApp for questions, orders, reports and opt-in updates. WhatsApp contact buttons and share previews, community events and shared service visits exist today.">
@@ -290,13 +320,13 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
 <!-- 2 -->
 <section class="slide" id="slide-2" aria-labelledby="t2">
 <div class="label"><b>02</b>Market · resident complaints</div>
-<h2 id="t2">Residents report the same failures in all four leading Indian apps</h2>
-<p class="dek">Themes found in 50 recent App Store reviews per app. A dot means the theme appeared in that app’s sample.</p>
+<h2 id="t2">What residents say about four society apps</h2>
+<p class="dek">We read 50 recent App Store reviews per app. A dot means at least one reviewer mentioned the issue.</p>
 <div class="body table-scroll"><table class="matrix">
 <thead><tr><th scope="col">Reported problem</th><th scope="col">MyGate</th><th scope="col">NoBrokerHood</th><th scope="col">ADDA</th><th scope="col">ANACITY</th><th scope="col">Wooru response</th></tr></thead>
 <tbody>
 <tr><th scope="row">Important alerts missed, late or buried in promotions</th><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td><span class="status s-prop">Proposed</span> Official notices kept apart from promotions</td></tr>
-<tr><th scope="row">Complaints hard to raise, track or close</th><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td><span class="status s-prop">Proposed</span> Issue tracking with a named owner</td></tr>
+<tr><th scope="row">Complaints hard to raise, track or close</th><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td><span class="status s-prop">Proposed</span> Issue tracking with someone assigned</td></tr>
 <tr><th scope="row">Slow, blank or confusing screens</th><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td><span class="status s-prop">Proposed</span> Simpler core journeys, tested with residents</td></tr>
 <tr><th scope="row">Payment status unclear or UPI failures</th><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td><span class="status s-have">Have</span> Open funds ledger · <span class="status s-prop">Proposed</span> payment status</td></tr>
 <tr><th scope="row">Login and OTP trouble</th><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td><span class="status s-prop">Proposed</span> Test login and recovery first</td></tr>
@@ -308,60 +338,61 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
 <div class="foot">
 <p class="note">Reviews returned on 15 Nov 2026. Self-selected reports, not verified defects or market-wide rates. “–” means not seen in our sample, not that the problem is absent.</p>
 <p class="sources">Sources: <a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=1101762651/sortby=mostrecent/json" target="_blank" rel="noopener noreferrer">MyGate</a> · <a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=1357972233/sortby=mostrecent/json" target="_blank" rel="noopener noreferrer">NoBrokerHood</a> · <a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=753845888/sortby=mostrecent/json" target="_blank" rel="noopener noreferrer">ADDA</a> · <a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=1045496496/sortby=mostrecent/json" target="_blank" rel="noopener noreferrer">ANACITY</a> (App Store India review feeds)</p>
-<div class="folio"><span>Wooru · leadership brief</span><span>02 / 10</span></div>
+<div class="folio"><span>Wooru · leadership brief</span><span>02 / 11</span></div>
 </div>
 </section>
 
 <!-- 3 -->
 <section class="slide" id="slide-3" aria-labelledby="t3">
 <div class="label"><b>03</b>Market · Indian competitors</div>
-<h2 id="t3">Society apps cover core operations. Wooru can complement them.</h2>
-<div class="body table-scroll"><table class="compete">
-<thead><tr><th scope="col">Platform</th><th scope="col">Built around</th><th scope="col" class="gap">Residents still miss</th><th scope="col" class="have">Wooru has today</th><th scope="col" class="prop">Wooru proposes</th></tr></thead>
+<h2 id="t3">What society apps offer, and where Wooru fits</h2>
+<div class="body table-scroll"><table class="compete wide">
+<thead><tr><th scope="col">Platform</th><th scope="col">Built around</th><th scope="col" class="gap">What reviewers reported</th><th scope="col" class="have">Wooru has today</th><th scope="col" class="prop">Wooru proposes</th><th scope="col" class="ai">AI on society documents</th></tr></thead>
 <tbody>
-<tr><th scope="row">MyGate<small>Gate-first</small></th><td>Gate management, helpdesk, accounting and ERP</td><td><ul><li>Society alerts lost among promotions</li><li>OTP login trouble</li><li>Confusing navigation, unwanted contact</li></ul></td><td>Neighbour-recommended providers and shared visits</td><td>Promotion-free official notices</td></tr>
-<tr><th scope="row">NoBrokerHood<small>Gate + services</small></th><td>Visitors, resident and flat records, staff, accounting and services</td><td><ul><li>Late visitor approvals and alerts</li><li>Complaints hard to raise or track</li><li>Cleaning cancellations and no-shows</li></ul></td><td>Resident businesses, food pre-orders, provider feedback</td><td>Issue follow-through across app + WhatsApp</td></tr>
-<tr><th scope="row">ADDA<small>Accounts-first</small></th><td>Accounting, gatekeeper, helpdesk, amenity booking; resident, tenant and family records</td><td><ul><li>Blank or slow screens</li><li>UPI and payment problems</li><li>Repeated support follow-ups</li></ul></td><td>Open funds ledger with CSV export</td><td>Owner/tenant access rules <small>planned · not a proven unique feature</small></td></tr>
-<tr><th scope="row">ApnaComplex / ANACITY<small>Admin-first</small></th><td>Notices, groups, helpdesk, unit-based polls</td><td><ul><li>Delayed notifications</li><li>Complaint tracking gaps</li><li>Few payment options, hard-to-use interface</li></ul></td><td>Events, carpools, parent connections, SOS</td><td>Notices and issues on one home screen</td></tr>
+<tr><th scope="row">MyGate<small>Gate-first</small></th><td>Gate management, helpdesk, accounting and ERP</td><td><ul><li>Society alerts lost among promotions</li><li>OTP login trouble</li><li>Confusing navigation, unwanted contact</li></ul></td><td><mark class="hl">Neighbour-recommended providers</mark> and shared visits</td><td>Promotion-free official notices</td><td class="ai"><b>None found</b>on public pages</td></tr>
+<tr><th scope="row">NoBrokerHood<small>Gate + services</small></th><td>Visitors, resident and flat records, staff, accounting and services</td><td><ul><li>Late visitor approvals and alerts</li><li>Complaints hard to raise or track</li><li>Cleaning cancellations and no-shows</li></ul></td><td>Resident businesses, <mark class="hl">food pre-orders</mark>, provider feedback</td><td>Issue follow-through across app + WhatsApp</td><td class="ai"><b>None found</b>on public pages</td></tr>
+<tr><th scope="row">ADDA<small>Accounts-first</small></th><td>Accounting, gatekeeper, helpdesk, amenity booking; resident, tenant and family records</td><td><ul><li>Blank or slow screens</li><li>UPI and payment problems</li><li>Repeated support follow-ups</li></ul></td><td><mark class="hl">Open funds ledger</mark> with CSV export</td><td>Owner/tenant access rules <small>planned · not a proven unique feature</small></td><td class="ai"><b>General chatbot</b>Not shown to read bye-laws or cite pages</td></tr>
+<tr><th scope="row">ApnaComplex / ANACITY<small>Admin-first</small></th><td>Notices, groups, helpdesk, unit-based polls</td><td><ul><li>Delayed notifications</li><li>Complaint tracking gaps</li><li>Few payment options, hard-to-use interface</li></ul></td><td>Events, <mark class="hl">carpools</mark>, <mark class="hl">parent connections</mark>, SOS</td><td>Notices and issues on one home screen</td><td class="ai"><b>None found</b>on public pages</td></tr>
 </tbody></table></div>
-<p class="so"><span>Owner / tenant</span>Not a new category: NoBrokerHood tracks legal owners and occupants; ADDA manages tenant and family records. Wooru's proposal is approved per-flat visibility rules—not basic role labels. Public pages don't confirm whether competitors offer the same permission depth.</p>
+<p class="so tight ai-gap"><span>AI gap</span><i style="font-style:normal"><mark class="hl">Wooru proposes a document assistant: residents ask about the bye-laws and get an answer with the page.</mark> We didn’t find this in any app we checked (slide 7).</i></p>
+<p class="so tight" style="margin-top:6px"><span>Owner / tenant</span>NoBrokerHood records owners and occupants; ADDA records tenants and families. Wooru proposes approved per-flat access rules. Public pages don’t show how deep competitors go.</p>
 <div class="foot">
-<p class="note">“Built around” = vendor descriptions. “Still miss” = self-selected app reviews, Sep–Nov 2026, not verified defects. Owner/tenant findings are from public product pages; they do not disclose the full permission model.</p>
-<p class="sources">Sources: <a href="https://mygate.com/community-management/residents/" target="_blank" rel="noopener noreferrer">MyGate</a> · <a href="https://nobrokerhood.com/residents-and-flats-management" target="_blank" rel="noopener noreferrer">NoBrokerHood</a> · <a href="https://ind.adda.io/community-super-app" target="_blank" rel="noopener noreferrer">ADDA</a> · <a href="https://www.anacity.com/services" target="_blank" rel="noopener noreferrer">ANACITY</a> · <a href="https://www.apnacomplex.com/features" target="_blank" rel="noopener noreferrer">ApnaComplex</a> · <a href="https://play.google.com/store/apps/details?id=com.app.nobrokerhood&amp;hl=en_IN&amp;gl=IN" target="_blank" rel="noopener noreferrer">NoBrokerHood app</a> · <a href="#slide-2">review feeds</a></p>
-<div class="folio"><span>Wooru · leadership brief</span><span>03 / 10</span></div>
+<p class="note"><mark class="hl">Highlighted</mark> = where Wooru differs most from that app’s public pitch; it doesn’t prove the rival lacks it. “Built around” = vendor descriptions. Reviewer reports come from self-selected app reviews, Sep–Nov 2026, and are not verified defects. AI column checked 16 Nov 2026 from vendor pages only.</p>
+<p class="sources">Sources: <a href="https://mygate.com/community-management/residents/" target="_blank" rel="noopener noreferrer">MyGate</a> · <a href="https://nobrokerhood.com/residents-and-flats-management" target="_blank" rel="noopener noreferrer">NoBrokerHood</a> · <a href="https://ind.adda.io/community-super-app" target="_blank" rel="noopener noreferrer">ADDA</a> · <a href="https://www.anacity.com/services" target="_blank" rel="noopener noreferrer">ANACITY</a> · <a href="https://www.apnacomplex.com/features" target="_blank" rel="noopener noreferrer">ApnaComplex</a> · <a href="https://play.google.com/store/apps/details?id=com.app.nobrokerhood&amp;hl=en_IN&amp;gl=IN" target="_blank" rel="noopener noreferrer">NoBrokerHood app</a> · <a href="https://adda.io/" target="_blank" rel="noopener noreferrer">ADDA AI features</a> · <a href="#slide-2">review feeds</a></p>
+<div class="folio"><span>Wooru · leadership brief</span><span>03 / 11</span></div>
 </div>
 </section>
 
 <!-- 4 -->
 <section class="slide" id="slide-4" aria-labelledby="t4">
 <div class="label"><b>04</b>Market · examples abroad</div>
-<h2 id="t4">The strongest products abroad put a named person behind the app</h2>
-<p class="dek">Five operators across five markets, and the one thing Wooru should borrow from each.</p>
+<h2 id="t4">What we can learn from apps in other markets</h2>
+<p class="dek">Five examples and ideas we could adapt for Wooru.</p>
 <div class="body table-scroll"><table class="world">
 <thead><tr><th scope="col">Market</th><th scope="col">Product</th><th scope="col">What residents get</th><th scope="col">What Wooru borrows</th><th scope="col">When</th></tr></thead>
 <tbody>
 <tr><td class="cty">USA</td><th scope="row"><a href="https://www.buildinglink.io/solutions/resident-experience/" target="_blank" rel="noopener noreferrer">BuildingLink</a></th><td>Repair request updates and amenity reservations</td><td>Show repair status to the resident who reported it</td><td class="phase">Pilot next</td></tr>
-<tr><td class="cty">CHINA</td><th scope="row"><a href="https://en.onewo.com/16582148289351/index.html" target="_blank" rel="noopener noreferrer">Onewo</a></th><td>Staffed resident coordinators and community activities</td><td>Pair every workflow with a staff owner</td><td class="phase">Pilot next</td></tr>
+<tr><td class="cty">CHINA</td><th scope="row"><a href="https://en.onewo.com/16582148289351/index.html" target="_blank" rel="noopener noreferrer">Onewo</a></th><td>Staffed resident coordinators and community activities</td><td>Give each workflow a named staff contact</td><td class="phase">Pilot next</td></tr>
 <tr><td class="cty">S. KOREA</td><th scope="row"><a href="https://www.apartmant.co.kr/en/residentApp/" target="_blank" rel="noopener noreferrer">Apartmant</a></th><td>Resident home screen, visitor access, facility booking</td><td>Notice and booking patterns for the home screen</td><td class="phase">Pilot next</td></tr>
 <tr><td class="cty">UAE</td><th scope="row"><a href="https://www.emaar.com/en/blog/manage-your-emaar-property-and-household-efficiently-with-emaar-one" target="_blank" rel="noopener noreferrer">Emaar One</a></th><td>Service requests and community bookings in one owner app</td><td>One home for requests and bookings</td><td class="phase">Later</td></tr>
 <tr><td class="cty">JAPAN</td><th scope="row"><a href="https://www.mitsui-kanri.co.jp/how/" target="_blank" rel="noopener noreferrer">Mitsui</a></th><td>Building procedures and information online</td><td>Put society forms and house rules online</td><td class="phase">Later</td></tr>
 </tbody></table></div>
-<p class="so"><span>So what</span>The app coordinates; a person resolves. Every proposal that follows has a society-side owner.</p>
+<p class="so"><span>Takeaway</span>The app can keep people informed; someone at the society still needs to act.</p>
 <div class="foot">
 <p class="note">Examples, not national coverage. Mollak (Dubai) and K-apt (Korea) are public regulatory systems, not private app rivals.</p>
 <p class="sources">Sources: linked product names · <a href="https://dubailand.gov.ae/en/eservices/request-for-approval-of-service-and-usage-charges/" target="_blank" rel="noopener noreferrer">Mollak</a> · <a href="https://www.k-apt.go.kr/cmmn/kaptsystemintro.do" target="_blank" rel="noopener noreferrer">K-apt</a></p>
-<div class="folio"><span>Wooru · leadership brief</span><span>04 / 10</span></div>
+<div class="folio"><span>Wooru · leadership brief</span><span>04 / 11</span></div>
 </div>
 </section>
 
 <!-- 5 -->
 <section class="slide" id="slide-5" aria-labelledby="t5">
 <div class="label"><b>05</b>Product · what exists</div>
-<h2 id="t5">Wooru already has the neighbourhood layer. The society-office layer is missing.</h2>
+<h2 id="t5">What Wooru does today, and what we’d add</h2>
 <div class="body layers">
 <div>
   <div class="layer prop">
-    <div class="layer-head"><h3>Society office layer</h3><span class="status s-prop">Proposed · not built</span></div>
+    <div class="layer-head"><h3>For the society office</h3><span class="status s-prop">Proposed · not built</span></div>
     <div class="cells">
       <div class="cell">Official notices<small>dated, read counts</small></div>
       <div class="cell">Issue tracking<small>named owner, status</small></div>
@@ -370,7 +401,7 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
     </div>
   </div>
   <div class="layer wa">
-    <div class="layer-head"><h3>WhatsApp channel</h3><span>Where residents already are</span></div>
+    <div class="layer-head"><h3>WhatsApp</h3><span>Current links and proposed messages</span></div>
     <div class="cells">
       <div class="cell"><span class="status s-have">Have</span> Call / WhatsApp buttons<small>providers, listings, visits, events, carpools</small></div>
       <div class="cell"><span class="status s-have">Have</span> Shared-link previews<small>food menus, listings, invites, fund links</small></div>
@@ -379,7 +410,7 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
     </div>
   </div>
   <div class="layer">
-    <div class="layer-head"><h3>Neighbourhood layer</h3><span class="status s-have">In the app today</span></div>
+    <div class="layer-head"><h3>For neighbours</h3><span class="status s-have">In the app today</span></div>
     <div class="cells">
       <div class="cell">Service providers<small>recommended by neighbours</small></div>
       <div class="cell">Shared service visits<small>neighbours join one visit</small></div>
@@ -395,7 +426,7 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
 <div class="order">
   <h3>Order of work</h3>
   <ol>
-    <li><div><b>Notices and issue follow-through</b>Fixes the two most-reported failures on slide 2.</div></li>
+    <li><div><b>Notices and issue follow-through</b>Addresses two recurring problems in the reviews on slide 2.</div></li>
     <li><div><b>Two-way WhatsApp on one Wooru number</b>Residents ask, order or report by chat; the record stays in Wooru.</div></li>
     <li><div><b>Facility booking and visitors</b>Pilot only where society staff run them.</div></li>
     <li><div><b>Formal voting and gate hardware</b>Later, with partners. Needs legal and hardware work.</div></li>
@@ -405,75 +436,128 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
 <div class="foot">
 <p class="note">“Have” and “In the app today” = present in the Wooru repository. Two-way WhatsApp needs a verified Wooru business number on Meta’s Cloud API, resident opt-in and message fees; it cannot read or post in existing society groups.</p>
 <p class="sources">WhatsApp: <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview" target="_blank" rel="noopener noreferrer">Cloud API webhooks</a> · <a href="https://business.whatsapp.com/policy" target="_blank" rel="noopener noreferrer">Messaging policy</a> · <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Pricing</a> · <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/groups" target="_blank" rel="noopener noreferrer">Groups API limits</a> · UI/UX: <a href="https://www.apartmant.co.kr/en/residentApp/" target="_blank" rel="noopener noreferrer">Apartmant Resident App</a> · <a href="https://www.apartmant.co.kr/en/community/" target="_blank" rel="noopener noreferrer">Community V2</a> · <a href="https://www.apartmant.co.kr/en/admin/" target="_blank" rel="noopener noreferrer">Admin Web</a></p>
-<div class="folio"><span>Wooru · leadership brief</span><span>05 / 10</span></div>
+<div class="folio"><span>Wooru · leadership brief</span><span>05 / 11</span></div>
 </div>
 </section>
 
 <!-- 6 -->
 <section class="slide" id="slide-6" aria-labelledby="t6">
 <div class="label"><b>06</b>Product · proposed experience</div>
-<h2 id="t6">Proposed: every reported issue gets an owner and a visible status</h2>
+<h2 id="t6">How an issue could be reported and tracked</h2>
 <p class="dek">Illustrative example: a leak in the Block B basement parking, reported and followed on WhatsApp. The same issue is visible in the app. Not a live feature.</p>
 <div class="body">
 <div class="timeline">
   <div class="stop"><time>Mon 09:10</time><h3>Reported</h3><p>Asha (B-204) sends two photos of water near bay 14 to the Wooru WhatsApp number.</p><div class="notif wa-msg"><small>WhatsApp reply</small>Report received · ref B-0142</div></div>
-  <div class="stop"><time>Mon 11:30</time><h3>Assigned</h3><p>The office names Ravi from maintenance as owner.</p><div class="notif wa-msg"><small>WhatsApp update</small>Ravi (maintenance) is handling this</div></div>
+  <div class="stop"><time>Mon 11:30</time><h3>Assigned</h3><p>The office asks Ravi from maintenance to take it on.</p><div class="notif wa-msg"><small>WhatsApp update</small>Ravi (maintenance) is handling this</div></div>
   <div class="stop now"><time>Tue 16:00</time><h3>In progress</h3><p>Plumber visit booked. Status visible to all of Block B.</p><div class="notif wa-msg"><small>WhatsApp update</small>Plumber visit Wed, 10:00–12:00</div></div>
-  <div class="stop next"><time>Wed 12:00</time><h3>Closed</h3><p>Fix noted with a photo by the owner.</p><div class="notif wa-msg"><small>WhatsApp · tap to reply</small>Fixed · [Confirm] [Reopen]</div></div>
+  <div class="stop next"><time>Wed 12:00</time><h3>Closed</h3><p>Ravi records the repair and adds a photo.</p><div class="notif wa-msg"><small>WhatsApp · tap to reply</small>Fixed · [Confirm] [Reopen]</div></div>
 </div>
 <div class="views">
-  <div class="today"><h3>Today, without this</h3><p>A WhatsApp message, three follow-up calls, and no record of who fixed what.</p></div>
-  <div><h3>What the resident sees</h3><p>One status and one owner, on WhatsApp or in the app. No need to chase.</p></div>
-  <div><h3>What the office sees</h3><p>Open issues by age and owner, and repeat problems by location.</p></div>
+  <div class="today"><h3>Without this</h3><p>It can mean a message, several follow-up calls, and no clear record of what was fixed.</p></div>
+  <div><h3>What the resident sees</h3><p>Who’s handling it and the latest update, in the app or on WhatsApp.</p></div>
+  <div><h3>What the office sees</h3><p>Open issues by age, who’s handling them, and repeat problems by location.</p></div>
 </div>
 </div>
 <div class="foot">
 <p class="note">The app coordinates the work. The society or its service team still has to do the repair.</p>
-<div class="folio"><span>Wooru · leadership brief</span><span>06 / 10</span></div>
+<div class="folio"><span>Wooru · leadership brief</span><span>06 / 11</span></div>
 </div>
 </section>
 
 <!-- 7 -->
-<section class="slide" id="slide-7" aria-labelledby="t7">
-<div class="label"><b>07</b>Product · sequencing</div>
-<h2 id="t7">Build in three stages, each with a proof point before the next</h2>
-<div class="body phases">
-  <div class="ph"><div class="ph-top"><span>Now</span><em>existing features</em></div><h3>Make what exists reliable</h3><ul><li>Test login, recovery and alert delivery</li><li>Tighten provider and menu journeys</li><li>Make the funds ledger readable to non&#8209;treasurers</li></ul><p class="proof"><span>Proof to move on</span>Pilot residents sign in and get alerts without calling for help.</p></div>
-  <div class="ph"><div class="ph-top"><span>Next</span><em>pilot, 3–5 societies</em></div><h3>Notices and issue follow&#8209;through</h3><ul><li>Official notices with read counts</li><li>Issues with a named owner and status</li><li>Two-way WhatsApp on one Wooru number</li><li>Clear privacy and contact choices</li></ul><p class="proof"><span>Proof to move on</span>Fewer repeat follow-ups on similar issues (working target 25%).</p></div>
-  <div class="ph"><div class="ph-top"><span>Later</span><em>with partners</em></div><h3>Connected operations</h3><ul><li>Facility booking and polls</li><li>Society billing and payment status</li><li>Visitor access with gate partners</li></ul><p class="proof"><span>Proof to move on</span>Pilot societies agree to pay for coordination.</p></div>
+<section class="slide split" id="slide-7" aria-labelledby="t7"><div class="split-grid">
+<div class="split-copy">
+<div class="label"><b>07</b>Product · proposed AI</div>
+<h2 id="t7">Answers from the society’s own documents</h2>
+<p class="dek">The committee uploads bye-laws, AGM minutes and circulars once. Residents ask in their own words. Every answer shows where it came from. Proposed, not built.</p>
+<div class="body">
+<div class="steps">
+  <div><b><i>1</i>Upload</b>A president or VP adds a PDF and marks it public or committee-only.</div>
+  <div><b><i>2</i>Read</b>Wooru splits it into short passages and remembers each page.</div>
+  <div><b><i>3</i>Ask</b>A resident types a question. Only documents they may see are searched.</div>
+  <div><b><i>4</i>Answer</b>A short reply with the page. If nothing fits, it says so and doesn’t guess.</div>
+</div>
+<table class="rivals">
+<thead><tr><th scope="col">Who</th><th scope="col">Closest thing on offer</th><th scope="col">Residents ask their own documents?</th></tr></thead>
+<tbody>
+<tr><th scope="row">TownSq <small style="font-weight:400;color:var(--ink3)">US</small></th><td>Drafts replies for managers from community documents</td><td>Partly · manager-side</td></tr>
+<tr><th scope="row">ADDA</th><td>Resident chatbot for “everyday community questions”</td><td>Not shown</td></tr>
+<tr><th scope="row">Vantaca <small style="font-weight:400;color:var(--ink3)">US</small></th><td>AI for management staff: board packs, month-end books</td><td>Not for residents</td></tr>
+<tr><th scope="row">MyGate, NoBrokerHood, ApnaComplex</th><td>No AI features on their public pages</td><td>None found</td></tr>
+<tr class="us"><th scope="row">Wooru</th><td><mark class="hl">Residents ask, answers cite the page, committee files stay private</mark></td><td><span class="status s-prop">Proposed</span></td></tr>
+</tbody></table>
+<div class="guard">
+  <div><b>No source, no answer</b>An answer without a page reference isn’t shown.</div>
+  <div><b>Private stays private</b>Committee-only files are blocked in the database, not just hidden by the AI.</div>
+  <div><b>Not legal advice</b>Each reply says so. A daily question limit keeps costs down.</div>
+</div>
 </div>
 <div class="foot">
-<p class="note">Built by our existing team on our existing app and infrastructure. Stages after “Now” are proposals; scope and timing depend on demand, costs and integrations.</p>
-<div class="folio"><span>Wooru · leadership brief</span><span>07 / 10</span></div>
+<p class="note">Checked 16 Nov 2026 from vendor pages only; PayHOA, Buildium, Yardi and a few others blocked us, so treat this as a likely gap. Rough cost: under ₹10 to read a society’s documents, ₹0.10–₹1 per question. To be measured in a pilot.</p>
+<p class="sources">Sources: <a href="https://www.townsq.io/ai" target="_blank" rel="noopener noreferrer">TownSq AI</a> · <a href="https://adda.io/" target="_blank" rel="noopener noreferrer">ADDA</a> · <a href="https://www.vantaca.com/hoai" target="_blank" rel="noopener noreferrer">Vantaca HOAi</a></p>
+<div class="folio"><span>Wooru · leadership brief</span><span>07 / 11</span></div>
 </div>
-</section>
+</div>
+<div class="split-visual">
+  <div class="phone" role="img" aria-label="Concept screen: a resident asks whether dogs are allowed and about the maintenance late fee, and gets answers that cite the bye-laws and AGM minutes. A question about terrace solar panels gets a not-covered reply.">
+    <div class="p-status" aria-hidden="true"><span>9:41</span><span>5G</span></div>
+    <div class="p-head"><div><small>Lakeview Residency · 6 documents</small><b>Ask the rules</b></div><span class="p-tag">Proposed</span></div>
+    <div class="p-scroll chat">
+      <div class="q">Can I keep a dog in my flat?</div>
+      <div class="a">Yes. Dogs must be on a leash in lifts and common areas, and aren’t allowed in the pool area.<br><span class="cite">Bye-laws 2019 · p. 22, cl. 14.3</span><span class="cite">Pet circular · Mar 2025</span></div>
+      <div class="q">What’s the late fee on maintenance?</div>
+      <div class="a">18% a year on the overdue amount, from the 16th of the month. This replaced the 12% in the 2019 bye-laws.<br><span class="cite">AGM minutes · Jun 2024 · p. 3</span><small>Newer document used first</small></div>
+      <div class="q">Can I put solar panels on the terrace?</div>
+      <div class="a miss">Your society’s documents don’t seem to cover this. You could ask the committee.<br><span class="cite">Ask the committee →</span></div>
+    </div>
+    <div class="p-ask" aria-hidden="true"><span>Ask about rules, fees, minutes…</span><i>↑</i></div>
+    <p class="p-legal" aria-hidden="true">Based on your society’s documents. Not legal advice.</p>
+  </div>
+  <p class="caption">Concept screen. Names, clauses and figures are made up for illustration.</p>
+</div>
+</div></section>
 
 <!-- 8 -->
 <section class="slide" id="slide-8" aria-labelledby="t8">
-<div class="label"><b>08</b>Business · revenue</div>
-<h2 id="t8">The residents’ association is the first payer to test</h2>
-<p class="dek">Three possible income streams, in the order we would test them. All prices are illustrative.</p>
-<div class="body table-scroll"><table class="revenue">
-<thead><tr><th scope="col">Stream</th><th scope="col">Who pays</th><th scope="col">Illustrative price</th><th scope="col">When</th><th scope="col">Only if</th></tr></thead>
-<tbody>
-<tr class="primary"><th scope="row">Society subscription</th><td>Residents’ association</td><td class="price">₹2,500 / month</td><td>From the pilot</td><td>Notices and issue tracking measurably save office time</td></tr>
-<tr><th scope="row">Assisted setup</th><td>Residents’ association</td><td class="price">₹5,000 once</td><td>With subscription</td><td>Onboarding and training are scoped and time-boxed</td></tr>
-<tr><th scope="row">Seller tools</th><td>Resident businesses</td><td class="price">Tools or fee</td><td>Later</td><td>Settlement, refunds and responsibilities are clear before any commission</td></tr>
-</tbody></table></div>
-<div class="notrev">
-  <div><b>Not Wooru revenue</b>Society maintenance funds and resident sellers’ sales pass through or sit beside the app. They are not our income.</div>
-  <div><b>Value to measure, not assume</b>Fewer repeat follow-ups for the office, and clearer spending for residents.</div>
+<div class="label"><b>08</b>Product · sequencing</div>
+<h2 id="t8">Build in stages, and check what works at each step</h2>
+<div class="body phases">
+  <div class="ph"><div class="ph-top"><span>Now</span><em>existing features</em></div><h3>Make what exists reliable</h3><ul><li>Test login, recovery and alert delivery</li><li>Make providers and menus easier to use</li><li>Make the funds ledger easier for residents to understand</li></ul><p class="proof"><span>What to check</span>Pilot residents sign in and get alerts without calling for help.</p></div>
+  <div class="ph"><div class="ph-top"><span>Next</span><em>pilot, 3–5 societies</em></div><h3>Notices and issue follow&#8209;through</h3><ul><li>Official notices with read counts</li><li>Issues with a named owner and status</li><li>Two-way WhatsApp on one Wooru number</li><li>Clear privacy and contact choices</li></ul><p class="proof"><span>What to check</span>Fewer repeat follow-ups on similar issues (working target 25%).</p></div>
+  <div class="ph"><div class="ph-top"><span>Later</span><em>with partners</em></div><h3>Connected operations</h3><ul><li>Facility booking and polls</li><li>Society billing and payment status</li><li>Visitor access with gate partners</li></ul><p class="proof"><span>What to check</span>Pilot societies agree to pay for coordination.</p></div>
 </div>
 <div class="foot">
-<p class="note">Illustrative prices, not offers or verified income.</p>
-<div class="folio"><span>Wooru · leadership brief</span><span>08 / 10</span></div>
+<p class="note">Built by our existing team on our existing app and infrastructure. Stages after “Now” are proposals; scope and timing depend on demand, costs and integrations.</p>
+<div class="folio"><span>Wooru · leadership brief</span><span>08 / 11</span></div>
 </div>
 </section>
 
 <!-- 9 -->
 <section class="slide" id="slide-9" aria-labelledby="t9">
-<div class="label"><b>09</b>Business · unit economics</div>
-<h2 id="t9">At ₹2,500 a month, Wooru would break even at 40 paying societies</h2>
+<div class="label"><b>09</b>Business · revenue</div>
+<h2 id="t9">First, ask societies if they’d pay</h2>
+<p class="dek">Three ways Wooru could earn, in the order we’d test them. All prices are examples.</p>
+<div class="body table-scroll"><table class="revenue">
+<thead><tr><th scope="col">Stream</th><th scope="col">Who pays</th><th scope="col">Illustrative price</th><th scope="col">When</th><th scope="col">Only if</th></tr></thead>
+<tbody>
+<tr class="primary"><th scope="row">Society subscription</th><td>Residents’ association</td><td class="price">₹2,500 / month</td><td>From the pilot</td><td>We can show that notices and issue tracking save the office time</td></tr>
+<tr><th scope="row">Assisted setup</th><td>Residents’ association</td><td class="price">₹5,000 once</td><td>With subscription</td><td>Setup and training have a clear scope and time limit</td></tr>
+<tr><th scope="row">Seller tools</th><td>Resident businesses</td><td class="price">Tools or fee</td><td>Later</td><td>Settlement, refunds and responsibilities are clear before any commission</td></tr>
+</tbody></table></div>
+<div class="notrev">
+  <div><b>Not Wooru revenue</b>Society maintenance funds and money paid to resident sellers are not Wooru’s income.</div>
+  <div><b>What we need to see</b>Fewer repeat follow-ups for the office, and clearer spending for residents.</div>
+</div>
+<div class="foot">
+<p class="note">Illustrative prices, not offers or verified income.</p>
+<div class="folio"><span>Wooru · leadership brief</span><span>09 / 11</span></div>
+</div>
+</section>
+
+<!-- 10 -->
+<section class="slide" id="slide-10" aria-labelledby="t10">
+<div class="label"><b>10</b>Business · unit economics</div>
+<h2 id="t10">With these assumptions, break-even is 40 societies</h2>
 <div class="body econ">
 <svg class="chart" viewBox="0 0 660 400" role="img" aria-label="Line chart: monthly revenue rises at ₹2,500 per society from zero; monthly cost starts at ₹60,000 and rises ₹1,000 per society. The lines cross at 40 societies and ₹1,00,000.">
   <g stroke="#e3e6ec"><line x1="70" y1="275" x2="650" y2="275"/><line x1="70" y1="190" x2="650" y2="190"/><line x1="70" y1="105" x2="650" y2="105"/><line x1="70" y1="20" x2="650" y2="20"/></g>
@@ -508,64 +592,64 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
 </div>
 <div class="foot">
 <p class="note"><b>Illustrative model, not a forecast.</b> Fixed cost stands for running our existing team and infrastructure; price and variable cost are assumptions. Excludes tax, customer acquisition, WhatsApp message fees, bad debt, financing and capital spend. Replace with actual costs when known.</p>
-<div class="folio"><span>Wooru · leadership brief</span><span>09 / 10</span></div>
+<div class="folio"><span>Wooru · leadership brief</span><span>10 / 11</span></div>
 </div>
 </section>
 
-<!-- 10 -->
-<section class="slide" id="slide-10" aria-labelledby="t10">
-<div class="label"><b>10</b>Team plan · next 90 days</div>
-<h2 id="t10">How we build it, what we ship, and how we know it worked</h2>
-<p class="dek">Our team and infrastructure are already in place. The pilot adds features to the live app; it is not a rebuild.</p>
+<!-- 11 -->
+<section class="slide" id="slide-11" aria-labelledby="t11">
+<div class="label"><b>11</b>Team plan · next 90 days</div>
+<h2 id="t11">Our first 90 days: what we’d build and how we’d measure it</h2>
+<p class="dek">The team and infrastructure already exist. We’d add to the live app rather than start over.</p>
 <div class="body">
 <div class="plan">
 <div>
-  <p class="sec-h">How we deliver · existing team, four workstreams, 3–5 pilot societies</p>
+  <p class="sec-h">The plan · existing team, four workstreams, 3–5 pilot societies</p>
   <div class="gantt">
     <div class="g-scale"><span></span><span>Days 1–30</span><span>31–60</span><span>61–90</span></div>
-    <div class="g-row"><div><b>Product &amp; research</b><small>interviews, measures</small></div><div class="g-track"><div class="g-bar prep" style="left:0;width:33.333%">Interviews · baseline follow-ups</div><div class="g-bar prep" style="left:66.666%;width:33.334%">Measure · scale-or-stop review</div></div></div>
-    <div class="g-row"><div><b>App engineering</b><small>on the live app + backend</small></div><div class="g-track"><div class="g-bar prep" style="left:0;width:33.333%">Harden sign-in, alerts, funds</div><div class="g-bar" style="left:33.333%;width:50%">Ship notices + issue tracking</div></div></div>
-    <div class="g-row"><div><b>WhatsApp</b><small>one Wooru number</small></div><div class="g-track"><div class="g-bar wa prep" style="left:0;width:33.333%">Number, templates, opt-in</div><div class="g-bar wa" style="left:33.333%;width:66.667%">Two-way: report, ask, get status updates</div></div></div>
-    <div class="g-row"><div><b>Society onboarding</b><small>office owner per society</small></div><div class="g-track"><div class="g-bar prep" style="left:20%;width:30%">Onboard · train owners</div><div class="g-bar" style="left:50%;width:50%">Weekly check-ins · support log</div></div></div>
-    <div class="g-row"><div><b>Team gates</b><small>go / no-go</small></div><div class="g-track gates"><span class="gate" style="left:33.333%">Day 30<small>pilot ready</small></span><span class="gate" style="left:66.666%">Day 60<small>in daily use</small></span><span class="gate" style="left:100%">Day 90<small>scale or stop</small></span></div></div>
+    <div class="g-row"><div><b>Product &amp; research</b><small>interviews, measures</small></div><div class="g-track"><div class="g-bar prep" style="left:0;width:33.333%">Interviews · baseline</div><div class="g-bar prep" style="left:66.666%;width:33.334%">Measure · review</div></div></div>
+    <div class="g-row"><div><b>App engineering</b><small>on the live app + backend</small></div><div class="g-track"><div class="g-bar prep" style="left:0;width:33.333%">Improve sign-in, alerts, funds</div><div class="g-bar" style="left:33.333%;width:50%">Build notices + issue tracking</div></div></div>
+    <div class="g-row"><div><b>WhatsApp</b><small>one Wooru number</small></div><div class="g-track"><div class="g-bar wa prep" style="left:0;width:33.333%">Number, templates, opt-in</div><div class="g-bar wa" style="left:33.333%;width:66.667%">Two-way: report, ask, get updates</div></div></div>
+    <div class="g-row"><div><b>Society onboarding</b><small>one office contact per society</small></div><div class="g-track"><div class="g-bar prep" style="left:20%;width:30%">Onboard · train contacts</div><div class="g-bar" style="left:50%;width:50%">Weekly check-ins · support log</div></div></div>
+    <div class="g-row"><div><b>Checkpoints</b><small>decisions</small></div><div class="g-track gates"><span class="gate" style="left:33.333%">Day 30<small>pilot ready</small></span><span class="gate" style="left:66.666%">Day 60<small>in daily use</small></span><span class="gate" style="left:100%">Day 90<small>decide next steps</small></span></div></div>
   </div>
 </div>
 <div>
-  <p class="sec-h">What we ship in the pilot</p>
+  <p class="sec-h">What the pilot would include</p>
   <div class="ship">
   <ul>
-    <li>Reliable sign-in and alerts<span class="status s-have">Have · harden</span></li>
+    <li>Reliable sign-in and alerts<span class="status s-have">Have · improve</span></li>
     <li>Official notices with read counts<span class="status s-prop">New</span></li>
     <li>Issues with a named owner and status<span class="status s-prop">New</span></li>
     <li>Two-way WhatsApp on one Wooru number<span class="status s-prop">New</span></li>
     <li>Privacy and contact choices<span class="status s-prop">New</span></li>
     <li>Services, menus, events, funds ledger<span class="status s-have">Have</span></li>
   </ul>
-  <p class="later"><b>Not in this pilot:</b> facility booking, polls, billing, visitor access. They come later, after the pilot proves demand.</p>
+  <p class="later"><b>Not in this pilot:</b> facility booking, polls, billing, visitor access. Consider these after the pilot, if there’s demand.</p>
 </div>
 </div>
 </div>
 <div class="wins-wrap">
-  <p class="sec-h">How we will know it worked · working targets, not results</p>
+  <p class="sec-h">What we’ll measure · working targets, not results</p>
   <div class="wins">
     <div><strong>25% fewer</strong><p>repeat follow-ups on similar issues</p><small>vs. the days 1–30 baseline</small></div>
     <div><strong>1 working day</strong><p>to name an owner on every reported issue</p><small>from report to assigned</small></div>
-    <div><strong>Hours / society</strong><p>support effort, logged weekly</p><small>tests the ₹1,000 variable cost (slide 9)</small></div>
-    <div><strong>Yes to pay</strong><p>associations agree to ₹2,500 a month</p><small>tests the price behind break-even at 40</small></div>
+    <div><strong>Hours / society</strong><p>support effort, logged weekly</p><small>tests the ₹1,000 variable cost (slide 10)</small></div>
+    <div><strong>Willing to pay</strong><p>associations agree to ₹2,500 a month</p><small>tests the price behind break-even at 40</small></div>
   </div>
 </div>
 </div>
 <div class="foot">
-<p class="so"><span>Day 90</span>All four met: expand toward 40 paying societies. Some met: fix and re-run. None: stop and rethink.</p>
-<div class="folio"><span>Wooru · leadership brief</span><span>10 / 10</span></div>
+<p class="so"><span>Day 90</span>All four met: expand toward 40 paying societies. Some met: improve and repeat. None met: stop and rethink.</p>
+<div class="folio"><span>Wooru · leadership brief</span><span>11 / 11</span></div>
 </div>
 </section>
 
 </div></div></main>
 <nav class="navigation" aria-label="Slide navigation">
   <button type="button" id="previous" aria-label="Previous slide">Back</button>
-  <span id="counter" class="counter">01 / 10</span>
-  <progress id="progress" max="10" value="1" aria-label="Presentation progress"></progress>
+  <span id="counter" class="counter">01 / 11</span>
+  <progress id="progress" max="11" value="1" aria-label="Presentation progress"></progress>
   <button type="button" id="next" class="next" aria-label="Next slide">Next</button>
 </nav>
 <script>
