@@ -155,17 +155,25 @@ mark.hl{background:transparent;color:inherit;padding:0;font-weight:600}
 
 /* 7 Document assistant */
 .split{padding:0}
-.split-grid{height:100%;display:grid;grid-template-columns:1fr 400px}
-.split-copy{padding:44px 44px 22px 64px;display:flex;flex-direction:column;min-width:0}
-.split-copy .body{margin-top:18px}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink)}
-.steps div{padding:10px 12px 0 0;font-size:13px;color:var(--ink2);line-height:1.35}.steps div+div{padding-left:12px;border-left:1px solid var(--line)}
-.steps b{display:block;color:var(--ink);font-size:14px;font-weight:600;margin-bottom:3px}.steps b i{font-style:normal;color:var(--blue);margin-right:5px}
-.rivals{margin-top:20px}.rivals th:nth-child(1){width:24%}.rivals th:nth-child(2){width:54%}.rivals th:nth-child(3){width:22%}
-.rivals td,.rivals tbody th{font-size:13px;padding:7px 10px 7px 0}.rivals thead th{padding-left:0}
-.rivals tr.us th,.rivals tr.us td{background:var(--blue-tint)}.rivals tr.us th{padding-left:8px}
-.guard{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
-.guard div{border-left:2px solid var(--blue);padding-left:10px;font-size:13px;color:var(--ink2);line-height:1.35}.guard b{display:block;color:var(--ink);font-weight:600}
+.split-grid{height:100%;display:grid;grid-template-columns:1fr 360px}
+.split-copy{padding:38px 38px 18px 64px;display:flex;flex-direction:column;min-width:0}
+.split-copy .label{margin-bottom:8px;color:var(--ink2)}
+.split-copy .dek{margin-top:8px}
+.split-copy .body{margin-top:12px}
+.content-heading{display:flex;align-items:center;gap:10px;color:var(--ink2);font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;line-height:1.2}
+.content-heading:after{content:"";height:1px;flex:1;background:var(--line2)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);margin-top:7px;border-top:1px solid var(--line)}
+.steps div{padding:8px 12px 0 0;font-size:13px;color:var(--ink2);line-height:1.34}.steps div+div{padding-left:12px;border-left:1px solid var(--line)}
+.steps b{display:block;color:var(--ink);font-size:15px;font-weight:600;margin-bottom:4px}.steps b i{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--blue-tint);font-style:normal;color:var(--blue);margin-right:6px}
+.content-heading.market-heading{margin-top:12px}
+.rivals{margin-top:8px}.rivals th:nth-child(1){width:21%}.rivals th:nth-child(2){width:48%}.rivals th:nth-child(3){width:31%}
+.rivals td,.rivals tbody th{font-size:13px;line-height:1.3;padding:5px 9px 5px 0}.rivals thead th{font-size:11.5px;line-height:1.3;padding:0 8px 5px 0}
+.rivals tr.us th,.rivals tr.us td{background:var(--blue-tint)}.rivals tr.us th{padding-left:8px;border-left:2px solid var(--blue)}
+.content-heading.guard-heading{margin-top:10px}
+.guard{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:7px}
+.guard div{border:1px solid var(--line);border-left:2px solid var(--blue);border-radius:4px;background:var(--tint);padding:7px 9px;font-size:12.5px;color:var(--ink2);line-height:1.3}.guard b{display:block;color:var(--ink);font-weight:600;margin-bottom:2px}
+.split-copy .foot{padding-top:8px}
+.split-copy .foot .folio{margin-top:8px;padding-top:7px}
 .split-visual{background:#eef1f6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-left:1px solid var(--line)}
 .chat{display:flex;flex-direction:column;gap:6px}
 .q{align-self:flex-end;max-width:82%;background:var(--blue);color:#fff;border-radius:12px 12px 3px 12px;padding:6px 9px;font-size:9.5px;line-height:1.35}
@@ -475,21 +483,24 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
 <h2 id="t7">Answers from the society’s own documents</h2>
 <p class="dek">The committee uploads bye-laws, AGM minutes and circulars once. Residents ask in their own words. Every answer shows where it came from. Proposed, not built.</p>
 <div class="body">
+<div class="content-heading">How it works</div>
 <div class="steps">
-  <div><b><i>1</i>Upload</b>A president or VP adds a PDF and marks it public or committee-only.</div>
-  <div><b><i>2</i>Read</b>Wooru splits it into short passages and remembers each page.</div>
-  <div><b><i>3</i>Ask</b>A resident types a question. Only documents they may see are searched.</div>
-  <div><b><i>4</i>Answer</b>A short reply with the page. If nothing fits, it says so and doesn’t guess.</div>
+  <div><b><i>1</i>Upload</b>A lead adds a PDF and marks it public or committee-only.</div>
+  <div><b><i>2</i>Read</b>Wooru indexes passages and keeps each page reference.</div>
+  <div><b><i>3</i>Ask</b>Residents ask in plain language; only allowed files are searched.</div>
+  <div><b><i>4</i>Answer</b>Replies cite pages. If nothing fits, Wooru says so.</div>
 </div>
+<div class="content-heading market-heading">Competitor snapshot</div>
 <table class="rivals">
-<thead><tr><th scope="col">Who</th><th scope="col">Closest thing on offer</th><th scope="col">Residents ask their own documents?</th></tr></thead>
+<thead><tr><th scope="col">Who</th><th scope="col">Closest thing on offer</th><th scope="col">Resident self-serve?</th></tr></thead>
 <tbody>
-<tr><th scope="row">TownSq <small style="font-weight:400;color:var(--ink3)">US</small></th><td>Drafts replies for managers from community documents</td><td>Partly · manager-side</td></tr>
-<tr><th scope="row">ADDA</th><td>Resident chatbot for “everyday community questions”</td><td>Not shown</td></tr>
-<tr><th scope="row">Vantaca <small style="font-weight:400;color:var(--ink3)">US</small></th><td>AI for management staff: board packs, month-end books</td><td>Not for residents</td></tr>
-<tr><th scope="row">MyGate, NoBrokerHood, ApnaComplex</th><td>No AI features on their public pages</td><td>None found</td></tr>
-<tr class="us"><th scope="row">Wooru</th><td><mark class="hl">Residents ask, answers cite the page, committee files stay private</mark></td><td><span class="status s-prop">Proposed</span></td></tr>
+<tr><th scope="row">TownSq <small style="font-weight:400;color:var(--ink3)">US</small></th><td>AI drafts manager replies from community documents</td><td>Manager-side</td></tr>
+<tr><th scope="row">ADDA</th><td>Resident chatbot for everyday questions</td><td>Not shown</td></tr>
+<tr><th scope="row">Vantaca <small style="font-weight:400;color:var(--ink3)">US</small></th><td>Staff AI for board packs and month-end books</td><td>Staff-side</td></tr>
+<tr><th scope="row">Indian society apps</th><td>MyGate, NoBrokerHood, ApnaComplex: no public AI features found</td><td>None found</td></tr>
+<tr class="us"><th scope="row">Wooru</th><td><mark class="hl">Residents ask, get cited answers; committee files stay private</mark></td><td><span class="status s-prop">Proposed</span></td></tr>
 </tbody></table>
+<div class="content-heading guard-heading">Safeguards</div>
 <div class="guard">
   <div><b>No source, no answer</b>An answer without a page reference isn’t shown.</div>
   <div><b>Private stays private</b>Committee-only files are blocked in the database, not just hidden by the AI.</div>
@@ -497,7 +508,7 @@ html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:no
 </div>
 </div>
 <div class="foot">
-<p class="note">Checked 16 Nov 2026 from vendor pages only; PayHOA, Buildium, Yardi and a few others blocked us, so treat this as a likely gap. Rough cost: under ₹10 to read a society’s documents, ₹0.10–₹1 per question. To be measured in a pilot.</p>
+<p class="note">Public-page check · 16 Nov 2026. Some vendor pages blocked access; this is a likely gap, not proof. Rough, unvalidated cost: &lt;₹10 per society to index; ₹0.10–₹1 per question.</p>
 <p class="sources">Sources: <a href="https://www.townsq.io/ai" target="_blank" rel="noopener noreferrer">TownSq AI</a> · <a href="https://adda.io/" target="_blank" rel="noopener noreferrer">ADDA</a> · <a href="https://www.vantaca.com/hoai" target="_blank" rel="noopener noreferrer">Vantaca HOAi</a></p>
 <div class="folio"><span>Wooru · leadership brief</span><span>07 / 11</span></div>
 </div>
