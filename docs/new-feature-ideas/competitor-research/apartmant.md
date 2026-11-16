@@ -160,12 +160,12 @@ Questions to answer through discovery:
 
 ### Wooru repository sources
 
-- [Application summary](../.github/app-summary.md) — current product modules and roles.
-- [Feature contracts](features.md) — per-screen behavior, including the [Community tab](features.md#74-community-tab-app-tabscommunitytsx), [events](features.md#community-events--appevents), [funds](features.md#6-funds), and [notifications](features.md#8-notifications).
-- [Feature status index](disabled-features.md) — in particular [hidden community-business ordering](disabled-features.md#2b-community-business-in-app-ordering--ui-hidden-2026-08-09).
-- [Hidden schools and Borrow & Share detail](hidden-features/mcn-schools-and-borrow.md) — why some built features are not currently surfaced.
-- [WhatsApp contact helpers](../lib/phone.ts) and [WhatsApp integration proposal](presentations/whatsapp-integration.html) — current outbound links versus the researched, unimplemented two-way design.
-- [Global navigation](../components/GlobalBottomNav.tsx) — resident tab labels and screen-reader labels.
-- [Community screen](../app/(tabs)/community.tsx) — events and funds overview.
-- [MCN screen](../app/(tabs)/network.tsx) — resident business, food, parents and carpool modules.
-- [Feature flags](../constants/featureFlags.ts) — current visibility of Schools Catalog and Borrow & Share.
+- [Application summary](../../../.github/app-summary.md) — current product modules and roles.
+- [Feature contracts](../../features.md) — per-screen behavior, including the [Community tab](../../features.md#74-community-tab-app-tabscommunitytsx), [events](../../features.md#community-events--appevents), [funds](../../features.md#6-funds), and [notifications](../../features.md#8-notifications).
+- [Feature status index](../../disabled-features.md) — in particular [hidden community-business ordering](../../disabled-features.md#2b-community-business-in-app-ordering--ui-hidden-2026-08-09).
+- [Hidden schools and Borrow & Share detail](../../hidden-features/mcn-schools-and-borrow.md) — why some built features are not currently surfaced.
+- [WhatsApp contact helpers](../../../lib/phone.ts) and [WhatsApp integration proposal](../../presentations/whatsapp-integration.html) — current outbound links versus the researched, unimplemented two-way design.
+- [Global navigation](../../../components/GlobalBottomNav.tsx) — resident tab labels and screen-reader labels.
+- [Community screen](../../../app/(tabs)/community.tsx) — events and funds overview.
+- [MCN screen](../../../app/(tabs)/network.tsx) — resident business, food, parents and carpool modules.
+- [Feature flags](../../../constants/featureFlags.ts) — current visibility of Schools Catalog and Borrow & Share.

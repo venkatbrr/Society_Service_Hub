@@ -2,6 +2,7 @@
 
 **Status:** proposal only, nothing built. No schema, RLS or UI exists for this yet.
 **Decisions already taken:** owners who live elsewhere are included; the resident picks their type and a president or vice-president approves it; the split covers funds, dues, governance, notices, issues, flat records, the directory and community roles.
+Residents and community leads can target posts and events to an audience. Only presidents and vice-presidents publish official notices. A household audience means the approved members of one specific flat.
 
 ## 1. Why
 
@@ -126,8 +127,57 @@ Documentary proof (sale deed, rental agreement) is **not** collected in v1. It r
 - **Profile:** a "My flats" card lists each flat with its type and status (Pending / Active). Here a resident can add a flat or end a tenancy.
 - **Lead queue:** one combined "Flat requests" list showing the claimed type and any conflict warning.
 - **Absentee owner home:** a lighter view with their flat's dues, issues, owner notices and polls first; community life follows.
-- **Notices and polls composer:** an audience picker (Everyone / Owners / Residents living here / One block).
+- **Posts, events and notices composer:** an audience picker, described below. Only leads get the official-notice option. Formal polls still follow their separate voting rules.
 - Use plain wording: say "Owner" and "Tenant", never "absentee". Badges are visible to leads only by default.
+
+### 7.1 Choose who sees a post or event
+
+**Proposed, not built.** Events already exist; audience restrictions would be new. This does not change the visibility of existing events automatically.
+
+When creating a post or event, the author chooses **Who can see this?** before publishing. The same choice controls the feed, event details, attachments, comments, RSVPs, search and notifications.
+
+| Audience | Who receives it | Example |
+|---|---|---|
+| Everyone in this society | All approved community members, including owners living elsewhere | A society anniversary event |
+| Owners only | Active, approved resident and non-resident owners | A discussion about a proposed corpus contribution |
+| Tenants only | Active, approved tenant members, not everyone registered at a rented flat | A tenant welcome session |
+| Residents living here | Resident owners, tenants and household members; not owners living elsewhere | Pest-control preparation |
+| One household / flat | Active, approved members of the selected flat, including its non-resident owner | A discussion among B-204's members about a repair visit |
+| One block | Approved members linked to flats in the selected block | A Block B cleaning day |
+| A group | Active members of a permission-controlled Wooru group | A gardening-group meetup |
+
+These are Wooru audiences, not existing WhatsApp groups. Groups and group membership controls would also need to be built. For the first release, allow one audience per item; combined filters can wait.
+
+**Who can publish**
+
+- Residents and leads can create ordinary posts and events. Resident-created content is labelled with the author's name, not presented as an official announcement.
+- Residents can target a restricted audience only if they belong to it. An owner cannot post to tenants only just because they own a rented flat. A resident can select only their own approved flat, block or groups.
+- Presidents and vice-presidents can address any audience within their society for community business. An admin role does not make someone an owner or give them an association vote.
+- Only presidents and vice-presidents can publish an **official notice**. A resident can suggest an announcement, but cannot apply the official label.
+- A household post is private to the selected flat's members and its author. Being president does not put someone into every household conversation. Any moderation or platform-admin access must be explicitly authorised and audited, not granted through the normal feed.
+
+**Publishing flow**
+
+1. Choose Post or Event and enter the details.
+2. Select the audience. No audience is preselected for a new item.
+3. Review a plain-language summary, for example: "Owners only, including owners living elsewhere." Show the recipient count, not a private membership list.
+4. Publish. The server checks the author's permission and recipients' approved memberships before saving or sending anything.
+5. Eligible members see the item and, where enabled, receive a notification. Ineligible members get neither the item nor a revealing notification preview.
+
+**Privacy and membership changes**
+
+- Enforce the audience in database permissions, not just feed filters. Copying a link must not expose the title, attachment, comments or RSVP list to someone outside the audience.
+- Recheck access when opening an item and when sending a queued notification. Ended memberships lose access; newly approved members can see relevant items still available to their audience. Previously delivered messages cannot be recalled.
+- Once published, keep the audience fixed. To widen it, create a new item and review it again, so private comments or attendee details are not exposed accidentally.
+- Notifications and any future WhatsApp delivery must use the same permission checks. Keep sensitive content out of push previews; do not send household or owner-only content to a public society chat.
+- RSVP eligibility follows the event audience. An RSVP is not a governance vote and never grants owner permissions.
+- Everyone still receives emergency and safety alerts; an audience filter must not hide these.
+
+**Examples**
+
+- A president publishes an official AGM notice to owners only. Approved tenants do not see its contents. Any voting entitlement still follows the society's bye-laws.
+- A tenant organises a tenants-only welcome meetup. It appears as a resident event, not an official society notice.
+- A member of B-204 posts a repair-visit update to B-204's household. Other flats cannot open it, even with its link.
 
 ## 8. Delivery phases
 
@@ -135,7 +185,7 @@ Documentary proof (sale deed, rental agreement) is **not** collected in v1. It r
 |---|---|---|
 | **1. Foundation** | Membership table, RLS, helpers, onboarding choice, lead approval, Profile "My flats", lead-only directory badge | — |
 | **2. Funds split** | Per-flat roll limited to owners and own flat; treasurer must be an owner | Phase 1 |
-| **3. Notices with audience** | New notices module with the Everyone / Owners / Residents audiences | Phase 1 |
+| **3. Audience-based publishing** | Audience controls for new posts and existing events; lead-only official notices; protected attachments, comments, RSVPs and notifications. Group targeting waits for permission-controlled groups | Phase 1 |
 | **4. Issues** | Flat and common-area issues; owners follow issues on their rented flat | Phase 1 |
 | **5. Governance and dues** | Owners' polls (one vote per flat), dues statements and payments | Phases 1 and 3, plus the payment gateway |
 | **6. Absentee owner experience** | Flat switcher, owner home view, multi-flat | Phase 1 |

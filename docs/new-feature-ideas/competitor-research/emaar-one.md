@@ -54,4 +54,4 @@ Some Play Store reviews report form data being lost after switching apps, pages 
 - [Emaar One on Google Play](https://play.google.com/store/apps/details?id=com.emaartechnologies.emaarone&hl=en) — public listing, feature descriptions, screenshots, update notes and user reviews.
 - Emaar One's six screenshots reviewed from the Google Play listing on 15 November 2026. The screenshots are visual references, not proof that every feature is available to every resident.
 - Review comments summarized above are user-submitted Play Store reports and were not reproduced in the app.
-- [Wooru feature contracts](features.md) and [Verandah design guidance](verandah.md) — references for current Wooru behavior and design constraints.
+- [Wooru feature contracts](../../features.md) and [Verandah design guidance](../../verandah.md) — references for current Wooru behavior and design constraints.
