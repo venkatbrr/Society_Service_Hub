@@ -8,7 +8,7 @@ Designed features that haven't been built.
 
 | Proposal | What it adds |
 |---|---|
-| [Owner and tenant visibility](proposals/owner-tenant-visibility-proposal.md) | Separates owners from tenants within a flat. Covers flat membership, lead approval, what each type can see, and a check of what competitors offer. |
+| [Owner and tenant visibility](proposals/owner-tenant-visibility-proposal.md) | Flat membership, lead approval and access rules. Includes posts and events for owners, tenants, one household/flat, a block or a group, with official notices reserved for leads. Also checks competitor evidence. |
 | [Society document assistant](proposals/society-document-assistant-proposal.md) | Residents ask questions about uploaded society documents (bye-laws, AGM minutes, circulars) and get answers that cite the page. Covers the competitor gap, visibility rules, risks and phases. |
 
 ## Competitor and UX research
