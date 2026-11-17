@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An evidence-aware Wooru strategy presentation: community pain-point research, useful features, competitor landscape, revenue hypotheses and a phased pilot plan.">
+  <title>Wooru | Feature and income strategy</title>
+  <style>
+    :root {
+      --paper:#FAF8F4; --card:#fff; --cream:#F0EDE3; --ink:#1F2A28;
+      --primary:#0F3732; --accent:#0F6E56; --muted:#596964; --line:#C8D6D0;
+      --gold:#854F0B; --gold-bg:#FAEEDA; --red:#A32D2D; --mint:#E1F5EE;
+    }
+    * { box-sizing:border-box; }
+    html { color-scheme:light; }
+    body { margin:0; color:var(--ink); background:#EDEDE8; font:400 16px/1.48 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    button { font:inherit; color:var(--primary); background:#fff; border:1px solid var(--line); border-radius:7px; padding:7px 11px; cursor:pointer; }
+    button:hover { background:var(--mint); }
+    button:disabled { opacity:.45; cursor:default; }
+    :focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+    a { color:var(--accent); overflow-wrap:anywhere; text-underline-offset:3px; }
+    h1,h2,h3,p { margin:0 0 14px; }
+    h1,h2,h3 { color:var(--primary); font-weight:400; letter-spacing:-.025em; line-height:1.13; }
+    h1 { font:400 clamp(42px,5vw,66px)/1.04 Georgia,serif; max-width:900px; }
+    h2 { font-size:clamp(30px,3vw,41px); max-width:1020px; }
+    h3 { font-size:18px; font-weight:500; }
+    strong,b { font-weight:600; }
+    ul,ol { margin:0; padding-left:20px; }
+    li { margin-bottom:7px; }
+    .top,.bottom { display:flex; align-items:center; gap:10px; padding:9px max(20px,calc((100vw - 1280px)/2)); background:#EDEDE8; }
+    .top { border-bottom:1px solid var(--line); flex-wrap:wrap; }
+    .bottom { border-top:1px solid var(--line); }
+    .brand { margin-right:auto; color:var(--primary); font-size:20px; font-weight:600; letter-spacing:-.05em; }
+    .counter { min-width:56px; text-align:center; font-size:13px; font-variant-numeric:tabular-nums; }
+    .bottom progress { flex:1; height:4px; accent-color:var(--accent); }
+    main { min-height:0; }
+    .slide { max-width:1480px; margin:auto; padding:clamp(24px,3.5vw,48px); background:#fff; border-bottom:1px solid var(--line); }
+    .kicker { color:var(--accent); font-size:11px; font-weight:600; letter-spacing:.12em; margin-bottom:14px; }
+    .lede { max-width:890px; color:var(--muted); font-size:clamp(19px,2vw,24px); }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; margin:15px 0; }
+    .grid.three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .grid.five { grid-template-columns:repeat(5,minmax(0,1fr)); }
+    .card { min-width:0; padding:16px 18px; border:1px solid var(--line); border-radius:9px; background:#fff; }
+    .card p:last-child,.card ul:last-child { margin-bottom:0; }
+    .card.dark { color:#fff; background:var(--primary); border-color:var(--primary); }
+    .card.dark h3 { color:#fff; }
+    .card.tint { background:var(--mint); }
+    .card.warn { background:var(--gold-bg); }
+    .card.danger { background:#FCEBEB; border-color:#E4BDBD; }
+    .tag { display:inline-block; padding:3px 8px; border-radius:99px; background:var(--mint); color:var(--accent); font-size:11px; font-weight:600; }
+    .tag.warn { color:var(--gold); background:var(--gold-bg); }
+    .tag.no { color:var(--red); background:#FCEBEB; }
+    .callout { padding:12px 15px; border-left:3px solid #B88237; border-radius:5px; background:var(--gold-bg); color:var(--gold); font-size:14px; margin:12px 0; }
+    .table-wrap { overflow-x:auto; margin:16px 0; border:1px solid var(--line); border-radius:7px; }
+    table { width:100%; min-width:680px; border-collapse:collapse; background:#fff; font-size:14px; }
+    th,td { padding:9px 11px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { color:var(--primary); font-weight:600; background:var(--cream); }
+    tr:last-child td { border-bottom:0; }
+    .small { color:var(--muted); font-size:13px; }
+    .metric { color:var(--accent); font-size:clamp(27px,3vw,40px); font-weight:600; line-height:1.1; }
+    .flow { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:9px; margin:20px 0; }
+    .flow > div { padding:13px; border:1px solid var(--line); border-radius:9px; background:#fff; }
+    .flow b { display:block; color:var(--primary); font-size:17px; margin-bottom:5px; }
+    .bar { margin-top:14px; padding:12px 15px; background:var(--cream); color:var(--primary); border-radius:6px; }
+    .sources { margin-top:16px; color:var(--muted); font-size:12px; }
+    .footerline { display:flex; justify-content:space-between; margin-top:30px; padding-top:9px; border-top:1px solid var(--line); color:var(--muted); font-size:10px; }
+    .js body { height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
+    .js main { flex:1; min-height:0; overflow-y:auto; }
+    .js .slide { display:none; border:0; }
+    .js .slide.active { display:flex; flex-direction:column; justify-content:center; width:min(1280px,calc((100dvh - 130px)*16/9),100%); min-height:0; height:auto; aspect-ratio:16/9; margin:auto; padding:clamp(28px,3vw,46px); overflow:auto; }
+    .js .slide.active.long { justify-content:flex-start; }
+    .js .slide.active h2 { font-size:clamp(26px,2.7vw,37px); }
+    .js .slide.active .card { padding:13px 15px; }
+    .js .slide.active table { font-size:12px; }
+    .js .slide.active th,.js .slide.active td { padding:7px 9px; }
+    .js .slide.active .grid { gap:10px; margin:10px 0; }
+    .js .slide.active .footerline { margin-top:15px; }
+    .js .slide.active .sources { font-size:11px; }
+    noscript { display:block; padding:12px; margin:12px; background:var(--gold-bg); }
+    .read-mode main { display:block; overflow:visible; }
+    .js body.read-mode { height:auto; overflow:auto; }
+    .read-mode .slide { display:block; width:min(100% - 32px,1100px); height:auto; aspect-ratio:auto; margin:20px auto; border:1px solid var(--line); }
+    /* Presenting works without the Fullscreen API (iPhone Safari has none for pages) */
+    .present-controls { display:none; }
+    .presenting .top,.presenting .bottom,.presenting #status { display:none; }
+    .js body.presenting { height:100dvh; overflow:hidden; background:#fff; }
+    .js body.presenting main { overflow-y:auto; padding-bottom:56px; }
+    .presenting .present-controls { display:flex; gap:6px; align-items:center; position:fixed; z-index:20; right:max(10px,env(safe-area-inset-right)); bottom:max(10px,env(safe-area-inset-bottom)); padding:5px; border:1px solid var(--line); border-radius:9px; background:rgba(255,255,255,.94); }
+    .present-controls button { padding:5px 10px; font-size:13px; }
+    .present-controls span { min-width:52px; text-align:center; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+    @media(max-width:900px) {
+      .js body { height:auto; min-height:100dvh; overflow:auto; }
+      .js main { overflow:visible; }
+      .js .slide.active { width:100%; height:auto; min-height:calc(100dvh - 112px); aspect-ratio:auto; padding:26px max(20px,5vw); }
+      .grid.three { grid-template-columns:1fr; }
+      .grid.five,.flow { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .top,.bottom { padding:9px 14px; }
+    }
+    @media(max-width:560px) {
+      .grid,.grid.three,.grid.five,.flow { grid-template-columns:1fr; }
+      .top button { padding:6px 8px; font-size:13px; }
+      .brand { font-size:18px; }
+      h1 { font-size:42px; }
+      h2 { font-size:30px; }
+    }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; animation:none !important; transition:none !important; } }
+    @media print {
+      @page { size:320mm 180mm; margin:0; }
+      html,body { width:320mm; margin:0; background:#fff; }
+      .top,.bottom,noscript,#status { display:none !important; }
+      .js body { height:auto !important; overflow:visible !important; }
+      main,.js main { display:block !important; overflow:visible !important; }
+      .slide,.js .slide,.js .slide.active,.read-mode .slide {
+        display:flex !important; flex-direction:column; justify-content:center; width:320mm !important; max-width:none !important;
+        height:180mm !important; min-height:0 !important; aspect-ratio:16/9;
+        margin:0 !important; padding:12mm 15mm !important; overflow:hidden !important;
+        border:0 !important; break-after:page; page-break-after:always;
+      }
+      .slide:last-child { break-after:auto; page-break-after:auto; }
+      .slide h1 { font-size:52px; }
+      .slide h2 { font-size:34px; }
+      .slide table { font-size:12px; }
+      .slide th,.slide td { padding:7px 9px; }
+      a { color:inherit; text-decoration:none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top" aria-label="Presentation controls">
+    <div class="brand">wooru<span style="color:var(--accent)">.</span></div>
+    <button id="community-issues" type="button">Community issues</button>
+    <button id="read-toggle" type="button" aria-pressed="false">Read all</button>
+    <button id="print" type="button">Print / PDF</button>
+    <button id="fullscreen" type="button">Full screen</button>
+    <button id="previous" type="button" aria-label="Previous slide">Back</button>
+    <button id="next" type="button" aria-label="Next slide">Next</button>
+  </header>
+  <noscript>JavaScript is off. All slides are available below as a readable document.</noscript>
+  <p id="status" class="small" role="status" aria-live="polite" style="padding:0 18px"></p>
+  <main id="deck">
+    <section class="slide" aria-label="Slide 1">
+      <p class="kicker">WOORU | FEATURE &amp; BUSINESS STRATEGY</p>
+      <h1>A sharper product. A credible income model.</h1>
+      <p class="lede">A trusted neighbourhood utility — not another gate-security ERP or delivery company.</p>
+      <div class="grid three" style="margin-top:30px">
+        <article class="card"><span class="tag">01 / PRODUCT</span><h3 style="margin-top:13px">Keep what earns trust</h3><p>Trusted services<br>Home-chef pre-orders<br>Transparent community funds</p></article>
+        <article class="card"><span class="tag">02 / GROWTH</span><h3 style="margin-top:13px">Add selectively</h3><p>Official notices + issue tracking<br>Clear commerce expectations<br>Small buying-circle pilots</p></article>
+        <article class="card"><span class="tag">03 / BUSINESS</span><h3 style="margin-top:13px">Validate who pays</h3><p>Society subscription first<br>Seller tools later<br>Commission only with settlement</p></article>
+      </div>
+      <div class="bar">Existing features, proposed features and illustrative economics are explicitly separated.</div>
+      <div class="footerline"><span>Leadership discussion · 15 Nov 2026</span><span>01</span></div>
+      <aside class="sources">Evidence: repository review and user-provided market strategy document. No market adoption or revenue is asserted.</aside>
+    </section>
+    <section class="slide" aria-label="Slide 2">
+      <p class="kicker">EXECUTIVE SUMMARY</p><h2>The leadership decision</h2><p class="lede">Win a focused resident workflow before broadening the platform.</p>
+      <div class="grid">
+        <article class="card tint"><span class="tag">APPROVE</span><h3 style="margin-top:12px">One coherent promise</h3><p>Find trusted help, buy from neighbours and coordinate important community matters.</p><p><b>Resident usefulness + leadership transparency.</b></p></article>
+        <article class="card danger"><span class="tag no">DO NOT FUND YET</span><h3 style="margin-top:12px">Five separate businesses</h3><p>Gate hardware, last-mile runners, a full social network, enterprise accounting and redeemable credits.</p><p><b>They need different operations and economics.</b></p></article>
+      </div><div class="bar">Recommendation: strengthen services and menus; pilot paid coordination; avoid premature expansion.</div>
+      <div class="footerline"><span>Recommendation, not measured customer preference</span><span>02</span></div>
+    </section>
+    <section class="slide" aria-label="Slide 3">
+      <p class="kicker">CUSTOMER JOBS</p><h2>The problem is coordination — not a missing app</h2><p class="lede">Four concrete jobs define a useful Wooru.</p>
+      <div class="table-wrap"><table><thead><tr><th>Customer</th><th>Job to be done</th><th>What success looks like</th></tr></thead><tbody>
+        <tr><td>Resident</td><td>Find a reliable electrician or cook</td><td>Useful recommendation and a successful contact</td></tr>
+        <tr><td>Resident / home chef</td><td>Order and prepare a neighbourhood menu</td><td>Clear cutoff, accurate quantities, agreed handoff</td></tr>
+        <tr><td>Community lead</td><td>Communicate updates and resolve issues</td><td>Visible status without repeated follow-ups</td></tr>
+        <tr><td>Treasurer / resident</td><td>Understand collections and expenses</td><td>Readable ledger and exportable records</td></tr>
+      </tbody></table></div>
+      <div class="footerline"><span>Success definitions are product hypotheses; no adoption or savings data available</span><span>03</span></div>
+    </section>
+    <section class="slide" aria-label="Slide 4">
+      <p class="kicker">EXISTING IN REPOSITORY</p><h2>Current product: the useful foundation</h2><p class="lede">Implemented workflows identified in code and docs; not a live-production QA result.</p>
+      <div class="grid three">
+        <article class="card"><span class="tag">SERVICES</span><h3 style="margin-top:11px">Trust and shared help</h3><p>Provider contacts + reviews<br>Reporting + private notes<br>Shared service visits<br>Saved providers</p></article>
+        <article class="card"><span class="tag">NEIGHBOUR ECONOMY</span><h3 style="margin-top:11px">Structured commerce</h3><p>Home-chef pre-order menus<br>Item limits + cancellations<br>Seller prep and delivery roster<br>Business directory + contact</p></article>
+        <article class="card"><span class="tag">COMMUNITY</span><h3 style="margin-top:11px">Transparency and utility</h3><p>Funds ledger + CSV export<br>Events + carpooling<br>Parent matching + SOS<br>Reminders + notifications</p></article>
+      </div><div class="bar">Not live integrations: automated WhatsApp commerce, external quick-commerce pooling or payment settlement.</div>
+      <div class="footerline"><span>CSV export already exists</span><span>04</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 5">
+      <p class="kicker">FEATURE PORTFOLIO</p><h2>Keep, add, defer, exclude</h2><p class="lede">Investment priority—not an instruction to delete historical data or code.</p>
+      <div class="table-wrap"><table><thead><tr><th>Decision</th><th>Feature portfolio</th><th>Why</th></tr></thead><tbody>
+        <tr><td><span class="tag">KEEP / STRENGTHEN</span></td><td>Providers, menus, funds, events, core utilities</td><td>Build on working product workflows</td></tr>
+        <tr><td><span class="tag">ADD / VALIDATE</span></td><td>Notices, issue tracking, quiet hours, commerce clarity</td><td>Broad utility with limited operating complexity</td></tr>
+        <tr><td><span class="tag warn">PILOT</span></td><td>Single-supplier buying circles; opt-in borrowing</td><td>Test participation and fulfilment before automation</td></tr>
+        <tr><td><span class="tag warn">DEFER</span></td><td>Full chat, school catalog expansion, formal voting, federation</td><td>Demand, privacy and governance need evidence</td></tr>
+        <tr><td><span class="tag no">EXCLUDE NOW</span></td><td>Lockers, runners, guard app, full ERP, redeemable credits</td><td>Different operating and financial business</td></tr>
+      </tbody></table></div><p class="small">Schools and Borrow &amp; Share entry points are disabled in feature flags. Deferred features can remain intact.</p>
+      <div class="footerline"><span>Prioritization only—not deletion or deployment</span><span>05</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 6">
+      <p class="kicker">COMPETITOR TABLE | OFFICIAL-SITE CLAIMS</p><h2>Competitors are broader than the input document suggests</h2><p class="lede">Vendor marketing, not independent product tests. Pricing and market-share claims are omitted.</p>
+      <div class="table-wrap"><table><thead><tr><th>Platform</th><th>Publicly marketed capabilities</th><th>Implication for Wooru</th></tr></thead><tbody>
+        <tr><td>MyGate</td><td>Accounting/ERP, visitors, facilities, helpdesk, communication</td><td>Avoid a head-on ERP and security feature race</td></tr>
+        <tr><td>NoBrokerHood</td><td>Visitors, staff, bill payments, communication, complaints</td><td>Basic notices and complaint tracking are not unique</td></tr>
+        <tr><td>ADDA</td><td>Accounting, gatekeeper, helpdesk, amenities; ad-free resident app</td><td>Ad-free positioning alone is not a moat</td></tr>
+        <tr><td>ApnaComplex / ANACITY</td><td>Notices, groups, forums, surveys; one-unit or one-user polls</td><td>Do not claim one-flat polling is absent from competitors</td></tr>
+        <tr><td>Wooru</td><td>Providers, shared visits, menus, funds ledger, neighbour matching</td><td>Focus on execution of neighbourhood workflows</td></tr>
+      </tbody></table></div>
+      <p class="small">An unlisted capability on a reviewed page is not proof that the product lacks it. Vendor claims are self-reported.</p>
+      <div class="footerline"><span>Competitor sources linked on final slide</span><span>06</span></div>
+    </section>
+    <section class="slide" aria-label="Slide 7">
+      <p class="kicker">COMPETITIVE STRATEGY</p><h2>Position against alternatives—not just competitors</h2><p class="lede">Coexist with a society ERP and WhatsApp where they already work.</p>
+      <div class="table-wrap"><table><thead><tr><th>Alternative</th><th>Why customers use it</th><th>Wooru must earn the switch</th></tr></thead><tbody>
+        <tr><td>Society ERP</td><td>Gate access, billing, administration</td><td>Solve a focused resident job without duplicating the ERP</td></tr>
+        <tr><td>WhatsApp groups</td><td>Habit, reach and fast coordination</td><td>Offer structured cutoffs, capacity, records and status</td></tr>
+        <tr><td>Spreadsheets</td><td>Flexible, low-cost financial records</td><td>Make visibility easier; retain CSV export</td></tr>
+        <tr><td>Direct seller contact</td><td>Familiar personal relationship</td><td>Reduce repeated order collection and kitchen planning</td></tr>
+      </tbody></table></div>
+      <div class="callout">Potential advantage: community trust + repeated successful outcomes. This is not a proven moat.</div>
+      <div class="footerline"><span>No competitive win-rate or defensibility evidence available</span><span>07</span></div>
+    </section>
+    <section class="slide" aria-label="Slide 8">
+      <p class="kicker">PROPOSED | NEXT PRODUCT BETS</p><h2>Add useful coordination—not an endless feed</h2><p class="lede">Start narrow, with explicit owners and visible outcomes.</p>
+      <div class="grid three">
+        <article class="card"><span class="tag">01 / OFFICIAL NOTICES</span><h3 style="margin-top:10px">Important updates</h3><p>Lead-authored notices<br>Category, expiry and audience<br>Durable inbox<br>Urgency used sparingly</p></article>
+        <article class="card"><span class="tag">02 / ISSUE TRACKING</span><h3 style="margin-top:10px">Acknowledge to resolve</h3><p>Report → acknowledge<br>Assign → update → resolve<br>Resident status visibility<br>No uncontracted SLA promise</p></article>
+        <article class="card"><span class="tag">03 / ATTENTION</span><h3 style="margin-top:10px">Less notification noise</h3><p>Quiet hours for broadcasts<br>Channel preferences<br>Transactional alerts distinct<br>Push is not the only record</p></article>
+      </div><div class="bar">Announcement backend exists without current UI; quiet hours and issue tracking are proposals.</div>
+      <div class="footerline"><span>Notices ≠ general social feed</span><span>08</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 9">
+      <p class="kicker">STRENGTHEN CURRENT COMMERCE</p><h2>Make the existing menu journey more trustworthy</h2><p class="lede">Order confirmation, payment receipt and delivery are three different facts.</p>
+      <div class="table-wrap"><table><thead><tr><th>Journey stage</th><th>Existing foundation</th><th>Recommended improvement</th></tr></thead><tbody>
+        <tr><td>Discover</td><td>Menu, items, prices, cutoff and capacity</td><td>Clear pickup/delivery promise and food information</td></tr>
+        <tr><td>Reserve</td><td>Confirmed orders; edits and cancellation</td><td>Explicit payment and refund expectations</td></tr>
+        <tr><td>Prepare</td><td>Host item totals and order roster</td><td>Clear buyer communication when plans change</td></tr>
+        <tr><td>Handoff</td><td>Host marks delivered / fulfilled</td><td>Unambiguous pickup or delivery confirmation</td></tr>
+      </tbody></table></div><div class="callout">Do not introduce subscriptions or payment fees until repeat demand and settlement responsibility are clear.</div>
+      <p class="small">Payment handling, refunds, food information and handoff checks are recommendations, not current implementations.</p>
+      <div class="footerline"><span>Specialist review may be needed for food-business obligations</span><span>09</span></div>
+    </section>
+    <section class="slide" aria-label="Slide 10">
+      <p class="kicker">PROPOSED | MANUAL-FIRST PILOT</p><h2>Buying circles: one offer, one supplier, one deadline</h2><p class="lede">Test a local fruit, grocery or service offer before external-platform pooling.</p>
+      <div class="flow">
+        <div><b>01 Request</b>Residents express interest</div><div><b>02 Quote</b>Supplier sets price + minimum</div><div><b>03 Commit</b>Households confirm quantities</div><div><b>04 Fulfil</b>Agreed pickup or delivery</div><div><b>05 Review</b>Savings, disputes, repeats</div>
+      </div>
+      <div class="grid three"><article class="card tint"><h3>Pilot gates</h3><p>Net savings after fees<br>Reliable supplier</p></article><article class="card"><h3>Clear responsibility</h3><p>Cancellation and refund rule<br>Named fulfilment owner</p></article><article class="card warn"><h3>No assumed integrations</h3><p>No external-platform APIs<br>No waived delivery fees</p></article></div>
+      <div class="footerline"><span>Proposed workflow; not implemented</span><span>10</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 11">
+      <p class="kicker">REVENUE HYPOTHESES | NOT CURRENT EARNINGS</p><h2>Income streams: who pays, and for what?</h2><p class="lede">Choose one primary payer; avoid charging everyone before value is established.</p>
+      <div class="table-wrap"><table><thead><tr><th>Stream</th><th>Payer / value</th><th>Sequence &amp; guardrail</th></tr></thead><tbody>
+        <tr><td>Society subscription</td><td>Association pays for coordination and transparency</td><td>First: trial-to-paid conversion; budget-owner approval</td></tr>
+        <tr><td>Setup / assisted onboarding</td><td>Association pays for scoped setup and training</td><td>Optional: price service effort explicitly</td></tr>
+        <tr><td>Seller tools subscription</td><td>Repeat seller pays for prep/reporting tools</td><td>Later: prove value; avoid charging for discovery</td></tr>
+        <tr><td>Commerce commission</td><td>Seller pays for settled, attributable transactions</td><td>Later: requires payment, refund and tax responsibilities</td></tr>
+        <tr><td>Disclosed local sponsorship</td><td>Sponsor funds agreed event or placement</td><td>Association consent; no ranking bias or resident-data sale</td></tr>
+      </tbody></table></div>
+      <div class="callout">Society contribution funds and seller GMV are not platform revenue. Sponsorship paid to an association is not automatically Wooru revenue.</div>
+      <div class="footerline"><span>No paying customers or contracts verified</span><span>11</span></div>
+    </section>
+    <section class="slide" aria-label="Slide 12">
+      <p class="kicker">ILLUSTRATIVE PRICING | NOT A QUOTE</p><h2>A simple commercial offer to test</h2><p class="lede">Interview and pilot anchors—not approved prices or forecasts.</p>
+      <div class="grid three">
+        <article class="card"><span class="tag">RESIDENT CORE</span><h3 style="margin-top:10px">No resident subscription</h3><p>Providers + menus + SOS<br>Maintain a useful entry point<br>Association-funded hypothesis<br>No forced ad feed</p></article>
+        <article class="card tint"><span class="tag">SOCIETY COORDINATION</span><h3 style="margin-top:10px">₹2,500 / month</h3><p>Illustrative flat society fee<br>Notices + issue tracking proposed<br>Test included units and support</p></article>
+        <article class="card warn"><span class="tag warn">ASSISTED SETUP</span><h3 style="margin-top:10px">₹5,000 one-time</h3><p>Illustrative optional fee<br>Inventory/import/training scope<br>Not recurring income</p></article>
+      </div><div class="bar">Validate willingness to pay with budget owners; define limits, support and taxes before quoting.</div>
+      <div class="footerline"><span>Pricing values are discussion assumptions only</span><span>12</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 13">
+      <p class="kicker">ILLUSTRATIVE MODEL | NOT A FORECAST</p><h2>Subscription economics: show the assumptions</h2><p class="lede">₹2,500 price/society/month; ₹1,000 variable cost/society/month; ₹60,000 fixed cost/month.</p>
+      <div class="table-wrap"><table><thead><tr><th>Paying societies</th><th>Monthly subscription revenue</th><th>Modeled monthly cost</th><th>Operating contribution</th></tr></thead><tbody>
+        <tr><td>10</td><td>₹25,000</td><td>₹70,000</td><td>−₹45,000</td></tr>
+        <tr><td>30</td><td>₹75,000</td><td>₹90,000</td><td>−₹15,000</td></tr>
+        <tr><td>75</td><td>₹187,500</td><td>₹135,000</td><td>₹52,500</td></tr>
+      </tbody></table></div>
+      <div class="card dark" style="margin-top:10px"><p style="font-size:21px"><b>Illustrative break-even: 40 societies</b></p><p>₹60,000 ÷ (₹2,500 − ₹1,000)</p></div>
+      <p class="small">Assumptions only; excludes acquisition ramp, tax, bad debt, finance and capital expenditure. Replace with actual cost data.</p>
+      <div class="footerline"><span>Contribution = subscription revenue − modeled cost</span><span>13</span></div>
+    </section>
+    <section class="slide" aria-label="Slide 14">
+      <p class="kicker">ECONOMIC GUARDRAILS</p><h2>Protect the business model from hidden costs</h2><p class="lede">Revenue growth is not useful if each new community creates unpriced service work.</p>
+      <div class="grid three">
+        <article class="card"><span class="tag">ACQUISITION</span><h3 style="margin-top:11px">Cost to win a society</h3><p>Leadership sales cycle<br>Trials and demonstrations<br>Onboarding assistance<br>Approval and renewal friction</p></article>
+        <article class="card"><span class="tag">OPERATIONS</span><h3 style="margin-top:11px">Cost to keep trust</h3><p>Hosting + messaging usage<br>Resident and seller support<br>Moderation and disputes<br>Data quality and privacy work</p></article>
+        <article class="card"><span class="tag">COMMERCE</span><h3 style="margin-top:11px">Cost of transactions</h3><p>Gateway + refund handling<br>Settlement reconciliation<br>Food/delivery responsibilities<br>Fraud and failed fulfilment</p></article>
+      </div><div class="bar">Measure contribution per society and renewal intent before adding transaction-led revenue.</div>
+      <div class="footerline"><span>Cost categories are not verified amounts</span><span>14</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 15">
+      <p class="kicker">PROPOSED 90-DAY PLAN</p><h2>A phased pilot—with stop/go gates</h2><p class="lede">A planning sequence, not an engineering delivery commitment.</p>
+      <div class="table-wrap"><table><thead><tr><th>Phase</th><th>Objective</th><th>Gate before expanding</th></tr></thead><tbody>
+        <tr><td>Days 1–30</td><td>Interview leads, residents, sellers; validate current journeys</td><td>Named payer, recurring problem, reliable core</td></tr>
+        <tr><td>Days 31–60</td><td>Narrow notices / issue-tracking pilot; test paid offer</td><td>Regular use, measurable follow-up reduction, price acceptance</td></tr>
+        <tr><td>Days 61–90</td><td>Run one local-supplier buying circle; seek paid renewals</td><td>Successful fulfilment, repeat participation, healthy support cost</td></tr>
+      </tbody></table></div>
+      <div class="bar">Suggested pilot size: 3–5 societies with active leads and willing resident sellers.</div>
+      <div class="footerline"><span>Proposed timeline and cohort size</span><span>15</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 16">
+      <p class="kicker">PILOT SCORECARD</p><h2>Measure repeat usefulness—not downloads</h2><p class="lede">Working gates below are hypotheses, not current results or industry benchmarks.</p>
+      <div class="table-wrap"><table><thead><tr><th>Metric</th><th>Initial working gate</th><th>Why it matters</th></tr></thead><tbody>
+        <tr><td>Household activation</td><td>30% of occupied households do a useful action in 30 days</td><td>Reach beyond a handful of champions</td></tr>
+        <tr><td>Buyer repeat</td><td>30% of first-time menu buyers reorder within 30 days</td><td>Validate repeated commerce value</td></tr>
+        <tr><td>Coordination outcome</td><td>25% fewer follow-ups for tracked pilot issues</td><td>Demonstrate a lead-level benefit</td></tr>
+        <tr><td>Payment commitment</td><td>At least 2 of 5 pilot societies accept a paid offer</td><td>Validate payer, not survey enthusiasm</td></tr>
+        <tr><td>Operating economics</td><td>Support effort and cost tracked per society</td><td>Replace illustrative costs with observed data</td></tr>
+      </tbody></table></div>
+      <p class="small">Define denominators and baselines before the pilot. Distinguish signed intent from actual payment; use privacy-safe analytics.</p>
+      <div class="footerline"><span>Targets are management hypotheses</span><span>16</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 17">
+      <p class="kicker">BOUNDARIES &amp; RISKS</p><h2>Defer complexity; do not delete value blindly</h2><p class="lede">Invest only when a customer problem and accountable operator are clear.</p>
+      <div class="table-wrap"><table><thead><tr><th>Area</th><th>Decision now</th><th>Re-entry condition</th></tr></thead><tbody>
+        <tr><td>Lockers / runners / guard mode</td><td>Outside near-term scope</td><td>Contracted operator, demand and viable economics</td></tr>
+        <tr><td>Full chat / formal voting</td><td>Defer</td><td>Moderation, identity, consent and governance defined</td></tr>
+        <tr><td>Redeemable credits</td><td>Exclude near term</td><td>Legal review, funded liabilities and settlement controls</td></tr>
+        <tr><td>Schools / broad federation</td><td>Defer expansion</td><td>Data steward and demonstrated recurring demand</td></tr>
+        <tr><td>Privacy / reliability / legal terms</td><td>Required foundation</td><td>Verify delivery, access boundaries and launch obligations</td></tr>
+      </tbody></table></div>
+      <p class="small">Flat selection does not prove residency or voting eligibility. Child-data exposure warrants minimization and specialist review.</p>
+      <div class="footerline"><span>Prioritization—not a security audit</span><span>17</span></div>
+    </section>
+    <section class="slide" aria-label="Slide 18">
+      <p class="kicker">DECISIONS &amp; OWNERS</p><h2>What leadership should approve today</h2><p class="lede">A few accountable bets beat a large speculative roadmap.</p>
+      <div class="grid three">
+        <article class="card"><span class="tag">PRODUCT OWNER</span><h3 style="margin-top:11px">Focus the portfolio</h3><p>Services + menus + funds<br>Scope notices and issue tracking<br>Keep ERP/hardware out<br>Protect historical data</p></article>
+        <article class="card tint"><span class="tag">COMMERCIAL OWNER</span><h3 style="margin-top:11px">Prove the payer</h3><p>Recruit 3–5 pilot societies<br>Test a subscription offer<br>Price assisted setup honestly<br>Record paid acceptance</p></article>
+        <article class="card warn"><span class="tag warn">OPERATIONS OWNER</span><h3 style="margin-top:11px">Replace assumptions</h3><p>Validate core workflows<br>Measure support effort<br>Agree dispute ownership<br>Review at 30/60/90 days</p></article>
+      </div><div class="bar">Success: a focused useful product, repeat resident activity and a credible path to paid renewal.</div>
+      <div class="footerline"><span>Suggested roles; assign named owners and budget</span><span>18</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 19">
+      <p class="kicker">REFERENCE APPENDIX</p><h2>Sources, evidence and limitations</h2><p class="lede">Official vendor pages accessed 15 November 2026.</p>
+      <div class="card">
+        <p><b>MyGate</b> — <a href="https://mygate.com/" target="_blank" rel="noreferrer">mygate.com</a></p>
+        <p><b>NoBrokerHood</b> — <a href="https://www.nobrokerhood.com/" target="_blank" rel="noreferrer">nobrokerhood.com</a></p>
+        <p><b>ADDA</b> — <a href="https://ind.adda.io/" target="_blank" rel="noreferrer">ind.adda.io</a> · <a href="https://ind.adda.io/community-super-app" target="_blank" rel="noreferrer">Community Super App</a></p>
+        <p><b>ApnaComplex</b> — <a href="https://www.apnacomplex.com/features" target="_blank" rel="noreferrer">features and communication/polls</a></p>
+        <p><b>Repository</b> — docs/features.md; docs/cross-community.md; constants/featureFlags.ts; selected funds and menu screens.</p>
+        <p><b>Input</b> — user-provided India Gated Community App — Market Gap &amp; Feature Strategy.docx.</p>
+      </div>
+      <div class="callout">No resident analytics, competitor trials, supplier quotes or actual revenue records were available. All prices, costs, targets and roadmap dates are illustrative. Competitor descriptions reflect vendor claims, not independent testing.</div>
+      <div class="footerline"><span>Evidence-aware strategy briefing</span><span>19</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 20" data-section="community-issues">
+      <p class="kicker">MARKET RESEARCH | USER-REPORTED</p><h2>Community pain points: what the evidence says</h2>
+      <p class="lede">A dated review sample identifies problems to investigate—not competitor failure rates.</p>
+      <div class="table-wrap"><table><thead><tr><th>Source</th><th>Returned sample window</th><th>How to interpret</th></tr></thead><tbody>
+        <tr><td>MyGate</td><td>13 Sep–12 Nov 2026</td><td>50 recent India App Store reviews returned</td></tr>
+        <tr><td>NoBrokerHood</td><td>9 Sep–11 Nov 2026</td><td>50 recent India App Store reviews returned</td></tr>
+        <tr><td>ADDA</td><td>23 May–13 Nov 2026</td><td>50 recent India App Store reviews returned</td></tr>
+        <tr><td>ANACITY IN</td><td>10 Jul–13 Nov 2026</td><td>50 recent India App Store reviews returned</td></tr>
+      </tbody></table></div>
+      <div class="callout">Recent complaint examples were qualitatively inspected. Reviews are self-selected; devices and society setups differ. Reports were not reproduced. Positive reviews also exist.</div>
+      <p class="small">Accessed 15 November 2026. Dates are review update dates, not necessarily original posting dates. No market-wide percentages or claim that every user is affected.</p>
+      <div class="footerline"><span>Evidence links and capability corrections on slide 25</span><span>20</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 21">
+      <p class="kicker">USER REPORTS | NOT VERIFIED DEFECTS</p><h2>Attention and access: four reported frustrations</h2>
+      <p class="lede">The essential task should remain reliable even when a product has many other features.</p>
+      <div class="table-wrap"><table><thead><tr><th>Issue</th><th>Dated report example</th><th>Resident impact</th></tr></thead><tbody>
+        <tr><td>1. Promotional noise</td><td>MyGate 9 Nov; NoBrokerHood 1 Nov: important alerts lost among promotions</td><td>Missed updates; incentive to mute the app</td></tr>
+        <tr><td>2. Late or missing alerts</td><td>NoBrokerHood 11 Nov; ANACITY 7 Nov: approval or notification delays</td><td>Waiting visitors; missed time-sensitive actions</td></tr>
+        <tr><td>3. Slow or blank screens</td><td>ADDA 21 Sep; NoBrokerHood Google Play: blank screens reported</td><td>Unfinished tasks; repeated actions</td></tr>
+        <tr><td>4. Login / recovery friction</td><td>MyGate 21 Oct; ADDA 19 Oct: OTP problems reported</td><td>Lost access to community functions</td></tr>
+      </tbody></table></div>
+      <div class="bar">Recommended Wooru response: test real journeys, preserve an inbox, show retries and make recovery understandable.</div>
+      <p class="small">Example dates are in 2026. Wooru does not currently replace visitor approval or gate security. See <a href="#slide-25">source links</a>.</p>
+      <div class="footerline"><span>Problems to validate—not a claim Wooru has solved them</span><span>21</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 22">
+      <p class="kicker">USER REPORTS | NOT VERIFIED DEFECTS</p><h2>Money and usability: three reported frustrations</h2>
+      <p class="lede">People need to know what happened and where to find their own records.</p>
+      <div class="table-wrap"><table><thead><tr><th>Issue</th><th>Dated report example</th><th>Resident impact</th></tr></thead><tbody>
+        <tr><td>5. Uncertain payments</td><td>ADDA 30 Sep; ANACITY 22 Oct: UPI or payment-option problems</td><td>Fear of duplicate payment or missed deadlines</td></tr>
+        <tr><td>6. Confusing navigation</td><td>MyGate 6 Nov; ANACITY 6 Nov: interface difficult to use</td><td>Routine tasks require help or move back to WhatsApp</td></tr>
+        <tr><td>7. Complaint tracking</td><td>ANACITY 9 Nov; NoBrokerHood 5 Nov: tracking or creation problems</td><td>Cannot tell if an issue was received or resolved</td></tr>
+      </tbody></table></div>
+      <div class="bar">Recommended Wooru response: distinguish ledger records from received money; test find-my-order and find-my-request tasks.</div>
+      <p class="small">Payment reports may involve gateways or society configuration. Proposed issue tracking and payment integrations are not implied to be shipped. See <a href="#slide-25">sources</a>.</p>
+      <div class="footerline"><span>CSV export already exists; a ledger entry does not prove settlement</span><span>22</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 23">
+      <p class="kicker">USER REPORTS | ALLEGATIONS ARE NOT PROOF</p><h2>Accountability and trust: three reported frustrations</h2>
+      <p class="lede">Responsibility and personal-data use must be understandable.</p>
+      <div class="table-wrap"><table><thead><tr><th>Issue</th><th>Dated report example</th><th>Resident impact</th></tr></thead><tbody>
+        <tr><td>8. Support follow-up</td><td>ADDA 10 Oct; ANACITY 23 Sep: repeated follow-ups without resolution</td><td>Small problems become long-running trust failures</td></tr>
+        <tr><td>9. Service fulfilment</td><td>NoBrokerHood: Google Play cleaning cancellations; App Store 31 Oct no-show report</td><td>Lost time; unclear provider/platform responsibility</td></tr>
+        <tr><td>10. Privacy / unwanted contact</td><td>MyGate and NoBrokerHood reviews express unwanted-contact and data-use concerns</td><td>Reluctance to share information or use services</td></tr>
+      </tbody></table></div>
+      <div class="callout">Privacy concerns do not establish data sale or a breach. Service complaints do not establish fraud. Some reports relate to vendor services, not society software.</div>
+      <p class="small">Recommended response: explicit support ownership, provider expectations, consent and data minimization. See <a href="#slide-25">sources</a>.</p>
+      <div class="footerline"><span>No personal reviewer or provider identities reproduced</span><span>23</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 24">
+      <p class="kicker">RECOMMENDED | NOT A CLAIM THAT WOORU HAS SOLVED IT</p><h2>Translate market pain into Wooru validation</h2>
+      <p class="lede">Improve execution first; add a module only when the customer need is verified.</p>
+      <div class="table-wrap"><table><thead><tr><th>Priority</th><th>Wooru action</th><th>Evidence of improvement</th></tr></thead><tbody>
+        <tr><td>1. Reliable core</td><td>Test notification, login, order and ledger journeys</td><td>Measure delivery delays, errors and completed tasks</td></tr>
+        <tr><td>2. Clear support</td><td>Named owner; acknowledgement and visible follow-up</td><td>Measure resolution times and repeat contacts</td></tr>
+        <tr><td>3. Trusted commerce</td><td>Current provider info; explicit menu handoff and cancellation terms</td><td>Track failed fulfilments, disputes and repeat orders</td></tr>
+        <tr><td>4. Attention / privacy</td><td>Meaningful alert controls; transparent audience and consent</td><td>Resident preference tests and exposure review</td></tr>
+        <tr><td>5. Narrow coordination</td><td>Validate notices and a simple issue-tracking pilot</td><td>Lead demand and fewer repeated follow-ups</td></tr>
+      </tbody></table></div>
+      <p class="small">Recommended validation activities—not proof of current Wooru defects or deployed fixes. Do not market proposed modules before verification and release.</p>
+      <div class="footerline"><span>Reliability, clarity and accountability before feature count</span><span>24</span></div>
+    </section>
+    <section class="slide long" aria-label="Slide 25">
+      <p class="kicker">RESEARCH APPENDIX | ACCESSED 15 NOV 2026</p><h2>Review sources and capability corrections</h2>
+      <p class="lede">Dated user feedback—not a ranking of competitors or an independent defect audit.</p>
+      <div class="card">
+        <p><a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=1101762651/sortby=mostrecent/json" target="_blank" rel="noreferrer">MyGate — India App Store review feed</a></p>
+        <p><a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=1357972233/sortby=mostrecent/json" target="_blank" rel="noreferrer">NoBrokerHood — India App Store review feed</a></p>
+        <p><a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=753845888/sortby=mostrecent/json" target="_blank" rel="noreferrer">ADDA — India App Store review feed</a></p>
+        <p><a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=1045496496/sortby=mostrecent/json" target="_blank" rel="noreferrer">ANACITY IN — India App Store review feed</a></p>
+        <p><a href="https://play.google.com/store/apps/details?id=com.app.nobrokerhood&amp;hl=en_IN&amp;gl=IN" target="_blank" rel="noreferrer">NoBrokerHood — Google Play listing and reviews</a></p>
+      </div>
+      <div class="callout">NoBrokerHood markets home-chef discovery and offline guard mode. ADDA markets an ad-free app. ApnaComplex advertises unit-based polls. Do not claim those features are absent from all competitors.</div>
+      <p class="small">These feeds change. Keep the research date and dated examples when presenting them; do not describe them as verified current defects. Official capability sources are on <a href="#slide-19">slide 19</a>.</p>
+      <div class="footerline"><span>Use neutral customer-problem language</span><span>25</span></div>
+    </section>
+  </main>
+  <footer class="bottom">
+    <button id="first" type="button">First</button>
+    <progress id="progress" max="25" value="1" aria-label="Presentation progress"></progress>
+    <span id="counter" class="counter" aria-live="polite">01 / 25</span>
+    <button id="last" type="button">Last</button>
+  </footer>
+  <div class="present-controls" aria-label="Full-screen controls">
+    <button id="present-previous" type="button" aria-label="Previous slide">‹</button>
+    <span id="present-counter"></span>
+    <button id="present-next" type="button" aria-label="Next slide">›</button>
+    <button id="present-exit" type="button" aria-label="Exit full screen">Exit</button>
+  </div>
+  <script>
+    (() => {
+      document.documentElement.classList.add('js');
+      const slides = [...document.querySelectorAll('.slide')];
+      const main = document.querySelector('#deck');
+      const progress = document.querySelector('#progress');
+      const counter = document.querySelector('#counter');
+      const previous = document.querySelector('#previous');
+      const next = document.querySelector('#next');
+      const status = document.querySelector('#status');
+      progress.max = slides.length;
+      let index = 0;
+      function show(n, updateHash = true) {
+        index = Math.max(0, Math.min(slides.length - 1, n));
+        slides.forEach((slide, i) => {
+          slide.classList.toggle('active', i === index);
+          slide.setAttribute('aria-hidden', String(!document.body.classList.contains('read-mode') && i !== index));
+        });
+        const label = `${String(index + 1).padStart(2, '0')} / ${slides.length}`;
+        counter.textContent = label;
+        document.querySelector('#present-counter').textContent = label;
+        progress.value = index + 1;
+        previous.disabled = index === 0;
+        next.disabled = index === slides.length - 1;
+        status.textContent = `Slide ${index + 1} of ${slides.length}`;
+        if (updateHash) history.replaceState(null, '', `#slide-${index + 1}`);
+      }
+      previous.addEventListener('click', () => show(index - 1));
+      next.addEventListener('click', () => show(index + 1));
+      document.querySelector('#first').addEventListener('click', () => show(0));
+      document.querySelector('#last').addEventListener('click', () => show(slides.length - 1));
+      document.querySelector('#community-issues').addEventListener('click', () => {
+        show(slides.findIndex(slide => slide.dataset.section === 'community-issues'));
+        if (document.body.classList.contains('read-mode')) slides[index].scrollIntoView();
+      });
+      document.querySelector('#print').addEventListener('click', () => window.print());
+      const root = document.documentElement;
+      const fullscreen = document.querySelector('#fullscreen');
+      const nativeFullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+      const isPresenting = () => document.body.classList.contains('presenting');
+      function setPresenting(on) {
+        document.body.classList.toggle('presenting', on);
+        fullscreen.textContent = on ? 'Exit full screen' : 'Full screen';
+      }
+      async function enterPresenting() {
+        if (document.body.classList.contains('read-mode')) document.querySelector('#read-toggle').click();
+        setPresenting(true);
+        const request = root.requestFullscreen || root.webkitRequestFullscreen;
+        if (request) {
+          try {
+            await request.call(root, {navigationUI: 'hide'});
+            if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape').catch(() => {});
+          } catch { /* Native full screen refused; the in-page mode still applies. */ }
+        }
+        document.querySelector('#present-exit').focus({preventScroll:true});
+      }
+      async function exitPresenting() {
+        setPresenting(false);
+        if (screen.orientation && screen.orientation.unlock) { try { screen.orientation.unlock(); } catch {} }
+        if (nativeFullscreenElement()) {
+          const exit = document.exitFullscreen || document.webkitExitFullscreen;
+          try { await exit.call(document); } catch {}
+        }
+        fullscreen.focus({preventScroll:true});
+      }
+      fullscreen.addEventListener('click', () => isPresenting() ? exitPresenting() : enterPresenting());
+      document.querySelector('#present-exit').addEventListener('click', exitPresenting);
+      document.querySelector('#present-previous').addEventListener('click', () => { show(index - 1); main.scrollTop = 0; });
+      document.querySelector('#present-next').addEventListener('click', () => { show(index + 1); main.scrollTop = 0; });
+      const onNativeChange = () => { if (!nativeFullscreenElement() && isPresenting()) exitPresenting(); };
+      document.addEventListener('fullscreenchange', onNativeChange);
+      document.addEventListener('webkitfullscreenchange', onNativeChange);
+      document.querySelector('#read-toggle').addEventListener('click', event => {
+        const enabled = document.body.classList.toggle('read-mode');
+        event.currentTarget.setAttribute('aria-pressed', String(enabled));
+        event.currentTarget.textContent = enabled ? 'Slideshow' : 'Read all';
+        show(index, false);
+        if (enabled) window.scrollTo(0, 0);
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && isPresenting() && !nativeFullscreenElement()) { exitPresenting(); return; }
+        if (document.body.classList.contains('read-mode') || event.altKey || event.ctrlKey || event.metaKey) return;
+        if (['ArrowRight', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); show(index + 1); }
+        if (['ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); show(index - 1); }
+        if (event.key === 'Home') show(0);
+        if (event.key === 'End') show(slides.length - 1);
+        if (event.key.toLowerCase() === 'f') document.querySelector('#fullscreen').click();
+      });
+      let touchStartX = 0, touchStartY = 0;
+      main.addEventListener('touchstart', event => {
+        touchStartX = event.changedTouches[0].clientX;
+        touchStartY = event.changedTouches[0].clientY;
+      }, {passive:true});
+      main.addEventListener('touchend', event => {
+        if (document.body.classList.contains('read-mode')) return;
+        const dx = event.changedTouches[0].clientX - touchStartX;
+        const dy = event.changedTouches[0].clientY - touchStartY;
+        if (Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.3) show(index + (dx < 0 ? 1 : -1));
+      }, {passive:true});
+      window.addEventListener('hashchange', () => {
+        const match = location.hash.match(/^#slide-(\d+)$/);
+        if (match) show(Number(match[1]) - 1, false);
+      });
+      const initial = location.hash.match(/^#slide-(\d+)$/);
+      show(initial ? Number(initial[1]) - 1 : 0, false);
+    })();
+  </script>
+</body>
+</html>

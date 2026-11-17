@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A twelve-slide Wooru leadership brief covering resident problems, competitors, product direction and illustrative economics.">
+<title>Wooru | One app, market and economics</title>
+<script>document.documentElement.classList.add('js');</script>
+<style>
+:root{--ink:#14181f;--ink2:#4a5361;--ink3:#868f9c;--line:#e3e6ec;--line2:#cfd4dc;--tint:#f4f6f9;--blue:#2457f5;--blue-tint:#ebf0ff;--warn:#c2410c;--warn-tint:#fff4ec;--ok:#15803d;--ok-tint:#ebf7ef;--scale:1}
+*{box-sizing:border-box}html{color-scheme:light}
+body{margin:0;min-height:100dvh;background:#e8ebf0;color:var(--ink);font:400 16px/1.45 "Inter","Segoe UI",system-ui,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer}a{color:var(--blue);text-underline-offset:3px}:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+h1,h2,h3,p{margin:0}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Shell */
+.js body{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.toolbar,.navigation{width:100%;display:flex;align-items:center;gap:10px;padding:10px max(24px,calc((100vw - 1280px)/2));background:#fff;flex-wrap:wrap}
+.toolbar{border-bottom:1px solid var(--line)}.navigation{border-top:1px solid var(--line)}
+.brand{margin-right:auto;font-size:20px;font-weight:700;letter-spacing:-.04em}.brand i{font-style:normal;color:var(--blue)}
+.help-text{color:var(--ink3);font-size:12px}
+.toolbar button,.navigation button{border:1px solid var(--line2);border-radius:6px;background:#fff;color:var(--ink);font-size:13px;font-weight:500;padding:6px 12px}
+.toolbar button:hover,.navigation button:hover{background:var(--tint)}.navigation button:disabled{opacity:.4;cursor:default}
+.navigation .next{background:var(--ink);border-color:var(--ink);color:#fff}.navigation .next:hover{background:#2b313b}
+.counter{font-size:13px;min-width:64px;text-align:center;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.navigation progress{flex:1;min-width:60px;height:3px;accent-color:var(--ink)}
+.feedback{position:fixed;z-index:10;top:62px;right:20px;max-width:320px;padding:10px 14px;border:1px solid var(--line);border-radius:6px;background:#fff;font-size:14px}.feedback[hidden]{display:none}
+main{flex:1;min-height:0;overflow:hidden;display:flex;justify-content:center;align-items:center}
+.stage-wrap{width:calc(1280px * var(--scale));height:calc(720px * var(--scale));flex:none}
+.stage{width:1280px;height:720px;transform:scale(var(--scale));transform-origin:top left}
+
+/* Slide frame */
+.slide{width:1280px;height:720px;padding:44px 64px 22px;background:#fff;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.js .slide{display:none}.js .slide.is-active{display:flex}
+.label{display:flex;gap:10px;font-size:13px;font-weight:500;color:var(--ink3);margin-bottom:14px}.label b{color:var(--blue);font-weight:600;font-variant-numeric:tabular-nums}
+h1{font-size:58px;line-height:1.04;font-weight:700;letter-spacing:-.035em}
+h2{font-size:34px;line-height:1.15;font-weight:650;letter-spacing:-.025em;max-width:1060px}
+.dek{margin-top:10px;font-size:17px;color:var(--ink2);max-width:960px}
+h3{font-size:17px;font-weight:600;line-height:1.25}
+.body{margin-top:26px;min-height:0}
+.foot{margin-top:auto;padding-top:12px}
+.note{font-size:12px;color:var(--ink3);line-height:1.4}.note b{color:var(--ink2);font-weight:600}
+.sources{font-size:11.5px;color:var(--ink3);margin-top:4px;line-height:1.4}.sources a{color:var(--ink2)}
+.folio{display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:10px;padding-top:9px;font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.so{display:flex;gap:14px;align-items:baseline;margin-top:18px;font-size:16px;color:var(--ink)}.so span{flex:none;font-size:12px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.06em}
+.status{display:inline-block;font-size:11px;font-weight:600;padding:1px 6px;border-radius:3px;white-space:nowrap}
+.s-have{background:var(--ok-tint);color:var(--ok)}.s-prop{background:var(--blue-tint);color:var(--blue)}.s-gap{background:var(--warn-tint);color:var(--warn)}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.35}
+thead th{font-size:11.5px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--ink);padding-top:0}
+tbody th{font-weight:600}
+tbody tr:last-child>*{border-bottom:1px solid var(--line2)}
+.table-scroll{min-width:0}
+
+/* 1 Cover */
+.cover{padding:0}
+.cover-grid{height:100%;display:grid;grid-template-columns:1fr 470px}
+.cover-copy{padding:56px 56px 30px 64px;display:flex;flex-direction:column}
+.cover-copy .label{margin-bottom:auto}
+.cover-copy h1{max-width:640px}
+.cover-copy .dek{font-size:18px;max-width:600px;margin-top:20px}
+.contents{margin-top:34px;border-top:1px solid var(--ink);max-width:600px}
+.contents div{display:grid;grid-template-columns:70px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}.contents span{color:var(--ink3);font-variant-numeric:tabular-nums}
+.cover-copy .folio{margin-top:28px}
+.cover-visual{background:#eef1f6;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding-top:26px;border-left:1px solid var(--line)}
+.caption{font-size:11.5px;color:var(--ink2);text-align:center;max-width:300px;line-height:1.4}
+
+/* Phone */
+.phone{position:relative;width:272px;height:590px;flex:none;display:flex;flex-direction:column;border:8px solid #14181f;border-radius:42px;background:#f4f6f9;overflow:hidden;box-shadow:0 18px 40px rgba(20,24,31,.14)}
+.phone:before{content:"";position:absolute;top:8px;left:50%;width:74px;height:21px;margin-left:-37px;border-radius:99px;background:#14181f;z-index:2}
+.phone:after{content:"";position:absolute;bottom:6px;left:50%;width:92px;height:4px;margin-left:-46px;border-radius:99px;background:#14181f}
+.p-status{flex:none;height:38px;display:flex;justify-content:space-between;align-items:center;padding:4px 22px 0;font-size:10px;font-weight:600;background:#fff}
+.p-head{flex:none;display:flex;justify-content:space-between;align-items:center;padding:4px 16px 12px;background:#fff;border-bottom:1px solid var(--line)}
+.p-head small{display:block;font-size:9px;color:var(--ink3)}.p-head b{display:block;font-size:15px;letter-spacing:-.02em;margin-top:1px}
+.p-bell{position:relative;color:var(--ink2)}.p-bell i{position:absolute;top:0;right:0;width:6px;height:6px;border-radius:50%;background:#e5484d}
+.p-scroll{flex:1;min-height:0;overflow:hidden;padding:8px 11px}
+.p-sec{display:flex;justify-content:space-between;align-items:baseline;margin:8px 3px 5px;font-size:10px;font-weight:650}.p-sec:first-child{margin-top:0}.p-sec span{font-size:7.5px;font-weight:500;color:var(--ink3)}
+.p-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.p-card b{display:block;font-size:11px;margin:5px 0 2px}.p-card small{display:block;font-size:8.5px;color:var(--ink3);line-height:1.35}
+.p-tag{display:inline-block;font-size:7.5px;font-weight:600;padding:1px 5px;border-radius:3px;background:var(--blue-tint);color:var(--blue)}
+.p-tag.grey{background:var(--tint);color:var(--ink2)}.p-tag.ok{background:var(--ok-tint);color:var(--ok)}
+.p-wa-card{margin-top:8px;border-color:#bfe3cc;background:#f7fcf9}
+.p-wa-head{display:flex;align-items:center;gap:5px}.p-wa-head b{flex:1;margin:0;font-size:10.5px}
+.p-wa-icon{width:20px;height:20px;flex:none;display:grid;place-items:center;border-radius:6px;background:var(--ok-tint);color:var(--ok)}
+.p-wa-icon svg.i{width:13px;height:13px}.p-wa-card small{margin-top:3px;color:var(--ink2)}.p-wa-card small .p-tag{margin-right:2px}
+.p-actions{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px 4px 5px}
+.p-actions div,.p-actions a{text-align:center;font-size:7.5px;font-weight:500;color:var(--ink2);line-height:1.2}
+.p-actions a{display:block;text-decoration:none;border-radius:6px}.p-actions a:hover{background:var(--blue-tint)}
+.p-actions small{display:block;font-size:6.5px;color:var(--ink3);margin-top:2px}
+.p-ico{width:30px;height:30px;margin:0 auto 4px;border-radius:9px;background:var(--blue-tint);color:var(--blue);display:grid;place-items:center}
+.p-ico.p-ai-icon{background:var(--blue);color:#fff}
+.p-row{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center}.p-row b{margin:0 0 2px}
+.p-date{width:30px;text-align:center;border:1px solid var(--line);border-radius:7px;padding:3px 0;font-size:7px;color:var(--ink3);line-height:1.1}.p-date strong{display:block;font-size:12px;color:var(--ink)}
+.p-tabs{flex:none;display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid var(--line);padding:7px 4px 19px}
+.p-tabs span{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:7.5px;color:var(--ink3)}.p-tabs .on{color:var(--blue);font-weight:600}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.p-tabs svg.i{width:15px;height:15px}
+
+/* 2 Matrix */
+.matrix th:first-child{width:27%}.matrix th:nth-child(n+2):nth-child(-n+5){width:11.5%;text-align:center;letter-spacing:.02em}.matrix th:last-child{width:27%}
+.matrix td.c{text-align:center;vertical-align:middle}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--warn)}
+.none{color:var(--line2)}
+.matrix tfoot td,.matrix tfoot th{border:0;padding-top:8px;font-size:12px;color:var(--ink3);font-weight:500}
+.matrix tfoot td.c{font-weight:600;color:var(--ink2)}
+
+/* 3 Competitors */
+.compete th:nth-child(1){width:14%}.compete th:nth-child(2){width:21%}.compete th:nth-child(3){width:27%}.compete th:nth-child(4){width:19%}.compete th:nth-child(5){width:19%}
+.compete td{font-size:13.5px}.compete thead th.gap{color:var(--warn)}.compete thead th.have{color:var(--ok)}.compete thead th.prop{color:var(--blue)}
+.compete ul{margin:0;padding:0;list-style:none}.compete li{margin:0 0 3px;padding-left:12px;position:relative}.compete li:before{content:"–";position:absolute;left:0;color:var(--ink3)}
+.compete tbody th small{display:block;font-weight:400;color:var(--ink3);font-size:11.5px;margin-top:2px}
+.compete.wide th:nth-child(1){width:12%}.compete.wide th:nth-child(2){width:17%}.compete.wide th:nth-child(3){width:22%}.compete.wide th:nth-child(4){width:15%}.compete.wide th:nth-child(5){width:16%}.compete.wide th:nth-child(6){width:18%}
+.compete.wide td{font-size:13px;padding:8px 9px;line-height:1.32}.compete.wide tbody th{padding:8px 9px;font-size:14px}.compete.wide li{margin-bottom:1px}
+.so.tight{margin-top:14px;font-size:15px;line-height:1.35}
+.compete thead th.ai{color:var(--ink2);background:var(--tint);padding-left:10px}.compete td.ai{background:#f8f9fb;color:var(--ink2)}.compete td.ai b{display:block;color:var(--ink);font-weight:600;font-size:12px;margin-bottom:1px}
+mark.hl{background:transparent;color:inherit;padding:0;font-weight:600}
+.so.ai-gap span{color:var(--blue)}
+
+/* 4 International */
+.world th:nth-child(1){width:10%}.world th:nth-child(2){width:15%}.world th:nth-child(3){width:30%}.world th:nth-child(4){width:33%}.world th:nth-child(5){width:12%}
+.world td,.world tbody th{font-size:14.5px;padding-top:13px;padding-bottom:13px}.world .cty{font-size:12px;font-weight:600;color:var(--ink3);letter-spacing:.04em}
+.phase{font-size:12px;font-weight:600;color:var(--ink2)}
+
+/* 5 Layers */
+.layers{display:grid;grid-template-columns:1fr 330px;gap:40px}
+.layer{border:1px solid var(--line2);border-radius:8px;padding:11px 16px}
+.layer+.layer{margin-top:9px}.layer.wa{border-color:#bfe3cc;background:#f7fcf9}.layer.wa .cell .status{font-size:9.5px;margin-bottom:3px}
+.layer.prop{border-style:dashed;border-color:var(--blue);background:#fafbff}
+.layer-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}.layer-head span{font-size:12px;color:var(--ink3)}
+.cells{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cell{border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 10px;font-size:13.5px;line-height:1.3}
+.cell small{display:block;color:var(--ink3);font-size:11px;margin-top:2px}
+.prop .cell{border-color:#d4defc}
+.order h3{margin-bottom:6px}
+.order ul{margin:0;padding:0;list-style:none}
+.order li{display:grid;grid-template-columns:14px 1fr;padding:12px 0;border-top:1px solid var(--line);font-size:14.5px}
+.order li:before{content:"";width:6px;height:6px;margin-top:7px;border-radius:50%;background:var(--blue)}
+.order li b{display:block;font-weight:600}
+
+/* 6 Timeline */
+.timeline{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding-top:26px}
+.timeline:before{content:"";position:absolute;top:6px;left:6px;right:6px;height:2px;background:linear-gradient(90deg,var(--blue) 0 62%,var(--line2) 62%)}
+.stop{position:relative}.stop:before{content:"";position:absolute;top:-25px;left:0;width:14px;height:14px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 3px #fff}
+.stop.next:before{background:#fff;border:2px solid var(--line2)}
+.stop.now:before{background:#fff;border:3px solid var(--blue)}
+.stop time{display:block;font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.stop h3{margin:3px 0 5px}.stop p{font-size:14px;color:var(--ink2)}
+.notif{margin-top:12px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;background:var(--tint)}.notif small{display:block;font-size:11px;color:var(--ink3)}.notif.wa-msg{background:#f0faf3;border-color:#c9e9d4}.notif.wa-msg small{color:var(--ok)}
+.views{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:40px;border-top:1px solid var(--ink)}
+.views div{padding:14px 20px 4px 0}.views div+div{padding-left:20px;border-left:1px solid var(--line)}
+.views h3{font-size:14px;margin-bottom:6px}.views p{font-size:14px;color:var(--ink2)}
+.views .today h3{color:var(--warn)}
+
+/* 9 Feature landscape */
+.portfolio{margin-top:22px;border-top:1px solid var(--ink)}
+.portfolio-row{display:grid;grid-template-columns:130px 250px minmax(0,1fr);gap:16px;align-items:start;padding:12px 10px 11px 0;border-bottom:1px solid var(--line)}
+.portfolio-row h3{font-size:16px;line-height:1.3;font-weight:600}
+.portfolio-row p{font-size:14px;line-height:1.35;color:var(--ink2)}
+.portfolio-when{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.portfolio-when small{font-size:11.5px;color:var(--ink3)}
+.portfolio-row.competitor{background:var(--tint)}
+.portfolio-row .status:not(.s-prop):not(.s-gap){background:var(--tint);color:var(--ink2)}
+.portfolio-note{margin-top:12px;font-size:14px;line-height:1.35;color:var(--ink2)}
+
+/* 7 Document assistant */
+.split{padding:0}
+.split-grid{height:100%;display:grid;grid-template-columns:1fr 470px}
+.split-copy{padding:44px 46px 22px 64px;display:flex;flex-direction:column;min-width:0}
+.split-copy .label{margin-bottom:12px}
+.split-copy .dek{max-width:680px}
+.split-copy .body{margin-top:25px}
+.steps{border-top:1px solid var(--line2)}
+.steps div{display:grid;grid-template-columns:120px 1fr;gap:18px;padding:12px 0;border-bottom:1px solid var(--line);font-size:16px;line-height:1.35;color:var(--ink2)}
+.steps b{color:var(--ink);font-weight:600}.steps b i{font-style:normal;color:var(--blue);margin-right:10px}
+.assistant-guard{margin-top:19px;font-size:15px;line-height:1.45;color:var(--ink2)}
+.assistant-guard b{color:var(--ink)}
+.assistant-market{margin-top:22px;font-size:14px;line-height:1.45;color:var(--ink2)}
+.assistant-market b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+.split-copy .foot{padding-top:8px}
+.split-visual{background:#eef1f6;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding-top:26px;border-left:1px solid var(--line)}
+.chat{display:flex;flex-direction:column;gap:6px}
+.q{align-self:flex-end;max-width:82%;background:var(--blue);color:#fff;border-radius:12px 12px 3px 12px;padding:6px 9px;font-size:10.5px;line-height:1.35}
+.a{align-self:flex-start;max-width:92%;background:#fff;border:1px solid var(--line);border-radius:12px 12px 12px 3px;padding:7px 9px;font-size:10.5px;line-height:1.4}
+.a.miss{background:var(--tint);border-color:var(--line)}
+.cite{display:inline-block;margin:4px 3px 0 0;padding:1px 6px;border-radius:99px;background:var(--blue-tint);color:var(--blue);font-size:7.5px;font-weight:600}
+.a small{display:block;margin-top:3px;font-size:7.5px;color:var(--ink3)}
+.p-ask{flex:none;display:flex;align-items:center;gap:6px;margin:0 10px 6px;padding:7px 10px;border:1px solid var(--line2);border-radius:99px;background:#fff;font-size:9px;color:var(--ink3)}
+.p-ask span{flex:1}.p-ask i{width:20px;height:20px;border-radius:50%;background:var(--blue);display:grid;place-items:center;color:#fff;font-style:normal;font-size:10px}
+.p-legal{flex:none;text-align:center;font-size:7px;color:var(--ink3);padding:0 10px 18px}
+
+/* 8 Phases */
+.phases{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink)}
+.ph{padding:16px 26px 0 0}.ph+.ph{padding-left:26px;border-left:1px solid var(--line)}
+.ph-top{display:flex;justify-content:space-between;align-items:baseline}.ph-top span{font-size:12px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.06em}.ph-top em{font-style:normal;font-size:12px;color:var(--ink3)}
+.phases{margin-top:34px}.ph{display:flex;flex-direction:column;min-height:340px}.ph .proof{margin-top:auto}.ph h3{font-size:24px;margin:10px 0 14px}
+.ph ul{margin:0;padding:0 0 0 18px;font-size:16px;color:var(--ink2)}.ph li{margin:9px 0}
+.proof{margin-top:30px;padding:14px 16px;border-radius:6px;background:var(--tint);font-size:15px}.proof span{display:block;font-size:11.5px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+
+/* 8 Revenue */
+.revenue th:nth-child(1){width:19%}.revenue th:nth-child(2){width:18%}.revenue th:nth-child(3){width:17%}.revenue th:nth-child(4){width:15%}.revenue th:nth-child(5){width:31%}
+.revenue{margin-top:8px}.revenue td,.revenue tbody th{font-size:16px;padding-top:20px;padding-bottom:20px}
+.revenue .price{font-weight:650;font-variant-numeric:tabular-nums}
+.revenue tr.primary th,.revenue tr.primary td{background:#fafbff}
+.notrev{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:34px}
+.notrev div{border-left:2px solid var(--line2);padding-left:14px;font-size:15px;color:var(--ink2)}.notrev b{display:block;color:var(--ink);font-weight:600;margin-bottom:2px}
+
+/* 9 Economics */
+.econ{display:grid;grid-template-columns:660px 1fr;gap:40px;align-items:start}
+.chart{width:100%;height:auto;display:block}
+.chart text{font:12px "Inter","Segoe UI",Arial,sans-serif;fill:#868f9c}
+.chart .lbl{font-size:12.5px;font-weight:600}
+.be{font-size:64px;font-weight:700;letter-spacing:-.04em;line-height:1}
+.be-sub{font-size:15px;color:var(--ink2);margin-top:4px}
+.formula{margin-top:14px;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px;font-variant-numeric:tabular-nums}
+.econ table{margin-top:18px}.econ td,.econ tbody th{font-variant-numeric:tabular-nums;font-size:14px}
+.econ td.neg{color:var(--warn)}.econ td.pos{color:var(--ok)}.econ tr.even th,.econ tr.even td{font-weight:650}
+
+/* 10 Team plan */
+.sec-h{font-size:11.5px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.plan{display:grid;grid-template-columns:1fr 340px;gap:40px}
+.gantt{border-top:1px solid var(--ink);padding-top:8px}
+.g-scale{display:grid;grid-template-columns:150px repeat(3,1fr);font-size:11.5px;color:var(--ink3);margin-bottom:2px}
+.g-row{display:grid;grid-template-columns:150px 1fr;align-items:center;padding:4px 0}
+.g-row b{display:block;font-size:14px;font-weight:600;line-height:1.2}.g-row small{display:block;font-size:11.5px;color:var(--ink3)}
+.g-track{position:relative;height:32px;border-radius:4px;background:linear-gradient(90deg,transparent calc(33.333% - 1px),#fff calc(33.333% - 1px) 33.333%,transparent 33.333% calc(66.666% - 1px),#fff calc(66.666% - 1px) 66.666%,transparent 66.666%),var(--tint)}
+.g-bar{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--blue);font-size:12.5px;color:#fff;padding:7px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-bar.prep{background:var(--blue-tint);color:var(--blue)}.g-bar.wa{background:var(--ok)}.g-bar.wa.prep{background:var(--ok-tint);color:var(--ok)}
+.g-track.gates{background:none;border-top:1px dashed var(--line2);border-radius:0;height:30px}
+.gate{position:absolute;top:0;transform:translateX(-100%);padding:4px 12px 0 0;font-size:11.5px;font-weight:600;color:var(--ink);white-space:nowrap;text-align:right;line-height:1.2}
+.gate:after{content:"";position:absolute;right:-5px;top:-5px;width:9px;height:9px;background:var(--ink);transform:rotate(45deg)}
+.gate small{display:block;font-weight:400;color:var(--ink3)}
+.ship{border-top:1px solid var(--ink)}.ship ul{margin:0;padding:0;list-style:none}
+.ship li{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.3}
+.ship .later{margin-top:8px;font-size:12.5px;color:var(--ink3)}.ship .later b{color:var(--ink2);font-weight:600}
+.wins{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink)}
+.wins>div{padding:10px 18px 0 0}.wins>div+div{padding-left:18px;border-left:1px solid var(--line)}
+.wins strong{display:block;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--blue);line-height:1.1}
+.wins p{font-size:13.5px;margin-top:3px;line-height:1.3}.wins small{display:block;font-size:11.5px;color:var(--ink3);margin-top:3px}
+.wins-wrap{margin-top:14px}
+#slide-12 .body{margin-top:18px}
+
+/* Read mode, no-JS and print */
+.read-mode main{display:block;overflow:visible}.js body.read-mode{height:auto;min-height:100dvh;overflow:auto}
+.read-mode .stage-wrap{height:var(--read-height);margin:20px auto;overflow:clip}.read-mode .stage{height:auto}
+.js body.read-mode .slide{display:flex}.js body.read-mode .slide:not(:last-child){margin-bottom:20px}.read-mode .navigation{display:none}
+/* Presenting: works without the Fullscreen API (iPhone Safari has none for pages) */
+.present-exit,.present-hint{display:none}
+.js body.presenting{background:#000;height:100dvh;height:100svh;overscroll-behavior:none;touch-action:pan-x pan-y}
+.presenting .toolbar,.presenting .navigation{display:none}
+.presenting main{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.presenting .present-exit{display:block;position:fixed;z-index:20;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));width:36px;height:36px;padding:0;border:0;border-radius:50%;background:rgba(20,24,31,.55);color:#fff;font-size:20px;line-height:36px;text-align:center}
+.presenting .present-counter{display:block;position:fixed;z-index:20;bottom:max(8px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);padding:3px 10px;border-radius:12px;background:rgba(20,24,31,.55);color:#fff;font-size:12px;font-variant-numeric:tabular-nums}
+.present-counter{display:none}
+@media(orientation:portrait){.presenting .present-hint{display:block;position:fixed;z-index:20;top:max(14px,env(safe-area-inset-top));left:14px;right:60px;color:#cfd4dc;font-size:13px;text-align:center}}
+html:not(.js) main{display:block;overflow:auto}html:not(.js) .stage-wrap,html:not(.js) .stage{width:1280px;height:auto;transform:none;margin:0 auto}html:not(.js) .slide{width:1280px;height:720px;margin:20px 0}
+@media(max-width:900px){
+ .toolbar,.navigation{padding:8px 14px}.help-text{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{
+ @page{size:13.333333in 7.5in;margin:0}
+ html,body,.js body{width:1280px;height:auto!important;background:#fff;display:block;overflow:visible!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .toolbar,.navigation,.feedback,noscript{display:none!important}main{display:block!important;overflow:visible!important}
+ .stage-wrap,.stage{width:1280px!important;height:auto!important;transform:none!important}
+ .slide,.js .slide,.js body.read-mode .slide{display:flex!important;width:1280px!important;height:720px!important;min-height:0!important;margin:0!important;break-after:page}
+ .slide:last-child{break-after:auto}.phone{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<header class="toolbar" aria-label="Presentation controls">
+  <div class="brand">wooru<i>.</i></div>
+  <span class="help-text">← → to navigate</span>
+  <button type="button" id="read" aria-pressed="false">Read all</button>
+  <button type="button" id="print">Print / PDF</button>
+  <button type="button" id="fullscreen">Full screen</button>
+</header>
+<noscript><p style="padding:14px;background:#fff4ec">JavaScript is off. All twelve slides are shown as one document.</p></noscript>
+<p id="status" class="sr-only" role="status" aria-live="polite"></p>
+<p id="feedback" class="feedback" role="status" hidden></p>
+<button type="button" class="present-exit" id="present-exit" aria-label="Exit full screen">×</button>
+<p class="present-hint" aria-hidden="true">Rotate your phone for a larger slide</p>
+<p class="present-counter" id="present-counter" aria-hidden="true"></p>
+<main><div class="stage-wrap"><div class="stage" id="deck">
+
+<!-- 1 -->
+<section class="slide cover" id="slide-1" aria-labelledby="t1"><div class="cover-grid">
+<div class="cover-copy">
+  <div class="label">Leadership brief · 15 Nov 2026</div>
+  <h1 id="t1">One app for life in your society</h1>
+  <p class="dek">Many residents use a society app for the gate and dues, and WhatsApp for everyday questions. This brief looks at what frustrates them, where Wooru can help, and what it could cost.</p>
+  <div class="contents">
+    <div><span>02–04</span>Market: resident feedback, competitors and ideas from abroad</div>
+    <div><span>05–09</span>Product: current Wooru features, feature concepts and competitor examples</div>
+    <div><span>10–12</span>Business: who might pay, break-even and the team’s 90-day plan</div>
+  </div>
+  <div class="folio"><span>Wooru</span><span>01 / 12</span></div>
+</div>
+<div class="cover-visual">
+  <div class="phone" role="group" aria-label="Concept resident home screen: proposed notices, quick actions including an AI society document assistant, and two-way WhatsApp for questions, orders, reports and opt-in updates. WhatsApp contact buttons and share previews, community events and shared service visits exist today.">
+    <div class="p-status" aria-hidden="true"><span>9:41</span><span>5G</span></div>
+    <div class="p-head"><div><small>Lakeview Residency · Block B</small><b>Good morning, Asha</b></div><span class="p-bell"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><i></i></span></div>
+    <div class="p-scroll">
+      <div class="p-sec">From the society office<span>Proposed</span></div>
+      <div class="p-card"><span class="p-tag">Notice</span><b>Water off in Block B, 10:00–14:00</b><small>Tank cleaning. Posted by the secretary today · 41 of 64 flats have read it</small></div>
+      <div class="p-sec">Quick actions<span>Proposed</span></div>
+      <div class="p-actions">
+        <a href="#slide-7" aria-label="Ask AI about society documents (proposed): see the example"><span class="p-ico p-ai-icon"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6z"/></svg></span>Ask AI<small>Society docs</small></a>
+        <div><span class="p-ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg></span>Report issue</div>
+        <div><span class="p-ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span>Book space</div>
+        <div><span class="p-ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/></svg></span>Visitor</div>
+        <div><span class="p-ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>Poll</div>
+      </div>
+      <div class="p-card p-wa-card">
+        <div class="p-wa-head"><span class="p-wa-icon"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 21l2-5.5A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8 11.5h.01M12 11.5h.01M16 11.5h.01"/></svg></span><b>Two-way WhatsApp</b><span class="p-tag">Proposed</span></div>
+        <small>Ask, order, report · Opt-in updates</small>
+        <small><span class="p-tag ok">Today</span> Contact buttons &amp; share previews</small>
+      </div>
+      <div class="p-sec">This week<span>In Wooru today</span></div>
+      <div class="p-card p-row"><span class="p-date">NOV<strong>16</strong></span><div><b>Diwali potluck</b><small>Clubhouse · 7 pm · 38 going</small></div><span class="p-tag ok">Going</span></div>
+      <div class="p-card p-row" style="margin-top:6px"><span class="p-date">NOV<strong>22</strong></span><div><b>AC servicing, shared visit</b><small>3 neighbours joined · recommended by 9</small></div><span class="p-tag">Join</span></div>
+    </div>
+    <div class="p-tabs" aria-hidden="true">
+      <span><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17h.01"/></svg>Help</span>
+      <span><svg class="i" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Saved</span>
+      <span><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>MCN</span>
+      <span class="on"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/></svg>Community</span>
+      <span><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Profile</span>
+    </div>
+  </div>
+  <p class="caption">Home-screen concept. The AI document assistant, two-way WhatsApp, notices and quick actions are proposed. Contact links, share previews, events and visits exist today. Names and numbers are illustrative.</p>
+</div>
+</div></section>
+
+<!-- 2 -->
+<section class="slide" id="slide-2" aria-labelledby="t2">
+<div class="label"><b>02</b>Market · resident complaints</div>
+<h2 id="t2">What residents say about four society apps</h2>
+<p class="dek">We read 50 recent App Store reviews per app. A dot means at least one reviewer mentioned the issue.</p>
+<div class="body table-scroll"><table class="matrix">
+<thead><tr><th scope="col">Reported problem</th><th scope="col">MyGate</th><th scope="col">NoBrokerHood</th><th scope="col">ADDA</th><th scope="col">ANACITY</th><th scope="col">Wooru response</th></tr></thead>
+<tbody>
+<tr><th scope="row">Important alerts missed, late or buried in promotions</th><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td><span class="status s-prop">Proposed</span> Official notices kept apart from promotions</td></tr>
+<tr><th scope="row">Complaints hard to raise, track or close</th><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td><span class="status s-prop">Proposed</span> Issue tracking with someone assigned</td></tr>
+<tr><th scope="row">Slow, blank or confusing screens</th><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td><span class="status s-prop">Proposed</span> Simpler core journeys, tested with residents</td></tr>
+<tr><th scope="row">Payment status unclear or UPI failures</th><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td><span class="status s-have">Have</span> Open funds ledger · <span class="status s-prop">Proposed</span> payment status</td></tr>
+<tr><th scope="row">Login and OTP trouble</th><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td><span class="status s-prop">Proposed</span> Test login and recovery first</td></tr>
+<tr><th scope="row">Service cancellations and no-shows</th><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td><span class="status s-have">Have</span> Neighbour-recommended providers + feedback</td></tr>
+<tr><th scope="row">Unwanted contact from the platform or others</th><td class="c"><span class="dot" aria-label="Reported"></span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td class="c"><span class="none" aria-label="Not in sample">–</span></td><td><span class="status s-prop">Proposed</span> Clear privacy and contact choices</td></tr>
+</tbody>
+<tfoot><tr><th scope="row">Themes found in sample</th><td class="c">4</td><td class="c">3</td><td class="c">3</td><td class="c">4</td><td></td></tr></tfoot>
+</table></div>
+<div class="foot">
+<p class="note">Reviews returned on 15 Nov 2026. Self-selected reports, not verified defects or market-wide rates. “–” means not seen in our sample, not that the problem is absent.</p>
+<p class="sources">Sources: <a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=1101762651/sortby=mostrecent/json" target="_blank" rel="noopener noreferrer">MyGate</a> · <a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=1357972233/sortby=mostrecent/json" target="_blank" rel="noopener noreferrer">NoBrokerHood</a> · <a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=753845888/sortby=mostrecent/json" target="_blank" rel="noopener noreferrer">ADDA</a> · <a href="https://itunes.apple.com/in/rss/customerreviews/page=1/id=1045496496/sortby=mostrecent/json" target="_blank" rel="noopener noreferrer">ANACITY</a> (App Store India review feeds)</p>
+<div class="folio"><span>Wooru · leadership brief</span><span>02 / 12</span></div>
+</div>
+</section>
+
+<!-- 3 -->
+<section class="slide" id="slide-3" aria-labelledby="t3">
+<div class="label"><b>03</b>Market · Indian competitors</div>
+<h2 id="t3">What society apps offer, and where Wooru fits</h2>
+<div class="body table-scroll"><table class="compete wide">
+<thead><tr><th scope="col">Platform</th><th scope="col">Built around</th><th scope="col" class="gap">What reviewers reported</th><th scope="col" class="have">Wooru has today</th><th scope="col" class="prop">Wooru proposes</th><th scope="col" class="ai">AI on society documents</th></tr></thead>
+<tbody>
+<tr><th scope="row">MyGate<small>Gate-first</small></th><td>Gate management, helpdesk, accounting and ERP</td><td><ul><li>Society alerts lost among promotions</li><li>OTP login trouble</li><li>Confusing navigation, unwanted contact</li></ul></td><td><mark class="hl">Neighbour-recommended providers</mark> and shared visits</td><td>Promotion-free official notices</td><td class="ai"><b>None found</b>on public pages</td></tr>
+<tr><th scope="row">NoBrokerHood<small>Gate + services</small></th><td>Visitors, resident and flat records, staff, accounting and services</td><td><ul><li>Late visitor approvals and alerts</li><li>Complaints hard to raise or track</li><li>Cleaning cancellations and no-shows</li></ul></td><td>Resident businesses, <mark class="hl">food pre-orders</mark>, provider feedback</td><td>Issue follow-through across app + WhatsApp</td><td class="ai"><b>None found</b>on public pages</td></tr>
+<tr><th scope="row">ADDA<small>Accounts-first</small></th><td>Accounting, gatekeeper, helpdesk, amenity booking; resident, tenant and family records</td><td><ul><li>Blank or slow screens</li><li>UPI and payment problems</li><li>Repeated support follow-ups</li></ul></td><td><mark class="hl">Open funds ledger</mark> with CSV export</td><td>Owner/tenant access rules <small>planned · not a proven unique feature</small></td><td class="ai"><b>General chatbot</b>Not shown to read bye-laws or cite pages</td></tr>
+<tr><th scope="row">ApnaComplex / ANACITY<small>Admin-first</small></th><td>Notices, groups, helpdesk, unit-based polls</td><td><ul><li>Delayed notifications</li><li>Complaint tracking gaps</li><li>Few payment options, hard-to-use interface</li></ul></td><td>Events, <mark class="hl">carpools</mark>, <mark class="hl">parent connections</mark>, SOS</td><td>Notices and issues on one home screen</td><td class="ai"><b>None found</b>on public pages</td></tr>
+</tbody></table></div>
+<p class="so tight ai-gap"><span>AI gap</span><i style="font-style:normal"><mark class="hl">Wooru proposes cited answers from society documents.</mark> No reviewed public page established resident document Q&amp;A. A 15-site homepage scan found document management at Kamiti and an AI bookkeeping claim in OSSAPP metadata, but neither shows this workflow (slide 7).</i></p>
+<p class="so tight" style="margin-top:6px"><span>Feature coverage</span>Across the 15-site scan, public pages commonly advertised gate/visitor, finance, helpdesk and amenity tools. The pages reviewed did not establish resident document Q&amp;A with citations or precise owner/tenant access rules.</p>
+<div class="foot">
+<p class="note"><b>Bold text</b> marks where Wooru differs most from that app’s public pitch; it doesn’t prove the rival lacks it. “Built around” = vendor descriptions. Reviewer reports come from self-selected app reviews, Sep–Nov 2026, and are not verified defects. The 15 additional vendor websites were checked on 17 Nov; homepage claims only.</p>
+<p class="sources">Sources: <a href="https://mygate.com/community-management/residents/" target="_blank" rel="noopener noreferrer">MyGate</a> · <a href="https://nobrokerhood.com/residents-and-flats-management" target="_blank" rel="noopener noreferrer">NoBrokerHood</a> · <a href="https://ind.adda.io/community-super-app" target="_blank" rel="noopener noreferrer">ADDA</a> · <a href="https://www.anacity.com/services" target="_blank" rel="noopener noreferrer">ANACITY</a> · <a href="https://www.apnacomplex.com/features" target="_blank" rel="noopener noreferrer">ApnaComplex</a> · <a href="https://kamiti.app/" target="_blank" rel="noopener noreferrer">Kamiti</a> · <a href="https://easymaintenance.in/" target="_blank" rel="noopener noreferrer">EasyMaintenance</a> · <a href="https://gatekeeperzero.com/" target="_blank" rel="noopener noreferrer">GateKeeperZero</a> · <a href="https://apnasociety365.com/" target="_blank" rel="noopener noreferrer">ApnaSociety365</a> · <a href="https://mysocietyentry.com/" target="_blank" rel="noopener noreferrer">MySocietyEntry</a> · <a href="#slide-2">review feeds</a></p>
+<div class="folio"><span>Wooru · leadership brief</span><span>03 / 12</span></div>
+</div>
+</section>
+
+<!-- 4 -->
+<section class="slide" id="slide-4" aria-labelledby="t4">
+<div class="label"><b>04</b>Market · examples abroad</div>
+<h2 id="t4">What we can learn from apps in other markets</h2>
+<p class="dek">Examples of resident and society-management features in other markets.</p>
+<div class="body table-scroll"><table class="world">
+<thead><tr><th scope="col">Market</th><th scope="col">Product</th><th scope="col">What residents get</th><th scope="col">Related Wooru feature concept</th><th scope="col">Status</th></tr></thead>
+<tbody>
+<tr><td class="cty">USA</td><th scope="row"><a href="https://www.buildinglink.io/solutions/resident-experience/" target="_blank" rel="noopener noreferrer">BuildingLink</a></th><td>Repair request updates and amenity reservations</td><td>Resident-visible issue status; amenity booking</td><td class="phase">Proposed</td></tr>
+<tr><td class="cty">CHINA</td><th scope="row"><a href="https://en.onewo.com/16582148289351/index.html" target="_blank" rel="noopener noreferrer">Onewo</a></th><td>Staffed resident coordinators and community activities</td><td>Named contact for service requests; community activities</td><td class="phase">Proposed</td></tr>
+<tr><td class="cty">S. KOREA</td><th scope="row"><a href="https://www.apartmant.co.kr/en/residentApp/" target="_blank" rel="noopener noreferrer">Apartmant</a></th><td>Resident home screen, visitor access, facility booking</td><td>Notices, visitor access and facility booking</td><td class="phase">Proposed</td></tr>
+<tr><td class="cty">UAE</td><th scope="row"><a href="https://www.emaar.com/en/blog/manage-your-emaar-property-and-household-efficiently-with-emaar-one" target="_blank" rel="noopener noreferrer">Emaar One</a></th><td>Service requests and community bookings in one owner app</td><td>Service requests and community booking</td><td class="phase">Proposed</td></tr>
+<tr><td class="cty">JAPAN</td><th scope="row"><a href="https://www.mitsui-kanri.co.jp/how/" target="_blank" rel="noopener noreferrer">Mitsui</a></th><td>Building procedures and information online</td><td>Society forms, procedures and house rules online</td><td class="phase">Proposed</td></tr>
+</tbody></table></div>
+<p class="so"><span>Feature themes</span>Request updates, amenity reservations, resident support, community activities and online building information.</p>
+<div class="foot">
+<p class="note">Examples, not national coverage. Mollak (Dubai) and K-apt (Korea) are public regulatory systems, not private app rivals.</p>
+<p class="sources">Sources: linked product names · <a href="https://dubailand.gov.ae/en/eservices/request-for-approval-of-service-and-usage-charges/" target="_blank" rel="noopener noreferrer">Mollak</a> · <a href="https://www.k-apt.go.kr/cmmn/kaptsystemintro.do" target="_blank" rel="noopener noreferrer">K-apt</a></p>
+<div class="folio"><span>Wooru · leadership brief</span><span>04 / 12</span></div>
+</div>
+</section>
+
+<!-- 5 -->
+<section class="slide" id="slide-5" aria-labelledby="t5">
+<div class="label"><b>05</b>Product · what exists</div>
+<h2 id="t5">What Wooru does today, and what we’d add</h2>
+<div class="body layers">
+<div>
+  <div class="layer prop">
+    <div class="layer-head"><h3>For the society office</h3><span class="status s-prop">Proposed · not built</span></div>
+    <div class="cells">
+      <div class="cell">Official notices<small>leads only, chosen audience</small></div>
+      <div class="cell">Issue tracking<small>named owner, status</small></div>
+      <div class="cell">Facility booking<small>availability, rules</small></div>
+      <div class="cell">Visitors and polls<small>staff-run pilots</small></div>
+    </div>
+  </div>
+  <div class="layer wa">
+    <div class="layer-head"><h3>WhatsApp</h3><span>Current links and proposed messages</span></div>
+    <div class="cells">
+      <div class="cell"><span class="status s-have">Have</span> Call / WhatsApp buttons<small>providers, listings, visits, events, carpools</small></div>
+      <div class="cell"><span class="status s-have">Have</span> Shared-link previews<small>food menus, listings, invites, fund links</small></div>
+      <div class="cell"><span class="status s-prop">Proposed</span> Two-way Wooru number<small>ask, order or report by chat</small></div>
+      <div class="cell"><span class="status s-prop">Proposed</span> Opt-in status updates<small>order ready, issue assigned, notices</small></div>
+    </div>
+  </div>
+  <div class="layer">
+    <div class="layer-head"><h3>For neighbours</h3><span class="status s-have">In the app today</span></div>
+    <div class="cells">
+      <div class="cell">Service providers<small>recommended by neighbours</small></div>
+      <div class="cell">Shared service visits<small>neighbours join one visit</small></div>
+      <div class="cell">Resident businesses<small>with food pre-orders</small></div>
+      <div class="cell">Events<small>with RSVPs</small></div>
+      <div class="cell">Funds ledger<small>with CSV export</small></div>
+      <div class="cell">Carpools<small>neighbour rides</small></div>
+      <div class="cell">Parent connections<small>by school</small></div>
+      <div class="cell">Emergency contacts and donors<small>one-tap alerts are not live</small></div>
+    </div>
+  </div>
+</div>
+<div class="order">
+  <h3>Feature concepts</h3>
+  <ul>
+    <li><div><b>Document assistant</b>Answers from permitted bye-laws and minutes, with page citations or a clear no-answer reply.</div></li>
+    <li><div><b>Issue tracking</b>Photo, named owner, current status and next update in the app or WhatsApp.</div></li>
+    <li><div><b>Audience-based posts and events</b>Target owners, tenants, one flat or a group; official notices are lead-only.</div></li>
+    <li><div><b>Resident tools</b>Amenity booking, polls and two-way WhatsApp with resident opt-in.</div></li>
+  </ul>
+</div>
+</div>
+<div class="foot">
+<p class="note">“Have” and “In the app today” = present in the Wooru repository. Two-way WhatsApp needs a verified Wooru business number on Meta’s Cloud API, resident opt-in and message fees; it cannot read or post in existing society groups.</p>
+<p class="sources">WhatsApp: <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview" target="_blank" rel="noopener noreferrer">Cloud API webhooks</a> · <a href="https://business.whatsapp.com/policy" target="_blank" rel="noopener noreferrer">Messaging policy</a> · <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing" target="_blank" rel="noopener noreferrer">Pricing</a> · <a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/groups" target="_blank" rel="noopener noreferrer">Groups API limits</a> · UI/UX: <a href="https://www.apartmant.co.kr/en/residentApp/" target="_blank" rel="noopener noreferrer">Apartmant Resident App</a> · <a href="https://www.apartmant.co.kr/en/community/" target="_blank" rel="noopener noreferrer">Community V2</a> · <a href="https://www.apartmant.co.kr/en/admin/" target="_blank" rel="noopener noreferrer">Admin Web</a></p>
+<div class="folio"><span>Wooru · leadership brief</span><span>05 / 12</span></div>
+</div>
+</section>
+
+<!-- 6 -->
+<section class="slide" id="slide-6" aria-labelledby="t6">
+<div class="label"><b>06</b>Product · proposed experience</div>
+<h2 id="t6">How an issue could be reported and tracked</h2>
+<p class="dek">Illustrative example: a leak in the Block B basement parking, reported and followed on WhatsApp. The same issue is visible in the app. Not a live feature.</p>
+<div class="body">
+<div class="timeline">
+  <div class="stop"><time>Mon 09:10</time><h3>Reported</h3><p>Asha (B-204) sends two photos of water near bay 14 to the Wooru WhatsApp number.</p><div class="notif wa-msg"><small>WhatsApp reply</small>Report received · ref B-0142</div></div>
+  <div class="stop"><time>Mon 11:30</time><h3>Assigned</h3><p>The office asks Ravi from maintenance to take it on.</p><div class="notif wa-msg"><small>WhatsApp update</small>Ravi (maintenance) is handling this</div></div>
+  <div class="stop now"><time>Tue 16:00</time><h3>In progress</h3><p>Plumber visit booked. Status visible to all of Block B.</p><div class="notif wa-msg"><small>WhatsApp update</small>Plumber visit Wed, 10:00–12:00</div></div>
+  <div class="stop next"><time>Wed 12:00</time><h3>Closed</h3><p>Ravi records the repair and adds a photo.</p><div class="notif wa-msg"><small>WhatsApp · tap to reply</small>Fixed · [Confirm] [Reopen]</div></div>
+</div>
+<div class="views">
+  <div class="today"><h3>Without this</h3><p>It can mean a message, several follow-up calls, and no clear record of what was fixed.</p></div>
+  <div><h3>What the resident sees</h3><p>Who’s handling it and the latest update, in the app or on WhatsApp.</p></div>
+  <div><h3>What the office sees</h3><p>Open issues by age, who’s handling them, and repeat problems by location.</p></div>
+</div>
+</div>
+<div class="foot">
+<p class="note">The app coordinates the work. The society or its service team still has to do the repair.</p>
+<div class="folio"><span>Wooru · leadership brief</span><span>06 / 12</span></div>
+</div>
+</section>
+
+<!-- 7 -->
+<section class="slide split" id="slide-7" aria-labelledby="t7"><div class="split-grid">
+<div class="split-copy">
+<div class="label"><b>07</b>Product · proposed AI</div>
+<h2 id="t7">Answers from the society’s own documents</h2>
+<p class="dek">A proposed assistant for bye-laws, AGM minutes and circulars. Residents ask a question and see the source of the answer.</p>
+<div class="body">
+<div class="steps">
+  <div><b><i>01</i>Upload</b><span>A lead adds documents and chooses who can see them.</span></div>
+  <div><b><i>02</i>Ask</b><span>A resident asks a question in their own words.</span></div>
+  <div><b><i>03</i>Check</b><span>Wooru cites the page, or says it cannot find an answer.</span></div>
+</div>
+<p class="assistant-guard"><b>Designed for privacy.</b> Only permitted files are searched; committee-only files are protected in the database. Answers aren’t legal advice.</p>
+<p class="assistant-market"><b>What we found elsewhere</b>TownSq drafts document-based replies for managers; ADDA offers a general chatbot; Vantaca serves staff. In 15 more society-platform homepages, Kamiti listed document management and OSSAPP mentioned AI bookkeeping in page metadata, but neither showed resident document Q&amp;A. This is a public-page check, not proof the feature is absent. See slide 3 for the comparison.</p>
+</div>
+<div class="foot">
+<p class="note">Public-page checks · 16–17 Nov 2026. The 15 added sites were reviewed mainly on their homepages, not in the apps; this does not prove a feature is absent. Rough, unvalidated cost: &lt;₹10 per society to index; ₹0.10–₹1 per question.</p>
+<p class="sources">Sources: <a href="https://www.townsq.io/ai" target="_blank" rel="noopener noreferrer">TownSq AI</a> · <a href="https://adda.io/" target="_blank" rel="noopener noreferrer">ADDA</a> · <a href="https://www.vantaca.com/hoai" target="_blank" rel="noopener noreferrer">Vantaca HOAi</a> · <a href="https://kamiti.app/" target="_blank" rel="noopener noreferrer">Kamiti</a> · <a href="https://ossapp.in/" target="_blank" rel="noopener noreferrer">OSSAPP</a></p>
+<div class="folio"><span>Wooru · leadership brief</span><span>07 / 12</span></div>
+</div>
+</div>
+<div class="split-visual">
+  <div class="phone" role="img" aria-label="Concept screen: a resident asks whether dogs are allowed and about the maintenance late fee, and gets answers that cite the bye-laws and AGM minutes. A question about terrace solar panels gets a not-covered reply.">
+    <div class="p-status" aria-hidden="true"><span>9:41</span><span>5G</span></div>
+    <div class="p-head"><div><small>Lakeview Residency · 6 documents</small><b>Ask the rules</b></div><span class="p-tag">Proposed</span></div>
+    <div class="p-scroll chat">
+      <div class="q">Can I keep a dog in my flat?</div>
+      <div class="a">Yes. Dogs must be on a leash in lifts and common areas, and aren’t allowed in the pool area.<br><span class="cite">Bye-laws 2019 · p. 22, cl. 14.3</span><span class="cite">Pet circular · Mar 2025</span></div>
+      <div class="q">What’s the late fee on maintenance?</div>
+      <div class="a">18% a year on the overdue amount, from the 16th of the month. This replaced the 12% in the 2019 bye-laws.<br><span class="cite">AGM minutes · Jun 2024 · p. 3</span><small>Newer document used first</small></div>
+      <div class="q">Can I put solar panels on the terrace?</div>
+      <div class="a miss">Your society’s documents don’t seem to cover this. You could ask the committee.<br><span class="cite">Ask the committee →</span></div>
+    </div>
+    <div class="p-ask" aria-hidden="true"><span>Ask about rules, fees, minutes…</span><i>↑</i></div>
+    <p class="p-legal" aria-hidden="true">Based on your society’s documents. Not legal advice.</p>
+  </div>
+  <p class="caption">Concept screen. Names, clauses and figures are made up for illustration.</p>
+</div>
+</div></section>
+
+<!-- 8 -->
+<section class="slide" id="slide-8" aria-labelledby="t8">
+<div class="label"><b>08</b>Product · sequencing</div>
+<h2 id="t8">Build in stages, and check what works at each step</h2>
+<div class="body phases">
+  <div class="ph"><div class="ph-top"><span>Now</span><em>existing features</em></div><h3>Make what exists reliable</h3><ul><li>Test login, recovery and alert delivery</li><li>Make providers and menus easier to use</li><li>Make the funds ledger easier for residents to understand</li></ul><p class="proof"><span>What to check</span>Pilot residents sign in and get alerts without calling for help.</p></div>
+  <div class="ph"><div class="ph-top"><span>Next</span><em>pilot, 3–5 societies</em></div><h3>Notices and issue follow&#8209;through</h3><ul><li>Posts/events by audience; lead-only notices</li><li>Issues with a named owner and status</li><li>Two-way WhatsApp on one Wooru number</li><li>Clear privacy and contact choices</li></ul><p class="proof"><span>What to check</span>Fewer repeat follow-ups on similar issues (working target 25%).</p></div>
+  <div class="ph"><div class="ph-top"><span>Later</span><em>with partners</em></div><h3>Connected operations</h3><ul><li>Facility booking and polls</li><li>Society billing and payment status</li><li>Visitor access with gate partners</li></ul><p class="proof"><span>What to check</span>Pilot societies agree to pay for coordination.</p></div>
+</div>
+<div class="foot">
+<p class="note">Built by our existing team on our existing app and infrastructure. Stages after “Now” are proposals; scope and timing depend on demand, costs and integrations.</p>
+<div class="folio"><span>Wooru · leadership brief</span><span>08 / 12</span></div>
+</div>
+</section>
+
+<!-- 9 -->
+<section class="slide" id="slide-9" aria-labelledby="t9">
+<div class="label"><b>09</b>Product · feature landscape</div>
+<h2 id="t9">Features across Wooru and society apps</h2>
+<p class="dek">Current Wooru features, concepts under discussion and capabilities advertised by competitors.</p>
+<div class="body">
+<div class="portfolio" role="list" aria-label="Wooru and competitor feature landscape">
+  <div class="portfolio-row" role="listitem">
+    <div class="portfolio-when"><span class="status s-have">Wooru today</span><small>in current repository</small></div>
+    <h3>Resident connections</h3>
+    <p>Neighbour-recommended providers, shared visits, resident businesses and food pre-orders, events, carpools, parent connections, funds ledger, emergency contacts and donor list. Borrow &amp; Share is built but hidden.</p>
+  </div>
+  <div class="portfolio-row" role="listitem">
+    <div class="portfolio-when"><span class="status s-prop">Proposed</span><small>resident experience</small></div>
+    <h3>Information and follow-through</h3>
+    <p>Society document answers with page citations; issue tracking with an owner, status and photos; posts and events for owners, tenants, one flat or a group, with official notices limited to leads.</p>
+  </div>
+  <div class="portfolio-row" role="listitem">
+    <div class="portfolio-when"><span class="status s-prop">Proposed</span><small>community services</small></div>
+    <h3>Services and records</h3>
+    <p>Amenity booking, polls and voting, one-tap SOS, a public society page with privacy controls, resident-readable financial statements, AGM/meeting records, and a vehicle/parking registry.</p>
+  </div>
+  <div class="portfolio-row competitor" role="listitem">
+    <div class="portfolio-when"><span class="status">Competitor pages</span><small>advertised capabilities</small></div>
+    <h3>Society operations</h3>
+    <p>Gate and visitor workflows, guard apps, RFID/intercom, maintenance billing, double-entry accounting, UPI reconciliation, payroll, patrol tracking and water monitoring.</p>
+  </div>
+</div>
+</div>
+<div class="foot">
+<p class="note">The Wooru status labels reflect the current repository. Competitor capabilities are public-page claims, not hands-on verification; plans and implementations may differ.</p>
+<p class="sources">Reviewed 17 Nov 2026. “Not found” on a public page does not prove a feature is absent. See <a href="#slide-3">competitor comparison</a>.</p>
+<div class="folio"><span>Wooru · leadership brief</span><span>09 / 12</span></div>
+</div>
+</section>
+
+<!-- 10 -->
+<section class="slide" id="slide-10" aria-labelledby="t10">
+<div class="label"><b>10</b>Business · revenue</div>
+<h2 id="t10">First, ask societies if they’d pay</h2>
+<p class="dek">Three ways Wooru could earn, in the order we’d test them. All prices are examples.</p>
+<div class="body table-scroll"><table class="revenue">
+<thead><tr><th scope="col">Stream</th><th scope="col">Who pays</th><th scope="col">Illustrative price</th><th scope="col">When</th><th scope="col">Only if</th></tr></thead>
+<tbody>
+<tr class="primary"><th scope="row">Society subscription</th><td>Residents’ association</td><td class="price">₹2,500 / month</td><td>From the pilot</td><td>We can show that notices and issue tracking save the office time</td></tr>
+<tr><th scope="row">Assisted setup</th><td>Residents’ association</td><td class="price">₹5,000 once</td><td>With subscription</td><td>Setup and training have a clear scope and time limit</td></tr>
+<tr><th scope="row">Seller tools</th><td>Resident businesses</td><td class="price">Tools or fee</td><td>Later</td><td>Settlement, refunds and responsibilities are clear before any commission</td></tr>
+</tbody></table></div>
+<div class="notrev">
+  <div><b>Not Wooru revenue</b>Society maintenance funds and money paid to resident sellers are not Wooru’s income.</div>
+  <div><b>What we need to see</b>Fewer repeat follow-ups for the office, and clearer spending for residents.</div>
+</div>
+<div class="foot">
+<p class="note">Illustrative prices, not offers or verified income.</p>
+<div class="folio"><span>Wooru · leadership brief</span><span>10 / 12</span></div>
+</div>
+</section>
+
+<!-- 11 -->
+<section class="slide" id="slide-11" aria-labelledby="t11">
+<div class="label"><b>11</b>Business · unit economics</div>
+<h2 id="t11">With these assumptions, break-even is 40 societies</h2>
+<div class="body econ">
+<svg class="chart" viewBox="0 0 660 400" role="img" aria-label="Line chart: monthly revenue rises at ₹2,500 per society from zero; monthly cost starts at ₹60,000 and rises ₹1,000 per society. The lines cross at 40 societies and ₹1,00,000.">
+  <g stroke="#e3e6ec"><line x1="70" y1="275" x2="650" y2="275"/><line x1="70" y1="190" x2="650" y2="190"/><line x1="70" y1="105" x2="650" y2="105"/><line x1="70" y1="20" x2="650" y2="20"/></g>
+  <line x1="70" y1="360" x2="650" y2="360" stroke="#14181f"/>
+  <text x="62" y="364" text-anchor="end">₹0</text><text x="62" y="279" text-anchor="end">₹50k</text><text x="62" y="194" text-anchor="end">₹1L</text><text x="62" y="109" text-anchor="end">₹1.5L</text><text x="62" y="24" text-anchor="end">₹2L</text>
+  <text x="70" y="382" text-anchor="middle">0</text><text x="215" y="382" text-anchor="middle">20</text><text x="360" y="382" text-anchor="middle">40</text><text x="505" y="382" text-anchor="middle">60</text><text x="650" y="382" text-anchor="end">80 societies</text>
+  <polygon points="70,360 70,258 360,190" fill="#fff4ec"/>
+  <polygon points="360,190 650,20 650,122" fill="#ebf7ef"/>
+  <line x1="360" y1="190" x2="360" y2="360" stroke="#14181f" stroke-dasharray="3 4"/>
+  <line x1="70" y1="258" x2="650" y2="122" stroke="#868f9c" stroke-width="2.5"/>
+  <line x1="70" y1="360" x2="650" y2="20" stroke="#2457f5" stroke-width="2.5"/>
+  <circle cx="360" cy="190" r="5" fill="#fff" stroke="#14181f" stroke-width="2"/>
+  <text x="560" y="58" class="lbl" fill="#2457f5" text-anchor="end" style="fill:#2457f5">Revenue</text>
+  <text x="560" y="160" class="lbl" text-anchor="start" style="fill:#4a5361">Cost</text>
+  <text x="372" y="214" style="fill:#14181f;font-weight:600">Break-even: 40</text>
+  <text x="92" y="292" style="fill:#c2410c">Loss</text>
+  <text x="585" y="100" style="fill:#15803d">Surplus</text>
+</svg>
+<div>
+  <div class="be">40</div>
+  <p class="be-sub">paying societies to break even</p>
+  <p class="formula">₹60,000 fixed ÷ (₹2,500 price − ₹1,000 variable) = 40</p>
+  <table>
+  <thead><tr><th scope="col">Societies</th><th scope="col">Revenue</th><th scope="col">Cost</th><th scope="col">Surplus</th></tr></thead>
+  <tbody>
+  <tr><th scope="row">10</th><td>₹25,000</td><td>₹70,000</td><td class="neg">−₹45,000</td></tr>
+  <tr class="even"><th scope="row">40</th><td>₹1,00,000</td><td>₹1,00,000</td><td>₹0</td></tr>
+  <tr><th scope="row">75</th><td>₹1,87,500</td><td>₹1,35,000</td><td class="pos">₹52,500</td></tr>
+  </tbody></table>
+  <p class="note" style="margin-top:8px">All figures per month.</p>
+</div>
+</div>
+<div class="foot">
+<p class="note"><b>Illustrative model, not a forecast.</b> Fixed cost stands for running our existing team and infrastructure; price and variable cost are assumptions. Excludes tax, customer acquisition, WhatsApp message fees, bad debt, financing and capital spend. Replace with actual costs when known.</p>
+<div class="folio"><span>Wooru · leadership brief</span><span>11 / 12</span></div>
+</div>
+</section>
+
+<!-- 12 -->
+<section class="slide" id="slide-12" aria-labelledby="t12">
+<div class="label"><b>12</b>Team plan · next 90 days</div>
+<h2 id="t12">Our first 90 days: what we’d build and how we’d measure it</h2>
+<p class="dek">The team and infrastructure already exist. We’d add to the live app rather than start over.</p>
+<div class="body">
+<div class="plan">
+<div>
+  <p class="sec-h">The plan · existing team, four workstreams, 3–5 pilot societies</p>
+  <div class="gantt">
+    <div class="g-scale"><span></span><span>Days 1–30</span><span>31–60</span><span>61–90</span></div>
+    <div class="g-row"><div><b>Product &amp; research</b><small>interviews, measures</small></div><div class="g-track"><div class="g-bar prep" style="left:0;width:33.333%">Interviews · baseline</div><div class="g-bar prep" style="left:66.666%;width:33.334%">Measure · review</div></div></div>
+    <div class="g-row"><div><b>App engineering</b><small>on the live app + backend</small></div><div class="g-track"><div class="g-bar prep" style="left:0;width:33.333%">Improve sign-in, alerts, funds</div><div class="g-bar" style="left:33.333%;width:50%">Build notices + issue tracking</div></div></div>
+    <div class="g-row"><div><b>WhatsApp</b><small>one Wooru number</small></div><div class="g-track"><div class="g-bar wa prep" style="left:0;width:33.333%">Number, templates, opt-in</div><div class="g-bar wa" style="left:33.333%;width:66.667%">Two-way: report, ask, get updates</div></div></div>
+    <div class="g-row"><div><b>Society onboarding</b><small>one office contact per society</small></div><div class="g-track"><div class="g-bar prep" style="left:20%;width:30%">Onboard · train contacts</div><div class="g-bar" style="left:50%;width:50%">Weekly check-ins · support log</div></div></div>
+    <div class="g-row"><div><b>Checkpoints</b><small>decisions</small></div><div class="g-track gates"><span class="gate" style="left:33.333%">Day 30<small>pilot ready</small></span><span class="gate" style="left:66.666%">Day 60<small>in daily use</small></span><span class="gate" style="left:100%">Day 90<small>decide next steps</small></span></div></div>
+  </div>
+</div>
+<div>
+  <p class="sec-h">What the pilot would include</p>
+  <div class="ship">
+  <ul>
+    <li>Reliable sign-in and alerts<span class="status s-have">Have · improve</span></li>
+    <li>Official notices with read counts<span class="status s-prop">New</span></li>
+    <li>Issues with a named owner and status<span class="status s-prop">New</span></li>
+    <li>Two-way WhatsApp on one Wooru number<span class="status s-prop">New</span></li>
+    <li>Privacy and contact choices<span class="status s-prop">New</span></li>
+    <li>Services, menus, events, funds ledger<span class="status s-have">Have</span></li>
+  </ul>
+  <p class="later"><b>Other feature concepts:</b> amenity booking, polls, one-tap SOS, public society page, billing and visitor systems.</p>
+</div>
+</div>
+</div>
+<div class="wins-wrap">
+  <p class="sec-h">What we’ll measure · working targets, not results</p>
+  <div class="wins">
+    <div><strong>25% fewer</strong><p>repeat follow-ups on similar issues</p><small>vs. the days 1–30 baseline</small></div>
+    <div><strong>1 working day</strong><p>to name an owner on every reported issue</p><small>from report to assigned</small></div>
+    <div><strong>Hours / society</strong><p>support effort, logged weekly</p><small>tests the ₹1,000 variable cost (slide 11)</small></div>
+    <div><strong>Willing to pay</strong><p>associations agree to ₹2,500 a month</p><small>tests the price behind break-even at 40</small></div>
+  </div>
+</div>
+</div>
+<div class="foot">
+<p class="so"><span>Day 90</span>All four met: expand toward 40 paying societies. Some met: improve and repeat. None met: stop and rethink.</p>
+<div class="folio"><span>Wooru · leadership brief</span><span>12 / 12</span></div>
+</div>
+</section>
+
+</div></div></main>
+<nav class="navigation" aria-label="Slide navigation">
+  <button type="button" id="previous" aria-label="Previous slide">Back</button>
+  <span id="counter" class="counter">01 / 12</span>
+  <progress id="progress" max="12" value="1" aria-label="Presentation progress"></progress>
+  <button type="button" id="next" class="next" aria-label="Next slide">Next</button>
+</nav>
+<script>
+(() => {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const previous = document.querySelector('#previous');
+  const next = document.querySelector('#next');
+  const read = document.querySelector('#read');
+  const fullscreen = document.querySelector('#fullscreen');
+  const counter = document.querySelector('#counter');
+  const progress = document.querySelector('#progress');
+  const status = document.querySelector('#status');
+  const feedback = document.querySelector('#feedback');
+  const main = document.querySelector('main');
+  let active = 0;
+  let touchStart = null;
+  function resize() {
+    const reading = document.body.classList.contains('read-mode');
+    const gutter = document.body.classList.contains('presenting') ? 0 : 32;
+    const width = Math.max(1, (reading ? document.documentElement.clientWidth : main.clientWidth) - gutter);
+    const height = Math.max(1, main.clientHeight - gutter);
+    const scale = reading ? Math.min(1, width / 1280) : Math.min(width / 1280, height / 720);
+    document.documentElement.style.setProperty('--scale', String(scale));
+    document.documentElement.style.setProperty('--read-height', `${(slides.length * 720 + (slides.length - 1) * 20) * scale}px`);
+  }
+  function fromHash() {
+    const match = /^#slide-([0-9]+)$/.exec(location.hash);
+    return match ? Math.max(0, Math.min(slides.length - 1, Number(match[1]) - 1)) : 0;
+  }
+  function show(index, writeHash = true) {
+    active = Math.max(0, Math.min(slides.length - 1, index));
+    const reading = document.body.classList.contains('read-mode');
+    slides.forEach((slide, i) => {
+      slide.classList.toggle('is-active', i === active);
+      if (reading || i === active) slide.removeAttribute('aria-hidden');
+      else slide.setAttribute('aria-hidden', 'true');
+    });
+    previous.disabled = active === 0;
+    next.disabled = active === slides.length - 1;
+    counter.textContent = String(active + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    presentCounter.textContent = counter.textContent;
+    progress.value = active + 1;
+    status.textContent = 'Slide ' + (active + 1) + ' of ' + slides.length + ': ' + slides[active].querySelector('h1,h2').textContent.trim();
+    if (writeHash) history.replaceState(null, '', '#slide-' + (active + 1));
+    if (!reading) {
+      main.scrollTop = 0;
+    }
+  }
+  previous.addEventListener('click', () => show(active - 1));
+  next.addEventListener('click', () => show(active + 1));
+  read.addEventListener('click', () => {
+    const enabled = document.body.classList.toggle('read-mode');
+    read.setAttribute('aria-pressed', String(enabled));
+    read.textContent = enabled ? 'Slide view' : 'Read all';
+    resize();
+    show(active, false);
+    if (enabled) slides[active].scrollIntoView({block: 'start'});
+    else window.scrollTo(0, 0);
+  });
+  document.querySelector('#print').addEventListener('click', () => window.print());
+  const root = document.documentElement;
+  const presentExit = document.querySelector('#present-exit');
+  const presentCounter = document.querySelector('#present-counter');
+  const nativeFullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+  function setPresenting(on) {
+    document.body.classList.toggle('presenting', on);
+    fullscreen.textContent = on ? 'Exit full screen' : 'Full screen';
+    resize();
+  }
+  async function enterPresenting() {
+    if (document.body.classList.contains('read-mode')) read.click();
+    feedback.hidden = true;
+    setPresenting(true);
+    const request = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (request) {
+      try {
+        await request.call(root, {navigationUI: 'hide'});
+        if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape').catch(() => {});
+      } catch (error) { /* Browser refused native full screen; the in-page mode still applies. */ }
+    }
+    presentExit.focus({preventScroll: true});
+  }
+  async function exitPresenting() {
+    setPresenting(false);
+    if (screen.orientation && screen.orientation.unlock) { try { screen.orientation.unlock(); } catch (error) {} }
+    if (nativeFullscreenElement()) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      try { await exit.call(document); } catch (error) {}
+    }
+    fullscreen.focus({preventScroll: true});
+  }
+  fullscreen.addEventListener('click', () => document.body.classList.contains('presenting') ? exitPresenting() : enterPresenting());
+  presentExit.addEventListener('click', exitPresenting);
+  const onNativeChange = () => {
+    // User left native full screen (Esc / Android back): leave the in-page mode too.
+    if (!nativeFullscreenElement() && document.body.classList.contains('presenting')) exitPresenting();
+    else resize();
+  };
+  document.addEventListener('fullscreenchange', onNativeChange);
+  document.addEventListener('webkitfullscreenchange', onNativeChange);
+  main.addEventListener('click', event => {
+    if (!document.body.classList.contains('presenting') || (event.target instanceof Element && event.target.closest('a,button'))) return;
+    show(active + (event.clientX < window.innerWidth / 3 ? -1 : 1));
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.body.classList.contains('presenting') && !nativeFullscreenElement()) { exitPresenting(); return; }
+    if (document.body.classList.contains('read-mode') || event.altKey || event.ctrlKey || event.metaKey || event.target.closest('input,select,textarea,[contenteditable="true"]')) return;
+    if (event.key === 'ArrowRight' || event.key === 'PageDown') { event.preventDefault(); show(active + 1); }
+    if (event.key === 'ArrowLeft' || event.key === 'PageUp') { event.preventDefault(); show(active - 1); }
+    if (event.key === 'Home') { event.preventDefault(); show(0); }
+    if (event.key === 'End') { event.preventDefault(); show(slides.length - 1); }
+  });
+  main.addEventListener('touchstart', event => {
+    if (event.target instanceof Element && event.target.closest('a,button')) { touchStart = null; return; }
+    if (event.touches.length === 1) touchStart = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+  }, {passive: true});
+  main.addEventListener('touchend', event => {
+    if (!touchStart || document.body.classList.contains('read-mode') || !event.changedTouches.length) return;
+    const dx = event.changedTouches[0].clientX - touchStart.x;
+    const dy = event.changedTouches[0].clientY - touchStart.y;
+    if (Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.5) show(active + (dx < 0 ? 1 : -1));
+    touchStart = null;
+  }, {passive: true});
+  window.addEventListener('hashchange', () => show(fromHash(), false));
+  window.addEventListener('resize', resize);
+  if (typeof ResizeObserver === 'function') new ResizeObserver(resize).observe(main);
+  resize();
+  show(fromHash(), false);
+})();
+</script>
+</body>
+</html>

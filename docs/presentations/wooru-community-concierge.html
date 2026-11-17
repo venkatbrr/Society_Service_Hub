@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Wooru community concierge: a ten-slide concept strategy with role screens and a human-confirmed bridge to existing WhatsApp groups, not automatic group sync.">
+  <title>Wooru | One community, one concierge</title>
+  <style>
+    :root {
+      --paper: #FAF8F4; --card: #fff; --cream: #F0EDE3; --ink: #1F2A28;
+      --primary: #0F3732; --accent: #0F6E56; --mint: #E1F5EE;
+      --muted: #596964; --line: #C8D6D0; --gold: #854F0B; --gold-bg: #FAEEDA;
+      --red: #A32D2D; --red-bg: #FCEBEB; --chat: #EAE2D6; --out: #D9FDD3;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 400 16px/1.48 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    button, select { font: inherit; color: var(--primary); background: var(--card); border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px; cursor: pointer; }
+    button:hover { background: var(--mint); }
+    button:disabled { opacity: .5; cursor: default; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    a { color: var(--accent); text-underline-offset: 3px; overflow-wrap: anywhere; }
+    h1, h2, h3, p { margin: 0 0 14px; }
+    h1, h2, h3 { color: var(--primary); font-weight: 400; line-height: 1.13; letter-spacing: -.025em; }
+    h1 { font: 400 clamp(38px, 5.2vw, 72px)/1.07 Georgia, serif; max-width: 930px; }
+    h2 { font-size: clamp(29px, 3.1vw, 43px); max-width: 1100px; }
+    h3 { font-size: 19px; font-weight: 500; }
+    strong, b { font-weight: 500; }
+    ul, ol { margin: 0; padding-left: 20px; }
+    li { margin-bottom: 8px; }
+    .small { font-size: 13px; color: var(--muted); }
+    .kicker { font-size: 13px; color: var(--accent); letter-spacing: .06em; font-weight: 500; margin-bottom: 12px; }
+    .lede { max-width: 950px; font-size: clamp(19px, 2vw, 25px); color: var(--muted); }
+    .top, .bottom { display: flex; align-items: center; gap: 12px; padding: 10px 24px; background: var(--paper); }
+    .top { border-bottom: 1px solid var(--line); }
+    .bottom { border-top: 1px solid var(--line); }
+    .brand { margin-right: auto; font-size: 20px; letter-spacing: -.04em; font-weight: 500; color: var(--primary); }
+    .top label, .counter { font-size: 13px; white-space: nowrap; }
+    .bottom progress { flex: 1; height: 6px; accent-color: var(--accent); }
+    .error { margin: 0 24px; color: var(--red); }
+    .error:empty { display: none; }
+    .slide { max-width: 1480px; margin: auto; padding: clamp(24px, 3.5vw, 48px); border-bottom: 1px solid var(--line); }
+    .js:not(.reading) body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    .js:not(.reading) main { min-height: 0; flex: 1; overflow-y: auto; }
+    .js:not(.reading) .slide { display: none; border: 0; min-height: 100%; }
+    .js:not(.reading) .slide.active { display: flex; flex-direction: column; justify-content: center; }
+    .js:not(.reading) .slide.active.long { justify-content: flex-start; }
+    .reading .slide { padding-top: 48px; padding-bottom: 48px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 18px 0; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 19px 21px; }
+    .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+    .green { background: var(--mint); }
+    .dark { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .dark h3, .dark .metric { color: #fff; }
+    .sand { background: var(--gold-bg); border-color: #DFC7A0; }
+    .metric { color: var(--accent); font-size: clamp(27px, 3vw, 40px); font-weight: 500; line-height: 1.1; }
+    .tag { display: inline-block; padding: 4px 9px; border-radius: 100px; background: var(--mint); color: var(--accent); font-size: 12px; font-weight: 500; }
+    .tag.later { background: var(--gold-bg); color: var(--gold); }
+    .tag.no { background: var(--red-bg); color: var(--red); }
+    .callout { padding: 13px 17px; background: var(--gold-bg); color: var(--gold); border-radius: 11px; margin: 12px 0; font-size: 14px; }
+    .pillrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+    .pillrow span { border: 1px solid var(--line); border-radius: 99px; padding: 4px 11px; background: var(--card); font-size: 13px; }
+    .columns { display: grid; grid-template-columns: minmax(200px, .75fr) minmax(0, 2fr); gap: 24px; align-items: start; }
+    .notes { font-size: 15px; }
+    .notes h2 { font-size: clamp(27px, 2.7vw, 37px); }
+    .notes ul { padding-left: 19px; }
+    .stage { min-width: 0; }
+    .stage-label { color: var(--gold); background: var(--gold-bg); padding: 3px 9px; border-radius: 99px; font-size: 11px; display: inline-block; margin-bottom: 8px; }
+    .showcase { display: grid; grid-template-columns: minmax(230px, 285px) 90px minmax(240px, 1fr); align-items: stretch; gap: 0; }
+    .phone { background: #192A26; padding: 8px; height: min(57vh, 500px); min-height: 390px; border-radius: 32px; }
+    .phone-inner { display: flex; flex-direction: column; height: 100%; background: var(--chat); border-radius: 25px; overflow: hidden; }
+    .phone-head { background: #0B5E54; color: #fff; padding: 10px 13px; display: flex; gap: 10px; align-items: center; }
+    .avatar { border-radius: 50%; width: 35px; height: 35px; display: grid; place-items: center; background: #E1F5EE; color: #0B5E54; font-weight: 500; flex: none; }
+    .phone-head b { display: block; font-size: 14px; }
+    .phone-head small { display: block; font-size: 11px; }
+    .messages { padding: 10px 8px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 7px; background-image: radial-gradient(#C9C4B9 0.6px, transparent 0.6px); background-size: 14px 14px; }
+    .bubble { align-self: flex-start; max-width: 91%; background: var(--card); color: #15241F; border-radius: 9px; padding: 8px 10px; font-size: 13px; line-height: 1.4; animation: appear .32s ease-out both; overflow-wrap: anywhere; }
+    .bubble.out { align-self: flex-end; background: var(--out); }
+    .bubble.preview { border: 2px dashed var(--accent); background: var(--mint); }
+    .share-screen { display: flex; flex-direction: column; gap: 12px; min-height: 100%; padding: 14px; background: var(--paper); color: var(--ink); font-size: 13px; }
+    .share-screen b { color: var(--primary); }
+    .share-row, .share-preview { padding: 10px 12px; border: 1px solid var(--line); background: var(--card); border-radius: 10px; }
+    .share-row small, .share-preview small { display: block; color: var(--muted); margin-top: 4px; }
+    .share-row.selected { border-color: var(--accent); background: var(--mint); }
+    .share-action { margin-top: auto; padding: 9px 12px; background: var(--primary); color: #fff; border-radius: 8px; text-align: center; font-weight: 500; }
+    .share-action.waiting { background: var(--cream); color: var(--muted); }
+    .bubble .by { display: block; color: var(--accent); font-size: 10px; font-weight: 500; margin-bottom: 4px; }
+    .bubble .stamp { color: var(--muted); display: block; text-align: right; font-size: 10px; margin-top: 4px; }
+    .chat-actions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+    .chat-actions span { color: var(--accent); border: 1px solid var(--line); border-radius: 7px; background: #fff; padding: 4px 7px; font-weight: 500; font-size: 11px; }
+    .phone-compose { margin: 7px; padding: 8px 12px; background: #fff; border-radius: 20px; color: var(--muted); font-size: 12px; }
+    .bridge { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; padding: 0 8px; color: var(--accent); font-size: 11px; text-align: center; font-weight: 500; }
+    .bridge-line { height: 2px; width: 100%; background: repeating-linear-gradient(to right, var(--line) 0 6px, transparent 6px 11px); position: relative; }
+    .bridge-line::after { content: ""; display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); position: absolute; top: -5px; opacity: 0; }
+    .bridge-line.forward::after { animation: forward .8s ease-in-out; }
+    .bridge-line.backward::after { animation: backward .8s ease-in-out; }
+    .app { border: 1px solid var(--line); border-radius: 17px; height: min(57vh, 500px); min-height: 390px; overflow: hidden; background: var(--paper); display: flex; flex-direction: column; }
+    .app-head { background: #fff; border-bottom: 1px solid var(--line); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .app-head b { color: var(--primary); font-size: 18px; letter-spacing: -.04em; }
+    .app-head small { color: var(--muted); font-size: 11px; text-align: right; }
+    .app-body { overflow-y: auto; padding: 13px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+    .app-tile { padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: 11px; font-size: 13px; }
+    .app-tile b, .app-tile small { display: block; }
+    .app-tile small { color: var(--muted); margin-top: 4px; }
+    .app-tile.highlight { border-color: var(--accent); background: var(--mint); }
+    .app-tile.just-added { animation: appear .45s ease-out both; }
+    .app-body:has(.ui-screen) { padding: 0; }
+    .ui-screen { width: min(100%, 410px); min-height: 100%; margin: auto; display: flex; flex-direction: column; background: var(--paper); border-inline: 1px solid var(--line); }
+    .ui-header { background: var(--primary); color: var(--cream); padding: 12px 14px; }
+    .ui-header b { display: block; font-size: 15px; }
+    .ui-header small { display: block; font-size: 11px; opacity: .85; }
+    .ui-content { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 9px; }
+    .ui-label { color: var(--muted); font-size: 11px; font-weight: 500; margin: 3px 0 -3px; }
+    .ui-banner { padding: 10px 12px; background: var(--mint); border-radius: 11px; color: var(--primary); font-size: 12px; }
+    .ui-banner b { display: block; font-size: 14px; }
+    .ui-banner.sand { background: var(--gold-bg); }
+    .ui-tabs { display: flex; justify-content: space-around; gap: 2px; padding: 9px 5px; background: #fff; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+    .ui-tabs b { color: var(--accent); }
+    .ui-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    .ui-metric { padding: 9px 10px; background: #fff; border: 1px solid var(--line); border-radius: 9px; font-size: 11px; color: var(--muted); }
+    .ui-metric b { display: block; font-size: 21px; line-height: 1.15; color: var(--primary); }
+    .ui-metric.changed { background: var(--mint); border-color: var(--accent); animation: appear .5s both; }
+    .ui-action { display: inline-block; padding: 5px 10px; border-radius: 7px; background: var(--primary); color: #fff; font-size: 11px; font-weight: 500; }
+    .console-screen { display: grid; grid-template-columns: 102px minmax(0, 1fr); min-height: 100%; width: 100%; background: #fff; }
+    .console-side { background: var(--primary); color: var(--cream); padding: 15px 9px; font-size: 11px; }
+    .console-side b, .console-side span { display: block; padding: 7px 5px; }
+    .console-side b { font-size: 16px; }
+    .console-side .selected { color: var(--primary); background: var(--mint); border-radius: 7px; }
+    .console-main { min-width: 0; padding: 13px; display: flex; flex-direction: column; gap: 9px; }
+    .console-main h3 { font-size: 17px; margin: 0; }
+    .console-main .ui-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .console-table { border: 1px solid var(--line); border-radius: 9px; font-size: 11px; overflow: hidden; }
+    .console-table div { display: flex; justify-content: space-between; gap: 6px; padding: 7px 9px; border-bottom: 1px solid var(--line); }
+    .console-table div:last-child { border: 0; }
+    .console-table div:first-child { background: var(--cream); font-weight: 500; }
+    .scene-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .scene-controls button { padding: 5px 10px; font-size: 13px; }
+    .scene-controls output { font-size: 12px; color: var(--muted); }
+    .scene-caption { flex-basis: 100%; min-height: 54px; border-radius: 10px; padding: 9px 13px; background: var(--cream); color: var(--primary); font-size: 14px; margin: 0; }
+    .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; margin: 18px 0; }
+    .flow > div { background: #fff; padding: 13px 14px; border: 1px solid var(--line); border-radius: 10px; flex: 1; min-width: 130px; font-size: 13px; }
+    .flow b { display: block; color: var(--primary); font-size: 14px; }
+    .flow > span { align-self: center; color: var(--accent); font-weight: 500; }
+    .steps { counter-reset: phase; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin: 18px 0; }
+    .steps > div { padding: 15px; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+    .steps > div::before { counter-increment: phase; content: "0" counter(phase); color: var(--accent); font-size: 25px; display: block; margin-bottom: 10px; }
+    .steps h3 { font-size: 17px; }
+    .steps p { font-size: 13px; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; }
+    th, td { padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--primary); font-weight: 500; background: var(--cream); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; margin: 18px 0; }
+    .source { color: var(--muted); font-size: 13px; margin-top: 16px; }
+    .source a { margin-right: 14px; }
+    .plain { font-size: 14px; }
+    noscript { display: block; padding: 12px; background: var(--gold-bg); border-radius: 9px; }
+    .quiet { color: var(--muted); }
+    @keyframes appear { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+    @keyframes forward { 0% { left: 0; opacity: 0; } 20%, 80% { opacity: 1; } 100% { left: calc(100% - 12px); opacity: 0; } }
+    @keyframes backward { 0% { left: calc(100% - 12px); opacity: 0; } 20%, 80% { opacity: 1; } 100% { left: 0; opacity: 0; } }
+    .instant, .instant * { animation: none !important; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1110px) {
+      .columns { grid-template-columns: 1fr; }
+      .notes { max-width: 800px; }
+      .notes ul { columns: 2; column-gap: 35px; }
+    }
+    @media (max-width: 760px) {
+      .grid.three, .grid.four, .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stage { display: flex; flex-direction: column; }
+      .stage-label { order: -2; align-self: flex-start; }
+      .scene-controls { order: -1; margin: 4px 0 12px; }
+      .showcase { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+      .phone, .app { width: min(100%, 370px); height: 420px; min-height: 0; }
+      .bridge { width: min(100%, 370px); flex-direction: row; padding: 14px 0; }
+      .bridge-line { flex: 1; }
+      .notes ul { columns: 1; }
+      .console-screen { grid-template-columns: 80px minmax(0, 1fr); }
+      .console-side { padding: 10px 5px; }
+      #group-bridge .columns { display: flex; flex-direction: column; }
+      #group-bridge .stage { order: -1; width: 100%; display: flex; flex-direction: column; }
+    }
+    @media (max-width: 560px) {
+      .grid, .grid.three, .grid.four, .steps { grid-template-columns: 1fr; }
+      .top, .bottom { padding: 10px 14px; gap: 8px; flex-wrap: wrap; }
+      .brand { width: 100%; }
+      .top label { flex: 1; }
+      .top select { width: 100%; }
+      .bottom button { padding: 6px; font-size: 12px; }
+      .flow { flex-direction: column; }
+      .flow > span { transform: rotate(90deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+    }
+    @media print {
+      @page { size: A4 landscape; margin: 12mm; }
+      body { height: auto !important; display: block !important; overflow: visible !important; font-size: 12px; }
+      main { overflow: visible !important; }
+      .top, .bottom, .scene-controls button, .error { display: none !important; }
+      .slide { display: block !important; min-height: 0 !important; border: 0; padding: 2mm 0; break-after: page; }
+      .columns { grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr); gap: 12px; }
+      .notes ul { columns: 1; }
+      .showcase { grid-template-columns: minmax(155px, .7fr) 40px minmax(210px, 1fr); }
+      .phone, .app { width: auto; height: 95mm; min-height: 0; }
+      .bridge { width: auto; flex-direction: column; padding: 0 4px; }
+      .bridge-line { width: 100%; }
+      .grid, .steps { gap: 8px; margin: 9px 0; }
+      .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .card, .steps > div { padding: 10px 12px; }
+      .table-wrap { margin: 8px 0; }
+      th, td { padding: 6px 8px; }
+      .scene-controls { margin-top: 5px; }
+      .scene-caption { min-height: 0; padding: 6px 9px; font-size: 12px; }
+      #group-bridge h2 { font-size: 25px; margin-bottom: 8px; }
+      #group-bridge .notes { font-size: 12px; }
+      #group-bridge .notes li { margin-bottom: 4px; }
+      #group-bridge .callout { font-size: 11px; padding: 7px 9px; margin: 6px 0; }
+      #group-bridge .phone, #group-bridge .app { height: 80mm; }
+      .messages, .app-body { overflow: visible; }
+      a::after { content: " (" attr(href) ")"; font-size: 10px; }
+    }
+  </style>
+  <link rel="stylesheet" href="./presentation.css">
+</head>
+<body>
+  <header class="top">
+    <span class="brand">wooru / community concierge</span>
+    <a class="archive-link" href="./wooru-whatsapp-briefing.html">Reference archive · Open unified deck</a>
+    <label for="jump">Slide</label>
+    <select id="jump" disabled></select>
+    <button id="read-all" type="button" disabled aria-pressed="false">Read all</button>
+    <button id="print" type="button" disabled>Print / PDF</button>
+  </header>
+  <p id="error" class="error" role="alert"></p>
+  <main id="deck" tabindex="-1" aria-label="Wooru community concierge presentation">
+    <section class="slide" id="vision" data-title="The thesis">
+      <p class="kicker">01 / PRODUCT STRATEGY · PROPOSAL, NOT A LIVE FEATURE</p>
+      <h1>One community.<br>One concierge.<br>All its local sellers.</h1>
+      <p class="lede">Not another WhatsApp Business inbox. Wooru is the community's discovery and order record—reachable by app or one opt-in chat. Existing groups remain human sharing channels.</p>
+      <div class="grid three">
+        <div class="card green"><h3>One place to ask</h3><p>“What vegetarian food is open on Sunday?”—across participating sellers in <em>my</em> society.</p></div>
+        <div class="card"><h3>One trustworthy record</h3><p>Menus, prices, capacity, order history and status live in Wooru, not in a thread or an AI model.</p></div>
+        <div class="card dark"><h3>AI with a job</h3><p>Help residents find things and help sellers draft them; never invent prices or take irreversible action without confirmation.</p></div>
+      </div>
+      <p class="small">Concept only · Synthetic screens · No live WhatsApp or AI integration. Use ← → to navigate; Pause, Step and Replay control the scenes.</p>
+    </section>
+
+    <section class="slide" id="gap" data-title="Why Wooru is different">
+      <p class="kicker">02 / DIFFERENTIATION</p>
+      <h2>WhatsApp distributes the message. Wooru keeps the community record.</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Typical seller-specific inbox or catalog</th><th>Proposed Wooru community layer</th></tr></thead>
+        <tbody>
+          <tr><td>Helps a business manage its own chats, catalog and responses.</td><td>Residents find participating sellers and structured offerings <b>within their own society</b>; sellers own their listings.</td></tr>
+          <tr><td>Can answer questions or share a product link; the conversation remains the main surface.</td><td>A linked Wooru account and live records can ground cross-seller discovery, with <b>the app and chat referring to the same order</b>.</td></tr>
+          <tr><td>A message such as “two please” still needs order handling.</td><td>For food, Wooru's server-checked pre-order tracks <b>item, price, cutoff and capacity</b> after explicit confirmation.</td></tr>
+          <tr><td>Community WhatsApp groups spread posts, but older offers get buried.</td><td>Human-shared posts can become <b>seller-approved, searchable Wooru listings</b>; Wooru listings can be shared back as links, never silently synced.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="grid three presenter-detail">
+        <div class="card"><h3>For residents</h3><p>Find community offerings in one place; food orders have a durable Wooru history instead of only a chat thread.</p></div>
+        <div class="card"><h3>For sellers</h3><p>Publish once in Wooru; choose when to share a listing into an existing group. No group listener or bulk auto-posting.</p></div>
+        <div class="card"><h3>For leads</h3><p>Moderate community listings with authorized tools and see aggregate activity, not private group or buyer conversations.</p></div>
+      </div>
+      <p class="small presenter-detail">This compares common inbox/catalog workflows, not every competing product. Wooru membership is currently based on a join code; account linking does not prove real-world identity. Resale-product drafting and WhatsApp sharing here are proposals, not shipped features.</p>
+    </section>
+
+    <section class="slide long" id="resident" data-title="Resident journey">
+      <div class="columns">
+        <div class="notes">
+          <p class="kicker">03 / ANIMATED RESIDENT JOURNEY</p>
+          <h2>Find it. Compare it. Confirm it.</h2>
+          <ul>
+            <li>Ask one Wooru number across participating sellers; live records ground the answer.</li>
+            <li>Review the full order, confirm explicitly, then wait for a real Wooru order record.</li>
+          </ul>
+          <p class="callout">Try “Show unavailable path” to see what happens when capacity changes. No record means no order.</p>
+          <p class="small presenter-detail">The app switches from community menus to Rahul's My Orders. On a delayed reply, check My Orders before retrying; seller cancellation needs a reason and next action. Food pilot; figures are illustrative.</p>
+        </div>
+        <div class="stage" data-scene="resident"></div>
+      </div>
+      <noscript>Animation needs JavaScript. Resident asks Wooru for vegetarian menus, chooses Priya's veg biryani, confirms 2 portions for ₹400, and receives one Wooru order reference.</noscript>
+    </section>
+
+    <section class="slide long" id="group-bridge" data-title="Existing group bridge">
+      <p class="kicker">04 / EXISTING GROUPS · PROPOSED HUMAN SHARING</p>
+      <h2>From group post to Wooru listing—by choice.</h2>
+      <div class="columns">
+        <div class="notes">
+          <ul>
+            <li>Priya submits her post. AI can draft, but only she can publish.</li>
+            <li>Priya chooses the group, previews the link and presses Send herself.</li>
+          </ul>
+          <p class="callout">No existing-group sync. The live Wooru menu, not a stale preview, decides availability.</p>
+          <p class="small presenter-detail">An authorized moderator can submit with seller permission; rejected or unclaimed drafts stay private. Unlinked visitors sign in before ordering. This sharing workflow is proposed, not shipped. The pilot remains food pre-orders; resale products come later.</p>
+        </div>
+        <div class="stage" data-scene="group"></div>
+      </div>
+      <noscript>Existing society groups cannot sync automatically. A seller or authorized moderator submits menu details with permission; the seller approves the Wooru draft. To share back, a person chooses the WhatsApp group and presses Send.</noscript>
+    </section>
+
+    <section class="slide long" id="seller" data-title="The seller and the app">
+      <div class="columns">
+        <div class="notes">
+          <p class="kicker">05 / SELLER EXPERIENCE</p>
+          <h2>The app remains the workshop. Chat is a shortcut.</h2>
+          <ul>
+            <li>AI helps draft. Priya reviews and publishes the menu in Wooru.</li>
+            <li>The same workspace receives Rahul’s confirmed order and manages capacity.</li>
+          </ul>
+          <p class="callout">The app is the workshop; chat is an optional shortcut.</p>
+          <p class="small presenter-detail">The app/PWA carries catalog, history, reviews, moderation and society administration. No WhatsApp or AI opt-in is required for core features. A seller-owned Business-number connection is optional and later, and never grants access to existing groups.</p>
+        </div>
+        <div class="stage" data-scene="seller"></div>
+      </div>
+      <noscript>A seller suggests a menu, Wooru asks for missing details and drafts it, then the seller reviews and explicitly publishes in Wooru.</noscript>
+    </section>
+
+    <section class="slide long" id="society-lead" data-title="Society lead dashboard">
+      <div class="columns">
+        <div class="notes">
+          <p class="kicker">06 / PRESIDENT OR VICE PRESIDENT · FUTURE CONCEPT</p>
+          <h2>See how the community is doing, without reading its chats.</h2>
+          <ul>
+            <li>Community-level food activity rises from 7 to 8 orders.</li>
+            <li>Review and resolve reported public menus—not private conversations.</li>
+          </ul>
+          <p class="callout">Aggregate insight. No buyer card, order detail or chat transcript.</p>
+          <p class="small presenter-detail">This proposed panel is not shipped. The president or vice president sees Green Meadows-level menus, sellers and aggregate orders. Moderation shows reported public content and an auditable outcome only.</p>
+        </div>
+        <div class="stage" data-scene="lead"></div>
+      </div>
+      <noscript>Concept: the society lead's Green Meadows dashboard shows food orders today changing from 7 to 8, while keeping individual orders and messages private.</noscript>
+    </section>
+
+    <section class="slide long" id="platform" data-title="Platform admin console">
+      <div class="columns">
+        <div class="notes">
+          <p class="kicker">07 / WOORU PLATFORM ADMIN · WEB-ONLY FUTURE CONCEPT</p>
+          <h2>Operate the channel across societies, not their conversations.</h2>
+          <ul>
+            <li>Track channel health and aggregate orders across societies.</li>
+            <li>Investigate delivery failures without opening resident chats.</li>
+          </ul>
+          <p class="callout">A separate web console—not a resident-app admin screen.</p>
+          <p class="small presenter-detail">The same order changes Green Meadows 7 → 8 and all communities 114 → 115. The existing console has other authorized commerce reports. This proposed insights panel is aggregate-only and does not change current privileges.</p>
+        </div>
+        <div class="stage" data-scene="platform"></div>
+      </div>
+      <noscript>Concept: the web-only platform console displays aggregate orders and a message-delivery alert for investigation; no private chat or buyer details appear.</noscript>
+    </section>
+
+    <section class="slide long" id="trust" data-title="Group feasibility and trust">
+      <p class="kicker">08 / PLATFORM REALITY AND SAFETY</p>
+      <h2>Existing society groups are not an API data source.</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Official route</th><th>What it supports</th><th>What it does not support</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users">Business-app Coexistence</a></td><td>Eligible seller's one-to-one app/API chat sync, subject to onboarding.</td><td>Group chats are explicitly <b>not synchronized</b>.</td></tr>
+          <tr><td><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/groups">Groups API</a></td><td>API-created, invite-only groups for Official Business Accounts, up to eight participants.</td><td>No connector to an existing large society group; unavailable to Business-app phone numbers.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="grid three">
+        <div class="card green"><h3>Supported human bridge</h3><p>Seller or authorized moderator submits with permission. Seller approves or rejects the private draft; a person later previews a link, chooses a group and confirms Send.</p></div>
+        <div class="card sand"><h3>Not automatic sync</h3><p>No background reading, copying, or posting in existing groups. AI and messaging providers cannot bypass the platform boundary; unofficial browser bots are not a dependable foundation.</p></div>
+        <div class="card"><h3>Trust before scale</h3><p>Unclaimed/rejected drafts never publish. Detect duplicates; edit, close or expire outdated menus; show live availability after login. A group preview may remain stale. AI never invents an order.</p></div>
+      </div>
+      <p class="small">Food orders still need linked identity, server-side price/cutoff/capacity checks and explicit buyer confirmation. Existing <code>place_mcn_preorder</code> relies on the signed-in user; a service-role key alone cannot impersonate the resident. Other business listings are contact-only today.</p>
+    </section>
+
+    <section class="slide long" id="roadmap" data-title="Phased rollout">
+      <p class="kicker">09 / ORDER OF OPERATIONS</p>
+      <h2>First prove the community value. Then widen the channels.</h2>
+      <div class="steps">
+        <div><h3>Validate</h3><p>Interview residents, sellers and leads. Confirm Wooru-owned number onboarding, opt-in, provider/AI contracts, data terms, human group-sharing friction and real costs.</p><span class="tag">Gate</span></div>
+        <div><h3>Concierge pilot</h3><p>One society, a few food sellers, one Wooru number. Link identity; search menus; confirm a food pre-order; check status. Structured fallback included.</p><span class="tag">Core</span></div>
+        <div><h3>Test human sharing</h3><p>Validate opt-in listing links and seller-approved drafts for existing groups. AI extraction can help but is optional; no group API sync.</p><span class="tag">Concept to validate</span></div>
+        <div><h3>Expand only after proof</h3><p>Try seller-number one-to-one Coexistence if eligible. Add resale products, service bookings or other commerce only after their Wooru lifecycle and safeguards exist.</p><span class="tag later">Later</span></div>
+      </div>
+      <div class="card green"><h3>A good pilot is not “messages sent”</h3><p>Measure linked residents, completed and repeat orders, discovery across sellers, seller time saved, abandoned orders, incorrect AI claims, opt-outs, support load and <b>cost per completed order</b>. Agree on baseline and thresholds before rollout.</p></div>
+    </section>
+
+    <section class="slide long" id="decision" data-title="Decision and economics">
+      <p class="kicker">10 / DECISION FOR STAKEHOLDERS</p>
+      <h2>Fund a narrow pilot—not a generic chatbot program.</h2>
+      <div class="grid three">
+        <div class="card dark"><h3>What to back</h3><p>A Wooru-owned concierge for community-wide food discovery and one reliable pre-order flow. Treat deliberate group sharing as distribution, not the product or its database.</p></div>
+        <div class="card"><h3>What to buy or verify</h3><p>Wooru-owned business number and official messaging access, qualified data processor for optional AI, consent/legal review, and a real written provider quote.</p></div>
+        <div class="card sand"><h3>What not to promise</h3><p>Automatic reading <em>or posting</em> in existing society groups, universal product checkout, AI-generated confirmations without a transaction, or seller Coexistence before eligibility is checked.</p></div>
+      </div>
+      <div class="table-wrap presenter-detail"><table>
+        <thead><tr><th>Cost driver</th><th>Question to answer in the pilot</th></tr></thead>
+        <tbody>
+          <tr><td>Official one-to-one messaging</td><td>Meta message categories, templates, number/provider charges and changing free tiers; what is the cost per completed order? A person sharing a link to a group is not an API-initiated group message.</td></tr>
+          <tr><td>AI assistance</td><td>How often does it actually improve discovery or save seller time versus buttons and search? What does each assisted conversation cost?</td></tr>
+          <tr><td>Engineering and trust</td><td>Identity, retries, seller approval, duplicate drafts, moderation, data processing, support and recovery; which expenses recur as sellers grow?</td></tr>
+        </tbody>
+      </table></div>
+      <p class="callout">Illustrative pilot: ₹10,330/month for one Wooru number under modeled assumptions—not a quote. <a href="./whatsapp-integration.html#cost">See the editable cost model.</a></p>
+      <p class="source presenter-detail">Product grounding: <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/features.md">Wooru feature reference</a> and <a href="https://github.com/venkatbrr/Society_Service_Hub/blob/main/docs/architecture.md">architecture reference</a>. Proposed journey and boundaries: <a href="./whatsapp-integration.html#allowed">WhatsApp feasibility deck · slide 3</a>.</p>
+    </section>
+  </main>
+  <footer class="bottom">
+    <button id="prev" type="button" disabled>Previous</button>
+    <span id="counter" class="counter" aria-live="polite">1 / 10</span>
+    <progress id="progress" value="1" max="10" aria-label="Presentation progress"></progress>
+    <button id="next" type="button" disabled>Next</button>
+    <span class="small">← → / Home / End</span>
+  </footer>
+  <script>
+    'use strict';
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const tile = (title, detail, highlight = false) =>
+      `<div class="app-tile${highlight ? ' highlight' : ''}"><b>${title}</b><small>${detail}</small></div>`;
+    const appScreen = (title, subtitle, content, activeTab) =>
+      `<div class="ui-screen"><div class="ui-header"><b>${title}</b><small>${subtitle}</small></div>` +
+      `<div class="ui-content">${content}</div><div class="ui-tabs">` +
+      ['Help', 'Saved', 'MCN', 'Community', 'Profile'].map(tab =>
+        tab === activeTab ? `<b>${tab}</b>` : `<span>${tab}</span>`).join('') + `</div></div>`;
+    const residentScreen = state => appScreen(
+      state === 'confirmed' ? 'My orders' : 'Pre-order food', 'Green Meadows · Rahul M',
+      state === 'confirmed'
+        ? `<div class="ui-banner"><b>Order confirmed</b>Saved in Wooru, whichever channel you use.</div>` +
+          `<span class="ui-label">Your upcoming orders</span>` +
+          tile('#WR-1042 · Priya’s Kitchen', '2 × veg biryani · ₹400 · Sun 1–2 pm · Confirmed', true) +
+          `<span class="ui-label">Explore more in your community</span>` +
+          tile('Anita’s Kitchen', 'Veg thali · ₹220 · 6 left')
+        : state === 'unavailable'
+          ? `<div class="ui-banner sand"><b>No order placed</b>Only 1 portion remains; the 2-portion quote is no longer valid.</div>` +
+            tile('Review revised cart', '1 × veg biryani · ₹200 · confirm again to place', true) +
+            tile('My orders', 'No new order · check here first if a request is still pending')
+        : state === 'checking'
+          ? `<div class="ui-banner sand"><b>Checking your order</b>Do not submit again yet. Confirmed only when a Wooru order appears.</div>` +
+            tile('Priya’s Kitchen · 2 × veg biryani', '₹400 · Sun 1–2 pm · B-1204 · Checking', true) +
+            tile('My orders', 'Check the latest status if the reply is delayed')
+          : `<div class="ui-banner"><b>Food in your community</b>Browse every participating seller in one place.</div>` +
+          `<span class="ui-label">Open for Sunday delivery</span>` +
+          tile('Priya’s Kitchen · Veg biryani', '₹200 · 9 left · closes Sat 8 pm') +
+          tile('Anita’s Kitchen · Veg thali', '₹220 · 6 left · closes Sat 6 pm') +
+          `<span class="ui-label">My orders</span>` +
+          tile('Recent orders', 'Your own order history is here, not in someone else’s chat.'),
+      'MCN');
+    const sellerScreen = state => appScreen(
+      'Priya’s Kitchen', 'Green Meadows · seller workspace',
+      `<div class="ui-banner"><b>Your menu and orders</b>Only you see your buyers and order details.</div>` +
+      `<span class="ui-label">Sunday menu</span>` +
+      (state === 'empty'
+        ? tile('No Sunday menu yet', 'Create in Wooru or review an assistant draft')
+        : state === 'draft'
+          ? tile('Draft · veg biryani', '₹200 · 15 portions · Sat 8 pm cutoff · Review and publish', true)
+          : tile('Published · veg biryani', `₹200 · ${state === 'ordered' ? '7' : '9'} left · Sat 8 pm cutoff`, true)) +
+      `<span class="ui-label">Your orders</span>` +
+      (state === 'ordered'
+        ? tile('New · #WR-1042 · Rahul M', '2 × veg biryani · ₹400 · Confirmed · Sun 1–2 pm', true)
+        : tile('Sunday pre-orders', state === 'published' ? 'Existing reservations · 9 portions left' : 'No Sunday orders yet')) +
+      `<span class="ui-label">Manage</span><span class="ui-action">Open seller dashboard</span>`,
+      'MCN');
+    const leadScreen = (ordered, flag = false) => appScreen(
+      'Community overview', 'Green Meadows · president / vice president',
+      `<div class="ui-banner"><b>Community food activity</b>Aggregate insight only · no private chats or buyer details</div>` +
+      `<div class="ui-metrics"><div class="ui-metric${ordered ? ' changed' : ''}"><b>${ordered ? 8 : 7}</b>Food orders today</div>` +
+      `<div class="ui-metric"><b>2</b>Open menus</div><div class="ui-metric"><b>2</b>Participating sellers</div>` +
+      `<div class="ui-metric${flag ? ' changed' : ''}"><b>${flag ? 1 : 0}</b>New moderation flags</div></div>` +
+      `<span class="ui-label">Moderation</span>` +
+      (flag
+        ? tile('Reported menu · incorrect cutoff', 'Public menu details only · review or request correction', true) +
+          `<span class="ui-action">Review report</span>`
+        : tile('Listings and menu reports', 'No open flags · resolved actions remain in audit history')),
+      'Community');
+    const platformScreen = (ordered, alert = false) =>
+      `<div class="console-screen"><aside class="console-side"><b>wooru</b><span class="selected">Overview</span>` +
+      `<span>Communities</span><span>Commerce</span><span>Health</span></aside>` +
+      `<div class="console-main"><h3>Concierge overview</h3><span class="small">All communities · synthetic pilot metrics</span>` +
+      `<div class="ui-metrics"><div class="ui-metric${ordered ? ' changed' : ''}"><b>${ordered ? 115 : 114}</b>Food orders today · all</div>` +
+      `<div class="ui-metric${ordered ? ' changed' : ''}"><b>${ordered ? 8 : 7}</b>Green Meadows today</div>` +
+      `<div class="ui-metric"><b>1</b>Pilot community</div><div class="ui-metric${alert ? ' changed' : ''}"><b>${alert ? 1 : 0}</b>Delivery alerts</div></div>` +
+      `<span class="ui-label">Operations · no buyer or chat data</span>` +
+      `<div class="console-table"><div><span>Community</span><span>Orders today</span></div>` +
+      `<div><span>Green Meadows</span><span>${ordered ? 8 : 7}</span></div>` +
+      `<div><span>Other communities</span><span>107</span></div></div>` +
+      (alert
+        ? tile('Template delivery failed · Green Meadows', 'Inspect provider status · no buyer or transcript shown', true) +
+          `<span class="ui-action">Inspect delivery status</span>`
+        : tile('Channel health & onboarding', 'Delivery healthy · 0 alerts · review provider setup')) +
+      `</div></div>`;
+    const groupScreen = state => appScreen(
+      'Food in your community', 'Green Meadows · future sharing concept',
+      state === 'empty'
+        ? `<div class="ui-banner sand"><b>No menu submitted yet</b>Wooru cannot read the existing group.</div>` +
+          tile('Submit food-menu details', 'Seller or authorized moderator · with seller permission')
+        : state === 'draft'
+          ? `<div class="ui-banner sand"><b>Private draft · not published</b>Optional AI suggests details; Priya must claim and review.</div>` +
+            tile('Sunday veg biryani · ₹200', 'Priya reviews price, 15 portions, Sat 8 pm cutoff and duplicate menus', true) +
+            `<span class="ui-label">Seller action required</span><span class="ui-action">Review and publish</span>`
+          : `<div class="ui-banner"><b>Published by Priya</b>Seller-approved menu · live details in Wooru.</div>` +
+            tile('Sunday veg biryani · ₹200', 'Priya’s Kitchen · 9 left · Sat 8 pm cutoff', true) +
+            `<span class="ui-label">Member link</span>` +
+            tile('Open current menu', 'Unlinked residents sign in before ordering; old previews may be stale') +
+            `<span class="ui-action">Share via WhatsApp</span>`,
+      'MCN');
+    const groupPhone = state => state === 'chooser'
+      ? `<div class="share-screen"><b>Choose a chat or group</b><div class="share-row">Recent chats</div>` +
+        `<div class="share-row selected">Green Meadows Residents<small>Selected by Priya · 312 members</small></div>` +
+        `<div class="share-action waiting">Continue to preview · not sent</div></div>`
+      : state === 'preview'
+        ? `<div class="share-screen"><b>Green Meadows Residents · preview</b>` +
+          `<div class="share-preview"><b>Priya’s Kitchen · Sunday veg biryani</b><small>₹200 · opens current Wooru menu; sign-in required to order</small></div>` +
+          `<small>Preview is illustrative and may go stale. You can cancel.</small><div class="share-action">Send · requires Priya’s tap</div></div>`
+        : `<div class="bubble${state === 'sent' ? ' out' : ''}"><span class="by">${state === 'sent' ? 'Priya · shared Wooru link' : 'Priya · original group post'}</span>` +
+          (state === 'sent'
+            ? `Sunday veg biryani · ₹200<br>Open Priya’s current Wooru menu (illustrative link)`
+            : `Sunday veg biryani · ₹200. 15 portions, closes Sat 8 pm. Message me to order.`) +
+          `<span class="stamp">${state === 'sent' ? 'Sent by Priya' : 'Visible in group only'}</span></div>`;
+    const scripts = {
+      resident: {
+        start: 'Rahul is linked to his Green Meadows Wooru account. This is a proposed experience.',
+        context: 'Resident app · concept',
+        panel: residentScreen('browse'),
+        steps: [
+          { who: 'resident', text: 'What vegetarian food is open Sunday under ₹250?', caption: 'One message to Wooru—not two chats with two different sellers.' },
+          { who: 'link', direction: 'forward', text: 'Community + live menus', caption: 'Wooru resolves Rahul’s linked society, then queries its current menus.' },
+          { who: 'wooru', text: 'In Green Meadows, two Sunday options match:\nPriya: veg biryani · ₹200 · 9 left\nAnita: veg thali · ₹220 · 6 left', actions: 'Priya’s biryani | Anita’s thali | Open Wooru', caption: 'AI can phrase the answer; Wooru supplies the exact menu facts.' },
+          { who: 'resident', text: 'Priya’s biryani, two portions', caption: 'Natural language helps choose, but it does not place the order.' },
+          { who: 'wooru', text: 'Review your order:\n2 × veg biryani · ₹400 total\nPriya’s Kitchen · Sun 1–2 pm · B-1204\nPay Priya at delivery (example)\nCheck cancellation terms · closes Sat 8 pm', actions: 'Place order | Change order', caption: 'Seller, quantity, full total, delivery location, payment arrangement and terms are visible before the write.' },
+          { who: 'resident', text: 'Place order', caption: 'Rahul explicitly confirms.' },
+          { who: 'panel', html: residentScreen('checking'),
+            caption: 'Checking order: do not claim success or invite a second tap before a Wooru order exists. A delayed reply points to My Orders.' },
+          { who: 'link', direction: 'forward', text: 'Authorised order request', caption: 'Wooru checks linked user, community, price, cutoff and capacity again on the server. Changed terms or sold-out means no order and a fresh review.' },
+          { who: 'panel', html: residentScreen('confirmed'),
+            caption: 'The resident app shows Rahul’s own #WR-1042 in My Orders. Priya’s remaining capacity drops 9 → 7.' },
+          { who: 'link', direction: 'backward', text: 'Confirmed order', caption: 'The confirmation comes from the actual Wooru order record, not from an AI guess.' },
+          { who: 'wooru', text: 'Order #WR-1042 confirmed.\n2 × veg biryani · ₹400\nSun 1–2 pm. Ask “my orders” anytime.', caption: 'WhatsApp delivers the answer; Wooru owns the order and future status.' }
+        ]
+      },
+      group: {
+        start: 'Existing WhatsApp group: Wooru cannot see it. Priya chooses to submit her own food-menu post.',
+        context: 'Listings · proposed app experience',
+        phoneTitle: 'Green Meadows Residents',
+        phoneSubtitle: 'Existing WhatsApp group · illustrative',
+        phoneAvatar: 'G',
+        phoneCompose: 'Existing group · person shares manually',
+        panel: groupScreen('empty'),
+        steps: [
+          { who: 'phone', html: groupPhone('original'), caption: 'Priya posts in the existing group. Wooru receives nothing from that group.' },
+          { who: 'link', direction: 'forward', text: 'Priya taps Share / pastes details',
+            caption: 'Priya deliberately submits her own menu details in Wooru. A moderator could submit with permission, but only Priya can approve publication.' },
+          { who: 'panel', html: groupScreen('draft'),
+            caption: 'Optional AI extracts a private food-menu draft. Priya signs in, claims it and checks price, cutoff and duplicates. If rejected or unclaimed, it stays private.' },
+          { who: 'panel', html: groupScreen('published'),
+            caption: 'Priya checks her menu, then taps Publish in Wooru. No one automatically posts to the group.' },
+          { who: 'link', direction: 'backward', text: 'Priya taps Share via WhatsApp',
+            caption: 'A person initiates sharing from the published Wooru listing; Wooru cannot pick a group or send in the background.' },
+          { who: 'phone', html: groupPhone('chooser'), title: 'WhatsApp · choose chat', subtitle: 'Native share chooser · illustrative', compose: 'No message sent',
+            caption: 'WhatsApp opens its share chooser, separate from the group chat. Priya selects Green Meadows Residents; nothing is sent.' },
+          { who: 'phone', html: groupPhone('preview'), title: 'WhatsApp · preview', subtitle: 'Selected group · not sent', compose: 'Cancel or press Send',
+            caption: 'Priya previews the link and may cancel. A preview is not a live availability guarantee; the Wooru menu is authoritative.' },
+          { who: 'phone', html: groupPhone('sent'), title: 'Green Meadows Residents', subtitle: 'Existing WhatsApp group · illustrative', compose: 'Existing group · person shares manually',
+            caption: 'Priya presses Send. The group receives a link to the current Wooru menu; unlinked residents sign in before ordering. No automatic group sync.' }
+        ]
+      },
+      seller: {
+        start: 'The seller can draft faster, while Wooru stays the publishing authority.',
+        context: 'Seller app · concept',
+        panel: sellerScreen('empty'),
+        steps: [
+          { who: 'seller', text: 'Sunday: veg biryani ₹200, 15 portions, delivery 1–2 pm', caption: 'Priya describes a menu in plain language to the Wooru assistant.' },
+          { who: 'link', direction: 'forward', text: 'Draft details', caption: 'AI extracts a draft; Wooru does not publish it.' },
+          { who: 'wooru', text: 'Draft: veg biryani · ₹200 · 15 portions · Sun 1–2 pm.\nWhen should orders close?', actions: 'Sat 8 pm | Edit draft', caption: 'Missing details are asked for rather than guessed.' },
+          { who: 'seller', text: 'Sat 8 pm', caption: 'Priya supplies the missing cutoff.' },
+          { who: 'wooru', text: 'Ready to review in Wooru:\nVeg biryani · ₹200 · 15 portions\nDelivery Sun 1–2 pm · cutoff Sat 8 pm', actions: 'Review and publish in Wooru', caption: 'Draft first; the seller approves the final listing in Wooru.' },
+          { who: 'panel', html: sellerScreen('draft'),
+            caption: 'The draft is private until Priya reviews and explicitly publishes it in Wooru.' },
+          { who: 'seller', text: 'I reviewed and published it in Wooru', caption: 'Publication is a separate, seller-confirmed Wooru action—not an AI action.' },
+          { who: 'panel', html: sellerScreen('published'),
+            caption: 'The published menu began with 15 portions. Other reservations have left 9 available before Rahul orders.' },
+          { who: 'link', direction: 'forward', text: 'Rahul confirms #WR-1042',
+            caption: 'The same confirmed order from the resident scene reaches Priya’s Wooru dashboard.' },
+          { who: 'panel', html: sellerScreen('ordered'),
+            caption: 'Priya sees her own buyer and order #WR-1042. Two portions reduce availability from 9 to 7.' }
+        ]
+      },
+      lead: {
+        start: 'A new, aggregate-only community view for a president or vice president.',
+        context: 'Society lead · Wooru app concept',
+        phoneTitle: 'Community activity',
+        phoneSubtitle: 'Green Meadows · aggregate signal',
+        panel: leadScreen(false),
+        steps: [
+          { who: 'system', text: 'Green Meadows · 7 food orders today', caption: 'The lead sees an aggregate count, not the resident’s messages.' },
+          { who: 'system', text: 'A food pre-order was confirmed', caption: 'The order event is counted without disclosing who placed it.' },
+          { who: 'link', direction: 'forward', text: 'Aggregate +1', caption: 'Only the community-level food order count changes.' },
+          { who: 'panel', html: leadScreen(true), caption: 'Today: 8 orders across Green Meadows. No buyer card or private chat is visible.' },
+          { who: 'system', text: 'Public menu reported: wrong cutoff', caption: 'A community member reports a public menu detail, not a buyer chat.' },
+          { who: 'panel', html: leadScreen(true, true), caption: 'One public listing report appears. The lead can inspect the listing and request a correction or moderate it.' },
+          { who: 'system', text: 'Lead reviews the menu and requests a correction', caption: 'The reported menu is handled under existing permissions; the seller is informed, with an auditable outcome.' },
+          { who: 'panel', html: leadScreen(true), caption: 'The queue returns to zero after resolution. The aggregate order count stays at 8.' }
+        ]
+      },
+      platform: {
+        start: 'The proposed concierge insight panel is in Wooru’s separate web-only admin console.',
+        context: 'Platform admin · web console concept',
+        phoneTitle: 'Channel events',
+        phoneSubtitle: 'Wooru operations · aggregate signal',
+        panel: platformScreen(false),
+        steps: [
+          { who: 'system', text: 'Platform total · 114 food orders today', caption: 'Operations starts with aggregate data across communities.' },
+          { who: 'system', text: 'A confirmed food order was recorded in Green Meadows', caption: 'The order is counted without exposing its reference, buyer identity or chat content here.' },
+          { who: 'link', direction: 'forward', text: 'Aggregate counters', caption: 'Authorized aggregation updates the platform and community totals.' },
+          { who: 'panel', html: platformScreen(true), caption: 'All communities: 114 → 115; Green Meadows: 7 → 8. Other communities stay at 107.' },
+          { who: 'system', text: 'Utility-template delivery failed · Green Meadows', caption: 'A channel alert appears without exposing a buyer or chat transcript.' },
+          { who: 'panel', html: platformScreen(true, true), caption: 'Operations inspects the delivery status and provider health, not the resident’s messages.' },
+          { who: 'system', text: 'Operator verifies recovery and safe retry', caption: 'If needed, retry idempotently; keep Wooru’s order state correct even while WhatsApp delivery fails.' },
+          { who: 'panel', html: platformScreen(true), caption: 'Delivery health is restored. The admin view still contains aggregate or operational signals only.' }
+        ]
+      }
+    };
+    scripts.resident.alternate = {
+      start: 'Alternate outcome: another order leaves only one portion before Rahul confirms.',
+      context: 'Resident app · capacity changed',
+      panel: residentScreen('browse'),
+      steps: [
+        { who: 'resident', text: 'Priya’s biryani, two portions', caption: 'Rahul asks for the same two portions shown in the successful path.' },
+        { who: 'wooru', text: 'Review your order:\n2 × veg biryani · ₹400 total\nPriya’s Kitchen · Sun 1–2 pm · B-1204\nPay Priya at delivery (example)\nCheck cancellation terms · closes Sat 8 pm',
+          actions: 'Place order | Change order', caption: 'The quote is a review, not a reservation. Availability can change before confirmation.' },
+        { who: 'resident', text: 'Place order', caption: 'Rahul confirms the reviewed terms.' },
+        { who: 'panel', html: residentScreen('checking'), caption: 'Wooru checks the server result before replying; it must not claim success yet.' },
+        { who: 'link', direction: 'forward', text: 'Capacity changed · no order',
+          caption: 'The server now has only one portion. It rejects the two-portion request without creating an order.' },
+        { who: 'panel', html: residentScreen('unavailable'),
+          caption: 'My Orders has no new order. Rahul can review one portion at ₹200, choose another seller, or leave.' },
+        { who: 'wooru', text: 'Sorry—only 1 portion is left. No order was placed.\nReview 1 portion for ₹200, or choose another menu. If a reply is delayed, check My Orders before retrying.',
+          actions: 'Review 1 portion | See other menus | My Orders',
+          caption: 'A new quantity or price requires a fresh review and another explicit confirmation. No silent substitution.' }
+      ]
+    };
+
+    class Scene {
+      constructor(element, data) {
+        this.element = element;
+        this.primary = data;
+        this.data = data;
+        this.timer = null;
+        element.innerHTML = `<span class="stage-label">Illustrative · proposed, not a live integration</span>
+          <div class="showcase">
+            <div class="phone"><div class="phone-inner">
+              <div class="phone-head"><span class="avatar" data-part="avatar">${data.phoneAvatar || 'W'}</span><span><b data-part="phoneTitle">${data.phoneTitle || 'Wooru concierge'}</b><small data-part="phoneSubtitle">${data.phoneSubtitle || 'One number · your community'}</small></span></div>
+              <div class="messages" data-part="messages"></div><div class="phone-compose" data-part="compose">${data.phoneCompose || (data.phoneTitle ? 'Activity feed · read-only' : 'Message Wooru…')}</div>
+            </div></div>
+            <div class="bridge"><span data-part="direction">Wooru ↔ chat</span><div class="bridge-line" data-part="bridge"></div></div>
+            <div class="app"><div class="app-head"><b>wooru</b><small data-part="context"></small></div><div class="app-body" data-part="panel"></div></div>
+          </div>
+          <div class="scene-controls">
+            <button type="button" data-action="play">Play</button>
+            <button type="button" data-action="step">Step</button>
+            <button type="button" data-action="replay">Replay</button>
+            ${data.alternate ? '<button type="button" data-action="variant"></button>' : ''}
+            <button type="button" data-action="speed">1×</button>
+            <output data-part="count"></output>
+            <p class="scene-caption" data-part="caption" aria-live="polite"></p>
+          </div>`;
+        this.parts = {};
+        element.querySelectorAll('[data-part]').forEach(node => { this.parts[node.dataset.part] = node; });
+        element.querySelector('[data-action="play"]').addEventListener('click', () => this.playing ? this.pause() : this.play());
+        element.querySelector('[data-action="step"]').addEventListener('click', () => this.step());
+        element.querySelector('[data-action="replay"]').addEventListener('click', () => { this.reset(); this.play(); });
+        if (data.alternate) element.querySelector('[data-action="variant"]').addEventListener('click', () => {
+          this.data = this.data === this.primary ? this.primary.alternate : this.primary;
+          this.reset();
+          this.play();
+        });
+        element.querySelector('[data-action="speed"]').addEventListener('click', event => {
+          this.speed = this.speed === 1 ? 1.5 : 1;
+          event.currentTarget.textContent = this.speed + '×';
+          if (this.playing) this.schedule();
+        });
+        this.speed = 1;
+        this.reset();
+      }
+      reset() {
+        this.pause();
+        this.index = 0;
+        this.started = false;
+        this.parts.messages.replaceChildren();
+        this.parts.panel.innerHTML = this.data.panel;
+        this.parts.context.textContent = this.data.context;
+        this.parts.caption.textContent = this.data.start;
+        this.parts.caption.setAttribute('aria-live', 'polite');
+        this.parts.direction.textContent = 'Wooru ↔ chat';
+        this.parts.bridge.className = 'bridge-line';
+        this.parts.avatar.textContent = this.data.phoneAvatar || 'W';
+        this.parts.phoneTitle.textContent = this.data.phoneTitle || 'Wooru concierge';
+        this.parts.phoneSubtitle.textContent = this.data.phoneSubtitle || 'One number · your community';
+        this.parts.compose.textContent = this.data.phoneCompose || (this.data.phoneTitle ? 'Activity feed · read-only' : 'Message Wooru…');
+        this.updateControls();
+      }
+      updateControls() {
+        this.parts.count.textContent = `Step ${this.index} / ${this.data.steps.length}`;
+        this.element.querySelector('[data-action="play"]').textContent =
+          this.playing ? 'Pause' : this.index === this.data.steps.length ? 'Play again' : this.index ? 'Resume' : 'Play';
+        const variant = this.element.querySelector('[data-action="variant"]');
+        if (variant) variant.textContent = this.data === this.primary ? 'Show unavailable path' : 'Show successful order';
+      }
+      pause() {
+        this.playing = false;
+        clearTimeout(this.timer);
+        if (this.parts) {
+          this.parts.caption.setAttribute('aria-live', 'polite');
+          this.updateControls();
+        }
+      }
+      schedule() {
+        clearTimeout(this.timer);
+        if (this.playing) this.timer = setTimeout(() => {
+          this.advance(false);
+          if (this.index < this.data.steps.length) this.schedule();
+          else this.pause();
+        }, 1550 / this.speed);
+      }
+      play() {
+        if (this.index === this.data.steps.length) this.reset();
+        this.started = true;
+        this.playing = true;
+        this.parts.caption.setAttribute('aria-live', 'off');
+        this.updateControls();
+        this.schedule();
+      }
+      step() {
+        this.pause();
+        if (this.index === this.data.steps.length) this.reset();
+        this.started = true;
+        this.parts.caption.setAttribute('aria-live', 'polite');
+        this.advance(false);
+      }
+      finish() {
+        this.pause();
+        this.reset();
+        this.started = true;
+        while (this.index < this.data.steps.length) this.advance(true);
+      }
+      advance(instant) {
+        const step = this.data.steps[this.index];
+        if (!step) return;
+        this.index++;
+        if (step.who === 'panel') {
+          this.parts.panel.innerHTML = step.html;
+          if (instant) this.parts.panel.classList.add('instant');
+          else this.parts.panel.classList.remove('instant');
+        } else if (step.who === 'phone') {
+          this.parts.messages.innerHTML = step.html;
+          this.parts.messages.classList.toggle('instant', instant);
+          if (step.title) this.parts.phoneTitle.textContent = step.title;
+          if (step.subtitle) this.parts.phoneSubtitle.textContent = step.subtitle;
+          if (step.compose) this.parts.compose.textContent = step.compose;
+        } else if (step.who === 'link') {
+          this.parts.direction.textContent = step.text;
+          this.parts.bridge.className = 'bridge-line';
+          if (!instant) {
+            void this.parts.bridge.offsetWidth;
+            this.parts.bridge.classList.add(step.direction);
+          }
+        } else {
+          const bubble = document.createElement('div');
+          bubble.className = 'bubble' + (step.who === 'resident' || step.who === 'seller' ? ' out' : '');
+          if (instant) bubble.classList.add('instant');
+          if (step.who === 'wooru') {
+            const by = document.createElement('span');
+            by.className = 'by';
+            by.textContent = this.data.context.includes('Seller app')
+              ? 'Wooru assistant · draft for review'
+              : 'Wooru reply · based on Wooru data';
+            bubble.append(by);
+          }
+          const content = document.createElement('span');
+          content.style.whiteSpace = 'pre-line';
+          content.textContent = step.text;
+          bubble.append(content);
+          if (step.actions) {
+            const actions = document.createElement('div');
+            actions.className = 'chat-actions';
+            step.actions.split(' | ').forEach(label => {
+              const chip = document.createElement('span');
+              chip.textContent = label;
+              actions.append(chip);
+            });
+            bubble.append(actions);
+          }
+          const stamp = document.createElement('span');
+          stamp.className = 'stamp';
+          stamp.textContent = '7:' + String(this.index + 2).padStart(2, '0') + ' pm';
+          bubble.append(stamp);
+          this.parts.messages.append(bubble);
+          this.parts.messages.scrollTop = this.parts.messages.scrollHeight;
+        }
+        this.parts.caption.textContent = step.caption;
+        this.updateControls();
+      }
+    }
+
+    const slides = [...document.querySelectorAll('.slide')];
+    const select = document.getElementById('jump');
+    const deck = document.getElementById('deck');
+    const readButton = document.getElementById('read-all');
+    const scenes = new Map([...document.querySelectorAll('[data-scene]')].map(element =>
+      [element.closest('.slide').id, new Scene(element, scripts[element.dataset.scene])]));
+    const sceneVisible = scene => {
+      const bounds = scene.element.getBoundingClientRect();
+      const viewport = deck.getBoundingClientRect();
+      return Math.max(0, Math.min(bounds.bottom, viewport.bottom) - Math.max(bounds.top, viewport.top)) >=
+        Math.min(bounds.height, viewport.height) * 0.25;
+    };
+    const sceneObserver = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        const scene = scenes.get(entry.target.closest('.slide').id);
+        if (!reading && scene && scene.element.closest('.slide').classList.contains('active') &&
+            !scene.started && sceneVisible(scene)) {
+          if (reduced) scene.finish();
+          else scene.play();
+        }
+      }
+    }, { root: deck, threshold: [0, 0.25] });
+    scenes.forEach(scene => sceneObserver.observe(scene.element));
+    let active = Math.max(0, slides.findIndex(slide => '#' + slide.id === location.hash));
+    let reading = false;
+    select.replaceChildren(...slides.map((slide, i) => {
+      const option = document.createElement('option');
+      option.value = String(i);
+      option.textContent = `${String(i + 1).padStart(2, '0')} / ${slide.dataset.title}`;
+      return option;
+    }));
+    document.documentElement.classList.add('js');
+    document.querySelectorAll('.top button, .top select, .bottom button').forEach(control => { control.disabled = false; });
+    function show(index, focus = false) {
+      const previous = active;
+      active = Math.max(0, Math.min(slides.length - 1, index));
+      if (previous !== active) scenes.forEach(scene => scene.pause());
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === active));
+      select.value = String(active);
+      document.getElementById('counter').textContent = `${active + 1} / ${slides.length}`;
+      document.getElementById('progress').value = active + 1;
+      document.getElementById('prev').disabled = active === 0;
+      document.getElementById('next').disabled = active === slides.length - 1;
+      document.title = `Wooru | ${slides[active].dataset.title}`;
+      history.replaceState(null, '', '#' + slides[active].id);
+      if (reading) slides[active].scrollIntoView({ block: 'start' });
+      else {
+        deck.scrollTop = 0;
+        const scene = scenes.get(slides[active].id);
+        if (scene && previous !== active) scene.reset();
+        if (scene && !scene.started && sceneVisible(scene)) {
+          if (reduced) scene.finish();
+          else scene.play();
+        }
+      }
+      if (focus) deck.focus({ preventScroll: true });
+    }
+    select.addEventListener('change', () => show(Number(select.value), true));
+    document.getElementById('prev').addEventListener('click', () => show(active - 1, true));
+    document.getElementById('next').addEventListener('click', () => show(active + 1, true));
+    readButton.addEventListener('click', () => {
+      reading = !reading;
+      document.documentElement.classList.toggle('reading', reading);
+      readButton.textContent = reading ? 'Slide view' : 'Read all';
+      readButton.setAttribute('aria-pressed', String(reading));
+      if (reading) scenes.forEach(scene => scene.finish());
+      else {
+        const scene = scenes.get(slides[active].id);
+        if (scene) scene.reset();
+      }
+      show(active);
+    });
+    document.addEventListener('keydown', event => {
+      if (event.altKey || event.ctrlKey || event.metaKey || reading ||
+          (event.target instanceof Element && event.target.closest('input, select, textarea, a, summary, [contenteditable="true"]'))) return;
+      const target = { ArrowRight: active + 1, ArrowLeft: active - 1, PageDown: active + 1,
+        PageUp: active - 1, Home: 0, End: slides.length - 1 }[event.key];
+      if (target !== undefined) { event.preventDefault(); show(target, true); }
+    });
+    document.getElementById('print').addEventListener('click', () => window.print());
+    window.addEventListener('beforeprint', () => scenes.forEach(scene => {
+      scene.data = scene.primary;
+      scene.finish();
+    }));
+    window.addEventListener('hashchange', () => {
+      const index = slides.findIndex(slide => '#' + slide.id === location.hash);
+      if (index >= 0 && index !== active) show(index);
+    });
+    show(active);
+  </script>
+</body>
+</html>

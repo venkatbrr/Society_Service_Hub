@@ -1,0 +1,45 @@
+# Indian society-platform scan
+
+**Reviewed:** 17 November 2026
+
+**Scope:** Public content on the 15 vendor websites listed below. This is desk research, not a hands-on test of the apps or a verification of customer deployments.
+
+## What stands out
+
+Several products advertise a broad society-operations package covering gate and visitor workflows, maintenance collection, accounting, helpdesk, notices and amenities. The closest operational overlap with Wooru's target market appears to be **Kamiti, EasyMaintenance, GateKeeperZero, ApnaSociety365 and MySocietyEntry**. That is based on their public positioning and feature lists, not a side-by-side product test.
+
+The public pages reviewed did **not** establish resident-facing Q&A grounded in society documents. Kamiti lists document management, but does not describe question answering. OSSAPP's page metadata mentions AI bookkeeping, but its visible public page did not expose a concrete feature description. This is not proof that either vendor lacks an unadvertised, app-only or newly released feature.
+
+Prices and feature counts below are vendor-published claims. Check the linked pages again before using them in a commercial proposal.
+
+## Evidence by product
+
+| Product | Public positioning and capabilities | Public pricing | Evidence and limits |
+|---|---|---|---|
+| [Kamiti](https://kamiti.app/) | India-focused society-management app. Advertises visitor and delivery management, maintenance billing, helpdesk tickets, amenity booking, notices, double-entry accounting, staff and vehicle management, polls, meetings, AGM resolutions and a guard panel. It also lists document management. | Free for up to 50 units; ₹20 per unit/month above that, billed annually. | Homepage feature and pricing sections. The site claims 250+ features and 11 roles; these are vendor claims. Document management is not described as resident document Q&A. |
+| [Atithi](https://atithiapp.com/) | Advertises visitor, delivery and service-provider entry; member directories, gate passes, vehicles, amenities and notifications, with member, admin and gatekeeper roles. | Advertised as free. | Homepage only. Geography and detailed accounting features were not established. |
+| [Yizitor](https://yizitor.com/) | Pune-focused society software. Advertises visitor management, maintenance dues, complaints, amenity booking, staff/vendor management, water monitoring and gate/barrier solutions. | Not found. | Homepage only. Some page copy appears mismatched to the product, so treat individual feature claims cautiously. |
+| [SVC SocietyPRO](https://svcsocietypro.com/) | Society-management application for committees and members. Advertises billing, accounting, payment gateway, resident records and communication, including notices, polls, events and alerts. | Not found. | Homepage only. Its public positioning is committee- and accounting-oriented; no gate or visitor workflow was established there. |
+| [SocietyNX](https://societynx.com/) | India-facing society platform. Advertises maintenance billing, visitors, amenities, accounts, helpdesk and parking, plus a public society page for notices and amenities. | Public society page advertised as free; other plan prices not found. | Homepage only. Claims such as 800+ societies and improved collections are self-reported marketing figures. |
+| [CURONext](https://www.curonext.com/) | Security-focused community platform. Advertises visitor appointments, vehicle tracking, restricted entry, digital vehicle locks, notices, resident management and security alerts. | Not found. | The supplied domain redirected to `www.curonext.com`. Homepage only; no billing or accounting feature was established there. |
+| [EasyMaintenance](https://easymaintenance.in/) | Housing-society software advertising billing, UPI/payment collection, visitor and guard workflows, vehicles, notices, complaints, expenses, payroll, amenity booking, polls, marketplace and special funds. | 30-day trial; Starter ₹290/year (up to 25 flats), Basic ₹990/year (up to 50), Pro ₹5,990/year (up to 200), Enterprise ₹9,990/year (unlimited). | Homepage pricing section. The page places some capabilities in higher tiers; confirm current plan inclusions with the vendor. |
+| [OSSAPP](https://ossapp.in/) | Page metadata describes “AI Society Book-keeping,” privacy and no ads. | Not found. | The visible page was blank in the public-page check. The metadata claim does not establish what the AI does; no document Q&A workflow could be assessed. |
+| [OnlineSociety.co.in](https://onlinesociety.co.in/) | Accounting and administration for housing and commercial societies. Advertises bills, member ledgers, accounts finalization and audit services. | A pricing link points to an image; its contents were not reviewed. | Homepage only. The site appears oriented toward accounting services, rather than a resident community app. |
+| [ApnaSociety365](https://apnasociety365.com/) | Indian housing-society management. Advertises guard workflows, visitor approval, QR pre-invites, maintenance billing, parking, complaints, notices, polls, amenities, directory and family records. | Free-trial offer; no price found. | Homepage only. App-store links appeared to be placeholders and were not treated as verified listings. |
+| [MySocietyEntry](https://mysocietyentry.com/) | Society entry, parking and finance platform. Advertises visitor/delivery passes, digital intercom, staff and patrol tracking, vehicle/RFID passes, billing, helpdesk SLAs, SOS, notices, polls, amenities and a resident marketplace. | Not found. | Homepage only. Builder logos on the page were not treated as verified customer references. |
+| [GateKeeperZero](https://gatekeeperzero.com/) | Society-management suite advertising visitor security, offline guard tools, double-entry accounting, resident-facing financial statements, UPI reconciliation, helpdesk, amenities, staff and notices. | ₹9 per flat/month billed yearly; a basic plan is advertised as free. | Homepage only. The 420+ feature count and plan terms are vendor claims and should be reconfirmed. |
+| [Societypay](https://societypay.co.in/) | No product capabilities could be established from the page reviewed. | Not found. | The site returned a login page with placeholder/demo text. Treat as unverified, not as evidence of absent features. |
+| [Yeshasvini](https://yeshasvini.com/) | The page reviewed showed a bilingual portal with society-user and department-user logins. A resident community-management product was not established. | Not found. | Login portal only. Its apparent government/department orientation is an inference; exclude it from direct competitor comparisons unless further evidence identifies a relevant product. |
+| [PropMan+](https://propmanplus.com/) | Property and community management for facility managers, owner associations and builders. Advertises multi-property management, roles, finances/service charges, notices, staff/vendors, helpdesk, visitor pre-approval and a resident app. | Not found. | Homepage only. A reference to Dubai's Mollak service-charge process suggests a UAE connection, but the company's geography was not explicit on the page reviewed. |
+
+## How this relates to Wooru
+
+- **Operational overlap:** the five closest broad overlaps identified in this scan are Kamiti, EasyMaintenance, GateKeeperZero, ApnaSociety365 and MySocietyEntry. Existing comparisons with MyGate, NoBrokerHood, ADDA, ApnaComplex and ANACITY remain relevant; this scan supplements rather than replaces them.
+- **Resident communication:** notices, polls and helpdesks appear across several vendor pitches. EasyMaintenance and MySocietyEntry also advertise a marketplace. These are not evidence that every product has the same audience targeting, moderation or permissions.
+- **Financial workflows:** accounting and maintenance collection are central to several products, notably Kamiti, SVC SocietyPRO, OnlineSociety.co.in and GateKeeperZero. Wooru's community-fund ledger should not be presented as a maintenance-billing or payment-settlement equivalent.
+- **AI and documents:** no reviewed page established resident Q&A with answers grounded in uploaded society documents and citations. OSSAPP mentions AI in metadata; Kamiti advertises document management. Neither statement alone verifies that capability.
+- **Not like-for-like:** some entries are security-focused, accounting services, a login-only portal or an unclear product page. Their inclusion records what was checked; it does not claim that all 15 are direct Wooru competitors.
+
+## Method and caveats
+
+The check used public vendor websites on 17 November 2026, mainly homepage content and visible pricing/feature sections. It did not test installed apps, gated customer portals, vendor demos, app-store listings, or every feature/pricing subpage. “Not found” means not found in the pages reviewed, not that the capability does not exist. Geography and role descriptions marked as inferred should not be repeated as confirmed facts. Recheck pages and ask vendors to demonstrate access controls before using comparisons in sales or product claims.
