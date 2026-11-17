@@ -11,7 +11,7 @@ With this feature, a committee lead uploads those documents once. A resident can
 
 ## 2. Why now: the competitor check
 
-On 2026-11-16 we checked public product pages for MyGate, NoBrokerHood, ADDA, ApnaComplex, Emaar One, TownSq, Vantaca, AppFolio, Entrata, RealPage and ButterflyMX.
+On 2026-11-16 we checked public product pages for MyGate, NoBrokerHood, ADDA, ApnaComplex, Emaar One, TownSq, Vantaca, AppFolio, Entrata, RealPage and ButterflyMX. On 2026-11-17, we added a homepage-level scan of 15 more society-platform vendors; the full evidence and limits are in the [Indian society-platform scan](../competitor-research/indian-society-platforms.md).
 
 | Product | Closest feature | Document Q&A for residents or committees? |
 |---|---|---|
@@ -19,8 +19,11 @@ On 2026-11-16 we checked public product pages for MyGate, NoBrokerHood, ADDA, Ap
 | ADDA (India) | A resident chatbot for "everyday community questions", plus an AI helpdesk, invoice reading and a writing assistant ([adda.io](https://adda.io/)) | No public evidence that the chatbot answers from uploaded bye-laws or shows sources. |
 | Vantaca (US) | Board packets, month-end financials, a staff "Knowledge Assistant" | It serves management staff, not committees or residents. |
 | MyGate, NoBrokerHood, ApnaComplex, Emaar One | None found on their public pages | No public evidence. |
+| Kamiti | Lists document management on its feature comparison | No resident document Q&A or cited answers were established on the reviewed homepage. |
+| OSSAPP | Homepage metadata says "AI Society Book-keeping" | The visible page did not expose feature details, so this is not evidence of document Q&A. |
+| Other 13 vendors in the 17 Nov scan | Society operations, gate/security, accounting and resident communication features; details in the linked scan | No reviewed homepage established resident document Q&A. |
 
-**What the check did not cover.** Search engines blocked automated queries, so only vendor pages were read. PayHOA, FRONTSTEPS, Condo Control, Buildium and Yardi refused access, and Enumerate, AppFolio's HOA pages and smaller bye-law chatbot startups weren't checked. Treat this as a likely gap and check those vendors in a normal browser before calling it unique in a pitch.
+**What the check did not cover.** These were public-page checks, not app tests or vendor demos. The 15-vendor scan was limited mainly to homepages and visible feature/pricing sections; it did not cover every product subpage, gated portal or app-store listing. Several other international HOA products and smaller bye-law chatbot vendors also remain unchecked. Treat this as a likely gap, not proof of uniqueness, and verify with vendors before making a competitive claim.
 
 ## 3. What Wooru has today
 

@@ -52,12 +52,13 @@ These documents are the maintained references for the live product and its engin
 | [`cross-community-changelog.md`](cross-community-changelog.md) | Append-only log; **mandatory** entry for any federation change |
 | [`decisions/0001-additive-rls-for-cross-community.md`](decisions/0001-additive-rls-for-cross-community.md) | ADR: why federation RLS is additive |
 
-### New feature ideas: proposals and competitor research
+### New feature ideas: proposals, research, and delivery plan
 
 Everything from the product discussions lives in one folder, [`new-feature-ideas/`](new-feature-ideas/README.md). Nothing in it is built.
 
 | File | Scope |
 |------|-------|
+| [`new-feature-ideas/implementation-plan.md`](new-feature-ideas/implementation-plan.md) | Dependency-aware implementation phases, delivery gates, 90-day pilot view, and acceptance criteria for the partner deck's proposed feature landscape. A working plan, not an approved scope or delivery commitment. |
 | [`proposals/owner-tenant-visibility-proposal.md`](new-feature-ideas/proposals/owner-tenant-visibility-proposal.md) | Owner versus tenant types, flat membership, lead approval, visibility rules, and a competitor evidence check. |
 | [`proposals/society-document-assistant-proposal.md`](new-feature-ideas/proposals/society-document-assistant-proposal.md) | Residents ask questions about uploaded society documents (bye-laws, minutes, circulars) and get answers with citations. Includes a competitor check, visibility rules, risks and phases. |
 | [`competitor-research/apartmant.md`](new-feature-ideas/competitor-research/apartmant.md) | Apartmant Resident App: advertised resident, management, guard and parking features; UX observations; gaps and adopt/pilot/defer recommendations. |
@@ -74,7 +75,7 @@ Research and concept reviews are useful for comparison and ideation. They do **n
 
 | Presentation | Format and purpose |
 |---|---|
-| [One app, market and economics](presentations/wooru-one-app-market-and-economics.html) | Redesigned 11-slide leadership deck covering competitors (including owner/tenant evidence, an AI-on-documents column and the limits of public permission data), Wooru's current versus proposed features, two-way WhatsApp, the proposed society document assistant with a worked example, phased delivery and illustrative economics. The web build publishes it at `/presentations/wooru-one-app-market-and-economics.html`. |
+| [One app, market and economics](presentations/wooru-one-app-market-and-economics.html) | Redesigned 12-slide partner deck covering competitors (including owner/tenant evidence, an AI-on-documents column and the limits of public permission data), Wooru's current versus proposed features, a feature landscape distinguishing Wooru capabilities from competitor claims, two-way WhatsApp, the proposed society document assistant with a worked example, phased delivery and illustrative economics. The web build publishes it at `/presentations/wooru-one-app-market-and-economics.html`. |
 | [One app, market and economics — editable deck](presentations/wooru-one-app-market-and-economics.pptx) | Earlier PowerPoint version with sources and notes. Its content and layout differ from the current HTML deck. |
 | [Feature and income strategy](presentations/wooru-feature-and-income-strategy.html) | 25-slide CEO briefing on current features, priorities, competitors, proposed revenue and community pain-point research. Slides 20–25 contain the issue-research section. |
 | [Feature and income strategy — editable deck](presentations/wooru-feature-and-income-strategy.pptx) | Matching PowerPoint version of the 25-slide strategy deck. |
