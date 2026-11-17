@@ -1,0 +1,34 @@
+services:
+  app:
+    build: .
+    env_file:
+      - .env
+    environment:
+      EXPO_NO_TELEMETRY: "1"
+    ports:
+      - "${WOORU_EXPO_BIND_ADDRESS:-127.0.0.1}:8081:8081"
+    command:
+      - sh
+      - -c
+      - |
+        set -eu
+        : "$${EXPO_PUBLIC_SUPABASE_URL:?Set EXPO_PUBLIC_SUPABASE_URL in .env}"
+        : "$${EXPO_PUBLIC_SUPABASE_ANON_KEY:?Set EXPO_PUBLIC_SUPABASE_ANON_KEY in .env}"
+        exec npm run web -- --host lan --port 8081
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          initial_sync: true
+          ignore:
+            - package.json
+            - package-lock.json
+            - Dockerfile
+            - compose.yaml
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: package-lock.json
+        - action: rebuild
+          path: Dockerfile
